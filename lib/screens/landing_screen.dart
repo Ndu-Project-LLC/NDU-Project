@@ -424,21 +424,39 @@ class _LandingScreenState extends State<LandingScreen>
  children: [
  buildLogo(),
  if (isDesktop) ...[
- const SizedBox(width: 32),
+ const SizedBox(width: 24),
+ Expanded(
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ physics: const BouncingScrollPhysics(),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
  _buildWhyNduDropdown(),
  _buildSolutionsDropdown(),
  _buildServicesDropdown(),
  _navButton('Pricing', () => _scrollTo(_ctaKey)),
  _buildResourcesDropdown(),
  ],
- const Spacer(),
+ ),
+ ),
+ ),
+ const SizedBox(width: 16),
+ ],
  if (!isDesktop) ...[
+ const Spacer(),
  buildMenuButton(),
  const SizedBox(width: 12),
  ],
+ if (isDesktop) ...[
  buildSignInButton(),
- const SizedBox(width: 16),
+ const SizedBox(width: 12),
  buildStartProjectButton(),
+ ] else if (!isDesktop) ...[
+ buildSignInButton(),
+ const SizedBox(width: 12),
+ buildStartProjectButton(),
+ ],
  ],
  );
  }

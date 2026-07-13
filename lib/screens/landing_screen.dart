@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/screens/pricing_screen.dart';
 import 'package:ndu_project/screens/partner_screen.dart';
+import 'package:ndu_project/screens/use_cases_screen.dart';
 import 'package:ndu_project/screens/sign_in_screen.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
@@ -293,8 +294,6 @@ class _LandingScreenState extends State<LandingScreen>
  SizedBox(height: isDesktop ? 80 : 56),
  _buildKazAiSection(context, isDesktop || isTablet),
  SizedBox(height: isDesktop ? 80 : 56),
- _buildUseCasesSection(context, isDesktop || isTablet),
- SizedBox(height: isDesktop ? 80 : 56),
  _buildTargetCustomersSection(context, isDesktop || isTablet),
  SizedBox(height: isDesktop ? 80 : 56),
  _buildOriginSection(context, isDesktop || isTablet),
@@ -583,7 +582,7 @@ class _LandingScreenState extends State<LandingScreen>
  items: [
  _DropdownItem(icon: Icons.play_circle_outline, label: 'How It Works', onTap: _handleWorkflowTap),
  _DropdownItem(icon: Icons.star_outline, label: 'Differentiator', onTap: () => _scrollTo(_differentiatorsKey)),
- _DropdownItem(icon: Icons.cases_outlined, label: 'Use Cases', onTap: () => _scrollTo(_differentiatorsKey)),
+ _DropdownItem(icon: Icons.cases_outlined, label: 'Use Cases', onTap: () => UseCasesScreen.open(context)),
  _DropdownItem(icon: Icons.slideshow_outlined, label: 'Demo', onTap: () => _scrollTo(_benefitsKey)),
  _DropdownItem(icon: Icons.handshake_outlined, label: 'Partner with Us', onTap: () => PartnerScreen.open(context)),
  ],

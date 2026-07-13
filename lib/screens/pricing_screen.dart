@@ -680,18 +680,6 @@ class _PlanColumn extends StatelessWidget {
  Row(
  crossAxisAlignment: CrossAxisAlignment.end,
  children: [
- if (price.originalPrice != null) ...[
- Text(
- price.originalPrice!,
- style: const TextStyle(
- color: _secondaryText,
- fontSize: 16,
- fontWeight: FontWeight.w600,
- decoration: TextDecoration.lineThrough,
- ),
- ),
- const SizedBox(width: 6),
- ],
  Text(
  price.price,
  style: const TextStyle(

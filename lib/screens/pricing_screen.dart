@@ -220,6 +220,10 @@ class _PricingScreenState extends State<PricingScreen> {
  const SizedBox(height: 24),
  // Plans grid
  _buildPlansGrid(isDesktop, isTablet),
+ const SizedBox(height: 48),
+ // All additional pricing sections
+ const _PricingExtras(),
+ const SizedBox(height: 48),
  ],
  ),
  ),
@@ -232,12 +236,22 @@ class _PricingScreenState extends State<PricingScreen> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  const Text(
- 'Pricing',
+ 'Simple, Scalable Pricing for Every Level of Project Delivery',
  style: TextStyle(
  fontSize: 36,
  fontWeight: FontWeight.w700,
  color: _primaryText,
  letterSpacing: -0.5,
+ height: 1.15,
+ ),
+ ),
+ const SizedBox(height: 10),
+ const Text(
+ 'Whether you\'re managing a single project or an enterprise portfolio, Ndu Project grows with your organization.',
+ style: TextStyle(
+ fontSize: 15,
+ color: _secondaryText,
+ height: 1.5,
  ),
  ),
  const SizedBox(height: 8),
@@ -774,6 +788,189 @@ class _PlanColumn extends StatelessWidget {
  ),
  ],
  ),
+ );
+ }
+}
+
+// Pricing extras widget containing all the additional sections
+class _PricingExtras extends StatelessWidget {
+ const _PricingExtras();
+
+ @override
+ Widget build(BuildContext context) {
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ _buildAllPlansInclude(),
+ const SizedBox(height: 48),
+ _buildRoleBasedAccess(),
+ const SizedBox(height: 48),
+ _buildAdditionalUserPricing(),
+ const SizedBox(height: 48),
+ _buildWhyViewersCostLess(),
+ const SizedBox(height: 48),
+ _buildFAQSection(),
+ ],
+ );
+ }
+
+ Widget _buildAllPlansInclude() {
+ final features = ['AI Project Assistant', 'Standard Templates', 'Dashboards & Reports', 'Mobile Access', 'Secure Cloud Hosting', 'Email Support'];
+ return Container(
+ width: double.infinity,
+ padding: const EdgeInsets.all(28),
+ decoration: BoxDecoration(
+ color: _themeSurface,
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text('All Plans Include', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _primaryText)),
+ const SizedBox(height: 16),
+ Wrap(
+ spacing: 12, runSpacing: 8,
+ children: features.map((f) => Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 18),
+ const SizedBox(width: 8),
+ Text(f, style: const TextStyle(fontSize: 14, color: _primaryText, fontWeight: FontWeight.w500)),
+ ],
+ )).toList(),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildRoleBasedAccess() {
+ return Container(
+ width: double.infinity,
+ padding: const EdgeInsets.all(28),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text('Role-Based Access', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _primaryText)),
+ const SizedBox(height: 12),
+ const Text('Every plan includes granular permissions to ensure users have access appropriate to their responsibilities.', style: TextStyle(fontSize: 14, color: _secondaryText, height: 1.5)),
+ const SizedBox(height: 16),
+ Container(
+ padding: const EdgeInsets.all(16),
+ decoration: BoxDecoration(color: _themeSurface, borderRadius: BorderRadius.circular(12)),
+ child: const Text('The core users included with each plan may be assigned any combination of Owner, Admin, Editor, Contributor, or Viewer roles. Additional user charges apply only after the included user limit is exceeded.', style: TextStyle(fontSize: 13, color: _secondaryText, height: 1.6)),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildAdditionalUserPricing() {
+ return Container(
+ width: double.infinity,
+ padding: const EdgeInsets.all(28),
+ decoration: BoxDecoration(
+ color: _themeSurface,
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ const Icon(Icons.group_add, color: _themeColor, size: 24),
+ const SizedBox(width: 10),
+ const Text('Additional User Pricing', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _primaryText)),
+ ],
+ ),
+ const SizedBox(height: 8),
+ const Text('As your team grows, you can add users without changing plans.', style: TextStyle(fontSize: 14, color: _secondaryText, height: 1.5)),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildWhyViewersCostLess() {
+ final viewerAccess = ['Executive Dashboards', 'Portfolio Dashboards', 'Reports', 'Approved Documents', 'Milestones', 'Risks', 'Meeting Summaries', 'PDF Export'];
+ return Container(
+ width: double.infinity,
+ padding: const EdgeInsets.all(28),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text('Why Viewers Cost Less', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _primaryText)),
+ const SizedBox(height: 12),
+ const Text('Many organizations have significantly more stakeholders than delivery team members. Executives, sponsors, clients, auditors, and department leaders often need visibility into project status without making changes.', style: TextStyle(fontSize: 14, color: _secondaryText, height: 1.6)),
+ const SizedBox(height: 12),
+ const Text('Viewer licenses provide access to:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _primaryText)),
+ const SizedBox(height: 10),
+ Wrap(
+ spacing: 8, runSpacing: 6,
+ children: viewerAccess.map((v) => Container(
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+ decoration: BoxDecoration(color: _themeSurface, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE5E7EB))),
+ child: Text(v, style: const TextStyle(fontSize: 12, color: _primaryText, fontWeight: FontWeight.w500)),
+ )).toList(),
+ ),
+ const SizedBox(height: 12),
+ const Text('Because Viewers cannot create or modify project data, they are offered at a lower price, making it affordable to extend visibility across the organization.', style: TextStyle(fontSize: 13, color: _secondaryText, height: 1.6, fontStyle: FontStyle.italic)),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildFAQSection() {
+ final faqs = [
+ {'q': 'Can I upgrade between plans?', 'a': 'Yes. Upgrade at any time as your organization grows.'},
+ {'q': 'Can I purchase additional projects instead of upgrading?', 'a': 'Yes. Additional Pro Projects can be purchased individually or you can upgrade to the Program or Portfolio tier for greater value.'},
+ {'q': 'What happens if I exceed my included users?', 'a': 'You can add Contributors or Viewers anytime.'},
+ {'q': 'Can I mix user roles?', 'a': 'Yes. Assign Owner, Admin, Editor, Contributor, and Viewer roles based on each user\'s responsibilities.'},
+ {'q': 'Do Viewers consume a full license?', 'a': 'No. Viewer licenses are priced separately because they provide read-only access and do not contribute to project execution.'},
+ ];
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text('Frequently Asked Questions', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: _primaryText)),
+ const SizedBox(height: 20),
+ ...faqs.map((faq) => Container(
+ margin: const EdgeInsets.only(bottom: 12),
+ padding: const EdgeInsets.all(20),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(12),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ const Icon(Icons.help_outline, color: _themeColor, size: 20),
+ const SizedBox(width: 8),
+ Expanded(child: Text(faq['q']!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _primaryText))),
+ ],
+ ),
+ const SizedBox(height: 8),
+ Padding(
+ padding: const EdgeInsets.only(left: 28),
+ child: Text(faq['q'] != faq['a'] ? faq['a']! : '', style: const TextStyle(fontSize: 13, color: _secondaryText, height: 1.5)),
+ ),
+ ],
+ ),
+ )).toList(),
+ ],
  );
  }
 }

@@ -540,202 +540,85 @@ class _LandingScreenState extends State<LandingScreen>
  }
 
  Widget _buildWhyNduDropdown() {
- return PopupMenuButton<String>(
- onSelected: (value) {
- switch (value) {
- case 'why':
- _scrollTo(_solutionKey);
- break;
- case 'how':
- _handleWorkflowTap();
- break;
- case 'diff':
- _scrollTo(_differentiatorsKey);
- break;
- case 'trusted':
- _scrollTo(_benefitsKey);
- break;
- case 'kaz':
- _scrollTo(_aiKey);
- break;
- }
- },
- itemBuilder: (context) => const [
- PopupMenuItem(value: 'why', child: Text('Why Ndu Project?')),
- PopupMenuItem(value: 'how', child: Text('How It Works')),
- PopupMenuItem(value: 'diff', child: Text('Differentiator')),
- PopupMenuItem(value: 'trusted', child: Text('Trusted By')),
- PopupMenuItem(value: 'kaz', child: Text('KAZ AI')),
+ return _buildPremiumDropdown(
+ label: 'Why Ndu Project?',
+ items: [
+ _DropdownItem(icon: Icons.lightbulb_outline, label: 'Why Ndu Project?', onTap: () => _scrollTo(_solutionKey)),
+ _DropdownItem(icon: Icons.play_circle_outline, label: 'How It Works', onTap: _handleWorkflowTap),
+ _DropdownItem(icon: Icons.star_outline, label: 'Differentiator', onTap: () => _scrollTo(_differentiatorsKey)),
+ _DropdownItem(icon: Icons.verified_outlined, label: 'Trusted By', onTap: () => _scrollTo(_benefitsKey)),
+ _DropdownItem(icon: Icons.auto_awesome, label: 'KAZ AI', onTap: () => _scrollTo(_aiKey)),
  ],
- child: Padding(
- padding: const EdgeInsets.symmetric(horizontal: 12),
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Text(
- 'Why Ndu Project?',
- style: const TextStyle(
- fontSize: 15,
- fontWeight: FontWeight.w600,
- color: Colors.white,
- ),
- ),
- const SizedBox(width: 4),
- const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 20),
- ],
- ),
- ),
- ),
  );
  }
 
  Widget _buildSolutionsDropdown() {
- return PopupMenuButton<String>(
- onSelected: (value) {
- switch (value) {
- case 'how':
- _handleWorkflowTap();
- break;
- case 'diff':
- _scrollTo(_differentiatorsKey);
- break;
- case 'usecases':
- _scrollTo(_differentiatorsKey);
- break;
- case 'demo':
- _scrollTo(_benefitsKey);
- break;
- case 'partner':
- _scrollTo(_aiKey);
- break;
- }
- },
- itemBuilder: (context) => const [
- PopupMenuItem(value: 'how', child: Text('How It Works')),
- PopupMenuItem(value: 'diff', child: Text('Differentiator')),
- PopupMenuItem(value: 'usecases', child: Text('Use Cases')),
- PopupMenuItem(value: 'demo', child: Text('Demo')),
- PopupMenuItem(value: 'partner', child: Text('Partner with Us')),
+ return _buildPremiumDropdown(
+ label: 'Solutions',
+ items: [
+ _DropdownItem(icon: Icons.play_circle_outline, label: 'How It Works', onTap: _handleWorkflowTap),
+ _DropdownItem(icon: Icons.star_outline, label: 'Differentiator', onTap: () => _scrollTo(_differentiatorsKey)),
+ _DropdownItem(icon: Icons.cases_outlined, label: 'Use Cases', onTap: () => _scrollTo(_differentiatorsKey)),
+ _DropdownItem(icon: Icons.slideshow_outlined, label: 'Demo', onTap: () => _scrollTo(_benefitsKey)),
+ _DropdownItem(icon: Icons.handshake_outlined, label: 'Partner with Us', onTap: () => _scrollTo(_aiKey)),
  ],
- child: Padding(
- padding: const EdgeInsets.symmetric(horizontal: 12),
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Text(
- 'Solutions',
- style: const TextStyle(
- fontSize: 15,
- fontWeight: FontWeight.w600,
- color: Colors.white,
- ),
- ),
- const SizedBox(width: 4),
- const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 20),
- ],
- ),
- ),
- ),
  );
  }
 
  Widget _buildServicesDropdown() {
- return PopupMenuButton<String>(
- onSelected: (value) {
- switch (value) {
- case 'services':
- _scrollTo(_benefitsKey);
- break;
- case 'delivery':
- _scrollTo(_benefitsKey);
- break;
- case 'training':
- _scrollTo(_aiKey);
- break;
- case 'consultation':
- _scrollTo(_ctaKey);
- break;
- }
- },
- itemBuilder: (context) => const [
- PopupMenuItem(value: 'services', child: Text('Services')),
- PopupMenuItem(value: 'delivery', child: Text('Project Delivery')),
- PopupMenuItem(value: 'training', child: Text('Training')),
- PopupMenuItem(value: 'consultation', child: Text('Consultation')),
+ return _buildPremiumDropdown(
+ label: 'Services',
+ items: [
+ _DropdownItem(icon: Icons.miscellaneous_services, label: 'Services', onTap: () => _scrollTo(_benefitsKey)),
+ _DropdownItem(icon: Icons.delivery_dining_outlined, label: 'Project Delivery', onTap: () => _scrollTo(_benefitsKey)),
+ _DropdownItem(icon: Icons.school_outlined, label: 'Training', onTap: () => _scrollTo(_aiKey)),
+ _DropdownItem(icon: Icons.support_agent, label: 'Consultation', onTap: () => _scrollTo(_ctaKey)),
  ],
- child: Padding(
- padding: const EdgeInsets.symmetric(horizontal: 12),
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Text(
- 'Services',
- style: const TextStyle(
- fontSize: 15,
- fontWeight: FontWeight.w600,
- color: Colors.white,
- ),
- ),
- const SizedBox(width: 4),
- const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 20),
- ],
- ),
- ),
- ),
  );
  }
 
  Widget _buildResourcesDropdown() {
- return PopupMenuButton<String>(
- onSelected: (value) {
- switch (value) {
- case 'contact':
- _scrollTo(_newsBlogKey);
- break;
- case 'support':
- _scrollTo(_reviewsKey);
- break;
- case 'media':
- launchUrl(Uri.parse('https://nduproject.tech'), mode: LaunchMode.externalApplication);
- break;
- case 'announcements':
- _scrollTo(_asSeenOnKey);
- break;
+ return _buildPremiumDropdown(
+ label: 'Resources',
+ items: [
+ _DropdownItem(icon: Icons.contact_page_outlined, label: 'Contact Us', onTap: () => _scrollTo(_newsBlogKey)),
+ _DropdownItem(icon: Icons.help_outline, label: 'Support', onTap: () => _scrollTo(_reviewsKey)),
+ _DropdownItem(icon: Icons.newspaper, label: 'Media', onTap: () => launchUrl(Uri.parse('https://nduproject.tech'), mode: LaunchMode.externalApplication)),
+ _DropdownItem(icon: Icons.campaign_outlined, label: 'Announcements', onTap: () => _scrollTo(_asSeenOnKey)),
+ ],
+ );
+ }
+
+ /// World-class premium dropdown with hover states, icons, brand colors,
+ /// rich typography, smooth animation, and elegant elevation.
+ Widget _buildPremiumDropdown({
+ required String label,
+ required List<_DropdownItem> items,
+ }) {
+ return PopupMenuButton<int>(
+ onSelected: (index) {
+ if (index >= 0 && index < items.length) {
+ items[index].onTap();
  }
  },
- itemBuilder: (context) => const [
- PopupMenuItem(value: 'contact', child: Text('Contact Us')),
- PopupMenuItem(value: 'support', child: Text('Support')),
- PopupMenuItem(value: 'media', child: Text('Media')),
- PopupMenuItem(value: 'announcements', child: Text('Announcements')),
+ offset: const Offset(0, 48),
+ constraints: BoxConstraints(minWidth: 240, maxWidth: 320),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(16),
+ side: BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1),
+ ),
+ elevation: 16,
+ shadowColor: Colors.black.withValues(alpha: 0.3),
+ color: const Color(0xFF1A1D29),
+ itemBuilder: (context) => [
+ for (int i = 0; i < items.length; i++)
+ PopupMenuItem<int>(
+ value: i,
+ padding: EdgeInsets.zero,
+ child: _PremiumDropdownItem(item: items[i], isLast: i == items.length - 1),
+ ),
  ],
- child: Padding(
- padding: const EdgeInsets.symmetric(horizontal: 12),
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Text(
- 'Resources',
- style: const TextStyle(
- fontSize: 15,
- fontWeight: FontWeight.w600,
- color: Colors.white,
- ),
- ),
- const SizedBox(width: 4),
- const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 20),
- ],
- ),
- ),
- ),
+ child: _PremiumDropdownTrigger(label: label),
  );
  }
 
@@ -5470,6 +5353,163 @@ class _SocialIconBubble extends StatelessWidget {
  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
  ),
  child: Icon(link.icon, color: Colors.white.withValues(alpha: 0.8), size: 18),
+ ),
+ ),
+ );
+ }
+}
+
+/// Data model for a premium dropdown item.
+class _DropdownItem {
+ final IconData icon;
+ final String label;
+ final VoidCallback onTap;
+ const _DropdownItem({required this.icon, required this.label, required this.onTap});
+}
+
+/// Premium dropdown trigger button with hover animation.
+class _PremiumDropdownTrigger extends StatefulWidget {
+ final String label;
+ const _PremiumDropdownTrigger({super.key, required this.label});
+
+ @override
+ State<_PremiumDropdownTrigger> createState() => _PremiumDropdownTriggerState();
+}
+
+class _PremiumDropdownTriggerState extends State<_PremiumDropdownTrigger> {
+ bool _isHovered = false;
+
+ @override
+ Widget build(BuildContext context) {
+ return MouseRegion(
+ onEnter: (_) => setState(() => _isHovered = true),
+ onExit: (_) => setState(() => _isHovered = false),
+ child: AnimatedContainer(
+ duration: const Duration(milliseconds: 200),
+ curve: Curves.easeOutCubic,
+ padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+ decoration: BoxDecoration(
+ color: _isHovered
+ ? Colors.white.withValues(alpha: 0.12)
+ : Colors.transparent,
+ borderRadius: BorderRadius.circular(10),
+ border: Border.all(
+ color: _isHovered
+ ? Colors.white.withValues(alpha: 0.2)
+ : Colors.transparent,
+ width: 1,
+ ),
+ ),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Text(
+ widget.label,
+ style: TextStyle(
+ fontSize: 15,
+ fontWeight: FontWeight.w600,
+ color: Colors.white.withValues(alpha: _isHovered ? 1.0 : 0.92),
+ letterSpacing: 0.2,
+ ),
+ ),
+ const SizedBox(width: 6),
+ AnimatedRotation(
+ duration: const Duration(milliseconds: 200),
+ turns: _isHovered ? 0.5 : 0,
+ child: Icon(
+ Icons.keyboard_arrow_down,
+ color: Colors.white.withValues(alpha: _isHovered ? 1.0 : 0.7),
+ size: 18,
+ ),
+ ),
+ ],
+ ),
+ ),
+ );
+ }
+}
+
+/// Premium dropdown item with icon, hover state, and elegant styling.
+class _PremiumDropdownItem extends StatefulWidget {
+ final _DropdownItem item;
+ final bool isLast;
+ const _PremiumDropdownItem({super.key, required this.item, this.isLast = false});
+
+ @override
+ State<_PremiumDropdownItem> createState() => _PremiumDropdownItemState();
+}
+
+class _PremiumDropdownItemState extends State<_PremiumDropdownItem> {
+ bool _isHovered = false;
+
+ @override
+ Widget build(BuildContext context) {
+ return MouseRegion(
+ onEnter: (_) => setState(() => _isHovered = true),
+ onExit: (_) => setState(() => _isHovered = false),
+ child: AnimatedContainer(
+ duration: const Duration(milliseconds: 150),
+ curve: Curves.easeOut,
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+ decoration: BoxDecoration(
+ color: _isHovered
+ ? const Color(0xFF2563EB).withValues(alpha: 0.15)
+ : Colors.transparent,
+ border: !widget.isLast
+ ? Border(
+ bottom: BorderSide(
+ color: Colors.white.withValues(alpha: 0.06),
+ width: 0.5,
+ ),
+ )
+ : null,
+ ),
+ child: Row(
+ children: [
+ // Icon with background circle
+ Container(
+ width: 32,
+ height: 32,
+ decoration: BoxDecoration(
+ color: _isHovered
+ ? const Color(0xFF2563EB).withValues(alpha: 0.2)
+ : Colors.white.withValues(alpha: 0.06),
+ borderRadius: BorderRadius.circular(8),
+ ),
+ child: Icon(
+ widget.item.icon,
+ size: 16,
+ color: _isHovered
+ ? const Color(0xFF60A5FA)
+ : Colors.white.withValues(alpha: 0.7),
+ ),
+ ),
+ const SizedBox(width: 12),
+ // Label
+ Expanded(
+ child: Text(
+ widget.item.label,
+ style: TextStyle(
+ fontSize: 14,
+ fontWeight: _isHovered ? FontWeight.w600 : FontWeight.w500,
+ color: _isHovered
+ ? Colors.white
+ : Colors.white.withValues(alpha: 0.85),
+ letterSpacing: 0.1,
+ ),
+ ),
+ ),
+ // Arrow on hover
+ AnimatedOpacity(
+ duration: const Duration(milliseconds: 150),
+ opacity: _isHovered ? 1.0 : 0.0,
+ child: Icon(
+ Icons.arrow_forward_ios,
+ size: 12,
+ color: const Color(0xFF60A5FA).withValues(alpha: _isHovered ? 1.0 : 0.0),
+ ),
+ ),
+ ],
  ),
  ),
  );

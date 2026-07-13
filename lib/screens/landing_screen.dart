@@ -1010,52 +1010,66 @@ class _LandingScreenState extends State<LandingScreen>
  ),
  ),
  Padding(
- padding: const EdgeInsets.all(32),
+ padding: const EdgeInsets.all(24),
  child: Column(
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
- // System diagram: Initiation → Planning → Execution loop
- Row(
- mainAxisAlignment: MainAxisAlignment.center,
+ // 5-step process: Initiation → Planning → Design → Execution → Launch
+ Wrap(
+ alignment: WrapAlignment.center,
+ spacing: 6,
+ runSpacing: 12,
  children: [
  _buildDiagramNode('Initiation', Icons.flag_rounded, const Color(0xFF3B82F6)),
  _buildDiagramArrow(),
  _buildDiagramNode('Planning', Icons.architecture_rounded, const Color(0xFF8B5CF6)),
  _buildDiagramArrow(),
- _buildDiagramNode('Execution', Icons.rocket_launch_rounded, const Color(0xFF10B981)),
+ _buildDiagramNode('Design', Icons.design_services_rounded, const Color(0xFFF59E0B)),
+ _buildDiagramArrow(),
+ _buildDiagramNode('Execution', Icons.build_rounded, const Color(0xFFF59E0B)),
+ _buildDiagramArrow(),
+ _buildDiagramNode('Launch', Icons.rocket_launch_rounded, const Color(0xFFF59E0B)),
  ],
  ),
- const SizedBox(height: 28),
- // Loop-back arrow indicator
+ const SizedBox(height: 24),
+ // Bottom row: Continuous Delivery Loop + Unified platform
+ Row(
+ mainAxisAlignment: MainAxisAlignment.center,
+ children: [
  Container(
- padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
  decoration: BoxDecoration(
- borderRadius: BorderRadius.circular(16),
+ borderRadius: BorderRadius.circular(12),
  color: Colors.white.withValues(alpha: 0.06),
  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: const [
- Icon(Icons.sync_rounded, color: Color(0xFF10B981), size: 18),
- SizedBox(width: 10),
- Text(
- 'Continuous Delivery Loop',
- style: TextStyle(
- color: Colors.white,
- fontWeight: FontWeight.w600,
- fontSize: 14,
- ),
- ),
+ Icon(Icons.sync_rounded, color: Color(0xFF10B981), size: 16),
+ SizedBox(width: 8),
+ Text('Continuous Delivery Loop', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
  ],
  ),
  ),
- const SizedBox(height: 24),
- // Overlay text
+ const SizedBox(width: 12),
  Container(
- padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
  decoration: BoxDecoration(
- borderRadius: BorderRadius.circular(20),
+ borderRadius: BorderRadius.circular(12),
+ color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+ border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.25)),
+ ),
+ child: Text('Unified platform', style: TextStyle(color: const Color(0xFF93C5FD).withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13)),
+ ),
+ ],
+ ),
+ const SizedBox(height: 20),
+ // AI + Analytics + Human Decision Making
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(16),
  gradient: LinearGradient(
  colors: [
  const Color(0xFF3B82F6).withValues(alpha: 0.15),
@@ -1072,17 +1086,17 @@ class _LandingScreenState extends State<LandingScreen>
  style: TextStyle(
  color: Colors.white.withValues(alpha: 0.92),
  fontWeight: FontWeight.w800,
- fontSize: 18,
+ fontSize: 16,
  letterSpacing: 0.3,
  ),
  ),
- const SizedBox(height: 8),
+ const SizedBox(height: 6),
  Text(
  'One system governing the full project lifecycle',
  textAlign: TextAlign.center,
  style: TextStyle(
  color: Colors.white.withValues(alpha: 0.6),
- fontSize: 13,
+ fontSize: 12,
  ),
  ),
  ],

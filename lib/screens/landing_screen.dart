@@ -290,6 +290,8 @@ class _LandingScreenState extends State<LandingScreen>
  SizedBox(height: isDesktop ? 80 : 56),
  _buildKazAiSection(context, isDesktop || isTablet),
  SizedBox(height: isDesktop ? 80 : 56),
+ _buildUseCasesSection(context, isDesktop || isTablet),
+ SizedBox(height: isDesktop ? 80 : 56),
  _buildTargetCustomersSection(context, isDesktop || isTablet),
  SizedBox(height: isDesktop ? 80 : 56),
  _buildOriginSection(context, isDesktop || isTablet),
@@ -2461,6 +2463,529 @@ class _LandingScreenState extends State<LandingScreen>
  Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
  const SizedBox(height: 8),
  Text(description, style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.65), height: 1.5)),
+ ],
+ ),
+ );
+ }
+
+ // ── Section 7c: Use Cases & Demo Center ───────────────────────────────
+ Widget _buildUseCasesSection(BuildContext context, bool wideLayout) {
+ final industries = [
+ _IndustryData(icon: Icons.bolt, name: 'Energy', demo: 'Solar Farm Expansion', color: const Color(0xFFF59E0B), highlights: ['Business Case', 'Work Breakdown Structure', 'Procurement Planning', 'Contractor Management', 'Project Schedule', 'Risk Register', 'Executive Dashboard']),
+ _IndustryData(icon: Icons.computer, name: 'Information Technology', demo: 'AI Customer Support Platform', color: const Color(0xFF3B82F6), highlights: ['Business Case', 'Frontend Planning', 'Sprint Planning', 'Kanban Board', 'Burndown Charts', 'Release Planning']),
+ _IndustryData(icon: Icons.local_hospital, name: 'Healthcare', demo: 'Hospital Imaging Center Construction', color: const Color(0xFFEF4444), highlights: ['Regulatory Planning', 'Equipment Procurement', 'Construction Tracking', 'Budget Control', 'Commissioning']),
+ _IndustryData(icon: Icons.school, name: 'Education', demo: 'University Mobile Student App', color: const Color(0xFF10B981), highlights: ['Product Discovery', 'Sprint Planning', 'Stakeholder Management', 'User Acceptance Testing']),
+ _IndustryData(icon: Icons.factory, name: 'Manufacturing', demo: 'Smart Manufacturing Transformation', color: const Color(0xFF8B5CF6), highlights: ['Facility Upgrades', 'IoT Integration', 'ERP Integration', 'Agile Software Delivery']),
+ _IndustryData(icon: Icons.account_balance, name: 'Government', demo: 'City Infrastructure Modernization', color: const Color(0xFF06B6D4), highlights: ['Capital Planning', 'Procurement', 'Public Stakeholders', 'Executive Reporting']),
+ ];
+
+ final methodologies = [
+ _MethodologyData(name: 'Waterfall Projects', desc: 'Designed for engineering, construction, infrastructure, capital projects, and regulated industries.', demos: ['Solar Farm Expansion', 'Hospital Imaging Center Construction'], color: const Color(0xFF3B82F6)),
+ _MethodologyData(name: 'Agile Projects', desc: 'Built for software development, innovation, and product teams.', demos: ['AI Customer Support Platform', 'University Mobile Student App'], color: const Color(0xFF10B981)),
+ _MethodologyData(name: 'Hybrid Projects', desc: 'Combines structured planning with iterative execution.', demos: ['Smart Manufacturing Transformation', 'Enterprise EHR Modernization'], color: const Color(0xFF8B5CF6)),
+ ];
+
+ final demos = [
+ _DemoData(title: 'Solar Farm Expansion', industry: 'Energy', methodology: 'Waterfall', icon: Icons.wb_sunny, color: const Color(0xFFF59E0B), experience: ['Project Charter', 'AI-generated WBS', 'Schedule Builder', 'Procurement Planning', 'Contractor Management', 'Risk Dashboard', 'Executive Reporting']),
+ _DemoData(title: 'AI Customer Support Platform', industry: 'Information Technology', methodology: 'Agile', icon: Icons.support_agent, color: const Color(0xFF3B82F6), experience: ['Product Vision', 'Product Backlog', 'Sprint Planning', 'AI Story Generation', 'Sprint Boards', 'Sprint Reviews', 'Burndown Charts']),
+ _DemoData(title: 'Hospital Imaging Center Construction', industry: 'Healthcare', methodology: 'Waterfall', icon: Icons.local_hospital, color: const Color(0xFFEF4444), experience: ['Business Case', 'Scope Planning', 'Budget Management', 'Procurement', 'Construction Tracking', 'Equipment Installation', 'Project Closeout']),
+ _DemoData(title: 'University Student Mobile App', industry: 'Education', methodology: 'Agile', icon: Icons.school, color: const Color(0xFF10B981), experience: ['User Personas', 'Product Roadmap', 'Sprint Planning', 'Feature Prioritization', 'User Testing', 'Release Management']),
+ _DemoData(title: 'Smart Manufacturing Transformation', industry: 'Manufacturing', methodology: 'Hybrid', icon: Icons.factory, color: const Color(0xFF8B5CF6), experience: ['Facility Assessment', 'Engineering Planning', 'ERP Integration', 'IoT Dashboard', 'Agile Software Delivery', 'Executive Reporting']),
+ _DemoData(title: 'Enterprise EHR Modernization', industry: 'Healthcare', methodology: 'Hybrid', icon: Icons.favorite, color: const Color(0xFFEC4899), experience: ['Program Governance', 'Multi-site Rollout', 'Vendor Management', 'Data Migration', 'Sprint Planning', 'Change Management', 'Executive Reporting']),
+ ];
+
+ return Container(
+ margin: EdgeInsets.symmetric(horizontal: wideLayout ? 96 : 24),
+ padding: EdgeInsets.symmetric(
+ horizontal: wideLayout ? 64 : 28, vertical: wideLayout ? 80 : 56),
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(36),
+ gradient: const LinearGradient(
+ begin: Alignment.topLeft,
+ end: Alignment.bottomRight,
+ colors: [Color(0xFF0A0E1A), Color(0xFF050810)],
+ ),
+ border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+ boxShadow: [
+ BoxShadow(
+ color: Colors.black.withValues(alpha: 0.4),
+ blurRadius: 48,
+ offset: const Offset(0, 30),
+ ),
+ ],
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ // Header
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(18),
+ color: const Color(0xFF06B6D4).withValues(alpha: 0.12),
+ border: Border.all(color: const Color(0xFF06B6D4).withValues(alpha: 0.3)),
+ ),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: const [
+ Icon(Icons.explore, color: Color(0xFF22D3EE), size: 16),
+ SizedBox(width: 8),
+ Text('Use Cases & Demo Center', style: TextStyle(color: Color(0xFF22D3EE), fontWeight: FontWeight.w700, fontSize: 14)),
+ ],
+ ),
+ ),
+ const SizedBox(height: 24),
+ Text(
+ 'Project Delivery for Every Industry',
+ style: TextStyle(
+ fontSize: wideLayout ? 38 : 28,
+ fontWeight: FontWeight.w800,
+ color: Colors.white,
+ height: 1.15,
+ ),
+ ),
+ const SizedBox(height: 14),
+ const Text(
+ 'Whether you\'re delivering software, constructing facilities, implementing enterprise systems, or launching strategic initiatives, Ndu Project provides the structure, visibility, and AI-powered guidance to improve project outcomes.',
+ style: TextStyle(fontSize: 16, color: Colors.white70, height: 1.6),
+ ),
+ const SizedBox(height: 16),
+ // Explore tabs
+ Wrap(
+ spacing: 10,
+ runSpacing: 10,
+ children: [
+ _exploreChip('Explore by Industry', Icons.business),
+ _exploreChip('Explore by Methodology', Icons.merge_type),
+ _exploreChip('Explore Program and Portfolio Delivery', Icons.dashboard),
+ ],
+ ),
+ const SizedBox(height: 48),
+
+ // ── Industry Cards ──
+ Text('Explore by Industry', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
+ const SizedBox(height: 24),
+ LayoutBuilder(
+ builder: (context, constraints) {
+ final double maxWidth = constraints.maxWidth;
+ final double spacing = 20;
+ final int columns = maxWidth >= 1000 ? 3 : (maxWidth >= 600 ? 2 : 1);
+ final double itemWidth = columns == 1 ? maxWidth : (maxWidth - spacing * (columns - 1)) / columns;
+ return Wrap(
+ spacing: spacing,
+ runSpacing: spacing,
+ children: industries.map((ind) => SizedBox(
+ width: itemWidth,
+ child: _industryCard(ind),
+ )).toList(),
+ );
+ },
+ ),
+ const SizedBox(height: 56),
+
+ // ── Methodology Cards ──
+ Text('Explore by Delivery Methodology', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
+ const SizedBox(height: 24),
+ LayoutBuilder(
+ builder: (context, constraints) {
+ final double maxWidth = constraints.maxWidth;
+ final double spacing = 20;
+ final int columns = maxWidth >= 800 ? 3 : 1;
+ final double itemWidth = columns == 1 ? maxWidth : (maxWidth - spacing * (columns - 1)) / columns;
+ return Wrap(
+ spacing: spacing,
+ runSpacing: spacing,
+ children: methodologies.map((meth) => SizedBox(
+ width: itemWidth,
+ child: _methodologyCard(meth),
+ )).toList(),
+ );
+ },
+ ),
+ const SizedBox(height: 56),
+
+ // ── Program & Portfolio ──
+ Text('Program & Portfolio Demonstrations', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
+ const SizedBox(height: 8),
+ const Text('See how Ndu Project scales beyond individual projects to support coordinated programs and enterprise portfolios.', style: TextStyle(fontSize: 14, color: Colors.white60, height: 1.5)),
+ const SizedBox(height: 24),
+ LayoutBuilder(
+ builder: (context, constraints) {
+ final double maxWidth = constraints.maxWidth;
+ final double spacing = 20;
+ final bool horizontal = maxWidth >= 700;
+ return horizontal
+ ? Row(
+ children: [
+ Expanded(child: _programCard()),
+ SizedBox(width: spacing),
+ Expanded(child: _portfolioCard()),
+ ],
+ )
+ : Column(
+ children: [
+ _programCard(),
+ SizedBox(height: spacing),
+ _portfolioCard(),
+ ],
+ );
+ },
+ ),
+ const SizedBox(height: 56),
+
+ // ── Demo Center ──
+ Text('Demo Center', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white)),
+ const SizedBox(height: 8),
+ const Text('Experience realistic project delivery scenarios that demonstrate how Ndu Project supports planning, execution, monitoring, and reporting across projects, programs, and portfolios.', style: TextStyle(fontSize: 14, color: Colors.white60, height: 1.5)),
+ const SizedBox(height: 24),
+ Text('Project Demonstrations', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white70)),
+ const SizedBox(height: 16),
+ LayoutBuilder(
+ builder: (context, constraints) {
+ final double maxWidth = constraints.maxWidth;
+ final double spacing = 20;
+ final int columns = maxWidth >= 1000 ? 3 : (maxWidth >= 600 ? 2 : 1);
+ final double itemWidth = columns == 1 ? maxWidth : (maxWidth - spacing * (columns - 1)) / columns;
+ return Wrap(
+ spacing: spacing,
+ runSpacing: spacing,
+ children: demos.map((demo) => SizedBox(
+ width: itemWidth,
+ child: _demoCard(demo),
+ )).toList(),
+ );
+ },
+ ),
+ const SizedBox(height: 32),
+ Text('Program Demonstration', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white70)),
+ const SizedBox(height: 16),
+ _demoCard(_DemoData(
+ title: 'Enterprise Digital Transformation Program',
+ industry: 'Multi-Industry',
+ methodology: 'Program',
+ icon: Icons.view_module,
+ color: const Color(0xFF0EA5E9),
+ experience: ['Program Dashboard', 'Interface Management', 'Cross Project Dependencies', 'Benefits Tracking', 'Shared Resources', 'Program Timeline', 'Executive Reporting'],
+ )),
+ const SizedBox(height: 24),
+ Text('Portfolio Demonstration', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white70)),
+ const SizedBox(height: 16),
+ _demoCard(_DemoData(
+ title: 'Strategic Enterprise Portfolio',
+ industry: 'Enterprise',
+ methodology: 'Portfolio',
+ icon: Icons.dashboard,
+ color: const Color(0xFFEC4899),
+ experience: ['Portfolio Dashboard', 'Executive KPIs', 'Portfolio Heat Maps', 'Resource Capacity', 'Financial Performance', 'Strategic Alignment', 'Portfolio Prioritization', 'Cross Program Reporting'],
+ )),
+ ],
+ ),
+ );
+ }
+
+ Widget _exploreChip(String label, IconData icon) {
+ return Container(
+ padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+ decoration: BoxDecoration(
+ color: const Color(0xFF06B6D4).withValues(alpha: 0.1),
+ borderRadius: BorderRadius.circular(10),
+ border: Border.all(color: const Color(0xFF06B6D4).withValues(alpha: 0.25)),
+ ),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Icon(icon, size: 14, color: const Color(0xFF22D3EE)),
+ const SizedBox(width: 6),
+ Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF22D3EE))),
+ ],
+ ),
+ );
+ }
+
+ Widget _industryCard(_IndustryData ind) {
+ return Container(
+ padding: const EdgeInsets.all(20),
+ decoration: BoxDecoration(
+ color: ind.color.withValues(alpha: 0.06),
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: ind.color.withValues(alpha: 0.2)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ Container(
+ width: 40, height: 40,
+ decoration: BoxDecoration(color: ind.color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+ child: Icon(ind.icon, color: ind.color, size: 20),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: Text(ind.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+ ),
+ ],
+ ),
+ const SizedBox(height: 8),
+ Text(ind.desc, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
+ const SizedBox(height: 12),
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+ decoration: BoxDecoration(
+ color: ind.color.withValues(alpha: 0.1),
+ borderRadius: BorderRadius.circular(6),
+ ),
+ child: Text('Featured Demo: ${ind.demo}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: ind.color)),
+ ),
+ const SizedBox(height: 12),
+ Text('Highlights', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white.withValues(alpha: 0.5))),
+ const SizedBox(height: 6),
+ Wrap(
+ spacing: 4, runSpacing: 4,
+ children: ind.highlights.map((h) => Container(
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+ decoration: BoxDecoration(
+ color: Colors.white.withValues(alpha: 0.05),
+ borderRadius: BorderRadius.circular(4),
+ ),
+ child: Text(h, style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.7))),
+ )).toList(),
+ ),
+ const SizedBox(height: 14),
+ Center(
+ child: TextButton(
+ onPressed: () {},
+ style: TextButton.styleFrom(foregroundColor: ind.color),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ const Text('View Project Demo', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+ const SizedBox(width: 4),
+ const Icon(Icons.arrow_forward, size: 14),
+ ],
+ ),
+ ),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _methodologyCard(_MethodologyData meth) {
+ return Container(
+ padding: const EdgeInsets.all(20),
+ decoration: BoxDecoration(
+ color: meth.color.withValues(alpha: 0.06),
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: meth.color.withValues(alpha: 0.2)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(meth.name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: meth.color)),
+ const SizedBox(height: 8),
+ Text(meth.desc, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6), height: 1.5)),
+ const SizedBox(height: 12),
+ Text('Available Demos', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white.withValues(alpha: 0.5))),
+ const SizedBox(height: 6),
+ ...meth.demos.map((d) => Padding(
+ padding: const EdgeInsets.only(bottom: 4),
+ child: Row(
+ children: [
+ Icon(Icons.check_circle_outline, size: 12, color: meth.color.withValues(alpha: 0.7)),
+ const SizedBox(width: 6),
+ Text(d, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.7))),
+ ],
+ ),
+ )),
+ const SizedBox(height: 12),
+ Center(
+ child: TextButton(
+ onPressed: () {},
+ style: TextButton.styleFrom(foregroundColor: meth.color),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Text('View ${meth.name.split(' ')[0]} Demos', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+ const SizedBox(width: 4),
+ const Icon(Icons.arrow_forward, size: 14),
+ ],
+ ),
+ ),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _programCard() {
+ return Container(
+ padding: const EdgeInsets.all(24),
+ decoration: BoxDecoration(
+ color: const Color(0xFF0EA5E9).withValues(alpha: 0.06),
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFF0EA5E9).withValues(alpha: 0.2)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ Container(
+ width: 44, height: 44,
+ decoration: BoxDecoration(color: const Color(0xFF0EA5E9).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+ child: const Icon(Icons.view_module, color: Color(0xFF0EA5E9), size: 22),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text('Program Management Demo', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+ const SizedBox(height: 2),
+ Text('Digital Transformation Program', style: TextStyle(fontSize: 12, color: const Color(0xFF0EA5E9))),
+ ],
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 12),
+ const Text('Manage multiple related projects through a single program workspace while maintaining visibility into dependencies, milestones, and benefits realization.', style: TextStyle(fontSize: 12, color: Colors.white60, height: 1.5)),
+ const SizedBox(height: 12),
+ const Text('You\'ll Experience', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white54)),
+ const SizedBox(height: 6),
+ Wrap(
+ spacing: 4, runSpacing: 4,
+ children: ['Program Dashboard', 'Program Roadmap', 'Cross Project Dependencies', 'Interface Management', 'Integrated Milestone Tracking', 'Benefits Realization', 'Resource Coordination', 'Program Risk Register', 'Program Financial Summary', 'Executive Status Reporting'].map((item) => Container(
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+ decoration: BoxDecoration(color: const Color(0xFF0EA5E9).withValues(alpha: 0.08), borderRadius: BorderRadius.circular(4)),
+ child: Text(item, style: const TextStyle(fontSize: 10, color: Color(0xFF7DD3FC))),
+ )).toList(),
+ ),
+ const SizedBox(height: 16),
+ Center(
+ child: ElevatedButton(
+ onPressed: () {},
+ style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0EA5E9), foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
+ child: const Text('View Program Demo', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+ ),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _portfolioCard() {
+ return Container(
+ padding: const EdgeInsets.all(24),
+ decoration: BoxDecoration(
+ color: const Color(0xFFEC4899).withValues(alpha: 0.06),
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFFEC4899).withValues(alpha: 0.2)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ Container(
+ width: 44, height: 44,
+ decoration: BoxDecoration(color: const Color(0xFFEC4899).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+ child: const Icon(Icons.dashboard, color: Color(0xFFEC4899), size: 22),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text('Portfolio Management Demo', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+ const SizedBox(height: 2),
+ Text('Enterprise Strategic Portfolio', style: TextStyle(fontSize: 12, color: const Color(0xFFEC4899))),
+ ],
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 12),
+ const Text('Monitor organizational initiatives across departments while aligning investments with strategic objectives.', style: TextStyle(fontSize: 12, color: Colors.white60, height: 1.5)),
+ const SizedBox(height: 12),
+ const Text('You\'ll Experience', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white54)),
+ const SizedBox(height: 6),
+ Wrap(
+ spacing: 4, runSpacing: 4,
+ children: ['Portfolio Dashboard', 'Strategic Alignment', 'Portfolio Health Indicators', 'Investment Prioritization', 'Capacity Planning', 'Resource Allocation', 'Financial Performance', 'Executive Scorecards', 'KPI Tracking', 'Portfolio Reporting'].map((item) => Container(
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+ decoration: BoxDecoration(color: const Color(0xFFEC4899).withValues(alpha: 0.08), borderRadius: BorderRadius.circular(4)),
+ child: Text(item, style: const TextStyle(fontSize: 10, color: Color(0xFFF9A8D4))),
+ )).toList(),
+ ),
+ const SizedBox(height: 16),
+ Center(
+ child: ElevatedButton(
+ onPressed: () {},
+ style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEC4899), foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
+ child: const Text('View Portfolio Demo', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+ ),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _demoCard(_DemoData demo) {
+ return Container(
+ padding: const EdgeInsets.all(20),
+ decoration: BoxDecoration(
+ color: Colors.white.withValues(alpha: 0.03),
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: demo.color.withValues(alpha: 0.2)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ Container(
+ width: 40, height: 40,
+ decoration: BoxDecoration(color: demo.color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+ child: Icon(demo.icon, color: demo.color, size: 20),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(demo.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+ const SizedBox(height: 2),
+ Text('Industry: ${demo.industry}  •  ${demo.methodology}', style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.5))),
+ ],
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 12),
+ const Text('Experience', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white54)),
+ const SizedBox(height: 6),
+ Wrap(
+ spacing: 4, runSpacing: 4,
+ children: demo.experience.map((e) => Container(
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+ decoration: BoxDecoration(
+ color: demo.color.withValues(alpha: 0.08),
+ borderRadius: BorderRadius.circular(4),
+ ),
+ child: Text(e, style: TextStyle(fontSize: 10, color: demo.color.withValues(alpha: 0.9))),
+ )).toList(),
+ ),
+ const SizedBox(height: 14),
+ Center(
+ child: OutlinedButton.icon(
+ onPressed: () {},
+ icon: const Icon(Icons.play_arrow, size: 16),
+ label: const Text('Launch Demo', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+ style: OutlinedButton.styleFrom(foregroundColor: demo.color, side: BorderSide(color: demo.color.withValues(alpha: 0.4)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
+ ),
+ ),
  ],
  ),
  );
@@ -5881,4 +6406,32 @@ class _PremiumDropdownItemState extends State<_PremiumDropdownItem> {
  ),
  );
  }
+}
+
+class _IndustryData {
+  final IconData icon;
+  final String name;
+  final String demo;
+  final String desc;
+  final Color color;
+  final List<String> highlights;
+  const _IndustryData({required this.icon, required this.name, required this.demo, required this.color, required this.highlights, this.desc = ''});
+}
+
+class _MethodologyData {
+  final String name;
+  final String desc;
+  final List<String> demos;
+  final Color color;
+  const _MethodologyData({required this.name, required this.desc, required this.demos, required this.color});
+}
+
+class _DemoData {
+  final String title;
+  final String industry;
+  final String methodology;
+  final IconData icon;
+  final Color color;
+  final List<String> experience;
+  const _DemoData({required this.title, required this.industry, required this.methodology, required this.icon, required this.color, required this.experience});
 }

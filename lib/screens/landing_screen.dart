@@ -122,14 +122,10 @@ class _LandingScreenState extends State<LandingScreen>
  }
 
  void _handleStartProject() {
- if (_isDebugMode) {
  Navigator.push(
  context,
  MaterialPageRoute(builder: (_) => const PricingScreen()),
  );
- } else {
- _showComingSoonDialog();
- }
  }
 
  void _showComingSoonDialog() {
@@ -378,14 +374,10 @@ class _LandingScreenState extends State<LandingScreen>
  Widget buildSignInButton({bool fullWidth = false}) {
  final button = TextButton(
  onPressed: () {
- if (_isDebugMode) {
  Navigator.push(
  context,
  MaterialPageRoute(builder: (_) => const SignInScreen()),
  );
- } else {
- _showComingSoonDialog();
- }
  },
  style: TextButton.styleFrom(
  foregroundColor: Colors.white,

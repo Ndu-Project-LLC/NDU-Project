@@ -226,11 +226,11 @@ class _LandingScreenState extends State<LandingScreen>
  final bool isTablet = size.width >= 900 && size.width < 1200;
 
  return Scaffold(
- backgroundColor: const Color(0xFFFFFBEB),
+ backgroundColor: Colors.black,
  body: SafeArea(
  child: Container(
  decoration: const BoxDecoration(
- color: Color(0xFFFFF9E3),
+ color: Color(0xFF040404),
  ),
  child: Stack(
  children: [
@@ -261,7 +261,7 @@ class _LandingScreenState extends State<LandingScreen>
  shape: BoxShape.circle,
  gradient: RadialGradient(
  colors: [
- const Color(0xFFF59E0B).withValues(alpha: 0.15),
+ Colors.white.withValues(alpha: 0.08),
  Colors.transparent,
  ],
  ),
@@ -286,6 +286,8 @@ class _LandingScreenState extends State<LandingScreen>
  _buildHowItWorksSection(context, isDesktop || isTablet),
  SizedBox(height: isDesktop ? 80 : 56),
  _buildDifferentiatorsSection(context, isDesktop || isTablet),
+ SizedBox(height: isDesktop ? 80 : 56),
+ _buildFeatureGridSection(context, isDesktop || isTablet),
  SizedBox(height: isDesktop ? 80 : 56),
  _buildBenefitsSection(context, isDesktop || isTablet),
  SizedBox(height: isDesktop ? 80 : 56),
@@ -743,9 +745,9 @@ class _LandingScreenState extends State<LandingScreen>
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
  decoration: BoxDecoration(
- color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+ color: Colors.white.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(24),
- border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+ border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -759,7 +761,7 @@ class _LandingScreenState extends State<LandingScreen>
  style: TextStyle(
  fontSize: 14,
  fontWeight: FontWeight.w600,
- color: const Color(0xFF92400E),
+ color: Colors.white.withValues(alpha: 0.88),
  ),
  ),
  ],
@@ -775,7 +777,7 @@ class _LandingScreenState extends State<LandingScreen>
  fontWeight: FontWeight.w800,
  height: 1.12,
  letterSpacing: -0.6,
- color: const Color(0xFF1A1A1A),
+ color: const Color(0xFFFFF3C0),
  ),
  ),
  const SizedBox(height: 20),
@@ -785,7 +787,7 @@ class _LandingScreenState extends State<LandingScreen>
  style: TextStyle(
  fontSize: isDesktop ? 19 : 17,
  height: 1.6,
- color: const Color(0xFF4A4A4A),
+ color: Colors.white.withValues(alpha: 0.72),
  ),
  ),
  const SizedBox(height: 24),
@@ -2070,6 +2072,92 @@ class _LandingScreenState extends State<LandingScreen>
  ),
  );
  }).toList(),
+ ),
+ ],
+ ),
+ );
+ }
+
+ // ── Section 6b: Feature Grid ──────────────────────────────────────────
+ Widget _buildFeatureGridSection(BuildContext context, bool wideLayout) {
+ const features = [
+ 'Quality Metrics', 'SSHER', 'Initiation', 'Requirements', 'Charter Development', 'Step by Step Project Delivery',
+ 'Contract Management', 'WBS Development', 'Integrated Schedule', 'Scope Tracking', 'Cost Estimation', 'Procurement',
+ 'Opportunities', 'Integrated Risk Management', 'Project Activities Log Tracker', 'Team Training', 'Scope Boundaries', 'Program and Portfolio Dashboards',
+ 'Baseline & Scope Tracking', 'Agile Ceremonies', 'Design and Engineering Hub', 'Program and Portfolio Interfaces', 'Role Based Approvals', 'Launch Readiness and Execution',
+ ];
+
+ return Container(
+ margin: EdgeInsets.symmetric(horizontal: wideLayout ? 96 : 24),
+ padding: EdgeInsets.symmetric(
+ horizontal: wideLayout ? 64 : 28, vertical: wideLayout ? 64 : 40),
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(36),
+ gradient: const LinearGradient(
+ begin: Alignment.topLeft,
+ end: Alignment.bottomRight,
+ colors: [Color(0xFF0A0E1A), Color(0xFF050810)],
+ ),
+ border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ 'Integrated Capabilities Across the Full Lifecycle',
+ style: TextStyle(
+ fontSize: wideLayout ? 28 : 22,
+ fontWeight: FontWeight.w800,
+ color: Colors.white,
+ height: 1.2,
+ ),
+ ),
+ const SizedBox(height: 8),
+ Text(
+ 'Every feature you need to govern projects from initiation through launch — all in one platform.',
+ style: TextStyle(
+ fontSize: 14,
+ color: Colors.white.withValues(alpha: 0.6),
+ height: 1.5,
+ ),
+ ),
+ const SizedBox(height: 28),
+ LayoutBuilder(
+ builder: (context, constraints) {
+ final double maxWidth = constraints.maxWidth;
+ final double spacing = 10;
+ final int columns = maxWidth >= 1000 ? 6 : (maxWidth >= 600 ? 4 : (maxWidth >= 400 ? 3 : 2));
+ final double itemWidth = (maxWidth - spacing * (columns - 1)) / columns;
+ return Wrap(
+ spacing: spacing,
+ runSpacing: spacing,
+ children: features.map((label) {
+ return Container(
+ width: itemWidth,
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+ decoration: BoxDecoration(
+ color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+ borderRadius: BorderRadius.circular(8),
+ border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.25)),
+ ),
+ child: Center(
+ child: Text(
+ label,
+ textAlign: TextAlign.center,
+ style: const TextStyle(
+ fontSize: 11,
+ fontWeight: FontWeight.w600,
+ color: Colors.white,
+ height: 1.3,
+ ),
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis,
+ ),
+ ),
+ );
+ }).toList(),
+ );
+ },
  ),
  ],
  ),

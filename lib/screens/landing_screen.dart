@@ -366,11 +366,11 @@ class _LandingScreenState extends State<LandingScreen>
  }
  },
  itemBuilder: (context) => const [
- PopupMenuItem(value: 'solution', child: Text('Platform')),
+ PopupMenuItem(value: 'solution', child: Text('Why Ndu Project?')),
  PopupMenuItem(value: 'howitworks', child: Text('How It Works')),
- PopupMenuItem(value: 'differentiators', child: Text('Why Ndu Project')),
- PopupMenuItem(value: 'benefits', child: Text('Benefits')),
- PopupMenuItem(value: 'cta', child: Text('Get Started')),
+ PopupMenuItem(value: 'differentiators', child: Text('Differentiator')),
+ PopupMenuItem(value: 'benefits', child: Text('Trusted By')),
+ PopupMenuItem(value: 'cta', child: Text('KAZ AI')),
  ],
  );
  }
@@ -433,9 +433,7 @@ class _LandingScreenState extends State<LandingScreen>
  buildLogo(),
  if (isDesktop) ...[
  const SizedBox(width: 32),
- _navButton('Platform', () => _scrollTo(_solutionKey)),
- _navButton('How It Works', _handleWorkflowTap),
- _navButton('Why Ndu Project', () => _scrollTo(_differentiatorsKey)),
+ _buildWhyNduDropdown(),
  _navButton('Benefits', () => _scrollTo(_benefitsKey)),
  _navButton('Get Started', () => _scrollTo(_ctaKey)),
  ],
@@ -541,6 +539,58 @@ class _LandingScreenState extends State<LandingScreen>
  color: Colors.white,
  ),
  ),
+ ),
+ ),
+ ),
+ );
+ }
+
+ Widget _buildWhyNduDropdown() {
+ return PopupMenuButton<String>(
+ onSelected: (value) {
+ switch (value) {
+ case 'why':
+ _scrollTo(_solutionKey);
+ break;
+ case 'how':
+ _handleWorkflowTap();
+ break;
+ case 'diff':
+ _scrollTo(_differentiatorsKey);
+ break;
+ case 'trusted':
+ _scrollTo(_benefitsKey);
+ break;
+ case 'kaz':
+ _scrollTo(_aiKey);
+ break;
+ }
+ },
+ itemBuilder: (context) => const [
+ PopupMenuItem(value: 'why', child: Text('Why Ndu Project?')),
+ PopupMenuItem(value: 'how', child: Text('How It Works')),
+ PopupMenuItem(value: 'diff', child: Text('Differentiator')),
+ PopupMenuItem(value: 'trusted', child: Text('Trusted By')),
+ PopupMenuItem(value: 'kaz', child: Text('KAZ AI')),
+ ],
+ child: Padding(
+ padding: const EdgeInsets.symmetric(horizontal: 12),
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Text(
+ 'Why Ndu Project?',
+ style: const TextStyle(
+ fontSize: 15,
+ fontWeight: FontWeight.w600,
+ color: Colors.white,
+ ),
+ ),
+ const SizedBox(width: 4),
+ const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 20),
+ ],
  ),
  ),
  ),

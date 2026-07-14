@@ -454,7 +454,7 @@ class DocumentTemplates {
       description: 'Defined project scope, boundaries, and deliverables',
       phase: DocumentPhase.initiation,
       category: DocumentCategory.governance,
-      sourceCheckpoint: 'scope_statement',
+      sourceCheckpoint: 'business_case',
       defaultReviewerRoles: ['Project Manager', 'Business Sponsor'],
     ),
     DocumentReviewTemplate(

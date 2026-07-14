@@ -5038,15 +5038,18 @@ class SolutionInfrastructureData {
 
 class CoreStakeholdersData {
   String notes;
+  String organisationContext;
   List<SolutionStakeholderData> solutionStakeholderData;
 
   CoreStakeholdersData({
     this.notes = '',
+    this.organisationContext = '',
     List<SolutionStakeholderData>? solutionStakeholderData,
   }) : solutionStakeholderData = solutionStakeholderData ?? [];
 
   Map<String, dynamic> toJson() => {
         'notes': notes,
+        'organisationContext': organisationContext,
         'solutionStakeholderData':
             solutionStakeholderData.map((s) => s.toJson()).toList(),
       };
@@ -5054,6 +5057,7 @@ class CoreStakeholdersData {
   factory CoreStakeholdersData.fromJson(Map<String, dynamic> json) {
     return CoreStakeholdersData(
       notes: json['notes'] ?? '',
+      organisationContext: json['organisationContext'] ?? '',
       solutionStakeholderData: (json['solutionStakeholderData'] as List?)
               ?.map((s) => SolutionStakeholderData.fromJson(s))
               .toList() ??

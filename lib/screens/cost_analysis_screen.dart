@@ -43,6 +43,7 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
+import 'package:ndu_project/widgets/expandable_text.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 class CostAnalysisScreen extends StatefulWidget {
@@ -1398,11 +1399,11 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  if (currentProjectValue <= 0 || initialCost <= 0) {
  return 0;
  }
- // ROI = (annual benefit - annualized cost) / annualized cost × 100
- // Annualized cost = initialCost / horizon (spread over project lifetime)
- final annualizedCost = initialCost / _npvHorizon;
- if (annualizedCost <= 0) return 0;
- return ((currentProjectValue - annualizedCost) / annualizedCost) * 100;
+ // ROI = (annual benefit - initial cost) / initial cost × 100
+ // Simple first-year ROI: how much of the initial investment is recovered
+ // in the first year of benefits. This avoids the inflation caused by
+ // spreading a one-time cost over the horizon while benefits are annualized.
+ return ((currentProjectValue - initialCost) / initialCost) * 100;
  }
 
  double _solutionNpv({
@@ -1412,6 +1413,8 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  if (annualProjectValue <= 0 || initialCost <= 0 || _npvHorizon <= 0) {
  return 0;
  }
+ // Cashflows: Year 0 = -initialCost (one-time outflow),
+ // Years 1..horizon = +annualProjectValue (annual benefit, already annualized)
  final cashflows = <double>[-initialCost];
  for (int year = 1; year <= _npvHorizon; year++) {
  cashflows.add(annualProjectValue);
@@ -1426,15 +1429,16 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  if (currentProjectValue <= 0 || initialCost <= 0 || _npvHorizon <= 0) {
  return 0;
  }
- // IRR uses annual benefit vs one-time initial cost over the horizon
- // ratio = total benefits over horizon / initial cost
- final totalBenefits = currentProjectValue * _npvHorizon;
- final ratio = totalBenefits / initialCost;
- if (!ratio.isFinite || ratio <= 0) {
- return 0;
+ // IRR computed from the same cashflow list as NPV using Newton-Raphson.
+ // Year 0 = -initialCost, Years 1..horizon = +currentProjectValue (annual).
+ final cashflows = <double>[-initialCost];
+ for (int year = 1; year <= _npvHorizon; year++) {
+ cashflows.add(currentProjectValue);
  }
- final irr = (math.pow(ratio, 1 / _npvHorizon).toDouble() - 1) * 100;
- return irr.isFinite ? irr : 0;
+ final irr = Finance.irr(cashflows);
+ if (irr.isNaN || !irr.isFinite) return 0;
+ // Convert to percentage
+ return irr * 100;
  }
 
  @override
@@ -2001,21 +2005,23 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  child: ConstrainedBox(
  constraints: BoxConstraints(minHeight: constraints.maxHeight),
  child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
+ crossAxisAlignment: CrossAxisAlignment.center,
  children: [
  Padding(
  padding: EdgeInsets.fromLTRB(horizontalPadding,
  horizontalPadding, horizontalPadding, 0),
  child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
+ crossAxisAlignment: CrossAxisAlignment.center,
  children: [
- const EditableContentText(
+ const Center(
+ child: EditableContentText(
  contentKey: 'cost_analysis_heading',
  fallback:
  'Cost Benefit Analysis & Financial Metrics',
  category: 'business_case',
  style: TextStyle(
  fontSize: 22, fontWeight: FontWeight.bold)),
+ ),
  const SizedBox(height: 6),
  Row(
  crossAxisAlignment: CrossAxisAlignment.end,
@@ -2046,7 +2052,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  ],
  ),
  const SizedBox(height: 20),
- _buildStepProgressIndicator(),
+ Center(child: _buildStepProgressIndicator()),
  ],
  ),
  ),
@@ -5284,14 +5290,14 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  Expanded(
  flex: 3,
  child: Center(
- child: Text(
- row.itemController.text.trim().isEmpty ||
+ child: ExpandableText(
+ text: row.itemController.text.trim().isEmpty ||
  row.itemController.text.trim().toLowerCase() == 'name'
  ? 'Cost item'
  : row.itemController.text.trim(),
  style: const TextStyle(fontSize: 12, color: Colors.black87),
  maxLines: 2,
- overflow: TextOverflow.ellipsis,
+ expandButtonColor: const Color(0xFF0D6EFD),
  ),
  ),
  ),
@@ -5311,15 +5317,15 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  Expanded(
  flex: 4,
  child: Center(
- child: Text(
- row.assumptionsController.text.trim().isEmpty
+ child: ExpandableText(
+ text: row.assumptionsController.text.trim().isEmpty
  ? (row.descriptionController.text.trim().isEmpty
  ? 'No comments'
  : row.descriptionController.text.trim())
  : row.assumptionsController.text.trim(),
  style: const TextStyle(fontSize: 12),
  maxLines: 2,
- overflow: TextOverflow.ellipsis,
+ expandButtonColor: const Color(0xFF0D6EFD),
  ),
  ),
  ),
@@ -6955,6 +6961,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  onChanged: (value) {
  setState(() {
  contextData.resourceIndex = value;
+ contextData.autoGenerated = false;
  _refreshJustificationFor(index);
  });
  _markDirty();
@@ -6967,6 +6974,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  onChanged: (value) {
  setState(() {
  contextData.timelineIndex = value;
+ contextData.autoGenerated = false;
  _refreshJustificationFor(index);
  });
  _markDirty();
@@ -6979,6 +6987,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  onChanged: (value) {
  setState(() {
  contextData.complexityIndex = value;
+ contextData.autoGenerated = false;
  _refreshJustificationFor(index);
  });
  _markDirty();
@@ -8787,6 +8796,54 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  intValue == 1000000;
  }
 
+ /// Derive resource (FTE band) and complexity indices from AI-generated cost items.
+ /// Instead of defaulting all solutions to "Lean squad / 3-5 FTEs" and "Foundational"
+ /// complexity, we infer both from the total cost magnitude and the number of
+ /// distinct cost items returned by the AI.
+ void _deriveAssumptionsFromCostItems(int index, List<AiCostItem> items) {
+   if (index < 0 || items.isEmpty) return;
+   final context = _contextFor(index);
+
+   // ── Total cost magnitude ──
+   double totalCost = 0;
+   for (final item in items) {
+     totalCost += item.estimatedCost;
+   }
+
+   // ── Derive resource (FTE band) index ──
+   // _resourceOptions: 0=Lean squad (3-5), 1=Core programme (6-10), 2=Enterprise (10+)
+   // Use total cost + item count as a proxy for team size
+   int newResourceIndex;
+   if (totalCost <= 0) {
+     newResourceIndex = 0; // unknown → lean
+   } else if (totalCost < 50000) {
+     newResourceIndex = 0; // < $50k → lean squad (3-5 FTEs)
+   } else if (totalCost < 250000) {
+     newResourceIndex = 1; // $50k–$250k → core programme team (6-10 FTEs)
+   } else {
+     newResourceIndex = 2; // > $250k → enterprise delivery (10+ FTEs)
+   }
+
+   // ── Derive complexity index ──
+   // _complexityOptions: 0=Foundational, 1=Moderate, 2=High
+   // Use item count + cost as proxies: more line items / higher cost → more complex
+   final itemCount = items.length;
+   int newComplexityIndex;
+   if (itemCount <= 3 && totalCost < 100000) {
+     newComplexityIndex = 0; // Foundational
+   } else if (itemCount <= 7 && totalCost < 500000) {
+     newComplexityIndex = 1; // Moderate
+   } else {
+     newComplexityIndex = 2; // High
+   }
+
+   // Only update if the user hasn't manually overridden (autoGenerated flag)
+   if (context.autoGenerated) {
+     context.resourceIndex = newResourceIndex;
+     context.complexityIndex = newComplexityIndex;
+   }
+ }
+
  Future<void> _generateCostBreakdownForSolution(
  int index, {
  bool showFeedback = true,
@@ -8815,6 +8872,10 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  _applyCostItemsToRows(index, items);
  // Also roll up into Project Value categories and surface ideas
  _applyCategoryEstimatesFromItems(index, items);
+ // Derive resource (FTE band) + complexity per solution from cost items
+ // so each solution card shows a customized snapshot instead of all
+ // defaulting to "Lean squad / Foundational"
+ _deriveAssumptionsFromCostItems(index, items);
  _costBreakdownContextHashesBySolution[index] =
  _costBreakdownContextHashForSolution(index);
  _solutionLoading.remove(index);

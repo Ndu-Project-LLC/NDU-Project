@@ -66,6 +66,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
  final ScrollController _reviewScrollController = ScrollController();
  late final TextEditingController _notesController;
+ late final TextEditingController _organisationContextController;
  late List<TextEditingController>
  _internalStakeholderControllers; // Made mutable for dynamic addition
  late List<TextEditingController>
@@ -141,6 +142,14 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  // We'll hydrate from provider in didChangeDependencies.
  _notesController = RichTextEditingController(text: widget.notes);
  // Notes = prose; no auto-bullet
+ _organisationContextController = TextEditingController();
+ // Auto-save when organisation context changes (debounced via post-frame)
+ _organisationContextController.addListener(() {
+   if (!_didInitFromProvider) return;
+   WidgetsBinding.instance.addPostFrameCallback((_) {
+     if (mounted) _saveCoreStakeholdersData();
+   });
+ });
 
  _solutions = List.from(widget.solutions); // Create mutable copy
  // Initialize with at least one empty item if solutions list is empty
@@ -199,6 +208,11 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  if (existingNotes != null && existingNotes.trim().isNotEmpty) {
  _notesController.text = existingNotes;
  }
+ final existingOrgContext =
+ provider?.projectData.coreStakeholdersData?.organisationContext;
+ if (existingOrgContext != null && existingOrgContext.trim().isNotEmpty) {
+ _organisationContextController.text = existingOrgContext;
+ }
  }
 
  void _addNewItem() {
@@ -225,6 +239,11 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  // Load notes
  if (stakeholdersData.notes.isNotEmpty) {
  _notesController.text = stakeholdersData.notes;
+ }
+
+ // Load organisation context
+ if (stakeholdersData.organisationContext.isNotEmpty) {
+ _organisationContextController.text = stakeholdersData.organisationContext;
  }
 
  // Load stakeholder data for each solution
@@ -861,6 +880,88 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
 
  const SizedBox(height: 20),
 
+ // Organisation Context Section — describes the organisation so AI can
+ // suggest internal stakeholder teams/groups that influence or are
+ // influenced by the project.
+ Container(
+ width: double.infinity,
+ padding: const EdgeInsets.all(20),
+ decoration: BoxDecoration(
+ color: const Color(0xFFEFF6FF),
+ borderRadius: BorderRadius.circular(8),
+ border: Border.all(color: const Color(0xFFBFDBFE)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ const Icon(Icons.business_outlined,
+ size: 20, color: Color(0xFF1D4ED8)),
+ const SizedBox(width: 8),
+ const Text(
+ 'Organisation Context',
+ style: TextStyle(
+ fontSize: 16,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF1E3A8A),
+ ),
+ ),
+ const Spacer(),
+ TextButton.icon(
+ onPressed: () {
+ _organisationContextController.clear();
+ },
+ icon: const Icon(Icons.clear, size: 16),
+ label: const Text('Clear',
+ style: TextStyle(fontSize: 12)),
+ style: TextButton.styleFrom(
+ foregroundColor: const Color(0xFF1D4ED8),
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 8),
+ const Text(
+ 'Describe your organisation — its structure, departments, teams, and any groups that would influence this project or be influenced by it. '
+ 'The AI uses this context to suggest relevant internal stakeholders for each solution.',
+ style: TextStyle(
+ fontSize: 13,
+ color: Color(0xFF1E40AF),
+ height: 1.5,
+ ),
+ ),
+ const SizedBox(height: 12),
+ Container(
+ width: double.infinity,
+ constraints: const BoxConstraints(minHeight: 100),
+ padding: const EdgeInsets.all(14),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(6),
+ border: Border.all(color: const Color(0xFFBFDBFE)),
+ ),
+ child: VoiceTextField(
+ controller: _organisationContextController,
+ keyboardType: TextInputType.multiline,
+ style: const TextStyle(
+ fontSize: 14, color: Color(0xFF1F2937), height: 1.5),
+ decoration: InputDecoration(
+ hintText: 'e.g. "Our organisation has a Finance team, IT department, Operations team, and HR. '
+ 'The project will impact the IT department (system changes) and Operations (workflow changes). '
+ 'The Finance team controls the budget and HR manages change adoption..."',
+ hintStyle: TextStyle(color: Colors.grey[400], fontSize: 12),
+ border: InputBorder.none,
+ contentPadding: EdgeInsets.zero),
+ minLines: 4,
+ maxLines: null,
+ ),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(height: 16),
+
  // Notes Section
  Container(
  width: double.infinity,
@@ -1173,6 +1274,13 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  contextNotes +=
  '\nDescription: ${projectData.solutionDescription.trim()}';
  }
+ }
+
+ // Append organisation context so AI can suggest internal stakeholder
+ // teams/groups that influence or are influenced by the project.
+ final orgContext = _organisationContextController.text.trim();
+ if (orgContext.isNotEmpty) {
+ contextNotes += '\n\nOrganisation Context:\n$orgContext';
  }
 
  final generated = await _openAi.generateStakeholdersForSolutions(
@@ -1554,6 +1662,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
 
  final coreStakeholdersData = CoreStakeholdersData(
  notes: _notesController.text,
+ organisationContext: _organisationContextController.text,
  solutionStakeholderData: solutionStakeholderData,
  );
 
@@ -1811,7 +1920,14 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
 
  final solution = _solutions[index];
  final solutionsToUse = [solution];
- final contextNotes = _notesController.text.trim();
+ var contextNotes = _notesController.text.trim();
+
+ // Append organisation context so AI can suggest relevant internal
+ // stakeholder teams/groups based on the organisation description.
+ final orgContext = _organisationContextController.text.trim();
+ if (orgContext.isNotEmpty) {
+ contextNotes += '\n\nOrganisation Context:\n$orgContext';
+ }
 
  final result = await _openAi.generateStakeholdersForSolutions(
  solutionsToUse,
@@ -1919,6 +2035,13 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  }
  }
 
+ // Append organisation context so AI can suggest internal stakeholder
+ // teams/groups that influence or are influenced by the project.
+ final orgContext = _organisationContextController.text.trim();
+ if (orgContext.isNotEmpty) {
+ contextNotes += '\n\nOrganisation Context:\n$orgContext';
+ }
+
  final result = await _openAi.generateStakeholdersForSolutions(
  solutionsToUse,
  contextNotes: contextNotes,
@@ -1982,6 +2105,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  void dispose() {
  _reviewScrollController.dispose();
  _notesController.dispose();
+ _organisationContextController.dispose();
  for (final c in _internalStakeholderControllers) {
  c.dispose();
  }

@@ -72,7 +72,7 @@ class _DeliverProjectClosureScreenState
  final bool isMobile = MediaQuery.sizeOf(context).width < 980;
 
  return ResponsiveScaffold(
- activeItemLabel: 'Deliver Project',
+ activeItemLabel: '1. Launch Readiness Assessment',
  backgroundColor: Colors.white,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
@@ -85,7 +85,7 @@ class _DeliverProjectClosureScreenState
  children: [
  if (_isLoading) const LinearProgressIndicator(minHeight: 2),
  PlanningPhaseHeader(
- title: 'Deliver Project',
+ title: 'Launch Readiness Assessment',
 showNavigationButtons: false,
  showActivityLogAction: false,
  onExportPdf: _exportPdf),
@@ -105,7 +105,7 @@ showNavigationButtons: false,
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
  backLabel: 'Back: Salvage and/or Disposal Plan',
- nextLabel: 'Next: Transition To Production Team',
+ nextLabel: 'Next: Deployment Transfer, Certification & Release',
  onBack: () => Navigator.of(context).maybePop(),
  onNext: () => TransitionToProdTeamScreen.open(context),
  ),

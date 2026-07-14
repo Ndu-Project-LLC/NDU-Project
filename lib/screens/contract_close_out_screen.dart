@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/models/launch_phase_models.dart';
+import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
+import 'package:ndu_project/screens/fat_mechanical_completion_screen.dart';
 import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
 import 'package:ndu_project/screens/vendor_account_close_out_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
@@ -63,7 +65,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
  final bool isMobile = MediaQuery.sizeOf(context).width < 980;
 
  return ResponsiveScaffold(
- activeItemLabel: 'Contract Close Out',
+ activeItemLabel: '4. Vendor & Contract Closeout',
  backgroundColor: Colors.white,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
@@ -76,7 +78,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
  children: [
  if (_isLoading) const LinearProgressIndicator(minHeight: 2),
  PlanningPhaseHeader(
- title: 'Contract Close Out',
+ title: 'Vendor & Contract Closeout',
 showNavigationButtons: false,
  showActivityLogAction: false,
  onExportPdf: _exportPdf),
@@ -97,10 +99,10 @@ showNavigationButtons: false,
  _buildSignOffsPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Transition To Production Team',
- nextLabel: 'Next: Vendor Account Close Out',
- onBack: () => TransitionToProdTeamScreen.open(context),
- onNext: () => VendorAccountCloseOutScreen.open(context),
+ backLabel: 'Back: FAT, Mechanical Completion & Commission Solution',
+ nextLabel: 'Next: Scope & Deliverable Reconciliation',
+ onBack: () => FatMechanicalCompletionScreen.open(context),
+ onNext: () => ActualVsPlannedGapAnalysisScreen.open(context),
  ),
  const SizedBox(height: 48),
  ],

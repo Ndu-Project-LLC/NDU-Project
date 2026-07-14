@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import 'package:ndu_project/models/launch_phase_models.dart';
 import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
+import 'package:ndu_project/screens/financial_closeout_screen.dart';
 import 'package:ndu_project/screens/summarize_account_risks_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
@@ -64,7 +65,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
  final bool isMobile = MediaQuery.sizeOf(context).width < 980;
 
  return ResponsiveScaffold(
- activeItemLabel: 'Warranties & Operations Support',
+ activeItemLabel: '6. Hypercare & Warranty Support',
  backgroundColor: Colors.white,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
@@ -77,7 +78,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
  children: [
  if (_isLoading) const LinearProgressIndicator(minHeight: 2),
  PlanningPhaseHeader(
- title: 'Warranties & Operations Support',
+ title: 'Hypercare & Warranty Support',
 showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 20),
  _buildMetricsRow(),
@@ -93,10 +94,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildRecommendationsPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Project Summary',
- nextLabel: 'Next: Actual vs Planned Gap Analysis',
- onBack: () => SummarizeAccountRisksScreen.open(context),
- onNext: () => ActualVsPlannedGapAnalysisScreen.open(context),
+ backLabel: 'Back: Scope & Deliverable Reconciliation',
+ nextLabel: 'Next: Financial Closeout',
+ onBack: () => ActualVsPlannedGapAnalysisScreen.open(context),
+ onNext: () => FinancialCloseoutScreen.open(context),
  ),
  const SizedBox(height: 48),
  ],

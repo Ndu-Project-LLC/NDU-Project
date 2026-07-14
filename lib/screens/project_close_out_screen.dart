@@ -25,7 +25,7 @@ class ProjectCloseOutScreen extends StatefulWidget {
  const ProjectCloseOutScreen({
  super.key,
  this.summarized = false,
- this.activeItemLabel = 'Project Close Out',
+ this.activeItemLabel = '11. Project Closeout',
  });
 
  final bool summarized;
@@ -34,7 +34,7 @@ class ProjectCloseOutScreen extends StatefulWidget {
  static void open(
  BuildContext context, {
  bool summarized = false,
- String activeItemLabel = 'Project Close Out',
+ String activeItemLabel = '11. Project Closeout',
  }) {
  Navigator.of(context).push(
  MaterialPageRoute(
@@ -92,7 +92,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
  children: [
  if (_isLoading) const LinearProgressIndicator(minHeight: 2),
  PlanningPhaseHeader(
- title: 'Project Close Out',
+ title: 'Project Closeout',
 showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 16),
  Row(
@@ -649,10 +649,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildNavigation() {
  return LaunchPhaseNavigation(
- backLabel: 'Back: Actual vs Planned Gap Analysis',
- nextLabel: 'Next: Demobilize Team',
- onBack: () => ActualVsPlannedGapAnalysisScreen.open(context),
- onNext: () => DemobilizeTeamScreen.open(context),
+ backLabel: 'Back: Team Demobilization & Operations/Production Transition',
+ nextLabel: 'Finalize & Close Project',
+ onBack: () => DemobilizeTeamScreen.open(context),
+ onNext: () {
+ Navigator.of(context).maybePop();
+ },
  );
  }
 

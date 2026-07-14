@@ -90,6 +90,7 @@ import 'package:ndu_project/screens/design_phase_screen.dart';
 import 'package:ndu_project/screens/deliverables_roadmap_screen.dart';
 import 'package:ndu_project/screens/deliver_project_closure_screen.dart';
 import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
+import 'package:ndu_project/screens/fat_mechanical_completion_screen.dart';
 import 'package:ndu_project/screens/contract_close_out_screen.dart';
 import 'package:ndu_project/screens/vendor_account_close_out_screen.dart';
 import 'package:ndu_project/screens/ui_ux_design_screen.dart';
@@ -101,6 +102,8 @@ import 'package:ndu_project/screens/tools_integration_screen.dart';
 import 'package:ndu_project/screens/project_close_out_screen.dart';
 import 'package:ndu_project/screens/demobilize_team_screen.dart';
 import 'package:ndu_project/screens/summarize_account_risks_screen.dart';
+import 'package:ndu_project/screens/financial_closeout_screen.dart';
+import 'package:ndu_project/screens/benefits_realization_screen.dart';
 import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
 import 'package:ndu_project/screens/engineering_design_screen.dart';
 import 'package:ndu_project/screens/scope_completion_screen.dart';
@@ -251,6 +254,9 @@ class AppRoutes {
   static const updateOpsMaintenancePlans = 'update-ops-maintenance-plans';
   static const projectCloseOut = 'project-close-out';
   static const demobilizeTeam = 'demobilize-team';
+  static const fatMechanicalCompletion = 'fat-mechanical-completion';
+  static const financialCloseout = 'financial-closeout';
+  static const benefitsRealization = 'benefits-realization';
   static const technicalDevelopment = 'technical-development';
   static const toolsIntegration = 'tools-integration';
   static const summarizeAccountRisks = 'summarize-account-risks';
@@ -777,6 +783,18 @@ class AppRouter {
           name: AppRoutes.demobilizeTeam,
           path: '/${AppRoutes.demobilizeTeam}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const DemobilizeTeamScreen())),
+      GoRoute(
+          name: AppRoutes.fatMechanicalCompletion,
+          path: '/${AppRoutes.fatMechanicalCompletion}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const FatMechanicalCompletionScreen())),
+      GoRoute(
+          name: AppRoutes.financialCloseout,
+          path: '/${AppRoutes.financialCloseout}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const FinancialCloseoutScreen())),
+      GoRoute(
+          name: AppRoutes.benefitsRealization,
+          path: '/${AppRoutes.benefitsRealization}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const BenefitsRealizationScreen())),
       GoRoute(
           name: AppRoutes.technicalDevelopment,
           path: '/${AppRoutes.technicalDevelopment}',

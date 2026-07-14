@@ -33,7 +33,7 @@ class SidebarNavigationService {
     _PhaseRange(
       label: 'Launch Phase',
       startCheckpoint: 'deliver_project_closure',
-      endCheckpoint: 'demobilize_team',
+      endCheckpoint: 'project_close_out',
     ),
   ];
 
@@ -325,26 +325,40 @@ class SidebarNavigationService {
         checkpoint: 'salvage_disposal_team',
         label: 'Salvage and/or Disposal Plan'),
 
-    // Launch Phase
+    // Launch Phase (11 sections per Launch Phase spec)
     SidebarItem(
-        checkpoint: 'deliver_project_closure', label: 'Deliver Project'),
+        checkpoint: 'deliver_project_closure',
+        label: '1. Launch Readiness Assessment'),
     SidebarItem(
         checkpoint: 'transition_to_prod_team',
-        label: 'Transition To Production Team'),
-    SidebarItem(checkpoint: 'contract_close_out', label: 'Contract Close Out'),
+        label: '2. Deployment Transfer, Certification & Release'),
     SidebarItem(
-        checkpoint: 'vendor_account_close_out',
-        label: 'Vendor Account Close Out'),
+        checkpoint: 'fat_mechanical_completion',
+        label: '3. FAT, Mechanical Completion & Commission Solution'),
     SidebarItem(
-        checkpoint: 'summarize_account_risks', label: 'Project Summary'),
-    SidebarItem(
-        checkpoint: 'commerce_viability',
-        label: 'Warranties & Operations Support'),
+        checkpoint: 'contract_close_out',
+        label: '4. Vendor & Contract Closeout'),
     SidebarItem(
         checkpoint: 'actual_vs_planned_gap_analysis',
-        label: 'Actual vs Planned Gap Analysis'),
-    SidebarItem(checkpoint: 'project_close_out', label: 'Project Close Out'),
-    SidebarItem(checkpoint: 'demobilize_team', label: 'Demobilize Team'),
+        label: '5. Scope & Deliverable Reconciliation'),
+    SidebarItem(
+        checkpoint: 'commerce_viability',
+        label: '6. Hypercare & Warranty Support'),
+    SidebarItem(
+        checkpoint: 'financial_closeout',
+        label: '7. Financial Closeout'),
+    SidebarItem(
+        checkpoint: 'summarize_account_risks',
+        label: '8. Project Performance Review'),
+    SidebarItem(
+        checkpoint: 'benefits_realization',
+        label: '9. Benefits Realization'),
+    SidebarItem(
+        checkpoint: 'demobilize_team',
+        label: '10. Team Demobilization & Operations/Production Transition'),
+    SidebarItem(
+        checkpoint: 'project_close_out',
+        label: '11. Project Closeout'),
   ];
 
   /// Ordered, read-only sidebar catalog for admin surfaces that need to mirror

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:ndu_project/models/launch_phase_models.dart';
 import 'package:ndu_project/screens/commerce_viability_screen.dart';
+import 'package:ndu_project/screens/contract_close_out_screen.dart';
 import 'package:ndu_project/screens/project_close_out_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
@@ -65,7 +66,7 @@ class _ActualVsPlannedGapAnalysisScreenState
  final bool isMobile = MediaQuery.sizeOf(context).width < 980;
 
  return ResponsiveScaffold(
- activeItemLabel: 'Actual vs Planned Gap Analysis',
+ activeItemLabel: '5. Scope & Deliverable Reconciliation',
  backgroundColor: Colors.white,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
@@ -78,7 +79,7 @@ class _ActualVsPlannedGapAnalysisScreenState
  children: [
  if (_isLoading) const LinearProgressIndicator(minHeight: 2),
  PlanningPhaseHeader(
- title: 'Actual vs Planned Gap Analysis',
+ title: 'Scope & Deliverable Reconciliation',
 showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 16),
  _buildMetricsRow(),
@@ -94,10 +95,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildFollowUpPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Warranties & Operations Support',
- nextLabel: 'Next: Project Close Out',
- onBack: () => CommerceViabilityScreen.open(context),
- onNext: () => ProjectCloseOutScreen.open(context),
+ backLabel: 'Back: Vendor & Contract Closeout',
+ nextLabel: 'Next: Hypercare & Warranty Support',
+ onBack: () => ContractCloseOutScreen.open(context),
+ onNext: () => CommerceViabilityScreen.open(context),
  ),
  const SizedBox(height: 48),
  ],

@@ -11,6 +11,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:ndu_project/models/launch_phase_models.dart';
 import 'package:ndu_project/screens/contract_close_out_screen.dart';
 import 'package:ndu_project/screens/deliver_project_closure_screen.dart';
+import 'package:ndu_project/screens/fat_mechanical_completion_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
@@ -63,7 +64,7 @@ class _TransitionToProdTeamScreenState extends State<TransitionToProdTeamScreen>
  final bool isMobile = MediaQuery.sizeOf(context).width < 980;
 
  return ResponsiveScaffold(
- activeItemLabel: 'Transition To Production Team',
+ activeItemLabel: '2. Deployment Transfer, Certification & Release',
  backgroundColor: Colors.white,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
@@ -76,7 +77,7 @@ class _TransitionToProdTeamScreenState extends State<TransitionToProdTeamScreen>
  children: [
  if (_isLoading) const LinearProgressIndicator(minHeight: 2),
  PlanningPhaseHeader(
- title: 'Transition to Production Team',
+ title: 'Deployment Transfer, Certification & Release',
 showNavigationButtons: false,
  showActivityLogAction: false,
  onExportPdf: _exportPdf,
@@ -100,10 +101,10 @@ showNavigationButtons: false,
  _buildSignOffsPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Deliver Project',
- nextLabel: 'Next: Contract Close Out',
+ backLabel: 'Back: Launch Readiness Assessment',
+ nextLabel: 'Next: FAT, Mechanical Completion & Commission Solution',
  onBack: () => DeliverProjectClosureScreen.open(context),
- onNext: () => ContractCloseOutScreen.open(context),
+ onNext: () => FatMechanicalCompletionScreen.open(context),
  ),
  const SizedBox(height: 48),
  ],

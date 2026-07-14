@@ -7,8 +7,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/commerce_viability_screen.dart';
-import 'package:ndu_project/screens/vendor_account_close_out_screen.dart';
+import 'package:ndu_project/screens/benefits_realization_screen.dart';
+import 'package:ndu_project/screens/financial_closeout_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -64,7 +64,7 @@ class _SummarizeAccountRisksScreenState
  final bool isMobile = MediaQuery.sizeOf(context).width < 980;
 
  return ResponsiveScaffold(
- activeItemLabel: 'Project Summary',
+ activeItemLabel: '8. Project Performance Review',
  backgroundColor: Colors.white,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SingleChildScrollView(
@@ -77,7 +77,7 @@ class _SummarizeAccountRisksScreenState
  children: [
  if (_isLoading) const LinearProgressIndicator(minHeight: 2),
  PlanningPhaseHeader(
- title: 'Project Summary',
+ title: 'Project Performance Review',
 showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 20),
  _buildExecutiveSummaryPanel(),
@@ -89,10 +89,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildNext90DaysPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Vendor Account Close Out',
- nextLabel: 'Next: Warranties & Operations Support',
- onBack: () => VendorAccountCloseOutScreen.open(context),
- onNext: () => CommerceViabilityScreen.open(context),
+ backLabel: 'Back: Financial Closeout',
+ nextLabel: 'Next: Benefits Realization',
+ onBack: () => FinancialCloseoutScreen.open(context),
+ onNext: () => BenefitsRealizationScreen.open(context),
  ),
  const SizedBox(height: 48),
  ],

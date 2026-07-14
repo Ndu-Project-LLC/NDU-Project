@@ -4,8 +4,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/models/launch_phase_models.dart';
-import 'package:ndu_project/screens/project_close_out_screen.dart';
+import 'package:ndu_project/screens/benefits_realization_screen.dart';
 import 'package:ndu_project/screens/finalize_project_screen.dart';
+import 'package:ndu_project/screens/project_close_out_screen.dart';
 import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
@@ -65,7 +66,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
  final bool isMobile = MediaQuery.sizeOf(context).width < 980;
 
  return ResponsiveScaffold(
- activeItemLabel: 'Demobilize Team',
+ activeItemLabel: '10. Team Demobilization & Operations/Production Transition',
  backgroundColor: Colors.white,
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
@@ -81,7 +82,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
  children: [
  if (_isLoading) const LinearProgressIndicator(minHeight: 2),
  PlanningPhaseHeader(
- title: 'Demobilize Team',
+ title: 'Team Demobilization & Operations/Production Transition',
 showNavigationButtons: false, showExportPdf: false, showAiAssist: false),
  const SizedBox(height: 16),
  _buildMetricsRow(),
@@ -116,10 +117,10 @@ showNavigationButtons: false, showExportPdf: false, showAiAssist: false),
  ),
  ),
  child: LaunchPhaseNavigation(
- backLabel: 'Back: Project Close Out',
- nextLabel: 'Finalize & Close Project',
- onBack: () => ProjectCloseOutScreen.open(context),
- onNext: () => FinalizeProjectScreen.open(context),
+ backLabel: 'Back: Benefits Realization',
+ nextLabel: 'Next: Project Closeout',
+ onBack: () => BenefitsRealizationScreen.open(context),
+ onNext: () => ProjectCloseOutScreen.open(context),
  ),
  ),
  ],

@@ -116,6 +116,10 @@ import 'package:ndu_project/screens/benefits_realization_screen.dart';
 import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
 import 'package:ndu_project/screens/agile_project_hub_screen.dart';
 import 'package:ndu_project/screens/agile_roadmap_screen.dart';
+import 'package:ndu_project/screens/project_team_activities_screen.dart';
+import 'package:ndu_project/screens/recognition_awards_screen.dart';
+import 'package:ndu_project/screens/team_status_check_screen.dart';
+import 'package:ndu_project/screens/team_handover_screen.dart';
 import 'package:ndu_project/screens/scope_completion_screen.dart';
 import 'package:ndu_project/screens/requirements_implementation_screen.dart';
 import 'package:ndu_project/screens/backend_design_screen.dart';
@@ -298,6 +302,21 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Technical Debt Management',
   };
 
+  static const Set<String> _projectTeamLabels = {
+    'Project Team Activities',
+    'Project Team Activities - Mobilize Team',
+    'Project Team Activities - Team Meetings',
+    'Project Team Activities - Training & Team Building',
+    'Project Team Activities - Recognition & Awards',
+    'Project Team Activities - Team Status Check',
+    'Project Team Activities - Team Handover',
+    'Project Team Activities - Lessons Learned',
+    'Staff Team',
+    'Team Meetings',
+    'Team Training and Team Building',
+    'Lessons Learned',
+  };
+
   static const Set<String> _projectFinancialReviewLabels = {
     'Project Financial Review',
     'Actual vs Planned Gap Analysis',
@@ -382,6 +401,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   static bool? _sharedOrganizationPlanExpanded;
   static bool? _sharedProjectPlanExpanded;
   static bool? _sharedPunchlistExpanded;
+  static bool? _sharedProjectTeamExpanded;
   static bool? _sharedCostEstimateExpanded;
   static bool? _sharedProjectServicesExpanded;
   static bool? _sharedAgileWireframeExpanded;
@@ -409,6 +429,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       _sharedOrganizationPlanExpanded ?? false;
   late bool _projectPlanExpanded = _sharedProjectPlanExpanded ?? false;
   late bool _punchlistExpanded = _sharedPunchlistExpanded ?? false;
+  late bool _projectTeamExpanded = _sharedProjectTeamExpanded ?? false;
   late bool _costEstimateExpanded = _sharedCostEstimateExpanded ?? false;
   late bool _projectServicesExpanded = _sharedProjectServicesExpanded ?? false;
   late bool _agileWireframeExpanded = _sharedAgileWireframeExpanded ?? false;
@@ -505,6 +526,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     expandIf(_punchlistLabels, _punchlistExpanded, () {
       _punchlistExpanded = true;
       _sharedPunchlistExpanded = true;
+    });
+    expandIf(_projectTeamLabels, _projectTeamExpanded, () {
+      _projectTeamExpanded = true;
+      _sharedProjectTeamExpanded = true;
     });
     expandIf(_launchPhaseLabels, _launchPhaseExpanded, () {
       _launchPhaseExpanded = true;
@@ -1225,6 +1250,22 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   void _openStaffTeam() {
     _navigateWithCheckpoint('staff_team', const StaffTeamScreen());
+  }
+
+  void _openProjectTeamActivities() {
+    _navigateWithCheckpoint('staff_team', const ProjectTeamActivitiesScreen());
+  }
+
+  void _openRecognitionAwards() {
+    _navigateWithCheckpoint('staff_team', const RecognitionAwardsScreen());
+  }
+
+  void _openTeamStatusCheck() {
+    _navigateWithCheckpoint('staff_team', const TeamStatusCheckScreen());
+  }
+
+  void _openTeamHandover() {
+    _navigateWithCheckpoint('staff_team', const TeamHandoverScreen());
   }
 
   void _openTeamMeetings() {
@@ -2614,15 +2655,66 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         isActive: _activeIn(_executionPhaseLabels),
       ),
       if (_executionPhaseExpanded) ...[
-        _buildSubMenuItem(
-          'Staff Team',
-          onTap: lockStaffTeam ? null : _openStaffTeam,
-          isActive: widget.activeItemLabel == 'Staff Team',
+        _buildSubExpandableHeader(
+          'Project Team Activities',
+          expanded: _projectTeamExpanded,
+          onTap: () => setState(() {
+            _projectTeamExpanded = !_projectTeamExpanded;
+            _sharedProjectTeamExpanded = _projectTeamExpanded;
+          }),
+          isActive: _activeIn(_projectTeamLabels),
           isDisabled: lockStaffTeam,
         ),
-        _buildSubMenuItem('Team Meetings',
+        if (_projectTeamExpanded) ...[
+          _buildSubSubMenuItem(
+            'Mobilize Team',
+            onTap: lockStaffTeam ? null : _openStaffTeam,
+            isActive: widget.activeItemLabel == 'Staff Team' ||
+                widget.activeItemLabel ==
+                    'Project Team Activities - Mobilize Team',
+          ),
+          _buildSubSubMenuItem(
+            'Team Meetings',
             onTap: _openTeamMeetings,
-            isActive: widget.activeItemLabel == 'Team Meetings'),
+            isActive: widget.activeItemLabel == 'Team Meetings' ||
+                widget.activeItemLabel ==
+                    'Project Team Activities - Team Meetings',
+          ),
+          _buildSubSubMenuItem(
+            'Training & Team Building',
+            onTap: () {
+              _navigateWithCheckpoint(
+                  'team_training', const TeamTrainingAndBuildingScreen());
+            },
+            isActive: widget.activeItemLabel ==
+                'Team Training and Team Building',
+          ),
+          _buildSubSubMenuItem(
+            'Recognition & Awards',
+            onTap: _openRecognitionAwards,
+            isActive: widget.activeItemLabel ==
+                'Project Team Activities - Recognition & Awards',
+          ),
+          _buildSubSubMenuItem(
+            'Team Status Check',
+            onTap: _openTeamStatusCheck,
+            isActive: widget.activeItemLabel ==
+                'Project Team Activities - Team Status Check',
+          ),
+          _buildSubSubMenuItem(
+            'Team Handover',
+            onTap: _openTeamHandover,
+            isActive: widget.activeItemLabel ==
+                'Project Team Activities - Team Handover',
+          ),
+          _buildSubSubMenuItem(
+            'Lessons Learned',
+            onTap: _openLessonsLearned,
+            isActive: widget.activeItemLabel == 'Lessons Learned' ||
+                widget.activeItemLabel ==
+                    'Project Team Activities - Lessons Learned',
+          ),
+        ],
         _buildSubExpandableHeader(
           'Progress Tracking',
           expanded: _progressTrackingExpanded,
@@ -3349,16 +3441,58 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: _openBackendDesign,
           isActive: widget.activeItemLabel == 'Backend Design'));
     }
-    if ('staff team'.contains(query)) {
+    // ── Project Team Activities hub ──
+    if ('project team activities'.contains(query) ||
+        'project team'.contains(query) ||
+        'team activities'.contains(query) ||
+        'mobilize team'.contains(query) ||
+        'team hub'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.groups_outlined, 'Project Team Activities',
+          onTap: _openProjectTeamActivities,
+          isActive: widget.activeItemLabel == 'Project Team Activities'));
+    }
+    if ('staff team'.contains(query) || 'mobilize'.contains(query)) {
       results.add(
         _buildMenuItem(
           Icons.badge_outlined,
-          'Staff Team',
+          'Mobilize Team',
           onTap: lockStaffTeam ? null : _openStaffTeam,
           isActive: widget.activeItemLabel == 'Staff Team',
           isDisabled: lockStaffTeam,
         ),
       );
+    }
+    if ('recognition'.contains(query) ||
+        'awards'.contains(query) ||
+        'recognition awards'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.emoji_events_outlined, 'Recognition & Awards',
+          onTap: _openRecognitionAwards,
+          isActive: widget.activeItemLabel ==
+              'Project Team Activities - Recognition & Awards'));
+    }
+    if ('team status'.contains(query) ||
+        'status check'.contains(query) ||
+        'team capacity'.contains(query) ||
+        'team operations'.contains(query) ||
+        'shift coverage'.contains(query) ||
+        'capacity health'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.health_and_safety_outlined, 'Team Status Check',
+          onTap: _openTeamStatusCheck,
+          isActive: widget.activeItemLabel ==
+              'Project Team Activities - Team Status Check'));
+    }
+    if ('team handover'.contains(query) ||
+        'handover'.contains(query) ||
+        'demobilize'.contains(query) ||
+        'offboarding'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.swap_horiz_outlined, 'Team Handover',
+          onTap: _openTeamHandover,
+          isActive: widget.activeItemLabel ==
+              'Project Team Activities - Team Handover'));
     }
     if ('engineering'.contains(query) ||
         'engineering design'.contains(query) ||

@@ -285,7 +285,7 @@ class SidebarNavigationService {
         checkpoint: 'design_deliverables', label: 'Design Deliverables'),
 
     // Execution Phase
-    SidebarItem(checkpoint: 'staff_team', label: 'Staff Team'),
+    SidebarItem(checkpoint: 'staff_team', label: 'Project Team Activities'),
     SidebarItem(checkpoint: 'team_meetings', label: 'Team Meetings'),
     SidebarItem(checkpoint: 'progress_tracking', label: 'Progress Tracking'),
     SidebarItem(

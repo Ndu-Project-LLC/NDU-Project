@@ -115,6 +115,7 @@ import 'package:ndu_project/screens/financial_closeout_screen.dart';
 import 'package:ndu_project/screens/benefits_realization_screen.dart';
 import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
 import 'package:ndu_project/screens/agile_project_hub_screen.dart';
+import 'package:ndu_project/screens/agile_roadmap_screen.dart';
 import 'package:ndu_project/screens/scope_completion_screen.dart';
 import 'package:ndu_project/screens/requirements_implementation_screen.dart';
 import 'package:ndu_project/screens/backend_design_screen.dart';
@@ -3059,6 +3060,47 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           isDisabled: lockProjectPlanCondensed,
         ),
       );
+    }
+    // ── Agile Project Hub ──
+    // Broad search entry so the hub is discoverable when users search for
+    // any agile-related term (agile, hub, sprint, kanban, scrum, backlog,
+    // retrospective, standup, roadmap, etc.)
+    if ('agile project hub'.contains(query) ||
+        'agile hub'.contains(query) ||
+        'agile'.contains(query) ||
+        'hub'.contains(query) ||
+        'scrum'.contains(query) ||
+        'kanban'.contains(query) ||
+        'sprint planning'.contains(query) ||
+        'daily standup'.contains(query) ||
+        'standup'.contains(query) ||
+        'retrospective'.contains(query) ||
+        'sprint review'.contains(query) ||
+        'agile coach'.contains(query) ||
+        'agile roadmap'.contains(query) ||
+        'iteration management'.contains(query) ||
+        'team capacity'.contains(query) ||
+        'agile metrics'.contains(query) ||
+        'agile risks'.contains(query) ||
+        'impediments'.contains(query) ||
+        'backlog grooming'.contains(query) ||
+        'release planning'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.dashboard_outlined, 'Agile Project Hub',
+          onTap: _openAgileProjectHub,
+          isActive: widget.activeItemLabel == 'Agile Project Hub'));
+    }
+    if ('agile roadmap'.contains(query) ||
+        'roadmap'.contains(query) ||
+        'delivery roadmap'.contains(query) ||
+        'strategic roadmap'.contains(query) ||
+        'release roadmap'.contains(query) ||
+        'milestone roadmap'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.map_outlined, 'Agile Project Hub - Agile Roadmap',
+          onTap: () => AgileRoadmapScreen.open(context),
+          isActive:
+              widget.activeItemLabel == 'Agile Project Hub - Agile Roadmap'));
     }
     if ('agile project baseline'.contains(query) ||
         'agile baseline'.contains(query)) {

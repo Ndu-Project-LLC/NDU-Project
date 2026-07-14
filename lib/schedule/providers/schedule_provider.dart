@@ -46,16 +46,18 @@ class ScheduleProvider extends ChangeNotifier {
   Future<void> _saveToStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      final s = _schedule;
       final data = {
         'state': {
-          'schedule': _schedule != null
+          'schedule': s != null
               ? {
-                  'id': _schedule!.id,
-                  'projectId': _schedule!.projectId,
-                  'projectName': _schedule!.projectName,
-                  'deliveryModel': _schedule!.basis.deliveryModel,
-                  'status': _schedule!.status.name,
-                  'isLocked': _schedule!.isLocked,
+                  'id': s.id,
+                  'projectId': s.projectId,
+                  'projectName': s.projectName,
+                  'deliveryModel': s.basis.deliveryModel,
+                  'status': s.status.name,
+                  'isLocked': s.isLocked,
+                  'activities': s.activities.map((a) => a.toJson()).toList(),
                 }
               : null,
           'setupComplete': _setupComplete,
@@ -69,10 +71,18 @@ class ScheduleProvider extends ChangeNotifier {
 
   Schedule _scheduleFromJson(Map<String, dynamic> json) {
     final deliveryModel = json['deliveryModel'] as String? ?? 'WATERFALL';
-    return createEmptySchedule(
+    final s = createEmptySchedule(
       projectName: json['projectName'] as String? ?? 'Project',
       deliveryModel: deliveryModel,
     );
+    final rawActivities = json['activities'] as List<dynamic>?;
+    if (rawActivities != null && rawActivities.isNotEmpty) {
+      final activities = rawActivities
+          .map((a) => ScheduleActivity.fromJson(a as Map<String, dynamic>))
+          .toList();
+      return s.copyWith(activities: activities);
+    }
+    return s;
   }
 
   // ─── Setup ──────────────────────────────────────────────────────────────
@@ -230,37 +240,32 @@ class ScheduleProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
-  void importFromWBS(List<({String id, String code, String name, String? description, List<({String id, String code, String name, String? description})> children})> wbsNodes) {
+  void importFromWBS(List<WbsImportNode> wbsNodes) {
     if (_schedule == null || _schedule!.activities.isEmpty) return;
     final root = _schedule!.activities[0];
-    var newChildren = [...root.children];
-    for (final l1 in wbsNodes) {
-      newChildren.add(ScheduleActivity(
+
+    ScheduleActivity _buildActivity(WbsImportNode node, int level) {
+      return ScheduleActivity(
         id: newSchedId('act'),
-        level: 1,
+        level: level,
         code: '',
-        name: l1.name,
-        description: l1.description,
+        name: node.name,
+        description: node.description,
         type: ActivityType.summary,
         domain: ScheduleDomain.engineering,
         dependencies: [],
         aiGenerated: false,
-        wbsNodeId: l1.id,
-        children: l1.children.map((l2) => ScheduleActivity(
-          id: newSchedId('act'),
-          level: 2,
-          code: '',
-          name: l2.name,
-          description: l2.description,
-          type: ActivityType.summary,
-          domain: ScheduleDomain.engineering,
-          dependencies: [],
-          aiGenerated: false,
-          wbsNodeId: l2.id,
-          children: [],
-        )).toList(),
-      ));
+        wbsNodeId: node.id,
+        children: node.children
+            .map((c) => _buildActivity(c, level + 1))
+            .toList(),
+      );
     }
+
+    final newChildren = [
+      ...root.children,
+      ...wbsNodes.map((n) => _buildActivity(n, 1)),
+    ];
     final updatedRoot = recalcActivityCodes(root.copyWith(children: newChildren));
     _schedule = _schedule!.copyWith(
       activities: [updatedRoot],

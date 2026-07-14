@@ -60,7 +60,7 @@ class _FrontEndPlanningRequirementsScreenState
   final ScrollController _requirementsHorizontalController = ScrollController();
   final ScrollController _requirementsVerticalController = ScrollController();
   bool _isGeneratingRequirements = false;
-  bool _isTableView = false;
+  bool _isTableView = true;
   bool _isRegeneratingRow = false;
   int? _regeneratingRowIndex;
   Timer? _autoSaveTimer;

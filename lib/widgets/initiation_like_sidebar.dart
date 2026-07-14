@@ -28,6 +28,7 @@ import 'package:ndu_project/screens/front_end_planning_summary.dart';
 import 'package:ndu_project/screens/project_charter_screen.dart';
 import 'package:ndu_project/screens/ssher_stacked_screen.dart';
 import 'package:ndu_project/screens/execution_plan_screen.dart';
+import 'package:ndu_project/screens/execution_work_packages_screen.dart';
 import 'package:ndu_project/screens/execution_plan_solutions_screen.dart';
 import 'package:ndu_project/screens/execution_plan_details_screen.dart';
 import 'package:ndu_project/screens/execution_enabling_work_plan_screen.dart';
@@ -50,13 +51,15 @@ import 'package:ndu_project/screens/project_framework_next_screen.dart';
 import 'package:ndu_project/screens/project_framework_screen.dart';
 import 'package:ndu_project/screens/project_plan_subsections_screen.dart';
 import 'package:ndu_project/screens/project_baseline_screen.dart';
-import 'package:ndu_project/screens/agile_project_baseline_screen.dart';
 import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
 import 'package:ndu_project/screens/agile_team_structure_screen.dart';
 import 'package:ndu_project/screens/agile_epics_features_screen.dart';
 import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
 import 'package:ndu_project/screens/agile_release_plan_screen.dart';
 import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
+import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
+import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
+import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
 import 'package:ndu_project/screens/stakeholder_management_screen.dart';
 import 'package:ndu_project/screens/lessons_learned_screen.dart';
 import 'package:ndu_project/screens/team_training_building_screen.dart';
@@ -192,6 +195,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   static const Set<String> _executionPlanLabels = {
     'Execution Plan Overview',
+    'Execution Work Packages',
     'Executive Plan Strategy',
     'Execution Plan Details',
     'Execution Early Works',
@@ -237,11 +241,13 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Agile Delivery Model - Delivery Model',
     'Agile Delivery Model - Backlog Governance',
     'Agile Delivery Model - Team Structure',
+    'Agile Delivery Model - Kanban Configuration',
     'Agile Delivery Model - Epics & Features',
+    'Agile Delivery Model - Acceptance Criteria Planning',
     'Agile Delivery Model - Sprint Calendar',
     'Agile Delivery Model - Agile Map Out',
     'Agile Delivery Model - Release Plan',
-    'Agile Delivery Model - Project Baseline',
+    'Agile Delivery Model - Metrics Planning',
   };
 
   static const Set<String> _projectPlanLabels = {
@@ -680,7 +686,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       'startup_planning',
       'deliverable_roadmap',
       'deliverables_roadmap',
-      'agile_project_baseline',
       'project_baseline',
       'organization_roles_responsibilities',
       'organization_staffing_plan',
@@ -697,11 +702,13 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       'agile_delivery_model',
       'agile_backlog_governance',
       'agile_team_structure',
+      'agile_kanban_config',
       'agile_epics_features',
+      'agile_acceptance_criteria',
       'agile_sprint_calendar',
       'agile_map_out',
       'agile_release_plan',
-      'agile_project_baseline',
+      'agile_metrics_planning',
     ];
     if (planningPhaseCheckpoints.contains(checkpoint) ||
         agileWireframeCheckpoints.contains(checkpoint)) {
@@ -978,6 +985,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     _navigateWithCheckpoint('execution_plan', const ExecutionPlanScreen());
   }
 
+  void _openExecutionWorkPackages() {
+    _navigateWithCheckpoint('execution_work_packages',
+        const ExecutionWorkPackagesScreen());
+  }
+
   // ignore: unused_element
   void _openExecutionPlanStrategy() {
     _navigateWithCheckpoint(
@@ -1121,6 +1133,21 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'agile_backlog_governance', const AgileBacklogGovernanceScreen());
   }
 
+  void _openAgileKanbanConfig() {
+    _navigateWithCheckpoint(
+        'agile_kanban_config', const AgileKanbanConfigScreen());
+  }
+
+  void _openAgileAcceptanceCriteria() {
+    _navigateWithCheckpoint(
+        'agile_acceptance_criteria', const AgileAcceptanceCriteriaScreen());
+  }
+
+  void _openAgileMetricsPlanning() {
+    _navigateWithCheckpoint(
+        'agile_metrics_planning', const AgileMetricsPlanningScreen());
+  }
+
   void _openStartUpPlanning() {
     _navigateWithCheckpoint('startup_planning', const StartUpPlanningScreen());
   }
@@ -1209,11 +1236,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   void _openProjectBaseline() {
     _navigateWithCheckpoint('project_baseline', const ProjectBaselineScreen());
-  }
-
-  void _openAgileProjectBaseline() {
-    _navigateWithCheckpoint(
-        'agile_project_baseline', const AgileProjectBaselineScreen());
   }
 
   void _openStakeholderManagement() {
@@ -2323,10 +2345,18 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openAgileTeamStructure,
               isActive:
                   widget.activeItemLabel == 'Agile Delivery Model - Team Structure'),
+          _buildSubSubMenuItem('Kanban Configuration',
+              onTap: _openAgileKanbanConfig,
+              isActive: widget.activeItemLabel ==
+                  'Agile Delivery Model - Kanban Configuration'),
           _buildSubSubMenuItem('Epics & Features',
               onTap: _openAgileEpicsFeatures,
               isActive:
                   widget.activeItemLabel == 'Agile Delivery Model - Epics & Features'),
+          _buildSubSubMenuItem('Acceptance Criteria Planning',
+              onTap: _openAgileAcceptanceCriteria,
+              isActive: widget.activeItemLabel ==
+                  'Agile Delivery Model - Acceptance Criteria Planning'),
           _buildSubSubMenuItem('Sprint Cadence & Calendar',
               onTap: _openAgileSprintCalendar,
               isActive: widget.activeItemLabel ==
@@ -2339,10 +2369,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openAgileReleasePlan,
               isActive:
                   widget.activeItemLabel == 'Agile Delivery Model - Release Plan'),
-          _buildSubSubMenuItem('Agile Project Baseline',
-              onTap: _openAgileProjectBaseline,
+          _buildSubSubMenuItem('Agile Metrics Planning',
+              onTap: _openAgileMetricsPlanning,
               isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Project Baseline'),
+                  'Agile Delivery Model - Metrics Planning'),
         ],
         _buildSubExpandableHeader(
           'Execution Plan',
@@ -2358,6 +2388,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             'Overview',
             onTap: _openExecutionPlan,
             isActive: widget.activeItemLabel == 'Execution Plan Overview',
+          ),
+          _buildSubSubMenuItem(
+            'Execution Work Packages',
+            onTap: _openExecutionWorkPackages,
+            isActive:
+                widget.activeItemLabel == 'Execution Work Packages',
           ),
           _buildSubSubMenuItem(
             'Executive Plan Strategy',
@@ -3200,7 +3236,17 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           'Agile Project Baseline',
           onTap: _openAgileProjectBaseline,
           isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Project Baseline'));
+              'Agile Delivery Model - Metrics Planning'));
+    }
+    if ('agile metrics'.contains(query) || 'metrics'.contains(query) ||
+        'velocity'.contains(query) || 'throughput'.contains(query) ||
+        'cycle time'.contains(query) || 'lead time'.contains(query) ||
+        'burndown'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.analytics_outlined, 'Agile Metrics Planning',
+          onTap: _openAgileMetricsPlanning,
+          isActive: widget.activeItemLabel ==
+              'Agile Delivery Model - Metrics Planning'));
     }
     if ('project baseline'.contains(query) || 'baseline'.contains(query)) {
       results.add(
@@ -3270,6 +3316,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: _openAgileTeamStructure,
           isActive: widget.activeItemLabel == 'Agile Delivery Model - Team Structure'));
     }
+    if ('kanban'.contains(query) || 'workflow'.contains(query) ||
+        'wip'.contains(query) || 'column'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.dashboard_outlined, 'Kanban Configuration',
+          onTap: _openAgileKanbanConfig,
+          isActive: widget.activeItemLabel ==
+              'Agile Delivery Model - Kanban Configuration'));
+    }
     if ('epics'.contains(query) || 'features'.contains(query) ||
         'user story'.contains(query)) {
       results.add(_buildMenuItem(
@@ -3277,6 +3331,15 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: _openAgileEpicsFeatures,
           isActive: widget.activeItemLabel ==
               'Agile Delivery Model - Epics & Features'));
+    }
+    if ('acceptance criteria'.contains(query) || 'ac'.contains(query) ||
+        'criteria'.contains(query) || 'bdd'.contains(query) ||
+        'definition of done'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.checklist_outlined, 'Acceptance Criteria Planning',
+          onTap: _openAgileAcceptanceCriteria,
+          isActive: widget.activeItemLabel ==
+              'Agile Delivery Model - Acceptance Criteria Planning'));
     }
     if ('sprint calendar'.contains(query) || 'sprint cadence'.contains(query) ||
         'sprint'.contains(query) || 'iteration'.contains(query)) {

@@ -83,8 +83,7 @@ class _FrontEndPlanningWorkspaceScreenState
  // AI Service
  final OpenAiServiceSecure _openAi = OpenAiServiceSecure();
  bool _isGenerating = false;
- bool _reviewConfirmed = false;
- final Map<String, List<List<String>>> _listUndoHistory =
+  final Map<String, List<List<String>>> _listUndoHistory =
  <String, List<List<String>>>{};
  static const int _maxUndoSnapshotsPerList = 20;
 
@@ -171,18 +170,30 @@ class _FrontEndPlanningWorkspaceScreenState
  );
  }
 
- Future<void> _handleNextPressed() async {
- if (!_reviewConfirmed) {
- final continueAnyway = await showProceedWithoutReviewDialog(
- context,
- title: 'Please confirm you have reviewed and understood this step',
- message:
- 'You have not confirmed this page yet. You can continue now and return later to complete details, or stay and update information now.',
- );
- if (!continueAnyway || !mounted) return;
- }
+  Future<void> _handleNextPressed() async {
+    final data = ProjectDataHelper.getData(context);
+    if (!data.frontEndPlanning.detailsConfirmed) {
+      final confirmed = await showProceedWithoutReviewDialog(
+        context,
+        title: 'Please confirm you have reviewed and understood this step',
+        message:
+            'I confirm that I have reviewed all information on this page before proceeding.',
+      );
+      if (!confirmed || !mounted) return;
 
- await ProjectDataHelper.saveAndNavigate(
+      final provider = ProjectDataHelper.getProvider(context);
+      provider.updateField(
+        (d) => d.copyWith(
+          frontEndPlanning: ProjectDataHelper.updateFEPField(
+            current: d.frontEndPlanning,
+            detailsConfirmed: true,
+          ),
+        ),
+      );
+      provider.saveToFirebase(checkpoint: 'fep_details_confirmed');
+    }
+
+    await ProjectDataHelper.saveAndNavigate(
  context: context,
  checkpoint: 'fep_details_complete',
  saveInBackground: true,
@@ -613,15 +624,7 @@ class _FrontEndPlanningWorkspaceScreenState
  // Debounce save logic could be added here
  },
  ),
- const SizedBox(height: 24),
- ProceedConfirmationGate(
- value: _reviewConfirmed,
- onChanged: (value) {
- setState(() => _reviewConfirmed = value);
- },
- scrollController: _contentScrollController,
- ),
- const SizedBox(height: 120),
+  const SizedBox(height: 120),
  ],
  ),
  ),

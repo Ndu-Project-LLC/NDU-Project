@@ -45,7 +45,9 @@ import 'package:ndu_project/screens/deliverable_roadmap_subsections_screen.dart'
 import 'package:ndu_project/screens/deliverables_roadmap_overview_screen.dart';
 import 'package:ndu_project/screens/deliverables_roadmap_detailed_screen.dart';
 import 'package:ndu_project/screens/document_review_matrix_screen.dart';
-import 'package:ndu_project/screens/agile_project_baseline_screen.dart';
+import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
+import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
+import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
 import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
 import 'package:ndu_project/screens/agile_team_structure_screen.dart';
 import 'package:ndu_project/screens/agile_epics_features_screen.dart';
@@ -149,9 +151,19 @@ class PlanningPhaseNavigation {
       builder: (_) => const AgileTeamStructureScreen(),
     ),
     PlanningPage(
+      id: 'agile_kanban_config',
+      title: 'Kanban Configuration',
+      builder: (_) => const AgileKanbanConfigScreen(),
+    ),
+    PlanningPage(
       id: 'agile_epics_features',
       title: 'Epics & Features',
       builder: (_) => const AgileEpicsFeaturesScreen(),
+    ),
+    PlanningPage(
+      id: 'agile_acceptance_criteria',
+      title: 'Acceptance Criteria Planning',
+      builder: (_) => const AgileAcceptanceCriteriaScreen(),
     ),
     PlanningPage(
       id: 'agile_sprint_calendar',
@@ -169,9 +181,9 @@ class PlanningPhaseNavigation {
       builder: (_) => const AgileReleasePlanScreen(),
     ),
     PlanningPage(
-      id: 'agile_project_baseline',
-      title: 'Agile Project Baseline',
-      builder: (_) => const AgileProjectBaselineScreen(),
+      id: 'agile_metrics_planning',
+      title: 'Agile Metrics Planning',
+      builder: (_) => const AgileMetricsPlanningScreen(),
     ),
     // Execution Plan — full flow matching sidebar order
     PlanningPage(
@@ -351,11 +363,6 @@ class PlanningPhaseNavigation {
       id: 'deliverables_roadmap',
       title: 'Deliverables Roadmap',
       builder: (_) => const DeliverablesRoadmapScreen(),
-    ),
-    PlanningPage(
-      id: 'agile_project_baseline',
-      title: 'Agile Project Baseline',
-      builder: (_) => const AgileProjectBaselineScreen(),
     ),
     PlanningPage(
       id: 'project_plan',

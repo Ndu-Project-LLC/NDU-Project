@@ -196,6 +196,82 @@ class ScheduleActivity {
     required this.children,
   });
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        if (wbsNodeId != null) 'wbsNodeId': wbsNodeId,
+        if (costLineId != null) 'costLineId': costLineId,
+        'level': level,
+        'code': code,
+        'name': name,
+        if (description != null) 'description': description,
+        'type': type.name,
+        'domain': domain.name,
+        if (duration != null) 'duration': duration,
+        if (durationUnit != null) 'durationUnit': durationUnit,
+        if (startDate != null) 'startDate': startDate!.toIso8601String(),
+        if (endDate != null) 'endDate': endDate!.toIso8601String(),
+        'dependencies': dependencies.map((d) => d.toJson()).toList(),
+        if (owner != null) 'owner': owner,
+        if (status != null) 'status': status,
+        if (progress != null) 'progress': progress,
+        if (estimationMethod != null) 'estimationMethod': estimationMethod!.name,
+        if (storyPoints != null) 'storyPoints': storyPoints,
+        if (tShirtSize != null) 'tShirtSize': tShirtSize!.name,
+        if (definitionOfReady != null) 'definitionOfReady': definitionOfReady,
+        if (definitionOfDone != null) 'definitionOfDone': definitionOfDone,
+        if (prerequisites != null) 'prerequisites': prerequisites,
+        'isCriticalPath': isCriticalPath,
+        'isLongLead': isLongLead,
+        if (estimatedHours != null) 'estimatedHours': estimatedHours,
+        'aiGenerated': aiGenerated,
+        'children': children.map((c) => c.toJson()).toList(),
+      };
+
+  factory ScheduleActivity.fromJson(Map<String, dynamic> json) {
+    return ScheduleActivity(
+      id: json['id'] as String,
+      wbsNodeId: json['wbsNodeId'] as String?,
+      costLineId: json['costLineId'] as String?,
+      level: json['level'] as int,
+      code: json['code'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      type: ActivityType.values.byName(json['type'] as String),
+      domain: ScheduleDomain.values.byName(json['domain'] as String),
+      duration: (json['duration'] as num?)?.toDouble(),
+      durationUnit: json['durationUnit'] as String?,
+      startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate'] as String) : null,
+      endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate'] as String) : null,
+      dependencies: (json['dependencies'] as List<dynamic>?)
+              ?.map((d) => ActivityDependency.fromJson(d as Map<String, dynamic>))
+              .toList() ??
+          [],
+      owner: json['owner'] as String?,
+      status: json['status'] as String?,
+      progress: (json['progress'] as num?)?.toDouble(),
+      estimationMethod: json['estimationMethod'] != null
+          ? EstimationMethod.values.byName(json['estimationMethod'] as String)
+          : null,
+      storyPoints: (json['storyPoints'] as num?)?.toDouble(),
+      tShirtSize: json['tShirtSize'] != null
+          ? TShirtSize.values.byName(json['tShirtSize'] as String)
+          : null,
+      definitionOfReady: json['definitionOfReady'] as String?,
+      definitionOfDone: json['definitionOfDone'] as String?,
+      prerequisites: (json['prerequisites'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      isCriticalPath: json['isCriticalPath'] as bool? ?? false,
+      isLongLead: json['isLongLead'] as bool? ?? false,
+      estimatedHours: (json['estimatedHours'] as num?)?.toDouble(),
+      aiGenerated: json['aiGenerated'] as bool? ?? false,
+      children: (json['children'] as List<dynamic>?)
+              ?.map((c) => ScheduleActivity.fromJson(c as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+  }
+
   ScheduleActivity copyWith({
     String? id,
     String? wbsNodeId,
@@ -267,6 +343,18 @@ class ActivityDependency {
     required this.activityId,
     required this.type,
   });
+
+  Map<String, dynamic> toJson() => {
+        'activityId': activityId,
+        'type': type.name,
+      };
+
+  factory ActivityDependency.fromJson(Map<String, dynamic> json) {
+    return ActivityDependency(
+      activityId: json['activityId'] as String,
+      type: DependencyType.values.byName(json['type'] as String),
+    );
+  }
 }
 
 /// Schedule basis configuration.
@@ -480,6 +568,24 @@ class Schedule {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+}
+
+/// Recursive WBS node for importing into the schedule.
+/// Supports arbitrary depth via [children].
+class WbsImportNode {
+  final String id;
+  final String code;
+  final String name;
+  final String? description;
+  final List<WbsImportNode> children;
+
+  const WbsImportNode({
+    required this.id,
+    required this.code,
+    required this.name,
+    this.description,
+    required this.children,
+  });
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

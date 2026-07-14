@@ -61,6 +61,7 @@ import 'package:ndu_project/project_controls/screens/change_management_module_sc
 import 'package:ndu_project/screens/landing/landing_page_screen.dart';
 import 'package:ndu_project/screens/landing/careers_page_screen.dart';
 import 'package:ndu_project/screens/execution_plan_screen.dart';
+import 'package:ndu_project/screens/execution_work_packages_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_overview_screen.dart';
 import 'package:ndu_project/screens/cost_estimate_screen.dart';
 import 'package:ndu_project/screens/cost_analysis_screen.dart';
@@ -192,6 +193,7 @@ class AppRoutes {
   static const wbs = 'work-breakdown-structure';
   static const pbs = 'product-breakdown-structure';
   static const executionPlan = 'execution-plan';
+  static const executionWorkPackages = 'execution-work-packages';
   static const executionPlanInterface = 'execution-plan-interface-management';
   static const costEstimate = 'cost-estimate';
   static const costAnalysis = 'cost-analysis';
@@ -616,6 +618,10 @@ class AppRouter {
           name: AppRoutes.executionPlan,
           path: '/${AppRoutes.executionPlan}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanScreen())),
+      GoRoute(
+          name: AppRoutes.executionWorkPackages,
+          path: '/${AppRoutes.executionWorkPackages}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionWorkPackagesScreen())),
       GoRoute(
           name: AppRoutes.executionPlanInterface,
           path: '/${AppRoutes.executionPlanInterface}',
@@ -1047,6 +1053,7 @@ class AppRouter {
 
     // Execution phase routes
     if (path.contains('execution')) return ('Execution Plan', 'Execution');
+    if (path.contains('execution-work-packages')) return ('Execution Work Packages', 'Execution');
     if (path.contains('agile')) return ('Agile Delivery', 'Execution');
     if (path.contains('sprint')) return ('Sprint Planning', 'Execution');
     if (path.contains('work-breakdown')) return ('Work Breakdown Structure', 'Execution');

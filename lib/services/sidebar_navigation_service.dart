@@ -159,8 +159,14 @@ class SidebarNavigationService {
         checkpoint: 'agile_team_structure',
         label: 'Agile Team Structure'),
     SidebarItem(
+        checkpoint: 'agile_kanban_config',
+        label: 'Kanban Configuration'),
+    SidebarItem(
         checkpoint: 'agile_epics_features',
         label: 'Epics & Features'),
+    SidebarItem(
+        checkpoint: 'agile_acceptance_criteria',
+        label: 'Acceptance Criteria Planning'),
     SidebarItem(
         checkpoint: 'agile_sprint_calendar',
         label: 'Sprint Cadence & Calendar'),
@@ -171,10 +177,13 @@ class SidebarNavigationService {
         checkpoint: 'agile_release_plan',
         label: 'Release Plan'),
     SidebarItem(
-        checkpoint: 'agile_project_baseline',
-        label: 'Agile Project Baseline'),
+        checkpoint: 'agile_metrics_planning',
+        label: 'Agile Metrics Planning'),
     // Execution Plan sub-items (full flow matching sidebar order)
     SidebarItem(checkpoint: 'execution_plan', label: 'Execution Plan Overview'),
+    SidebarItem(
+        checkpoint: 'execution_work_packages',
+        label: 'Execution Work Packages'),
     SidebarItem(
         checkpoint: 'execution_plan_strategy',
         label: 'Executive Plan Strategy'),

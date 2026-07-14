@@ -57,7 +57,6 @@ import 'package:ndu_project/screens/deliverables_roadmap_overview_screen.dart';
 import 'package:ndu_project/screens/deliverables_roadmap_detailed_screen.dart';
 import 'package:ndu_project/screens/document_review_matrix_screen.dart';
 import 'package:ndu_project/screens/project_baseline_screen.dart';
-import 'package:ndu_project/screens/agile_project_baseline_screen.dart';
 import 'package:ndu_project/screens/project_plan_subsections_screen.dart';
 import 'package:ndu_project/screens/organization_plan_subsections_screen.dart';
 import 'package:ndu_project/screens/team_management_screen.dart';
@@ -90,6 +89,9 @@ import 'package:ndu_project/screens/agile_epics_features_screen.dart';
 import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
 import 'package:ndu_project/screens/agile_release_plan_screen.dart';
 import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
+import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
+import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
+import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
 import 'package:ndu_project/screens/scope_tracking_implementation_screen.dart';
 import 'package:ndu_project/screens/stakeholder_alignment_screen.dart';
 import 'package:ndu_project/screens/update_ops_maintenance_plans_screen.dart';
@@ -350,6 +352,10 @@ class NavigationRouteResolver {
         return const ExecutionPlanAgileDeliveryPlanScreen();
       case 'agile_team_structure':
         return const AgileTeamStructureScreen();
+      case 'agile_kanban_config':
+        return const AgileKanbanConfigScreen();
+      case 'agile_acceptance_criteria':
+        return const AgileAcceptanceCriteriaScreen();
       case 'agile_epics_features':
         return const AgileEpicsFeaturesScreen();
       case 'agile_sprint_calendar':
@@ -362,6 +368,8 @@ class NavigationRouteResolver {
         return const AgileReleasePlanScreen();
       case 'agile_backlog_governance':
         return const AgileBacklogGovernanceScreen();
+      case 'agile_metrics_planning':
+        return const AgileMetricsPlanningScreen();
       case 'deliverables_roadmap_overview':
         return const DeliverablesRoadmapOverviewScreen();
       case 'deliverables_roadmap_detailed':
@@ -401,8 +409,6 @@ class NavigationRouteResolver {
       case 'deliverables_roadmap':
       case 'deliverable_roadmap':
         return const DeliverablesRoadmapScreen();
-      case 'agile_project_baseline':
-        return const AgileProjectBaselineScreen();
       case 'project_baseline':
         return const ProjectBaselineScreen();
       case 'organization_roles_responsibilities':

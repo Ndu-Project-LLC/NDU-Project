@@ -34,6 +34,7 @@ import 'package:ndu_project/services/integrated_work_package_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/design_planning_document.dart';
 import 'package:ndu_project/models/project_data_model.dart' hide ScheduleActivity;
+import 'package:ndu_project/wbs/utils/wbs_to_work_item_converter.dart';
 
 class BuilderScreen extends StatefulWidget {
   const BuilderScreen({super.key});
@@ -71,37 +72,30 @@ class _BuilderScreenState extends State<BuilderScreen> {
       return;
     }
 
-    // Build WBS nodes and import
-    final l1Nodes = wbs.level0.children;
-    if (l1Nodes.isEmpty) {
+    // Recursively convert WBSNode → WbsImportNode for arbitrary depth
+    WbsImportNode _buildImportNode(WBSNode node) {
+      return WbsImportNode(
+        id: node.id,
+        code: node.code,
+        name: node.name,
+        description: node.description,
+        children: node.children.map(_buildImportNode).toList(),
+      );
+    }
+
+    final importNodes = wbs.level0.children.map(_buildImportNode).toList();
+    if (importNodes.isEmpty) {
       _hasAutoImported = true;
       return;
     }
 
-    final wbsNodes = l1Nodes.map((l1) {
-      return (
-        id: l1.id,
-        code: l1.code,
-        name: l1.name,
-        description: l1.description,
-        children: l1.children.map((l2) {
-          return (
-            id: l2.id,
-            code: l2.code,
-            name: l2.name,
-            description: l2.description,
-          );
-        }).toList(),
-      );
-    }).toList();
-
-    scheduleProvider.importFromWBS(wbsNodes);
+    scheduleProvider.importFromWBS(importNodes);
     _hasAutoImported = true;
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Auto-populated ${l1Nodes.length} deliverable(s) from WBS into schedule'),
+          content: Text('Auto-populated ${importNodes.length} deliverable(s) from WBS into schedule'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: LightModeColors.accent,
           duration: const Duration(seconds: 3),
@@ -110,49 +104,39 @@ class _BuilderScreenState extends State<BuilderScreen> {
     }
   }
 
-  Future<void> _generateWorkPackageActivities() async {
+  Future<void> _createActivitiesFromPackages() async {
     final scheduleProvider = context.read<ScheduleProvider>();
-    final data = ProjectDataHelper.getData(context);
+    final data = ProjectDataHelper.getData(context, listen: false);
 
-    if (data.wbsTree.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No WBS items found. Create a WBS first.')),
-        );
-      }
-      return;
-    }
-
-    final designDoc = DesignPlanningDocument.fromProjectData(data);
-    final designSpecs = designDoc.specifications;
-
-    var packages = IntegratedWorkPackageService.generatePackageChainsFromWbs(
-      wbsTree: data.wbsTree,
-      methodology: 'waterfall',
-      designSpecifications: designSpecs,
-    );
-
-    packages = IntegratedWorkPackageService.deriveProcurementScopeFromEwpDeliverables(packages);
-    packages = IntegratedWorkPackageService.rollUpChildCostsAndDates(packages);
-    packages = IntegratedWorkPackageService.enforceEstimateBasis(packages);
-
+    final packages = data.workPackages;
     if (packages.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No work packages generated from WBS. Try adding more WBS levels.')),
+          const SnackBar(content: Text('No work packages found. Create them in Execution Work Packages first.')),
         );
       }
       return;
     }
 
-    // Build package ID → activity ID mapping
+    final existingActivityWpIds =
+        data.scheduleActivities.map((a) => a.workPackageId).where((id) => id.isNotEmpty).toSet();
+
+    final newPackages = packages.where((p) => !existingActivityWpIds.contains(p.id)).toList();
+    if (newPackages.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('All work packages already have schedule activities.')),
+        );
+      }
+      return;
+    }
+
     final pkgToActId = <String, String>{};
-    for (final pkg in packages) {
+    for (final pkg in newPackages) {
       pkgToActId[pkg.id] = newSchedId('act');
     }
-    final packageIdSet = packages.map((p) => p.id).toSet();
+    final packageIdSet = newPackages.map((p) => p.id).toSet();
 
-    // Convert WorkPackages to ScheduleActivity with proper ActivityType and dependency chains
     final root = scheduleProvider.schedule!.activities[0];
     var newChildren = [...root.children];
 
@@ -185,12 +169,11 @@ class _BuilderScreenState extends State<BuilderScreen> {
       return deps.toList();
     }
 
-    for (final pkg in packages) {
+    for (final pkg in newPackages) {
       final domain = _domainForPackage(pkg);
       final activityType = _typeForPackage(pkg);
       final activityId = pkgToActId[pkg.id]!;
 
-      // Resolve dependency package IDs → ActivityDependency objects
       final depPackageIds = _depPackageIds(pkg);
       final dependencies = depPackageIds
           .where((depId) => pkgToActId.containsKey(depId))
@@ -239,7 +222,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Generated ${packages.length} work package activities (EWP, Procurement, CWP, etc.)'),
+          content: Text('Created ${newPackages.length} schedule activities from work packages.'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: LightModeColors.accent,
           duration: const Duration(seconds: 3),
@@ -400,10 +383,10 @@ class _BuilderScreenState extends State<BuilderScreen> {
                         onTap: () => _showImportInfo(context),
                       ),
                       _ActionChip(
-                        icon: Icons.account_tree_outlined,
-                        label: 'Gen from WBS',
+                        icon: Icons.work_outline,
+                        label: 'From Packages',
                         enabled: !schedule.isLocked,
-                        onTap: () => _generateWorkPackageActivities(),
+                        onTap: () => _createActivitiesFromPackages(),
                       ),
                       _ActionChip(
                         icon: Icons.calculate_outlined,
@@ -788,24 +771,18 @@ class _BuilderScreenState extends State<BuilderScreen> {
       return;
     }
 
-    // Build the WBS node list in the format expected by importFromWBS
-    final l1Nodes = wbs.level0.children;
-    final wbsNodes = l1Nodes.map((l1) {
-      return (
-        id: l1.id,
-        code: l1.code,
-        name: l1.name,
-        description: l1.description,
-        children: l1.children.map((l2) {
-          return (
-            id: l2.id,
-            code: l2.code,
-            name: l2.name,
-            description: l2.description,
-          );
-        }).toList(),
+    // Build recursive WbsImportNode tree for arbitrary depth
+    WbsImportNode _buildImportNode(WBSNode node) {
+      return WbsImportNode(
+        id: node.id,
+        code: node.code,
+        name: node.name,
+        description: node.description,
+        children: node.children.map(_buildImportNode).toList(),
       );
-    }).toList();
+    }
+
+    final importNodes = wbs.level0.children.map(_buildImportNode).toList();
 
     // Show confirmation dialog
     showDialog(
@@ -819,7 +796,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
             style: TextStyle(
                 color: Color(0xFF1A1D1F), fontWeight: FontWeight.w600)),
         content: Text(
-          'This will import ${l1Nodes.length} Level 1 deliverable(s) and their sub-deliverables from your WBS into the schedule as activities. '
+          'This will import ${importNodes.length} Level 1 deliverable(s) and their sub-deliverables from your WBS into the schedule as activities. '
           'Each WBS node becomes a schedule activity with its WBS reference preserved for traceability.',
           style: const TextStyle(color: Color(0xFF495057), fontSize: 13, height: 1.5),
         ),
@@ -830,11 +807,11 @@ class _BuilderScreenState extends State<BuilderScreen> {
           ),
           FilledButton(
             onPressed: () {
-              scheduleProvider.importFromWBS(wbsNodes);
+              scheduleProvider.importFromWBS(importNodes);
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Imported ${l1Nodes.length} deliverable(s) from WBS'),
+                  content: Text('Imported ${importNodes.length} deliverable(s) from WBS'),
                   behavior: SnackBarBehavior.floating,
                   backgroundColor: LightModeColors.accent,
                 ),

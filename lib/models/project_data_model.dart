@@ -2105,6 +2105,7 @@ class FrontEndPlanningData {
   List<InfrastructurePlanningItem> infrastructureItems;
   // Success Criteria items
   List<PlanningDashboardItem> successCriteriaItems;
+  bool detailsConfirmed;
 
   FrontEndPlanningData({
     this.requirements = '',
@@ -2123,6 +2124,7 @@ class FrontEndPlanningData {
     this.contracts = '',
     this.milestoneStartDate = '',
     this.milestoneEndDate = '',
+    this.detailsConfirmed = false,
     List<RequirementItem>? requirementItems,
     List<ScenarioRecord>? scenarioMatrixItems,
     List<RoleItem>? securityRoles,
@@ -2192,6 +2194,7 @@ class FrontEndPlanningData {
     List<InfrastructurePlanningItem>? infrastructureItems,
     List<OpportunityItem>? opportunityItems,
     List<PlanningDashboardItem>? successCriteriaItems,
+    bool? detailsConfirmed,
   }) {
     return FrontEndPlanningData(
       requirements: requirements ?? this.requirements,
@@ -2229,6 +2232,7 @@ class FrontEndPlanningData {
       infrastructureItems: infrastructureItems ?? this.infrastructureItems,
       opportunityItems: opportunityItems ?? this.opportunityItems,
       successCriteriaItems: successCriteriaItems ?? this.successCriteriaItems,
+      detailsConfirmed: detailsConfirmed ?? this.detailsConfirmed,
     );
   }
 
@@ -2279,6 +2283,7 @@ class FrontEndPlanningData {
         'securitySettings': securitySettings.map((s) => s.toJson()).toList(),
         'securityAccessLogs':
             securityAccessLogs.map((a) => a.toJson()).toList(),
+        'detailsConfirmed': detailsConfirmed,
       };
 
   factory FrontEndPlanningData.fromJson(Map<String, dynamic> json) {
@@ -2380,6 +2385,7 @@ class FrontEndPlanningData {
                   AccessLogItem.fromJson(item as Map<String, dynamic>))
               .toList() ??
           [],
+      detailsConfirmed: json['detailsConfirmed'] ?? false,
     );
   }
 }

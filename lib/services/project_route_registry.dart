@@ -28,13 +28,15 @@ import 'package:ndu_project/screens/lessons_learned_screen.dart';
 import 'package:ndu_project/screens/startup_planning_screen.dart';
 import 'package:ndu_project/screens/deliverables_roadmap_screen.dart';
 import 'package:ndu_project/screens/deliverable_roadmap_subsections_screen.dart';
-import 'package:ndu_project/screens/agile_project_baseline_screen.dart';
 import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
 import 'package:ndu_project/screens/agile_team_structure_screen.dart';
 import 'package:ndu_project/screens/agile_epics_features_screen.dart';
 import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
 import 'package:ndu_project/screens/agile_release_plan_screen.dart';
 import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
+import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
+import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
+import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
 import 'package:ndu_project/screens/project_plan_screen.dart';
 import 'package:ndu_project/screens/project_baseline_screen.dart';
 
@@ -62,7 +64,9 @@ class ProjectRouteRegistry {
     'interface_management': () => const InterfaceManagementScreen(),
     'agile_delivery_model': () => const AgileDeliveryModelScreen(),
     'agile_team_structure': () => const AgileTeamStructureScreen(),
+    'agile_kanban_config': () => const AgileKanbanConfigScreen(),
     'agile_epics_features': () => const AgileEpicsFeaturesScreen(),
+    'agile_acceptance_criteria': () => const AgileAcceptanceCriteriaScreen(),
     'agile_sprint_calendar': () => const AgileSprintCalendarScreen(),
     'agile_map_out': () => const DeliverableRoadmapAgileMapOutScreen(),
     'agile_release_plan': () => const AgileReleasePlanScreen(),
@@ -79,7 +83,7 @@ class ProjectRouteRegistry {
     'startup_planning': () => const StartUpPlanningScreen(),
     'deliverable_roadmap': () => const DeliverablesRoadmapScreen(),
     'deliverables_roadmap': () => const DeliverablesRoadmapScreen(),
-    'agile_project_baseline': () => const AgileProjectBaselineScreen(),
+    'agile_metrics_planning': () => const AgileMetricsPlanningScreen(),
     'project_plan': () => const ProjectPlanScreen(),
     'project_baseline': () => const ProjectBaselineScreen(),
   };

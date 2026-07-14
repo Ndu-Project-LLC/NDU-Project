@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:ndu_project/models/acceptance_criteria.dart';
 import 'package:ndu_project/models/agile_release_plan.dart';
 import 'package:ndu_project/services/agile_cache_service.dart';
 
@@ -198,6 +199,98 @@ class AgileWireframeService {
       AgileCacheService.instance.invalidate(_releasesCacheKey(projectId));
     } catch (error) {
       debugPrint('AgileWireframeService.deleteReleasePlan error: $error');
+      rethrow;
+    }
+  }
+
+  // ── Acceptance Criteria ──
+
+  static Future<AcceptanceCriteriaConfig> loadAcceptanceCriteria(
+      String projectId) async {
+    try {
+      final doc = await _loadDoc(projectId);
+      if (doc == null) return AcceptanceCriteriaConfig();
+      final data = doc['acceptanceCriteria'] as Map<String, dynamic>?;
+      if (data == null) return AcceptanceCriteriaConfig();
+      return AcceptanceCriteriaConfig.fromJson(data);
+    } catch (error) {
+      debugPrint('AgileWireframeService.loadAcceptanceCriteria error: $error');
+      return AcceptanceCriteriaConfig();
+    }
+  }
+
+  static Future<void> saveAcceptanceCriteria({
+    required String projectId,
+    required AcceptanceCriteriaConfig config,
+  }) async {
+    try {
+      await _agileDoc(projectId).set({
+        'acceptanceCriteria': config.toJson(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      _invalidate(projectId);
+    } catch (error) {
+      debugPrint('AgileWireframeService.saveAcceptanceCriteria error: $error');
+      rethrow;
+    }
+  }
+
+  // ── Metrics Config ──
+
+  static Future<Map<String, dynamic>> loadMetricsConfig(
+      String projectId) async {
+    try {
+      final doc = await _loadDoc(projectId);
+      if (doc == null) return {};
+      return (doc['metricsConfig'] as Map<String, dynamic>?) ?? {};
+    } catch (error) {
+      debugPrint('AgileWireframeService.loadMetricsConfig error: $error');
+      return {};
+    }
+  }
+
+  static Future<void> saveMetricsConfig({
+    required String projectId,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      await _agileDoc(projectId).set({
+        'metricsConfig': data,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      _invalidate(projectId);
+    } catch (error) {
+      debugPrint('AgileWireframeService.saveMetricsConfig error: $error');
+      rethrow;
+    }
+  }
+
+  // ── Kanban Config ──
+
+  static Future<Map<String, dynamic>> loadKanbanConfig(
+      String projectId) async {
+    try {
+      final doc = await _loadDoc(projectId);
+      if (doc == null) return {};
+      return (doc['kanbanConfig'] as Map<String, dynamic>?) ?? {};
+    } catch (error) {
+      debugPrint('AgileWireframeService.loadKanbanConfig error: $error');
+      return {};
+    }
+  }
+
+  static Future<void> saveKanbanConfig({
+    required String projectId,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      await _agileDoc(projectId).set({
+        'kanbanConfig': data,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      _invalidate(projectId);
+    } catch (error) {
+      debugPrint('AgileWireframeService.saveKanbanConfig error: $error');
       rethrow;
     }
   }

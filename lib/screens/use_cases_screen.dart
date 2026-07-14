@@ -28,11 +28,11 @@ class UseCasesScreen extends StatelessWidget {
               const SizedBox(height: 48),
               _sectionTitle('Explore by Industry'),
               const SizedBox(height: 24),
-              _industryGrid(isDesktop),
+              _industryGrid(context, isDesktop),
               const SizedBox(height: 56),
               _sectionTitle('Explore by Delivery Methodology'),
               const SizedBox(height: 24),
-              _methodologyGrid(isDesktop),
+              _methodologyGrid(context, isDesktop),
               const SizedBox(height: 56),
               _sectionTitle('Program & Portfolio Demonstrations'),
               const SizedBox(height: 8),
@@ -48,7 +48,7 @@ class UseCasesScreen extends StatelessWidget {
               const SizedBox(height: 24),
               _sectionSubTitle('Project Demonstrations'),
               const SizedBox(height: 16),
-              _demoGrid(isDesktop),
+              _demoGrid(context, isDesktop),
               const SizedBox(height: 32),
               _sectionSubTitle('Program Demonstration'),
               const SizedBox(height: 16),
@@ -134,7 +134,7 @@ class UseCasesScreen extends StatelessWidget {
     return Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white70));
   }
 
-  Widget _industryGrid(bool isDesktop) {
+  Widget _industryGrid(BuildContext context, bool isDesktop) {
     final industries = [
       _Industry(icon: Icons.bolt, name: 'Energy', demo: 'Solar Farm Expansion', color: const Color(0xFFF59E0B), highlights: ['Business Case', 'WBS', 'Procurement', 'Contractor Mgmt', 'Schedule', 'Risk Register', 'Exec Dashboard']),
       _Industry(icon: Icons.computer, name: 'Information Technology', demo: 'AI Customer Support Platform', color: const Color(0xFF3B82F6), highlights: ['Business Case', 'Frontend Planning', 'Sprint Planning', 'Kanban Board', 'Burndown Charts', 'Release Planning']),
@@ -144,12 +144,10 @@ class UseCasesScreen extends StatelessWidget {
       _Industry(icon: Icons.account_balance, name: 'Government', demo: 'City Infrastructure Modernization', color: const Color(0xFF06B6D4), highlights: ['Capital Planning', 'Procurement', 'Public Stakeholders', 'Executive Reporting']),
     ];
     final cols = isDesktop ? 3 : 1;
-    return Wrap(spacing: 20, runSpacing: 20, children: industries.map((i) => SizedBox(width: cols == 1 ? double.infinity : (MediaQuery.sizeOf(_context()).width - 240) / cols, child: _industryCard(i))).toList());
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final cardWidth = cols == 1 ? double.infinity : (screenWidth - 240) / cols;
+    return Wrap(spacing: 20, runSpacing: 20, children: industries.map((i) => SizedBox(width: cardWidth, child: _industryCard(i))).toList());
   }
-
-  BuildContext _context() => _contextKey.currentContext!;
-
-  static final GlobalKey _contextKey = GlobalKey();
 
   Widget _industryCard(_Industry ind) {
     return Container(
@@ -177,14 +175,16 @@ class UseCasesScreen extends StatelessWidget {
     );
   }
 
-  Widget _methodologyGrid(bool isDesktop) {
+  Widget _methodologyGrid(BuildContext context, bool isDesktop) {
     final meths = [
       _Methodology(name: 'Waterfall Projects', desc: 'Designed for engineering, construction, infrastructure, capital projects, and regulated industries.', demos: ['Solar Farm Expansion', 'Hospital Imaging Center Construction'], color: const Color(0xFF3B82F6)),
       _Methodology(name: 'Agile Projects', desc: 'Built for software development, innovation, and product teams.', demos: ['AI Customer Support Platform', 'University Mobile Student App'], color: const Color(0xFF10B981)),
       _Methodology(name: 'Hybrid Projects', desc: 'Combines structured planning with iterative execution.', demos: ['Smart Manufacturing Transformation', 'Enterprise EHR Modernization'], color: const Color(0xFF8B5CF6)),
     ];
     final cols = isDesktop ? 3 : 1;
-    return Wrap(spacing: 20, runSpacing: 20, children: meths.map((m) => SizedBox(width: cols == 1 ? double.infinity : (MediaQuery.sizeOf(_context()).width - 240) / cols, child: _methodologyCard(m))).toList());
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final cardWidth = cols == 1 ? double.infinity : (screenWidth - 240) / cols;
+    return Wrap(spacing: 20, runSpacing: 20, children: meths.map((m) => SizedBox(width: cardWidth, child: _methodologyCard(m))).toList());
   }
 
   Widget _methodologyCard(_Methodology m) {
@@ -275,7 +275,7 @@ class UseCasesScreen extends StatelessWidget {
     );
   }
 
-  Widget _demoGrid(bool isDesktop) {
+  Widget _demoGrid(BuildContext context, bool isDesktop) {
     final demos = [
       _Demo('Solar Farm Expansion', 'Energy', 'Waterfall', Icons.wb_sunny, const Color(0xFFF59E0B), ['Project Charter', 'AI-generated WBS', 'Schedule Builder', 'Procurement Planning', 'Contractor Management', 'Risk Dashboard', 'Executive Reporting']),
       _Demo('AI Customer Support Platform', 'Information Technology', 'Agile', Icons.support_agent, const Color(0xFF3B82F6), ['Product Vision', 'Product Backlog', 'Sprint Planning', 'AI Story Generation', 'Sprint Boards', 'Sprint Reviews', 'Burndown Charts']),
@@ -285,7 +285,9 @@ class UseCasesScreen extends StatelessWidget {
       _Demo('Enterprise EHR Modernization', 'Healthcare', 'Hybrid', Icons.favorite, const Color(0xFFEC4899), ['Program Governance', 'Multi-site Rollout', 'Vendor Management', 'Data Migration', 'Sprint Planning', 'Change Management', 'Executive Reporting']),
     ];
     final cols = isDesktop ? 3 : 1;
-    return Wrap(spacing: 20, runSpacing: 20, children: demos.map((d) => SizedBox(width: cols == 1 ? double.infinity : (MediaQuery.sizeOf(_context()).width - 240) / cols, child: _demoCard(d))).toList());
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final cardWidth = cols == 1 ? double.infinity : (screenWidth - 240) / cols;
+    return Wrap(spacing: 20, runSpacing: 20, children: demos.map((d) => SizedBox(width: cardWidth, child: _demoCard(d))).toList());
   }
 
   Widget _demoCard(_Demo d) {

@@ -114,6 +114,7 @@ import 'package:ndu_project/screens/summarize_account_risks_screen.dart';
 import 'package:ndu_project/screens/financial_closeout_screen.dart';
 import 'package:ndu_project/screens/benefits_realization_screen.dart';
 import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
+import 'package:ndu_project/screens/agile_project_hub_screen.dart';
 import 'package:ndu_project/screens/scope_completion_screen.dart';
 import 'package:ndu_project/screens/requirements_implementation_screen.dart';
 import 'package:ndu_project/screens/backend_design_screen.dart';
@@ -276,7 +277,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Contracts Tracking',
     'Vendor Tracking',
     'Detailed Design',
-    'Agile Development Iterations',
+    'Agile Project Hub',
     'Scope Tracking Implementation',
     'Stakeholder Alignment',
     'Update Ops and Maintenance Plans',
@@ -1406,6 +1407,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openAgileDevelopmentIterations() {
     _navigateWithCheckpoint('agile_development_iterations',
         const AgileDevelopmentIterationsScreen());
+  }
+
+  void _openAgileProjectHub() {
+    _navigateWithCheckpoint('agile_development_iterations',
+        const AgileProjectHubScreen());
   }
 
   void _openScopeCompletion() {
@@ -2645,9 +2651,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         _buildSubMenuItem('Detailed Design',
             onTap: _openDetailedDesign,
             isActive: widget.activeItemLabel == 'Detailed Design'),
-        _buildSubMenuItem('Agile Development Iterations',
-            onTap: _openAgileDevelopmentIterations,
-            isActive: widget.activeItemLabel == 'Agile Development Iterations'),
+        _buildSubMenuItem('Agile Project Hub',
+            onTap: _openAgileProjectHub,
+            isActive: widget.activeItemLabel == 'Agile Project Hub'),
         _buildSubMenuItem('Scope Tracking Implementation',
             onTap: _openScopeTrackingImplementation,
             isActive:

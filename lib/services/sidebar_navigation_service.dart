@@ -299,7 +299,7 @@ class SidebarNavigationService {
     SidebarItem(checkpoint: 'detailed_design', label: 'Detailed Design'),
     SidebarItem(
         checkpoint: 'agile_development_iterations',
-        label: 'Agile Development Iterations'),
+        label: 'Agile Project Hub'),
     SidebarItem(
         checkpoint: 'scope_tracking_implementation',
         label: 'Scope Tracking Implementation'),

@@ -213,7 +213,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _ModalField(
-                                label: 'Monthly Cost',
+                                label: 'Monthly Rate',
                                 controller: costController,
                                 hint: '5000',
                                 icon: Icons.attach_money_rounded,
@@ -446,7 +446,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
   void _showImportDialog() async {
     final headers = [
       'Role', 'Qty', 'Type', 'Start Date', 'Duration (months)',
-      'Monthly Cost', 'Status'
+      'Monthly Rate', 'Status'
     ];
     final sampleRows = [
       ['Project Manager', '1', 'Internal', 'Jan 2024', '6', '4000', 'Active'],
@@ -496,7 +496,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
   void _downloadTemplate() {
     TableImportHelper.downloadTemplate(
       filename: 'staffing_needs_template.csv',
-      headers: ['Role', 'Qty', 'Type', 'Start Date', 'Duration (months)', 'Monthly Cost', 'Status'],
+      headers: ['Role', 'Qty', 'Type', 'Start Date', 'Duration (months)', 'Monthly Rate', 'Status'],
       sampleRows: [
         ['Project Manager', '1', 'Internal', 'Jan 2024', '6', '4000', 'Active'],
         ['Technical Lead', '2', 'Internal', 'Jan 2024', '8', '5000', 'Active'],
@@ -905,7 +905,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
           _PremiumHeaderCell('Type', flex: 2),
           _PremiumHeaderCell('Start Date', flex: 2),
           _PremiumHeaderCell('Duration', flex: 2),
-          _PremiumHeaderCell('Monthly Cost', flex: 2),
+          _PremiumHeaderCell('Monthly Rate', flex: 2),
           _PremiumHeaderCell('Subtotal', flex: 2),
           _PremiumHeaderCell('Status', flex: 2),
           _PremiumHeaderCell('Actions', flex: 2),
@@ -1343,7 +1343,7 @@ class _PremiumStaffingRowState extends State<_PremiumStaffingRow> {
                             hint: '—',
                           ),
                   ),
-                  // ── Monthly Cost ──
+                  // ── Monthly Rate ──
                   Expanded(
                     flex: 2,
                     child: _isEditing

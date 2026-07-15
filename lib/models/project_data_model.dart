@@ -2603,6 +2603,8 @@ class OpportunityItem {
   List<String> appliesTo;
   String assignedTo;
   String impact;
+  /// Whether this opportunity has been accepted (applied to cost estimate)
+  bool isAccepted;
 
   OpportunityItem({
     required this.id,
@@ -2619,7 +2621,32 @@ class OpportunityItem {
     this.appliesTo = const [],
     this.assignedTo = '',
     this.impact = 'Medium',
+    this.isAccepted = false,
   });
+
+  OpportunityItem copyWithAcceptance({required bool accepted}) {
+    // Build the appliesTo list immutably — add 'Estimate' when accepting
+    final newAppliesTo = accepted && !appliesTo.contains('Estimate')
+        ? [...appliesTo, 'Estimate']
+        : List<String>.from(appliesTo);
+    return OpportunityItem(
+      id: id,
+      opportunity: opportunity,
+      discipline: discipline,
+      stakeholder: stakeholder,
+      responsibleRole: responsibleRole,
+      potentialCostSavings: potentialCostSavings,
+      potentialScheduleSavings: potentialScheduleSavings,
+      implementationStrategy: implementationStrategy,
+      applicablePhase: applicablePhase,
+      owner: owner,
+      status: status,
+      appliesTo: newAppliesTo,
+      assignedTo: assignedTo,
+      impact: impact,
+      isAccepted: accepted,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -2636,6 +2663,7 @@ class OpportunityItem {
         'appliesTo': appliesTo,
         'assignedTo': assignedTo,
         'impact': impact,
+        'isAccepted': isAccepted,
       };
 
   factory OpportunityItem.fromJson(Map<String, dynamic> json) {
@@ -2666,6 +2694,7 @@ class OpportunityItem {
       appliesTo: appliesTo,
       assignedTo: json['assignedTo']?.toString() ?? '',
       impact: json['impact']?.toString() ?? 'Medium',
+      isAccepted: json['isAccepted'] == true,
     );
   }
 }

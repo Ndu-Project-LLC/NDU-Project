@@ -38,6 +38,8 @@ import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/csv_table_import_button.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SafeSection — Build-time error boundary that prevents a single failing child
@@ -174,9 +176,16 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
  bool _isSaving = false;
  bool _hasUnsavedChanges = false;
  DateTime? _lastSavedAt;
- bool _reviewConfirmed = false;
+  bool _reviewConfirmed = false;
 
- // Admin status
+  static const List<CsvColumnSpec> _riskCsvColumns = [
+    CsvColumnSpec(key: 'solutionTitle', label: 'Solution Title', required: true, sampleValue: 'Cloud Migration'),
+    CsvColumnSpec(key: 'risk1', label: 'Risk 1', sampleValue: 'Budget overrun due to unforeseen costs'),
+    CsvColumnSpec(key: 'risk2', label: 'Risk 2', sampleValue: 'Timeline delays from resource constraints'),
+    CsvColumnSpec(key: 'risk3', label: 'Risk 3', sampleValue: 'Technical complexity causing scope creep'),
+  ];
+
+  // Admin status
  bool _isAdmin = false;
 
  bool get _canUseAdminControls =>
@@ -442,9 +451,38 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
  }
  }
 
- Future<void> _regenerateAllRisks() async {
- await _generateRisks();
- }
+  Future<void> _regenerateAllRisks() async {
+    await _generateRisks();
+  }
+
+  void _handleCsvImport(List<Map<String, String>> rows) {
+    int imported = 0;
+    for (final row in rows) {
+      final solutionTitle = row['solutionTitle']?.trim() ?? '';
+      if (solutionTitle.isEmpty) continue;
+      setState(() {
+        _solutions.add(AiSolutionItem(title: solutionTitle, description: ''));
+        final risks = [
+          row['risk1']?.trim() ?? '',
+          row['risk2']?.trim() ?? '',
+          row['risk3']?.trim() ?? '',
+        ];
+        _solutionTitleControllers.add(TextEditingController(text: solutionTitle)
+          ..addListener(_onDataChanged));
+        _riskControllers.add(List.generate(3, (r) {
+          final c = _createRiskController(text: risks[r]);
+          return c;
+        }));
+        imported++;
+      });
+    }
+    _onDataChanged();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Imported $imported solution(s) with risks from CSV')),
+      );
+    }
+  }
 
  @override
  Widget build(BuildContext context) {
@@ -1542,21 +1580,26 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
  child: const Icon(Icons.info_outline,
  color: Colors.white),
  ),
- const SizedBox(width: 24),
- ElevatedButton.icon(
- onPressed: _addNewRisk,
- icon: const Icon(Icons.add),
- label: const Text('Add Risk'),
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFFFD700),
- foregroundColor: Colors.black,
- elevation: 0,
- padding: const EdgeInsets.symmetric(
- horizontal: 20, vertical: 12),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- ),
- ),
+ const SizedBox(width: 24),          CsvTableImportButton(
+            tableTitle: 'Risk Identification',
+            columns: _riskCsvColumns,
+            onImport: _handleCsvImport,
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton.icon(
+            onPressed: _addNewRisk,
+            icon: const Icon(Icons.add),
+            label: const Text('Add Risk'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFD700),
+              foregroundColor: Colors.black,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
  ],
  ),
  const SizedBox(height: 24),

@@ -866,7 +866,7 @@ class _OrganizationStaffingPlanScreenState
  ],
  ),
  const SizedBox(height: 16),
- PremiumEditDialog.fieldLabel('Monthly Rate'),
+                    PremiumEditDialog.fieldLabel('Monthly Rate'),
  PremiumEditDialog.textField(
  controller: monthlyCostController, hint: '2500'),
  const SizedBox(height: 16),

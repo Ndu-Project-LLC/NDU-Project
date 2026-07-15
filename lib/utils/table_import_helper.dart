@@ -23,7 +23,7 @@ import 'package:ndu_project/theme.dart';
 /// // Download a template
 /// TableImportHelper.downloadTemplate(
 ///   filename: 'staffing_template.csv',
-///   headers: ['Role', 'Qty', 'Type', 'Start Date', 'Duration', 'Monthly Cost', 'Status'],
+///   headers: ['Role', 'Qty', 'Type', 'Start Date', 'Duration', 'Monthly Rate', 'Status'],
 ///   sampleRows: [
 ///     ['Project Manager', '1', 'Internal', 'Jan 2024', '6', '4000', 'Active'],
 ///     ['Technical Lead', '2', 'Internal', 'Jan 2024', '8', '5000', 'Active'],

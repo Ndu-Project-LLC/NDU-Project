@@ -28,6 +28,8 @@ import 'package:ndu_project/screens/preferred_solution_analysis_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/access_policy.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/page_hint_dialog.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
@@ -145,6 +147,21 @@ class PotentialSolutionsScreen extends StatefulWidget {
 
 class _PotentialSolutionsScreenState extends State<PotentialSolutionsScreen> {
  static const String _notesFieldKey = 'potential_solutions_notes';
+
+  static const List<CsvColumnSpec> _solutionCsvColumns = [
+    CsvColumnSpec(
+      key: 'title',
+      label: 'Solution Title',
+      required: true,
+      sampleValue: 'Cloud Migration Platform',
+    ),
+    CsvColumnSpec(
+      key: 'description',
+      label: 'Description',
+      required: true,
+      sampleValue: 'Migrate on-premise infrastructure to AWS cloud services',
+    ),
+  ];
 
  // ignore: unused_field
  static const List<_SidebarItem> _sidebarItems = [
@@ -1612,15 +1629,22 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  _buildSolutionsSection(),
  if (_solutions.length < 3 && !_isLoadingSolutions) ...[
  const SizedBox(height: 16),
- Align(
- alignment: Alignment.centerRight,
- child: OutlinedButton.icon(
- onPressed:
- _isLoadingSolutions ? null : _addManualSolution,
- icon: const Icon(Icons.add),
- label: Text('Add Solution (${_solutions.length}/3)'),
- ),
- ),
+        Row(
+              children: [
+                CsvTableImportButton(
+                  tableTitle: 'Potential Solutions',
+                  columns: _solutionCsvColumns,
+                  onImport: (rows) => _handleSolutionCsvImport(rows),
+                  compact: true,
+                ),
+                const Spacer(),
+                OutlinedButton.icon(
+                  onPressed: _isLoadingSolutions ? null : _addManualSolution,
+                  icon: const Icon(Icons.add),
+                  label: Text('Add Solution (${_solutions.length}/3)'),
+                ),
+              ],
+            ),
  ],
  const SizedBox(height: 24),
  BusinessCaseNavigationButtons(
@@ -2297,8 +2321,49 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
 
  setState(() {});
  await _saveSolutions();
+
  }
  }
+
+  void _handleSolutionCsvImport(List<Map<String, String>> rows) {
+    if (_solutions.length >= 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Maximum 3 solutions allowed. Please delete one first.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    int imported = 0;
+    for (final row in rows) {
+      if (_solutions.length >= 3) break;
+      final title = row['title'] ?? '';
+      final description = row['description'] ?? '';
+      if (title.trim().isEmpty && description.trim().isEmpty) continue;
+      final created = SolutionRow(
+        number: _solutions.length + 1,
+        titleController: TextEditingController(text: title),
+        descriptionController: _createDescriptionController(text: description),
+        isAiGenerated: false,
+      );
+      _seedSolutionFieldHistory(created);
+      _solutions.add(created);
+      imported++;
+    }
+    _syncDraftToProvider();
+    setState(() {});
+    _saveSolutions();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Imported $imported solution${imported == 1 ? '' : 's'}'),
+          backgroundColor: const Color(0xFF059669),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
  Future<void> _saveSolutions() async {
  final provider = ProjectDataHelper.getProvider(context);

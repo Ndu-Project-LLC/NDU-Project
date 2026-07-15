@@ -45,6 +45,8 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/expandable_text.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/csv_table_import_button.dart';
 
 class CostAnalysisScreen extends StatefulWidget {
  final String notes;
@@ -94,6 +96,32 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  static const double _benefitNotesColumnWidth = 240;
  static const double _benefitActionsColumnWidth = 132;
  static const double _initialCostActionsColumnWidth = 132;
+
+  static const List<CsvColumnSpec> _costCsvColumns = [
+    CsvColumnSpec(
+      key: 'itemName',
+      label: 'Item Name',
+      required: true,
+      sampleValue: 'Software licenses',
+    ),
+    CsvColumnSpec(
+      key: 'description',
+      label: 'Description',
+      sampleValue: 'Annual licensing for core platform modules',
+    ),
+    CsvColumnSpec(
+      key: 'cost',
+      label: 'Cost',
+      required: true,
+      hint: 'Numeric value only (e.g. 50000)',
+      sampleValue: '50000',
+    ),
+    CsvColumnSpec(
+      key: 'assumptions',
+      label: 'Assumptions',
+      sampleValue: 'Based on vendor quote Q3 2026',
+    ),
+  ];
 
  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
  final ScrollController _mainScrollController = ScrollController();
@@ -6028,6 +6056,12 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  _buildContingencyButtons(solutionIndex),
  const SizedBox(height: 10),
  Row(children: [
+ CsvTableImportButton(
+ tableTitle: 'Initial Cost Estimate',
+ columns: _costCsvColumns,
+ onImport: (rows) => _handleCostCsvImport(solutionIndex, rows),
+ compact: true,
+ ),
  const Spacer(),
  OutlinedButton.icon(
  onPressed: () => _addInitialCostRow(solutionIndex),
@@ -6079,6 +6113,38 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  });
  _refreshJustificationFor(solutionIndex, force: true);
  _markDirty();
+ }
+
+ void _handleCostCsvImport(int solutionIndex, List<Map<String, String>> rows) {
+ if (solutionIndex < 0 || solutionIndex >= _rowsPerSolution.length) return;
+ int imported = 0;
+ for (final row in rows) {
+ final itemName = row['itemName'] ?? '';
+ final cost = row['cost'] ?? '';
+ if (itemName.trim().isEmpty && cost.trim().isEmpty) continue;
+ final costRow = _CostRow(currencyProvider: () => _currency);
+ _attachRowDirtyListeners(costRow);
+ costRow.setHorizon(_npvHorizon);
+ costRow.itemController.text = itemName;
+ costRow.descriptionController.text = row['description'] ?? '';
+ costRow.costController.text = cost;
+ costRow.assumptionsController.text = row['assumptions'] ?? '';
+ setState(() {
+ _rowsPerSolution[solutionIndex].add(costRow);
+ });
+ imported++;
+ }
+ _refreshJustificationFor(solutionIndex, force: true);
+ _markDirty();
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text('Imported $imported cost item${imported == 1 ? '' : 's'}'),
+ backgroundColor: const Color(0xFF059669),
+ duration: const Duration(seconds: 2),
+ ),
+ );
+ }
  }
 
  int _findSolutionIndexForRow(_CostRow row) {

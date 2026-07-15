@@ -18,6 +18,8 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/csv_table_import_button.dart';
 
 class RiskAssessmentScreen extends StatefulWidget {
  const RiskAssessmentScreen({super.key});
@@ -58,9 +60,19 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  DateTime? _mitigationSavedAt;
  bool _didInitNotes = false;
  bool _loadingMitigationSuggestions = false;
- String? _mitigationSuggestionError;
- final Set<String> _seededRiskDescriptions = {};
- final Set<String> _regeneratingMitigationIds = {};
+ String? _mitigationSuggestionError;final Set<String> _seededRiskDescriptions = {};
+  final Set<String> _regeneratingMitigationIds = {};
+
+  static const List<CsvColumnSpec> _riskCsvColumns = [
+    CsvColumnSpec(key: 'id', label: 'Risk ID', sampleValue: 'R-001'),
+    CsvColumnSpec(key: 'description', label: 'Description', required: true, sampleValue: 'Budget overrun risk'),
+    CsvColumnSpec(key: 'category', label: 'Category', sampleValue: 'Financial'),
+    CsvColumnSpec(key: 'probability', label: 'Probability', allowedValues: ['Low', 'Medium', 'High'], defaultValue: 'Medium'),
+    CsvColumnSpec(key: 'impact', label: 'Impact', allowedValues: ['Low', 'Medium', 'High'], defaultValue: 'Medium'),
+    CsvColumnSpec(key: 'score', label: 'Risk Score', sampleValue: '12'),
+    CsvColumnSpec(key: 'owner', label: 'Owner', sampleValue: 'Project Manager'),
+    CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Open', 'In Progress', 'Monitoring', 'Closed'], defaultValue: 'Open'),
+  ];
 
  @override
  void initState() {
@@ -433,18 +445,18 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  saving: _mitigationSaving,
  savedAt: _mitigationSavedAt,
  regeneratingIds: _regeneratingMitigationIds),
- const SizedBox(height: 16),
- // Risk Register
- _RiskRegister(
- entries: entries,
- loading: _loadingEntries,
- searchController: _searchController,
- onAdd: () => _openEntryDialog(),
- onFilter: _openFilterDialog,
- onView: (entry) =>
- _openEntryDialog(entry: entry, readOnly: true),
- onEdit: (entry) => _openEntryDialog(entry: entry),
- ),
+ const SizedBox(height: 16),    // Risk Register
+        _RiskRegister(
+          entries: entries,
+          loading: _loadingEntries,
+          searchController: _searchController,
+          onAdd: () => _openEntryDialog(),
+          onFilter: _openFilterDialog,
+          onCsvImport: _handleCsvImport,
+          onView: (entry) =>
+              _openEntryDialog(entry: entry, readOnly: true),
+          onEdit: (entry) => _openEntryDialog(entry: entry),
+        ),
  ],
  ),
  ),
@@ -751,11 +763,48 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  } finally {
  if (mounted) {
  setState(() => _regeneratingMitigationIds.remove(entry.docId));
- }
- }
- }
+ }}
 
- Future<void> _exportPdf() async {
+  Future<void> _handleCsvImport(List<Map<String, String>> rows) async {
+    int imported = 0;
+    for (final row in rows) {
+      final description = row['description']?.trim() ?? '';
+      if (description.isEmpty) continue;
+      final entry = _RiskEntry(
+        docId: _newEntryId(),
+        id: row['id']?.trim().isNotEmpty == true
+            ? row['id']!.trim()
+            : 'R-${DateTime.now().millisecondsSinceEpoch + imported}',
+        description: description,
+        category: row['category']?.trim() ?? '',
+        probability: row['probability']?.trim().isNotEmpty == true
+            ? row['probability']!.trim()
+            : 'Medium',
+        impact: row['impact']?.trim().isNotEmpty == true
+            ? row['impact']!.trim()
+            : 'Medium',
+        score: row['score']?.trim() ?? '',
+        discipline: '',
+        role: '',
+        owner: row['owner']?.trim() ?? '',
+        status: row['status']?.trim().isNotEmpty == true
+            ? row['status']!.trim()
+            : 'Open',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      setState(() => _entries.insert(0, entry));
+      await _persistEntry(entry, isNew: true);
+      imported++;
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Imported $imported risk(s) from CSV')),
+      );
+    }
+  }
+
+  Future<void> _exportPdf() async {
  final projectData = ProjectDataHelper.getData(context);
  await PdfExportHelper.exportScreenPdf(
  context: context,
@@ -1606,28 +1655,29 @@ class _MitigationPlanCard extends StatelessWidget {
  ),
  const SizedBox(height: 12),
  ],
- );
- }
+ );  }
 }
 
 class _RiskRegister extends StatelessWidget {
- const _RiskRegister({
- required this.entries,
- required this.loading,
- required this.searchController,
- required this.onAdd,
- required this.onFilter,
- required this.onView,
- required this.onEdit,
- });
+  const _RiskRegister({
+    required this.entries,
+    required this.loading,
+    required this.searchController,
+    required this.onAdd,
+    required this.onFilter,
+    required this.onCsvImport,
+    required this.onView,
+    required this.onEdit,
+  });
 
- final List<_RiskEntry> entries;
- final bool loading;
- final TextEditingController searchController;
- final VoidCallback onAdd;
- final VoidCallback onFilter;
- final ValueChanged<_RiskEntry> onView;
- final ValueChanged<_RiskEntry> onEdit;
+  final List<_RiskEntry> entries;
+  final bool loading;
+  final TextEditingController searchController;
+  final VoidCallback onAdd;
+  final VoidCallback onFilter;
+  final ValueChanged<List<Map<String, String>>> onCsvImport;
+  final ValueChanged<_RiskEntry> onView;
+  final ValueChanged<_RiskEntry> onEdit;
 
  static const List<int> _columnFlex = [4, 3, 2, 2, 2, 1, 2, 2, 2];
  static const double _actionsColumnWidth = 96;
@@ -1681,11 +1731,16 @@ class _RiskRegister extends StatelessWidget {
  ),
  style: const TextStyle(fontSize: 14),
  ),
- ),
- const SizedBox(width: 8),
- _OutlinedButton(label: 'Filter', onPressed: onFilter),
- const SizedBox(width: 8),
- _YellowButton(label: 'Add Risk', onPressed: onAdd),
+ ),        const SizedBox(width: 8),
+        _OutlinedButton(label: 'Filter', onPressed: onFilter),
+        const SizedBox(width: 8),
+        CsvTableImportButton(
+          tableTitle: 'Risk Register',
+          columns: _RiskAssessmentScreenState._riskCsvColumns,
+          onImport: onCsvImport,
+        ),
+        const SizedBox(width: 8),
+        _YellowButton(label: 'Add Risk', onPressed: onAdd),
  ],
  ),
  const SizedBox(height: 16),

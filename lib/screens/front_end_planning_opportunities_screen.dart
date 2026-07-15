@@ -17,6 +17,7 @@ import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/batch_delete_bar.dart';
 import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/screens/design_phase_screen.dart';
 import 'package:ndu_project/screens/staff_team_screen.dart';
@@ -58,6 +59,10 @@ class _FrontEndPlanningOpportunitiesScreenState
  // Backing rows for the table; built from incoming requirements (if any).
  late List<OpportunityItem> _rows;
  bool _isGeneratingOpportunities = false;
+ 
+ // Multi-select batch deletion state
+ final Set<String> _selectedIds = {};
+ bool get _hasSelection => _selectedIds.isNotEmpty;
 
  @override
  void initState() {
@@ -277,26 +282,25 @@ Future<void> _checkAndAutoGenerateOpportunities() async {
  : 'Opportunity ${index + 1}';
  final implementationStrategy = item.implementationStrategy.trim().isNotEmpty
  ? item.implementationStrategy.trim()
- : 'Define implementation steps, owner handoffs, and validation checkpoints.';
-
- return OpportunityItem(
- id: id,
- opportunity: opportunity,
- discipline: item.discipline.trim(),
- stakeholder: role,
- responsibleRole: role,
- potentialCostSavings: item.potentialCostSavings.trim(),
- potentialScheduleSavings: item.potentialScheduleSavings.trim(),
- implementationStrategy: implementationStrategy,
- applicablePhase: phase,
- owner: owner,
- status: status,
- appliesTo: item.appliesTo.isNotEmpty
- ? List<String>.from(item.appliesTo)
- : _tagsFromPhase(phase),
- assignedTo: owner,
- impact: item.impact.trim().isNotEmpty ? item.impact.trim() : 'Medium',
- );
+ : 'Define implementation steps, owner handoffs, and validation checkpoints.';    return OpportunityItem(
+      id: id,
+      opportunity: opportunity,
+      discipline: item.discipline.trim(),
+      stakeholder: role,
+      responsibleRole: role,
+      potentialCostSavings: item.potentialCostSavings.trim(),
+      potentialScheduleSavings: item.potentialScheduleSavings.trim(),
+      implementationStrategy: implementationStrategy,
+      applicablePhase: phase,
+      owner: owner,
+      status: status,
+      appliesTo: item.appliesTo.isNotEmpty
+          ? List<String>.from(item.appliesTo)
+          : _tagsFromPhase(phase),
+      assignedTo: owner,
+      impact: item.impact.trim().isNotEmpty ? item.impact.trim() : 'Medium',
+      isAccepted: item.isAccepted,
+    );
  }
 
  String _phaseFromTags(List<String> tags) {
@@ -703,6 +707,8 @@ Opportunity generation constraints:
  ),
  )
  else
+ Column(
+ children: [
  _OpportunityTable(
  rows: _rows,
  onEdit: (item) {
@@ -712,6 +718,24 @@ Opportunity generation constraints:
  onDelete: _confirmDeleteOpportunity,
  onUndo: _undoOpportunityRow,
  canUndoRow: _canUndoOpportunityRow,
+ selectedIds: _selectedIds,
+ onToggleSelect: _toggleSelection,
+ onAcceptReject: _handleAcceptReject,
+ ),
+ if (_hasSelection)
+ Padding(
+ padding: const EdgeInsets.only(top: 12),              child: BatchDeleteBar(
+                    selectedCount: _selectedIds.length,
+                    onDelete: () async {
+                      await _handleBatchDelete();
+                      return true;
+                    },
+                    onClear: () => setState(() => _selectedIds.clear()),
+                    itemLabel: 'opportunities',
+                    confirmTitle: 'Delete selected opportunities?',
+                  ),
+ ),
+ ],
  ),
  const SizedBox(height: 80),
  ],
@@ -856,9 +880,43 @@ Opportunity generation constraints:
  _rows.removeAt(index);
  });
  _syncOpportunitiesToProvider();
- }
+ }  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
 
- Future<void> _submitOpportunities() async {
+  void _handleAcceptReject(int index) {
+    if (index < 0 || index >= _rows.length) return;
+    final row = _rows[index];
+    final updated = row.copyWithAcceptance(accepted: !row.isAccepted);
+    setState(() {
+      _rows[index] = _normalizeOpportunityItem(updated, index: index);
+    });
+    _syncOpportunitiesToProvider();
+  }
+
+  Future<void> _handleBatchDelete() async {
+    if (_selectedIds.isEmpty) return;
+    final count = _selectedIds.length;
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Selected Opportunities?',
+      itemLabel: '$count item${count == 1 ? '' : 's'}',
+    );
+    if (!confirmed) return;
+    setState(() {
+      _rows.removeWhere((row) => _selectedIds.contains(row.id));
+      _selectedIds.clear();
+    });
+    _syncOpportunitiesToProvider();
+  }
+
+  Future<void> _submitOpportunities() async {
  final oppText = _rows
  .map((r) {
  final parts = <String>[
@@ -1632,22 +1690,26 @@ class _OpportunityDialogState extends State<_OpportunityDialog> {
  ),
  );
  }
-}
+}class _OpportunityTable extends StatefulWidget {
+  const _OpportunityTable({
+    required this.rows,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onUndo,
+    required this.canUndoRow,
+    required this.selectedIds,
+    required this.onToggleSelect,
+    required this.onAcceptReject,
+  });
 
-class _OpportunityTable extends StatefulWidget {
- const _OpportunityTable({
- required this.rows,
- required this.onEdit,
- required this.onDelete,
- required this.onUndo,
- required this.canUndoRow,
- });
-
- final List<OpportunityItem> rows;
- final Function(OpportunityItem) onEdit;
- final Future<void> Function(String) onDelete;
- final ValueChanged<int> onUndo;
- final bool Function(int) canUndoRow;
+  final List<OpportunityItem> rows;
+  final Function(OpportunityItem) onEdit;
+  final Future<void> Function(String) onDelete;
+  final ValueChanged<int> onUndo;
+  final bool Function(int) canUndoRow;
+  final Set<String> selectedIds;
+  final void Function(String) onToggleSelect;
+  final void Function(int) onAcceptReject;
 
  @override
  State<_OpportunityTable> createState() => _OpportunityTableState();
@@ -1703,20 +1765,20 @@ class _OpportunityTableState extends State<_OpportunityTable> {
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: minTableWidth),
- child: Table(
- columnWidths: const {
- 0: FixedColumnWidth(52),
- 1: FixedColumnWidth(260),
- 2: FixedColumnWidth(150),
- 3: FixedColumnWidth(150),
- 4: FixedColumnWidth(320),
- 5: FixedColumnWidth(160),
- 6: FixedColumnWidth(180),
- 7: FixedColumnWidth(170),
- 8: FixedColumnWidth(160),
- 9: FixedColumnWidth(130),
- 10: FixedColumnWidth(140),
- },
+ child: Table(                columnWidths: const {
+                  0: FixedColumnWidth(48),
+                  1: FixedColumnWidth(52),
+                  2: FixedColumnWidth(260),
+                  3: FixedColumnWidth(150),
+                  4: FixedColumnWidth(150),
+                  5: FixedColumnWidth(320),
+                  6: FixedColumnWidth(150),
+                  7: FixedColumnWidth(150),
+                  8: FixedColumnWidth(150),
+                  9: FixedColumnWidth(170),
+                  10: FixedColumnWidth(160),
+                  11: FixedColumnWidth(180),
+                },
  border: TableBorder(
  horizontalInside: border,
  verticalInside: border,
@@ -1728,20 +1790,20 @@ class _OpportunityTableState extends State<_OpportunityTable> {
  defaultVerticalAlignment: TableCellVerticalAlignment.top,
  children: [
  TableRow(
- decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),
- children: [
- _th('No', headerStyle),
- _th('Potential Opportunity', headerStyle),
- _th('Potential Cost Savings', headerStyle),
- _th('Potential Schedule Savings', headerStyle),
- _th('Implementation Strategy', headerStyle),
- _th('Discipline', headerStyle),
- _th('Responsible Role', headerStyle),
- _th('Owner', headerStyle),
- _th('Applicable Phase', headerStyle),
- _th('Status', headerStyle),
- _th('Action', headerStyle),
- ],
+ decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),              children: [
+                    _th('Select', headerStyle),
+                    _th('No', headerStyle),
+                    _th('Potential Opportunity', headerStyle),
+                    _th('Potential Cost Savings', headerStyle),
+                    _th('Potential Schedule Savings', headerStyle),
+                    _th('Implementation Strategy', headerStyle),
+                    _th('Discipline', headerStyle),
+                    _th('Responsible Role', headerStyle),
+                    _th('Owner', headerStyle),
+                    _th('Applicable Phase', headerStyle),
+                    _th('Status', headerStyle),
+                    _th('Action', headerStyle),
+                  ],
  ),
  ...List<TableRow>.generate(rows.length, (i) {
  final r = rows[i];
@@ -1758,9 +1820,29 @@ class _OpportunityTableState extends State<_OpportunityTable> {
  final status =
  r.status.trim().isNotEmpty ? r.status : 'Identified';
  final canUndo = widget.canUndoRow(i);
+ final isAccepted = r.isAccepted;
 
- return TableRow(children: [
- td(Text('${i + 1}', style: cellStyle),
+ return TableRow(
+ decoration: BoxDecoration(
+ color: isAccepted ? const Color(0xFFF0FDF4) : Colors.transparent,
+ ),
+ children: [
+ // Checkbox column
+ td(Center(
+ child: SizedBox(
+ width: 20,
+ height: 20,
+ child: Checkbox(
+ value: widget.selectedIds.contains(r.id),
+ onChanged: (_) => widget.onToggleSelect(r.id),
+ activeColor: const Color(0xFF2563EB),
+ materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+ visualDensity: VisualDensity.compact,
+ ),
+ ),
+ )),
+ // Number column
+td(Text('${i + 1}', style: cellStyle),
  onDoubleTap: () => widget.onEdit(r)),
  td(
  _ExpandableCellText(
@@ -1829,11 +1911,37 @@ class _OpportunityTableState extends State<_OpportunityTable> {
  td(status.isEmpty
  ? const SizedBox.shrink()
  : _statusPill(status)),
+ // Action column with Accept/Reject toggle + edit/undo/delete
  td(
  Center(
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
+ // Accept/Reject toggle
+ InkWell(
+ onTap: () => widget.onAcceptReject(i),
+ borderRadius: BorderRadius.circular(8),
+ child: Container(
+ padding: const EdgeInsets.all(6),
+ decoration: BoxDecoration(
+ color: isAccepted
+ ? const Color(0xFFDCFCE7)
+ : const Color(0xFFF3F4F6),
+ borderRadius: BorderRadius.circular(8),
+ ),
+ child: Icon(
+ isAccepted
+ ? Icons.check_circle
+ : Icons.radio_button_unchecked,
+ size: 16,
+ color: isAccepted
+ ? const Color(0xFF059669)
+ : const Color(0xFF9CA3AF),
+ ),
+ ),
+ ),
+ const SizedBox(width: 6),
+ // Edit
  InkWell(
  onTap: () => widget.onEdit(r),
  borderRadius: BorderRadius.circular(8),
@@ -1848,6 +1956,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
  ),
  ),
  const SizedBox(width: 6),
+ // Undo
  InkWell(
  onTap:
  canUndo ? () => widget.onUndo(i) : null,
@@ -1868,6 +1977,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
  ),
  ),
  const SizedBox(width: 6),
+ // Delete
  InkWell(
  onTap: () => widget.onDelete(r.id),
  borderRadius: BorderRadius.circular(8),

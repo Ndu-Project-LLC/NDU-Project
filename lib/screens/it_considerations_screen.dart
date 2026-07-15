@@ -136,35 +136,36 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
  // Check admin status
  UserService.isCurrentUserAdmin().then((isAdmin) {
  if (mounted) setState(() => _isAdmin = isAdmin);
- });
+ });  ApiKeyManager.initializeApiKey();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!mounted) return;
+    try {
+      _loadExistingData();
+    } catch (e) { debugPrint('initState error: $e'); }
 
- ApiKeyManager.initializeApiKey();
- WidgetsBinding.instance.addPostFrameCallback((_) {
- if (!mounted) return;
- try {
- _loadExistingData();
- } catch (e) { debugPrint('initState error: $e'); }
- Future.delayed(const Duration(milliseconds: 500), () {
- if (!mounted) return;
- PageHintDialog.showIfNeeded(
- context: context,
- pageId: 'it_considerations',
- title: 'IT Considerations',
- message:
- 'List the core technology considerations for each potential solution. Click "Generate Technologies" to get AI suggestions tailored to each solution.',
- );
- });
- // Only auto-generate if we have actual solutions (not empty placeholder)
- // AND there is no saved IT data already (avoid wiping saved tech)
- if (widget.solutions.isNotEmpty) {
-   final existingData = ProjectDataInherited.maybeOf(context)?.projectData.itConsiderationsData;
-   final hasSavedData = existingData != null &&
-       existingData.solutionITData.any((s) => s.coreTechnology.trim().isNotEmpty);
-   if (!hasSavedData) {
-     _generateTechnologies();
-   }
- }
- });
+    // Only auto-generate if there is NO existing IT data with content
+    final provider = ProjectDataInherited.maybeOf(context);
+    final existingItData = provider?.projectData.itConsiderationsData;
+    final hasExistingData = existingItData != null &&
+        existingItData.solutionITData.isNotEmpty &&
+        existingItData.solutionITData.any(
+            (item) => item.coreTechnology.trim().isNotEmpty);
+
+    if (widget.solutions.isNotEmpty && !hasExistingData) {
+      _generateTechnologies();
+    }
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      PageHintDialog.showIfNeeded(
+        context: context,
+        pageId: 'it_considerations',
+        title: 'IT Considerations',
+        message:
+            'List the core technology considerations for each potential solution. Click "Generate Technologies" to get AI suggestions tailored to each solution.',
+      );
+    });
+  });
  }
 
  @override

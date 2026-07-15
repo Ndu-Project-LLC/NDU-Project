@@ -177,8 +177,7 @@ class _FrontEndPlanningPersonnelScreenState
  const TextInputType.numberWithOptions(
  decimal: true,
  ),
- decoration: const InputDecoration(
- labelText: 'Monthly Cost',
+ decoration: const InputDecoration(  labelText: 'Monthly Rate',
  border: OutlineInputBorder(),
  ),
  ),
@@ -591,8 +590,7 @@ class _PersonnelTable extends StatelessWidget {
  th('Project Roles'),
  th('Definition'),
  th('Qty'),
- th('Duration'),
- th('Monthly Cost'),
+ th('Duration'),  th('Monthly Rate'),
  th('Subtotal'),
  th('Type'),
  th('Status'),

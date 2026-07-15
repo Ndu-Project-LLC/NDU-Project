@@ -6,7 +6,7 @@ class StaffingRow {
   bool isInternal; // true = Internal, false = External
   String startDate;
   String durationMonths; // Duration in months (as string for flexibility)
-  String monthlyCost; // Monthly cost per person (as string for flexibility)
+  String monthlyCost; // Monthly rate per person (as string for flexibility)
   String roleDescription; // Prose description (no bullets)
   String skillRequirements; // Bullet list with "." separator
   String notes; // Manual notes only, no AI generation

@@ -763,7 +763,9 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  } finally {
  if (mounted) {
  setState(() => _regeneratingMitigationIds.remove(entry.docId));
- }}
+ }
+ }
+ }
 
   Future<void> _handleCsvImport(List<Map<String, String>> rows) async {
     int imported = 0;
@@ -1141,16 +1143,16 @@ class _MetricsWrap extends StatelessWidget {
  ),
  ];
 
-	return GridView.count(
-	crossAxisCount: 2,
-	childAspectRatio: 1.35,
-	shrinkWrap: true,
-	physics: const NeverScrollableScrollPhysics(),
-	crossAxisSpacing: 12,
-	mainAxisSpacing: 12,
-	children: cards,
-	);
-	}
+        return GridView.count(
+        crossAxisCount: 2,
+        childAspectRatio: 1.35,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        children: cards,
+        );
+        }
 }
 
 class _MetricCard extends StatelessWidget {
@@ -1166,68 +1168,68 @@ class _MetricCard extends StatelessWidget {
  final String? footer;
  final IconData? footerIcon;
 
-	@override
-	Widget build(BuildContext context) {
-	return Container(
-	padding: const EdgeInsets.all(16),
-	decoration: BoxDecoration(
-	color: Colors.white,
-	borderRadius: BorderRadius.circular(16),
-	border: Border.all(color: const Color(0xFFE5E7EB)),
-	boxShadow: const [
-	BoxShadow(
-	color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
-	],
-	),
-	child: Column(
-	crossAxisAlignment: CrossAxisAlignment.start,
-	mainAxisAlignment: MainAxisAlignment.spaceBetween,
-	children: [
-	// Small label
-	Text(
-	title,
-	maxLines: 1,
-	overflow: TextOverflow.ellipsis,
-	style: const TextStyle(
-	fontSize: 12,
-	fontWeight: FontWeight.w500,
-	color: Color(0xFF6B7280)),
-	),
-	const SizedBox(height: 8),
-	// Large value
-	Text(
-	value,
-	maxLines: 1,
-	overflow: TextOverflow.ellipsis,
-	style: const TextStyle(
-	fontSize: 24,
-	fontWeight: FontWeight.bold,
-	color: Color(0xFF111827)),
-	),
-	// Optional footer
-	if (footer != null) ...[
-	const SizedBox(height: 8),
-	Row(
-	children: [
-	if (footerIcon != null)
-	Icon(footerIcon, size: 14, color: const Color(0xFF9CA3AF)),
-	if (footerIcon != null) const SizedBox(width: 4),
-	Expanded(
-	child: Text(
-	footer!,
-	maxLines: 1,
-	overflow: TextOverflow.ellipsis,
-	style:
-	const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
-	),
-	),
-	],
-	),
-	],
-	],
-	),
-	);
-	}
+        @override
+        Widget build(BuildContext context) {
+        return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+        BoxShadow(
+        color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)),
+        ],
+        ),
+        child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+        // Small label
+        Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: Color(0xFF6B7280)),
+        ),
+        const SizedBox(height: 8),
+        // Large value
+        Text(
+        value,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFF111827)),
+        ),
+        // Optional footer
+        if (footer != null) ...[
+        const SizedBox(height: 8),
+        Row(
+        children: [
+        if (footerIcon != null)
+        Icon(footerIcon, size: 14, color: const Color(0xFF9CA3AF)),
+        if (footerIcon != null) const SizedBox(width: 4),
+        Expanded(
+        child: Text(
+        footer!,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style:
+        const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+        ),
+        ),
+        ],
+        ),
+        ],
+        ],
+        ),
+        );
+        }
 }
 
 class _RiskMatrixCard extends StatelessWidget {

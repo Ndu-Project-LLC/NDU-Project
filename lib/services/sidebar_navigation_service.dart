@@ -337,37 +337,37 @@ class SidebarNavigationService {
     // Launch Phase (11 sections per Launch Phase spec)
     SidebarItem(
         checkpoint: 'deliver_project_closure',
-        label: '1. Launch Readiness Assessment'),
+        label: 'Launch Readiness Assessment'),
     SidebarItem(
         checkpoint: 'transition_to_prod_team',
-        label: '2. Deployment Transfer, Certification & Release'),
+        label: 'Deployment Transfer, Certification & Release'),
     SidebarItem(
         checkpoint: 'fat_mechanical_completion',
-        label: '3. FAT, Mechanical Completion & Commission Solution'),
+        label: 'FAT, Mechanical Completion & Commission Solution'),
     SidebarItem(
         checkpoint: 'contract_close_out',
-        label: '4. Vendor & Contract Closeout'),
+        label: 'Vendor & Contract Closeout'),
     SidebarItem(
         checkpoint: 'actual_vs_planned_gap_analysis',
-        label: '5. Scope & Deliverable Reconciliation'),
+        label: 'Scope & Deliverable Reconciliation'),
     SidebarItem(
         checkpoint: 'commerce_viability',
-        label: '6. Hypercare & Warranty Support'),
+        label: 'Hypercare & Warranty Support'),
     SidebarItem(
         checkpoint: 'financial_closeout',
-        label: '7. Financial Closeout'),
+        label: 'Financial Closeout'),
     SidebarItem(
         checkpoint: 'summarize_account_risks',
-        label: '8. Project Performance Review'),
+        label: 'Project Performance Review'),
     SidebarItem(
         checkpoint: 'benefits_realization',
-        label: '9. Benefits Realization'),
+        label: 'Benefits Realization'),
     SidebarItem(
         checkpoint: 'demobilize_team',
-        label: '10. Team Demobilization & Operations/Production Transition'),
+        label: 'Team Demobilization & Operations/Production Transition'),
     SidebarItem(
         checkpoint: 'project_close_out',
-        label: '11. Project Closeout'),
+        label: 'Project Closeout'),
   ];
 
   /// Ordered, read-only sidebar catalog for admin surfaces that need to mirror

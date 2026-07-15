@@ -789,18 +789,21 @@ class _LandingScreenState extends State<LandingScreen>
  ),
  ),
  const SizedBox(height: 10),
- // 50% stat
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+ // 50% stat — yellow, wrapped, centered
+ Center(
+ child: Container(
+ constraints: const BoxConstraints(maxWidth: 700),
+ padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
  decoration: BoxDecoration(
- color: const Color(0xFFEF4444).withValues(alpha: 0.1),
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.25)),
+ color: const Color(0xFFFEF3C7),
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFFF59E0B), width: 2),
  ),
  child: Text(
  '50% of projects fail to meet original scope due to skipped front-end phases, fragmented tools, and poor implementation of project delivery processes',
- textAlign: isDesktop ? TextAlign.left : TextAlign.center,
- style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFFCA5A5), height: 1.5),
+ textAlign: TextAlign.center,
+ style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF78350F), height: 1.6),
+ ),
  ),
  ),
  const SizedBox(height: 10),

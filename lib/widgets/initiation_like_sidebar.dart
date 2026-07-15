@@ -338,17 +338,17 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   static const Set<String> _launchPhaseLabels = {
     'Launch Phase',
-    '1. Launch Readiness Assessment',
-    '2. Deployment Transfer, Certification & Release',
-    '3. FAT, Mechanical Completion & Commission Solution',
-    '4. Vendor & Contract Closeout',
-    '5. Scope & Deliverable Reconciliation',
-    '6. Hypercare & Warranty Support',
-    '7. Financial Closeout',
-    '8. Project Performance Review',
-    '9. Benefits Realization',
-    '10. Team Demobilization & Operations/Production Transition',
-    '11. Project Closeout',
+    'Launch Readiness Assessment',
+    'Deployment Transfer, Certification & Release',
+    'FAT, Mechanical Completion & Commission Solution',
+    'Vendor & Contract Closeout',
+    'Scope & Deliverable Reconciliation',
+    'Hypercare & Warranty Support',
+    'Financial Closeout',
+    'Project Performance Review',
+    'Benefits Realization',
+    'Team Demobilization & Operations/Production Transition',
+    'Project Closeout',
   };
 
   static const Set<String> _planningPhaseLabels = {
@@ -2116,9 +2116,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     final lockTechnicalDevelopment =
         _isBasicPlanLocked('Technical Development');
     final lockProjectSummary =
-        _isBasicPlanLocked('8. Project Performance Review');
+        _isBasicPlanLocked('Project Performance Review');
     final lockWarrantiesSupport =
-        _isBasicPlanLocked('6. Hypercare & Warranty Support');
+        _isBasicPlanLocked('Hypercare & Warranty Support');
     return [
       _buildMenuItem(
         Icons.home_outlined,
@@ -2868,53 +2868,53 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         isActive: _activeIn(_launchPhaseLabels),
       ),
       if (_launchPhaseExpanded) ...[
-        _buildSubMenuItem('1. Launch Readiness Assessment',
+        _buildSubMenuItem('Launch Readiness Assessment',
             onTap: _openDeliverProjectClosure,
             isActive: widget.activeItemLabel ==
-                '1. Launch Readiness Assessment'),
-        _buildSubMenuItem('2. Deployment Transfer, Certification & Release',
+                'Launch Readiness Assessment'),
+        _buildSubMenuItem('Deployment Transfer, Certification & Release',
             onTap: _openTransitionToProdTeam,
             isActive: widget.activeItemLabel ==
-                '2. Deployment Transfer, Certification & Release'),
-        _buildSubMenuItem('3. FAT, Mechanical Completion & Commission Solution',
+                'Deployment Transfer, Certification & Release'),
+        _buildSubMenuItem('FAT, Mechanical Completion & Commission Solution',
             onTap: _openFatMechanicalCompletion,
             isActive: widget.activeItemLabel ==
-                '3. FAT, Mechanical Completion & Commission Solution'),
-        _buildSubMenuItem('4. Vendor & Contract Closeout',
+                'FAT, Mechanical Completion & Commission Solution'),
+        _buildSubMenuItem('Vendor & Contract Closeout',
             onTap: _openContractCloseOut,
             isActive:
-                widget.activeItemLabel == '4. Vendor & Contract Closeout'),
-        _buildSubMenuItem('5. Scope & Deliverable Reconciliation',
+                widget.activeItemLabel == 'Vendor & Contract Closeout'),
+        _buildSubMenuItem('Scope & Deliverable Reconciliation',
             onTap: _openActualVsPlannedGapAnalysis,
             isActive: widget.activeItemLabel ==
-                '5. Scope & Deliverable Reconciliation'),
+                'Scope & Deliverable Reconciliation'),
         _buildSubMenuItem(
-          '6. Hypercare & Warranty Support',
+          'Hypercare & Warranty Support',
           onTap: lockWarrantiesSupport ? null : _openCommerceViability,
           isActive:
-              widget.activeItemLabel == '6. Hypercare & Warranty Support',
+              widget.activeItemLabel == 'Hypercare & Warranty Support',
           isDisabled: lockWarrantiesSupport,
         ),
-        _buildSubMenuItem('7. Financial Closeout',
+        _buildSubMenuItem('Financial Closeout',
             onTap: _openFinancialCloseout,
-            isActive: widget.activeItemLabel == '7. Financial Closeout'),
-        _buildSubMenuItem('8. Project Performance Review',
+            isActive: widget.activeItemLabel == 'Financial Closeout'),
+        _buildSubMenuItem('Project Performance Review',
             onTap: lockProjectSummary ? null : _openSummarizeAccountRisks,
             isActive:
-                widget.activeItemLabel == '8. Project Performance Review',
+                widget.activeItemLabel == 'Project Performance Review',
             isDisabled: lockProjectSummary,
         ),
-        _buildSubMenuItem('9. Benefits Realization',
+        _buildSubMenuItem('Benefits Realization',
             onTap: _openBenefitsRealization,
-            isActive: widget.activeItemLabel == '9. Benefits Realization'),
+            isActive: widget.activeItemLabel == 'Benefits Realization'),
         _buildSubMenuItem(
-            '10. Team Demobilization & Operations/Production Transition',
+            'Team Demobilization & Operations/Production Transition',
             onTap: _openDemobilizeTeam,
             isActive: widget.activeItemLabel ==
-                '10. Team Demobilization & Operations/Production Transition'),
-        _buildSubMenuItem('11. Project Closeout',
+                'Team Demobilization & Operations/Production Transition'),
+        _buildSubMenuItem('Project Closeout',
             onTap: _openProjectCloseOutLongForm,
-            isActive: widget.activeItemLabel == '11. Project Closeout'),
+            isActive: widget.activeItemLabel == 'Project Closeout'),
       ],
       const SizedBox(height: 20),
       _buildMenuItem(Icons.settings_outlined, 'Settings',
@@ -2956,9 +2956,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     final lockTechnicalDevelopment =
         _isBasicPlanLocked('Technical Development');
     final lockProjectSummary =
-        _isBasicPlanLocked('8. Project Performance Review');
+        _isBasicPlanLocked('Project Performance Review');
     final lockWarrantiesSupport =
-        _isBasicPlanLocked('6. Hypercare & Warranty Support');
+        _isBasicPlanLocked('Hypercare & Warranty Support');
 
     // Search through all menu items
     if ('home'.contains(query)) {
@@ -3775,10 +3775,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'launch readiness'.contains(query) ||
         'readiness assessment'.contains(query)) {
       results.add(_buildMenuItem(
-          Icons.delivery_dining_outlined, '1. Launch Readiness Assessment',
+          Icons.delivery_dining_outlined, 'Launch Readiness Assessment',
           onTap: _openDeliverProjectClosure,
           isActive: widget.activeItemLabel ==
-              '1. Launch Readiness Assessment'));
+              'Launch Readiness Assessment'));
     }
     if ('contract close out'.contains(query) ||
         'contract closure'.contains(query) ||
@@ -3786,17 +3786,17 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'vendor closeout'.contains(query) ||
         'vendor contract'.contains(query)) {
       results.add(_buildMenuItem(
-          Icons.description_outlined, '4. Vendor & Contract Closeout',
+          Icons.description_outlined, 'Vendor & Contract Closeout',
           onTap: _openContractCloseOut,
-          isActive: widget.activeItemLabel == '4. Vendor & Contract Closeout'));
+          isActive: widget.activeItemLabel == 'Vendor & Contract Closeout'));
     }
     if ('vendor account close out'.contains(query) ||
         'vendor close'.contains(query) ||
         'vendor account'.contains(query)) {
       results.add(_buildMenuItem(
-          Icons.business_outlined, '4. Vendor & Contract Closeout',
+          Icons.business_outlined, 'Vendor & Contract Closeout',
           onTap: _openContractCloseOut,
-          isActive: widget.activeItemLabel == '4. Vendor & Contract Closeout'));
+          isActive: widget.activeItemLabel == 'Vendor & Contract Closeout'));
     }
     if ('transition'.contains(query) ||
         'production team'.contains(query) ||
@@ -3807,10 +3807,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'release'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.swap_horiz_outlined,
-          '2. Deployment Transfer, Certification & Release',
+          'Deployment Transfer, Certification & Release',
           onTap: _openTransitionToProdTeam,
           isActive: widget.activeItemLabel ==
-              '2. Deployment Transfer, Certification & Release'));
+              'Deployment Transfer, Certification & Release'));
     }
     if ('fat'.contains(query) ||
         'mechanical completion'.contains(query) ||
@@ -3819,34 +3819,34 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'turnover'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.engineering_outlined,
-          '3. FAT, Mechanical Completion & Commission Solution',
+          'FAT, Mechanical Completion & Commission Solution',
           onTap: _openFatMechanicalCompletion,
           isActive: widget.activeItemLabel ==
-              '3. FAT, Mechanical Completion & Commission Solution'));
+              'FAT, Mechanical Completion & Commission Solution'));
     }
     if ('project close out'.contains(query) ||
         'project closure'.contains(query) ||
         'closeout'.contains(query) ||
         'project closeout'.contains(query)) {
       results.add(_buildMenuItem(
-          Icons.task_alt_outlined, '11. Project Closeout',
+          Icons.task_alt_outlined, 'Project Closeout',
           onTap: _openProjectCloseOutLongForm,
-          isActive: widget.activeItemLabel == '11. Project Closeout'));
+          isActive: widget.activeItemLabel == 'Project Closeout'));
     }
     if ('close out long form'.contains(query) || 'long form'.contains(query)) {
       results.add(_buildMenuItem(
-          Icons.task_alt_outlined, '11. Project Closeout',
+          Icons.task_alt_outlined, 'Project Closeout',
           onTap: _openProjectCloseOutLongForm,
-          isActive: widget.activeItemLabel == '11. Project Closeout'));
+          isActive: widget.activeItemLabel == 'Project Closeout'));
     }
     if ('close out summarized form'.contains(query) ||
         'summarized form'.contains(query) ||
         'summary form'.contains(query) ||
         'close out summary'.contains(query)) {
       results.add(_buildMenuItem(
-          Icons.task_alt_outlined, '11. Project Closeout',
+          Icons.task_alt_outlined, 'Project Closeout',
           onTap: _openProjectCloseOutLongForm,
-          isActive: widget.activeItemLabel == '11. Project Closeout'));
+          isActive: widget.activeItemLabel == 'Project Closeout'));
     }
     if ('demobilize team'.contains(query) ||
         'demobilize'.contains(query) ||
@@ -3856,10 +3856,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'production transition'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.groups_outlined,
-          '10. Team Demobilization & Operations/Production Transition',
+          'Team Demobilization & Operations/Production Transition',
           onTap: _openDemobilizeTeam,
           isActive: widget.activeItemLabel ==
-              '10. Team Demobilization & Operations/Production Transition'));
+              'Team Demobilization & Operations/Production Transition'));
     }
     if ('project financial review'.contains(query) ||
         'actual vs planned'.contains(query) ||
@@ -3871,10 +3871,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(
         _buildMenuItem(
           Icons.compare_arrows_outlined,
-          '5. Scope & Deliverable Reconciliation',
+          'Scope & Deliverable Reconciliation',
           onTap: _openActualVsPlannedGapAnalysis,
           isActive: widget.activeItemLabel ==
-              '5. Scope & Deliverable Reconciliation',
+              'Scope & Deliverable Reconciliation',
         ),
       );
     }
@@ -3882,10 +3882,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'scope reconciliation'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.compare_arrows_outlined,
-          '5. Scope & Deliverable Reconciliation',
+          'Scope & Deliverable Reconciliation',
           onTap: _openActualVsPlannedGapAnalysis,
           isActive: widget.activeItemLabel ==
-              '5. Scope & Deliverable Reconciliation'));
+              'Scope & Deliverable Reconciliation'));
     }
     if ('warranties'.contains(query) ||
         'warranty'.contains(query) ||
@@ -3898,10 +3898,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(
         _buildMenuItem(
           Icons.monetization_on_outlined,
-          '6. Hypercare & Warranty Support',
+          'Hypercare & Warranty Support',
           onTap: lockWarrantiesSupport ? null : _openCommerceViability,
           isActive:
-              widget.activeItemLabel == '6. Hypercare & Warranty Support',
+              widget.activeItemLabel == 'Hypercare & Warranty Support',
           isDisabled: lockWarrantiesSupport,
         ),
       );
@@ -3917,9 +3917,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(
         _buildMenuItem(
           Icons.summarize_outlined,
-          '8. Project Performance Review',
+          'Project Performance Review',
           onTap: lockProjectSummary ? null : _openSummarizeAccountRisks,
-          isActive: widget.activeItemLabel == '8. Project Performance Review',
+          isActive: widget.activeItemLabel == 'Project Performance Review',
           isDisabled: lockProjectSummary,
         ),
       );
@@ -3932,9 +3932,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'cpi'.contains(query) ||
         'roi'.contains(query)) {
       results.add(_buildMenuItem(
-          Icons.account_balance_wallet_outlined, '7. Financial Closeout',
+          Icons.account_balance_wallet_outlined, 'Financial Closeout',
           onTap: _openFinancialCloseout,
-          isActive: widget.activeItemLabel == '7. Financial Closeout'));
+          isActive: widget.activeItemLabel == 'Financial Closeout'));
     }
     if ('benefits realization'.contains(query) ||
         'benefits'.contains(query) ||
@@ -3942,9 +3942,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'benefit dashboard'.contains(query) ||
         'benefit quantification'.contains(query)) {
       results.add(_buildMenuItem(
-          Icons.insights_outlined, '9. Benefits Realization',
+          Icons.insights_outlined, 'Benefits Realization',
           onTap: _openBenefitsRealization,
-          isActive: widget.activeItemLabel == '9. Benefits Realization'));
+          isActive: widget.activeItemLabel == 'Benefits Realization'));
     }
     if ('project controls'.contains(query) ||
         'controls'.contains(query) ||

@@ -34,6 +34,7 @@ import 'package:ndu_project/screens/infrastructure_considerations_screen.dart';
 import 'package:ndu_project/screens/core_stakeholders_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/services/access_policy.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 
@@ -132,9 +133,10 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  ScrollController();
  bool _initiationExpanded = true;
  bool _businessCaseExpanded = true;
- final GlobalKey _tablesSectionKey = GlobalKey();
- int _currentStepIndex = 0;
- bool _reviewConfirmed = false;
+ final GlobalKey _tablesSectionKey = GlobalKey();  int _currentStepIndex = 0;
+  bool _reviewConfirmed = false;
+  // Admin view: full Cost Benefit Analysis. Non-admin: simplified Initial Cost Estimate only.
+  bool _isFullAdminView = false;
  bool _hasUnsavedChanges = false;
  bool _suppressDirtyTracking = false;
  bool _syncingProjectValueEditors = false;
@@ -423,11 +425,17 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  // Seed each tab with 3 placeholder rows to mirror the screenshot
  return List.generate(
  3, (j) => _CostRow(currencyProvider: () => _currency));
- });
- _currentStepIndex = _boundedIndex(
- widget.initialStepIndex ?? _currentStepIndex,
- _stepDefinitions.length,
- );
+ });    // Determine if this is the full admin view or simplified non-admin view
+    _isFullAdminView = AdminEditToggle.isAdmin() || AccessPolicy.isRestrictedAdminHost();
+    if (_isFullAdminView) {
+      _currentStepIndex = _boundedIndex(
+        widget.initialStepIndex ?? _currentStepIndex,
+        _stepDefinitions.length,
+      );
+    } else {
+      // Non-admin: always land on Initial Cost Estimate (index 1)
+      _currentStepIndex = 1;
+    }
  _activeTab = _boundedIndex(
  widget.initialSolutionIndex ?? _activeTab,
  _rowsPerSolution.isEmpty ? 1 : _rowsPerSolution.length,
@@ -2040,25 +2048,25 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  horizontalPadding, horizontalPadding, 0),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.center,
- children: [
- const Center(
- child: EditableContentText(
- contentKey: 'cost_analysis_heading',
- fallback:
- 'Cost Benefit Analysis & Financial Metrics',
- category: 'business_case',
- style: TextStyle(
- fontSize: 22, fontWeight: FontWeight.bold)),
- ),
+ children: [Center(
+                      child: EditableContentText(
+                        contentKey: 'cost_analysis_heading',
+                        fallback: _isFullAdminView
+                            ? 'Cost Benefit Analysis & Financial Metrics'
+                            : 'Initial Cost Estimate',
+                        category: 'business_case',
+                        style: const TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.bold)),
+                    ),
  const SizedBox(height: 6),
  Row(
  crossAxisAlignment: CrossAxisAlignment.end,
  children: [
  Expanded(
  child: EditableContentText(
- contentKey: 'cost_analysis_description',
- fallback:
- 'Analyze the selected solution\'s investment profile, project value, ROI and NPV in a consolidated workspace.',
+ contentKey: 'cost_analysis_description',fallback: _isFullAdminView
+                              ? 'Analyze the selected solution\'s investment profile, project value, ROI and NPV in a consolidated workspace.'
+                              : 'Capture itemized cost items for each potential solution to build an AI-assisted initial cost estimate.',
  category: 'business_case',
  style: TextStyle(
  fontSize: 14, color: Colors.grey[600]),
@@ -2079,8 +2087,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  ),
  ],
  ),
- const SizedBox(height: 20),
- Center(child: _buildStepProgressIndicator()),
+ const SizedBox(height: 20),                      if (_isFullAdminView) Center(child: _buildStepProgressIndicator()),
  ],
  ),
  ),
@@ -2090,8 +2097,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  isMobile: isMobile,
  horizonLabel: horizonLabel,
  padding: contentPadding,
- ),
- _buildStepNavigationControls(),
+ ),                      if (_isFullAdminView) _buildStepNavigationControls(),
  // Removed duplicate BusinessCaseNavigationButtons - navigation is handled by _buildStepNavigationControls()
  ],
  ),

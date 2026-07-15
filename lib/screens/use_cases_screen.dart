@@ -20,7 +20,7 @@ class UseCasesScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _backButton(context),
+              _buildTopBar(context),
               const SizedBox(height: 32),
               _header(),
               const SizedBox(height: 48),
@@ -64,6 +64,21 @@ class UseCasesScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
+    return Row(
+      children: [
+        Image.asset(
+          'assets/images/Logo.png',
+          height: isDesktop ? 70 : 50,
+          fit: BoxFit.contain,
+        ),
+        const Spacer(),
+        _backButton(context),
+      ],
     );
   }
 

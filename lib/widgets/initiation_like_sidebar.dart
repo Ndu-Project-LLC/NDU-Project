@@ -56,6 +56,7 @@ import 'package:ndu_project/screens/agile_team_structure_screen.dart';
 import 'package:ndu_project/screens/agile_epics_features_screen.dart';
 import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
 import 'package:ndu_project/screens/agile_release_plan_screen.dart';
+import 'package:ndu_project/screens/agile_project_baseline_screen.dart';
 import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
 import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
@@ -1131,6 +1132,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openAgileBacklogGovernance() {
     _navigateWithCheckpoint(
         'agile_backlog_governance', const AgileBacklogGovernanceScreen());
+  }
+
+  void _openAgileProjectBaseline() {
+    _navigateWithCheckpoint(
+        'agile_project_baseline', const AgileProjectBaselineScreen());
   }
 
   void _openAgileKanbanConfig() {

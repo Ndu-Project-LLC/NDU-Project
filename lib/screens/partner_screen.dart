@@ -24,7 +24,7 @@ class PartnerScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildBackButton(context),
+              _buildTopBar(context),
               const SizedBox(height: 32),
               _buildHero(),
               const SizedBox(height: 64),
@@ -44,6 +44,22 @@ class PartnerScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
+    return Row(
+      children: [
+        // Ndu Project logo
+        Image.asset(
+          'assets/images/Logo.png',
+          height: isDesktop ? 70 : 50,
+          fit: BoxFit.contain,
+        ),
+        const Spacer(),
+        _buildBackButton(context),
+      ],
     );
   }
 

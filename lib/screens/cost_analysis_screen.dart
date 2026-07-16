@@ -135,7 +135,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  bool _businessCaseExpanded = true;
  final GlobalKey _tablesSectionKey = GlobalKey();  int _currentStepIndex = 0;
   bool _reviewConfirmed = false;
-  // Admin view: full Cost Benefit Analysis. Non-admin: simplified Initial Cost Estimate only.
+  // Full Cost Benefit Analysis is only available on the admin web host.
   bool _isFullAdminView = false;
  bool _hasUnsavedChanges = false;
  bool _suppressDirtyTracking = false;
@@ -425,15 +425,16 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
  // Seed each tab with 3 placeholder rows to mirror the screenshot
  return List.generate(
  3, (j) => _CostRow(currencyProvider: () => _currency));
- });    // Determine if this is the full admin view or simplified non-admin view
-    _isFullAdminView = AdminEditToggle.isAdmin() || AccessPolicy.isRestrictedAdminHost();
+ });
+    // Render the full workflow only on admin.nduproject.com.
+    _isFullAdminView = AccessPolicy.isRestrictedAdminHost();
     if (_isFullAdminView) {
       _currentStepIndex = _boundedIndex(
         widget.initialStepIndex ?? _currentStepIndex,
         _stepDefinitions.length,
       );
     } else {
-      // Non-admin: always land on Initial Cost Estimate (index 1)
+      // All non-admin-host renders land on Initial Cost Estimate (index 1).
       _currentStepIndex = 1;
     }
  _activeTab = _boundedIndex(

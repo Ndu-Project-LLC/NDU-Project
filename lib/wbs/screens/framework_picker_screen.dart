@@ -14,6 +14,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
@@ -27,13 +28,12 @@ class FrameworkPickerScreen extends StatefulWidget {
 
 class _FrameworkPickerScreenState extends State<FrameworkPickerScreen> {
   int _step = 0;
-  String _projectName = '';
   ProjectMethodology? _methodology;
   WBSFramework? _framework;
 
   @override
   Widget build(BuildContext context) {
-    final totalSteps = 3;
+    final totalSteps = 2;
     return ResponsiveScaffold(
       activeItemLabel: 'Work Breakdown Structure',
       appBarTitle: 'Work Breakdown Structure',
@@ -149,19 +149,15 @@ class _FrameworkPickerScreenState extends State<FrameworkPickerScreen> {
   bool _canProceed() {
     switch (_step) {
       case 0:
-        return _projectName.trim().isNotEmpty;
-      case 1:
         return _methodology != null;
-      case 2:
+      case 1:
         return _framework != null;
     }
     return false;
   }
 
   void _handleNext() {
-    if (_step == 0 && _projectName.trim().isNotEmpty) {
-      setState(() => _step = 1);
-    } else if (_step == 1 && _methodology != null) {
+    if (_step == 0 && _methodology != null) {
       // Auto-select the default framework based on methodology
       if (_framework == null) {
         _framework = switch (_methodology!) {
@@ -170,10 +166,13 @@ class _FrameworkPickerScreenState extends State<FrameworkPickerScreen> {
           ProjectMethodology.hybrid => WBSFramework.waterfallDeliverable,
         };
       }
-      setState(() => _step = 2);
-    } else if (_step == 2 && _framework != null) {
+      setState(() => _step = 1);
+    } else if (_step == 1 && _framework != null) {
+      // Get project name from the application context
+      final projectData = context.read<ProjectDataProvider>();
+      final projectName = projectData.projectData.projectName;
       context.read<WBSProvider>().setup(
-            projectName: _projectName.trim(),
+            projectName: projectName.isNotEmpty ? projectName : 'Untitled Project',
             framework: _framework!,
             methodology: _methodology!,
           );
@@ -183,61 +182,14 @@ class _FrameworkPickerScreenState extends State<FrameworkPickerScreen> {
   Widget _buildStepContent() {
     switch (_step) {
       case 0:
-        return _buildProjectNameStep();
-      case 1:
         return _buildMethodologyStep();
-      case 2:
+      case 1:
         return _buildFrameworkStep();
     }
     return const SizedBox();
   }
 
-  // ── STEP 1: Project Name ───────────────────────────────────────────
-
-  Widget _buildProjectNameStep() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text('Name your project',
-            style: TextStyle(
-                color: Color(0xFF1A1D1F),
-                fontSize: 28,
-                fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        const Text(
-            'This becomes the Level 0 root node of your WBS. It represents the overall project or product being delivered.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF6B7280), fontSize: 14)),
-        const SizedBox(height: 32),
-        TextField(
-          onChanged: (v) => setState(() => _projectName = v),
-          decoration: InputDecoration(
-            labelText: 'Project name (Level 0)',
-            labelStyle:
-                const TextStyle(color: Color(0xFF6B7280), fontSize: 11),
-            hintText: 'e.g. NDU Manufacturing Facility',
-            hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE4E7EC))),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: LightModeColors.accent, width: 1.6)),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE4E7EC))),
-          ),
-          style: const TextStyle(color: Color(0xFF1A1D1F), fontSize: 14),
-          autofocus: true,
-        ),
-      ],
-    );
-  }
-
-  // ── STEP 2: Methodology ────────────────────────────────────────────
+  // ── STEP 1: Methodology ────────────────────────────────────────────
 
   Widget _buildMethodologyStep() {
     return Column(
@@ -377,7 +329,7 @@ class _FrameworkPickerScreenState extends State<FrameworkPickerScreen> {
     );
   }
 
-  // ── STEP 3: Framework ──────────────────────────────────────────────
+  // ── STEP 2: Framework ──────────────────────────────────────────────
 
   Widget _buildFrameworkStep() {
     return Column(

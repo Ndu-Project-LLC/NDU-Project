@@ -779,45 +779,379 @@ class _BenefitsSection extends StatelessWidget {
 // SECTION 10: PRICING
 // ═════════════════════════════════════════════════════════════════════════
 
-class _PricingSection extends StatelessWidget {
+class _PricingSection extends StatefulWidget {
+  @override
+  State<_PricingSection> createState() => _PricingSectionState();
+}
+
+class _PricingSectionState extends State<_PricingSection> {
+  bool _isAnnual = false;
+
+  // Gold/Yellow accent colors matching the design image
+  static const _accentGold = Color(0xFFF59E0B);
+  static const _accentGoldLight = Color(0xFFFEF3C7);
+  static const _accentGoldDark = Color(0xFFD97706);
+
   @override
   Widget build(BuildContext context) {
-    final tiers = [
-      ('Basic', '\$29', '/user/month', ['Up to 5 projects', 'Core initiation tools', 'Basic dashboards', 'Email support'], _blue, false),
-      ('Professional', '\$79', '/user/month', ['Unlimited projects', 'Full PDOS lifecycle', 'KAZ AI assistant', 'Advanced analytics', 'Priority support'], _purple, true),
-      ('Enterprise', 'Custom', 'contact us', ['Everything in Professional', 'Multi-portfolio', 'API integrations', 'SSO & SAML', 'Dedicated support', 'Custom workflows'], _gold, false),
-    ];
     return Container(
       key: const Key('pricing'),
       padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 80),
+      color: Colors.white,
       child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1200),
+        constraints: const BoxConstraints(maxWidth: 1280),
         child: Column(children: [
-          Text('Pricing', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+          // Back navigation hint
+          Align(alignment: Alignment.centerLeft, child: Row(children: [
+            Icon(Icons.arrow_back, size: 16, color: Colors.grey[600]),
+            const SizedBox(width: 8),
+            Text('Select a plan that fits your needs', style: TextStyle(color: Colors.grey[600], fontSize: 14, fontFamily: appFontFamily)),
+          ])),
+          const SizedBox(height: 32),
+
+          // Main Title
+          Text('Simple, Scalable Pricing for Every Level of Project Delivery',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: const Color(0xFF111827),
+              fontSize: 36,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+              fontFamily: appFontFamily,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Subtitle
+          Text("Whether you're managing a single project or an enterprise portfolio, Ndu Project grows with your organization.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 15,
+              height: 1.5,
+              fontFamily: appFontFamily,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text('Transparent pricing for teams of every size. Additional roles available.', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
+
+          // Underline accent
+          Container(width: 80, height: 3, decoration: BoxDecoration(color: _accentGold, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 40),
-          Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: tiers.map((t) => _tierCard(t.$1, t.$2, t.$3, t.$4, t.$5, t.$6, context)).toList()),
+
+          // Monthly/Annual Toggle Row
+          Row(mainAxisAlignment: MainAxisAlignment.end, crossAxisAlignment: CrossAxisAlignment.center, children: [
+            Text("Annual will save 1 month's payment",
+              style: TextStyle(color: Colors.grey[600], fontSize: 12, fontFamily: appFontFamily)),
+            const SizedBox(width: 16),
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                GestureDetector(
+                  onTap: () => setState(() => _isAnnual = false),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: !_isAnnual ? _accentGold : Colors.transparent,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('Monthly',
+                      style: TextStyle(
+                        color: !_isAnnual ? Colors.white : Colors.grey[600],
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: appFontFamily,
+                      ),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => setState(() => _isAnnual = true),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _isAnnual ? _accentGold : Colors.transparent,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('Annual',
+                      style: TextStyle(
+                        color: _isAnnual ? Colors.white : Colors.grey[600],
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: appFontFamily,
+                      ),
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+          ]),
+          const SizedBox(height: 32),
+
+          // Pricing Cards Grid
+          LayoutBuilder(builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 900;
+            final cardWidth = isMobile ? double.infinity : (constraints.maxWidth - 48) / 4;
+
+            return Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              alignment: WrapAlignment.center,
+              children: [
+                _buildPricingCard(
+                  context: context,
+                  badgeText: 'Regular Project',
+                  badgeColor: _accentGold,
+                  description: 'No Fuss routine project delivered at a fraction of the cost',
+                  price: _isAnnual ? '\$351' : '\$39',
+                  period: _isAnnual ? '/year' : 'per month',
+                  subText: 'First month free',
+                  features: [
+                    'Free for the first month',
+                    '1 user',
+                    'Full project delivery from initiation to Launch',
+                    'Auto AI assist',
+                    'One-time incremental AI assist per section',
+                    'Limited Documentation features',
+                    'Upgrade tier any time',
+                  ],
+                  isSelected: false,
+                  width: cardWidth,
+                ),
+                _buildPricingCard(
+                  context: context,
+                  badgeText: 'Project',
+                  badgeColor: _accentGold,
+                  description: 'Robust project delivered at an affordable rate',
+                  price: _isAnnual ? '\$1161' : '\$129',
+                  period: _isAnnual ? '/year' : 'per month',
+                  features: [
+                    'Maximum 7 users included',
+                    'Robust project delivery with full features including organization planning, design, change management, work breakdown structure, and more',
+                    'Auto AI assist',
+                    'One-time incremental AI assist per section',
+                    'Document print out feature',
+                    'Upgrade tier anytime',
+                  ],
+                  isSelected: false,
+                  width: cardWidth,
+                ),
+                _buildPricingCard(
+                  context: context,
+                  badgeText: 'Program',
+                  badgeColor: _accentGold,
+                  showSelectedBadge: true,
+                  description: 'Up to 3 projects at a discounted rate with interface management',
+                  price: _isAnnual ? '\$2871' : '\$319',
+                  period: _isAnnual ? '/year' : 'per month',
+                  features: [
+                    'Everything in Project',
+                    'Maximum 12 users included',
+                    'Monthly. Annual at a discount.',
+                    'Interface management',
+                    'Project dependency tracking',
+                    'Program level reports for cost, schedule, scope tracking',
+                  ],
+                  isSelected: true,
+                  width: cardWidth,
+                ),
+                _buildPricingCard(
+                  context: context,
+                  badgeText: 'Portfolio',
+                  badgeColor: _accentGold,
+                  description: 'Up to 9 projects at a bulk rate with integrated stewarding',
+                  price: _isAnnual ? '\$6750' : '\$750',
+                  period: _isAnnual ? '/year' : 'per month',
+                  features: [
+                    'Everything in Program',
+                    'Maximum 24 users included',
+                    'Portfolio level reports for cost, schedule, scope tracking',
+                  ],
+                  isSelected: false,
+                  width: cardWidth,
+                ),
+              ],
+            );
+          }),
         ]),
       )),
     );
   }
 
-  Widget _tierCard(String name, String price, String period, List<String> features, Color color, bool popular, BuildContext context) {
-    return Container(width: 280, margin: const EdgeInsets.symmetric(horizontal: 10), padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: popular ? _surfaceCard : _surfaceCard.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(16), border: Border.all(color: popular ? color : _border, width: popular ? 2 : 1), boxShadow: popular ? [BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 20)] : null), child: Column(children: [
-      if (popular) Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3), decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)), child: Text('MOST POPULAR', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
-      Text(name, style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
-      const SizedBox(height: 12),
-      Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.end, children: [Text(price, style: TextStyle(color: color, fontSize: 36, fontWeight: FontWeight.w900, fontFamily: appFontFamily)), const SizedBox(width: 4), Text(period, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]),
-      const SizedBox(height: 20),
-      ...features.map((f) => Padding(padding: const EdgeInsets.only(bottom: 10), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(Icons.check_circle, color: color, size: 14), const SizedBox(width: 8), Expanded(child: Text(f, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily)))]))),
-      const SizedBox(height: 20),
-      SizedBox(width: double.infinity, child: ElevatedButton(
-        onPressed: () => price == 'Custom' ? _launchUrl('mailto:contact@nduproject.com') : context.go('/create-account'),
-        style: ElevatedButton.styleFrom(backgroundColor: popular ? color : _surfaceHigh, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), padding: const EdgeInsets.symmetric(vertical: 12)),
-        child: Text(price == 'Custom' ? 'Contact Us' : 'Select Tier', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
-      )),
-    ]));
+  Widget _buildPricingCard({
+    required BuildContext context,
+    required String badgeText,
+    required Color badgeColor,
+    required String description,
+    required String price,
+    required String period,
+    String? subText,
+    required List<String> features,
+    required bool isSelected,
+    required double width,
+    bool showSelectedBadge = false,
+  }) {
+    return Container(
+      width: width,
+      constraints: const BoxConstraints(minWidth: 260, maxWidth: 320),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected ? _accentGoldDark : Colors.grey[300]!,
+          width: isSelected ? 2 : 1,
+        ),
+        boxShadow: isSelected
+            ? [BoxShadow(color: _accentGold.withValues(alpha: 0.15), blurRadius: 24, offset: const Offset(0, 4))]
+            : [BoxShadow(color: Colors.grey.withValues(alpha: 0.08), blurRadius: 12)],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Badge row
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: _accentGoldLight,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(badgeText,
+              style: TextStyle(
+                color: _accentGoldDark,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                fontFamily: appFontFamily,
+              ),
+            ),
+          ),
+          if (showSelectedBadge)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: _accentGoldLight,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _accentGold.withValues(alpha: 0.3)),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.check_circle, color: _accentGoldDark, size: 14),
+                const SizedBox(width: 4),
+                Text('Selected',
+                  style: TextStyle(
+                    color: _accentGoldDark,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: appFontFamily,
+                  ),
+                ),
+              ]),
+            ),
+        ]),
+        const SizedBox(height: 16),
+
+        // Description
+        Text(description,
+          style: TextStyle(
+            color: const Color(0xFF111827),
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            height: 1.4,
+            fontFamily: appFontFamily,
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Price
+        Row(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+          Text(price,
+            style: TextStyle(
+              color: const Color(0xFF111827),
+              fontSize: 36,
+              fontWeight: FontWeight.w800,
+              fontFamily: appFontFamily,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(period,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 13,
+              fontFamily: appFontFamily,
+            ),
+          ),
+        ]),
+
+        // Sub text (e.g., "First month free")
+        if (subText != null) ...[
+          const SizedBox(height: 4),
+          Text(subText,
+            style: TextStyle(
+              color: Colors.grey[500],
+              fontSize: 12,
+              fontFamily: appFontFamily,
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 20),
+
+        // Features list
+        ...features.map((feature) => Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+              margin: const EdgeInsets.only(top: 3),
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: _accentGold,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(feature,
+                style: TextStyle(
+                  color: Colors.grey[700],
+                  fontSize: 12.5,
+                  height: 1.4,
+                  fontFamily: appFontFamily,
+                ),
+              ),
+            ),
+          ]),
+        )),
+
+        const SizedBox(height: 24),
+
+        // CTA Button
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () => context.go('/create-account'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: isSelected ? Colors.white : _accentGoldDark,
+              backgroundColor: isSelected ? _accentGold : Colors.transparent,
+              side: BorderSide(color: isSelected ? _accentGoldDark : _accentGold),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(isSelected ? 'Selected' : 'Select Plan',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontFamily: appFontFamily,
+              ),
+            ),
+          ),
+        ),
+      ]),
+    );
   }
 }
 

@@ -921,46 +921,193 @@ class _PricingExtras extends StatelessWidget {
 
  Widget _buildFAQSection() {
  final faqs = [
- {'q': 'Can I upgrade between plans?', 'a': 'Yes. Upgrade at any time as your organization grows.'},
- {'q': 'Can I purchase additional projects instead of upgrading?', 'a': 'Yes. Additional Pro Projects can be purchased individually or you can upgrade to the Program or Portfolio tier for greater value.'},
- {'q': 'What happens if I exceed my included users?', 'a': 'You can add Contributors or Viewers anytime.'},
- {'q': 'Can I mix user roles?', 'a': 'Yes. Assign Owner, Admin, Editor, Contributor, and Viewer roles based on each user\'s responsibilities.'},
- {'q': 'Do Viewers consume a full license?', 'a': 'No. Viewer licenses are priced separately because they provide read-only access and do not contribute to project execution.'},
+ {'q': 'Can I upgrade between plans?', 'a': 'Yes. Upgrade at any time as your organization grows. Your data and project history carry over seamlessly, and you only pay the prorated difference for the remaining billing period.'},
+ {'q': 'Can I purchase additional projects instead of upgrading?', 'a': 'Yes. Additional Pro Projects can be purchased individually at any time, or you can upgrade to the Program or Portfolio tier for greater value and bundled features.'},
+ {'q': 'What happens if I exceed my included users?', 'a': 'You can add Contributors or Viewers anytime. Additional users are billed prorated to your current billing cycle. Contributors count toward your plan limit, while Viewers are priced separately at a lower rate.'},
+ {'q': 'Can I mix user roles?', 'a': 'Yes. Assign Owner, Admin, Editor, Contributor, and Viewer roles based on each user\'s responsibilities. You can change roles at any time, and role-based access controls ensure users only see what they need.'},
+ {'q': 'Do Viewers consume a full license?', 'a': 'No. Viewer licenses are priced separately because they provide read-only access and do not contribute to project execution. This allows stakeholders and executives to stay informed without consuming execution-tier licenses.'},
  ];
  return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const Text('Frequently Asked Questions', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: _primaryText)),
- const SizedBox(height: 20),
- ...faqs.map((faq) => Container(
- margin: const EdgeInsets.only(bottom: 12),
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
+ // Header with icon
  Row(
  children: [
- const Icon(Icons.help_outline, color: _themeColor, size: 20),
- const SizedBox(width: 8),
- Expanded(child: Text(faq['q']!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: _primaryText))),
+ Container(
+ padding: const EdgeInsets.all(10),
+ decoration: BoxDecoration(
+ color: _themeColor.withValues(alpha: 0.1),
+ borderRadius: BorderRadius.circular(12),
+ ),
+ child: const Icon(Icons.quiz_outlined, color: _themeColor, size: 24),
+ ),
+ const SizedBox(width: 12),
+ const Text('Frequently Asked Questions',
+ style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: _primaryText)),
  ],
  ),
- const SizedBox(height: 8),
- Padding(
- padding: const EdgeInsets.only(left: 28),
- child: Text(faq['q'] != faq['a'] ? faq['a']! : '', style: const TextStyle(fontSize: 13, color: _secondaryText, height: 1.5)),
- ),
- ],
- ),
- )).toList(),
+ const SizedBox(height: 6),
+ const Text('Everything you need to know about plans, pricing, and user roles.',
+ style: TextStyle(fontSize: 14, color: _secondaryText)),
+ const SizedBox(height: 24),
+ ...faqs.asMap().entries.map((entry) {
+ final index = entry.key;
+ final faq = entry.value;
+ return _buildFAQCard(index, faq['q']!, faq['a']!);
+ }).toList(),
  ],
  );
  }
+  Widget _buildFAQCard(int index, String question, String answer) {
+    return _FAQCard(index: index, question: question, answer: answer);
+  }
+}
+
+class _FAQCard extends StatefulWidget {
+  const _FAQCard({required this.index, required this.question, required this.answer});
+
+  final int index;
+  final String question;
+  final String answer;
+
+  @override
+  State<_FAQCard> createState() => _FAQCardState();
+}
+
+class _FAQCardState extends State<_FAQCard> with SingleTickerProviderStateMixin {
+  bool _isExpanded = false;
+  late AnimationController _animController;
+  late Animation<Color?> _borderColorAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    _borderColorAnimation = ColorTween(
+      begin: const Color(0xFFE5E7EB),
+      end: const Color(0xFFFFC812),
+    ).animate(_animController);
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  void _toggle() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+      if (_isExpanded) {
+        _animController.forward();
+      } else {
+        _animController.reverse();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _borderColorAnimation.value ?? const Color(0xFFE5E7EB),
+          width: _isExpanded ? 1.5 : 1,
+        ),
+        boxShadow: _isExpanded
+            ? [BoxShadow(color: const Color(0xFFFFC812).withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))]
+            : [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 1))],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: _toggle,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: _isExpanded
+                            ? const Color(0xFFFFC812)
+                            : const Color(0xFFFFC812).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${widget.index + 1}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: _isExpanded ? Colors.white : const Color(0xFFFFC812),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        widget.question,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: _isExpanded ? const Color(0xFF111827) : const Color(0xFF1F2937),
+                        ),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: _isExpanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 250),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: _isExpanded ? const Color(0xFFFFC812) : const Color(0xFF9CA3AF),
+                        size: 22,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AnimatedCrossFade(
+                duration: const Duration(milliseconds: 250),
+                crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                firstChild: const SizedBox.shrink(),
+                secondChild: Padding(
+                  padding: const EdgeInsets.only(left: 62, right: 20, bottom: 16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7).withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFFDE68A).withValues(alpha: 0.4)),
+                    ),
+                    child: Text(
+                      widget.answer,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF4B5563),
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _PricingPlan {

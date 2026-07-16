@@ -137,8 +137,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Agile Dashboard',
       subtitle: 'Real-time delivery performance',
       icon: Icons.dashboard_outlined,
-      gradientStart: Color(0xFF6366F1),
-      gradientEnd: Color(0xFF8B5CF6),
+      gradientStart: Color(0xFFF59E0B),
+      gradientEnd: Color(0xFFD97706),
       features: [
         'Active sprint overview',
         'Velocity trends',
@@ -153,8 +153,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Product Backlog',
       subtitle: 'Central repository for all work items',
       icon: Icons.list_alt_outlined,
-      gradientStart: Color(0xFF0EA5E9),
-      gradientEnd: Color(0xFF06B6D4),
+      gradientStart: Color(0xFFFFC812),
+      gradientEnd: Color(0xFFEAB308),
       features: [
         'User stories, Epics, Features',
         'Story point estimation',
@@ -169,8 +169,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Sprint / Iteration Planning',
       subtitle: 'Plan each development iteration',
       icon: Icons.event_note_outlined,
-      gradientStart: Color(0xFF10B981),
-      gradientEnd: Color(0xFF059669),
+      gradientStart: Color(0xFFF59E0B),
+      gradientEnd: Color(0xFFD97706),
       features: [
         'Sprint creation & goals',
         'Team capacity planning',
@@ -201,8 +201,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Kanban Board',
       subtitle: 'Visual work management board',
       icon: Icons.view_kanban_outlined,
-      gradientStart: Color(0xFFEC4899),
-      gradientEnd: Color(0xFFDB2777),
+      gradientStart: Color(0xFFEAB308),
+      gradientEnd: Color(0xFFCA8A04),
       features: [
         'Standard & configurable columns',
         'Drag-and-drop workflow',
@@ -217,8 +217,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Daily Standups',
       subtitle: 'Daily Agile ceremonies',
       icon: Icons.groups_outlined,
-      gradientStart: Color(0xFF8B5CF6),
-      gradientEnd: Color(0xFF7C3AED),
+      gradientStart: Color(0xFFD97706),
+      gradientEnd: Color(0xFFB45309),
       features: [
         'Yesterday / Today / Blockers',
         'Team attendance',
@@ -233,8 +233,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Sprint Reviews',
       subtitle: 'Review completed work with stakeholders',
       icon: Icons.rate_review_outlined,
-      gradientStart: Color(0xFF3B82F6),
-      gradientEnd: Color(0xFF2563EB),
+      gradientStart: Color(0xFFF59E0B),
+      gradientEnd: Color(0xFFD97706),
       features: [
         'Completed story review',
         'Demonstrations',
@@ -249,8 +249,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Sprint Retrospectives',
       subtitle: 'Continuous improvement',
       icon: Icons.lightbulb_outline,
-      gradientStart: Color(0xFFEF4444),
-      gradientEnd: Color(0xFFDC2626),
+      gradientStart: Color(0xFFF59E0B),
+      gradientEnd: Color(0xFFD97706),
       features: [
         'Start / Stop / Continue',
         'Mad / Sad / Glad',
@@ -265,8 +265,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Backlog Grooming',
       subtitle: 'Maintain backlog readiness',
       icon: Icons.tune_outlined,
-      gradientStart: Color(0xFF14B8A6),
-      gradientEnd: Color(0xFF0D9488),
+      gradientStart: Color(0xFFEAB308),
+      gradientEnd: Color(0xFFCA8A04),
       features: [
         'Story refinement & splitting',
         'Estimation updates',
@@ -281,8 +281,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Agile Metrics & Reporting',
       subtitle: 'Comprehensive delivery analytics',
       icon: Icons.analytics_outlined,
-      gradientStart: Color(0xFF6366F1),
-      gradientEnd: Color(0xFF4F46E5),
+      gradientStart: Color(0xFFF59E0B),
+      gradientEnd: Color(0xFFEAB308),
       features: [
         'Velocity & predictability',
         'Burndown & Burnup',
@@ -297,8 +297,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Release Planning',
       subtitle: 'Coordinate multiple sprints into releases',
       icon: Icons.rocket_launch_outlined,
-      gradientStart: Color(0xFFF97316),
-      gradientEnd: Color(0xFFEA580C),
+      gradientStart: Color(0xFFF59E0B),
+      gradientEnd: Color(0xFFD97706),
       features: [
         'Release roadmap',
         'Sprint-to-release mapping',
@@ -313,8 +313,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Agile Risks & Impediments',
       subtitle: 'Track delivery blockers',
       icon: Icons.warning_amber_outlined,
-      gradientStart: Color(0xFFDC2626),
-      gradientEnd: Color(0xFFB91C1C),
+      gradientStart: Color(0xFFD97706),
+      gradientEnd: Color(0xFFB45309),
       features: [
         'Blocker log',
         'Escalation workflow',
@@ -329,8 +329,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Team Capacity & Workload',
       subtitle: 'Support sustainable delivery',
       icon: Icons.fitness_center_outlined,
-      gradientStart: Color(0xFF0891B2),
-      gradientEnd: Color(0xFF0E7490),
+      gradientStart: Color(0xFFEAB308),
+      gradientEnd: Color(0xFFCA8A04),
       features: [
         'Capacity planning',
         'Team allocation',
@@ -345,8 +345,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'AI Agile Coach',
       subtitle: 'Embedded guidance throughout execution',
       icon: Icons.auto_awesome,
-      gradientStart: Color(0xFFA855F7),
-      gradientEnd: Color(0xFF9333EA),
+      gradientStart: Color(0xFFF59E0B),
+      gradientEnd: Color(0xFFD97706),
       features: [
         'Sprint planning recommendations',
         'Story writing assistance',
@@ -361,8 +361,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       title: 'Agile Roadmap',
       subtitle: 'Strategic visual roadmap',
       icon: Icons.map_outlined,
-      gradientStart: Color(0xFF059669),
-      gradientEnd: Color(0xFF047857),
+      gradientStart: Color(0xFFD97706),
+      gradientEnd: Color(0xFFB45309),
       features: [
         'Timeline & Hierarchical views',
         'Project progress tracking',
@@ -440,7 +440,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -489,7 +489,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFF6366F1)),
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFF59E0B)),
             child: const Text('Got it'),
           ),
         ],
@@ -564,13 +564,13 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
           colors: [
             Color(0xFF1E1B4B),
             Color(0xFF312E81),
-            Color(0xFF4338CA),
+            Color(0xFFCA8A04),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4338CA).withValues(alpha: 0.3),
+            color: const Color(0xFFCA8A04).withValues(alpha: 0.3),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -674,19 +674,19 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
           label: 'Total Stories',
           value: '$_totalStories',
           icon: Icons.assignment_outlined,
-          color: const Color(0xFF0EA5E9),
+          color: const Color(0xFFFFC812),
         ),
         _MetricCard(
           label: 'Total Epics',
           value: '$_totalEpics',
           icon: Icons.layers_outlined,
-          color: const Color(0xFF8B5CF6),
+          color: const Color(0xFFD97706),
         ),
         _MetricCard(
           label: 'Active Sprints',
           value: '$_activeSprints',
           icon: Icons.play_circle_outline,
-          color: const Color(0xFF10B981),
+          color: const Color(0xFFF59E0B),
         ),
         _MetricCard(
           label: 'Team Members',
@@ -755,7 +755,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF4338CA),
+                  color: Color(0xFFCA8A04),
                 ),
               ),
             ),
@@ -939,11 +939,11 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.auto_awesome,
-                    color: Color(0xFF059669), size: 22),
+                    color: Color(0xFFD97706), size: 22),
               ),
               const SizedBox(width: 12),
               const Expanded(

@@ -200,7 +200,7 @@ class _FatMechanicalCompletionScreenState
             _buildIntroPanel(),
             const SizedBox(height: 16),
             _buildSubsectionPanel(
-              title: 'Subsection 1 — Mechanical Completion',
+              title: 'Mechanical Completion',
               description:
                   'Track mechanical completion packages, turnover packages, equipment status, system completion, walkdowns, and work package references.',
               items: _mechanicalCompletionItems,
@@ -214,7 +214,7 @@ class _FatMechanicalCompletionScreenState
             ),
             const SizedBox(height: 16),
             _buildSubsectionPanel(
-              title: 'Subsection 2 — FAT / SAT / Commissioning',
+              title: 'FAT / SAT / Commissioning',
               description:
                   'Factory Acceptance Tests, Site Acceptance Tests, commissioning activities, functional testing, integrated system testing, performance verification, and operational readiness.',
               items: _fatSatCommissioningItems,
@@ -228,7 +228,7 @@ class _FatMechanicalCompletionScreenState
             ),
             const SizedBox(height: 16),
             _buildSubsectionPanel(
-              title: 'Subsection 3 — Final Turnover',
+              title: 'Final Turnover',
               description:
                   'Punch list closeout, as-built drawings, operating manuals, equipment handover, asset registration, owner acceptance, and final certificates.',
               items: _finalTurnoverItems,

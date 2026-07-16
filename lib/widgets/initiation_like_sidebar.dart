@@ -120,6 +120,15 @@ import 'package:ndu_project/screens/benefits_realization_screen.dart';
 import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
 import 'package:ndu_project/screens/agile_project_hub_screen.dart';
 import 'package:ndu_project/screens/agile_roadmap_screen.dart';
+import 'package:ndu_project/screens/agile_dashboard_screen.dart';
+import 'package:ndu_project/screens/agile_kanban_board_screen.dart';
+import 'package:ndu_project/screens/agile_daily_standups_screen.dart';
+import 'package:ndu_project/screens/agile_sprint_reviews_screen.dart';
+import 'package:ndu_project/screens/agile_retrospectives_screen.dart';
+import 'package:ndu_project/screens/agile_metrics_screen.dart';
+import 'package:ndu_project/screens/agile_risks_screen.dart';
+import 'package:ndu_project/screens/agile_ai_coach_screen.dart';
+import 'package:ndu_project/screens/agile_iteration_management_screen.dart';
 import 'package:ndu_project/screens/project_team_activities_screen.dart';
 import 'package:ndu_project/screens/recognition_awards_screen.dart';
 import 'package:ndu_project/screens/team_status_check_screen.dart';
@@ -324,6 +333,25 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Lessons Learned',
   };
 
+  static const Set<String> _agileHubLabels = {
+    'Agile Project Hub',
+    'Agile Project Hub - Agile Dashboard',
+    'Agile Project Hub - Product Backlog',
+    'Agile Project Hub - Sprint Planning',
+    'Agile Project Hub - Iteration Management',
+    'Agile Project Hub - Kanban Board',
+    'Agile Project Hub - Daily Standups',
+    'Agile Project Hub - Sprint Reviews',
+    'Agile Project Hub - Sprint Retrospectives',
+    'Agile Project Hub - Backlog Grooming',
+    'Agile Project Hub - Agile Metrics',
+    'Agile Project Hub - Release Planning',
+    'Agile Project Hub - Agile Risks',
+    'Agile Project Hub - Team Capacity',
+    'Agile Project Hub - AI Agile Coach',
+    'Agile Project Hub - Agile Roadmap',
+  };
+
   static const Set<String> _projectFinancialReviewLabels = {
     'Project Financial Review',
     'Actual vs Planned Gap Analysis',
@@ -409,6 +437,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   static bool? _sharedProjectPlanExpanded;
   static bool? _sharedPunchlistExpanded;
   static bool? _sharedProjectTeamExpanded;
+  static bool? _sharedAgileHubExpanded;
   static bool? _sharedCostEstimateExpanded;
   static bool? _sharedProjectServicesExpanded;
   static bool? _sharedAgileWireframeExpanded;
@@ -437,6 +466,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   late bool _projectPlanExpanded = _sharedProjectPlanExpanded ?? false;
   late bool _punchlistExpanded = _sharedPunchlistExpanded ?? false;
   late bool _projectTeamExpanded = _sharedProjectTeamExpanded ?? false;
+  late bool _agileHubExpanded = _sharedAgileHubExpanded ?? false;
   late bool _costEstimateExpanded = _sharedCostEstimateExpanded ?? false;
   late bool _projectServicesExpanded = _sharedProjectServicesExpanded ?? false;
   late bool _agileWireframeExpanded = _sharedAgileWireframeExpanded ?? false;
@@ -537,6 +567,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     expandIf(_projectTeamLabels, _projectTeamExpanded, () {
       _projectTeamExpanded = true;
       _sharedProjectTeamExpanded = true;
+    });
+    expandIf(_agileHubLabels, _agileHubExpanded, () {
+      _agileHubExpanded = true;
+      _sharedAgileHubExpanded = true;
     });
     expandIf(_launchPhaseLabels, _launchPhaseExpanded, () {
       _launchPhaseExpanded = true;
@@ -1482,6 +1516,43 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openAgileProjectHub() {
     _navigateWithCheckpoint('agile_development_iterations',
         const AgileProjectHubScreen());
+  }
+
+  void _showAgileComingSoon(String sectionName) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(sectionName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
+          ],
+        ),
+        content: const Text(
+          'This section is being activated as part of the Agile Project Hub rollout. '
+          'Data from earlier phases flows into this module automatically.',
+          style: TextStyle(fontSize: 14, color: Color(0xFF6B7280), height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFF6366F1)),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _openScopeCompletion() {
@@ -2786,9 +2857,92 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         _buildSubMenuItem('Detailed Design',
             onTap: _openDetailedDesign,
             isActive: widget.activeItemLabel == 'Detailed Design'),
-        _buildSubMenuItem('Agile Project Hub',
-            onTap: _openAgileProjectHub,
-            isActive: widget.activeItemLabel == 'Agile Project Hub'),
+        _buildSubExpandableHeader(
+          'Agile Project Hub',
+          expanded: _agileHubExpanded,
+          onTap: () => setState(() {
+            _agileHubExpanded = !_agileHubExpanded;
+            _sharedAgileHubExpanded = _agileHubExpanded;
+          }),
+          isActive: _activeIn(_agileHubLabels),
+        ),
+        if (_agileHubExpanded) ...[
+          _buildSubSubMenuItem(
+            'Agile Dashboard',
+            onTap: () => AgileDashboardScreen.open(context),
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Agile Dashboard',
+          ),
+          _buildSubSubMenuItem(
+            'Product Backlog',
+            onTap: _openAgileBacklogGovernance,
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Product Backlog',
+          ),
+          _buildSubSubMenuItem(
+            'Sprint / Iteration Planning',
+            onTap: _openAgileSprintCalendar,
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Sprint Planning',
+          ),
+          _buildSubSubMenuItem(
+            'Iteration Management',
+            onTap: () => AgileIterationManagementScreen.open(context),
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Iteration Management',
+          ),
+          _buildSubSubMenuItem(
+            'Kanban Board',
+            onTap: () => AgileKanbanBoardScreen.open(context),
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Kanban Board',
+          ),
+          _buildSubSubMenuItem(
+            'Daily Standups',
+            onTap: () => AgileDailyStandupsScreen.open(context),
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Daily Standups',
+          ),
+          _buildSubSubMenuItem(
+            'Sprint Reviews',
+            onTap: () => AgileSprintReviewsScreen.open(context),
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Sprint Reviews',
+          ),
+          _buildSubSubMenuItem(
+            'Sprint Retrospectives',
+            onTap: () => AgileRetrospectivesScreen.open(context),
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Sprint Retrospectives',
+          ),
+          _buildSubSubMenuItem(
+            'Backlog Grooming',
+            onTap: _openAgileBacklogGovernance,
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Backlog Grooming',
+          ),
+          _buildSubSubMenuItem(
+            'Agile Metrics & Reporting',
+            onTap: () => AgileMetricsScreen.open(context),
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Agile Metrics',
+          ),
+          _buildSubSubMenuItem(
+            'Release Planning',
+            onTap: _openAgileReleasePlan,
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Release Planning',
+          ),
+          _buildSubSubMenuItem(
+            'Agile Risks & Impediments',
+            onTap: () => AgileRisksScreen.open(context),
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Agile Risks',
+          ),
+          _buildSubSubMenuItem(
+            'Team Capacity & Workload',
+            onTap: _openAgileTeamStructure,
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Team Capacity',
+          ),
+          _buildSubSubMenuItem(
+            'AI Agile Coach',
+            onTap: () => AgileAiCoachScreen.open(context),
+            isActive: widget.activeItemLabel == 'Agile Project Hub - AI Agile Coach',
+          ),
+          _buildSubSubMenuItem(
+            'Agile Roadmap',
+            onTap: () => AgileRoadmapScreen.open(context),
+            isActive: widget.activeItemLabel == 'Agile Project Hub - Agile Roadmap',
+          ),
+        ],
         _buildSubMenuItem('Scope Tracking Implementation',
             onTap: _openScopeTrackingImplementation,
             isActive:

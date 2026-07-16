@@ -14,7 +14,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
-import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
@@ -30,6 +30,21 @@ class _FrameworkPickerScreenState extends State<FrameworkPickerScreen> {
   int _step = 0;
   ProjectMethodology? _methodology;
   WBSFramework? _framework;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-populate project name from existing project data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final projectData = ProjectDataHelper.getData(context);
+        final name = projectData.projectName;
+        if (name != null && name.trim().isNotEmpty) {
+          setState(() => _projectName = name.trim());
+        }
+      } catch (_) {}
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -168,11 +183,15 @@ class _FrameworkPickerScreenState extends State<FrameworkPickerScreen> {
       }
       setState(() => _step = 1);
     } else if (_step == 1 && _framework != null) {
-      // Get project name from the application context
-      final projectData = context.read<ProjectDataProvider>();
-      final projectName = projectData.projectData.projectName;
+      final projectData = ProjectDataHelper.getData(context);
+      final resolvedProjectName =
+          projectData.projectName?.trim().isNotEmpty == true
+              ? projectData.projectName!.trim()
+              : (_projectName.trim().isNotEmpty
+                  ? _projectName.trim()
+                  : 'Untitled Project');
       context.read<WBSProvider>().setup(
-            projectName: projectName.isNotEmpty ? projectName : 'Untitled Project',
+            projectName: resolvedProjectName,
             framework: _framework!,
             methodology: _methodology!,
           );

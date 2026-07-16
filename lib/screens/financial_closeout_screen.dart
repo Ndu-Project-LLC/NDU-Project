@@ -149,7 +149,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
             _buildIntroPanel(),
             const SizedBox(height: 16),
             _buildSubsectionCard(
-              title: 'Subsection 1 — Financial Summary',
+              title: 'Financial Summary',
               description:
                   'Finalize the project financial summary including approved budget, actual cost, cost variance, forecast accuracy, final cost performance, CPI, and cost breakdown.',
               hintItems: const [
@@ -165,7 +165,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
             ),
             const SizedBox(height: 16),
             _buildSubsectionCard(
-              title: 'Subsection 2 — Accounting Reconciliation',
+              title: 'Accounting Reconciliation',
               description:
                   'Reconcile all accounting records including invoice status, purchase orders, capitalization, expense reconciliation, GL coding, accounting approval, and audit package.',
               hintItems: const [
@@ -181,7 +181,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
             ),
             const SizedBox(height: 16),
             _buildSubsectionCard(
-              title: 'Subsection 3 — Financial Analysis',
+              title: 'Financial Analysis',
               description:
                   'Capture the final financial analysis including earned value summary, ROI, cash flow summary, budget utilization, and financial lessons learned.',
               hintItems: const [

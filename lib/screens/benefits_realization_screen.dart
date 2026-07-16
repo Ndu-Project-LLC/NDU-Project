@@ -152,7 +152,7 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
             _buildIntroPanel(),
             const SizedBox(height: 16),
             _buildSubsectionCard(
-              title: 'Subsection 1 — Benefits Dashboard',
+              title: 'Benefits Dashboard',
               description:
                   'Track planned versus actual benefits across six categories: Financial, Operational, Customer, Strategic, Sustainability, and Innovation.',
               hintItems: const [
@@ -167,7 +167,7 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
             ),
             const SizedBox(height: 16),
             _buildSubsectionCard(
-              title: 'Subsection 2 — Benefits Quantification',
+              title: 'Benefits Quantification',
               description:
                   'Capture measurable value including planned value, actual value, variance, benefit realization %, benefit owner, measurement method, validation evidence, and realization timeline.',
               hintItems: const [
@@ -184,7 +184,7 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
             ),
             const SizedBox(height: 16),
             _buildSubsectionCard(
-              title: 'Subsection 3 — Continuous Benefits Tracking',
+              title: 'Continuous Benefits Tracking',
               description:
                   'For benefits that extend beyond project completion, capture future review dates, operational KPIs, benefit sustainability, and ongoing improvement actions.',
               hintItems: const [

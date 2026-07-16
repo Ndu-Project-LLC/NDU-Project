@@ -22,6 +22,96 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum AuthenticationMethod { password, passwordlessEmail }
+
+enum MfaMethod { authenticator, sms, emailCode, none }
+
+enum MfaRequirement { everyLogin, newDeviceOnly, highRiskOnly, adminOnly }
+
+class SecurityPolicy {
+  const SecurityPolicy({
+    required this.passwordLoginEnabled,
+    required this.passwordlessEmailEnabled,
+    required this.mfaEnabled,
+    required this.requireMfaEveryLogin,
+    required this.requireMfaNewDeviceOnly,
+    required this.requireMfaHighRiskOnly,
+    required this.requireMfaAdminOnly,
+    required this.defaultMfaMethod,
+    required this.backupMethods,
+    required this.rememberDeviceDays,
+  });
+
+  final bool passwordLoginEnabled;
+  final bool passwordlessEmailEnabled;
+  final bool mfaEnabled;
+  final bool requireMfaEveryLogin;
+  final bool requireMfaNewDeviceOnly;
+  final bool requireMfaHighRiskOnly;
+  final bool requireMfaAdminOnly;
+  final MfaMethod defaultMfaMethod;
+  final List<MfaMethod> backupMethods;
+  final int rememberDeviceDays;
+
+  factory SecurityPolicy.defaults() => const SecurityPolicy(
+        passwordLoginEnabled: true,
+        passwordlessEmailEnabled: false,
+        mfaEnabled: true,
+        requireMfaEveryLogin: true,
+        requireMfaNewDeviceOnly: false,
+        requireMfaHighRiskOnly: false,
+        requireMfaAdminOnly: false,
+        defaultMfaMethod: MfaMethod.authenticator,
+        backupMethods: [MfaMethod.sms, MfaMethod.emailCode],
+        rememberDeviceDays: 30,
+      );
+
+  Map<String, dynamic> toMap() => {
+        'passwordLoginEnabled': passwordLoginEnabled,
+        'passwordlessEmailEnabled': passwordlessEmailEnabled,
+        'mfaEnabled': mfaEnabled,
+        'requireMfaEveryLogin': requireMfaEveryLogin,
+        'requireMfaNewDeviceOnly': requireMfaNewDeviceOnly,
+        'requireMfaHighRiskOnly': requireMfaHighRiskOnly,
+        'requireMfaAdminOnly': requireMfaAdminOnly,
+        'defaultMfaMethod': defaultMfaMethod.name,
+        'backupMethods': backupMethods.map((e) => e.name).toList(),
+        'rememberDeviceDays': rememberDeviceDays,
+      };
+
+  factory SecurityPolicy.fromMap(Map<String, dynamic>? map) {
+    final data = map ?? const {};
+    MfaMethod parseMfa(String? value) {
+      switch (value) {
+        case 'sms':
+          return MfaMethod.sms;
+        case 'emailCode':
+          return MfaMethod.emailCode;
+        case 'none':
+          return MfaMethod.none;
+        case 'authenticator':
+        default:
+          return MfaMethod.authenticator;
+      }
+    }
+
+    return SecurityPolicy(
+      passwordLoginEnabled: data['passwordLoginEnabled'] != false,
+      passwordlessEmailEnabled: data['passwordlessEmailEnabled'] == true,
+      mfaEnabled: data['mfaEnabled'] != false,
+      requireMfaEveryLogin: data['requireMfaEveryLogin'] != false,
+      requireMfaNewDeviceOnly: data['requireMfaNewDeviceOnly'] == true,
+      requireMfaHighRiskOnly: data['requireMfaHighRiskOnly'] == true,
+      requireMfaAdminOnly: data['requireMfaAdminOnly'] == true,
+      defaultMfaMethod: parseMfa(data['defaultMfaMethod'] as String?),
+      backupMethods: (data['backupMethods'] as List<dynamic>? ?? const [])
+          .map((e) => parseMfa(e.toString()))
+          .toList(),
+      rememberDeviceDays: (data['rememberDeviceDays'] as num?)?.toInt() ?? 30,
+    );
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // #6: SESSION MANAGER — auto-logout after inactivity
 // ═══════════════════════════════════════════════════════════════════════════
@@ -47,7 +137,8 @@ class SessionManager {
     _timer?.cancel();
     _lastActivity = DateTime.now();
     _timer = Timer(_timeout, () {
-      debugPrint('[SessionManager] Session timed out after ${_timeout.inMinutes} minutes of inactivity');
+      debugPrint(
+          '[SessionManager] Session timed out after ${_timeout.inMinutes} minutes of inactivity');
       _signOut();
     });
   }
@@ -107,17 +198,26 @@ class PasswordValidator {
     if (password.isEmpty) return 'Password is required';
     if (password.length < 8) return 'Minimum 8 characters required';
     if (password.length > 128) return 'Maximum 128 characters allowed';
-    if (!password.contains(RegExp(r'[A-Z]'))) return 'Must include an uppercase letter';
-    if (!password.contains(RegExp(r'[a-z]'))) return 'Must include a lowercase letter';
+    if (!password.contains(RegExp(r'[A-Z]')))
+      return 'Must include an uppercase letter';
+    if (!password.contains(RegExp(r'[a-z]')))
+      return 'Must include a lowercase letter';
     if (!password.contains(RegExp(r'[0-9]'))) return 'Must include a number';
     if (!password.contains(RegExp(r'[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~`]'))) {
       return 'Must include a special character (!@#\$%^&*)';
     }
     // Check for common weak passwords
     final lower = password.toLowerCase();
-    final weakPasswords = ['password', '12345678', 'qwerty12', 'abc12345', 'password1'];
+    final weakPasswords = [
+      'password',
+      '12345678',
+      'qwerty12',
+      'abc12345',
+      'password1'
+    ];
     for (final weak in weakPasswords) {
-      if (lower.contains(weak)) return 'Password is too common. Please choose a stronger password.';
+      if (lower.contains(weak))
+        return 'Password is too common. Please choose a stronger password.';
     }
     return null; // Valid
   }
@@ -129,7 +229,8 @@ class PasswordValidator {
     if (password.length >= 12) score++;
     if (password.contains(RegExp(r'[A-Z]'))) score++;
     if (password.contains(RegExp(r'[0-9]'))) score++;
-    if (password.contains(RegExp(r'[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~`]'))) score++;
+    if (password.contains(RegExp(r'[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?~`]')))
+      score++;
     return score;
   }
 
@@ -255,7 +356,8 @@ class SecurityAuditLogger {
 
   static String _getUserAgent() {
     try {
-      return PlatformDispatcher.instance.views.first.platformDispatcher.toString();
+      return PlatformDispatcher.instance.views.first.platformDispatcher
+          .toString();
     } catch (_) {
       return 'unknown';
     }
@@ -291,7 +393,8 @@ class ApiKeyRotationService {
   static Future<void> markRotated() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(_lastRotatedKey, DateTime.now().millisecondsSinceEpoch);
+      await prefs.setInt(
+          _lastRotatedKey, DateTime.now().millisecondsSinceEpoch);
     } catch (e) {
       debugPrint('[ApiKeyRotationService] Failed to mark rotation: $e');
     }
@@ -337,7 +440,6 @@ class SecureStorage {
 
   static const String _apiKeyKey = 'secure_openai_api_key';
   static const String _twoFactorSecretKey = 'secure_2fa_secret';
-  static const String _sessionTokenKey = 'secure_session_token';
 
   /// Store the OpenAI API key securely
   static Future<void> setApiKey(String apiKey) async {
@@ -443,7 +545,8 @@ class RequestSigner {
   }
 
   /// Verify a signature (for server-side validation)
-  static bool verify(Map<String, dynamic> body, String secret, String signature) {
+  static bool verify(
+      Map<String, dynamic> body, String secret, String signature) {
     final expected = sign(body, secret);
     return expected == signature;
   }
@@ -499,7 +602,8 @@ class AnomalyDetector {
               'timeWindow': '1 hour',
             },
           );
-          debugPrint('[AnomalyDetector] Excessive login attempts detected for $email');
+          debugPrint(
+              '[AnomalyDetector] Excessive login attempts detected for $email');
         }
       }
 
@@ -521,7 +625,8 @@ class AnomalyDetector {
             'failedCount': failedLogins.size,
           },
         );
-        debugPrint('[AnomalyDetector] Multiple failed logins detected for $email');
+        debugPrint(
+            '[AnomalyDetector] Multiple failed logins detected for $email');
       }
     } catch (e) {
       debugPrint('[AnomalyDetector] Error: $e');
@@ -559,7 +664,8 @@ class AnomalyDetector {
             'timeWindow': '5 minutes',
           },
         );
-        debugPrint('[AnomalyDetector] Bulk data access detected for user $userId');
+        debugPrint(
+            '[AnomalyDetector] Bulk data access detected for user $userId');
       }
     } catch (e) {
       debugPrint('[AnomalyDetector] Bulk access check error: $e');
@@ -605,6 +711,120 @@ class TwoFactorAuthService {
     }
   }
 
+  static Future<SecurityPolicy> loadPolicy() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('security_settings_system')
+          .doc('current')
+          .get();
+      return SecurityPolicy.fromMap(doc.data());
+    } catch (e) {
+      debugPrint('[TwoFactorAuthService] loadPolicy error: $e');
+      return SecurityPolicy.defaults();
+    }
+  }
+
+  static Future<void> savePolicy(SecurityPolicy policy) async {
+    await FirebaseFirestore.instance
+        .collection('security_settings_system')
+        .doc('current')
+        .set({
+      ...policy.toMap(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  static Future<void> saveUserSecurity({
+    required String uid,
+    required String email,
+    required MfaMethod method,
+    String? encryptedSecret,
+    String? phoneNumber,
+    List<String>? recoveryCodes,
+  }) async {
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      'security': {
+        'mfaMethod': method.name,
+        'mfaEnabled': method != MfaMethod.none,
+        if (encryptedSecret != null) 'encryptedSecret': encryptedSecret,
+        if (phoneNumber != null) 'phoneNumber': phoneNumber,
+        if (recoveryCodes != null) 'recoveryCodes': recoveryCodes,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'email': email,
+      }
+    }, SetOptions(merge: true));
+  }
+
+  static String _trustedDeviceKey(String uid) => 'trusted_device_$uid';
+  static String _recoveryCodesKey(String uid) => 'recovery_codes_$uid';
+
+  static Future<bool> isTrustedDevice(String uid,
+      {int rememberDays = 30}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final ms = prefs.getInt(_trustedDeviceKey(uid));
+      if (ms == null) return false;
+      final expires = DateTime.fromMillisecondsSinceEpoch(ms);
+      return DateTime.now().isBefore(expires);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> rememberDevice(String uid, {int days = 30}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(
+      _trustedDeviceKey(uid),
+      DateTime.now().add(Duration(days: days)).millisecondsSinceEpoch,
+    );
+  }
+
+  static List<String> generateRecoveryCodes({int count = 10}) {
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final rng = DateTime.now().microsecondsSinceEpoch;
+    return List.generate(count, (index) {
+      final seed = rng + index * 7919;
+      final chars = List.generate(8, (i) {
+        final pos = (seed + i * 31) % alphabet.length;
+        return alphabet[pos];
+      });
+      return '${chars.sublist(0, 4).join()}-${chars.sublist(4).join()}';
+    });
+  }
+
+  static Future<void> saveRecoveryCodes(String uid, List<String> codes) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_recoveryCodesKey(uid), codes);
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      'security': {
+        'recoveryCodes': codes,
+        'recoveryCodesUpdatedAt': FieldValue.serverTimestamp(),
+      }
+    }, SetOptions(merge: true));
+  }
+
+  static Future<List<String>> getRecoveryCodes(String uid) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_recoveryCodesKey(uid)) ?? <String>[];
+  }
+
+  static Future<bool> consumeRecoveryCode(String uid, String code) async {
+    final prefs = await SharedPreferences.getInstance();
+    final codes = prefs.getStringList(_recoveryCodesKey(uid)) ?? <String>[];
+    final normalized = code.trim().toUpperCase();
+    final remaining =
+        codes.where((c) => c.toUpperCase() != normalized).toList();
+    if (remaining.length == codes.length) return false;
+    await prefs.setStringList(_recoveryCodesKey(uid), remaining);
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
+      'security': {
+        'recoveryCodes': remaining,
+        'recoveryCodesUpdatedAt': FieldValue.serverTimestamp(),
+      }
+    }, SetOptions(merge: true));
+    return true;
+  }
+
   // ── Enable / Disable 2FA ──────────────────────────────────────────────
   static Future<void> enable() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -646,13 +866,15 @@ class TwoFactorAuthService {
         headers['Authorization'] = 'Bearer $idToken';
       }
 
-      final response = await http.post(
-        Uri.parse(_sendCodeUrl),
-        headers: headers,
-        body: jsonEncode({
-          'data': {'email': email},
-        }),
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(
+            Uri.parse(_sendCodeUrl),
+            headers: headers,
+            body: jsonEncode({
+              'data': {'email': email},
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -677,7 +899,8 @@ class TwoFactorAuthService {
   // ── Verify OTP ────────────────────────────────────────────────────────
   /// Verifies the 6-digit [code] entered by the user.
   /// Returns true if valid, false otherwise.
-  static Future<bool> verifyCode({required String code, required String email}) async {
+  static Future<bool> verifyCode(
+      {required String code, required String email}) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       String? idToken;
@@ -692,13 +915,15 @@ class TwoFactorAuthService {
         headers['Authorization'] = 'Bearer $idToken';
       }
 
-      final response = await http.post(
-        Uri.parse(_verifyCodeUrl),
-        headers: headers,
-        body: jsonEncode({
-          'data': {'code': code, 'email': email},
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .post(
+            Uri.parse(_verifyCodeUrl),
+            headers: headers,
+            body: jsonEncode({
+              'data': {'code': code, 'email': email},
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -708,7 +933,8 @@ class TwoFactorAuthService {
 
       final errorData = jsonDecode(response.body) as Map<String, dynamic>;
       final error = errorData['error'] as Map<String, dynamic>?;
-      debugPrint('[TwoFactorAuthService] verifyCode HTTP error: ${error?['message']}');
+      debugPrint(
+          '[TwoFactorAuthService] verifyCode HTTP error: ${error?['message']}');
       return false;
     } catch (e) {
       debugPrint('[TwoFactorAuthService] verifyCode error: $e');

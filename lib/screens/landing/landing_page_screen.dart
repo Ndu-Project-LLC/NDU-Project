@@ -133,9 +133,9 @@ class LandingPageScreen extends StatelessWidget {
                         _socialIcon(Icons.play_circle_outline, 'https://youtube.com/@nduproject'),
                         _socialIcon(Icons.music_note, 'https://tiktok.com/@nduproject'),
                         const SizedBox(width: 12),
-                        TextButton(onPressed: () => context.go('/sign-in'), child: Text('Sign In', style: TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: appFontFamily))),
-                        const SizedBox(width: 8),
-                        _gradientButton('Start Your Project', () => context.go('/create-account')),
+                        TextButton(onPressed: () => context.go('/sign-in'), child: Text('Sign In', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
+                        const SizedBox(width: 16),
+                        _yellowButton('Start Your Project', () => context.go('/create-account')),
                       ]),
                     ],
                   ),
@@ -294,14 +294,31 @@ class LandingPageScreen extends StatelessWidget {
     );
   }
 
-  Widget _gradientButton(String label, VoidCallback onTap) {
+  Widget _yellowButton(String label, VoidCallback onTap) {
     return Container(
-      decoration: BoxDecoration(gradient: LinearGradient(colors: [_blue, _purple]), borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: _blue.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 3))]),
-      child: Material(color: Colors.transparent, child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), child: Text(label, style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
-      )),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [_gold, _goldDeep]),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: _bg,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                fontFamily: appFontFamily,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

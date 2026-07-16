@@ -816,7 +816,12 @@ class _LandingScreenState extends State<LandingScreen>
  ),
  ),
  const SizedBox(height: 12),
- // Project type pills
+ // Project type pills + CTAs
+ Center(
+ child: ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 1260),
+ child: Column(
+ children: [
  Wrap(
  alignment: WrapAlignment.center,
  spacing: 8,
@@ -832,7 +837,6 @@ class _LandingScreenState extends State<LandingScreen>
  )).toList(),
  ),
  const SizedBox(height: 16),
- // CTAs
  Wrap(
  spacing: 14,
  runSpacing: 14,
@@ -861,6 +865,10 @@ class _LandingScreenState extends State<LandingScreen>
  label: const Text('Explore platform', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
  ),
  ],
+ ),
+ ],
+ ),
+ ),
  ),
  const SizedBox(height: 16),
  // Stats row

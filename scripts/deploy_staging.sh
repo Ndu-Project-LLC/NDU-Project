@@ -1,12 +1,15 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 echo "=========================================="
 echo "  NDU Project - Staging Deployment Script"
 echo "  Target: staging.nduproject.com"
 echo "=========================================="
 
-cd /home/z/my-project
+cd "$REPO_ROOT"
 
 # Set Firebase project
 export FIREBASE_PROJECT="ndu-d3f60"

@@ -61,14 +61,10 @@ enum WBSFramework {
 
   String get label => switch (this) {
         WBSFramework.agile => 'Agile WBS',
-        WBSFramework.waterfallDeliverable =>
-          'Waterfall — Deliverable-Based',
-        WBSFramework.waterfallDiscipline =>
-          'Waterfall — Discipline-Based',
-        WBSFramework.waterfallFunctional =>
-          'Waterfall — Functional Area',
-        WBSFramework.waterfallGeographic =>
-          'Waterfall — Geographic Location',
+        WBSFramework.waterfallDeliverable => 'Waterfall — Deliverable-Based',
+        WBSFramework.waterfallDiscipline => 'Waterfall — Discipline-Based',
+        WBSFramework.waterfallFunctional => 'Waterfall — Functional Area',
+        WBSFramework.waterfallGeographic => 'Waterfall — Geographic Location',
         WBSFramework.waterfallPhase =>
           'Waterfall — Phase-Based (Least Preferred)',
       };
@@ -200,8 +196,7 @@ enum WBSFramework {
       };
 
   String get bestFor => switch (this) {
-        WBSFramework.agile =>
-          'Software, digital products, iterative delivery',
+        WBSFramework.agile => 'Software, digital products, iterative delivery',
         WBSFramework.waterfallDeliverable =>
           'All industries (preferred standard approach)',
         WBSFramework.waterfallDiscipline =>
@@ -246,7 +241,17 @@ enum WBSFramework {
   }
 }
 
-enum WBSLevel { level0, level1, level2, level3, level4, level5, level6, level7, level8 }
+enum WBSLevel {
+  level0,
+  level1,
+  level2,
+  level3,
+  level4,
+  level5,
+  level6,
+  level7,
+  level8
+}
 
 extension WBSLevelMeta on WBSLevel {
   int get value => switch (this) {
@@ -291,8 +296,7 @@ enum EstimationMethod {
   String get desc => switch (this) {
         EstimationMethod.tShirt =>
           'XS / S / M / L / XL — quick epic-level sizing',
-        EstimationMethod.storyPoints =>
-          'Fibonacci-scale relative estimation',
+        EstimationMethod.storyPoints => 'Fibonacci-scale relative estimation',
         EstimationMethod.hours => 'Detailed hour estimates (task-level)',
         EstimationMethod.days => 'Day-level estimates (task-level)',
       };
@@ -447,9 +451,17 @@ class WBS {
 }
 
 /// Count nodes at each level (up to level8).
-({int level0, int level1, int level2, int level3, int level4, int level5,
-  int level6, int level7, int level8})
-    countNodes(WBS wbs) {
+({
+  int level0,
+  int level1,
+  int level2,
+  int level3,
+  int level4,
+  int level5,
+  int level6,
+  int level7,
+  int level8
+}) countNodes(WBS wbs) {
   final counts = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0};
   void walk(WBSNode node) {
     final lvl = node.level.value;
@@ -458,6 +470,7 @@ class WBS {
       walk(c);
     }
   }
+
   walk(wbs.level0);
   return (
     level0: counts[0]!,
@@ -515,6 +528,7 @@ List<FlattenedWBSNode> flattenWBS(WBS wbs, {bool includeRoot = true}) {
       walk(child, path);
     }
   }
+
   walk(wbs.level0, '');
   return out;
 }
@@ -525,19 +539,23 @@ int countAllLinkedCostLines(WBS wbs) {
     final own = n.costLineIds?.length ?? 0;
     return own + n.children.fold(0, (s, c) => s + count(c));
   }
+
   return count(wbs.level0);
 }
 
+int _wbsIdCounter = 0;
+
 /// Generate a unique ID.
 String newWBSId([String prefix = 'wbs']) {
-  return '${prefix}_${DateTime.now().millisecondsSinceEpoch}_${DateTime.now().microsecond}';
+  _wbsIdCounter++;
+  return '${prefix}_${DateTime.now().millisecondsSinceEpoch}_$_wbsIdCounter';
 }
 
 /// Determine [WBSLevel] from a dotted-code like "G1.2.3" → level3 (2 dots + 1).
 /// G-prefixed nomenclature: G1 = level1, G1.1 = level2, G1.1.1 = level3
 WBSLevel _codeDepthToLevel(String code) {
- final depth = code.split('.').length;
- return WBSLevelMeta.fromInt(depth);
+  final depth = code.split('.').length;
+  return WBSLevelMeta.fromInt(depth);
 }
 
 /// Recompute node codes based on tree position for arbitrary depth.
@@ -547,26 +565,26 @@ WBSLevel _codeDepthToLevel(String code) {
 ///   Level 3: G1.1.1, G1.1.2, G1.1.3
 /// The root (Level 0) keeps its project name as the code.
 WBSNode recalcCodes(WBSNode node) {
- if (node.level == WBSLevel.level0) {
- return node.copyWith(
- code: '0',
- children: node.children.asMap().entries.map((e) {
- return _recalcCodesRecursive(e.value, 'G${e.key + 1}');
- }).toList(),
- );
- }
- return node;
+  if (node.level == WBSLevel.level0) {
+    return node.copyWith(
+      code: '0',
+      children: node.children.asMap().entries.map((e) {
+        return _recalcCodesRecursive(e.value, 'G${e.key + 1}');
+      }).toList(),
+    );
+  }
+  return node;
 }
 
 WBSNode _recalcCodesRecursive(WBSNode node, String parentCode) {
- final level = _codeDepthToLevel(parentCode);
- return node.copyWith(
- code: parentCode,
- level: level,
- children: node.children.asMap().entries.map((e) {
- return _recalcCodesRecursive(e.value, '$parentCode.${e.key + 1}');
- }).toList(),
- );
+  final level = _codeDepthToLevel(parentCode);
+  return node.copyWith(
+    code: parentCode,
+    level: level,
+    children: node.children.asMap().entries.map((e) {
+      return _recalcCodesRecursive(e.value, '$parentCode.${e.key + 1}');
+    }).toList(),
+  );
 }
 
 /// Get the effective depth of a WBS tree (0 = root only).

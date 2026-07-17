@@ -14,6 +14,7 @@ library;
 /// Rendered inside the parent module's `ResponsiveScaffold` body — no
 /// per-screen Scaffold wrapper (parent provides white background).
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
+import 'package:ndu_project/schedule/services/schedule_cpm_service.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
@@ -31,10 +33,14 @@ import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
+import 'package:ndu_project/services/execution_phase_service.dart';
+import 'package:ndu_project/services/epic_feature_service.dart';
+import 'package:ndu_project/services/agile_wireframe_service.dart';
+import 'package:ndu_project/services/roadmap_service.dart';
+import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/utils/design_planning_document.dart';
-import 'package:ndu_project/models/project_data_model.dart' hide ScheduleActivity;
-import 'package:ndu_project/wbs/utils/wbs_to_work_item_converter.dart';
+import 'package:ndu_project/models/project_data_model.dart'
+    hide ScheduleActivity;
 
 class BuilderScreen extends StatefulWidget {
   const BuilderScreen({super.key});
@@ -49,83 +55,96 @@ class _BuilderScreenState extends State<BuilderScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-populate schedule from WBS on first load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _hasAutoImported) return;
-      _autoImportFromWBS();
+      _autoPopulateSchedule();
     });
   }
 
-  void _autoImportFromWBS() {
+  void _autoPopulateSchedule() {
     final wbsProvider = context.read<WBSProvider>();
     final scheduleProvider = context.read<ScheduleProvider>();
+    final projectData = ProjectDataHelper.getData(context, listen: false);
 
     final wbs = wbsProvider.wbs;
-    if (wbs == null) return;
-
     final root = scheduleProvider.schedule?.activities[0];
-    if (root == null) return;
+    if (wbs == null || root == null) return;
 
-    // Only auto-import if the schedule is empty (no child activities)
     if (root.children.isNotEmpty) {
       _hasAutoImported = true;
       return;
     }
 
-    // Recursively convert WBSNode → WbsImportNode for arbitrary depth
-    WbsImportNode _buildImportNode(WBSNode node) {
-      return WbsImportNode(
-        id: node.id,
-        code: node.code,
-        name: node.name,
-        description: node.description,
-        children: node.children.map(_buildImportNode).toList(),
-      );
-    }
+    final methodology = wbs.methodology.name.toLowerCase();
+    final hasWorkPackages = projectData.workPackages.isNotEmpty;
+    final hasAgileStories = methodology != 'waterfall';
 
-    final importNodes = wbs.level0.children.map(_buildImportNode).toList();
-    if (importNodes.isEmpty) {
+    if (methodology == 'waterfall' || methodology == 'hybrid') {
+      if (hasWorkPackages) {
+        unawaited(_createActivitiesFromPackages(autoMode: true));
+        _hasAutoImported = true;
+        return;
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Schedule builder now prefers integrated work packages for waterfall/hybrid projects. Generate work packages first to build the schedule network.'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
       _hasAutoImported = true;
       return;
     }
 
-    scheduleProvider.importFromWBS(importNodes);
-    _hasAutoImported = true;
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Auto-populated ${importNodes.length} deliverable(s) from WBS into schedule'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: LightModeColors.accent,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+    if (hasAgileStories) {
+      unawaited(_importStories());
+      _hasAutoImported = true;
+      return;
     }
+
+    _hasAutoImported = true;
   }
 
-  Future<void> _createActivitiesFromPackages() async {
+  Future<void> _createActivitiesFromPackages({bool autoMode = false}) async {
     final scheduleProvider = context.read<ScheduleProvider>();
     final data = ProjectDataHelper.getData(context, listen: false);
 
     final packages = data.workPackages;
     if (packages.isEmpty) {
-      if (mounted) {
+      if (mounted && !autoMode) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No work packages found. Create them in Execution Work Packages first.')),
+          const SnackBar(
+              content: Text(
+                  'No work packages found. Create them in Execution Work Packages first.')),
         );
       }
       return;
     }
 
-    final existingActivityWpIds =
-        data.scheduleActivities.map((a) => a.workPackageId).where((id) => id.isNotEmpty).toSet();
+    final existingActivityWpIds = data.scheduleActivities
+        .map((a) => a.workPackageId)
+        .where((id) => id.isNotEmpty)
+        .toSet();
+    final existingWbsIds = data.scheduleActivities
+        .map((a) => a.wbsId)
+        .where((id) => id.isNotEmpty)
+        .toSet();
 
-    final newPackages = packages.where((p) => !existingActivityWpIds.contains(p.id)).toList();
+    final newPackages =
+        packages.where((p) => !existingActivityWpIds.contains(p.id)).toList();
+    final duplicateWbsPackages = newPackages
+        .where((p) =>
+            p.wbsItemId.isNotEmpty && existingWbsIds.contains(p.wbsItemId))
+        .length;
     if (newPackages.isEmpty) {
-      if (mounted) {
+      if (mounted && !autoMode) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All work packages already have schedule activities.')),
+          const SnackBar(
+              content:
+                  Text('All work packages already have schedule activities.')),
         );
       }
       return;
@@ -147,6 +166,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
           deps.add(id.trim());
         }
       }
+
       switch (pkg.packageClassification) {
         case IntegratedWorkPackageService.procurementPackage:
           for (final id in pkg.linkedEngineeringPackageIds) addIfPresent(id);
@@ -187,7 +207,8 @@ class _BuilderScreenState extends State<BuilderScreen> {
       final description = StringBuffer();
       if (pkg.description.isNotEmpty) description.writeln(pkg.description);
       if (pkg.deliverables.isNotEmpty) {
-        description.writeln('Deliverables: ${pkg.deliverables.map((d) => d.title).join(', ')}');
+        description.writeln(
+            'Deliverables: ${pkg.deliverables.map((d) => d.title).join(', ')}');
       }
 
       newChildren.add(ScheduleActivity(
@@ -198,7 +219,8 @@ class _BuilderScreenState extends State<BuilderScreen> {
         description: description.toString().trim(),
         type: activityType,
         domain: domain,
-        duration: IntegratedWorkPackageService.estimateDurationDays(pkg).toDouble(),
+        duration:
+            IntegratedWorkPackageService.estimateDurationDays(pkg).toDouble(),
         durationUnit: 'day',
         owner: pkg.owner.isNotEmpty ? pkg.owner : pkg.contractorOrCrew,
         dependencies: dependencies,
@@ -212,20 +234,144 @@ class _BuilderScreenState extends State<BuilderScreen> {
             : null,
         status: pkg.releaseStatus.isNotEmpty ? pkg.releaseStatus : 'draft',
         progress: pkg.percentComplete,
+        importSource: 'work_package',
         children: [],
       ));
     }
 
-    final updatedRoot = recalcActivityCodes(root.copyWith(children: newChildren));
+    final updatedRoot =
+        recalcActivityCodes(root.copyWith(children: newChildren));
     scheduleProvider.setActivities([updatedRoot]);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Created ${newPackages.length} schedule activities from work packages.'),
+          content: Text(autoMode
+              ? 'Auto-populated ${newPackages.length} schedule activities from integrated work packages${duplicateWbsPackages > 0 ? ' · $duplicateWbsPackages share WBS links with existing schedule rows' : ''}.'
+              : 'Created ${newPackages.length} schedule activities from work packages${duplicateWbsPackages > 0 ? ' · $duplicateWbsPackages share WBS links with existing schedule rows' : ''}.'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: LightModeColors.accent,
           duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Future<void> _importStories() async {
+    final scheduleProvider = context.read<ScheduleProvider>();
+    final projectData = ProjectDataHelper.getData(context, listen: false);
+    final pid = projectData.projectId;
+    if (pid == null || pid.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No project ID found.')),
+        );
+      }
+      return;
+    }
+
+    // Load epics + features + stories from Firestore
+    final epics = await EpicFeatureService.loadEpics(pid);
+    if (epics.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'No epics found. Sync from WBS or create epics first in the Agile Delivery Model.')),
+        );
+      }
+      return;
+    }
+
+    final stories = <({
+      AgileTask story,
+      String epicTitle,
+      String featureTitle,
+      String? sprintLabel,
+      String? releaseLabel
+    })>[];
+    int totalStories = 0;
+
+    final tasks = await ExecutionPhaseService.loadAgileTasks(projectId: pid);
+    final sprintData = await RoadmapService.loadSprints(projectId: pid);
+    final releaseData = await AgileWireframeService.loadReleasePlans(pid);
+    final sprintLabelById = {
+      for (final sprint in sprintData) sprint.id: sprint.name
+    };
+    final releaseLabelById = {
+      for (final release in releaseData) release.id: release.releaseLabel
+    };
+
+    for (final epic in epics) {
+      final features = await EpicFeatureService.loadFeatures(pid, epic.id);
+      for (final feature in features) {
+        final matchingTasks = tasks
+            .where((t) => t.epicId == epic.id && t.featureId == feature.id);
+        for (final task in matchingTasks) {
+          stories.add((
+            story: task,
+            epicTitle: epic.title.isNotEmpty ? epic.title : 'Unnamed Epic',
+            featureTitle:
+                feature.title.isNotEmpty ? feature.title : 'Unnamed Feature',
+            sprintLabel: sprintLabelById[task.plannedSprintId],
+            releaseLabel: releaseLabelById[task.plannedReleaseId],
+          ));
+          totalStories++;
+        }
+      }
+    }
+
+    if (stories.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'No stories found assigned to features. Create stories in Agile Development Iterations first.')),
+        );
+      }
+      return;
+    }
+
+    final missingSprint =
+        stories.where((entry) => entry.story.plannedSprintId.isEmpty).length;
+    final missingRelease =
+        stories.where((entry) => entry.story.plannedReleaseId.isEmpty).length;
+    final notReady = stories
+        .where((entry) => entry.story.readinessStatus != 'Ready for Sprint')
+        .length;
+
+    scheduleProvider.importStoriesFromAgile(stories: stories);
+
+    if (mounted) {
+      final warningParts = <String>[];
+      if (missingSprint > 0) warningParts.add('$missingSprint without sprint');
+      if (missingRelease > 0) {
+        warningParts.add('$missingRelease without release');
+      }
+      if (notReady > 0) warningParts.add('$notReady not sprint-ready');
+      final existingAgileIds = scheduleProvider.schedule?.activities
+              .expand((root) => ScheduleCpmService.flatten([root]))
+              .where((a) => a.agileTaskId != null && a.agileTaskId!.isNotEmpty)
+              .map((a) => a.agileTaskId!)
+              .toSet() ??
+          <String>{};
+      final duplicateStories = stories
+          .where((entry) => existingAgileIds.contains(entry.story.id))
+          .length;
+      if (duplicateStories > 0) {
+        warningParts.add('$duplicateStories already imported');
+      }
+      final warningSuffix =
+          warningParts.isEmpty ? '' : ' Warning: ${warningParts.join(' · ')}.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Imported $totalStories stories from ${epics.length} epics into schedule.$warningSuffix'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: warningParts.isEmpty
+              ? LightModeColors.accent
+              : const Color(0xFFF59E0B),
+          duration: const Duration(seconds: 4),
         ),
       );
     }
@@ -241,9 +387,8 @@ class _BuilderScreenState extends State<BuilderScreen> {
       return;
     }
     final critCount = result.criticalPathIds.length;
-    final totalFloatItems = result.activitiesById.values
-        .where((a) => a.totalFloat > 0)
-        .length;
+    final totalFloatItems =
+        result.activitiesById.values.where((a) => a.totalFloat > 0).length;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -316,8 +461,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
         final currency = estimate?.currency ?? 'USD';
         final costTotal = estimate != null
             ? estimate.lines.fold<double>(
-                0,
-                (s, l) => s + _effectiveScheduleBuilderLineTotal(l))
+                0, (s, l) => s + _effectiveScheduleBuilderLineTotal(l))
             : 0.0;
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -374,20 +518,29 @@ class _BuilderScreenState extends State<BuilderScreen> {
                         icon: Icons.date_range,
                         label: 'Setup Timeline',
                         enabled: !schedule.isLocked,
-                        onTap: () => _showTimelineSetupDialog(context, provider, root),
+                        onTap: () =>
+                            _showTimelineSetupDialog(context, provider, root),
                       ),
                       _ActionChip(
                         icon: Icons.upload_outlined,
-                        label: 'Import',
+                        label: 'Import by Methodology',
                         enabled: !schedule.isLocked,
                         onTap: () => _showImportInfo(context),
                       ),
                       _ActionChip(
                         icon: Icons.work_outline,
-                        label: 'From Packages',
+                        label: 'From Work Packages',
                         enabled: !schedule.isLocked,
                         onTap: () => _createActivitiesFromPackages(),
                       ),
+                      if (schedule.basis.deliveryModel == 'AGILE' ||
+                          schedule.basis.deliveryModel == 'HYBRID')
+                        _ActionChip(
+                          icon: Icons.auto_stories,
+                          label: 'Import Agile Stories',
+                          enabled: !schedule.isLocked,
+                          onTap: () => _importStories(),
+                        ),
                       _ActionChip(
                         icon: Icons.calculate_outlined,
                         label: 'Run CPM',
@@ -420,7 +573,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Schedule levels: L0=Project · L1=Major Deliverable · L2=Epic/Sub-Deliverable · L3=EWP/Procurement/CWP · L4=Activity/Story · L5–8=Task. Decompose until each activity is executable by one person.',
+                        'Schedule levels: L0=Project · L1=Major Deliverable · L2=Epic/Sub-Deliverable · L3=EWP/Procurement/CWP · L4=Activity/Story · L5–8=Task. Waterfall/Hybrid schedules should be built from integrated work packages; Agile schedules should be built from story-level AgileTask items.',
                         style: TextStyle(
                             color: const Color(0xFF495057),
                             fontSize: 12,
@@ -517,13 +670,17 @@ class _BuilderScreenState extends State<BuilderScreen> {
     return l.total;
   }
 
-  void _showTimelineSetupDialog(BuildContext context, ScheduleProvider provider,
-      ScheduleActivity root) {
+  void _showTimelineSetupDialog(
+      BuildContext context, ScheduleProvider provider, ScheduleActivity root) {
     final startCtrl = TextEditingController(
-      text: root.startDate != null ? DateFormat('MM/dd/yy').format(root.startDate!) : '01/06/26',
+      text: root.startDate != null
+          ? DateFormat('MM/dd/yy').format(root.startDate!)
+          : '01/06/26',
     );
     final endCtrl = TextEditingController(
-      text: root.endDate != null ? DateFormat('MM/dd/yy').format(root.endDate!) : '12/31/26',
+      text: root.endDate != null
+          ? DateFormat('MM/dd/yy').format(root.endDate!)
+          : '12/31/26',
     );
 
     showDialog(
@@ -542,11 +699,15 @@ class _BuilderScreenState extends State<BuilderScreen> {
                 color: LightModeColors.accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.date_range, size: 18, color: LightModeColors.accent),
+              child: const Icon(Icons.date_range,
+                  size: 18, color: LightModeColors.accent),
             ),
             const SizedBox(width: 12),
             const Text('Setup Project Timeline',
-                style: TextStyle(color: Color(0xFF1A1D1F), fontWeight: FontWeight.w600, fontSize: 16)),
+                style: TextStyle(
+                    color: Color(0xFF1A1D1F),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16)),
           ],
         ),
         content: SizedBox(
@@ -557,7 +718,8 @@ class _BuilderScreenState extends State<BuilderScreen> {
             children: [
               const Text(
                 'Set the overall project timeline. Individual activity dates can be adjusted below.',
-                style: TextStyle(color: Color(0xFF6B7280), fontSize: 12, height: 1.5),
+                style: TextStyle(
+                    color: Color(0xFF6B7280), fontSize: 12, height: 1.5),
               ),
               const SizedBox(height: 16),
               Row(
@@ -590,12 +752,16 @@ class _BuilderScreenState extends State<BuilderScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
-                    Icon(Icons.info_outline, size: 14, color: Color(0xFF6B7280)),
+                    Icon(Icons.info_outline,
+                        size: 14, color: Color(0xFF6B7280)),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'This sets the project-wide date range. Use the timeline view below to set dates for individual activities.',
-                        style: TextStyle(color: Color(0xFF6B7280), fontSize: 11, height: 1.5),
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 11,
+                            height: 1.5),
                       ),
                     ),
                   ],
@@ -607,21 +773,25 @@ class _BuilderScreenState extends State<BuilderScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF6B7280))),
+            child: const Text('Cancel',
+                style: TextStyle(color: Color(0xFF6B7280))),
           ),
           FilledButton(
             onPressed: () {
               final startDate = _parseDate(startCtrl.text);
               final endDate = _parseDate(endCtrl.text);
               if (startDate != null && endDate != null) {
-                provider.updateActivity(root.id, root.copyWith(
-                  startDate: startDate,
-                  endDate: endDate,
-                ));
+                provider.updateActivity(
+                    root.id,
+                    root.copyWith(
+                      startDate: startDate,
+                      endDate: endDate,
+                    ));
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Project timeline set: ${DateFormat('MMM d, y').format(startDate)} — ${DateFormat('MMM d, y').format(endDate)}'),
+                    content: Text(
+                        'Project timeline set: ${DateFormat('MMM d, y').format(startDate)} — ${DateFormat('MMM d, y').format(endDate)}'),
                     behavior: SnackBarBehavior.floating,
                     backgroundColor: LightModeColors.accent,
                     duration: const Duration(seconds: 3),
@@ -629,7 +799,9 @@ class _BuilderScreenState extends State<BuilderScreen> {
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please enter valid dates in MM/DD/YY format')),
+                  const SnackBar(
+                      content:
+                          Text('Please enter valid dates in MM/DD/YY format')),
                 );
               }
             },
@@ -686,8 +858,8 @@ class _BuilderScreenState extends State<BuilderScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                  color: LightModeColors.accent, width: 1.6),
+              borderSide:
+                  const BorderSide(color: LightModeColors.accent, width: 1.6),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -738,8 +910,6 @@ class _BuilderScreenState extends State<BuilderScreen> {
 
   void _showImportInfo(BuildContext context) {
     final wbsProvider = context.read<WBSProvider>();
-    final scheduleProvider = context.read<ScheduleProvider>();
-
     final wbs = wbsProvider.wbs;
     if (wbs == null) {
       showDialog(
@@ -753,8 +923,9 @@ class _BuilderScreenState extends State<BuilderScreen> {
               style: TextStyle(
                   color: Color(0xFF1A1D1F), fontWeight: FontWeight.w600)),
           content: const Text(
-            'Open the WBS module from the sidebar to create your work breakdown structure first, then return here to import it into the schedule.',
-            style: TextStyle(color: Color(0xFF495057), fontSize: 13, height: 1.5),
+            'Open the WBS module from the sidebar to create your work breakdown structure first, then return here to continue schedule setup.',
+            style:
+                TextStyle(color: Color(0xFF495057), fontSize: 13, height: 1.5),
           ),
           actions: [
             FilledButton(
@@ -771,20 +942,10 @@ class _BuilderScreenState extends State<BuilderScreen> {
       return;
     }
 
-    // Build recursive WbsImportNode tree for arbitrary depth
-    WbsImportNode _buildImportNode(WBSNode node) {
-      return WbsImportNode(
-        id: node.id,
-        code: node.code,
-        name: node.name,
-        description: node.description,
-        children: node.children.map(_buildImportNode).toList(),
-      );
-    }
+    final methodology = wbs.methodology.name.toLowerCase();
+    final isWaterfallLike =
+        methodology == 'waterfall' || methodology == 'hybrid';
 
-    final importNodes = wbs.level0.children.map(_buildImportNode).toList();
-
-    // Show confirmation dialog
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -792,13 +953,19 @@ class _BuilderScreenState extends State<BuilderScreen> {
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: Color(0xFFE4E7EC))),
-        title: const Text('Import from WBS',
-            style: TextStyle(
-                color: Color(0xFF1A1D1F), fontWeight: FontWeight.w600)),
+        title: Text(
+          isWaterfallLike
+              ? 'Use work packages for schedule import'
+              : 'Import agile stories into schedule',
+          style: const TextStyle(
+              color: Color(0xFF1A1D1F), fontWeight: FontWeight.w600),
+        ),
         content: Text(
-          'This will import ${importNodes.length} Level 1 deliverable(s) and their sub-deliverables from your WBS into the schedule as activities. '
-          'Each WBS node becomes a schedule activity with its WBS reference preserved for traceability.',
-          style: const TextStyle(color: Color(0xFF495057), fontSize: 13, height: 1.5),
+          isWaterfallLike
+              ? 'For waterfall and hybrid projects, the schedule builder now prefers integrated work packages instead of direct WBS activities. Generate package chains first, then create schedule activities from packages.'
+              : 'For agile projects, the schedule builder imports the lowest-level agile stories grouped under features and epics, rather than importing raw WBS nodes directly.',
+          style: const TextStyle(
+              color: Color(0xFF495057), fontSize: 13, height: 1.5),
         ),
         actions: [
           TextButton(
@@ -807,21 +974,18 @@ class _BuilderScreenState extends State<BuilderScreen> {
           ),
           FilledButton(
             onPressed: () {
-              scheduleProvider.importFromWBS(importNodes);
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Imported ${importNodes.length} deliverable(s) from WBS'),
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: LightModeColors.accent,
-                ),
-              );
+              if (isWaterfallLike) {
+                _createActivitiesFromPackages();
+              } else {
+                _importStories();
+              }
             },
             style: FilledButton.styleFrom(
               backgroundColor: LightModeColors.accent,
               foregroundColor: LightModeColors.lightOnPrimary,
             ),
-            child: const Text('Import Now'),
+            child: Text(isWaterfallLike ? 'Use Packages' : 'Import Stories'),
           ),
         ],
       ),
@@ -893,8 +1057,7 @@ class _ActionChip extends StatelessWidget {
           backgroundColor: LightModeColors.accent,
           foregroundColor: LightModeColors.lightOnPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
     }
@@ -903,15 +1066,14 @@ class _ActionChip extends StatelessWidget {
       icon: Icon(icon, size: 16),
       label: Text(label),
       style: OutlinedButton.styleFrom(
-        foregroundColor: disabled ? const Color(0xFF9CA3AF) : const Color(0xFF1A1D1F),
+        foregroundColor:
+            disabled ? const Color(0xFF9CA3AF) : const Color(0xFF1A1D1F),
         backgroundColor: Colors.white,
         side: BorderSide(
-            color: disabled
-                ? const Color(0xFFE4E7EC)
-                : const Color(0xFFE4E7EC)),
+            color:
+                disabled ? const Color(0xFFE4E7EC) : const Color(0xFFE4E7EC)),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -931,141 +1093,226 @@ class _ActivityNode extends StatelessWidget {
     required this.isLocked,
   });
 
+  List<Widget> _traceabilityChips() {
+    final chips = <Widget>[];
+    if (activity.wbsNodeId != null && activity.wbsNodeId!.isNotEmpty) {
+      chips.add(_miniChip(Icons.account_tree_outlined, 'WBS linked'));
+    }
+    if (activity.agileTaskId != null && activity.agileTaskId!.isNotEmpty) {
+      chips.add(_miniChip(
+          Icons.auto_stories_outlined,
+          activity.agileFeatureTitle != null &&
+                  activity.agileFeatureTitle!.isNotEmpty
+              ? 'Story · ${activity.agileFeatureTitle!}'
+              : 'Agile story'));
+    }
+    if (activity.sprintId != null && activity.sprintId!.isNotEmpty) {
+      chips.add(_miniChip(
+          Icons.calendar_today_outlined,
+          activity.sprintLabel != null && activity.sprintLabel!.isNotEmpty
+              ? activity.sprintLabel!
+              : 'Sprint assigned'));
+    }
+    if (activity.releaseId != null && activity.releaseId!.isNotEmpty) {
+      chips.add(_miniChip(
+          Icons.rocket_launch_outlined,
+          activity.releaseLabel != null && activity.releaseLabel!.isNotEmpty
+              ? activity.releaseLabel!
+              : 'Release assigned'));
+    }
+    if (activity.prerequisites != null && activity.prerequisites!.isNotEmpty) {
+      chips.add(_miniChip(
+          Icons.link_outlined, '${activity.prerequisites!.length} prereq'));
+    }
+    return chips;
+  }
+
+  Widget _miniChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        border: Border.all(color: const Color(0xFFE4E7EC)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: const Color(0xFF6B7280)),
+          const SizedBox(width: 4),
+          Text(label,
+              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => _showActivityEditDialog(context),
       child: Container(
-      margin: EdgeInsets.only(bottom: 6, left: isRoot ? 0 : 24),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border(
-          left: BorderSide(color: Color(activity.domain.color), width: 3),
-          top: const BorderSide(color: Color(0xFFE4E7EC), width: 1),
-          right: const BorderSide(color: Color(0xFFE4E7EC), width: 1),
-          bottom: const BorderSide(color: Color(0xFFE4E7EC), width: 1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        margin: EdgeInsets.only(bottom: 6, left: isRoot ? 0 : 24),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border(
+            left: BorderSide(color: Color(activity.domain.color), width: 3),
+            top: const BorderSide(color: Color(0xFFE4E7EC), width: 1),
+            right: const BorderSide(color: Color(0xFFE4E7EC), width: 1),
+            bottom: const BorderSide(color: Color(0xFFE4E7EC), width: 1),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: const Color(0xFFE4E7EC)),
-            ),
-            child: Text(activity.code,
-                style: const TextStyle(
-                    color: Color(0xFF495057),
-                    fontSize: 11,
-                    fontFamily: appFontFamily,
-                    fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-                color: Color(activity.domain.color), shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(activity.name,
-                style: const TextStyle(
-                    color: Color(0xFF1A1D1F),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600),
-                overflow: TextOverflow.ellipsis),
-          ),
-          if (formatDuration(activity.duration, activity.durationUnit) != '—')
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Text(
-                  formatDuration(activity.duration, activity.durationUnit),
-                  style: const TextStyle(
-                      color: Color(0xFF6B7280), fontSize: 11)),
-            ),
-          // Dependency type chips
-          if (activity.dependencies.isNotEmpty)
-            ...activity.dependencies.map((dep) => Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0FDF4),
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(color: const Color(0xFFBBF7D0)),
-                    ),
-                    child: Text(
-                      dep.type.short,
-                      style: const TextStyle(
-                          color: Color(0xFF166534),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                )),
-          // Inline start/end date chips
-          if (activity.startDate != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFECFDF5),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: const Color(0xFFA7F3D0)),
-                ),
-                child: Text(
-                  'Start: ${activity.startDate!.month}/${activity.startDate!.day}/${activity.startDate!.year.toString().substring(2)}',
-                  style: const TextStyle(color: Color(0xFF065F46), fontSize: 10, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-          if (activity.endDate != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 4),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: const Color(0xFFFDE68A)),
-                ),
-                child: Text(
-                  'End: ${activity.endDate!.month}/${activity.endDate!.day}/${activity.endDate!.year.toString().substring(2)}',
-                  style: const TextStyle(color: Color(0xFF92400E), fontSize: 10, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-          if (!isRoot && !isLocked) ...[
-            IconButton(
-              icon: const Icon(Icons.add, size: 14, color: Color(0xFF6B7280)),
-              onPressed: () {},
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(4),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline,
-                  size: 14, color: Color(0xFFB91C1C)),
-              onPressed: () => provider.removeActivity(activity.id),
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(4),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
-        ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: const Color(0xFFE4E7EC)),
+              ),
+              child: Text(activity.code,
+                  style: const TextStyle(
+                      color: Color(0xFF495057),
+                      fontSize: 11,
+                      fontFamily: appFontFamily,
+                      fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                  color: Color(activity.domain.color), shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(activity.name,
+                  style: const TextStyle(
+                      color: Color(0xFF1A1D1F),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis),
+            ),
+            if (formatDuration(activity.duration, activity.durationUnit) != '—')
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Text(
+                    formatDuration(activity.duration, activity.durationUnit),
+                    style: const TextStyle(
+                        color: Color(0xFF6B7280), fontSize: 11)),
+              ),
+            // Dependency type chips
+            if (activity.dependencies.isNotEmpty)
+              ...activity.dependencies.map((dep) => Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0FDF4),
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(color: const Color(0xFFBBF7D0)),
+                      ),
+                      child: Text(
+                        dep.type.short,
+                        style: const TextStyle(
+                            color: Color(0xFF166534),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  )),
+            // Inline start/end date chips
+            if (activity.startDate != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: const Color(0xFFA7F3D0)),
+                  ),
+                  child: Text(
+                    'Start: ${activity.startDate!.month}/${activity.startDate!.day}/${activity.startDate!.year.toString().substring(2)}',
+                    style: const TextStyle(
+                        color: Color(0xFF065F46),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            if (activity.endDate != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
+                  ),
+                  child: Text(
+                    'End: ${activity.endDate!.month}/${activity.endDate!.day}/${activity.endDate!.year.toString().substring(2)}',
+                    style: const TextStyle(
+                        color: Color(0xFF92400E),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            if (_traceabilityChips().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: SizedBox(
+                  width: 240,
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: _traceabilityChips(),
+                  ),
+                ),
+              ),
+            if (activity.agileEpicTitle != null &&
+                activity.agileEpicTitle!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Text(
+                  'Epic: ${activity.agileEpicTitle!}${activity.agileFeatureTitle != null && activity.agileFeatureTitle!.isNotEmpty ? ' · Feature: ${activity.agileFeatureTitle!}' : ''}',
+                  style:
+                      const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                ),
+              ),
+            if (!isRoot && !isLocked) ...[
+              IconButton(
+                icon: const Icon(Icons.add, size: 14, color: Color(0xFF6B7280)),
+                onPressed: () {},
+                constraints: const BoxConstraints(),
+                padding: const EdgeInsets.all(4),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline,
+                    size: 14, color: Color(0xFFB91C1C)),
+                onPressed: () => provider.removeActivity(activity.id),
+                constraints: const BoxConstraints(),
+                padding: const EdgeInsets.all(4),
+              ),
+            ],
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -1084,7 +1331,8 @@ class _ActivityNode extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('Dependencies',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                 const SizedBox(height: 8),
                 if (deps.isEmpty)
                   const Text('No dependencies',
@@ -1116,7 +1364,8 @@ class _ActivityNode extends StatelessWidget {
                               if (newType != null) {
                                 setDialogState(() {
                                   deps[i] = ActivityDependency(
-                                      activityId: dep.activityId, type: newType);
+                                      activityId: dep.activityId,
+                                      type: newType);
                                 });
                               }
                             },
@@ -1200,15 +1449,9 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
       _rows.add(_SampleRow(
         (_nextId++).toString(),
         name,
-        _durationCtrl.text.trim().isNotEmpty
-            ? _durationCtrl.text.trim()
-            : '—',
-        _startCtrl.text.trim().isNotEmpty
-            ? _startCtrl.text.trim()
-            : '—',
-        _finishCtrl.text.trim().isNotEmpty
-            ? _finishCtrl.text.trim()
-            : '—',
+        _durationCtrl.text.trim().isNotEmpty ? _durationCtrl.text.trim() : '—',
+        _startCtrl.text.trim().isNotEmpty ? _startCtrl.text.trim() : '—',
+        _finishCtrl.text.trim().isNotEmpty ? _finishCtrl.text.trim() : '—',
         _predecessorsCtrl.text.trim().isNotEmpty
             ? _predecessorsCtrl.text.trim()
             : '—',
@@ -1427,8 +1670,7 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              headingRowColor:
-                  WidgetStateProperty.all(const Color(0xFFF9FAFB)),
+              headingRowColor: WidgetStateProperty.all(const Color(0xFFF9FAFB)),
               dataRowColor: WidgetStateProperty.all(Colors.transparent),
               columnSpacing: 24,
               horizontalMargin: 16,
@@ -1531,8 +1773,8 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                           onPressed: () => _removeRow(i),
                           tooltip: 'Remove activity',
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                              minWidth: 28, minHeight: 28),
+                          constraints:
+                              const BoxConstraints(minWidth: 28, minHeight: 28),
                         ),
                       ),
                     ],
@@ -1540,8 +1782,7 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                 }),
                 // ── New-row edit fields ──
                 DataRow(
-                  color: WidgetStateProperty.all(
-                      const Color(0xFFFAFFFB)),
+                  color: WidgetStateProperty.all(const Color(0xFFFAFFFB)),
                   cells: [
                     DataCell(
                       SizedBox(
@@ -1565,8 +1806,8 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                             hintText: 'New activity name...',
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding:
-                                EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
                           ),
                           style: const TextStyle(
                               fontSize: 12, color: Color(0xFF1A1D1F)),
@@ -1584,8 +1825,8 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                             hintText: 'e.g. 10 d',
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding:
-                                EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
                           ),
                           style: const TextStyle(
                               fontSize: 12, color: Color(0xFF1A1D1F)),
@@ -1601,8 +1842,8 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                             hintText: 'MM/DD/YY',
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding:
-                                EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
                           ),
                           style: const TextStyle(
                               fontSize: 12, color: Color(0xFF1A1D1F)),
@@ -1618,8 +1859,8 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                             hintText: 'MM/DD/YY',
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding:
-                                EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
                           ),
                           style: const TextStyle(
                               fontSize: 12, color: Color(0xFF1A1D1F)),
@@ -1635,8 +1876,8 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                             hintText: 'e.g. 6FS',
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding:
-                                EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
                           ),
                           style: const TextStyle(
                               fontSize: 12, color: Color(0xFF1A1D1F)),
@@ -1652,8 +1893,8 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                             hintText: 'e.g. Crew (4)',
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding:
-                                EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
                           ),
                           style: const TextStyle(
                               fontSize: 12, color: Color(0xFF1A1D1F)),
@@ -1669,13 +1910,12 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                               ? const Color(0xFF10B981)
                               : const Color(0xFF9CA3AF),
                         ),
-                        onPressed: _nameCtrl.text.trim().isNotEmpty
-                            ? _addRow
-                            : null,
+                        onPressed:
+                            _nameCtrl.text.trim().isNotEmpty ? _addRow : null,
                         tooltip: 'Add activity',
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                            minWidth: 28, minHeight: 28),
+                        constraints:
+                            const BoxConstraints(minWidth: 28, minHeight: 28),
                       ),
                     ),
                   ],
@@ -1695,8 +1935,8 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                   Text(
                     'Type an activity name and press Enter or tap + to add. '
                     'Use KAZ AI to auto-generate realistic schedule activities.',
-                    style: const TextStyle(
-                        fontSize: 11, color: Color(0xFF9CA3AF)),
+                    style:
+                        const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
                   ),
                 ],
               ),
@@ -1710,18 +1950,53 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
     return [
       _SampleRow('1', 'Engineering — Process Design', '20 d', '01/06/26',
           '01/30/26', '—', 'Process Eng (2)', ScheduleDomain.engineering.color),
-      _SampleRow('2', 'Procurement — Long-Lead Vessels', '45 d', '02/02/26',
-          '03/20/26', '1FS', 'Buyer, Expediter', ScheduleDomain.procurement.color),
+      _SampleRow(
+          '2',
+          'Procurement — Long-Lead Vessels',
+          '45 d',
+          '02/02/26',
+          '03/20/26',
+          '1FS',
+          'Buyer, Expediter',
+          ScheduleDomain.procurement.color),
       _SampleRow('3', 'Execution — Fabrication Phase A', '60 d', '03/23/26',
           '05/22/26', '2FS', 'Fab Shop (6)', ScheduleDomain.execution.color),
-      _SampleRow('4', 'Construction — Site Mobilization', '10 d', '05/25/26',
-          '06/05/26', '3FS-5d', 'Site Sup (3)', ScheduleDomain.construction.color),
-      _SampleRow('5', 'Construction — Mechanical Install', '35 d', '06/08/26',
-          '07/17/26', '4FS', 'Mech Crew (8)', ScheduleDomain.construction.color),
-      _SampleRow('6', 'Commissioning — Cold Commissioning', '15 d', '07/20/26',
-          '08/07/26', '5FS', 'Commissioning Eng (2)', ScheduleDomain.commissioning.color),
-      _SampleRow('7', 'Commissioning — Hot Commissioning & Handover', '12 d',
-          '08/10/26', '08/22/26', '6FS', 'Commissioning Eng (2)', ScheduleDomain.commissioning.color),
+      _SampleRow(
+          '4',
+          'Construction — Site Mobilization',
+          '10 d',
+          '05/25/26',
+          '06/05/26',
+          '3FS-5d',
+          'Site Sup (3)',
+          ScheduleDomain.construction.color),
+      _SampleRow(
+          '5',
+          'Construction — Mechanical Install',
+          '35 d',
+          '06/08/26',
+          '07/17/26',
+          '4FS',
+          'Mech Crew (8)',
+          ScheduleDomain.construction.color),
+      _SampleRow(
+          '6',
+          'Commissioning — Cold Commissioning',
+          '15 d',
+          '07/20/26',
+          '08/07/26',
+          '5FS',
+          'Commissioning Eng (2)',
+          ScheduleDomain.commissioning.color),
+      _SampleRow(
+          '7',
+          'Commissioning — Hot Commissioning & Handover',
+          '12 d',
+          '08/10/26',
+          '08/22/26',
+          '6FS',
+          'Commissioning Eng (2)',
+          ScheduleDomain.commissioning.color),
     ];
   }
 }
@@ -1801,9 +2076,12 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
     return months;
   }
 
-  Future<void> _pickDate(BuildContext context, bool isStart, int activityIndex) async {
+  Future<void> _pickDate(
+      BuildContext context, bool isStart, int activityIndex) async {
     final activity = widget.activities[activityIndex];
-    final current = isStart ? (activity.startDate ?? DateTime.now()) : (activity.endDate ?? DateTime.now().add(const Duration(days: 30)));
+    final current = isStart
+        ? (activity.startDate ?? DateTime.now())
+        : (activity.endDate ?? DateTime.now().add(const Duration(days: 30)));
     final picked = await showDatePicker(
       context: context,
       initialDate: current,
@@ -1837,10 +2115,12 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
     final activity = widget.activities[activityIndex];
     final start = _editStart ?? activity.startDate;
     final end = _editEnd ?? activity.endDate;
-    widget.provider.updateActivity(activity.id, activity.copyWith(
-      startDate: start,
-      endDate: end,
-    ));
+    widget.provider.updateActivity(
+        activity.id,
+        activity.copyWith(
+          startDate: start,
+          endDate: end,
+        ));
     setState(() {
       _editingIndex = null;
       _editStart = null;
@@ -1881,17 +2161,23 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                     color: LightModeColors.accent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Icon(Icons.timeline, size: 16, color: LightModeColors.accent),
+                  child: const Icon(Icons.timeline,
+                      size: 16, color: LightModeColors.accent),
                 ),
                 const SizedBox(width: 10),
                 const Text('Project Timeline',
-                    style: TextStyle(color: Color(0xFF1A1D1F), fontSize: 14, fontWeight: FontWeight.w700)),
+                    style: TextStyle(
+                        color: Color(0xFF1A1D1F),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700)),
                 const Spacer(),
                 if (!widget.isLocked)
-                  _TimelineKazAiButton(activities: widget.activities, provider: widget.provider),
+                  _TimelineKazAiButton(
+                      activities: widget.activities, provider: widget.provider),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF3F4F6),
                     borderRadius: BorderRadius.circular(10),
@@ -1899,7 +2185,10 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                   ),
                   child: Text(
                     '${DateFormat('MMM d').format(rangeStart)} — ${DateFormat('MMM d, y').format(rangeEnd)}',
-                    style: const TextStyle(color: Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                        color: Color(0xFF6B7280),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -1929,27 +2218,32 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                               color: const Color(0xFFE4E7EC),
                             ),
                           );
-                        }).toList()..addAll(months.map((month) {
-                          final dayOffset = month.difference(rangeStart).inDays;
-                          final fraction = dayOffset / totalDays;
-                          final xPos = fraction * constraints.maxWidth;
-                          return Positioned(
-                            left: xPos + 4,
-                            top: 6,
-                            child: Text(
-                              DateFormat('MMM').format(month),
-                              style: TextStyle(
-                                color: month.month == DateTime.now().month && month.year == DateTime.now().year
-                                    ? LightModeColors.accent
-                                    : const Color(0xFF9CA3AF),
-                                fontSize: 10,
-                                fontWeight: month.month == DateTime.now().month && month.year == DateTime.now().year
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
+                        }).toList()
+                          ..addAll(months.map((month) {
+                            final dayOffset =
+                                month.difference(rangeStart).inDays;
+                            final fraction = dayOffset / totalDays;
+                            final xPos = fraction * constraints.maxWidth;
+                            return Positioned(
+                              left: xPos + 4,
+                              top: 6,
+                              child: Text(
+                                DateFormat('MMM').format(month),
+                                style: TextStyle(
+                                  color: month.month == DateTime.now().month &&
+                                          month.year == DateTime.now().year
+                                      ? LightModeColors.accent
+                                      : const Color(0xFF9CA3AF),
+                                  fontSize: 10,
+                                  fontWeight:
+                                      month.month == DateTime.now().month &&
+                                              month.year == DateTime.now().year
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                ),
                               ),
-                            ),
-                          );
-                        })),
+                            );
+                          })),
                       );
                     },
                   ),
@@ -1966,8 +2260,11 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
             final barStart = _editStart ?? a.startDate;
             final barEnd = _editEnd ?? a.endDate;
             final hasDates = barStart != null && barEnd != null;
-            final leftFrac = hasDates ? barStart.difference(rangeStart).inDays / totalDays : 0.0;
-            final widthFrac = hasDates ? barEnd.difference(barStart).inDays / totalDays : 0.0;
+            final leftFrac = hasDates
+                ? barStart.difference(rangeStart).inDays / totalDays
+                : 0.0;
+            final widthFrac =
+                hasDates ? barEnd.difference(barStart).inDays / totalDays : 0.0;
             final clampedLeft = leftFrac.clamp(0.0, 1.0);
             final clampedWidth = widthFrac.clamp(0.01, 1.0 - clampedLeft);
 
@@ -2000,11 +2297,17 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                                 children: [
                                   Text(
                                     a.code,
-                                    style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, fontFamily: appFontFamily),
+                                    style: const TextStyle(
+                                        color: Color(0xFF9CA3AF),
+                                        fontSize: 9,
+                                        fontFamily: appFontFamily),
                                   ),
                                   Text(
                                     a.name,
-                                    style: const TextStyle(color: Color(0xFF1A1D1F), fontSize: 11, fontWeight: FontWeight.w600),
+                                    style: const TextStyle(
+                                        color: Color(0xFF1A1D1F),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                   ),
@@ -2017,17 +2320,19 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                       // ── Gantt bar area ──
                       Expanded(
                         child: GestureDetector(
-                          onTap: widget.isLocked ? null : () {
-                            setState(() {
-                              if (_editingIndex == i) {
-                                _editingIndex = null;
-                              } else {
-                                _editingIndex = i;
-                                _editStart = null;
-                                _editEnd = null;
-                              }
-                            });
-                          },
+                          onTap: widget.isLocked
+                              ? null
+                              : () {
+                                  setState(() {
+                                    if (_editingIndex == i) {
+                                      _editingIndex = null;
+                                    } else {
+                                      _editingIndex = i;
+                                      _editStart = null;
+                                      _editEnd = null;
+                                    }
+                                  });
+                                },
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               return Stack(
@@ -2035,12 +2340,17 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                                   // Grid lines
                                   if (months.length > 1)
                                     ...months.map((month) {
-                                      final xPos = month.difference(rangeStart).inDays / totalDays * constraints.maxWidth;
+                                      final xPos =
+                                          month.difference(rangeStart).inDays /
+                                              totalDays *
+                                              constraints.maxWidth;
                                       return Positioned(
                                         left: xPos,
                                         top: 0,
                                         bottom: 0,
-                                        child: Container(width: 1, color: const Color(0xFFF3F4F6)),
+                                        child: Container(
+                                            width: 1,
+                                            color: const Color(0xFFF3F4F6)),
                                       );
                                     }),
                                   // Bar
@@ -2050,13 +2360,23 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                                       top: 10,
                                       bottom: 10,
                                       child: AnimatedContainer(
-                                        duration: const Duration(milliseconds: 250),
-                                        width: (clampedWidth * constraints.maxWidth).clamp(20.0, constraints.maxWidth),
+                                        duration:
+                                            const Duration(milliseconds: 250),
+                                        width: (clampedWidth *
+                                                constraints.maxWidth)
+                                            .clamp(20.0, constraints.maxWidth),
                                         decoration: BoxDecoration(
-                                          color: Color(a.domain.color).withValues(alpha: isEditing ? 0.5 : 0.25),
-                                          borderRadius: BorderRadius.circular(4),
+                                          color: Color(a.domain.color)
+                                              .withValues(
+                                                  alpha:
+                                                      isEditing ? 0.5 : 0.25),
+                                          borderRadius:
+                                              BorderRadius.circular(4),
                                           border: Border.all(
-                                            color: isEditing ? LightModeColors.accent : Color(a.domain.color).withValues(alpha: 0.5),
+                                            color: isEditing
+                                                ? LightModeColors.accent
+                                                : Color(a.domain.color)
+                                                    .withValues(alpha: 0.5),
                                             width: isEditing ? 2 : 1,
                                           ),
                                         ),
@@ -2073,29 +2393,41 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                                       ),
                                     ),
                                   // Today marker
-                                  if (DateTime.now().isAfter(rangeStart) && DateTime.now().isBefore(rangeEnd))
+                                  if (DateTime.now().isAfter(rangeStart) &&
+                                      DateTime.now().isBefore(rangeEnd))
                                     Positioned(
-                                      left: DateTime.now().difference(rangeStart).inDays / totalDays * constraints.maxWidth,
+                                      left: DateTime.now()
+                                              .difference(rangeStart)
+                                              .inDays /
+                                          totalDays *
+                                          constraints.maxWidth,
                                       top: 0,
                                       bottom: 0,
                                       child: Container(
                                         width: 2,
-                                        color: const Color(0xFFEF4444).withValues(alpha: 0.6),
+                                        color: const Color(0xFFEF4444)
+                                            .withValues(alpha: 0.6),
                                       ),
                                     ),
                                   // No-dates placeholder
                                   if (!hasDates && !widget.isLocked)
                                     Center(
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 4),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFF9FAFB),
-                                          borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(color: const Color(0xFFE4E7EC), style: BorderStyle.solid),
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                          border: Border.all(
+                                              color: const Color(0xFFE4E7EC),
+                                              style: BorderStyle.solid),
                                         ),
                                         child: const Text(
                                           'Click to set dates',
-                                          style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 10),
+                                          style: TextStyle(
+                                              color: Color(0xFF9CA3AF),
+                                              fontSize: 10),
                                         ),
                                       ),
                                     ),
@@ -2103,7 +2435,9 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                                     Center(
                                       child: Text(
                                         'No dates set',
-                                        style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 10),
+                                        style: TextStyle(
+                                            color: Color(0xFF9CA3AF),
+                                            fontSize: 10),
                                       ),
                                     ),
                                 ],
@@ -2123,11 +2457,13 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFFAFFFB),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: LightModeColors.accent.withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color: LightModeColors.accent.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.edit_calendar, size: 14, color: LightModeColors.accent),
+                        const Icon(Icons.edit_calendar,
+                            size: 14, color: LightModeColors.accent),
                         const SizedBox(width: 8),
                         _InlineDateChip(
                           label: 'Start',
@@ -2136,7 +2472,8 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                         ),
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 8),
-                          child: Icon(Icons.arrow_forward, size: 12, color: Color(0xFF9CA3AF)),
+                          child: Icon(Icons.arrow_forward,
+                              size: 12, color: Color(0xFF9CA3AF)),
                         ),
                         _InlineDateChip(
                           label: 'End',
@@ -2150,7 +2487,10 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                             padding: const EdgeInsets.only(right: 8),
                             child: Text(
                               '${barEnd.difference(barStart).inDays} days',
-                              style: const TextStyle(color: Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  color: Color(0xFF6B7280),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                         // Save button
@@ -2161,9 +2501,11 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                             style: FilledButton.styleFrom(
                               backgroundColor: LightModeColors.accent,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 0),
                             ),
-                            child: const Text('Save', style: TextStyle(fontSize: 11)),
+                            child: const Text('Save',
+                                style: TextStyle(fontSize: 11)),
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -2174,7 +2516,9 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                             _editStart = null;
                             _editEnd = null;
                           }),
-                          child: const Text('Cancel', style: TextStyle(color: Color(0xFF6B7280), fontSize: 11)),
+                          child: const Text('Cancel',
+                              style: TextStyle(
+                                  color: Color(0xFF6B7280), fontSize: 11)),
                         ),
                       ],
                     ),
@@ -2187,22 +2531,33 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
             padding: const EdgeInsets.fromLTRB(160, 6, 16, 10),
             child: Row(
               children: [
-                Container(width: 12, height: 3, color: const Color(0xFFEF4444).withValues(alpha: 0.6)),
+                Container(
+                    width: 12,
+                    height: 3,
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.6)),
                 const SizedBox(width: 4),
-                const Text('Today', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9)),
+                const Text('Today',
+                    style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9)),
                 const Spacer(),
                 // Domain legend
                 ...ScheduleDomain.values.map((d) => Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(width: 8, height: 8, decoration: BoxDecoration(color: Color(d.color), shape: BoxShape.circle)),
-                      const SizedBox(width: 3),
-                      Text(d.label, style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 9)),
-                    ],
-                  ),
-                )),
+                      padding: const EdgeInsets.only(left: 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                  color: Color(d.color),
+                                  shape: BoxShape.circle)),
+                          const SizedBox(width: 3),
+                          Text(d.label,
+                              style: const TextStyle(
+                                  color: Color(0xFF9CA3AF), fontSize: 9)),
+                        ],
+                      ),
+                    )),
               ],
             ),
           ),
@@ -2217,7 +2572,8 @@ class _TimelineKazAiButton extends StatefulWidget {
   final List<ScheduleActivity> activities;
   final ScheduleProvider provider;
 
-  const _TimelineKazAiButton({required this.activities, required this.provider});
+  const _TimelineKazAiButton(
+      {required this.activities, required this.provider});
 
   @override
   State<_TimelineKazAiButton> createState() => _TimelineKazAiButtonState();
@@ -2236,13 +2592,16 @@ class _TimelineKazAiButtonState extends State<_TimelineKazAiButton> {
       if (activitiesWithoutDates.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('All activities already have dates set.'), duration: Duration(seconds: 2)),
+            const SnackBar(
+                content: Text('All activities already have dates set.'),
+                duration: Duration(seconds: 2)),
           );
         }
         return;
       }
 
-      final activityNames = activitiesWithoutDates.map((a) => '${a.code}: ${a.name}').join(', ');
+      final activityNames =
+          activitiesWithoutDates.map((a) => '${a.code}: ${a.name}').join(', ');
       final ai = OpenAiServiceSecure();
       final result = await ai.generateCompletion(
         'You are a project scheduling expert. Given these activities: $activityNames. '
@@ -2256,7 +2615,11 @@ class _TimelineKazAiButtonState extends State<_TimelineKazAiButton> {
       );
 
       if (!mounted) return;
-      final lines = result.split('\n').map((l) => l.trim()).where((l) => l.contains('|')).toList();
+      final lines = result
+          .split('\n')
+          .map((l) => l.trim())
+          .where((l) => l.contains('|'))
+          .toList();
 
       int applied = 0;
       for (final line in lines) {
@@ -2266,20 +2629,25 @@ class _TimelineKazAiButtonState extends State<_TimelineKazAiButton> {
         final start = _tryParseDate(parts[1]);
         final end = _tryParseDate(parts[2]);
         if (start == null || end == null) continue;
-        final matchIdx = activitiesWithoutDates.indexWhere((a) => a.code == code);
+        final matchIdx =
+            activitiesWithoutDates.indexWhere((a) => a.code == code);
         if (matchIdx < 0) continue;
         final activity = activitiesWithoutDates[matchIdx];
-        widget.provider.updateActivity(activity.id, activity.copyWith(
-          startDate: start,
-          endDate: end,
-        ));
+        widget.provider.updateActivity(
+            activity.id,
+            activity.copyWith(
+              startDate: start,
+              endDate: end,
+            ));
         applied++;
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(applied > 0 ? 'KAZ AI set dates for $applied activities' : 'Could not parse AI suggestions. Try again.'),
+            content: Text(applied > 0
+                ? 'KAZ AI set dates for $applied activities'
+                : 'Could not parse AI suggestions. Try again.'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: LightModeColors.accent,
             duration: const Duration(seconds: 3),
@@ -2289,7 +2657,9 @@ class _TimelineKazAiButtonState extends State<_TimelineKazAiButton> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KAZ AI failed: $e'), duration: const Duration(seconds: 3)),
+          SnackBar(
+              content: Text('KAZ AI failed: $e'),
+              duration: const Duration(seconds: 3)),
         );
       }
     } finally {
@@ -2314,10 +2684,12 @@ class _TimelineKazAiButtonState extends State<_TimelineKazAiButton> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: _isGenerating ? const Color(0xFFFEF3C7) : const Color(0xFFFFF7ED),
+        color:
+            _isGenerating ? const Color(0xFFFEF3C7) : const Color(0xFFFFF7ED),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: _isGenerating ? const Color(0xFFF59E0B) : const Color(0xFFFDE68A),
+          color:
+              _isGenerating ? const Color(0xFFF59E0B) : const Color(0xFFFDE68A),
         ),
       ),
       child: InkWell(
@@ -2329,12 +2701,20 @@ class _TimelineKazAiButtonState extends State<_TimelineKazAiButton> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _isGenerating
-                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFF59E0B)))
-                  : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)),
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Color(0xFFF59E0B)))
+                  : const Icon(Icons.auto_awesome,
+                      size: 14, color: Color(0xFFF59E0B)),
               const SizedBox(width: 6),
               Text(
                 _isGenerating ? 'Suggesting...' : 'KAZ AI Dates',
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF92400E)),
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF92400E)),
               ),
             ],
           ),
@@ -2350,7 +2730,8 @@ class _InlineDateChip extends StatelessWidget {
   final DateTime? date;
   final VoidCallback onTap;
 
-  const _InlineDateChip({required this.label, required this.date, required this.onTap});
+  const _InlineDateChip(
+      {required this.label, required this.date, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -2367,18 +2748,28 @@ class _InlineDateChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(label, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 10, fontWeight: FontWeight.w600)),
+            Text(label,
+                style: const TextStyle(
+                    color: Color(0xFF6B7280),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600)),
             const SizedBox(width: 4),
             Text(
               date != null ? DateFormat('MMM d, y').format(date!) : 'Pick date',
               style: TextStyle(
-                color: date != null ? const Color(0xFF1A1D1F) : const Color(0xFFF59E0B),
+                color: date != null
+                    ? const Color(0xFF1A1D1F)
+                    : const Color(0xFFF59E0B),
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.calendar_today, size: 12, color: date != null ? LightModeColors.accent : const Color(0xFFF59E0B)),
+            Icon(Icons.calendar_today,
+                size: 12,
+                color: date != null
+                    ? LightModeColors.accent
+                    : const Color(0xFFF59E0B)),
           ],
         ),
       ),
@@ -2410,7 +2801,9 @@ class _DateField extends StatelessWidget {
       children: [
         Text(label,
             style: const TextStyle(
-                color: Color(0xFF6B7280), fontSize: 11, fontWeight: FontWeight.w600)),
+                color: Color(0xFF6B7280),
+                fontSize: 11,
+                fontWeight: FontWeight.w600)),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
@@ -2421,14 +2814,16 @@ class _DateField extends StatelessWidget {
             filled: true,
             fillColor: Colors.white,
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: LightModeColors.accent, width: 1.6),
+              borderSide:
+                  const BorderSide(color: LightModeColors.accent, width: 1.6),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -2444,7 +2839,17 @@ class _DateField extends StatelessWidget {
 
 class _DrawingFromBanner extends StatelessWidget {
   final WBS? wbs;
-  final ({int level0, int level1, int level2, int level3, int level4, int level5, int level6, int level7, int level8})? wbsCounts;
+  final ({
+    int level0,
+    int level1,
+    int level2,
+    int level3,
+    int level4,
+    int level5,
+    int level6,
+    int level7,
+    int level8
+  })? wbsCounts;
   final double costTotal;
   final String currency;
   final bool hasEstimate;
@@ -2467,8 +2872,7 @@ class _DrawingFromBanner extends StatelessWidget {
 
     final parts = <String>[];
     if (hasWbs) {
-      parts.add(
-          'WBS ($l1Count $l1Label, $l2Count $l2Label)');
+      parts.add('WBS ($l1Count $l1Label, $l2Count $l2Label)');
     }
     if (hasEstimate) {
       parts.add('Cost Estimate (${formatCurrency(costTotal, currency)})');
@@ -2480,8 +2884,8 @@ class _DrawingFromBanner extends StatelessWidget {
         decoration: BoxDecoration(
           color: LightModeColors.accent.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: LightModeColors.accent.withValues(alpha: 0.25)),
+          border:
+              Border.all(color: LightModeColors.accent.withValues(alpha: 0.25)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2493,9 +2897,7 @@ class _DrawingFromBanner extends StatelessWidget {
               child: Text(
                 'No WBS or Cost Estimate data found yet. Set up the WBS and Cost Estimate modules first to enrich the schedule context.',
                 style: TextStyle(
-                    color: const Color(0xFF495057),
-                    fontSize: 12,
-                    height: 1.5),
+                    color: const Color(0xFF495057), fontSize: 12, height: 1.5),
               ),
             ),
           ],

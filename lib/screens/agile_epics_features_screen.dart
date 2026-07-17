@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:ndu_project/models/epic_model.dart';
 import 'package:ndu_project/models/feature_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/wbs/models/wbs_models.dart';
+import 'package:ndu_project/wbs/providers/wbs_provider.dart';
+import 'package:ndu_project/wbs/services/wbs_agile_sync_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -39,9 +43,10 @@ class _AgileEpicsFeaturesScreenState
  String? _selectedEpicId;
  List<Feature> _features = [];
  bool _isLoading = true;
- bool _isGenerating = false;
+  bool _isGenerating = false;
+  bool _isSyncing = false;
 
- // ── Managed controllers to prevent memory leaks ──
+  // ── Managed controllers to prevent memory leaks ──
  final Map<String, TextEditingController> _epicControllers = {};
  final Map<String, TextEditingController> _featureControllers = {};
  final Map<String, TextEditingController> _chipControllers = {};
@@ -92,13 +97,68 @@ class _AgileEpicsFeaturesScreenState
  }
  }
 
- Future<void> _loadFeatures() async {
- final pid = _projectId;
- if (pid == null || _selectedEpicId == null) return;
- final features =
- await EpicFeatureService.loadFeatures(pid, _selectedEpicId!);
- if (mounted) setState(() => _features = features);
- }
+  Future<void> _loadFeatures() async {
+    final pid = _projectId;
+    if (pid == null || _selectedEpicId == null) return;
+    final features =
+        await EpicFeatureService.loadFeatures(pid, _selectedEpicId!);
+    if (mounted) setState(() => _features = features);
+  }
+
+  Future<void> _syncFromWbs() async {
+    final pid = _projectId;
+    if (pid == null) return;
+    setState(() => _isSyncing = true);
+    try {
+      final wbsProvider = context.read<WBSProvider>();
+      final wbs = wbsProvider.wbs;
+      if (wbs == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No WBS found. Create a WBS first.')),
+          );
+        }
+        return;
+      }
+      if (wbs.methodology == ProjectMethodology.waterfall) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('WBS is set to Waterfall. Switch to Agile or Hybrid to sync.')),
+          );
+        }
+        return;
+      }
+      final result = await WbsAgileSyncService.syncWbsToAgile(
+        projectId: pid,
+        wbs: wbs,
+      );
+      if (!mounted) return;
+      if (result.total > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Synced ${result.total} items from WBS: ${result.epicsCreated} epics, ${result.featuresCreated} features, ${result.storiesCreated} stories.'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Color(0xFF059669),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('All WBS items already synced. No new items created.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      _loadData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sync failed: $e')),
+        );
+      }
+    }
+    if (mounted) setState(() => _isSyncing = false);
+  }
 
  void _addEpic() {
  final epic = Epic(title: 'New Epic ${_epics.length + 1}');
@@ -372,29 +432,44 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  if (_isLoading)
  const Center(child: CircularProgressIndicator())
  else ...[
- Row(
- children: [
- Expanded(
- child: Text('Define epics (large bodies of work) and their features.',
- style: TextStyle(fontSize: 15, color: _kMuted)),
- ),
- const SizedBox(width: 12),
- OutlinedButton.icon(
- onPressed: _isGenerating ? null : _generateEpics,
- icon: _isGenerating
- ? const SizedBox(
- width: 16,
- height: 16,
- child: CircularProgressIndicator(strokeWidth: 2))
- : const Icon(Icons.auto_awesome, size: 18),
- label: Text(_isGenerating ? 'Generating...' : 'AI Generate'),
- style: OutlinedButton.styleFrom(
- foregroundColor: _kAccent,
- side: const BorderSide(color: _kAccent),
- ),
- ),
- ],
- ),
+  Row(
+    children: [
+      Expanded(
+        child: Text('Define epics (large bodies of work) and their features.',
+            style: TextStyle(fontSize: 15, color: _kMuted)),
+      ),
+      const SizedBox(width: 12),
+      OutlinedButton.icon(
+        onPressed: _isSyncing ? null : _syncFromWbs,
+        icon: _isSyncing
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2))
+            : const Icon(Icons.link, size: 18),
+        label: Text(_isSyncing ? 'Syncing...' : 'Sync from WBS'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF059669),
+          side: const BorderSide(color: Color(0xFF059669)),
+        ),
+      ),
+      const SizedBox(width: 8),
+      OutlinedButton.icon(
+        onPressed: _isGenerating ? null : _generateEpics,
+        icon: _isGenerating
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2))
+            : const Icon(Icons.auto_awesome, size: 18),
+        label: Text(_isGenerating ? 'Generating...' : 'AI Generate'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: _kAccent,
+          side: const BorderSide(color: _kAccent),
+        ),
+      ),
+    ],
+  ),
  const SizedBox(height: 20),
  Row(
  children: [
@@ -562,16 +637,22 @@ Widget _buildEpicTile(int index, Epic epic) {
  ),
  ),
  ),
- const SizedBox(width: 4),
- IconButton(
- icon: const Icon(Icons.delete_outline,
- size: 18, color: Colors.red),
- onPressed: () => _deleteEpic(index),
- constraints: const BoxConstraints(),
- padding: EdgeInsets.zero,
- ),
- ],
- ),
+                  const SizedBox(width: 4),
+                  if (epic.wbsId.isNotEmpty)
+                    Tooltip(
+                      message: 'Synced from WBS',
+                      child: Icon(Icons.link, size: 16, color: const Color(0xFF059669)),
+                    ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline,
+                        size: 18, color: Colors.red),
+                    onPressed: () => _deleteEpic(index),
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
   const SizedBox(height: 6),
   Row(
     children: [
@@ -698,16 +779,22 @@ Widget _buildEpicTile(int index, Epic epic) {
  ),
  ),
  ),
- const SizedBox(width: 4),
- IconButton(
- icon: const Icon(Icons.delete_outline,
- size: 16, color: Colors.red),
- onPressed: () => _deleteFeature(index),
- constraints: const BoxConstraints(),
- padding: EdgeInsets.zero,
- ),
-      ],
-    ),
+                  const SizedBox(width: 4),
+                  if (feature.wbsId.isNotEmpty)
+                    Tooltip(
+                      message: 'Synced from WBS',
+                      child: Icon(Icons.link, size: 14, color: const Color(0xFF059669)),
+                    ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline,
+                        size: 16, color: Colors.red),
+                    onPressed: () => _deleteFeature(index),
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
     VoiceTextField(
       decoration: InputDecoration(
         hintText: 'Feature description',

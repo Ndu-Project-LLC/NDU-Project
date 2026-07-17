@@ -8,6 +8,7 @@ library;
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/services/schedule_cpm_service.dart';
 
@@ -34,7 +35,8 @@ class ScheduleProvider extends ChangeNotifier {
         _setupComplete = state['setupComplete'] as bool? ?? false;
         // Simplified deserialization — in production, use full JSON mapping
         if (state['schedule'] != null) {
-          _schedule = _scheduleFromJson(state['schedule'] as Map<String, dynamic>);
+          _schedule =
+              _scheduleFromJson(state['schedule'] as Map<String, dynamic>);
         }
         notifyListeners();
       }
@@ -164,9 +166,12 @@ class ScheduleProvider extends ChangeNotifier {
     final newActivity = activity.copyWith(id: id, code: '', level: 0);
     final root = _schedule!.activities[0];
     final updatedRoot = recalcActivityCodes(
-      _findAndUpdate(root, parentId, (n) => n.copyWith(
-        children: [...n.children, newActivity],
-      )),
+      _findAndUpdate(
+          root,
+          parentId,
+          (n) => n.copyWith(
+                children: [...n.children, newActivity],
+              )),
     );
     _schedule = _schedule!.copyWith(
       activities: [updatedRoot],
@@ -181,29 +186,39 @@ class ScheduleProvider extends ChangeNotifier {
     if (_schedule == null || _schedule!.activities.isEmpty) return;
     final root = _schedule!.activities[0];
     final updatedRoot = recalcActivityCodes(
-      _findAndUpdate(root, id, (a) => a.copyWith(
-        name: patch.name,
-        description: patch.description,
-        domain: patch.domain,
-        type: patch.type,
-        duration: patch.duration,
-        durationUnit: patch.durationUnit,
-        owner: patch.owner,
-        status: patch.status,
-        progress: patch.progress,
-        estimationMethod: patch.estimationMethod,
-        storyPoints: patch.storyPoints,
-        tShirtSize: patch.tShirtSize,
-        definitionOfReady: patch.definitionOfReady,
-        definitionOfDone: patch.definitionOfDone,
-        costLineId: patch.costLineId,
-        startDate: patch.startDate,
-        endDate: patch.endDate,
-        isCriticalPath: patch.isCriticalPath,
-        isLongLead: patch.isLongLead,
-        dependencies: patch.dependencies,
-        estimatedHours: patch.estimatedHours,
-      )),
+      _findAndUpdate(
+          root,
+          id,
+          (a) => a.copyWith(
+                name: patch.name,
+                description: patch.description,
+                domain: patch.domain,
+                type: patch.type,
+                duration: patch.duration,
+                durationUnit: patch.durationUnit,
+                owner: patch.owner,
+                status: patch.status,
+                progress: patch.progress,
+                estimationMethod: patch.estimationMethod,
+                storyPoints: patch.storyPoints,
+                tShirtSize: patch.tShirtSize,
+                definitionOfReady: patch.definitionOfReady,
+                definitionOfDone: patch.definitionOfDone,
+                costLineId: patch.costLineId,
+                sprintId: patch.sprintId,
+                releaseId: patch.releaseId,
+                agileEpicTitle: patch.agileEpicTitle,
+                agileFeatureTitle: patch.agileFeatureTitle,
+                sprintLabel: patch.sprintLabel,
+                releaseLabel: patch.releaseLabel,
+                importSource: patch.importSource,
+                startDate: patch.startDate,
+                endDate: patch.endDate,
+                isCriticalPath: patch.isCriticalPath,
+                isLongLead: patch.isLongLead,
+                dependencies: patch.dependencies,
+                estimatedHours: patch.estimatedHours,
+              )),
     );
     _schedule = _schedule!.copyWith(
       activities: [updatedRoot],
@@ -240,25 +255,41 @@ class ScheduleProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  /// Legacy direct WBS import path retained for backward compatibility.
+  ///
+  /// Prefer integrated work-package generation for Waterfall/Hybrid and
+  /// `importStoriesFromAgile` for Agile delivery flows.
   void importFromWBS(List<WbsImportNode> wbsNodes) {
     if (_schedule == null || _schedule!.activities.isEmpty) return;
     final root = _schedule!.activities[0];
+    final dm = _schedule!.basis.deliveryModel;
+    final isAgile = dm == 'AGILE' || dm == 'HYBRID';
 
     ScheduleActivity _buildActivity(WbsImportNode node, int level) {
+      // Use Agile-specific types and domain for Agile/Hybrid projects
+      final type = isAgile
+          ? (level <= 2 ? ActivityType.summary : ActivityType.activity)
+          : ActivityType.summary;
+      final domain = isAgile
+          ? (level <= 3 ? ScheduleDomain.execution : _domainForLevel(level))
+          : ScheduleDomain.engineering;
+
       return ScheduleActivity(
         id: newSchedId('act'),
         level: level,
         code: '',
         name: node.name,
         description: node.description,
-        type: ActivityType.summary,
-        domain: ScheduleDomain.engineering,
+        type: type,
+        domain: domain,
         dependencies: [],
         aiGenerated: false,
         wbsNodeId: node.id,
-        children: node.children
-            .map((c) => _buildActivity(c, level + 1))
-            .toList(),
+        importSource: 'wbs',
+        definitionOfReady: isAgile ? _schedule!.basis.definitionOfReady : null,
+        definitionOfDone: isAgile ? _schedule!.basis.definitionOfDone : null,
+        children:
+            node.children.map((c) => _buildActivity(c, level + 1)).toList(),
       );
     }
 
@@ -266,7 +297,130 @@ class ScheduleProvider extends ChangeNotifier {
       ...root.children,
       ...wbsNodes.map((n) => _buildActivity(n, 1)),
     ];
-    final updatedRoot = recalcActivityCodes(root.copyWith(children: newChildren));
+    final updatedRoot =
+        recalcActivityCodes(root.copyWith(children: newChildren));
+    _schedule = _schedule!.copyWith(
+      activities: [updatedRoot],
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+  }
+
+  ScheduleDomain _domainForLevel(int level) {
+    return switch (level) {
+      1 => ScheduleDomain.engineering,
+      2 => ScheduleDomain.execution,
+      3 => ScheduleDomain.procurement,
+      _ => ScheduleDomain.execution,
+    };
+  }
+
+  /// Import AgileTask (story) records into the schedule as ScheduleActivity entries.
+  ///
+  /// Groups stories under Feature/Epic summary activities. Only operates when
+  /// the schedule delivery model is AGILE or HYBRID.
+  void importStoriesFromAgile({
+    required List<
+            ({
+              AgileTask story,
+              String epicTitle,
+              String featureTitle,
+              String? sprintLabel,
+              String? releaseLabel
+            })>
+        stories,
+  }) {
+    if (_schedule == null || _schedule!.activities.isEmpty) return;
+    final dm = _schedule!.basis.deliveryModel;
+    if (dm != 'AGILE' && dm != 'HYBRID') return;
+
+    final root = _schedule!.activities[0];
+
+    // Build a map: epic title → feature title → list of stories
+    final Map<String, Map<String, List<AgileTask>>> grouped = {};
+    final Map<String, String?> sprintLabelByStoryId = {};
+    final Map<String, String?> releaseLabelByStoryId = {};
+    for (final entry in stories) {
+      grouped.putIfAbsent(entry.epicTitle, () => {});
+      grouped[entry.epicTitle]!.putIfAbsent(entry.featureTitle, () => []);
+      grouped[entry.epicTitle]![entry.featureTitle]!.add(entry.story);
+      sprintLabelByStoryId[entry.story.id] = entry.sprintLabel;
+      releaseLabelByStoryId[entry.story.id] = entry.releaseLabel;
+    }
+
+    // Build feature activities as children of epic activities
+    final List<ScheduleActivity> epicActivities = [];
+    for (final epicEntry in grouped.entries) {
+      final featureActivities = <ScheduleActivity>[];
+      for (final featureEntry in epicEntry.value.entries) {
+        final storyActivities = featureEntry.value.map((s) {
+          return ScheduleActivity(
+            id: newSchedId('act'),
+            level: 4,
+            code: '',
+            name: s.userStory,
+            description:
+                s.taskDescription.isNotEmpty ? s.taskDescription : null,
+            type: ActivityType.activity,
+            domain: ScheduleDomain.execution,
+            duration: null,
+            dependencies: [],
+            storyPoints: s.storyPoints.toDouble(),
+            sprintId: s.plannedSprintId.isNotEmpty ? s.plannedSprintId : null,
+            releaseId:
+                s.plannedReleaseId.isNotEmpty ? s.plannedReleaseId : null,
+            agileEpicTitle: epicEntry.key,
+            agileFeatureTitle: featureEntry.key,
+            sprintLabel: sprintLabelByStoryId[s.id],
+            releaseLabel: releaseLabelByStoryId[s.id],
+            estimationMethod: EstimationMethod.storyPoints,
+            aiGenerated: false,
+            children: [],
+            agileTaskId: s.id,
+            wbsNodeId: s.wbsId.isNotEmpty ? s.wbsId : null,
+            importSource: 'agile_story',
+            definitionOfReady: _schedule!.basis.definitionOfReady,
+            definitionOfDone: _schedule!.basis.definitionOfDone,
+            prerequisites: s.dependencyTaskIds.isEmpty
+                ? null
+                : List<String>.from(s.dependencyTaskIds),
+          );
+        }).toList();
+
+        featureActivities.add(
+          ScheduleActivity(
+            id: newSchedId('act'),
+            level: 3,
+            code: '',
+            name: featureEntry.key,
+            type: ActivityType.summary,
+            domain: ScheduleDomain.execution,
+            dependencies: [],
+            aiGenerated: false,
+            children: storyActivities,
+          ),
+        );
+      }
+
+      epicActivities.add(
+        ScheduleActivity(
+          id: newSchedId('act'),
+          level: 2,
+          code: '',
+          name: epicEntry.key,
+          type: ActivityType.summary,
+          domain: ScheduleDomain.execution,
+          dependencies: [],
+          aiGenerated: false,
+          children: featureActivities,
+        ),
+      );
+    }
+
+    final updatedRoot = recalcActivityCodes(root.copyWith(
+      children: [...root.children, ...epicActivities],
+    ));
     _schedule = _schedule!.copyWith(
       activities: [updatedRoot],
       updatedAt: DateTime.now(),
@@ -279,12 +433,13 @@ class ScheduleProvider extends ChangeNotifier {
 
   void addSMEReviewer(SMEReviewer reviewer) {
     if (_schedule == null) return;
-    final review = _schedule!.review ?? const ScheduleReview(
-      stage1Reviewers: [],
-      stage2Reviewers: [],
-      stage1Complete: false,
-      stage2Complete: false,
-    );
+    final review = _schedule!.review ??
+        const ScheduleReview(
+          stage1Reviewers: [],
+          stage2Reviewers: [],
+          stage1Complete: false,
+          stage2Complete: false,
+        );
     if (reviewer.stage == 1) {
       _schedule = _schedule!.copyWith(
         review: review.copyWith(
@@ -308,10 +463,30 @@ class ScheduleProvider extends ChangeNotifier {
     final now = DateTime.now();
     _schedule = _schedule!.copyWith(
       review: review.copyWith(
-        stage1Reviewers: review.stage1Reviewers.map((r) =>
-            r.id == id ? SMEReviewer(id: r.id, name: r.name, email: r.email, role: r.role, stage: r.stage, approved: true, approvedAt: now) : r).toList(),
-        stage2Reviewers: review.stage2Reviewers.map((r) =>
-            r.id == id ? SMEReviewer(id: r.id, name: r.name, email: r.email, role: r.role, stage: r.stage, approved: true, approvedAt: now) : r).toList(),
+        stage1Reviewers: review.stage1Reviewers
+            .map((r) => r.id == id
+                ? SMEReviewer(
+                    id: r.id,
+                    name: r.name,
+                    email: r.email,
+                    role: r.role,
+                    stage: r.stage,
+                    approved: true,
+                    approvedAt: now)
+                : r)
+            .toList(),
+        stage2Reviewers: review.stage2Reviewers
+            .map((r) => r.id == id
+                ? SMEReviewer(
+                    id: r.id,
+                    name: r.name,
+                    email: r.email,
+                    role: r.role,
+                    stage: r.stage,
+                    approved: true,
+                    approvedAt: now)
+                : r)
+            .toList(),
       ),
     );
     notifyListeners();
@@ -322,9 +497,14 @@ class ScheduleProvider extends ChangeNotifier {
     if (_schedule == null) return;
     _schedule = _schedule!.copyWith(
       status: ScheduleStatus.stage1Complete,
-      review: (_schedule!.review ?? const ScheduleReview(
-        stage1Reviewers: [], stage2Reviewers: [], stage1Complete: false, stage2Complete: false,
-      )).copyWith(stage1Complete: true, stage1CompletedAt: DateTime.now()),
+      review: (_schedule!.review ??
+              const ScheduleReview(
+                stage1Reviewers: [],
+                stage2Reviewers: [],
+                stage1Complete: false,
+                stage2Complete: false,
+              ))
+          .copyWith(stage1Complete: true, stage1CompletedAt: DateTime.now()),
     );
     notifyListeners();
     _saveToStorage();
@@ -334,9 +514,14 @@ class ScheduleProvider extends ChangeNotifier {
     if (_schedule == null) return;
     _schedule = _schedule!.copyWith(
       status: ScheduleStatus.stage2Complete,
-      review: (_schedule!.review ?? const ScheduleReview(
-        stage1Reviewers: [], stage2Reviewers: [], stage1Complete: false, stage2Complete: false,
-      )).copyWith(stage2Complete: true, stage2CompletedAt: DateTime.now()),
+      review: (_schedule!.review ??
+              const ScheduleReview(
+                stage1Reviewers: [],
+                stage2Reviewers: [],
+                stage1Complete: false,
+                stage2Complete: false,
+              ))
+          .copyWith(stage2Complete: true, stage2CompletedAt: DateTime.now()),
     );
     notifyListeners();
     _saveToStorage();
@@ -344,7 +529,8 @@ class ScheduleProvider extends ChangeNotifier {
 
   void proceedToCostEstimate() {
     if (_schedule == null) return;
-    _schedule = _schedule!.copyWith(status: ScheduleStatus.readyForCostEstimate);
+    _schedule =
+        _schedule!.copyWith(status: ScheduleStatus.readyForCostEstimate);
     notifyListeners();
     _saveToStorage();
   }
@@ -353,25 +539,28 @@ class ScheduleProvider extends ChangeNotifier {
 
   void lock() {
     if (_schedule == null) return;
-    _schedule = _schedule!.copyWith(isLocked: true, status: ScheduleStatus.locked);
+    _schedule =
+        _schedule!.copyWith(isLocked: true, status: ScheduleStatus.locked);
     notifyListeners();
     _saveToStorage();
   }
 
   void unlock() {
     if (_schedule == null) return;
-    _schedule = _schedule!.copyWith(isLocked: false, status: ScheduleStatus.readyForCostEstimate);
+    _schedule = _schedule!
+        .copyWith(isLocked: false, status: ScheduleStatus.readyForCostEstimate);
     notifyListeners();
     _saveToStorage();
   }
 
   // ─── Tree helpers ───────────────────────────────────────────────────────
 
-  ScheduleActivity _findAndUpdate(
-      ScheduleActivity root, String id, ScheduleActivity Function(ScheduleActivity) updater) {
+  ScheduleActivity _findAndUpdate(ScheduleActivity root, String id,
+      ScheduleActivity Function(ScheduleActivity) updater) {
     if (root.id == id) return updater(root);
     return root.copyWith(
-      children: root.children.map((c) => _findAndUpdate(c, id, updater)).toList(),
+      children:
+          root.children.map((c) => _findAndUpdate(c, id, updater)).toList(),
     );
   }
 
@@ -384,7 +573,8 @@ class ScheduleProvider extends ChangeNotifier {
     );
   }
 
-  ScheduleActivity _swapInTree(ScheduleActivity root, String id, bool directionUp) {
+  ScheduleActivity _swapInTree(
+      ScheduleActivity root, String id, bool directionUp) {
     List<ScheduleActivity> swap(List<ScheduleActivity> arr) {
       final idx = arr.indexWhere((a) => a.id == id);
       if (idx >= 0) {
@@ -406,10 +596,13 @@ class ScheduleProvider extends ChangeNotifier {
       }
       return arr.map((n) => n.copyWith(children: swap(n.children))).toList();
     }
+
     final idx = root.children.indexWhere((a) => a.id == id);
     if (idx >= 0) {
       return root.copyWith(children: swap(root.children));
     }
-    return root.copyWith(children: root.children.map((c) => _swapInTree(c, id, directionUp)).toList());
+    return root.copyWith(
+        children:
+            root.children.map((c) => _swapInTree(c, id, directionUp)).toList());
   }
 }

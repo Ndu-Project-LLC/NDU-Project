@@ -34,11 +34,11 @@ class _ListViewScreenState extends State<ListViewScreen> {
         final rows = _buildRows(schedule);
         final filtered = _applyFilters(rows);
         final criticalCount = rows.where((r) => r.isCritical).length;
-        final inProgressCount = rows.where((r) => r.status == 'In Progress').length;
+        final inProgressCount =
+            rows.where((r) => r.status == 'In Progress').length;
         final completeCount = rows.where((r) => r.status == 'Complete').length;
-        final pctComplete = rows.isEmpty
-            ? 0.0
-            : (completeCount / rows.length) * 100;
+        final pctComplete =
+            rows.isEmpty ? 0.0 : (completeCount / rows.length) * 100;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -181,8 +181,8 @@ class _ListViewScreenState extends State<ListViewScreen> {
                     : SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
-                          headingRowColor: WidgetStateProperty.all(
-                              const Color(0xFFF9FAFB)),
+                          headingRowColor:
+                              WidgetStateProperty.all(const Color(0xFFF9FAFB)),
                           dataRowColor:
                               WidgetStateProperty.all(Colors.transparent),
                           columnSpacing: 24,
@@ -196,8 +196,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                       color: Color(0xFF6B7280),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) =>
-                                  _onSort(_SortBy.code, asc),
+                              onSort: (c, asc) => _onSort(_SortBy.code, asc),
                             ),
                             DataColumn(
                               label: const Text('Name',
@@ -205,8 +204,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                       color: Color(0xFF6B7280),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) =>
-                                  _onSort(_SortBy.name, asc),
+                              onSort: (c, asc) => _onSort(_SortBy.name, asc),
                             ),
                             DataColumn(
                               label: const Text('Domain',
@@ -214,8 +212,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                       color: Color(0xFF6B7280),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) =>
-                                  _onSort(_SortBy.domain, asc),
+                              onSort: (c, asc) => _onSort(_SortBy.domain, asc),
                             ),
                             DataColumn(
                               label: const Text('Duration',
@@ -232,8 +229,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                       color: Color(0xFF6B7280),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) =>
-                                  _onSort(_SortBy.start, asc),
+                              onSort: (c, asc) => _onSort(_SortBy.start, asc),
                             ),
                             DataColumn(
                               label: const Text('Finish',
@@ -241,8 +237,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                       color: Color(0xFF6B7280),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) =>
-                                  _onSort(_SortBy.finish, asc),
+                              onSort: (c, asc) => _onSort(_SortBy.finish, asc),
                             ),
                             DataColumn(
                               label: const Text('Owner',
@@ -250,8 +245,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                       color: Color(0xFF6B7280),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) =>
-                                  _onSort(_SortBy.owner, asc),
+                              onSort: (c, asc) => _onSort(_SortBy.owner, asc),
                             ),
                             DataColumn(
                               label: const Text('Status',
@@ -259,8 +253,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                       color: Color(0xFF6B7280),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600)),
-                              onSort: (c, asc) =>
-                                  _onSort(_SortBy.status, asc),
+                              onSort: (c, asc) => _onSort(_SortBy.status, asc),
+                            ),
+                            const DataColumn(
+                              label: Text('Traceability',
+                                  style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
                             ),
                           ],
                           rows: filtered
@@ -309,6 +309,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                                             color: Color(0xFF495057),
                                             fontSize: 12))),
                                     DataCell(_StatusBadge(status: r.status)),
+                                    DataCell(_TraceabilityCell(row: r)),
                                   ]))
                               .toList(),
                         ),
@@ -323,8 +324,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                           color: Color(0xFF6B7280), fontSize: 12)),
                   const SizedBox(width: 8),
                   const Text('·',
-                      style:
-                          TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
+                      style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
                   const SizedBox(width: 8),
                   const Text(
                       'Sample data shown alongside live activities added via the Builder tab.',
@@ -367,6 +367,17 @@ class _ListViewScreenState extends State<ListViewScreen> {
           owner: node.owner ?? '—',
           status: node.status ?? 'Not Started',
           isCritical: node.isCriticalPath,
+          hasWbs: node.wbsNodeId != null && node.wbsNodeId!.isNotEmpty,
+          hasAgileStory:
+              node.agileTaskId != null && node.agileTaskId!.isNotEmpty,
+          hasSprint: node.sprintId != null && node.sprintId!.isNotEmpty,
+          hasRelease: node.releaseId != null && node.releaseId!.isNotEmpty,
+          sprintLabel: node.sprintLabel ?? '',
+          releaseLabel: node.releaseLabel ?? '',
+          agileEpicTitle: node.agileEpicTitle ?? '',
+          agileFeatureTitle: node.agileFeatureTitle ?? '',
+          importSource: node.importSource ?? '',
+          prerequisiteCount: node.prerequisites?.length ?? 0,
           sortStart: node.startDate?.millisecondsSinceEpoch ?? 0,
           sortFinish: node.endDate?.millisecondsSinceEpoch ?? 0,
           sortDuration: node.duration ?? 0,
@@ -499,9 +510,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
   List<_ListRow> _applyFilters(List<_ListRow> rows) {
     var out = rows;
     if (_domainFilter != null) {
-      out = out
-          .where((r) => r.domainLabel == _domainFilter!.label)
-          .toList();
+      out = out.where((r) => r.domainLabel == _domainFilter!.label).toList();
     }
     if (_search.trim().isNotEmpty) {
       final q = _search.trim().toLowerCase();
@@ -560,6 +569,16 @@ class _ListRow {
   final String owner;
   final String status;
   final bool isCritical;
+  final bool hasWbs;
+  final bool hasAgileStory;
+  final bool hasSprint;
+  final bool hasRelease;
+  final String sprintLabel;
+  final String releaseLabel;
+  final String agileEpicTitle;
+  final String agileFeatureTitle;
+  final String importSource;
+  final int prerequisiteCount;
   final int sortStart;
   final int sortFinish;
   final double sortDuration;
@@ -575,6 +594,16 @@ class _ListRow {
     required this.owner,
     required this.status,
     required this.isCritical,
+    this.hasWbs = false,
+    this.hasAgileStory = false,
+    this.hasSprint = false,
+    this.hasRelease = false,
+    this.sprintLabel = '',
+    this.releaseLabel = '',
+    this.agileEpicTitle = '',
+    this.agileFeatureTitle = '',
+    this.importSource = '',
+    this.prerequisiteCount = 0,
     required this.sortStart,
     required this.sortFinish,
     required this.sortDuration,
@@ -686,8 +715,7 @@ class _FilterChip extends StatelessWidget {
               Container(
                 width: 8,
                 height: 8,
-                decoration: BoxDecoration(
-                    color: color, shape: BoxShape.circle),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 5),
             ],
@@ -707,6 +735,90 @@ class _FilterChip extends StatelessWidget {
 }
 
 /// Status badge — colored pill based on activity status.
+class _TraceabilityCell extends StatelessWidget {
+  final _ListRow row;
+  const _TraceabilityCell({required this.row});
+
+  @override
+  Widget build(BuildContext context) {
+    final chips = <Widget>[];
+    if (row.importSource.isNotEmpty) {
+      chips.add(
+          _miniChip(_sourceLabel(row.importSource), const Color(0xFF475467)));
+    }
+    if (row.hasWbs) {
+      chips.add(_miniChip('WBS', const Color(0xFF0EA5E9)));
+    }
+    if (row.hasAgileStory) {
+      chips.add(_miniChip(
+          row.agileFeatureTitle.isNotEmpty ? row.agileFeatureTitle : 'Story',
+          const Color(0xFF8B5CF6)));
+    }
+    if (row.hasSprint) {
+      chips.add(_miniChip(
+          row.sprintLabel.isNotEmpty ? row.sprintLabel : 'Sprint',
+          const Color(0xFF16A34A)));
+    }
+    if (row.hasRelease) {
+      chips.add(_miniChip(
+          row.releaseLabel.isNotEmpty ? row.releaseLabel : 'Release',
+          const Color(0xFFD97706)));
+    }
+    if (row.prerequisiteCount > 0) {
+      chips.add(_miniChip(
+          '${row.prerequisiteCount} prereq', const Color(0xFF6B7280)));
+    }
+    if (chips.isEmpty) {
+      return const Text('—',
+          style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12));
+    }
+    return SizedBox(
+      width: 260,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (row.agileEpicTitle.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                'Epic: ${row.agileEpicTitle}${row.agileFeatureTitle.isNotEmpty ? ' · Feature: ${row.agileFeatureTitle}' : ''}',
+                style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
+              ),
+            ),
+          Wrap(spacing: 4, runSpacing: 4, children: chips),
+        ],
+      ),
+    );
+  }
+
+  String _sourceLabel(String source) {
+    switch (source) {
+      case 'agile_story':
+        return 'Agile Import';
+      case 'work_package':
+        return 'Package Import';
+      case 'wbs':
+        return 'WBS Import';
+      default:
+        return source;
+    }
+  }
+
+  Widget _miniChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Text(label,
+          style: TextStyle(
+              color: color, fontSize: 10, fontWeight: FontWeight.w600)),
+    );
+  }
+}
+
 class _StatusBadge extends StatelessWidget {
   final String status;
   const _StatusBadge({required this.status});
@@ -744,8 +856,8 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(status,
-          style: TextStyle(
-              color: fg, fontSize: 11, fontWeight: FontWeight.w600)),
+          style:
+              TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.w600)),
     );
   }
 }
@@ -762,8 +874,7 @@ class _EmptyState extends StatelessWidget {
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.search_off,
-                size: 36, color: Color(0xFF9CA3AF)),
+            const Icon(Icons.search_off, size: 36, color: Color(0xFF9CA3AF)),
             const SizedBox(height: 12),
             const Text('No matching activities',
                 style: TextStyle(

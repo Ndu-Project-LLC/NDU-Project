@@ -11,6 +11,13 @@ class AgileTask {
   String iterationNotes; // Prose, no bullets, manual input only
   String epicId;
   String featureId;
+  String wbsId; // WBS node ID for Level 3 traceability
+  String plannedSprintId; // Planning-phase target sprint allocation
+  String plannedReleaseId; // Planning-phase target release allocation
+  String workflowState; // Cross-phase kanban / execution workflow state
+  String readinessStatus; // Draft, Ready for Refinement, Ready for Sprint
+  List<String> dependencyTaskIds; // Related story/task dependencies
+  int backlogOrder; // Planning-phase ordering within feature backlog
 
   AgileTask({
     String? id,
@@ -24,7 +31,15 @@ class AgileTask {
     this.iterationNotes = '',
     this.epicId = '',
     this.featureId = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+    this.wbsId = '',
+    this.plannedSprintId = '',
+    this.plannedReleaseId = '',
+    this.workflowState = 'backlog',
+    this.readinessStatus = 'Draft',
+    List<String>? dependencyTaskIds,
+    this.backlogOrder = 0,
+  })  : dependencyTaskIds = dependencyTaskIds ?? [],
+        id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
 
   AgileTask copyWith({
     String? userStory,
@@ -37,6 +52,13 @@ class AgileTask {
     String? iterationNotes,
     String? epicId,
     String? featureId,
+    String? wbsId,
+    String? plannedSprintId,
+    String? plannedReleaseId,
+    String? workflowState,
+    String? readinessStatus,
+    List<String>? dependencyTaskIds,
+    int? backlogOrder,
   }) {
     return AgileTask(
       id: id,
@@ -50,6 +72,14 @@ class AgileTask {
       iterationNotes: iterationNotes ?? this.iterationNotes,
       epicId: epicId ?? this.epicId,
       featureId: featureId ?? this.featureId,
+      wbsId: wbsId ?? this.wbsId,
+      plannedSprintId: plannedSprintId ?? this.plannedSprintId,
+      plannedReleaseId: plannedReleaseId ?? this.plannedReleaseId,
+      workflowState: workflowState ?? this.workflowState,
+      readinessStatus: readinessStatus ?? this.readinessStatus,
+      dependencyTaskIds:
+          dependencyTaskIds ?? List<String>.from(this.dependencyTaskIds),
+      backlogOrder: backlogOrder ?? this.backlogOrder,
     );
   }
 
@@ -65,6 +95,13 @@ class AgileTask {
         'iterationNotes': iterationNotes,
         'epicId': epicId,
         'featureId': featureId,
+        if (wbsId.isNotEmpty) 'wbsId': wbsId,
+        if (plannedSprintId.isNotEmpty) 'plannedSprintId': plannedSprintId,
+        if (plannedReleaseId.isNotEmpty) 'plannedReleaseId': plannedReleaseId,
+        'workflowState': workflowState,
+        'readinessStatus': readinessStatus,
+        'dependencyTaskIds': dependencyTaskIds,
+        'backlogOrder': backlogOrder,
       };
 
   factory AgileTask.fromJson(Map<String, dynamic> json) {
@@ -86,6 +123,18 @@ class AgileTask {
       iterationNotes: json['iterationNotes']?.toString() ?? '',
       epicId: json['epicId']?.toString() ?? '',
       featureId: json['featureId']?.toString() ?? '',
+      wbsId: json['wbsId']?.toString() ?? '',
+      plannedSprintId: json['plannedSprintId']?.toString() ?? '',
+      plannedReleaseId: json['plannedReleaseId']?.toString() ?? '',
+      workflowState: json['workflowState']?.toString() ?? 'backlog',
+      readinessStatus: json['readinessStatus']?.toString() ?? 'Draft',
+      dependencyTaskIds: (json['dependencyTaskIds'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      backlogOrder: json['backlogOrder'] is num
+          ? (json['backlogOrder'] as num).toInt()
+          : int.tryParse(json['backlogOrder']?.toString() ?? '') ?? 0,
     );
   }
 }

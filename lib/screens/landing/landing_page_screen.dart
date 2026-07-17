@@ -35,6 +35,12 @@ const _gold = Color(0xFFFBBF24);
 const _goldDeep = Color(0xFFD97706);
 const _red = Color(0xFFEF4444);
 
+// Phase-specific unique colors for "How It Works" section
+const _teal = Color(0xFF14B8A6);      // For Design phase
+const _tealLight = Color(0xFF2DD4BF);
+const _orange = Color(0xFFF97316);     // For Execution phase
+const _orangeLight = Color(0xFFFB923C);
+
 class LandingPageScreen extends StatelessWidget {
   const LandingPageScreen({super.key});
 
@@ -376,18 +382,27 @@ class _HeroSection extends StatelessWidget {
                 _ctaButton('See How It Works', Colors.transparent, _textPrimary, () {}, border: true),
               ]),
               const SizedBox(height: 60),
-              // System diagram visual
+              // System diagram visual - 5 phases with unique colors
               Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(color: _surfaceCard.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(20), border: Border.all(color: _border)),
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  _phaseNode('Initiation', _blue),
-                  _arrow(),
-                  _phaseNode('Planning', _purple),
-                  _arrow(),
-                  _phaseNode('Execution', _green),
-                  _arrow(),
-                  _phaseNode('Launch', _gold),
+                child: Column(children: [
+                  // Row 1: Initiation → Planning → Design
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    _phaseNode('Initiation', _blue, Icons.flag_outlined),
+                    _arrow(),
+                    _phaseNode('Planning', _purple, Icons.explore_outlined),
+                    _arrow(),
+                    _phaseNode('Design', _teal, Icons.design_services_outlined),
+                    _arrow(),
+                  ]),
+                  const SizedBox(height: 16),
+                  // Row 2: Execution → Launch (centered)
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    _phaseNode('Execution', _orange, Icons.build_outlined),
+                    _arrow(),
+                    _phaseNode('Launch', _gold, Icons.rocket_launch_outlined),
+                  ]),
                 ]),
               ),
               // AI + Analytics + Human overlay
@@ -419,11 +434,23 @@ class _HeroSection extends StatelessWidget {
     );
   }
 
-  Widget _phaseNode(String label, Color color) {
+  Widget _phaseNode(String label, Color color, [IconData? icon]) {
     return Column(children: [
-      Container(width: 48, height: 48, decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.4))), child: Icon(Icons.circle, color: color, size: 12)),
-      const SizedBox(height: 6),
-      Text(label, style: TextStyle(color: _textPrimary, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: appFontFamily)),
+      Container(
+        width: 72,
+        height: 72,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.5), width: 2),
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 12, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Icon(icon ?? Icons.circle, color: color, size: 32),
+      ),
+      const SizedBox(height: 8),
+      Text(label, style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
     ]);
   }
 

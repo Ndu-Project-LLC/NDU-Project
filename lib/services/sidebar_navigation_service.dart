@@ -100,10 +100,10 @@ class SidebarNavigationService {
         checkpoint: 'infrastructure_considerations',
         label: 'Infrastructure Considerations'),
     SidebarItem(checkpoint: 'core_stakeholders', label: 'Core Stakeholders'),
-    SidebarItem(checkpoint: 'cost_analysis', label: 'Initial Cost Estimate'),
     SidebarItem(
         checkpoint: 'preferred_solution_analysis',
         label: 'Preferred Solution Analysis'),
+    SidebarItem(checkpoint: 'cost_analysis', label: 'Initial Cost Estimate'),
 
     // Front End Planning
     SidebarItem(checkpoint: 'fep_summary', label: 'Summary'),

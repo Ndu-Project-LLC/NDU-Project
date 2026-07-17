@@ -3692,7 +3692,7 @@ class _LandingScreenState extends State<LandingScreen>
  );
  }
 
- // ── Section 11: Final CTA ─────────────────────────────────────────────
+ // ── Section: Pricing ──────────────────────────────────────────────────
  Widget _buildCTASection(BuildContext context, bool isDesktop) {
  return Container(
  key: _ctaKey,
@@ -3719,63 +3719,462 @@ class _LandingScreenState extends State<LandingScreen>
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.center,
  children: [
+ // ── Pricing Header ──
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(18),
+ color: LightModeColors.accent.withValues(alpha: 0.12),
+ border: Border.all(color: LightModeColors.accent.withValues(alpha: 0.3)),
+ ),
+ child: const Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Icon(Icons.paid_rounded, color: LightModeColors.accent, size: 16),
+ SizedBox(width: 8),
+ Text('Pricing', style: TextStyle(color: LightModeColors.accent, fontWeight: FontWeight.w700, fontSize: 14)),
+ ],
+ ),
+ ),
+ const SizedBox(height: 24),
  Text(
- 'Ready to Transform How You Deliver Projects?',
+ 'Simple, Scalable Pricing\nfor Every Level of Project Delivery',
  textAlign: TextAlign.center,
  style: TextStyle(
- fontSize: isDesktop ? 40 : 30,
+ fontSize: isDesktop ? 36 : 26,
  fontWeight: FontWeight.w800,
  color: Colors.white,
+ height: 1.15,
  ),
  ),
  const SizedBox(height: 14),
  Text(
- 'Move beyond tracking tools. Implement a system designed for real project success.',
+ "Whether you're managing a single project or an enterprise portfolio,\nNdu Project grows with your organization.",
  textAlign: TextAlign.center,
  style: TextStyle(
- fontSize: 17, color: Colors.white.withValues(alpha: 0.78)),
+ fontSize: 16,
+ color: Colors.white.withValues(alpha: 0.72),
+ height: 1.5,
+ ),
  ),
  const SizedBox(height: 32),
- SizedBox(
- width: isDesktop ? 500 : double.infinity,
+
+ // ── All Plans Include ──
+ Container(
+ padding: const EdgeInsets.all(20),
+ decoration: BoxDecoration(
+ color: const Color(0xFF10B981).withValues(alpha: 0.08),
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.2)),
+ ),
  child: Column(
- crossAxisAlignment: CrossAxisAlignment.stretch,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text('All plans include:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF34D399))),
+ const SizedBox(height: 12),
+ Wrap(
+ spacing: 16,
+ runSpacing: 8,
+ children: const [
+ _IncludedFeature(text: 'AI Project Assistant'),
+ _IncludedFeature(text: 'Standard Templates'),
+ _IncludedFeature(text: 'Dashboards & Reports'),
+ _IncludedFeature(text: 'Mobile Access'),
+ _IncludedFeature(text: 'Secure Cloud Hosting'),
+ _IncludedFeature(text: 'Email Support'),
+ ],
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(height: 40),
+
+ // ── Pricing Cards Grid ──
+ _buildPricingCards(context, isDesktop),
+ const SizedBox(height: 48),
+
+ // ── Role-Based Access Section ──
+ _buildRoleBasedAccessSection(),
+ const SizedBox(height: 48),
+
+ // ── Additional User Pricing Section ──
+ _buildAdditionalUserPricingSection(),
+ const SizedBox(height: 48),
+
+ // ── Why Viewers Cost Less Section ──
+ _buildViewersCostLessSection(),
+ const SizedBox(height: 48),
+
+ // ── FAQ Section ──
+ _buildPricingFAQSection(),
+ const SizedBox(height: 40),
+
+ // ── CTA Buttons ──
+ Wrap(
+ spacing: 16,
+ runSpacing: 16,
+ alignment: WrapAlignment.center,
  children: [
  ElevatedButton(
  onPressed: _handleStartProject,
  style: ElevatedButton.styleFrom(
  backgroundColor: LightModeColors.accent,
  foregroundColor: const Color(0xFF151515),
- padding:
- const EdgeInsets.symmetric(horizontal: 48, vertical: 22),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(16)),
+ padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 22),
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
  elevation: 0,
- minimumSize: const Size(double.infinity, 58),
+ minimumSize: const Size(200, 58),
  ),
- child: const Text('Start Your Project',
- style:
- TextStyle(fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 0.3)),
+ child: const Text('Start Your Project', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
  ),
- const SizedBox(height: 16),
  OutlinedButton(
  onPressed: () => _launchExternalLink('https://calendar.app.google/aGQDFPpmEK9eDh5W6'),
  style: OutlinedButton.styleFrom(
  foregroundColor: Colors.white,
- padding:
- const EdgeInsets.symmetric(horizontal: 48, vertical: 22),
+ padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 22),
  side: BorderSide(color: Colors.white.withValues(alpha: 0.6), width: 2),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(16)),
- minimumSize: const Size(double.infinity, 58),
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+ minimumSize: const Size(200, 58),
  ),
- child: const Text('Contact Us',
- style:
- TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.3)),
+ child: const Text('Contact Us', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
  ),
  ],
  ),
+ ],
  ),
+ );
+ }
+
+ // ── Pricing Cards Widget ──
+ Widget _buildPricingCards(BuildContext context, bool isDesktop) {
+ return LayoutBuilder(
+ builder: (context, constraints) {
+ final cols = constraints.maxWidth >= 1100 ? 4 : (constraints.maxWidth >= 800 ? 2 : 1);
+ final cardWidth = cols == 1 ? constraints.maxWidth : (constraints.maxWidth - 60) / cols;
+
+ final plans = [
+ _PricingPlanData(
+ name: 'Project',
+ price: r'$99',
+ period: '/month',
+ idealFor: 'Individuals, small businesses, project managers, and small teams.',
+ features: ['1 Active Project', '1 Owner', 'AI Project Assistant', 'Initiation Phase', 'Planning Phase', 'Design Phase', 'Execution Phase', 'Launch Phase', 'Continuous end-to-end delivery', 'Risk Management', 'Document Management', 'Dashboards', 'PDF Reports'],
+ maxTeamSize: '10 Contributors',
+ color: const Color(0xFF3B82F6),
+ ),
+ _PricingPlanData(
+ name: 'Project Pro',
+ price: r'$299',
+ period: '/month',
+ idealFor: 'Everything in Regular Project plus advanced features.',
+ features: ['Up to 5 Core Users', 'Advanced AI', 'Cost Benefit Analysis', 'Contract Management', 'Resource Management', 'Budget Tracking', 'Custom Reports', 'Project Health Dashboard', 'Integrations'],
+ maxTeamSize: '25 Contributors',
+ color: const Color(0xFF8B5CF6),
+ ),
+ _PricingPlanData(
+ name: 'Program',
+ price: r'$799',
+ period: '/month',
+ idealFor: 'Ideal for organizations managing multiple related projects.',
+ features: ['Everything in Project Pro plus', 'Up to 3 Pro Projects', '12 Core Users', 'Interface Management', 'Dependency Management', 'Shared Resources', 'Benefits Tracking', 'Program Roadmap', 'Cross-Project Reporting', 'Program Dashboard', 'Executive Reports'],
+ maxTeamSize: '75 Contributors',
+ isPopular: true,
+ color: const Color(0xFFF59E0B),
+ ),
+ _PricingPlanData(
+ name: 'Portfolio',
+ price: r'$2,199',
+ period: '/month',
+ idealFor: 'Designed for organizations managing strategic initiatives across departments.',
+ features: ['Everything in Program plus', 'Up to 3 Programs OR 9 Pro Projects', '22 Core Users', 'Portfolio Dashboard', 'Portfolio Health', 'Strategic Alignment', 'Investment Tracking', 'Capacity Planning', 'Portfolio Roadmaps', 'Executive KPI Dashboard', 'Portfolio Analytics', 'Portfolio Reporting'],
+ maxTeamSize: 'Unlimited Contributors',
+ isEnterprise: true,
+ color: const Color(0xFF10B981),
+ ),
+ ];
+
+ return Wrap(
+ spacing: 20,
+ runSpacing: 20,
+ children: plans.map((plan) => SizedBox(
+ width: cardWidth,
+ child: _buildPricingCard(plan, isDesktop),
+ )).toList(),
+ );
+ },
+ );
+ }
+
+ Widget _buildPricingCard(_PricingPlanData plan, bool isDesktop) {
+ return Container(
+ padding: const EdgeInsets.all(24),
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(20),
+ color: plan.isPopular ? plan.color.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.04),
+ border: Border.all(
+ color: plan.isPopular ? plan.color.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.1),
+ width: plan.isPopular ? 2 : 1,
+ ),
+ boxShadow: plan.isPopular ? [
+ BoxShadow(color: plan.color.withValues(alpha: 0.2), blurRadius: 24, offset: const Offset(0, 12)),
+ ] : null,
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+ decoration: BoxDecoration(color: plan.color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+ child: Text(plan.name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: plan.color)),
+ ),
+ if (plan.isPopular) ...[
+ const SizedBox(width: 8),
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+ decoration: BoxDecoration(color: plan.color, borderRadius: BorderRadius.circular(6)),
+ child: const Text('Most Popular', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
+ ),
+ ],
+ if (plan.isEnterprise) ...[
+ const SizedBox(width: 8),
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+ decoration: BoxDecoration(color: plan.color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
+ child: Text('Enterprise', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: plan.color)),
+ ),
+ ],
+ ],
+ ),
+ const SizedBox(height: 16),
+ Text('Ideal For', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withValues(alpha: 0.5))),
+ const SizedBox(height: 6),
+ Text(plan.idealFor, style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.8), height: 1.4)),
+ const SizedBox(height: 20),
+ const Text('Includes', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)),
+ const SizedBox(height: 12),
+ ...plan.features.map((feature) => Padding(
+ padding: const EdgeInsets.only(bottom: 8),
+ child: Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Icon(Icons.check_circle, size: 16, color: plan.color),
+ const SizedBox(width: 10),
+ Expanded(child: Text(feature, style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.8), height: 1.3))),
+ ],
+ ),
+ )),
+ const SizedBox(height: 20),
+ Container(
+ padding: const EdgeInsets.all(16),
+ decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(12)),
+ child: Row(
+ children: [
+ Text(plan.price, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: plan.color)),
+ Text(plan.period, style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.5))),
+ ],
+ ),
+ ),
+ const SizedBox(height: 16),
+ Container(
+ padding: const EdgeInsets.all(12),
+ decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(10)),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text('Need More Users?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withValues(alpha: 0.5))),
+ const SizedBox(height: 8),
+ Row(
+ children: [
+ Icon(Icons.group, size: 16, color: plan.color),
+ const SizedBox(width: 8),
+ Text('Maximum Team Size', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
+ ],
+ ),
+ const SizedBox(height: 4),
+ Text(plan.maxTeamSize, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: plan.color)),
+ const SizedBox(height: 4),
+ Text('Unlimited Viewers', style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6))),
+ ],
+ ),
+ ),
+ ],
+ ),
+ );
+ }
+
+ // ── Role-Based Access Section ──
+ Widget _buildRoleBasedAccessSection() {
+ return Container(
+ padding: const EdgeInsets.all(24),
+ decoration: BoxDecoration(
+ color: Colors.white.withValues(alpha: 0.04),
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: const [
+ Row(
+ children: [
+ Icon(Icons.admin_panel_settings, color: Color(0xFF3B82F6), size: 24),
+ SizedBox(width: 12),
+ Text('Role-Based Access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+ ],
+ ),
+ SizedBox(height: 12),
+ Text(
+ 'Every plan includes granular permissions to ensure users have access appropriate to their responsibilities.',
+ style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+ ),
+ ],
+ ),
+ );
+ }
+
+ // ── Additional User Pricing Section ──
+ Widget _buildAdditionalUserPricingSection() {
+ return Container(
+ padding: const EdgeInsets.all(24),
+ decoration: BoxDecoration(
+ color: Colors.white.withValues(alpha: 0.04),
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: const [
+ Row(
+ children: [
+ Icon(Icons.person_add, color: Color(0xFF8B5CF6), size: 24),
+ SizedBox(width: 12),
+ Text('Included Users', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+ ],
+ ),
+ SizedBox(height: 12),
+ Text(
+ 'The core users included with each plan may be assigned any combination of Owner, Admin, Editor, Contributor, or Viewer roles. Additional user charges apply only after the included user limit is exceeded.',
+ style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+ ),
+ SizedBox(height: 24),
+ Row(
+ children: [
+ Icon(Icons.group_add, color: Color(0xFF10B981), size: 24),
+ SizedBox(width: 12),
+ Text('Additional User Pricing', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+ ],
+ ),
+ SizedBox(height: 12),
+ Text(
+ 'As your team grows, you can add users without changing plans.',
+ style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+ ),
+ ],
+ ),
+ );
+ }
+
+ // ── Why Viewers Cost Less Section ──
+ Widget _buildViewersCostLessSection() {
+ final viewerFeatures = ['Executive Dashboards', 'Portfolio Dashboards', 'Reports', 'Approved Documents', 'Milestones', 'Risks', 'Meeting Summaries', 'PDF Export'];
+ return Container(
+ padding: const EdgeInsets.all(24),
+ decoration: BoxDecoration(
+ color: Colors.white.withValues(alpha: 0.04),
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Row(
+ children: [
+ Icon(Icons.visibility, color: Color(0xFFF59E0B), size: 24),
+ SizedBox(width: 12),
+ Text('Why Viewers Cost Less', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+ ],
+ ),
+ const SizedBox(height: 12),
+ Text(
+ "Many organizations have significantly more stakeholders than delivery team members. Executives, sponsors, clients, auditors, and department leaders often need visibility into project status without making changes.",
+ style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.5),
+ ),
+ const SizedBox(height: 16),
+ Text('Viewer licenses provide access to:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white70)),
+ const SizedBox(height: 12),
+ Wrap(
+ spacing: 12,
+ runSpacing: 8,
+ children: viewerFeatures.map((feature) => Container(
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+ decoration: BoxDecoration(
+ color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+ borderRadius: BorderRadius.circular(8),
+ border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
+ ),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ const Icon(Icons.check, size: 14, color: Color(0xFFF59E0B)),
+ const SizedBox(width: 6),
+ Text(feature, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFFBBF24))),
+ ],
+ ),
+ )).toList(),
+ ),
+ const SizedBox(height: 16),
+ Container(
+ padding: const EdgeInsets.all(12),
+ decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(10)),
+ child: const Text(
+ 'Because Viewers cannot create or modify project data, they are offered at a lower price, making it affordable to extend visibility across the organization.',
+ style: TextStyle(fontSize: 13, color: Colors.white54, fontStyle: FontStyle.italic),
+ ),
+ ),
+ ],
+ ),
+ );
+ }
+
+ // ── Pricing FAQ Section ──
+ Widget _buildPricingFAQSection() {
+ final faqs = [
+ ('Can I upgrade between plans?', 'Yes. Upgrade at any time as your organization grows.'),
+ ('Can I purchase additional projects instead of upgrading?', 'Yes. Additional Pro Projects can be purchased individually or you can upgrade to the Program or Portfolio tier for greater value.'),
+ ('What happens if I exceed my included users?', 'You can add Contributors or Viewers anytime.'),
+ ('Can I mix user roles?', "Yes. Assign Owner, Admin, Editor, Contributor, and Viewer roles based on each user's responsibilities."),
+ ('Do Viewers consume a full license?', 'No. Viewer licenses are priced separately because they provide read-only access and do not contribute to project execution.'),
+ ];
+ return Container(
+ padding: const EdgeInsets.all(24),
+ decoration: BoxDecoration(
+ color: Colors.white.withValues(alpha: 0.04),
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Row(
+ children: [
+ Icon(Icons.help_outline, color: Color(0xFF8B5CF6), size: 24),
+ SizedBox(width: 12),
+ Text('Frequently Asked Questions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+ ],
+ ),
+ const SizedBox(height: 20),
+ ...faqs.map((faq) => Padding(
+ padding: const EdgeInsets.only(bottom: 16),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(faq.$1, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.9))),
+ const SizedBox(height: 8),
+ Text(faq.$2, style: TextStyle(fontSize: 13, color: Colors.white54, height: 1.5)),
+ ],
+ ),
+ )),
  ],
  ),
  );
@@ -6849,4 +7248,44 @@ class _DeliveryStep {
   final Color color;
   final List<String> items;
   const _DeliveryStep({required this.num, required this.title, required this.color, required this.items});
+}
+
+class _PricingPlanData {
+  final String name;
+  final String price;
+  final String period;
+  final String idealFor;
+  final List<String> features;
+  final String maxTeamSize;
+  final bool isPopular;
+  final bool isEnterprise;
+  final Color color;
+  const _PricingPlanData({
+    required this.name,
+    required this.price,
+    required this.period,
+    required this.idealFor,
+    required this.features,
+    required this.maxTeamSize,
+    this.isPopular = false,
+    this.isEnterprise = false,
+    required this.color,
+  });
+}
+
+class _IncludedFeature extends StatelessWidget {
+  final String text;
+  const _IncludedFeature({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.check_circle, size: 16, color: Color(0xFF34D399)),
+        const SizedBox(width: 8),
+        Text(text, style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.8))),
+      ],
+    );
+  }
 }

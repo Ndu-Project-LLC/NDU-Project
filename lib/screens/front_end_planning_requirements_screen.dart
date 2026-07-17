@@ -30,6 +30,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
+
 /// Front End Planning - Project Requirements page
 /// Implements the layout from the provided screenshot exactly:
 /// - Top notes field
@@ -99,22 +100,22 @@ class _FrontEndPlanningRequirementsScreenState
     });
   }
 
-  
   Future<void> _exportPdf() async {
-      final projectData = ProjectDataHelper.getData(context);
-      final fep = projectData.frontEndPlanning;
-      await PdfExportHelper.exportScreenPdf(
-        context: context,
-        screenTitle: 'Requirements',
-        sections: [
-          PdfSection.keyValue('Project Info', [
-            {'Project Name': projectData.projectName ?? 'N/A'},
-          ]),
-          PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
-        ],
-      );
+    final projectData = ProjectDataHelper.getData(context);
+    final fep = projectData.frontEndPlanning;
+    await PdfExportHelper.exportScreenPdf(
+      context: context,
+      screenTitle: 'Requirements',
+      sections: [
+        PdfSection.keyValue('Project Info', [
+          {'Project Name': projectData.projectName ?? 'N/A'},
+        ]),
+        PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
+      ],
+    );
   }
-_RequirementRow _createRow(int number, {bool expanded = false}) {
+
+  _RequirementRow _createRow(int number, {bool expanded = false}) {
     return _RequirementRow(
       number: number,
       onChanged: _scheduleAutoSave,
@@ -652,11 +653,11 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
             Expanded(
               child: Stack(
                 children: [
-                    MobileSidebarHamburger(
-                      sidebar: const InitiationLikeSidebar(
-                        activeItemLabel: 'Project Requirements',
-                      ),
+                  MobileSidebarHamburger(
+                    sidebar: const InitiationLikeSidebar(
+                      activeItemLabel: 'Project Requirements',
                     ),
+                  ),
                   const AdminEditToggle(),
                   Column(
                     children: [
@@ -731,7 +732,8 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
                                     ),
                                     const SizedBox(height: 14),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Row(
                                           children: [
@@ -853,18 +855,28 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
           color: active ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
           boxShadow: active
-              ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 2)]
+              ? [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.06), blurRadius: 2)
+                ]
               : [],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: active ? const Color(0xFF2563EB) : const Color(0xFF6B7280)),
+            Icon(icon,
+                size: 16,
+                color:
+                    active ? const Color(0xFF2563EB) : const Color(0xFF6B7280)),
             const SizedBox(width: 6),
-            Text(label, style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w600,
-              color: active ? const Color(0xFF2563EB) : const Color(0xFF6B7280),
-            )),
+            Text(label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: active
+                      ? const Color(0xFF2563EB)
+                      : const Color(0xFF6B7280),
+                )),
           ],
         ),
       ),
@@ -927,10 +939,7 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
         context,
         message: 'Add your first requirement to get started.',
         actionLabel: 'Add requirement',
-        onAction: () {
-          setState(() => _rows.add(_createRow(1, expanded: true)));
-          _scheduleAutoSave(showSnack: false);
-        },
+        onAction: _addRequirementViaEditor,
       );
     }
 
@@ -942,7 +951,8 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (showErrorBanner)
-            _buildGenerationErrorBanner(context, message: _initialGenerationError!),
+            _buildGenerationErrorBanner(context,
+                message: _initialGenerationError!),
           _buildTableView(),
         ],
       );
@@ -996,89 +1006,146 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 100),
-          child: Column(
-            children: [
-              // Header row
-              Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                ),
-                child: Row(
-                  children: [
-                    _tableHeaderCell('#', 50, headerStyle),
-                    _tableHeaderCell('Requirement', 300, headerStyle),
-                    _tableHeaderCell('Type', 140, headerStyle),
-                    _tableHeaderCell('Discipline', 140, headerStyle),
-                    _tableHeaderCell('Role', 120, headerStyle),
-                    _tableHeaderCell('Person', 120, headerStyle),
-                    _tableHeaderCell('Phase', 100, headerStyle),
-                    _tableHeaderCell('Source', 160, headerStyle),
-                    _tableHeaderCell('Comments', 200, headerStyle),
-                    _tableHeaderCell('Actions', 80, headerStyle),
-                  ],
-                ),
-              ),
-              // Data rows
-              ..._rows.asMap().entries.map((entry) {
-                final index = entry.key;
-                final row = entry.value;
-                return Container(
-                  key: ValueKey('req_table_row_$index'),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: const Color(0xFFE5E7EB)),
-                    ),
-                    color: index.isEven ? Colors.white : const Color(0xFFFAFBFC),
+      child: Scrollbar(
+        controller: _requirementsHorizontalController,
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          controller: _requirementsHorizontalController,
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: MediaQuery.of(context).size.width - 100,
+            ),
+            child: Column(
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF9FAFB),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(12)),
                   ),
                   child: Row(
                     children: [
-                      _tableDataCell('${index + 1}', 50, center: true),
-                      _tableDataCell(row.descriptionController.text.trim().isEmpty ? '—' : row.descriptionController.text.trim(), 300),
-                      _tableDataCell(row.selectedType ?? '—', 140, center: true),
-                      _tableDataCell(row.selectedDiscipline ?? '—', 140, center: true),
-                      _tableDataCell(row.roleController.text.trim().isEmpty ? '—' : row.roleController.text.trim(), 120),
-                      _tableDataCell(row.personController.text.trim().isEmpty ? '—' : row.personController.text.trim(), 120),
-                      _tableDataCell(row.selectedPhase ?? '—', 100, center: true),
-                      _tableDataCell(row.sourceController.text.trim().isEmpty ? '—' : row.sourceController.text.trim(), 160),
-                      _tableDataCell(row.commentsController.text.trim().isEmpty ? '—' : row.commentsController.text.trim(), 200),
-                      SizedBox(
-                        width: 80,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF2563EB)),
-                              tooltip: 'Edit',
-                              onPressed: () {
-                                setState(() {
-                                  _isTableView = false;
-                                  row.isExpanded = true;
-                                });
-                              },
-                              padding: const EdgeInsets.all(4),
-                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)),
-                              tooltip: 'Delete',
-                              onPressed: () => _deleteRow(index),
-                              padding: const EdgeInsets.all(4),
-                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                            ),
-                          ],
-                        ),
-                      ),
+                      _tableHeaderCell('#', 50, headerStyle),
+                      _tableHeaderCell('Requirement', 300, headerStyle),
+                      _tableHeaderCell('Type', 140, headerStyle),
+                      _tableHeaderCell('Discipline', 140, headerStyle),
+                      _tableHeaderCell('Role', 120, headerStyle),
+                      _tableHeaderCell('Person', 120, headerStyle),
+                      _tableHeaderCell('Phase', 100, headerStyle),
+                      _tableHeaderCell('Source', 160, headerStyle),
+                      _tableHeaderCell('Comments', 200, headerStyle),
+                      _tableHeaderCell('Actions', 80, headerStyle),
                     ],
                   ),
-                );
-              }),
-            ],
+                ),
+                ..._rows.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final row = entry.value;
+                  return Container(
+                    key: ValueKey('req_table_row_$index'),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: const Color(0xFFE5E7EB)),
+                      ),
+                      color:
+                          index.isEven ? Colors.white : const Color(0xFFFAFBFC),
+                    ),
+                    child: Row(
+                      children: [
+                        _tableDataCell('${index + 1}', 50, center: true),
+                        _tableDataCell(
+                          row.descriptionController.text.trim().isEmpty
+                              ? '—'
+                              : row.descriptionController.text.trim(),
+                          300,
+                        ),
+                        _tableDataCell(
+                          row.selectedType ?? '—',
+                          140,
+                          center: true,
+                        ),
+                        _tableDataCell(
+                          row.selectedDiscipline ?? '—',
+                          140,
+                          center: true,
+                        ),
+                        _tableDataCell(
+                          row.roleController.text.trim().isEmpty
+                              ? '—'
+                              : row.roleController.text.trim(),
+                          120,
+                        ),
+                        _tableDataCell(
+                          row.personController.text.trim().isEmpty
+                              ? '—'
+                              : row.personController.text.trim(),
+                          120,
+                        ),
+                        _tableDataCell(
+                          row.selectedPhase ?? '—',
+                          100,
+                          center: true,
+                        ),
+                        _tableDataCell(
+                          row.sourceController.text.trim().isEmpty
+                              ? '—'
+                              : row.sourceController.text.trim(),
+                          160,
+                        ),
+                        _tableDataCell(
+                          row.commentsController.text.trim().isEmpty
+                              ? '—'
+                              : row.commentsController.text.trim(),
+                          200,
+                        ),
+                        SizedBox(
+                          width: 80,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit_outlined,
+                                  size: 16,
+                                  color: Color(0xFF2563EB),
+                                ),
+                                tooltip: 'Edit',
+                                onPressed: () => _openMobileRequirementEditor(
+                                  context,
+                                  index,
+                                  row,
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                constraints: const BoxConstraints(
+                                  minWidth: 32,
+                                  minHeight: 32,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 16,
+                                  color: Color(0xFFEF4444),
+                                ),
+                                tooltip: 'Delete',
+                                onPressed: () => _deleteRow(index),
+                                padding: const EdgeInsets.all(4),
+                                constraints: const BoxConstraints(
+                                  minWidth: 32,
+                                  minHeight: 32,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
           ),
         ),
       ),
@@ -1090,7 +1157,11 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
       width: width,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        child: Text(text, style: style, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+        child: Text(text,
+            style: style,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis),
       ),
     );
   }
@@ -1102,7 +1173,11 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Text(
           text,
-          style: TextStyle(fontSize: 12, color: text == '—' ? const Color(0xFF9CA3AF) : const Color(0xFF111827)),
+          style: TextStyle(
+              fontSize: 12,
+              color: text == '—'
+                  ? const Color(0xFF9CA3AF)
+                  : const Color(0xFF111827)),
           textAlign: center ? TextAlign.center : TextAlign.left,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -1140,8 +1215,9 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
             ),
           ),
           TextButton(
-            onPressed:
-                _isGeneratingRequirements ? null : _generateRequirementsFromContext,
+            onPressed: _isGeneratingRequirements
+                ? null
+                : _generateRequirementsFromContext,
             child: const Text('Retry'),
           ),
           IconButton(
@@ -1367,12 +1443,7 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
                           ),
                     ],
                     OutlinedButton.icon(
-                      onPressed: () {
-                        setState(() => _rows.add(
-                              _createRow(_rows.length + 1, expanded: true),
-                            ));
-                        _scheduleAutoSave(showSnack: false);
-                      },
+                      onPressed: _addRequirementViaEditor,
                       icon: const Icon(Icons.add, size: 18),
                       label: const Text(
                         'Add Requirement',
@@ -1581,7 +1652,8 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
   }
 
   Future<void> _openMobileRequirementEditor(
-      BuildContext context, int index, _RequirementRow row) async {
+      BuildContext context, int index, _RequirementRow row,
+      {bool isNew = false}) async {
     final descriptionController =
         TextEditingController(text: row.descriptionController.text);
     final commentsController =
@@ -1613,8 +1685,8 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Edit Requirement',
+                  Text(
+                    isNew ? 'Add Requirement' : 'Edit Requirement',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 12),
@@ -1757,7 +1829,10 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
                       const Spacer(),
                       TextButton(
                         onPressed: () {
-                          if (index >= 0 && index < _rows.length) {
+                          if (isNew || (index >= 0 && index < _rows.length)) {
+                            if (isNew && !_rows.contains(row)) {
+                              setState(() => _rows.add(row));
+                            }
                             setState(() {
                               final previousDescription =
                                   row.descriptionController.text;
@@ -1853,15 +1928,39 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
   }
 
   List<CsvColumnSpec> get _csvColumns => [
-    CsvColumnSpec(key: 'description', label: 'Requirement', required: true, sampleValue: 'The system shall support user authentication'),
-    CsvColumnSpec(key: 'type', label: 'Type', allowedValues: _RequirementRow.requirementTypeOptions, defaultValue: 'Functional', sampleValue: 'Functional'),
-    CsvColumnSpec(key: 'discipline', label: 'Discipline', allowedValues: _RequirementRow.disciplineOptions, defaultValue: 'IT', sampleValue: 'IT'),
-    CsvColumnSpec(key: 'role', label: 'Role', sampleValue: 'Requirements Lead'),
-    CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
-    CsvColumnSpec(key: 'phase', label: 'Phase', allowedValues: _RequirementRow.phaseOptions, defaultValue: 'Planning', sampleValue: 'Planning'),
-    CsvColumnSpec(key: 'source', label: 'Source', sampleValue: 'Stakeholder interview'),
-    CsvColumnSpec(key: 'comments', label: 'Comments', sampleValue: 'High priority'),
-  ];
+        CsvColumnSpec(
+            key: 'description',
+            label: 'Requirement',
+            required: true,
+            sampleValue: 'The system shall support user authentication'),
+        CsvColumnSpec(
+            key: 'type',
+            label: 'Type',
+            allowedValues: _RequirementRow.requirementTypeOptions,
+            defaultValue: 'Functional',
+            sampleValue: 'Functional'),
+        CsvColumnSpec(
+            key: 'discipline',
+            label: 'Discipline',
+            allowedValues: _RequirementRow.disciplineOptions,
+            defaultValue: 'IT',
+            sampleValue: 'IT'),
+        CsvColumnSpec(
+            key: 'role', label: 'Role', sampleValue: 'Requirements Lead'),
+        CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
+        CsvColumnSpec(
+            key: 'phase',
+            label: 'Phase',
+            allowedValues: _RequirementRow.phaseOptions,
+            defaultValue: 'Planning',
+            sampleValue: 'Planning'),
+        CsvColumnSpec(
+            key: 'source',
+            label: 'Source',
+            sampleValue: 'Stakeholder interview'),
+        CsvColumnSpec(
+            key: 'comments', label: 'Comments', sampleValue: 'High priority'),
+      ];
 
   void _downloadTemplate() {
     final template = CsvImportHelper.generateTemplate(_csvColumns);
@@ -1894,9 +1993,18 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
             for (final row in rows) {
               final newRow = _createRow(_rows.length + 1, expanded: false);
               newRow.descriptionController.text = row['description'] ?? '';
-              newRow.selectedType = _RequirementRow.requirementTypeOptions.contains(row['type']) ? row['type'] : 'Functional';
-              newRow.selectedDiscipline = _RequirementRow.disciplineOptions.contains(row['discipline']) ? row['discipline'] : 'IT';
-              newRow.selectedPhase = _RequirementRow.phaseOptions.contains(row['phase']) ? row['phase'] : 'Planning';
+              newRow.selectedType =
+                  _RequirementRow.requirementTypeOptions.contains(row['type'])
+                      ? row['type']
+                      : 'Functional';
+              newRow.selectedDiscipline =
+                  _RequirementRow.disciplineOptions.contains(row['discipline'])
+                      ? row['discipline']
+                      : 'IT';
+              newRow.selectedPhase =
+                  _RequirementRow.phaseOptions.contains(row['phase'])
+                      ? row['phase']
+                      : 'Planning';
               newRow.roleController.text = row['role'] ?? '';
               newRow.personController.text = row['person'] ?? '';
               newRow.sourceController.text = row['source'] ?? '';
@@ -1916,13 +2024,14 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
           }
         },
         icon: const Icon(Icons.upload_file_outlined, size: 18),
-        label: const Text('Import CSV', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+        label: const Text('Import CSV',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: const Color(0xFF2563EB),
           side: const BorderSide(color: Color(0xFF93C5FD)),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         ),
       ),
@@ -1935,13 +2044,14 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
       child: OutlinedButton.icon(
         onPressed: _downloadTemplate,
         icon: const Icon(Icons.download, size: 18),
-        label: const Text('Template', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+        label: const Text('Template',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: const Color(0xFF2563EB),
           side: const BorderSide(color: Color(0xFF93C5FD)),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         ),
       ),
@@ -1952,24 +2062,24 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
     return SizedBox(
       height: 44,
       child: OutlinedButton(
-        onPressed: () {
-          setState(() {
-            _rows.add(_createRow(_rows.length + 1, expanded: true));
-          });
-          _scheduleAutoSave(showSnack: false);
-        },
+        onPressed: _addRequirementViaEditor,
         style: OutlinedButton.styleFrom(
           backgroundColor: const Color(0xFFF2F4F7),
           foregroundColor: const Color(0xFF111827),
           side: const BorderSide(color: Color(0xFFE5E7EB)),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         ),
         child: const Text('Add requirement',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
       ),
     );
+  }
+
+  void _addRequirementViaEditor() {
+    final newRow = _createRow(_rows.length + 1, expanded: true);
+    _openMobileRequirementEditor(context, _rows.length, newRow, isNew: true);
   }
 
   Widget _buildRequirementsEmptyState(
@@ -2059,59 +2169,44 @@ _RequirementRow _createRow(int number, {bool expanded = false}) {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Assignment Required'),
+          title: const Text('Assignment Guidance'),
           content: Text(
-            'Each requirement must include at least one assignment: Discipline, Role, or Person.\n\nUpdate rows: ${missingAssignmentRows.join(', ')}',
+            'Discipline, Role, and Person help route each requirement to the right owners. Rows ${missingAssignmentRows.join(', ')} do not have any assignment yet.\n\nYou can continue now and complete those assignments later.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: const Text('Review Now'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Continue Anyway'),
             ),
           ],
         ),
       );
-      return;
     }
 
     if (missingPhaseRows.isNotEmpty) {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Phase Required'),
+          title: const Text('Phase Guidance'),
           content: Text(
-            'Assign an implementation phase (Initiation, Planning, Design, Execution, Launch, or ALL) for every requirement.\n\nUpdate rows: ${missingPhaseRows.join(', ')}',
+            'Rows ${missingPhaseRows.join(', ')} do not have an implementation phase yet. This is recommended for sequencing, but it should not block progression.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: const Text('Review Now'),
             ),
-          ],
-        ),
-      );
-      return;
-    }
-
-    final resolvedRole = await _resolveCurrentUserRoleForRequirementsSubmit();
-    if (!_isRoleAuthorizedForRequirementSubmit(resolvedRole)) {
-      if (!mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Authorization Required'),
-          content: Text(
-            'Only Owner, Project Manager, or Technical Manager can submit final requirements.\n\nCurrent role: $resolvedRole\n\nPlease notify the correct person to review and submit this section.',
-          ),
-          actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: const Text('Continue Anyway'),
             ),
           ],
         ),
       );
-      return;
     }
 
     if (!mounted) return;

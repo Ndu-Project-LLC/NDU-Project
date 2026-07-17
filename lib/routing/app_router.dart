@@ -58,7 +58,7 @@ import 'package:ndu_project/cost_estimate/screens/cost_estimate_module_screen.da
 import 'package:ndu_project/schedule/screens/schedule_module_screen.dart';
 import 'package:ndu_project/project_controls/screens/project_controls_screen.dart';
 import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
-import 'package:ndu_project/screens/landing/landing_page_screen.dart';
+import 'package:ndu_project/screens/landing_screen.dart';
 import 'package:ndu_project/screens/landing/careers_page_screen.dart';
 import 'package:ndu_project/screens/execution_plan_screen.dart';
 import 'package:ndu_project/screens/execution_work_packages_screen.dart';
@@ -685,7 +685,7 @@ class AppRouter {
       GoRoute(
           name: AppRoutes.landingPage,
           path: "/landing",
-          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const LandingPageScreen())),
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const LandingScreen())),
       GoRoute(
           name: AppRoutes.careersPage,
           path: "/careers",

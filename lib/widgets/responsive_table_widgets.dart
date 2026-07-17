@@ -155,15 +155,32 @@ class _ResponsiveDataTableWrapperState
                 ),
               ),
             if (_canScrollRight)
-              const Positioned(
+              Positioned(
                 right: 8,
                 bottom: 2,
-                child: Text(
-                  'Scroll to see more ->',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF6B7280),
-                    fontWeight: FontWeight.w600,
+                child: GestureDetector(
+                  onTap: () {
+                    _horizontalController.animateTo(
+                      _horizontalController.offset + 300,
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOut,
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFC812).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFFFC812).withValues(alpha: 0.3)),
+                    ),
+                    child: const Text(
+                      'Scroll to see more ->',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFFD97706),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ),

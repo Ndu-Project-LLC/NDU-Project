@@ -5353,7 +5353,7 @@ class _FrontEndPlanningProcurementScreenState
  size: 18,
  ),
  label: const Text(
- 'Approved Vendor List (Always Available)'),
+ 'Approved Vendor List'),
  ),
  ),
  if (_isPlanningMode) ...[
@@ -5930,7 +5930,7 @@ class _ContractScopeManagementSection extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  final roleLabel = canStartProcess
- ? 'Authorized to commence contracting'
+ ? 'Authorized to commence procurement'
  : 'View only at this stage';
 
  return Container(

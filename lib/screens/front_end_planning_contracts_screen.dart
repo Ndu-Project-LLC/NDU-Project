@@ -742,12 +742,8 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  content: Text('Please complete all required fields.')));
  return;
  }
- if (_startDate == null || _endDate == null) {
- messenger.showSnackBar(const SnackBar(
- content: Text('Please select Start Date and End Date.')));
- return;
- }
- if (_endDate!.isBefore(_startDate!)) {
+ // Dates are optional in initiation phase — only validate if both are provided
+ if (_startDate != null && _endDate != null && _endDate!.isBefore(_startDate!)) {
  messenger.showSnackBar(const SnackBar(
  content: Text('End Date cannot be before Start Date.')));
  return;
@@ -765,11 +761,15 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  return;
  }
 
+ // Estimated value is optional in initiation phase — only validate if provided
  final double? estValue =
- double.tryParse(_estimatedValueController.text.trim());
- if (estValue == null || estValue <= 0) {
+ _estimatedValueController.text.trim().isEmpty
+ ? null
+ : double.tryParse(_estimatedValueController.text.trim());
+ if (_estimatedValueController.text.trim().isNotEmpty &&
+ (estValue == null || estValue <= 0)) {
  messenger.showSnackBar(const SnackBar(
- content: Text('Estimated Value must be a positive number.')));
+ content: Text('Estimated Value must be a positive number if provided.')));
  return;
  }
 
@@ -783,9 +783,9 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  contractType: _contractType,
  paymentType: _paymentType,
  status: _status,
- estimatedValue: estValue,
- startDate: _startDate!,
- endDate: _endDate!,
+ estimatedValue: estValue ?? 0,
+ startDate: _startDate,
+ endDate: _endDate,
  scope: _scopeController.text.trim(),
  discipline: _disciplineController.text.trim(),
  notes: _notesController.text.trim(),
@@ -798,9 +798,9 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  contractType: _contractType,
  paymentType: _paymentType,
  status: _status,
- estimatedValue: estValue,
- startDate: _startDate!,
- endDate: _endDate!,
+ estimatedValue: estValue ?? 0,
+ startDate: _startDate,
+ endDate: _endDate,
  scope: _scopeController.text.trim(),
  discipline: _disciplineController.text.trim(),
  notes: _notesController.text.trim(),

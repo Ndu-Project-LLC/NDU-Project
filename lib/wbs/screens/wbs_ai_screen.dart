@@ -127,6 +127,17 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
     final provider = context.read<WBSProvider>();
     final wbs = provider.wbs;
     if (wbs == null) return;
+    if (wbs.level0.children.length >= 3) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Maximum 3 top-level WBS items. Remove one first to add another.'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
+        );
+      }
+      return;
+    }
     final l1Id = provider.addChildNode(
       wbs.level0.id,
       s['name'] as String? ?? '',

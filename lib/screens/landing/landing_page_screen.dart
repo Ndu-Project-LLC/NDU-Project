@@ -341,78 +341,89 @@ void _launchUrl(String url) async {
 class _HeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    
     return Container(
       key: const Key('why'),
-      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 80),
+      padding: const EdgeInsets.symmetric(horizontal: 48),
+      height: screenHeight,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
-          child: Column(
-            children: [
-              // Badge
-              Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), decoration: BoxDecoration(color: _blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: _blue.withValues(alpha: 0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.auto_awesome, color: _blue, size: 14),
-                const SizedBox(width: 6),
-                Text('Project Delivery Operating System (PDOS)', style: TextStyle(color: _blueLight, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: appFontFamily)),
-              ])),
-              const SizedBox(height: 32),
-              // Headline
-              Text('42% of Projects Fail to meet original scope.\nFix Project Failure Before It Starts',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: _textPrimary, fontSize: 42, fontWeight: FontWeight.w800, letterSpacing: -1, height: 1.2, fontFamily: appFontFamily)),
-              const SizedBox(height: 24),
-              // Subheadline
-              Text('Ndu Project is a Project Delivery Operating System — a SaaS platform that integrates AI, analytics, and human decision making to deliver projects from initiation through completion.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: _textSecondary, fontSize: 18, height: 1.6, fontFamily: appFontFamily)),
-              const SizedBox(height: 32),
-              // Value props
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                _valueProp('Define, plan, and execute in one continuous system'),
-                const SizedBox(width: 24),
-                _valueProp('Predict risks, delays, and cost impacts before they happen'),
-                const SizedBox(width: 24),
-                _valueProp('Align teams and decisions in real time'),
-              ]),
-              const SizedBox(height: 40),
-              // CTAs
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                _ctaButton('Request a Demo', _blue, Colors.white, () => context.go('/create-account')),
-                const SizedBox(width: 16),
-                _ctaButton('See How It Works', Colors.transparent, _textPrimary, () {}, border: true),
-              ]),
-              const SizedBox(height: 60),
-              // System diagram visual - 5 phases with unique colors
-              Container(
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(color: _surfaceCard.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(20), border: Border.all(color: _border)),
-                child: Column(children: [
-                  // Row 1: Initiation → Planning → Design
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    _phaseNode('Initiation', _blue, Icons.flag_outlined),
-                    _arrow(),
-                    _phaseNode('Planning', _purple, Icons.explore_outlined),
-                    _arrow(),
-                    _phaseNode('Design', _teal, Icons.design_services_outlined),
-                    _arrow(),
-                  ]),
-                  const SizedBox(height: 16),
-                  // Row 2: Execution → Launch (centered)
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    _phaseNode('Execution', _orange, Icons.build_outlined),
-                    _arrow(),
-                    _phaseNode('Launch', _gold, Icons.rocket_launch_outlined),
-                  ]),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Badge
+                Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), decoration: BoxDecoration(color: _blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: _blue.withValues(alpha: 0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.auto_awesome, color: _blue, size: 14),
+                  const SizedBox(width: 6),
+                  Text('Project Delivery Operating System (PDOS)', style: TextStyle(color: _blueLight, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: appFontFamily)),
+                ])),
+                const SizedBox(height: 32),
+                // Headline
+                Text('42% of Projects Fail to meet original scope.\nFix Project Failure Before It Starts',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: _textPrimary, fontSize: 42, fontWeight: FontWeight.w800, letterSpacing: -1, height: 1.2, fontFamily: appFontFamily)),
+                const SizedBox(height: 24),
+                // Subheadline
+                Text('Ndu Project is a Project Delivery Operating System — a SaaS platform that integrates AI, analytics, and human decision making to deliver projects from initiation through completion.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: _textSecondary, fontSize: 18, height: 1.6, fontFamily: appFontFamily)),
+                const SizedBox(height: 32),
+                // Value props
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  _valueProp('Define, plan, and execute in one continuous system'),
+                  const SizedBox(width: 24),
+                  _valueProp('Predict risks, delays, and cost impacts before they happen'),
+                  const SizedBox(width: 24),
+                  _valueProp('Align teams and decisions in real time'),
                 ]),
-              ),
-              // AI + Analytics + Human overlay
-              const SizedBox(height: 12),
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                _overlayChip('AI Guidance', _purple),
-                _overlayChip('Analytics', _blue),
-                _overlayChip('Human Decision', _green),
-              ]),
-            ],
+                const SizedBox(height: 40),
+                // CTAs
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  _ctaButton('Request a Demo', _blue, Colors.white, () => context.go('/create-account')),
+                  const SizedBox(width: 16),
+                  _ctaButton('See How It Works', Colors.transparent, _textPrimary, () {}, border: true),
+                ]),
+                const SizedBox(height: 60),
+                // System diagram visual - 5 phases with unique colors (CENTERED)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(40),
+                  decoration: BoxDecoration(color: _surfaceCard.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(20), border: Border.all(color: _border)),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Row 1: Initiation → Planning → Design
+                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        _phaseNode('Initiation', _blue, Icons.flag_outlined),
+                        _arrow(),
+                        _phaseNode('Planning', _purple, Icons.explore_outlined),
+                        _arrow(),
+                        _phaseNode('Design', _teal, Icons.design_services_outlined),
+                        _arrow(),
+                      ]),
+                      const SizedBox(height: 24),
+                      // Row 2: Execution → Launch (centered)
+                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        _phaseNode('Execution', _orange, Icons.build_outlined),
+                        _arrow(),
+                        _phaseNode('Launch', _gold, Icons.rocket_launch_outlined),
+                      ]),
+                    ],
+                  ),
+                ),
+                // AI + Analytics + Human overlay
+                const SizedBox(height: 16),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  _overlayChip('AI Guidance', _purple),
+                  _overlayChip('Analytics', _blue),
+                  _overlayChip('Human Decision', _green),
+                ]),
+              ],
+            ),
           ),
         ),
       ),

@@ -1052,14 +1052,14 @@ class _LandingScreenState extends State<LandingScreen>
  runSpacing: 12,
  children: [
  _buildDiagramNode('Initiation', Icons.flag_rounded, const Color(0xFF3B82F6)),
- _buildDiagramArrow(),
+ _buildDiagramArrow(const Color(0xFF3B82F6)),
  _buildDiagramNode('Planning', Icons.architecture_rounded, const Color(0xFF8B5CF6)),
- _buildDiagramArrow(),
- _buildDiagramNode('Design', Icons.design_services_rounded, const Color(0xFFF59E0B)),
- _buildDiagramArrow(),
+ _buildDiagramArrow(const Color(0xFF8B5CF6)),
+ _buildDiagramNode('Design', Icons.design_services_rounded, const Color(0xFFEC4899)),
+ _buildDiagramArrow(const Color(0xFFEC4899)),
  _buildDiagramNode('Execution', Icons.build_rounded, const Color(0xFFF59E0B)),
- _buildDiagramArrow(),
- _buildDiagramNode('Launch', Icons.rocket_launch_rounded, const Color(0xFFF59E0B)),
+ _buildDiagramArrow(const Color(0xFFF59E0B)),
+ _buildDiagramNode('Launch', Icons.rocket_launch_rounded, const Color(0xFF10B981)),
  ],
  ),
  const SizedBox(height: 24),
@@ -1181,11 +1181,11 @@ class _LandingScreenState extends State<LandingScreen>
  );
  }
 
- Widget _buildDiagramArrow() {
+ Widget _buildDiagramArrow(Color color) {
  return Padding(
  padding: const EdgeInsets.symmetric(horizontal: 8),
  child: Icon(Icons.arrow_forward_rounded,
- color: Colors.white.withValues(alpha: 0.5), size: 24),
+ color: color.withValues(alpha: 0.8), size: 24),
  );
  }
 

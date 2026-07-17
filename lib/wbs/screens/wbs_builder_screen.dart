@@ -366,9 +366,15 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
               ],
               const SizedBox(width: 12),
               FilledButton.icon(
-                onPressed: () => _showAddNodeDialog(
-                    context, provider, 1, fm.level1Label,
-                    parentId: wbs.level0.id),
+                onPressed: () {
+                  if (wbs.level0.children.length >= 3) {
+                    _showLevel1CapMessage(context);
+                    return;
+                  }
+                  _showAddNodeDialog(
+                      context, provider, 1, fm.level1Label,
+                      parentId: wbs.level0.id);
+                },
                 icon: const Icon(Icons.add, size: 16),
                 label: Text('Add ${fm.level1Label}'),
                 style: FilledButton.styleFrom(
@@ -812,9 +818,15 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
             spacing: 8,
             children: [
               FilledButton(
-                onPressed: () => _showAddNodeDialog(
-                    context, provider, 1, fm.level1Label,
-                    parentId: provider.wbs!.level0.id),
+                onPressed: () {
+                  if (provider.wbs!.level0.children.length >= 3) {
+                    _showLevel1CapMessage(context);
+                    return;
+                  }
+                  _showAddNodeDialog(
+                      context, provider, 1, fm.level1Label,
+                      parentId: provider.wbs!.level0.id);
+                },
                 style: FilledButton.styleFrom(
                     backgroundColor: LightModeColors.accent,
                     foregroundColor: LightModeColors.lightOnPrimary),
@@ -1542,9 +1554,15 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
             spacing: 8,
             children: [
               FilledButton(
-                onPressed: () => _showAddNodeDialog(
-                    context, provider, 1, fm.level1Label,
-                    parentId: provider.wbs!.level0.id),
+                onPressed: () {
+                  if (provider.wbs!.level0.children.length >= 3) {
+                    _showLevel1CapMessage(context);
+                    return;
+                  }
+                  _showAddNodeDialog(
+                      context, provider, 1, fm.level1Label,
+                      parentId: provider.wbs!.level0.id);
+                },
                 style: FilledButton.styleFrom(
                     backgroundColor: LightModeColors.accent,
                     foregroundColor: LightModeColors.lightOnPrimary),
@@ -1577,6 +1595,11 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     String levelLabel, {
     String? parentId,
   }) {
+    if (level == 1 && provider.wbs != null &&
+        provider.wbs!.level0.children.length >= 3) {
+      _showLevel1CapMessage(context);
+      return;
+    }
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
     final isHybrid = provider.wbs!.methodology == ProjectMethodology.hybrid;
@@ -1871,6 +1894,13 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                       ),
                       FilledButton(
                         onPressed: () {
+                          final wbs = provider.wbs;
+                          if (wbs != null &&
+                              wbs.level0.children.length >= 3) {
+                            Navigator.pop(ctx);
+                            _showLevel1CapMessage(context);
+                            return;
+                          }
                           provider.addNodesFromTemplate(parentId, [t]);
                           Navigator.pop(ctx);
                         },
@@ -1896,6 +1926,18 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                 const Text('Close', style: TextStyle(color: Color(0xFF6B7280))),
           ),
         ],
+      ),
+    );
+  }
+
+  // ─── Level 1 cap ────────────────────────────────────────────────────
+
+  void _showLevel1CapMessage(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+            'Maximum 3 top-level WBS items — these become the 3 goals. Remove one to add another.'),
+        backgroundColor: Color(0xFFEF4444),
       ),
     );
   }
@@ -1973,7 +2015,8 @@ Guidelines:
       }
 
       int added = 0;
-      for (final line in lines) {
+      final maxToAdd = 3 - wbs.level0.children.length;
+      for (final line in lines.take(maxToAdd > 0 ? maxToAdd : 0)) {
         final parts = line.split('|');
         if (parts.length >= 2) {
           final name = parts[0].trim();

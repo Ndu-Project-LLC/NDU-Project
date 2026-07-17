@@ -866,6 +866,7 @@ class _ProjectFrameworkNextScreenState
       onClear: () => _clearGoal(index),
       onPriorityChanged: (priority) => _setPriority(index, priority),
       onToggleMilestone: (milestoneId, selected) {
+        if (milestoneId.trim().isEmpty) return;
         setState(() {
           final ids = _goalMilestoneIds[index];
           if (selected) {
@@ -912,7 +913,8 @@ class _ProjectFrameworkNextScreenState
 
   List<Milestone> get _sortedMilestones {
     final data = ProjectDataHelper.getData(context);
-    final milestones = List<Milestone>.from(data.keyMilestones);
+    final milestones = List<Milestone>.from(data.keyMilestones)
+      ..removeWhere((m) => m.id.trim().isEmpty);
     milestones.sort((a, b) {
       final aDate = DateTime.tryParse(a.dueDate);
       final bDate = DateTime.tryParse(b.dueDate);
@@ -1023,38 +1025,15 @@ Rules:
 
   Widget _buildMilestoneTimelineSection() {
     final milestones = _sortedMilestones;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _kBorderColor),
-        boxShadow: const [
-          BoxShadow(color: _kCardShadow, blurRadius: 4, offset: Offset(0, 1))
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Milestone Timeline',
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: _kPrimaryText),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Front-end planning milestones ordered by date. These become the shared timeline context for goal mapping.',
-            style: TextStyle(fontSize: 12, color: _kSecondaryText),
-          ),
-          const SizedBox(height: 16),
-          if (milestones.isEmpty)
-            const Text(
-                'No milestones available yet. Add them in Front End Planning → Milestone.',
-                style: TextStyle(fontSize: 13, color: _kSecondaryText))
-          else
-            SingleChildScrollView(
+    return _CollapsibleSection(
+      title: 'Milestone Timeline',
+      subtitle:
+          'Front-end planning milestones ordered by date. These become the shared timeline context for goal mapping.',
+      child: milestones.isEmpty
+          ? const Text(
+              'No milestones available yet. Add them in Front End Planning → Milestone.',
+              style: TextStyle(fontSize: 13, color: _kSecondaryText))
+          : SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1084,44 +1063,19 @@ Rules:
                 }).toList(),
               ),
             ),
-        ],
-      ),
     );
   }
 
   Widget _buildMilestoneTableSection() {
     final milestones = _sortedMilestones;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _kBorderColor),
-        boxShadow: const [
-          BoxShadow(color: _kCardShadow, blurRadius: 4, offset: Offset(0, 1))
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Milestones Table',
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: _kPrimaryText),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'All shared milestones from FEP, with the goals currently mapped to each milestone.',
-            style: TextStyle(fontSize: 12, color: _kSecondaryText),
-          ),
-          const SizedBox(height: 16),
-          if (milestones.isEmpty)
-            const Text('No milestones available yet.',
-                style: TextStyle(fontSize: 13, color: _kSecondaryText))
-          else
-            SingleChildScrollView(
+    return _CollapsibleSection(
+      title: 'Milestones Table',
+      subtitle:
+          'All shared milestones from FEP, with the goals currently mapped to each milestone.',
+      child: milestones.isEmpty
+          ? const Text('No milestones available yet.',
+              style: TextStyle(fontSize: 13, color: _kSecondaryText))
+          : SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
                 columnSpacing: 20,
@@ -1198,8 +1152,6 @@ Rules:
                 }).toList(),
               ),
             ),
-        ],
-      ),
     );
   }
 
@@ -1219,6 +1171,126 @@ Rules:
                     .planningNotes['planning_project_framework_next_notes'] ??
                 'No data recorded.'),
       ],
+    );
+  }
+}
+
+// ─── Collapsible Section Widget ──────────────────────────────────────
+class _CollapsibleSection extends StatefulWidget {
+  final String title;
+  final String subtitle;
+  final Widget child;
+
+  const _CollapsibleSection({
+    required this.title,
+    required this.subtitle,
+    required this.child,
+  });
+
+  @override
+  State<_CollapsibleSection> createState() => _CollapsibleSectionState();
+}
+
+class _CollapsibleSectionState extends State<_CollapsibleSection>
+    with SingleTickerProviderStateMixin {
+  bool _expanded = false;
+  late final AnimationController _animCtrl;
+  late final Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    _anim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    super.dispose();
+  }
+
+  void _toggle() {
+    setState(() {
+      _expanded = !_expanded;
+      if (_expanded) {
+        _animCtrl.forward();
+      } else {
+        _animCtrl.reverse();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _kBorderColor),
+        boxShadow: const [
+          BoxShadow(color: _kCardShadow, blurRadius: 4, offset: Offset(0, 1))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: _toggle,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: _kPrimaryText,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.subtitle,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: _kSecondaryText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  RotationTransition(
+                    turns: _anim,
+                    child: const Icon(
+                      Icons.expand_more,
+                      size: 24,
+                      color: _kSecondaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizeTransition(
+            sizeFactor: _anim,
+            axisAlignment: -1.0,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: widget.child,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1340,64 +1412,11 @@ class _GoalCardWidget extends StatefulWidget {
 }
 
 class _GoalCardWidgetState extends State<_GoalCardWidget> {
-  DateTime? _targetCompletionDate;
   final DateFormat _dateFormat = DateFormat('MMM d, y');
 
   @override
   void initState() {
     super.initState();
-    _parseTargetDate();
-  }
-
-  void _parseTargetDate() {
-    final text = widget.yearController.text.trim();
-    if (text.isNotEmpty) {
-      final year = int.tryParse(text);
-      if (year != null && year > 2000 && year < 2100) {
-        _targetCompletionDate = DateTime(year, 12, 31);
-      } else {
-        try {
-          _targetCompletionDate = DateTime.parse(text);
-        } catch (e) {
-          debugPrint('Error: $e');
-        }
-      }
-    }
-  }
-
-  Future<void> _pickTargetDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _targetCompletionDate ??
-          DateTime.now().add(const Duration(days: 365)),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: _kAccentColor,
-              onPrimary: _kPrimaryText,
-              surface: Colors.white,
-              onSurface: _kPrimaryText,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() {
-        _targetCompletionDate = picked;
-        widget.yearController.text =
-            '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
-      });
-    }
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'Select target date';
-    return _dateFormat.format(date);
   }
 
   String _formatMilestoneDate(String raw) {
@@ -1555,47 +1574,6 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                   style: const TextStyle(fontSize: 14, color: _kPrimaryText),
                 ),
                 const SizedBox(height: 16),
-                // Target Completion
-                const Text('Target Completion',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: _kSecondaryText)),
-                const SizedBox(height: 6),
-                GestureDetector(
-                  onTap: _pickTargetDate,
-                  child: Container(
-                    height: 42,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: _kBorderColor),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today_outlined,
-                            size: 16, color: _kSecondaryText),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            _targetCompletionDate != null
-                                ? _formatDate(_targetCompletionDate)
-                                : 'Select target date',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: _targetCompletionDate != null
-                                  ? _kPrimaryText
-                                  : _kSecondaryText,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
                 // ── Milestones sub-section (mapped from FEP) ──
                 const Divider(height: 1, color: _kLightGray),
                 const SizedBox(height: 12),
@@ -1652,7 +1630,9 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                               TextStyle(fontSize: 12, color: _kSecondaryText),
                         )
                       else
-                        ...widget.availableMilestones.map((milestone) {
+                        ...widget.availableMilestones
+                            .where((m) => m.id.trim().isNotEmpty)
+                            .map((milestone) {
                           final selected = widget.selectedMilestoneIds
                               .contains(milestone.id);
                           return Padding(

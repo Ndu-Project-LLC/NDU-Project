@@ -1551,7 +1551,9 @@ class Milestone {
     this.dueDate = '',
     this.references = '',
     this.comments = '',
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = (id == null || id.trim().isEmpty)
+          ? DateTime.now().microsecondsSinceEpoch.toString()
+          : id;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -1563,8 +1565,9 @@ class Milestone {
       };
 
   factory Milestone.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id']?.toString();
     return Milestone(
-      id: json['id']?.toString(),
+      id: (rawId == null || rawId.trim().isEmpty) ? null : rawId,
       name: json['name'] ?? '',
       discipline: json['discipline'] ?? '',
       dueDate: json['dueDate'] ?? '',

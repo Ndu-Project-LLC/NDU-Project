@@ -6,6 +6,9 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/project_framework_screen.dart';
+import 'package:ndu_project/screens/program_basics_screen.dart' show ProjectDetailsScreen;
+import 'package:ndu_project/screens/core_stakeholders_screen.dart';
+import 'package:ndu_project/screens/cost_analysis_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -206,52 +209,6 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  businessCase: overview,
  ));
  }
- } else if (sectionType == 'scope') {
- final scope = await _openAi.generateProjectScope(
- context: contextText,
- );
- if (mounted) {
- final inScope = List<String>.from(scope['in'] ?? []);
- final outScope = List<String>.from(scope['out'] ?? []);
- if (inScope.isNotEmpty || outScope.isNotEmpty) {
- provider.updateField((data) => data.copyWith(
- withinScope: inScope,
- outOfScope: outScope,
- ));
- }
- }
- } else if (sectionType == 'risks') {
- final result = await _openAi.generateDetailedRisks(
- context: contextText,
- );
- if (mounted) {
- final newRisks = List<RiskRegisterItem>.from(result['risks'] ?? []);
- final newConstraints = List<String>.from(result['constraints'] ?? []);
-
- provider.updateField((data) {
- final fep = data.frontEndPlanning;
- final updatedFep = fep.copyWith(riskRegisterItems: newRisks);
- return data.copyWith(
- frontEndPlanning: updatedFep,
- constraints: newConstraints,
- );
- });
- }
- } else if (sectionType == 'tech') {
- final result = await _openAi.generateTechnicalRequirements(
- context: contextText,
- );
- if (mounted) {
- final it = result['it'] as ITConsiderationsData?;
- final infra = result['infra'] as InfrastructureConsiderationsData?;
- if (it != null || infra != null) {
- provider.updateField((data) => data.copyWith(
- itConsiderationsData: it ?? data.itConsiderationsData,
- infrastructureConsiderationsData:
- infra ?? data.infrastructureConsiderationsData,
- ));
- }
- }
  }
 
  if (mounted) {
@@ -270,6 +227,79 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  if (mounted) {
  setState(() => _isGenerating = false);
  }
+ }
+ }
+
+ /// Navigate the user back to the Project Details page (where project
+ /// scope is actually edited). The charter merely reflects that page.
+ void _navigateToProjectDetails() {
+ try {
+ Navigator.of(context).push(
+ MaterialPageRoute<void>(
+ builder: (_) =>
+ const ProjectDetailsScreen(),
+ ),
+ );
+ } catch (e) {
+ debugPrint('Could not navigate to Project Details: $e');
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Project Details page is reachable from the sidebar under Front End Planning → Project Details.'),
+ duration: Duration(seconds: 4),
+ ),
+ );
+ }
+ }
+
+ /// Navigate to the Core Stakeholders screen so the user can edit the
+ /// stakeholders that the charter inherits from the preferred solution.
+ void _navigateToCoreStakeholders() {
+ try {
+ final data = _projectData;
+ Navigator.of(context).push(
+ MaterialPageRoute<void>(
+ builder: (_) => CoreStakeholdersScreen(
+ notes: data?.coreStakeholdersData?.notes ?? data?.notes ?? '',
+ solutions: const [],
+ ),
+ ),
+ );
+ } catch (e) {
+ debugPrint('Could not navigate to Core Stakeholders: $e');
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Core Stakeholders page is reachable from the sidebar under Initiation → Core Stakeholders.'),
+ duration: Duration(seconds: 4),
+ ),
+ );
+ }
+ }
+
+ /// Navigate to the Business Case screen so the user can view / edit
+ /// the preferred solution that supplies IT considerations and
+ /// infrastructure to the charter.
+ void _navigateToBusinessCase() {
+ try {
+ final data = _projectData;
+ Navigator.of(context).push(
+ MaterialPageRoute<void>(
+ builder: (_) => CostAnalysisScreen(
+ notes: data?.notes ?? '',
+ solutions: const [],
+ ),
+ ),
+ );
+ } catch (e) {
+ debugPrint('Could not navigate to Business Case: $e');
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Business Case / Cost Analysis page is reachable from the sidebar under Initiation → Cost Analysis.'),
+ duration: Duration(seconds: 4),
+ ),
+ );
  }
  }
 
@@ -389,8 +419,10 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  const SizedBox(height: 12),
  CharterScope(
  data: _projectData,
- onGenerate: () =>
- _generateSection('scope'),
+ // AI Generate intentionally removed — the charter
+ // reflects the Project Details page. Edit takes the
+ // user back to that page in the same FEP.
+ onEdit: () => _navigateToProjectDetails(),
  ),
  ],
  ),
@@ -413,8 +445,7 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  const SizedBox(height: 12),
  CharterScope(
  data: _projectData,
- onGenerate: () =>
- _generateSection('scope'),
+ onEdit: () => _navigateToProjectDetails(),
  ),
  ],
  );
@@ -425,14 +456,19 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  // ─── 5. Key Risks Section ───
  CharterRisks(
  data: _projectData,
- onGenerate: () => _generateSection('risks'),
+ // AI Generate intentionally removed — risks are reflected from
+ // the dedicated Risks page; charter is read-only here.
  ),
  const SizedBox(height: 24),
 
  // ─── 6. Technical & Procurement Bento ───
  CharterTechnicalProcurementBento(
  data: _projectData,
- onGenerate: () => _generateSection('tech'),
+ // AI Generate intentionally removed — IT/Infrastructure comes from
+ // the preferred solution (Business Case section, locked once a
+ // preferred solution is selected). onEdit takes the user to view
+ // the source.
+ onEdit: () => _navigateToBusinessCase(),
  ),
  const SizedBox(height: 24),
 
@@ -441,7 +477,10 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  const SizedBox(height: 24),
 
  // ─── 8. Governance Section ───
- CharterGovernanceSection(data: _projectData),
+ CharterGovernanceSection(
+ data: _projectData,
+ onEditStakeholders: () => _navigateToCoreStakeholders(),
+ ),
  const SizedBox(height: 24),
 
  // ─── 9. Assumptions (Collapsible) ───
@@ -452,7 +491,10 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  LaunchPhaseNavigation(
  backLabel: 'Back',
  nextLabel: 'Next',
- nextEnabled: _projectData?.charterProjectManagerName.isNotEmpty == true,
+ nextEnabled:
+ _projectData?.charterProjectManagerName.isNotEmpty == true &&
+ (_projectData?.charterApprovalDate != null ||
+ _projectData?.frontEndPlanning.charterApproved == true),
  onBack: () => FrontEndPlanningNavigation.goToPrevious(
  context,
  'project_charter',
@@ -468,6 +510,25 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  'Tap "Assign Manager" in the Project Manager card.'),
  backgroundColor: Color(0xFFDC2626),
  duration: Duration(seconds: 4),
+ ),
+ );
+ return;
+ }
+ // BLOCK: Charter must be approved before Planning phase is
+ // unlocked. Once approved, FEP sections are locked.
+ final isCharterApproved =
+ _projectData!.charterApprovalDate != null ||
+ _projectData!.frontEndPlanning.charterApproved == true;
+ if (!isCharterApproved) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Charter to be approved by sponsor, owner or applicable lead '
+ 'before the Planning phase is unlocked. Scroll to the '
+ 'Governance section to review and approve.'),
+ backgroundColor: Color(0xFFD97706),
+ duration: Duration(seconds: 5),
+ behavior: SnackBarBehavior.floating,
  ),
  );
  return;

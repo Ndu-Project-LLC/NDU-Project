@@ -384,13 +384,8 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  iconFgColor: const Color(0xFF636262),
  onTap: hasManager ? null : () => _showAssignManagerDialog(data),
  ),
- _MetaInfoItem(
- icon: Icons.badge_outlined,
- label: 'Ref ID',
- value: data.projectId ?? 'Draft',
- iconBgColor: BrandColors.primaryFixed,
- iconFgColor: BrandColors.onPrimaryFixedVariant,
- ),
+ // Ref-ID removed per user request — the charter no longer displays
+ // an internal reference ID badge in the meta info row.
  _MetaInfoItem(
  icon: Icons.calendar_today_outlined,
  label: 'Start Date',
@@ -765,22 +760,8 @@ class CharterFinancialOverview extends StatelessWidget {
  children: [
  sectionTitleWithIcon(
  Icons.payments_outlined, 'Financial Overview'),
- Container(
- padding:
- const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
- decoration: BoxDecoration(
- color: BrandColors.primaryFixed,
- borderRadius: BorderRadius.circular(4),
- ),
- child: Text(
- 'ROI Analysis',
- style: TextStyle(
- fontSize: 10,
- color: BrandColors.onPrimaryFixedVariant,
- fontWeight: FontWeight.bold,
- ),
- ),
- ),
+ // "ROI Analysis" badge removed per user request — the
+ // charter no longer displays an ROI Analysis pill.
  ],
  ),
  const SizedBox(height: 20),
@@ -1105,8 +1086,13 @@ class CharterSuccessCriteria extends StatelessWidget {
 class CharterScope extends StatelessWidget {
  final ProjectDataModel? data;
  final VoidCallback? onGenerate;
+ /// When provided, the card shows an "Edit" button that navigates the user
+ /// back to the Project Details page (where the scope actually lives).
+ /// The AI Generate button has been removed — the charter merely reflects
+ /// what was entered on the Project Details page.
+ final VoidCallback? onEdit;
 
- const CharterScope({super.key, required this.data, this.onGenerate});
+ const CharterScope({super.key, required this.data, this.onGenerate, this.onEdit});
 
  @override
  Widget build(BuildContext context) {
@@ -1129,13 +1115,16 @@ class CharterScope extends StatelessWidget {
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
  sectionTitleWithIcon(Icons.zoom_in_outlined, 'Project Scope'),
- if (onGenerate != null)
+ // AI Generate removed — scope comes from the Project Details
+ // page. Show an Edit button that takes the user back there.
+ if (onEdit != null)
  TextButton.icon(
- onPressed: onGenerate,
- icon: const Icon(Icons.auto_awesome, size: 16),
- label:
- const Text('AI Generate', style: TextStyle(fontSize: 12)),
+ onPressed: onEdit,
+ icon: const Icon(Icons.edit_outlined, size: 16),
+ label: const Text('Edit on Details Page',
+ style: TextStyle(fontSize: 12)),
  style: TextButton.styleFrom(
+ foregroundColor: BrandColors.primary,
  padding:
  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  minimumSize: Size.zero,
@@ -1332,20 +1321,9 @@ class CharterRisks extends StatelessWidget {
  ),
  ),
  ),
- const Spacer(),
- if (onGenerate != null)
- TextButton.icon(
- onPressed: onGenerate,
- icon: const Icon(Icons.auto_awesome, size: 16),
- label:
- const Text('AI Generate', style: TextStyle(fontSize: 12)),
- style: TextButton.styleFrom(
- padding:
- const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
- minimumSize: Size.zero,
- tapTargetSize: MaterialTapTargetSize.shrinkWrap,
- ),
- ),
+ // AI Generate button removed per user request — Key Risks
+ // reflect the risk register maintained on the dedicated Risks
+ // page; the charter is a reflection, not a generator.
  ],
  ),
  const SizedBox(height: 20),
@@ -1499,9 +1477,13 @@ class CharterRisks extends StatelessWidget {
 class CharterTechnicalProcurementBento extends StatelessWidget {
  final ProjectDataModel? data;
  final VoidCallback? onGenerate;
+ /// When provided, shows a "View / Edit Source" button that takes the
+ /// user back to the Business Case section (read-only after the
+ /// preferred solution is locked).
+ final VoidCallback? onEdit;
 
  const CharterTechnicalProcurementBento(
- {super.key, required this.data, this.onGenerate});
+ {super.key, required this.data, this.onGenerate, this.onEdit});
 
  @override
  Widget build(BuildContext context) {
@@ -1520,12 +1502,15 @@ class CharterTechnicalProcurementBento extends StatelessWidget {
  children: [
  sectionTitleWithIcon(
  Icons.precision_manufacturing_outlined, 'Technical & Procurement'),
- if (onGenerate != null)
+ // AI Generate removed per user request — IT considerations and
+ // Infrastructure come from the preferred solution (Business Case
+ // section, which is locked once the preferred solution is selected).
+ if (onEdit != null)
  TextButton.icon(
- onPressed: onGenerate,
- icon: const Icon(Icons.auto_awesome, size: 16),
- label:
- const Text('AI Generate', style: TextStyle(fontSize: 12)),
+ onPressed: onEdit,
+ icon: const Icon(Icons.edit_outlined, size: 16),
+ label: const Text('View / Edit Source',
+ style: TextStyle(fontSize: 12)),
  style: TextButton.styleFrom(
  padding:
  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1901,189 +1886,345 @@ class _TimelineItem extends StatelessWidget {
 
 // ─── 8. Floating Approval Action Bar ───
 
-class CharterFloatingApprovalBar extends StatelessWidget {
- final ProjectDataModel? data;
+class CharterFloatingApprovalBar extends StatefulWidget {
+  final ProjectDataModel? data;
 
- const CharterFloatingApprovalBar({super.key, required this.data});
+  const CharterFloatingApprovalBar({super.key, required this.data});
 
- @override
- Widget build(BuildContext context) {
- // Determine signer info
- String signerName = data?.charterProjectSponsorName ?? '';
- String signerRole = 'Project Sponsor';
- if (signerName.isEmpty) {
- signerName = data?.charterProjectManagerName ?? '';
- signerRole = 'Project Owner';
- }
- if (signerName.isEmpty) {
- signerName = 'Pending Assignment';
- }
- final isApproved = data?.charterApprovalDate != null;
-
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
- decoration: BoxDecoration(
- color: BrandColors.inverseSurface,
- boxShadow: [
- BoxShadow(
- color: Colors.black.withOpacity(0.15),
- offset: const Offset(0, -4),
- blurRadius: 12,
- )
- ],
- ),
- child: Center(
- child: ConstrainedBox(
- constraints: const BoxConstraints(maxWidth: 1400),
- child: LayoutBuilder(builder: (context, constraints) {
- final isMobile = constraints.maxWidth < 600;
- if (isMobile) {
- return Column(
- children: [
- _buildApprovalInfo(signerName, signerRole, isApproved),
- const SizedBox(height: 12),
- _buildApproveButton(context, signerName, isApproved),
- ],
- );
- }
- return Row(
- mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- _buildApprovalInfo(signerName, signerRole, isApproved),
- _buildApproveButton(context, signerName, isApproved),
- ],
- );
- }),
- ),
- ),
- );
- }
-
- Widget _buildApprovalInfo(
- String signerName, String signerRole, bool isApproved) {
- return Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- const Icon(Icons.gavel_outlined, size: 18, color: Colors.white70),
- const SizedBox(width: 8),
- Text(
- 'Approval Authority: $signerName',
- style: TextStyle(
- color: Colors.white.withOpacity(0.8),
- fontSize: 14,
- fontWeight: FontWeight.w500,
- ),
- ),
- if (isApproved) ...[
- const SizedBox(width: 12),
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
- decoration: BoxDecoration(
- color: Colors.green.shade600,
- borderRadius: BorderRadius.circular(12),
- ),
- child: const Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.check_circle, size: 14, color: Colors.white),
- SizedBox(width: 4),
- Text('APPROVED',
- style: TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.bold,
- color: Colors.white)),
- ],
- ),
- ),
- ],
- ],
- );
- }
-
- Widget _buildApproveButton(
- BuildContext context, String signerName, bool isApproved) {
- if (isApproved) return const SizedBox();
-
- return InkWell(
- onTap: () async {
- if (signerName == 'Pending Assignment') {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content:
- Text('Assign a sponsor or project owner before approval.'),
- ),
- );
- return;
- }
-
- final provider = ProjectDataInherited.maybeOf(context);
- if (provider == null) {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text('Unable to find project context.'),
- ),
- );
- return;
- }
-
- provider.updateField(
- (data) => data.copyWith(
- charterApprovalDate: DateTime.now(),
- ),
- );
- final success = await provider.saveToFirebase(
- checkpoint: 'project_charter');
-
- if (!context.mounted) return;
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text(
- success
- ? 'Project charter approved.'
- : 'Approval saved locally, but cloud sync failed.',
- ),
- backgroundColor: success ? Colors.green : Colors.orange,
- ),
- );
- },
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
- decoration: BoxDecoration(
- gradient: const LinearGradient(
- colors: [BrandColors.primary, BrandColors.primaryContainer],
- begin: Alignment.centerLeft,
- end: Alignment.centerRight,
- ),
- borderRadius: BorderRadius.circular(8),
- boxShadow: [
- BoxShadow(
- color: BrandColors.primary.withOpacity(0.3),
- offset: const Offset(0, 2),
- blurRadius: 8,
- )
- ],
- ),
- child: const Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.check_circle_outline, size: 18, color: Colors.white),
- SizedBox(width: 8),
- Text(
- 'Click to Approve',
- style: TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: Colors.white,
- ),
- ),
- ],
- ),
- ),
- );
- }
+  @override
+  State<CharterFloatingApprovalBar> createState() =>
+      _CharterFloatingApprovalBarState();
 }
 
-// ─── Legacy/Kept widgets for compatibility ───
+class _CharterFloatingApprovalBarState
+    extends State<CharterFloatingApprovalBar> {
+  @override
+  Widget build(BuildContext context) {
+    final data = widget.data;
+    // Determine signer info
+    String signerName = data?.charterProjectSponsorName ?? '';
+    String signerRole = 'Project Sponsor';
+    if (signerName.isEmpty) {
+      signerName = data?.charterProjectManagerName ?? '';
+      signerRole = 'Project Owner';
+    }
+    if (signerName.isEmpty) {
+      signerName = 'Pending Assignment';
+    }
+    final isApproved = data?.charterApprovalDate != null ||
+        (data?.frontEndPlanning.charterApproved ?? false);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: BrandColors.inverseSurface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            offset: const Offset(0, -4),
+            blurRadius: 12,
+          )
+        ],
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1400),
+          child: LayoutBuilder(builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
+            if (isMobile) {
+              return Column(
+                children: [
+                  _buildApprovalInfo(signerName, signerRole, isApproved),
+                  const SizedBox(height: 12),
+                  _buildApproveButton(context, signerName, isApproved),
+                ],
+              );
+            }
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildApprovalInfo(signerName, signerRole, isApproved),
+                _buildApproveButton(context, signerName, isApproved),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildApprovalInfo(
+      String signerName, String signerRole, bool isApproved) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.gavel_outlined, size: 18, color: Colors.white70),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            'Approval Authority: $signerName ($signerRole) — Charter to be approved by sponsor, owner or applicable lead',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.85),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (isApproved) ...[
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.green.shade600,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.check_circle, size: 14, color: Colors.white),
+                SizedBox(width: 4),
+                Text('APPROVED',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildApproveButton(
+      BuildContext context, String signerName, bool isApproved) {
+    if (isApproved) return const SizedBox();
+
+    return InkWell(
+      onTap: () => _showApprovalConfirmationDialog(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [BrandColors.primary, BrandColors.primaryContainer],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: BrandColors.primary.withOpacity(0.3),
+              offset: const Offset(0, 2),
+              blurRadius: 8,
+            )
+          ],
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle_outline, size: 18, color: Colors.white),
+            SizedBox(width: 8),
+            Text(
+              'Click to Approve',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showApprovalConfirmationDialog() async {
+    final data = widget.data;
+    if (data == null) return;
+    if ((data.charterProjectSponsorName.isEmpty) &&
+        (data.charterProjectManagerName.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+              'Assign a sponsor or project owner before approval. Use the sponsor suggestion banner in the Governance section.'),
+          backgroundColor: const Color(0xFFD97706),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'Dismiss',
+            textColor: Colors.white,
+            onPressed: () =>
+                ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+          ),
+        ),
+      );
+      return;
+    }
+
+    bool smeReviewed = false;
+    bool sponsorConfirmed = false;
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.gavel_outlined,
+                  color: BrandColors.primary, size: 22),
+              const SizedBox(width: 10),
+              const Text('Confirm Charter Approval'),
+            ],
+          ),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Charter to be approved by sponsor, owner or applicable lead. '
+                  'Confirm the following before approving:',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF374151)),
+                ),
+                const SizedBox(height: 14),
+                CheckboxListTile(
+                  value: smeReviewed,
+                  onChanged: (v) =>
+                      setDialogState(() => smeReviewed = v ?? false),
+                  title: const Text(
+                    'I confirm the applicable subject matter experts have reviewed all relevant sections of the Front End Execution Plan.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                CheckboxListTile(
+                  value: sponsorConfirmed,
+                  onChanged: (v) =>
+                      setDialogState(() => sponsorConfirmed = v ?? false),
+                  title: const Text(
+                    'I am the project sponsor, owner, or applicable lead and I am authorized to approve this charter.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Once approved, the Front End Planning sections will be locked and the Planning phase will be unlocked.',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFFD97706),
+                      fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: (smeReviewed && sponsorConfirmed)
+                  ? () => Navigator.pop(dialogContext, true)
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade600,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Confirm & Approve'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result == true) {
+      await _approveCharter();
+    }
+  }
+
+  Future<void> _approveCharter() async {
+    final provider = ProjectDataInherited.maybeOf(context);
+    if (provider == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to find project context.'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
+
+    provider.updateField((data) => data.copyWith(
+          charterApprovalDate: DateTime.now(),
+          frontEndPlanning: data.frontEndPlanning.copyWith(
+            charterApproved: true,
+            charterApprovedAt: DateTime.now(),
+          ),
+        ));
+
+    // Retry cloud sync up to 3 times to avoid the "Approval saved
+    // locally, but cloud sync failed" message.
+    bool success = false;
+    String? lastError;
+    for (var attempt = 1; attempt <= 3; attempt++) {
+      try {
+        success = await provider.saveToFirebase(
+          checkpoint: 'project_charter',
+        );
+        if (success) break;
+      } catch (e) {
+        lastError = e.toString();
+      }
+      await Future.delayed(const Duration(milliseconds: 800));
+    }
+
+    if (!mounted) return;
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+              'Project charter approved. Front End Planning is now locked and the Planning phase is unlocked.'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'Dismiss',
+            textColor: Colors.white,
+            onPressed: () =>
+                ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+          ),
+        ),
+      );
+      setState(() {});
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Approval saved locally but cloud sync failed after 3 retries. Please check your network connection and tap Approve again to retry. Error: $lastError'),
+          backgroundColor: const Color(0xFFD97706),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 8),
+          action: SnackBarAction(
+            label: 'Dismiss',
+            textColor: Colors.white,
+            onPressed: () =>
+                ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+          ),
+        ),
+      );
+    }
+  }
+}
+
+// ─── Legacy// ─── Legacy/Kept widgets for compatibility ───
 
 class CharterExecutiveSnapshot extends StatelessWidget {
  final ProjectDataModel? data;

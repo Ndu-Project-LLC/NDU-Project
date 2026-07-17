@@ -50,6 +50,12 @@ class _FrontEndPlanningMilestoneScreenState
  bool _isSyncReady = false;
  bool _isGenerating = false;
  bool _autoGenerationTriggered = false;
+ // 2-Step SME Review Verification
+ // Step 1: User confirms they have reviewed the milestones.
+ // Step 2: User confirms the milestones have been discussed with the
+ // applicable subject matter experts (SMEs).
+ bool _smeReviewConfirmedStep1 = false;
+ bool _smeReviewConfirmedStep2 = false;
  final DateFormat _dateFormat = DateFormat('MMM dd, yyyy');
  final ScrollController _milestonesHorizontalScroll = ScrollController();
  final List<TextEditingController> _milestoneNameControllers =
@@ -125,6 +131,10 @@ void _loadMilestoneData() {
  _startDateStr = data.frontEndPlanning.milestoneStartDate;
  _endDateStr = data.frontEndPlanning.milestoneEndDate;
 
+ // Load 2-step SME review verification state
+ _smeReviewConfirmedStep1 = data.frontEndPlanning.milestoneSmeReviewStep1;
+ _smeReviewConfirmedStep2 = data.frontEndPlanning.milestoneSmeReviewStep2;
+
  // Load milestones from project data
  _milestones = List.from(data.keyMilestones);
  _rebuildMilestoneCommentControllers();
@@ -194,6 +204,8 @@ void _loadMilestoneData() {
  current: data.frontEndPlanning,
  milestoneStartDate: _startDateStr,
  milestoneEndDate: _endDateStr,
+ milestoneSmeReviewStep1: _smeReviewConfirmedStep1,
+ milestoneSmeReviewStep2: _smeReviewConfirmedStep2,
  ),
  keyMilestones: List.from(_milestones),
  ),
@@ -499,9 +511,11 @@ void _loadMilestoneData() {
  final data = ProjectDataHelper.getData(context);
  final projectContext = ProjectDataHelper.buildFepContext(data);
 
- // Build a comprehensive prompt with project context
+ // IMPORTANT: These are KEY MILESTONES (significant project checkpoints),
+ // NOT opportunities. Do NOT prefix any milestone name with the word
+ // "Opportunity" or treat these as opportunity items.
  final prompt =
- '''Based on the following project information, generate 5-7 key project milestones with realistic dates and descriptions.
+ '''Based on the following project information, suggest 5-7 KEY PROJECT MILESTONES — significant checkpoints that mark major progress points in the project lifecycle. These are MILESTONES ONLY, not opportunities, risks, or requirements.
 
 Project Information:
 $projectContext
@@ -512,12 +526,19 @@ Objectives: ${data.projectObjective}
 Start Date: ${_startDateStr.isNotEmpty ? _startDateStr : 'Not set'}
 End Date: ${_endDateStr.isNotEmpty ? _endDateStr : 'Not set'}
 
+RULES:
+- Each line must be a single KEY MILESTONE (e.g., Project Kickoff, Planning Complete, Design Review, Execution Start, User Acceptance Testing, Go-Live).
+- Do NOT use the word "Opportunity" anywhere in the milestone name, description, or discipline.
+- Do NOT generate risk items, requirements, or potential benefits.
+- Leave DUE_DATE BLANK if start/end dates are not set; the user will fill in dates manually.
+
 Please generate milestones in the following format, one per line:
-MILESTONE_NAME | DISCIPLINE | DUE_DATE (MMM dd, yyyy format) | DESCRIPTION
+MILESTONE_NAME | DISCIPLINE | DUE_DATE (MMM dd, yyyy format, or leave blank) | DESCRIPTION
 
 Example:
-Project Kickoff | Project Management | Jan 15, 2026 | Initial project kickoff meeting with all stakeholders
-Requirements Gathering | Analysis | Feb 01, 2026 | Complete documentation of all project requirements
+Project Kickoff | Project Management | | Initial project kickoff meeting with all stakeholders
+Planning Complete | Planning | | All planning documents finalized and approved
+Go-Live | Operations | | Project goes live and transitions to operations
 
 Generate milestones that cover the typical project lifecycle phases.''';
 
@@ -603,8 +624,23 @@ Generate milestones that cover the typical project lifecycle phases.''';
  final parts = line.split('|').map((p) => p.trim()).toList();
 
  if (parts.isNotEmpty && parts[0].isNotEmpty) {
+ // Strip any "Opportunity:" / "Opportunity -" prefix the AI may have
+ // added despite instructions, so milestone names are clean.
+ final rawName = parts[0];
+ final cleanedName = rawName
+ .replaceAll(RegExp(r'^opportunity\s*[:\-]\s*', caseSensitive: false), '')
+ .replaceAll(RegExp(r'^opportunity\s+', caseSensitive: false), '')
+ .trim();
+ if (cleanedName.isEmpty) continue;
+ // Filter out lines that are clearly NOT milestones.
+ final lower = cleanedName.toLowerCase();
+ if (lower.startsWith('opportunity') ||
+ lower.startsWith('risk:') ||
+ lower.startsWith('requirement:')) {
+ continue;
+ }
  milestones.add(Milestone(
- name: parts[0],
+ name: cleanedName,
  discipline: parts.length > 1 ? parts[1] : '',
  dueDate: parts.length > 2 ? parts[2] : '',
  references: '',
@@ -631,16 +667,27 @@ Generate milestones that cover the typical project lifecycle phases.''';
 
  for (final line in naturalLines) {
  final cleanLine = line.replaceAll(RegExp(r'^[-•\d.)\s]+'), '').trim();
- if (cleanLine.isNotEmpty) {
+ if (cleanLine.isEmpty) continue;
+ // Strip "Opportunity:" prefix if present, and skip lines that
+ // are clearly not milestones.
+ final lower = cleanLine.toLowerCase();
+ if (lower.startsWith('opportunity') ||
+ lower.startsWith('risk:') ||
+ lower.startsWith('requirement:')) {
+ continue;
+ }
+ final milestoneText = cleanLine
+ .replaceAll(RegExp(r'^opportunity\s*[:\-]\s*', caseSensitive: false), '')
+ .trim();
+ if (milestoneText.isEmpty) continue;
  milestones.add(Milestone(
  name:
- cleanLine.length > 60 ? cleanLine.substring(0, 60) : cleanLine,
+ milestoneText.length > 60 ? milestoneText.substring(0, 60) : milestoneText,
  discipline: 'General',
  dueDate: '',
  references: '',
- comments: cleanLine.length > 60 ? cleanLine : '',
+ comments: milestoneText.length > 60 ? milestoneText : '',
  ));
- }
  }
  }
 
@@ -1042,6 +1089,11 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  const SizedBox(height: 32),
 
+ // 2-Step SME Review Verification
+ _buildSmeReviewCard(),
+
+ const SizedBox(height: 32),
+
  // Navigation buttons
  Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1079,6 +1131,169 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  const SizedBox(height: 100), // Space for KAZ chat bubble
  ],
+ ),
+ );
+ }
+
+ Widget _buildSmeReviewCard() {
+ final bothConfirmed =
+ _smeReviewConfirmedStep1 && _smeReviewConfirmedStep2;
+ return Container(
+ width: double.infinity,
+ padding: const EdgeInsets.all(20),
+ decoration: BoxDecoration(
+ color: bothConfirmed
+ ? const Color(0xFFECFDF5)
+ : const Color(0xFFFFFBEB),
+ borderRadius: BorderRadius.circular(12),
+ border: Border.all(
+ color: bothConfirmed
+ ? const Color(0xFF10B981)
+ : const Color(0xFFF59E0B),
+ width: 1.2,
+ ),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ Icon(
+ bothConfirmed
+ ? Icons.verified_outlined
+ : Icons.fact_check_outlined,
+ size: 20,
+ color: bothConfirmed
+ ? const Color(0xFF10B981)
+ : const Color(0xFFD97706),
+ ),
+ const SizedBox(width: 10),
+ const Expanded(
+ child: Text(
+ 'Subject Matter Expert (SME) Review Verification',
+ style: TextStyle(
+ fontSize: 15,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ ),
+ ),
+ if (bothConfirmed)
+ Container(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 10, vertical: 4),
+ decoration: BoxDecoration(
+ color: const Color(0xFF10B981),
+ borderRadius: BorderRadius.circular(12),
+ ),
+ child: const Text(
+ 'VERIFIED',
+ style: TextStyle(
+ color: Colors.white,
+ fontSize: 10,
+ fontWeight: FontWeight.w700,
+ letterSpacing: 0.8),
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 6),
+ const Text(
+ 'Confirm that the milestones above have been reviewed and discussed with the appropriate subject matter experts before proceeding.',
+ style: TextStyle(
+ fontSize: 12,
+ color: Color(0xFF6B7280),
+ height: 1.4,
+ ),
+ ),
+ const SizedBox(height: 14),
+ _buildVerificationCheckbox(
+ value: _smeReviewConfirmedStep1,
+ label:
+ 'Step 1 — I have personally reviewed each milestone name, target date, and discipline for accuracy.',
+ onChanged: (val) {
+ setState(() => _smeReviewConfirmedStep1 = val ?? false);
+ _syncToProvider();
+ },
+ ),
+ const SizedBox(height: 8),
+ _buildVerificationCheckbox(
+ value: _smeReviewConfirmedStep2,
+ enabled: _smeReviewConfirmedStep1,
+ label:
+ 'Step 2 — I have discussed these milestones with the relevant subject matter experts (engineering, schedule, procurement, operations) and incorporated their feedback.',
+ onChanged: (val) {
+ setState(() => _smeReviewConfirmedStep2 = val ?? false);
+ _syncToProvider();
+ },
+ ),
+ if (!bothConfirmed) ...[
+ const SizedBox(height: 10),
+ const Row(
+ children: [
+ Icon(Icons.info_outline,
+ size: 14, color: Color(0xFFD97706)),
+ SizedBox(width: 6),
+ Expanded(
+ child: Text(
+ 'Both confirmations are required before the milestone plan is considered final.',
+ style: TextStyle(
+ fontSize: 11,
+ color: Color(0xFFD97706),
+ fontStyle: FontStyle.italic),
+ ),
+ ),
+ ],
+ ),
+ ],
+ ],
+ ),
+ );
+ }
+
+ Widget _buildVerificationCheckbox({
+ required bool value,
+ required String label,
+ required ValueChanged<bool?> onChanged,
+ bool enabled = true,
+ }) {
+ return InkWell(
+ onTap: enabled
+ ? () => onChanged(!value)
+ : null,
+ borderRadius: BorderRadius.circular(6),
+ child: Padding(
+ padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+ child: Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ SizedBox(
+ width: 24,
+ height: 24,
+ child: Checkbox(
+ value: value,
+ onChanged: enabled ? onChanged : null,
+ activeColor: const Color(0xFF10B981),
+ materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(4)),
+ ),
+ ),
+ const SizedBox(width: 10),
+ Expanded(
+ child: Text(
+ label,
+ style: TextStyle(
+ fontSize: 13,
+ color: enabled
+ ? const Color(0xFF1F2937)
+ : const Color(0xFF9CA3AF),
+ height: 1.4,
+ ),
+ ),
+ ),
+ ],
+ ),
  ),
  );
  }
@@ -1196,8 +1411,28 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  child: LayoutBuilder(
  builder: (context, constraints) {
- final tableWidth =
- constraints.maxWidth > 1420 ? constraints.maxWidth : 1420.0;
+ // Expandable: use the full available width when wider than the
+ // minimum readable width; otherwise fall back to horizontal
+ // scrolling so the table always fills the screen as much as
+ // possible.
+ final minTableWidth = 1100.0;
+ final tableWidth = constraints.maxWidth > minTableWidth
+ ? constraints.maxWidth
+ : minTableWidth;
+
+ // Proportional column widths so the table expands to fill the
+ // available space (rather than the old fixed-pixel widths that
+ // always left a fixed table size regardless of viewport).
+ final col0 = 60.0; // #
+ final col1 = tableWidth * 0.22; // Milestone Name
+ final col2 = tableWidth * 0.16; // Target Date
+ final col3 = tableWidth * 0.16; // Discipline
+ final col4 = tableWidth * 0.36; // Notes (expandable)
+ final col5 = 70.0; // Actions
+ // Adjust to exactly fill tableWidth
+ final allocated = col0 + col1 + col2 + col3 + col4 + col5;
+ final slack = tableWidth - allocated;
+ final col4Adjusted = col4 + (slack > 0 ? slack : 0);
 
  return Scrollbar(
  controller: _milestonesHorizontalScroll,
@@ -1213,13 +1448,13 @@ Consider typical project timelines and ensure end date is after start date.''';
  verticalInside: border,
  ),
  defaultVerticalAlignment: TableCellVerticalAlignment.top,
- columnWidths: const {
- 0: FixedColumnWidth(60),
- 1: FixedColumnWidth(300),
- 2: FixedColumnWidth(220),
- 3: FixedColumnWidth(220),
- 4: FixedColumnWidth(540),
- 5: FixedColumnWidth(80),
+ columnWidths: {
+ 0: FixedColumnWidth(col0),
+ 1: FixedColumnWidth(col1),
+ 2: FixedColumnWidth(col2),
+ 3: FixedColumnWidth(col3),
+ 4: FixedColumnWidth(col4Adjusted),
+ 5: FixedColumnWidth(col5),
  },
  children: [
  TableRow(

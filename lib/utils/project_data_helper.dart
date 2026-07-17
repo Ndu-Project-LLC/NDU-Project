@@ -1050,6 +1050,12 @@ class ProjectDataHelper {
     String? contracts,
     String? milestoneStartDate,
     String? milestoneEndDate,
+    bool? milestoneSmeReviewStep1,
+    bool? milestoneSmeReviewStep2,
+    bool? charterApproved,
+    DateTime? charterApprovedAt,
+    bool? businessCaseLocked,
+    bool? skippedBusinessCase,
     List<RequirementItem>? requirementItems,
     // Added optional list fields so screens can update persisted lists centrally
     List<ScenarioRecord>? scenarioMatrixItems,
@@ -1088,6 +1094,14 @@ class ProjectDataHelper {
       contracts: contracts ?? current.contracts,
       milestoneStartDate: milestoneStartDate ?? current.milestoneStartDate,
       milestoneEndDate: milestoneEndDate ?? current.milestoneEndDate,
+      milestoneSmeReviewStep1:
+          milestoneSmeReviewStep1 ?? current.milestoneSmeReviewStep1,
+      milestoneSmeReviewStep2:
+          milestoneSmeReviewStep2 ?? current.milestoneSmeReviewStep2,
+      charterApproved: charterApproved ?? current.charterApproved,
+      charterApprovedAt: charterApprovedAt ?? current.charterApprovedAt,
+      businessCaseLocked: businessCaseLocked ?? current.businessCaseLocked,
+      skippedBusinessCase: skippedBusinessCase ?? current.skippedBusinessCase,
       requirementItems: requirementItems ?? current.requirementItems,
       // Preserve or replace list fields
       scenarioMatrixItems: scenarioMatrixItems ?? current.scenarioMatrixItems,

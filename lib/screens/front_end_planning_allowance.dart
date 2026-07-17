@@ -179,6 +179,36 @@ class _FrontEndPlanningAllowanceScreenState
  if (_isGenerating) return;
  setState(() => _isGenerating = true);
 
+ // Show immediate feedback so the user knows the AI assist click was
+ // registered (fixes the "clicked AI assist and didn't get any feedback"
+ // issue).
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Row(
+ children: [
+ SizedBox(
+ width: 18,
+ height: 18,
+ child: CircularProgressIndicator(
+ strokeWidth: 2,
+ color: Colors.white,
+ ),
+ ),
+ SizedBox(width: 12),
+ Expanded(
+ child: Text(
+ 'AI is generating region-aware allowances and contingencies...'),
+ ),
+ ],
+ ),
+ duration: Duration(seconds: 5),
+ backgroundColor: Color(0xFF2563EB),
+ behavior: SnackBarBehavior.floating,
+ ),
+ );
+ }
+
  try {
  final data = ProjectDataHelper.getData(context);
  final sb = StringBuffer();
@@ -203,6 +233,12 @@ class _FrontEndPlanningAllowanceScreenState
  )
  ..writeln(
  '- Include realistic contingency items for schedule, commercial, operational, and compliance exposure.',
+ )
+ ..writeln(
+ '- Factor in the project LOCATION and REGION (hurricanes in the US Gulf Coast, typhoons in East/Southeast Asia, power instability in West/Central Africa, security issues in fragile regions, monsoon flooding in South Asia, seismic activity in the Pacific Rim, winter storms in North America/Europe).',
+ )
+ ..writeln(
+ '- For each item, populate description, estimated cost/quantity, schedule impact (with weeks), responsible discipline, assumptions, and trigger context.',
  );
 
  final newItems =
@@ -213,11 +249,26 @@ class _FrontEndPlanningAllowanceScreenState
  _allowanceItems.addAll(newItems);
  });
  _syncItemsToProvider();
+ // Show success feedback so the user sees the AI assist result.
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(
+ 'Generated ${newItems.length} region-aware allowances successfully.'),
+ backgroundColor: const Color(0xFF10B981),
+ behavior: SnackBarBehavior.floating,
+ duration: const Duration(seconds: 3),
+ ),
+ );
  }
  } catch (e) {
  if (mounted) {
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Error generating allowances: $e')),
+ SnackBar(
+ content: Text('Error generating allowances: $e'),
+ backgroundColor: const Color(0xFFDC2626),
+ behavior: SnackBarBehavior.floating,
+ duration: const Duration(seconds: 5),
+ ),
  );
  }
  } finally {
@@ -314,13 +365,35 @@ class _FrontEndPlanningAllowanceScreenState
  Future<void> _showItemDialog({AllowanceItem? item}) async {
  final isEditing = item != null;
  final nameController = TextEditingController(text: item?.name ?? '');
+ final descriptionController =
+ TextEditingController(text: item?.description ?? '');
  final amountController =
  TextEditingController(text: item?.amount.toString() ?? '0');
+ final estimatedCostOrQtyController = TextEditingController(
+ text: item?.estimatedCostOrQuantity.isNotEmpty == true
+ ? item!.estimatedCostOrQuantity
+ : (item != null && item.amount > 0
+ ? '\$${item.amount.toStringAsFixed(0)}'
+ : ''),
+ );
+ final scheduleImpactController =
+ TextEditingController(text: item?.scheduleImpact ?? '');
+ final scheduleImpactWeeksController = TextEditingController(
+ text: item != null && item.scheduleImpactWeeks > 0
+ ? item.scheduleImpactWeeks.toStringAsFixed(1)
+ : '',
+ );
+ final responsibleDisciplineController =
+ TextEditingController(text: item?.responsibleDiscipline ?? '');
+ final assumptionsController =
+ TextEditingController(text: item?.assumptions ?? '');
  final appliesToController =
  TextEditingController(text: item?.appliesTo.join(', ') ?? '');
  final assignedToController =
  TextEditingController(text: item?.assignedTo ?? '');
  final notesController = TextEditingController(text: item?.notes ?? '');
+ final triggerContextController =
+ TextEditingController(text: item?.triggerContext ?? '');
  String selectedType = item?.type ?? 'Contingency';
  String releaseStatus = item?.releaseStatus ?? 'Reserved';
  final releasedAmountController = TextEditingController(
@@ -393,15 +466,23 @@ class _FrontEndPlanningAllowanceScreenState
  ),
  content: ConstrainedBox(
  constraints: BoxConstraints(
- maxWidth: 500,
- maxHeight: MediaQuery.of(dialogContext).size.height * 0.68,
+ maxWidth: 560,
+ maxHeight: MediaQuery.of(dialogContext).size.height * 0.78,
  ),
  child: SingleChildScrollView(
  child: Column(
  mainAxisSize: MainAxisSize.min,
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- fieldLabel('Name'),
+ fieldLabel('Allowance Description *'),
+ VoiceTextField(
+ controller: descriptionController,
+ decoration: fieldDecoration(
+ hintText:
+ 'e.g. Hurricane schedule contingency for Gulf Coast construction'),
+ ),
+ const SizedBox(height: 12),
+ fieldLabel('Name (short label)'),
  VoiceTextField(
  controller: nameController,
  decoration: fieldDecoration(hintText: 'Allowance name'),
@@ -427,13 +508,96 @@ class _FrontEndPlanningAllowanceScreenState
  },
  ),
  const SizedBox(height: 12),
- fieldLabel('Amount'),
+ Row(
+ children: [
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Estimated Cost (\$)'),
  VoiceTextField(
  controller: amountController,
  keyboardType:
  const TextInputType.numberWithOptions(decimal: true),
- decoration:
- fieldDecoration(hintText: '0', prefixText: '\$'),
+ decoration: fieldDecoration(
+ hintText: '0', prefixText: '\$'),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Estimated Cost / Quantity (text)'),
+ VoiceTextField(
+ controller: estimatedCostOrQtyController,
+ decoration: fieldDecoration(
+ hintText: '\$50,000 / 10% / 200 hrs'),
+ ),
+ ],
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 12),
+ Row(
+ children: [
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Schedule Impact (text)'),
+ VoiceTextField(
+ controller: scheduleImpactController,
+ decoration: fieldDecoration(
+ hintText:
+ 'e.g. Adds 2 weeks to commissioning'),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Schedule Impact (weeks)'),
+ VoiceTextField(
+ controller: scheduleImpactWeeksController,
+ keyboardType:
+ const TextInputType.numberWithOptions(decimal: true),
+ decoration: fieldDecoration(hintText: '0'),
+ ),
+ ],
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 12),
+ fieldLabel('Responsible Discipline'),
+ VoiceTextField(
+ controller: responsibleDisciplineController,
+ decoration: fieldDecoration(
+ hintText:
+ 'e.g. Project Controls, Procurement, Civil'),
+ ),
+ const SizedBox(height: 12),
+ fieldLabel('Trigger Context (auto / regional)'),
+ VoiceTextField(
+ controller: triggerContextController,
+ decoration: fieldDecoration(
+ hintText:
+ 'e.g. Hurricane exposure — Gulf Coast US'),
+ ),
+ const SizedBox(height: 12),
+ fieldLabel('Assumptions'),
+ VoiceTextField(
+ controller: assumptionsController,
+ maxLines: 3,
+ decoration: fieldDecoration(
+ hintText: 'Assumptions underpinning this allowance'),
  ),
  const SizedBox(height: 12),
  fieldLabel('Release Status'),
@@ -554,7 +718,10 @@ class _FrontEndPlanningAllowanceScreenState
  );
 
  if (result == true) {
- final name = nameController.text.trim();
+ final description = descriptionController.text.trim();
+ final name = nameController.text.trim().isNotEmpty
+ ? nameController.text.trim()
+ : description;
  if (name.isEmpty) return;
 
  final amount =
@@ -565,6 +732,9 @@ class _FrontEndPlanningAllowanceScreenState
  final actualAmount =
  double.tryParse(actualAmountController.text.replaceAll(',', '')) ??
  0.0;
+ final scheduleImpactWeeks =
+ double.tryParse(scheduleImpactWeeksController.text.replaceAll(',', '')) ??
+ 0.0;
  final appliesTo = appliesToController.text
  .split(',')
  .map((e) => e.trim())
@@ -572,11 +742,18 @@ class _FrontEndPlanningAllowanceScreenState
  .toList();
 
  final newItem = AllowanceItem(
- id: item?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+ id: item?.id ?? '${DateTime.now().microsecondsSinceEpoch}_${_allowanceItems.length}',
  number: item?.number ?? (_allowanceItems.length + 1),
  name: name,
+ description: description,
  type: selectedType,
  amount: amount,
+ estimatedCostOrQuantity: estimatedCostOrQtyController.text.trim(),
+ scheduleImpact: scheduleImpactController.text.trim(),
+ scheduleImpactWeeks: scheduleImpactWeeks,
+ responsibleDiscipline: responsibleDisciplineController.text.trim(),
+ assumptions: assumptionsController.text.trim(),
+ triggerContext: triggerContextController.text.trim(),
  appliesTo: appliesTo,
  assignedTo: assignedToController.text.trim(),
  notes: notesController.text.trim(),
@@ -686,10 +863,12 @@ class _FrontEndPlanningAllowanceScreenState
  children: [
  Row(
  children: [
- Text(
+ Expanded(
+ child: Text(
  item.name,
  style: const TextStyle(
  fontWeight: FontWeight.w700, fontSize: 16),
+ ),
  ),
  const SizedBox(width: 8),
  Container(
@@ -707,13 +886,59 @@ class _FrontEndPlanningAllowanceScreenState
  color: Color(0xFF4B5563)),
  ),
  ),
- const Spacer(),
+ const SizedBox(width: 8),
  Text(
  formatter.format(item.amount),
  style: const TextStyle(
  fontWeight: FontWeight.w700,
  fontSize: 16,
  color: Color(0xFF059669)),
+ ),
+ ],
+ ),
+ if (item.description.isNotEmpty && item.description != item.name) ...[
+ const SizedBox(height: 6),
+ Text(
+ item.description,
+ style: const TextStyle(
+ fontSize: 13, color: Color(0xFF4B5563)),
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis,
+ ),
+ ],
+ // New: Estimated Cost / Quantity + Schedule Impact
+ const SizedBox(height: 8),
+ Wrap(
+ spacing: 12,
+ runSpacing: 6,
+ children: [
+ if (item.estimatedCostOrQuantity.isNotEmpty)
+ _detailChip(
+ icon: Icons.attach_money_outlined,
+ label: 'Est: ${item.estimatedCostOrQuantity}',
+ color: const Color(0xFF059669),
+ ),
+ if (item.scheduleImpact.isNotEmpty ||
+ item.scheduleImpactWeeks > 0)
+ _detailChip(
+ icon: Icons.schedule_outlined,
+ label: item.scheduleImpactWeeks > 0
+ ? 'Schedule: ${item.scheduleImpactWeeks.toStringAsFixed(item.scheduleImpactWeeks.truncateToDouble() == item.scheduleImpactWeeks ? 0 : 1)} wk'
+ '${item.scheduleImpact.isNotEmpty ? ' — ${item.scheduleImpact}' : ''}'
+ : 'Schedule: ${item.scheduleImpact}',
+ color: const Color(0xFFD97706),
+ ),
+ if (item.responsibleDiscipline.isNotEmpty)
+ _detailChip(
+ icon: Icons.engineering_outlined,
+ label: item.responsibleDiscipline,
+ color: const Color(0xFF2563EB),
+ ),
+ if (item.triggerContext.isNotEmpty)
+ _detailChip(
+ icon: Icons.public_outlined,
+ label: item.triggerContext,
+ color: const Color(0xFF7C3AED),
  ),
  ],
  ),
@@ -730,6 +955,26 @@ class _FrontEndPlanningAllowanceScreenState
  fontSize: 12,
  fontWeight: FontWeight.w600,
  color: Color(0xFF374151)),
+ ),
+ ],
+ ),
+ ],
+ if (item.assumptions.isNotEmpty) ...[
+ const SizedBox(height: 6),
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Icon(Icons.lightbulb_outline,
+ size: 14, color: Color(0xFF6B7280)),
+ const SizedBox(width: 4),
+ Expanded(
+ child: Text(
+ 'Assumptions: ${item.assumptions}',
+ style: const TextStyle(
+ fontSize: 12, color: Color(0xFF4B5563)),
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis,
+ ),
  ),
  ],
  ),
@@ -856,6 +1101,36 @@ class _FrontEndPlanningAllowanceScreenState
  ],
  ),
  ],
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _detailChip({
+ required IconData icon,
+ required String label,
+ required Color color,
+ }) {
+ return Container(
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+ decoration: BoxDecoration(
+ color: color.withOpacity(0.08),
+ borderRadius: BorderRadius.circular(6),
+ border: Border.all(color: color.withOpacity(0.25)),
+ ),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Icon(icon, size: 12, color: color),
+ const SizedBox(width: 4),
+ Text(
+ label,
+ style: TextStyle(
+ fontSize: 11,
+ fontWeight: FontWeight.w600,
+ color: color,
+ ),
  ),
  ],
  ),
@@ -1172,11 +1447,18 @@ class _CostMetaItem extends StatelessWidget {
  }
 }
 
-class _BottomOverlay extends StatelessWidget {
+class _BottomOverlay extends StatefulWidget {
  final VoidCallback onBack;
  final VoidCallback onNext;
 
  const _BottomOverlay({required this.onBack, required this.onNext});
+
+ @override
+ State<_BottomOverlay> createState() => _BottomOverlayState();
+}
+
+class _BottomOverlayState extends State<_BottomOverlay> {
+ bool _bannerDismissed = false;
 
  @override
  Widget build(BuildContext context) {
@@ -1198,6 +1480,7 @@ class _BottomOverlay extends StatelessWidget {
  bottom: 24,
  child: Row(
  children: [
+ if (!_bannerDismissed)
  Container(
  padding: const EdgeInsets.symmetric(
  horizontal: 18, vertical: 16),
@@ -1208,24 +1491,40 @@ class _BottomOverlay extends StatelessWidget {
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
- children: const [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
- SizedBox(width: 10),
- Text('AI',
+ children: [
+ const Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ const SizedBox(width: 10),
+ const Text('AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
  color: Color(0xFF2563EB))),
- SizedBox(width: 12),
- Text(
+ const SizedBox(width: 12),
+ const Text(
  'Define budget allowances and contingency plans.',
  style: TextStyle(color: Color(0xFF1F2937)),
+ ),
+ const SizedBox(width: 8),
+ Tooltip(
+ message: 'Close banner',
+ child: InkWell(
+ onTap: () => setState(() => _bannerDismissed = true),
+ borderRadius: BorderRadius.circular(12),
+ child: const Padding(
+ padding: EdgeInsets.all(4),
+ child: Icon(
+ Icons.close,
+ size: 16,
+ color: Color(0xFF6B7280),
+ ),
+ ),
+ ),
  ),
  ],
  ),
  ),
  const SizedBox(width: 16),
  OutlinedButton(
- onPressed: onBack,
+ onPressed: widget.onBack,
  style: OutlinedButton.styleFrom(
  foregroundColor: const Color(0xFF374151),
  side: const BorderSide(color: Color(0xFFD1D5DB)),
@@ -1242,7 +1541,7 @@ class _BottomOverlay extends StatelessWidget {
  ),
  const SizedBox(width: 12),
  ElevatedButton(
- onPressed: onNext,
+ onPressed: widget.onNext,
  style: ElevatedButton.styleFrom(
  backgroundColor: const Color(0xFFFFC812),
  foregroundColor: const Color(0xFF111827),

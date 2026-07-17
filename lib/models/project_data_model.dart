@@ -2146,6 +2146,20 @@ class FrontEndPlanningData {
   // Milestone date fields
   String milestoneStartDate;
   String milestoneEndDate;
+  /// 2-step SME review verification for milestones.
+  bool milestoneSmeReviewStep1;
+  bool milestoneSmeReviewStep2;
+  /// Charter lifecycle flags. Once the charter is approved, the FEP
+  /// sections are locked (view-only) and the Planning phase unlocks.
+  bool charterApproved;
+  DateTime? charterApprovedAt;
+  /// Once true, all Business Case sections are locked (view-only, no AI
+  /// generate). Triggered when the preferred solution is locked.
+  bool businessCaseLocked;
+  /// When true, the user opted to skip the Business Case workflow
+  /// because the solution was already known. The project description
+  /// carries the basis for FEP documentation instead.
+  bool skippedBusinessCase;
   List<RequirementItem> requirementItems;
   // Persisted scenario matrix items
   List<ScenarioRecord> scenarioMatrixItems;
@@ -2190,6 +2204,12 @@ class FrontEndPlanningData {
     this.contracts = '',
     this.milestoneStartDate = '',
     this.milestoneEndDate = '',
+    this.milestoneSmeReviewStep1 = false,
+    this.milestoneSmeReviewStep2 = false,
+    this.charterApproved = false,
+    this.charterApprovedAt,
+    this.businessCaseLocked = false,
+    this.skippedBusinessCase = false,
     this.detailsConfirmed = false,
     List<RequirementItem>? requirementItems,
     List<ScenarioRecord>? scenarioMatrixItems,
@@ -2243,6 +2263,12 @@ class FrontEndPlanningData {
     String? contracts,
     String? milestoneStartDate,
     String? milestoneEndDate,
+    bool? milestoneSmeReviewStep1,
+    bool? milestoneSmeReviewStep2,
+    bool? charterApproved,
+    DateTime? charterApprovedAt,
+    bool? businessCaseLocked,
+    bool? skippedBusinessCase,
     List<RequirementItem>? requirementItems,
     List<ScenarioRecord>? scenarioMatrixItems,
     List<RoleItem>? securityRoles,
@@ -2279,6 +2305,12 @@ class FrontEndPlanningData {
       contracts: contracts ?? this.contracts,
       milestoneStartDate: milestoneStartDate ?? this.milestoneStartDate,
       milestoneEndDate: milestoneEndDate ?? this.milestoneEndDate,
+      milestoneSmeReviewStep1: milestoneSmeReviewStep1 ?? this.milestoneSmeReviewStep1,
+      milestoneSmeReviewStep2: milestoneSmeReviewStep2 ?? this.milestoneSmeReviewStep2,
+      charterApproved: charterApproved ?? this.charterApproved,
+      charterApprovedAt: charterApprovedAt ?? this.charterApprovedAt,
+      businessCaseLocked: businessCaseLocked ?? this.businessCaseLocked,
+      skippedBusinessCase: skippedBusinessCase ?? this.skippedBusinessCase,
       requirementItems: requirementItems ?? this.requirementItems,
       scenarioMatrixItems: scenarioMatrixItems ?? this.scenarioMatrixItems,
       securityRoles: securityRoles ?? this.securityRoles,
@@ -2319,6 +2351,12 @@ class FrontEndPlanningData {
         'contracts': contracts,
         'milestoneStartDate': milestoneStartDate,
         'milestoneEndDate': milestoneEndDate,
+        'milestoneSmeReviewStep1': milestoneSmeReviewStep1,
+        'milestoneSmeReviewStep2': milestoneSmeReviewStep2,
+        'charterApproved': charterApproved,
+        'charterApprovedAt': charterApprovedAt?.toIso8601String(),
+        'businessCaseLocked': businessCaseLocked,
+        'skippedBusinessCase': skippedBusinessCase,
         'allowanceItems': allowanceItems.map((e) => e.toJson()).toList(),
         'staffingRows': staffingRows.map((item) => item.toJson()).toList(),
         'technologyPersonnelItems':
@@ -2370,6 +2408,12 @@ class FrontEndPlanningData {
       contracts: json['contracts'] ?? '',
       milestoneStartDate: json['milestoneStartDate'] ?? '',
       milestoneEndDate: json['milestoneEndDate'] ?? '',
+      milestoneSmeReviewStep1: json['milestoneSmeReviewStep1'] == true,
+      milestoneSmeReviewStep2: json['milestoneSmeReviewStep2'] == true,
+      charterApproved: json['charterApproved'] == true,
+      charterApprovedAt: _parseFepDateTime(json['charterApprovedAt']),
+      businessCaseLocked: json['businessCaseLocked'] == true,
+      skippedBusinessCase: json['skippedBusinessCase'] == true,
       allowanceItems: (json['allowanceItems'] as List?)
               ?.map((e) => AllowanceItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -2453,6 +2497,21 @@ class FrontEndPlanningData {
           [],
       detailsConfirmed: json['detailsConfirmed'] ?? false,
     );
+  }
+}
+
+/// Top-level helper to parse a nullable ISO date string into a [DateTime].
+/// Used by [FrontEndPlanningData.fromJson] (which cannot see the
+/// private `safeParseDateTime` defined inside [ProjectDataModel.fromJson]).
+DateTime? _parseFepDateTime(Object? raw) {
+  if (raw == null) return null;
+  if (raw is DateTime) return raw;
+  final str = raw.toString().trim();
+  if (str.isEmpty) return null;
+  try {
+    return DateTime.parse(str);
+  } catch (_) {
+    return null;
   }
 }
 
@@ -2602,6 +2661,24 @@ class AllowanceItem {
   String releaseStatus;
   double releasedAmount;
   double actualAmount;
+  /// Allowance description (what the allowance covers).
+  String description;
+  /// Estimated cost OR quantity (e.g., "$50,000", "10% of base", "200 hrs").
+  String estimatedCostOrQuantity;
+  /// Schedule impact (if applicable) — short text describing schedule
+  /// exposure (e.g., "Adds 2 weeks to commissioning").
+  String scheduleImpact;
+  /// Schedule impact duration in weeks (numeric allowance for schedule
+  /// contingency tracking). Nullable/zero when not applicable.
+  double scheduleImpactWeeks;
+  /// Responsible discipline (e.g., "Civil", "Electrical", "Procurement").
+  String responsibleDiscipline;
+  /// Assumptions underpinning this allowance.
+  String assumptions;
+  /// Geographic / contextual trigger that suggested this allowance (e.g.,
+  /// "Hurricane exposure — Gulf Coast US", "Power instability — West Africa").
+  /// Populated by the auto-generation logic based on project location.
+  String triggerContext;
 
   AllowanceItem({
     required this.id,
@@ -2615,6 +2692,13 @@ class AllowanceItem {
     this.releaseStatus = 'Reserved',
     this.releasedAmount = 0.0,
     this.actualAmount = 0.0,
+    this.description = '',
+    this.estimatedCostOrQuantity = '',
+    this.scheduleImpact = '',
+    this.scheduleImpactWeeks = 0.0,
+    this.responsibleDiscipline = '',
+    this.assumptions = '',
+    this.triggerContext = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -2629,6 +2713,13 @@ class AllowanceItem {
         'releaseStatus': releaseStatus,
         'releasedAmount': releasedAmount,
         'actualAmount': actualAmount,
+        'description': description,
+        'estimatedCostOrQuantity': estimatedCostOrQuantity,
+        'scheduleImpact': scheduleImpact,
+        'scheduleImpactWeeks': scheduleImpactWeeks,
+        'responsibleDiscipline': responsibleDiscipline,
+        'assumptions': assumptions,
+        'triggerContext': triggerContext,
       };
 
   factory AllowanceItem.fromJson(Map<String, dynamic> json) {
@@ -2650,6 +2741,18 @@ class AllowanceItem {
       actualAmount: (json['actualAmount'] is num)
           ? (json['actualAmount'] as num).toDouble()
           : double.tryParse(json['actualAmount']?.toString() ?? '') ?? 0.0,
+      description: json['description']?.toString() ?? '',
+      estimatedCostOrQuantity:
+          json['estimatedCostOrQuantity']?.toString() ?? '',
+      scheduleImpact: json['scheduleImpact']?.toString() ?? '',
+      scheduleImpactWeeks: (json['scheduleImpactWeeks'] is num)
+          ? (json['scheduleImpactWeeks'] as num).toDouble()
+          : double.tryParse(json['scheduleImpactWeeks']?.toString() ?? '') ??
+              0.0,
+      responsibleDiscipline:
+          json['responsibleDiscipline']?.toString() ?? '',
+      assumptions: json['assumptions']?.toString() ?? '',
+      triggerContext: json['triggerContext']?.toString() ?? '',
     );
   }
 }

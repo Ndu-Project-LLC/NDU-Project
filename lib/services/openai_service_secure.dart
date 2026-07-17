@@ -612,6 +612,101 @@ class OpenAiServiceSecure {
     }
   }
 
+  /// Rewrite / polish an existing block of text using the project context.
+  /// The AI is instructed to:
+  ///   - fix grammar, spelling, and punctuation
+  ///   - tighten wording without changing meaning
+  ///   - preserve the user's intent and any technical terms / proper nouns
+  ///   - keep the original tone (professional, neutral)
+  ///   - return ONLY the rewritten text in JSON: `{"text": "..."}`
+  Future<String> rewriteExistingText({
+    required String section,
+    required String currentText,
+    required String projectContext,
+    int maxTokens = 900,
+    double temperature = 0.4,
+  }) async {
+    final trimmedText = currentText.trim();
+    if (trimmedText.isEmpty) return '';
+    if (!OpenAiConfig.isConfigured) {
+      throw const OpenAiNotConfiguredException();
+    }
+
+    final uri = OpenAiConfig.chatUri();
+    final headers = OpenAiConfig.headers();
+
+    final prompt = '''
+You are a senior editor for an enterprise project management workspace. Rewrite the user's existing text for the "$section" section so that it is clearer, more professional, and grammatically correct.
+
+Rules:
+- Preserve the user's intent and meaning. Do NOT introduce new facts not present in the original text or project context.
+- Keep all proper nouns, technical terms, numbers, dates, and acronyms exactly as written.
+- Tighten wordy phrasing and fix grammar, spelling, and punctuation.
+- Keep the tone professional and neutral.
+- Do NOT add headers, bullet markers, or formatting that wasn't in the original unless needed for clarity.
+- Return ONLY valid JSON: {"text": "<rewritten text here>"}
+
+Project context (for reference only — do not invent):
+"""
+${_escape(projectContext)}
+"""
+
+Original text to rewrite:
+"""
+${_escape(trimmedText)}
+"""
+''';
+
+    final body = jsonEncode(OpenAiConfig.wrapBody({
+      'model': OpenAiConfig.model,
+      'temperature': temperature,
+      'max_completion_tokens': maxTokens,
+      'response_format': {'type': 'json_object'},
+      'messages': [
+        {
+          'role': 'system',
+          'content': _nduProjectSystemPrompt(
+            specialistRole:
+                'senior editor polishing user-written project documentation',
+            strictJson: true,
+            extraRules:
+                'Preserve the user\'s voice and intent. Make minimal, high-value edits.',
+          ),
+        },
+        {
+          'role': 'user',
+          'content': prompt,
+        }
+      ],
+    }));
+
+    try {
+      final response = await _client
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 14));
+      if (response.statusCode == 401) throw Exception('Invalid API key');
+      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+            'OpenAI error ${response.statusCode}: ${response.body}');
+      }
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final content = OpenAiConfig.extractContent(data);
+      final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
+      final text = (parsed['text'] ??
+              parsed['section'] ??
+              parsed['content'] ??
+              '')
+          .toString()
+          .trim();
+      final cleanText = _stripAsterisks(text);
+      return cleanText;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<QualitySeedBundle> generateQualitySeedBundle({
     required String context,
     required String section,
@@ -2877,7 +2972,7 @@ $scaleConstraints
     final body = jsonEncode(OpenAiConfig.wrapBody({
       'model': OpenAiConfig.model,
       'temperature': 0.5,
-      'max_completion_tokens': 1200,
+      'max_completion_tokens': 1600,
       'response_format': {'type': 'json_object'},
       'messages': [
         {
@@ -2887,7 +2982,7 @@ $scaleConstraints
                 'financial program manager proposing realistic allowance and contingency items',
             strictJson: true,
             extraRules:
-                'Calibrate amounts and risk categories to the project scale and type in the provided context.',
+                'Calibrate amounts and risk categories to the project scale, type, and geographic/regional risk profile in the provided context. Always consider regional hazards (hurricanes in the US Gulf Coast / Caribbean, typhoons in East/Southeast Asia, power instability in parts of Africa/South Asia, security/civil unrest in fragile regions, seismic activity in Pacific Rim, winter storms in North America/Europe, monsoon flooding in South Asia).',
           ),
         },
         {
@@ -2900,7 +2995,7 @@ $scaleConstraints
     try {
       final response = await _client
           .post(uri, headers: headers, body: body)
-          .timeout(const Duration(seconds: 14));
+          .timeout(const Duration(seconds: 18));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw Exception(
             'OpenAI error ${response.statusCode}: ${response.body}');
@@ -2913,6 +3008,7 @@ $scaleConstraints
       final list = (parsed['items'] as List? ?? []);
 
       final result = <AllowanceItem>[];
+      var counter = DateTime.now().microsecondsSinceEpoch;
 for (final item in list) {
         if (item is! Map) continue;
         final map = item as Map<String, dynamic>;
@@ -2939,16 +3035,37 @@ for (final item in list) {
           appliesTo.add('Project Wide');
         }
 
+        // Schedule impact weeks — numeric, optional
+        double scheduleImpactWeeks = 0.0;
+        if (map['scheduleImpactWeeks'] is num) {
+          scheduleImpactWeeks = (map['scheduleImpactWeeks'] as num).toDouble();
+        } else {
+          scheduleImpactWeeks = double.tryParse(
+                  map['scheduleImpactWeeks']?.toString() ?? '') ??
+              0.0;
+        }
+
         result.add(AllowanceItem(
-          id: DateTime.now()
-              .microsecondsSinceEpoch
-              .toString(), // Will be unique enough in loop or re-assigned by caller
+          id: '${counter}_$result',
           name: name,
           type: (map['type'] ?? 'Other').toString(),
           amount: amount,
           appliesTo: appliesTo,
           notes: (map['notes'] ?? '').toString(),
+          description: (map['description'] ?? '').toString(),
+          estimatedCostOrQuantity:
+              (map['estimatedCostOrQuantity'] ?? map['estimatedCostOrQty'] ?? '')
+                  .toString(),
+          scheduleImpact: (map['scheduleImpact'] ?? '').toString(),
+          scheduleImpactWeeks: scheduleImpactWeeks,
+          responsibleDiscipline:
+              (map['responsibleDiscipline'] ?? map['discipline'] ?? '')
+                  .toString(),
+          assumptions: (map['assumptions'] ?? '').toString(),
+          triggerContext: (map['triggerContext'] ?? map['trigger'] ?? '')
+              .toString(),
         ));
+        counter += 1;
       }
       if (result.isNotEmpty) return result;
       throw Exception('OpenAI returned no allowance items');
@@ -2960,18 +3077,46 @@ for (final item in list) {
   String _allowancesPrompt(String context) {
     final c = _escape(context);
     return '''
-Based on the project context below, suggest 3-5 specific Allowance or Contingency items.
-These should represent set-aside funds for specific uncertain areas (e.g. Training, Staffing, Tech, General Contingency).
+Based on the project context below, suggest 4-7 specific Allowance or Contingency items — including basic allowances and contingencies for both COST and SCHEDULE.
+
+CRITICAL: Factor in the project's LOCATION, REGION, and PROJECT TYPE to generate context-appropriate allowances. Examples of regional considerations:
+- US Gulf Coast / Caribbean / SE US: hurricane season contingency, flood allowance, evacuation/remobilization
+- East / Southeast Asia: typhoon contingency, monsoon flooding allowance, supply chain disruption
+- West / Central Africa: power instability allowance (generator fuel, UPS), security escort contingency, customs delay
+- South Asia: monsoon schedule allowance, civil unrest contingency, power backup
+- Middle East: extreme heat schedule allowance (reduced productivity hours), security contingency
+- Pacific Rim: seismic design allowance, tsunami contingency
+- Europe / North America: winter weather schedule allowance, environmental compliance contingency
+- Remote sites: logistics/mobilization allowance, communications infrastructure, medical evac
+
+For EACH item, populate these fields:
+- name: short item name (e.g. "Hurricane Schedule Contingency")
+- type: one of Contingency, Training, Staffing, Tech, Other
+- amount: numeric USD estimate (e.g. 25000)
+- estimatedCostOrQuantity: human-readable cost or quantity (e.g. "\$25,000", "10% of base cost", "200 person-hours")
+- scheduleImpact: short text describing schedule exposure (e.g. "Adds 2 weeks to commissioning after storm")
+- scheduleImpactWeeks: numeric weeks of schedule allowance (e.g. 2, 0 if not applicable)
+- responsibleDiscipline: which discipline owns this (e.g. "Project Controls", "Procurement", "Civil", "IT")
+- appliesTo: array of strings (e.g. ["Schedule", "Estimate"])
+- assumptions: brief assumptions underpinning the allowance
+- triggerContext: WHY this allowance was suggested (e.g. "Hurricane exposure — Gulf Coast US", "Power instability — West Africa")
+- notes: brief justification
 
 Return ONLY valid JSON with this exact structure:
 {
   "items": [
     {
-      "name": "Item Name (e.g. End User Training)",
-      "type": "One of: Contingency, Training, Staffing, Tech, Other",
-      "amount": 15000,
-      "appliesTo": ["Operations", "IT"],
-      "notes": "Brief justification"
+      "name": "Hurricane Schedule Contingency",
+      "type": "Contingency",
+      "amount": 50000,
+      "estimatedCostOrQuantity": "\$50,000",
+      "scheduleImpact": "Up to 3 weeks delay during hurricane season",
+      "scheduleImpactWeeks": 3,
+      "responsibleDiscipline": "Project Controls",
+      "appliesTo": ["Schedule", "Estimate"],
+      "assumptions": "Assumes 1 named storm impact per construction season",
+      "triggerContext": "Hurricane exposure — Gulf Coast US",
+      "notes": "Covers demobilization/remobilization and storm protection"
     }
   ]
 }

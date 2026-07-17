@@ -6,8 +6,12 @@
 /// Shows: executive KPIs, health indicators, EVM metrics (CPI/SPI),
 /// work package summary, open change requests, variance alerts.
 
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/project_controls/models/project_controls_models.dart';
 import 'package:ndu_project/project_controls/providers/project_controls_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
@@ -169,7 +173,7 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                   children: [
                     _DashboardTab(state: state, aiContext: aiContext, aiMilestones: aiMilestones, aiCostForecast: aiCostForecast, changeRecommendations: changeRecommendations),
                     _ScopeTrackingTab(state: state, aiMilestones: aiMilestones, aiContext: aiContext),
-                    _CostControlTab(state: state, aiCostForecast: aiCostForecast, aiContext: aiContext),
+                    _CostControlTab(state: state, aiCostForecast: aiCostForecast, aiContext: aiContext, projectData: projectData),
                     _ChangeMgmtTab(state: state, provider: provider, changeRecommendations: changeRecommendations, aiContext: aiContext),
                     _ForecastingTab(state: state),
                     _BaselineMgmtTab(state: state, provider: provider),
@@ -715,10 +719,12 @@ class _CostControlTab extends StatelessWidget {
   final ProjectControlsState state;
   final String aiCostForecast;
   final String aiContext;
+  final ProjectDataModel projectData;
   const _CostControlTab({
     required this.state,
     required this.aiCostForecast,
     required this.aiContext,
+    required this.projectData,
   });
 
   @override
@@ -786,7 +792,296 @@ class _CostControlTab extends StatelessWidget {
         ],
         // Cost breakdown per WP
         ...state.workPackages.map((wp) => _costCard(wp)),
+        const SizedBox(height: 28),
+        // ── Allowance & Contingency Tracking ─────────────────────────
+        _buildAllowanceTrackingSection(projectData),
       ]),
+    );
+  }
+
+  Widget _buildAllowanceTrackingSection(ProjectDataModel projectData) {
+    final items = projectData.frontEndPlanning.allowanceItems;
+    final formatter = NumberFormat.simpleCurrency(decimalDigits: 0);
+    final totalReserved = items.fold<double>(0.0, (s, i) => s + i.amount);
+    final totalReleased = items.fold<double>(0.0, (s, i) => s + i.releasedAmount);
+    final totalActual = items.fold<double>(0.0, (s, i) => s + i.actualAmount);
+    final totalScheduleWeeks = items.fold<double>(
+        0.0, (s, i) => s + i.scheduleImpactWeeks);
+    final reservedCount = items.where((i) => i.releaseStatus == 'Reserved').length;
+    final releasedCount = items
+        .where((i) =>
+            i.releaseStatus == 'Released' ||
+            i.releaseStatus == 'Partially Released')
+        .length;
+    final consumedCount = items.where((i) => i.releaseStatus == 'Consumed').length;
+    final closedCount = items.where((i) => i.releaseStatus == 'Closed').length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.savings_outlined,
+                color: Color(0xFFD97706), size: 20),
+            const SizedBox(width: 8),
+            const Text('Allowance & Contingency Tracking',
+                style: TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700)),
+            const Spacer(),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${items.length} item${items.length == 1 ? "" : "s"}',
+                style: const TextStyle(
+                    color: Color(0xFFD97706),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'Live tracking of allowance and contingency items as the project '
+          'progresses. Updated when items are delayed, moved, added, '
+          'cancelled, or consumed.',
+          style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+        ),
+        const SizedBox(height: 14),
+        // Summary tiles
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _allowanceSummaryTile(
+              label: 'Total Reserved',
+              value: formatter.format(totalReserved),
+              icon: Icons.account_balance_wallet_outlined,
+              color: const Color(0xFF2563EB),
+            ),
+            _allowanceSummaryTile(
+              label: 'Released',
+              value: formatter.format(totalReleased),
+              icon: Icons.unarchive_outlined,
+              color: const Color(0xFFD97706),
+            ),
+            _allowanceSummaryTile(
+              label: 'Actual Consumed',
+              value: formatter.format(totalActual),
+              icon: Icons.trending_down_rounded,
+              color: const Color(0xFFDC2626),
+            ),
+            _allowanceSummaryTile(
+              label: 'Schedule Allowance',
+              value: '${totalScheduleWeeks.toStringAsFixed(totalScheduleWeeks.truncateToDouble() == totalScheduleWeeks ? 0 : 1)} wks',
+              icon: Icons.schedule_outlined,
+              color: const Color(0xFF7C3AED),
+            ),
+            _allowanceSummaryTile(
+              label: 'Status Mix',
+              value: '$reservedCount Rsv • $releasedCount Rel • $consumedCount Con • $closedCount Cls',
+              icon: Icons.pie_chart_outline,
+              color: const Color(0xFF059669),
+              small: true,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (items.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: const Column(
+              children: [
+                Icon(Icons.inbox_outlined,
+                    size: 36, color: Color(0xFF9CA3AF)),
+                SizedBox(height: 10),
+                Text('No allowance items to track yet.',
+                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+                SizedBox(height: 4),
+                Text(
+                    'Define allowances in Front End Planning → Allowance to '
+                    'begin tracking them here as the project progresses.',
+                    style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 11),
+                    textAlign: TextAlign.center),
+              ],
+            ),
+          )
+        else
+          ...items.map((item) => _allowanceTrackingCard(item, formatter)),
+      ],
+    );
+  }
+
+  Widget _allowanceSummaryTile({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+    bool small = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(label.toUpperCase(),
+                  style: TextStyle(
+                      color: color.withOpacity(0.85),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6)),
+              const SizedBox(height: 2),
+              Text(value,
+                  style: TextStyle(
+                      color: color,
+                      fontSize: small ? 11 : 14,
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _allowanceTrackingCard(AllowanceItem item, NumberFormat formatter) {
+    final burnRate = item.amount > 0
+        ? (item.actualAmount / item.amount).clamp(0.0, 2.0)
+        : 0.0;
+    final Color statusColor;
+    switch (item.releaseStatus) {
+      case 'Released':
+        statusColor = const Color(0xFFD97706);
+        break;
+      case 'Partially Released':
+        statusColor = const Color(0xFFF59E0B);
+        break;
+      case 'Consumed':
+        statusColor = const Color(0xFFDC2626);
+        break;
+      case 'Closed':
+        statusColor = const Color(0xFF6B7280);
+        break;
+      default:
+        statusColor = const Color(0xFF2563EB);
+    }
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(item.name,
+                    style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700)),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: statusColor.withOpacity(0.35)),
+                ),
+                child: Text(item.releaseStatus,
+                    style: TextStyle(
+                        color: statusColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+          if (item.description.isNotEmpty &&
+              item.description != item.name) ...[
+            const SizedBox(height: 4),
+            Text(item.description,
+                style: const TextStyle(
+                    color: Color(0xFF6B7280), fontSize: 11)),
+          ],
+          const SizedBox(height: 8),
+          // Burn rate progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: burnRate,
+              backgroundColor: const Color(0xFFF3F4F6),
+              valueColor: AlwaysStoppedAnimation(burnRate > 1.0
+                  ? const Color(0xFFDC2626)
+                  : burnRate > 0.75
+                      ? const Color(0xFFD97706)
+                      : const Color(0xFF10B981)),
+              minHeight: 6,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 14,
+            runSpacing: 4,
+            children: [
+              _metaText('Reserved', formatter.format(item.amount)),
+              _metaText('Released', formatter.format(item.releasedAmount)),
+              _metaText('Actual', formatter.format(item.actualAmount)),
+              if (item.scheduleImpactWeeks > 0)
+                _metaText('Schedule wks',
+                    item.scheduleImpactWeeks.toStringAsFixed(1)),
+              if (item.responsibleDiscipline.isNotEmpty)
+                _metaText('Discipline', item.responsibleDiscipline),
+              if (item.triggerContext.isNotEmpty)
+                _metaText('Trigger', item.triggerContext),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metaText(String label, String value) {
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(color: Color(0xFF6B7280), fontSize: 11),
+        children: [
+          TextSpan(
+              text: '$label: ',
+              style: const TextStyle(fontWeight: FontWeight.w600)),
+          TextSpan(
+              text: value,
+              style: const TextStyle(color: Color(0xFF111827))),
+        ],
+      ),
     );
   }
 
@@ -3652,7 +3947,7 @@ class _RiskHeatmapPainter extends CustomPainter {
     }
 
     // Axis labels (probability on bottom, impact on left)
-    final labelPainter = TextPainter(textDirection: TextDirection.ltr);
+    final labelPainter = TextPainter(textDirection: ui.TextDirection.ltr);
     final labelStyle = TextStyle(
         color: const Color(0xFF6B7280),
         fontSize: 10,
@@ -3881,7 +4176,7 @@ class _ResourceHistogramPainter extends CustomPainter {
 
     // Y-axis grid (4 lines)
     final gridPaint = Paint()..color = const Color(0xFFE4E7EC)..strokeWidth = 1;
-    final labelPainter = TextPainter(textDirection: TextDirection.ltr);
+    final labelPainter = TextPainter(textDirection: ui.TextDirection.ltr);
     final labelStyle = TextStyle(
         color: const Color(0xFF6B7280),
         fontSize: 9,

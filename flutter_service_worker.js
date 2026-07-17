@@ -1,69 +1,31 @@
 'use strict';
 
-// =============================================================================
-// NDU Project — Custom Flutter Service Worker (root deployment)
-// =============================================================================
-// See web/flutter_service_worker.js for full documentation. This is the same
-// versioned-cache SW, placed at the repo root for deployments serving from "/".
-// =============================================================================
-
-const _NDU_RAW_STAMP = 'NDU_BUILD_STAMP';
-const NDU_BUILD_STAMP =
-  (_NDU_RAW_STAMP && _NDU_RAW_STAMP !== 'NDU_BUILD_STAMP')
-    ? _NDU_RAW_STAMP
-    : 'dev-local';
-
-const CACHE_NAME = 'ndu-flutter-app-v' + NDU_BUILD_STAMP;
-
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[NDU SW] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
+    (async () => {
+      try {
+        await self.registration.unregister();
+      } catch (e) {
+        console.warn('Failed to unregister the service worker:', e);
+      }
+
+      try {
+        const clients = await self.clients.matchAll({
+          type: 'window',
+        });
+        // Reload clients to ensure they are not using the old service worker.
+        clients.forEach((client) => {
+          if (client.url && 'navigate' in client) {
+            client.navigate(client.url);
           }
-          return Promise.resolve();
-        })
-      ))
-      .then(() => self.clients.claim())
+        });
+      } catch (e) {
+        console.warn('Failed to navigate some service worker clients:', e);
+      }
+    })()
   );
-});
-
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
-  const isNavigation = event.request.mode === 'navigate';
-
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone).catch((e) => {
-              console.warn('[NDU SW] Cache put failed for', event.request.url, e);
-            });
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        if (isNavigation) {
-          return caches.match('index.html').then((r) => r || caches.match(event.request));
-        }
-        return caches.match(event.request);
-      })
-  );
-});
-
-self.addEventListener('message', (event) => {
-  if (event.data === 'ndu-skip-waiting') {
-    self.skipWaiting();
-  }
 });

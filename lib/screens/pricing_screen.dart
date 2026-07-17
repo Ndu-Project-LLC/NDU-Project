@@ -238,8 +238,6 @@ class _PricingScreenState extends State<PricingScreen> {
                     children: [
                       _buildTopNav(context, isDesktop: isDesktop),
                       const SizedBox(height: 24),
-                      _buildHeroSection(context, isDesktop: isDesktop),
-                      const SizedBox(height: 28),
                       _buildTrustStrip(),
                       const SizedBox(height: 28),
                       _buildPositioningSection(

@@ -1076,9 +1076,7 @@ Rules:
       child: milestones.isEmpty
           ? const Text('No milestones available yet.',
               style: TextStyle(fontSize: 13, color: _kSecondaryText))
-          : FullScreenTableWrapper(
-          title: 'Milestones Table',
-          child: SingleChildScrollView(
+          : SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: buildNduDataTable(context: context, 
                 columnSpacing: 20,
@@ -1154,83 +1152,6 @@ Rules:
                 }).toList(),
               ),
             ),
-          tableBuilder: (fsContext) => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: buildNduDataTable(context: context, 
-                columnSpacing: 20,
-                horizontalMargin: 12,
-                headingRowColor: const Color(0xFFF5F7FB),
-                columns: const [
-                  DataColumn(
-                      label: Text('Milestone',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                  DataColumn(
-                      label: Text('Date',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                  DataColumn(
-                      label: Text('Discipline',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                  DataColumn(
-                      label: Text('Mapped Goals',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                  DataColumn(
-                      label: Text('References',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                  DataColumn(
-                      label: Text('Comments',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                ],
-                rows: milestones.map((milestone) {
-                  final goalLabels = _goalLabelsForMilestone(milestone.id);
-                  return DataRow(cells: [
-                    DataCell(Text(milestone.name.trim().isEmpty
-                        ? 'Untitled milestone'
-                        : milestone.name.trim())),
-                    DataCell(Text(_formatDateString(milestone.dueDate))),
-                    DataCell(Text(milestone.discipline.trim().isEmpty
-                        ? '—'
-                        : milestone.discipline.trim())),
-                    DataCell(SizedBox(
-                      width: 220,
-                      child: Text(goalLabels.isEmpty
-                          ? 'Unmapped'
-                          : goalLabels.join(', ')),
-                    )),
-                    DataCell(SizedBox(
-                      width: 160,
-                      child: Text(milestone.references.trim().isEmpty
-                          ? '—'
-                          : milestone.references.trim()),
-                    )),
-                    DataCell(SizedBox(
-                      width: 220,
-                      child: Text(milestone.comments.trim().isEmpty
-                          ? '—'
-                          : milestone.comments.trim()),
-                    )),
-                  ]);
-                }).toList(),
-              ),
-            ),
-          ),
     );
   }
 

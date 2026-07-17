@@ -1622,8 +1622,8 @@ class Milestone {
     this.references = '',
     this.comments = '',
   }) : id = (id == null || id.trim().isEmpty)
-            ? DateTime.now().microsecondsSinceEpoch.toString()
-            : id;
+          ? DateTime.now().microsecondsSinceEpoch.toString()
+          : id;
 
   Map<String, dynamic> toJson() => {
         'id': id,

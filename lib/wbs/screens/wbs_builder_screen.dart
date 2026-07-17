@@ -2050,13 +2050,8 @@ Guidelines:
         return;
       }
 
-      final addedNodes = <({String name, String id, String description})>[];
-      final isDisciplineUnlimited =
-          wbs.framework == WBSFramework.waterfallDiscipline &&
-              wbs.methodology == ProjectMethodology.waterfall;
-      final maxToAdd = isDisciplineUnlimited
-          ? 5 - wbs.level0.children.length
-          : 3 - wbs.level0.children.length;
+      int added = 0;
+      final maxToAdd = 3 - wbs.level0.children.length;
       for (final line in lines.take(maxToAdd > 0 ? maxToAdd : 0)) {
         final parts = line.split('|');
         if (parts.length >= 2) {

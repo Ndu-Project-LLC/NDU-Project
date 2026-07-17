@@ -177,9 +177,6 @@ class LandingPageScreen extends StatelessWidget {
     return PopupMenuButton<String>(
       onSelected: (value) {
         switch (value) {
-          case 'how':
-            _scrollTo(context, 'how');
-            break;
           case 'diff':
             _scrollTo(context, 'diff');
             break;
@@ -195,7 +192,6 @@ class LandingPageScreen extends StatelessWidget {
         }
       },
       itemBuilder: (context) => const [
-        PopupMenuItem(value: 'how', child: Text('How It Works')),
         PopupMenuItem(value: 'diff', child: Text('Differentiator')),
         PopupMenuItem(value: 'usecases', child: Text('Use Cases')),
         PopupMenuItem(value: 'demo', child: Text('Demo')),

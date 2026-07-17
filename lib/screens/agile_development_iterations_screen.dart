@@ -9,7 +9,10 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
+import 'package:ndu_project/services/epic_feature_service.dart';
 import 'package:ndu_project/models/agile_task.dart';
+import 'package:ndu_project/models/epic_model.dart';
+import 'package:ndu_project/models/feature_model.dart';
 import 'package:ndu_project/utils/form_validation_engine.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
@@ -40,13 +43,15 @@ class AgileDevelopmentIterationsScreen extends StatefulWidget {
 
 class _AgileDevelopmentIterationsScreenState
  extends State<AgileDevelopmentIterationsScreen> {
- final Set<String> _selectedFilters = {'All'};
- List<AgileTask> _tasks = [];
- List<String> _availableRoles = [];
- bool _isLoading = false;
- bool _isRegeneratingAll = false;
- bool _autoGenerationTriggered = false;
- bool _isAutoGenerating = false;
+  final Set<String> _selectedFilters = {'All'};
+  List<AgileTask> _tasks = [];
+  List<Epic> _epics = [];
+  Map<String, List<Feature>> _featuresByEpic = {};
+  List<String> _availableRoles = [];
+  bool _isLoading = false;
+  bool _isRegeneratingAll = false;
+  bool _autoGenerationTriggered = false;
+  bool _isAutoGenerating = false;
 
  String? get _projectId {
  try {
@@ -66,28 +71,37 @@ class _AgileDevelopmentIterationsScreenState
  });
  }
 
- Future<void> _loadTasks() async {
- final projectId = _projectId;
- if (projectId == null) return;
+  Future<void> _loadTasks() async {
+    final projectId = _projectId;
+    if (projectId == null) return;
 
- setState(() => _isLoading = true);
- try {
- final tasks =
- await ExecutionPhaseService.loadAgileTasks(projectId: projectId);
- if (mounted) {
- setState(() {
- _tasks = tasks;
- _isLoading = false;
- });
- }
- await _autoGenerateIfNeeded();
- } catch (e) {
- debugPrint('Error loading agile tasks: $e');
- if (mounted) {
- setState(() => _isLoading = false);
- }
- }
- }
+    setState(() => _isLoading = true);
+    try {
+      final tasks =
+          await ExecutionPhaseService.loadAgileTasks(projectId: projectId);
+      // Also load epics and features for grouping
+      final epics = await EpicFeatureService.loadEpics(projectId);
+      final featuresByEpic = <String, List<Feature>>{};
+      for (final epic in epics) {
+        featuresByEpic[epic.id] =
+            await EpicFeatureService.loadFeatures(projectId, epic.id);
+      }
+      if (mounted) {
+        setState(() {
+          _tasks = tasks;
+          _epics = epics;
+          _featuresByEpic = featuresByEpic;
+          _isLoading = false;
+        });
+      }
+      await _autoGenerateIfNeeded();
+    } catch (e) {
+      debugPrint('Error loading agile tasks: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
  Future<void> _loadAvailableRoles() async {
  final projectId = _projectId;
@@ -484,57 +498,171 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- Widget _buildIterationTable() {
- final filteredTasks = _selectedFilters.contains('All')
- ? _tasks
- : _tasks.where((t) => _selectedFilters.contains(t.status)).toList();
+  String _epicTitleForTask(AgileTask task) {
+    final epic = _epics.where((e) => e.id == task.epicId);
+    return epic.isNotEmpty ? epic.first.title : 'Unassigned';
+  }
 
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE2E8F0)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Agile Iteration Table',
- style: TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827)),
- ),
- const SizedBox(height: 8),
- const Text(
- 'Track user stories, assign roles, and manage sprint velocity.',
- style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
- ),
- const SizedBox(height: 16),
- AgileIterationTableWidget(
- tasks: filteredTasks,
- availableRoles: _availableRoles,
- onUpdated: (task) {
- setState(() {
- final index = _tasks.indexWhere((t) => t.id == task.id);
- if (index != -1) {
- _tasks[index] = task;
- } else {
- _tasks.add(task);
- }
- });
- },
- onDeleted: (task) {
- setState(() {
- _tasks.removeWhere((t) => t.id == task.id);
- });
- },
- ),
- ],
- ),
- );
- }
+  String _featureTitleForTask(AgileTask task) {
+    if (task.featureId.isEmpty) return 'General';
+    for (final features in _featuresByEpic.values) {
+      final f = features.where((fe) => fe.id == task.featureId);
+      if (f.isNotEmpty) return f.first.title;
+    }
+    return 'General';
+  }
+
+  Widget _buildIterationTable() {
+    final filteredTasks = _selectedFilters.contains('All')
+        ? _tasks
+        : _tasks.where((t) => _selectedFilters.contains(t.status)).toList();
+
+    // Group tasks by Epic → Feature
+    final Map<String, Map<String, List<AgileTask>>> grouped = {};
+    for (final task in filteredTasks) {
+      final epicTitle = _epicTitleForTask(task);
+      final featureTitle = _featureTitleForTask(task);
+      grouped.putIfAbsent(epicTitle, () => {});
+      grouped[epicTitle]!.putIfAbsent(featureTitle, () => []);
+      grouped[epicTitle]![featureTitle]!.add(task);
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Agile Iteration Table',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827)),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Track user stories, assign roles, and manage sprint velocity.',
+            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 16),
+          if (grouped.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: Text('No tasks match the current filter.',
+                    style: TextStyle(color: Color(0xFF6B7280))),
+              ),
+            )
+          else
+            ...grouped.entries.map((epicEntry) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.speed, size: 16,
+                              color: const Color(0xFF7C3AED)),
+                          const SizedBox(width: 8),
+                          Text(
+                            epicEntry.key,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF111827),
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${epicEntry.value.values.fold<int>(0, (sum, tasks) => sum + tasks.fold<int>(0, (s, t) => s + t.storyPoints))} pts',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...epicEntry.value.entries.map((featureEntry) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 12, bottom: 4),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.flag, size: 14,
+                                      color: const Color(0xFFF59E0B)),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    featureEntry.key,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF374151),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${featureEntry.value.length} stories',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF9CA3AF),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            AgileIterationTableWidget(
+                              tasks: featureEntry.value,
+                              availableRoles: _availableRoles,
+                              onUpdated: (task) {
+                                setState(() {
+                                  final index = _tasks.indexWhere(
+                                      (t) => t.id == task.id);
+                                  if (index != -1) {
+                                    _tasks[index] = task;
+                                  } else {
+                                    _tasks.add(task);
+                                  }
+                                });
+                              },
+                              onDeleted: (task) {
+                                setState(() {
+                                  _tasks.removeWhere(
+                                      (t) => t.id == task.id);
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
 
  void _showAddTaskDialog(BuildContext context) {
  final userStoryController = TextEditingController();
@@ -543,11 +671,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final iterationNotesController = RichTextEditingController();
  final userStoryFieldKey = GlobalKey();
  final assignedRoleFieldKey = GlobalKey();
- String selectedRole = '';
- int selectedStoryPoints = 1;
- String selectedPriority = 'Medium';
- String selectedStatus = 'To-Do';
- Map<String, String> validationErrors = const {};
+  String selectedRole = '';
+  int selectedStoryPoints = 1;
+  String selectedPriority = 'Medium';
+  String selectedStatus = 'To-Do';
+  String selectedEpicId = _epics.isNotEmpty ? _epics.first.id : '';
+  String selectedFeatureId = '';
+  Map<String, String> validationErrors = const {};
 
  OutlineInputBorder fieldBorder(bool hasError) {
  return OutlineInputBorder(
@@ -656,12 +786,56 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  .map((s) {
  return DropdownMenuItem<String>(value: s, child: Text(s));
  }).toList(),
- onChanged: (value) => selectedStatus = value ?? 'To-Do',
- ),
- const SizedBox(height: 12),
- const SizedBox(height: 6),
- VoiceTextField(
- controller: taskDescriptionController,
+  onChanged: (value) => selectedStatus = value ?? 'To-Do',
+            ),
+            const SizedBox(height: 12),
+            if (_epics.isNotEmpty)
+              DropdownButtonFormField<String>(
+                value: selectedEpicId,
+                decoration: const InputDecoration(
+                    labelText: 'Epic *'),
+                items: _epics.map((e) => DropdownMenuItem<String>(
+                      value: e.id,
+                      child: Text(e.title.isNotEmpty
+                          ? e.title
+                          : 'Unnamed Epic'),
+                    )).toList(),
+                onChanged: (value) {
+                  setDialogState(() {
+                    selectedEpicId = value ?? '';
+                    selectedFeatureId =
+                        ''; // reset feature when epic changes
+                  });
+                },
+              ),
+            if (selectedEpicId.isNotEmpty &&
+                (_featuresByEpic[selectedEpicId]?.isNotEmpty == true))
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: DropdownButtonFormField<String>(
+                  value: selectedFeatureId.isNotEmpty
+                      ? selectedFeatureId
+                      : null,
+                  decoration: const InputDecoration(
+                      labelText: 'Feature'),
+                  items: _featuresByEpic[selectedEpicId]!
+                      .map((f) => DropdownMenuItem<String>(
+                            value: f.id,
+                            child: Text(f.title.isNotEmpty
+                                ? f.title
+                                : 'Unnamed Feature'),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedFeatureId = value ?? '';
+                    });
+                  },
+                ),
+              ),
+            const SizedBox(height: 12),
+            VoiceTextField(
+              controller: taskDescriptionController,
  decoration:
  const InputDecoration(labelText: 'Task Description'),
  maxLines: 3,
@@ -717,16 +891,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return;
  }
 
- final newTask = AgileTask(
- userStory: userStoryController.text,
- assignedRole: selectedRole,
- storyPoints: selectedStoryPoints,
- priority: selectedPriority,
- status: selectedStatus,
- taskDescription: taskDescriptionController.text,
- acceptanceCriteria: acceptanceCriteriaController.text,
- iterationNotes: iterationNotesController.text,
- );
+  final newTask = AgileTask(
+    userStory: userStoryController.text,
+    assignedRole: selectedRole,
+    storyPoints: selectedStoryPoints,
+    priority: selectedPriority,
+    status: selectedStatus,
+    taskDescription: taskDescriptionController.text,
+    acceptanceCriteria: acceptanceCriteriaController.text,
+    iterationNotes: iterationNotesController.text,
+    epicId: selectedEpicId,
+    featureId: selectedFeatureId,
+  );
 
  setState(() {
  _tasks.add(newTask);

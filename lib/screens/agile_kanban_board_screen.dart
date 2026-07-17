@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ndu_project/utils/agile_project_context_helper.dart';
+import 'package:ndu_project/models/agile_task.dart';
+import 'package:ndu_project/models/feature_model.dart';
+import 'package:ndu_project/services/agile_wireframe_service.dart';
+import 'package:ndu_project/services/epic_feature_service.dart';
+import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -8,9 +11,6 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
-/// ═══════════════════════════════════════════════════════════════════════════
-/// AGILE KANBAN BOARD — Visual Work Management Screen
-/// ═══════════════════════════════════════════════════════════════════════════
 class AgileKanbanBoardScreen extends StatefulWidget {
   const AgileKanbanBoardScreen({super.key});
 
@@ -36,110 +36,127 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
 
   bool _isLoading = true;
   bool _isSaving = false;
-
-  // Column definitions with WIP limits
-  final List<_KanbanColumn> _columns = [
-    _KanbanColumn(id: 'backlog', title: 'Backlog', accent: Color(0xFF6B7280), wipLimit: 999),
-    _KanbanColumn(id: 'ready', title: 'Ready', accent: Color(0xFF3B82F6), wipLimit: 8),
-    _KanbanColumn(id: 'in_progress', title: 'In Progress', accent: _kAccent, wipLimit: 5),
-    _KanbanColumn(id: 'in_review', title: 'In Review', accent: Color(0xFF8B5CF6), wipLimit: 3),
-    _KanbanColumn(id: 'done', title: 'Done', accent: Color(0xFF10B981), wipLimit: 999),
-  ];
-
-  late final Map<String, List<_KanbanCard>> _cardsByColumn;
+  List<_KanbanColumn> _columns = const [];
+  Map<String, Feature> _featureById = {};
+  Map<String, String> _epicTitleById = {};
+  List<AgileTask> _stories = [];
+  Map<String, List<AgileTask>> _storiesByColumn = {};
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
 
   @override
   void initState() {
     super.initState();
-    _cardsByColumn = {
-      for (final c in _columns) c.id: <_KanbanCard>[],
-    };
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
   Future<void> _loadData() async {
     final pid = _projectId;
-    final projectData = ProjectDataHelper.getData(context);
     if (pid == null) {
-      _seedProjectCards(projectData);
       if (mounted) setState(() => _isLoading = false);
       return;
     }
     setState(() => _isLoading = true);
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('projects')
-          .doc(pid)
-          .collection('execution_phase_entries')
-          .doc('agile_kanban_board')
-          .get();
-      final data = doc.data() ?? {};
-      final cards = data['cards'] as List? ?? [];
-      if (cards.isEmpty) {
-        _seedProjectCards(projectData);
-      } else {
-        for (final c in _columns) {
-          _cardsByColumn[c.id] = [];
-        }
-        for (final raw in cards) {
-          final m = raw as Map<String, dynamic>;
-          final card = _KanbanCard(
-            id: m['id'] as String? ?? '',
-            title: m['title'] as String? ?? 'Untitled',
-            description: m['description'] as String? ?? '',
-            points: (m['points'] as num?)?.toInt() ?? 0,
-            assignee: m['assignee'] as String? ?? 'Unassigned',
-            priority: m['priority'] as String? ?? 'Medium',
-            columnId: m['columnId'] as String? ?? 'backlog',
-            tags: (m['tags'] as List?)?.map((e) => e.toString()).toList() ?? [],
-          );
-          if (_cardsByColumn.containsKey(card.columnId)) {
-            _cardsByColumn[card.columnId]!.add(card);
-          }
+      final kanbanConfig = await AgileWireframeService.loadKanbanConfig(pid);
+      final epics = await EpicFeatureService.loadEpics(pid);
+      final featureById = <String, Feature>{};
+      final epicTitleById = <String, String>{};
+      for (final epic in epics) {
+        epicTitleById[epic.id] = epic.title;
+        final features = await EpicFeatureService.loadFeatures(pid, epic.id);
+        for (final feature in features) {
+          featureById[feature.id] = feature;
         }
       }
-      if (mounted) setState(() => _isLoading = false);
+      final stories =
+          await ExecutionPhaseService.loadAgileTasks(projectId: pid);
+      final columns = _buildColumnsFromConfig(kanbanConfig);
+      final grouped = {for (final c in columns) c.id: <AgileTask>[]};
+      for (final story in stories) {
+        final state = grouped.containsKey(story.workflowState)
+            ? story.workflowState
+            : columns.first.id;
+        grouped[state]!.add(story);
+      }
+      if (!mounted) return;
+      setState(() {
+        _columns = columns;
+        _featureById = featureById;
+        _epicTitleById = epicTitleById;
+        _stories = stories;
+        _storiesByColumn = grouped;
+        _isLoading = false;
+      });
     } catch (e) {
       debugPrint('Kanban load error: $e');
-      _seedProjectCards(projectData);
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _seedProjectCards(dynamic projectData) {
-    for (final column in _columns) {
-      _cardsByColumn[column.id] = [];
+  List<_KanbanColumn> _buildColumnsFromConfig(Map<String, dynamic> data) {
+    final rawCols = data['columns'] as List?;
+    if (rawCols == null || rawCols.isEmpty) {
+      return const [
+        _KanbanColumn(
+            id: 'backlog',
+            title: 'Backlog',
+            accent: Color(0xFF6B7280),
+            wipLimit: 999),
+        _KanbanColumn(
+            id: 'ready',
+            title: 'Ready',
+            accent: Color(0xFF3B82F6),
+            wipLimit: 8),
+        _KanbanColumn(
+            id: 'in_progress',
+            title: 'In Progress',
+            accent: _kAccent,
+            wipLimit: 5),
+        _KanbanColumn(
+            id: 'in_review',
+            title: 'In Review',
+            accent: Color(0xFF8B5CF6),
+            wipLimit: 3),
+        _KanbanColumn(
+            id: 'done',
+            title: 'Done',
+            accent: Color(0xFF10B981),
+            wipLimit: 999),
+      ];
     }
-    final items = AgileProjectContextHelper.workItems(projectData, limit: 16);
-    for (final item in items) {
-      final columnId = switch (item.status) {
-        'Done' => 'done',
-        'In Review' => 'in_review',
-        'In Progress' => 'in_progress',
-        'Ready' => 'ready',
-        'Blocked' => 'ready',
-        _ => 'backlog',
-      };
-      _cardsByColumn[columnId]!.add(
-        _KanbanCard(
-          id: item.id,
-          title: item.title,
-          description: item.description.isEmpty
-              ? '${item.category} pulled from project context.'
-              : item.description,
-          points: AgileProjectContextHelper.estimateStoryPoints(item.title),
-          assignee: item.owner.isEmpty ? 'Unassigned' : item.owner,
-          priority: item.priority,
-          columnId: columnId,
-          tags: [
-            item.category.toLowerCase().replaceAll(' ', '_'),
-            item.priority.toLowerCase(),
-          ],
-        ),
+    return rawCols.asMap().entries.map((entry) {
+      final item = Map<String, dynamic>.from(entry.value as Map);
+      final name = item['name']?.toString() ?? 'Column';
+      final id = _normalizeColumnId(name, fallback: 'column_${entry.key + 1}');
+      return _KanbanColumn(
+        id: id,
+        title: name,
+        accent: _accentForIndex(entry.key),
+        wipLimit: (item['wipLimit'] as num?)?.toInt() ?? 999,
       );
-    }
+    }).toList();
+  }
+
+  String _normalizeColumnId(String value, {required String fallback}) {
+    final normalized = value
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_+|_+$'), '');
+    return normalized.isEmpty ? fallback : normalized;
+  }
+
+  Color _accentForIndex(int index) {
+    const accents = [
+      Color(0xFF6B7280),
+      Color(0xFF3B82F6),
+      Color(0xFFF59E0B),
+      Color(0xFF8B5CF6),
+      Color(0xFFEF4444),
+      Color(0xFF10B981),
+      Color(0xFF0EA5E9),
+    ];
+    return accents[index % accents.length];
   }
 
   Future<void> _saveData() async {
@@ -147,56 +164,39 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     if (pid == null) return;
     setState(() => _isSaving = true);
     try {
-      final allCards = <Map<String, dynamic>>[];
-      for (final entry in _cardsByColumn.entries) {
-        for (final c in entry.value) {
-          allCards.add({
-            'id': c.id,
-            'title': c.title,
-            'description': c.description,
-            'points': c.points,
-            'assignee': c.assignee,
-            'priority': c.priority,
-            'columnId': entry.key,
-            'tags': c.tags,
-          });
-        }
-      }
-      await FirebaseFirestore.instance
-          .collection('projects')
-          .doc(pid)
-          .collection('execution_phase_entries')
-          .doc('agile_kanban_board')
-          .set({
-        'cards': allCards,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await ExecutionPhaseService.saveAgileTasks(
+          projectId: pid, tasks: _stories);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Kanban board saved'),
+          const SnackBar(
+            content: Text('Kanban workflow saved'),
+            duration: Duration(seconds: 2),
             backgroundColor: _kAccent,
-            duration: const Duration(seconds: 2),
           ),
         );
       }
-    } catch (e) {
-      debugPrint('Kanban save error: $e');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  void _moveCard(_KanbanCard card, String fromColumn, String toColumn) {
-    if (fromColumn == toColumn) return;
+  void _moveStory(AgileTask story, String toColumn) {
+    if (story.workflowState == toColumn) return;
     setState(() {
-      _cardsByColumn[fromColumn]?.removeWhere((c) => c.id == card.id);
-      _cardsByColumn[toColumn]?.add(card.copyWith(columnId: toColumn));
+      _storiesByColumn[story.workflowState]
+          ?.removeWhere((s) => s.id == story.id);
+      final updated = story.copyWith(workflowState: toColumn);
+      final index = _stories.indexWhere((s) => s.id == story.id);
+      if (index != -1) _stories[index] = updated;
+      _storiesByColumn.putIfAbsent(toColumn, () => []).add(updated);
     });
   }
 
-  void _showMoveSheet(_KanbanCard card) {
-    final currentCol = _columns.firstWhere((c) => c.id == card.columnId);
+  void _showMoveSheet(AgileTask story) {
+    final currentCol = _columns.firstWhere(
+      (c) => c.id == story.workflowState,
+      orElse: () => _columns.first,
+    );
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -215,7 +215,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                       fontWeight: FontWeight.w700,
                       color: _kHeadline)),
               const SizedBox(height: 4),
-              Text(card.title,
+              Text(story.userStory,
                   style: const TextStyle(fontSize: 13, color: _kMuted)),
               const SizedBox(height: 16),
               Wrap(
@@ -223,12 +223,12 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                 runSpacing: 8,
                 children: _columns
                     .map((c) => ChoiceChip(
-                          label: Text('${c.title}'),
+                          label: Text(c.title),
                           selected: c.id == currentCol.id,
                           selectedColor: c.accent.withOpacity(0.2),
                           onSelected: (_) {
                             Navigator.pop(ctx);
-                            _moveCard(card, currentCol.id, c.id);
+                            _moveStory(story, c.id);
                           },
                         ))
                     .toList(),
@@ -240,89 +240,94 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     );
   }
 
-  void _showCardDetail(_KanbanCard card) {
+  void _showStoryDetail(AgileTask story) {
+    final feature = _featureById[story.featureId];
+    final epicTitle = _epicTitleById[story.epicId] ?? 'Unknown Epic';
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         title: Row(
           children: [
-            _priorityDot(card.priority),
+            _priorityDot(story.priority),
             const SizedBox(width: 8),
-            Text(card.id,
+            Text(story.id,
                 style: const TextStyle(
                     fontSize: 14, color: _kMuted, fontWeight: FontWeight.w600)),
           ],
         ),
         content: SizedBox(
-          width: 460,
+          width: 480,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(card.title,
+              Text(story.userStory,
                   style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: _kHeadline)),
               const SizedBox(height: 12),
-              Text(card.description,
-                  style: const TextStyle(
-                      fontSize: 13, color: _kMuted, height: 1.5)),
+              Text(
+                story.taskDescription.isNotEmpty
+                    ? story.taskDescription
+                    : 'No description provided.',
+                style:
+                    const TextStyle(fontSize: 13, color: _kMuted, height: 1.5),
+              ),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _metaChip(Icons.bolt, '${card.points} pts', _kAccent),
-                  _metaChip(Icons.person_outline, card.assignee, Colors.blue),
-                  ...card.tags.map((t) =>
-                      _metaChip(Icons.label_outline, t, Colors.purple)),
+                  _metaChip(Icons.bolt, '${story.storyPoints} pts', _kAccent),
+                  _metaChip(
+                      Icons.person_outline,
+                      story.assignedRole.isNotEmpty
+                          ? story.assignedRole
+                          : 'Unassigned',
+                      Colors.blue),
+                  _metaChip(
+                      Icons.account_tree_outlined,
+                      feature?.title.isNotEmpty == true
+                          ? feature!.title
+                          : 'Feature unlinked',
+                      Colors.purple),
+                  _metaChip(
+                      Icons.layers_outlined,
+                      epicTitle.isNotEmpty ? epicTitle : 'Epic unlinked',
+                      Colors.teal),
+                  _metaChip(
+                      Icons.flag_outlined, story.readinessStatus, Colors.green),
                 ],
               ),
+              if (story.acceptanceCriteria.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text('Acceptance Criteria',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700, color: _kHeadline)),
+                const SizedBox(height: 6),
+                Text(story.acceptanceCriteria,
+                    style: const TextStyle(
+                        fontSize: 13, color: _kMuted, height: 1.5)),
+              ],
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close',
-                style: TextStyle(color: _kMuted)),
-          ),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close', style: TextStyle(color: _kMuted))),
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(ctx);
-              _showMoveSheet(card);
+              _showMoveSheet(story);
             },
             icon: const Icon(Icons.swap_horiz, size: 16),
             label: const Text('Move'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _kAccent,
-              foregroundColor: Colors.white,
-            ),
+                backgroundColor: _kAccent, foregroundColor: Colors.white),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _metaChip(IconData icon, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: color)),
         ],
       ),
     );
@@ -352,7 +357,10 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
         color: c,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(color: c.withOpacity(0.4), blurRadius: 6, offset: const Offset(0, 1)),
+          BoxShadow(
+              color: c.withOpacity(0.4),
+              blurRadius: 6,
+              offset: const Offset(0, 1)),
         ],
       ),
     );
@@ -383,8 +391,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                     ),
                   ),
                   SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: hp, vertical: 24),
+                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -431,9 +438,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
         const SizedBox(width: 12),
         const Text('Ndu Project',
             style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: _kHeadline)),
+                fontSize: 18, fontWeight: FontWeight.w800, color: _kHeadline)),
         const Spacer(),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -442,7 +447,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: _kAccent.withOpacity(0.3)),
           ),
-          child: const Text('SPRINT 24',
+          child: const Text('KANBAN FLOW',
               style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -454,14 +459,12 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   }
 
   Widget _buildSummaryBar() {
-    final total = _cardsByColumn.values
-        .fold<int>(0, (a, b) => a + b.length);
-    final inProgress = _cardsByColumn['in_progress']?.length ?? 0;
-    final done = _cardsByColumn['done']?.length ?? 0;
-    final pointsDone = (_cardsByColumn['done'] ?? [])
-        .fold<int>(0, (a, c) => a + c.points);
-    final pointsTotal = _cardsByColumn.values
-        .fold<int>(0, (a, list) => a + list.fold<int>(0, (b, c) => b + c.points));
+    final total = _stories.length;
+    final inProgress = _storiesByColumn['in_progress']?.length ?? 0;
+    final done = _storiesByColumn['done']?.length ?? 0;
+    final pointsDone = (_storiesByColumn['done'] ?? [])
+        .fold<int>(0, (a, c) => a + c.storyPoints);
+    final pointsTotal = _stories.fold<int>(0, (a, c) => a + c.storyPoints);
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -475,21 +478,18 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
       child: Row(
         children: [
           Expanded(
-            child: _summaryCell('Total Stories', '$total', Icons.layers),
-          ),
+              child: _summaryCell('Total Stories', '$total', Icons.layers)),
           Container(width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
           Expanded(
-            child: _summaryCell('In Progress', '$inProgress', Icons.flash_on),
-          ),
+              child:
+                  _summaryCell('In Progress', '$inProgress', Icons.flash_on)),
           Container(width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
           Expanded(
-            child: _summaryCell('Points Done', '$pointsDone / $pointsTotal',
-                Icons.stars),
-          ),
+              child: _summaryCell(
+                  'Points Done', '$pointsDone / $pointsTotal', Icons.stars)),
           Container(width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
           Expanded(
-            child: _summaryCell('Done', '$done', Icons.check_circle_outline),
-          ),
+              child: _summaryCell('Done', '$done', Icons.check_circle_outline)),
         ],
       ),
     );
@@ -542,16 +542,15 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   }
 
   Widget _buildColumn(_KanbanColumn col, {bool inner = false}) {
-    final cards = _cardsByColumn[col.id] ?? [];
-    final wipExceeded = cards.length > col.wipLimit && col.wipLimit < 999;
+    final stories = _storiesByColumn[col.id] ?? [];
+    final wipExceeded = stories.length > col.wipLimit && col.wipLimit < 999;
     return Container(
       decoration: inner
           ? BoxDecoration(
               border: Border(
-                right: col.id != 'done'
-                    ? const BorderSide(color: _kBorder, width: 1)
-                    : BorderSide.none,
-              ),
+                  right: col.id != _columns.last.id
+                      ? const BorderSide(color: _kBorder, width: 1)
+                      : BorderSide.none),
             )
           : BoxDecoration(
               color: _kSurface,
@@ -574,8 +573,8 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: BoxDecoration(
-                      color: col.accent, shape: BoxShape.circle),
+                  decoration:
+                      BoxDecoration(color: col.accent, shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 8),
                 Text(col.title,
@@ -585,13 +584,13 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                         color: _kHeadline)),
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                   decoration: BoxDecoration(
                     color: col.accent.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text('${cards.length}',
+                  child: Text('${stories.length}',
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -603,12 +602,11 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        wipExceeded ? Icons.warning_amber_rounded : Icons.check,
-                        size: 12,
-                        color: wipExceeded
-                            ? Colors.red
-                            : Colors.green,
-                      ),
+                          wipExceeded
+                              ? Icons.warning_amber_rounded
+                              : Icons.check,
+                          size: 12,
+                          color: wipExceeded ? Colors.red : Colors.green),
                       const SizedBox(width: 2),
                       Text(
                         'WIP ${col.wipLimit}',
@@ -627,19 +625,18 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
               margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text(
-                'WIP limit exceeded — pull blocked',
-                style: TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.w600),
-              ),
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6)),
+              child: const Text('WIP limit exceeded — pull blocked',
+                  style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600)),
             ),
           Expanded(
-            child: DragTarget<_KanbanCard>(
-              onAcceptWithDetails: (details) {
-                _moveCard(details.data, details.data.columnId, col.id);
-              },
+            child: DragTarget<AgileTask>(
+              onAcceptWithDetails: (details) =>
+                  _moveStory(details.data, col.id),
               builder: (ctx, candidate, rejected) {
                 return Container(
                   padding: const EdgeInsets.all(8),
@@ -650,41 +647,34 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                           height: 4,
                           margin: const EdgeInsets.only(bottom: 6),
                           decoration: BoxDecoration(
-                            color: col.accent,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
+                              color: col.accent,
+                              borderRadius: BorderRadius.circular(2)),
                         ),
-                      ...cards.map((c) => Draggable<_KanbanCard>(
-                            data: c,
+                      ...stories.map((story) => Draggable<AgileTask>(
+                            data: story,
                             feedback: SizedBox(
                               width: 220,
                               child: Material(
                                 elevation: 8,
                                 borderRadius: BorderRadius.circular(10),
-                                child: _buildCard(c, col),
+                                child: _buildCard(story, col),
                               ),
                             ),
                             childWhenDragging: Opacity(
-                              opacity: 0.4,
-                              child: _buildCard(c, col),
-                            ),
-                            child: _buildCard(c, col),
+                                opacity: 0.4, child: _buildCard(story, col)),
+                            child: _buildCard(story, col),
                           )),
-                      if (cards.isEmpty)
+                      if (stories.isEmpty)
                         Container(
                           padding: const EdgeInsets.symmetric(
                               vertical: 24, horizontal: 12),
                           decoration: BoxDecoration(
-                            border: Border.all(
-                                color: _kBorder,
-                                style: BorderStyle.solid),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                              border: Border.all(color: _kBorder),
+                              borderRadius: BorderRadius.circular(8)),
                           child: const Center(
-                            child: Text('Drop stories here',
-                                style: TextStyle(
-                                    fontSize: 12, color: _kMuted)),
-                          ),
+                              child: Text('Drop stories here',
+                                  style:
+                                      TextStyle(fontSize: 12, color: _kMuted))),
                         ),
                     ],
                   ),
@@ -697,7 +687,8 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     );
   }
 
-  Widget _buildCard(_KanbanCard card, _KanbanColumn col) {
+  Widget _buildCard(AgileTask story, _KanbanColumn col) {
+    final feature = _featureById[story.featureId];
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
@@ -707,36 +698,34 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
         border: Border.all(color: _kBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 1)),
         ],
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
-        onTap: () => _showCardDetail(card),
+        onTap: () => _showStoryDetail(story),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                _priorityDot(card.priority),
+                _priorityDot(story.priority),
                 const SizedBox(width: 6),
-                Text(card.id,
+                Text(story.id,
                     style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         color: _kMuted)),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                   decoration: BoxDecoration(
-                    color: _kAccentBg,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text('${card.points}',
+                      color: _kAccentBg,
+                      borderRadius: BorderRadius.circular(6)),
+                  child: Text('${story.storyPoints}',
                       style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -745,7 +734,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
               ],
             ),
             const SizedBox(height: 6),
-            Text(card.title,
+            Text(story.userStory,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -754,35 +743,31 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                     color: _kHeadline,
                     height: 1.3)),
             const SizedBox(height: 8),
-            if (card.tags.isNotEmpty) ...[
-              Wrap(
-                spacing: 4,
-                runSpacing: 4,
-                children: card.tags
-                    .take(2)
-                    .map((t) => Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3F4F6),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(t,
-                              style: const TextStyle(
-                                  fontSize: 10, color: _kMuted)),
-                        ))
-                    .toList(),
-              ),
-              const SizedBox(height: 8),
-            ],
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: [
+                if (feature != null && feature.title.isNotEmpty)
+                  _smallTag(feature.title),
+                if (story.readinessStatus.isNotEmpty)
+                  _smallTag(story.readinessStatus),
+                if (story.plannedSprintId.isNotEmpty)
+                  _smallTag('Sprint planned'),
+              ],
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
                 CircleAvatar(
                   radius: 10,
                   backgroundColor: col.accent.withOpacity(0.2),
                   child: Text(
-                    card.assignee.isNotEmpty
-                        ? card.assignee.split(' ').map((p) => p.isNotEmpty ? p[0] : '').take(2).join()
+                    story.assignedRole.isNotEmpty
+                        ? story.assignedRole
+                            .split(' ')
+                            .map((p) => p.isNotEmpty ? p[0] : '')
+                            .take(2)
+                            .join()
                         : '?',
                     style: TextStyle(
                         fontSize: 9,
@@ -792,16 +777,48 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                 ),
                 const SizedBox(width: 6),
                 Expanded(
-                  child: Text(card.assignee,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 11, color: _kMuted)),
+                  child: Text(
+                    story.assignedRole.isNotEmpty
+                        ? story.assignedRole
+                        : 'Unassigned',
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11, color: _kMuted),
+                  ),
                 ),
                 Icon(Icons.drag_indicator, size: 14, color: _kMuted),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _smallTag(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(6)),
+      child: Text(label, style: const TextStyle(fontSize: 10, color: _kMuted)),
+    );
+  }
+
+  Widget _metaChip(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+        ],
       ),
     );
   }
@@ -822,8 +839,8 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
         const SizedBox(width: 12),
@@ -835,77 +852,36 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
         const Spacer(),
-        Text('Drag cards between columns to update workflow',
-            style: TextStyle(fontSize: 12, color: _kMuted, fontStyle: FontStyle.italic)),
+        Text(
+            'Board columns come from planning Kanban workflow configuration; cards come from the same AgileTask stories used by backlog planning and schedule import.',
+            style: TextStyle(
+                fontSize: 12, color: _kMuted, fontStyle: FontStyle.italic)),
       ],
     );
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Helper models
-// ═══════════════════════════════════════════════════════════════════════════
 class _KanbanColumn {
   final String id;
   final String title;
   final Color accent;
   final int wipLimit;
-  const _KanbanColumn({
-    required this.id,
-    required this.title,
-    required this.accent,
-    required this.wipLimit,
-  });
-}
 
-class _KanbanCard {
-  final String id;
-  final String title;
-  final String description;
-  final int points;
-  final String assignee;
-  final String priority;
-  final String columnId;
-  final List<String> tags;
-  const _KanbanCard({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.points,
-    required this.assignee,
-    required this.priority,
-    required this.columnId,
-    required this.tags,
-  });
-
-  _KanbanCard copyWith({
-    String? columnId,
-    String? title,
-    String? description,
-    int? points,
-    String? assignee,
-    String? priority,
-    List<String>? tags,
-  }) =>
-      _KanbanCard(
-        id: id,
-        title: title ?? this.title,
-        description: description ?? this.description,
-        points: points ?? this.points,
-        assignee: assignee ?? this.assignee,
-        priority: priority ?? this.priority,
-        columnId: columnId ?? this.columnId,
-        tags: tags ?? this.tags,
-      );
+  const _KanbanColumn(
+      {required this.id,
+      required this.title,
+      required this.accent,
+      required this.wipLimit});
 }
 
 class _LoadingStrip extends StatelessWidget {
   const _LoadingStrip();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -913,7 +889,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

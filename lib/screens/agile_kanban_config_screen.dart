@@ -311,19 +311,16 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                             'Agile Delivery Model - Kanban Configuration'),
                   ),
                   SingleChildScrollView(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: hp, vertical: 32),
+                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         PlanningPhaseHeader(
-                          title: 'Kanban Configuration',
-                          onBack: () =>
-                              PlanningPhaseNavigation.goToPrevious(
-                                  context, 'agile_kanban_config'),
-                          onForward: () =>
-                              PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_kanban_config'),
+                          title: 'Kanban Workflow Configuration',
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'agile_kanban_config'),
+                          onForward: () => PlanningPhaseNavigation.goToNext(
+                              context, 'agile_kanban_config'),
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 24),
@@ -344,12 +341,10 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                               'agile_kanban_config'),
                           nextLabel: PlanningPhaseNavigation.nextLabel(
                               'agile_kanban_config'),
-                          onBack: () =>
-                              PlanningPhaseNavigation.goToPrevious(
-                                  context, 'agile_kanban_config'),
-                          onNext: () =>
-                              PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_kanban_config'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'agile_kanban_config'),
+                          onNext: () => PlanningPhaseNavigation.goToNext(
+                              context, 'agile_kanban_config'),
                         ),
                         const SizedBox(height: 40),
                       ],
@@ -396,7 +391,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Define the Kanban workflow stages. Drag to reorder.',
+            'Define the workflow stages and WIP limits that the execution Kanban board will use. Drag to reorder.',
             style: TextStyle(fontSize: 13, color: _kMuted),
           ),
           const SizedBox(height: 12),
@@ -433,13 +428,13 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text('${index + 1}.',
-                            style: const TextStyle(
-                                fontSize: 13, color: _kMuted)),
+                            style:
+                                const TextStyle(fontSize: 13, color: _kMuted)),
                         const SizedBox(width: 8),
                         Expanded(
                           child: VoiceTextField(
-                            controller: _nameCtrls[col.id] ??
-                                TextEditingController(),
+                            controller:
+                                _nameCtrls[col.id] ?? TextEditingController(),
                             decoration: const InputDecoration(
                               hintText: 'Column name',
                               border: InputBorder.none,
@@ -461,8 +456,8 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                             controller: TextEditingController.fromValue(
                               TextEditingValue(
                                 text: col.wipLimit.toString(),
-                                selection: const TextSelection.collapsed(
-                                    offset: 999),
+                                selection:
+                                    const TextSelection.collapsed(offset: 999),
                               ),
                             ),
                             decoration: const InputDecoration(
@@ -496,8 +491,8 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                       children: [
                         Expanded(
                           child: VoiceTextField(
-                            controller: _entryCtrls[col.id] ??
-                                TextEditingController(),
+                            controller:
+                                _entryCtrls[col.id] ?? TextEditingController(),
                             decoration: const InputDecoration(
                               hintText: 'Entry criteria',
                               border: OutlineInputBorder(),
@@ -514,8 +509,8 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: VoiceTextField(
-                            controller: _exitCtrls[col.id] ??
-                                TextEditingController(),
+                            controller:
+                                _exitCtrls[col.id] ?? TextEditingController(),
                             decoration: const InputDecoration(
                               hintText: 'Exit criteria',
                               border: OutlineInputBorder(),
@@ -562,8 +557,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
             style: TextStyle(fontSize: 13, color: _kMuted),
           ),
           const SizedBox(height: 12),
-          ..._cosList.asMap().entries.map((e) =>
-              _buildCosRow(e.key, e.value)),
+          ..._cosList.asMap().entries.map((e) => _buildCosRow(e.key, e.value)),
         ],
       ),
     );
@@ -594,8 +588,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
               items: _cosOptions
                   .map((o) => DropdownMenuItem(
                       value: o,
-                      child:
-                          Text(o, style: const TextStyle(fontSize: 12))))
+                      child: Text(o, style: const TextStyle(fontSize: 12))))
                   .toList(),
               onChanged: (v) {
                 if (v != null) {
@@ -727,9 +720,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
       children: [
         const Text('Additional Notes',
             style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: _kHeadline)),
+                fontSize: 14, fontWeight: FontWeight.w600, color: _kHeadline)),
         const SizedBox(height: 8),
         VoiceTextField(
           controller: _notesCtrl,
@@ -752,12 +743,12 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
       screenTitle: 'Kanban Configuration',
       sections: [
         PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+          {'Project Name': projectData.projectName},
+          {'Solution Title': projectData.solutionTitle},
         ]),
-        PdfSection.text('Notes',
-            projectData.planningNotes[
-                    'planning_agile_kanban_config_notes'] ??
+        PdfSection.text(
+            'Notes',
+            projectData.planningNotes['planning_agile_kanban_config_notes'] ??
                 'No data recorded.'),
       ],
     );

@@ -51,6 +51,7 @@ import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
 import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
 import 'package:ndu_project/screens/agile_team_structure_screen.dart';
 import 'package:ndu_project/screens/agile_epics_features_screen.dart';
+import 'package:ndu_project/screens/agile_stories_backlog_screen.dart';
 import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
 import 'package:ndu_project/screens/agile_release_plan_screen.dart';
 import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
@@ -164,6 +165,11 @@ class PlanningPhaseNavigation {
       id: 'agile_epics_features',
       title: 'Epics & Features',
       builder: (_) => const AgileEpicsFeaturesScreen(),
+    ),
+    PlanningPage(
+      id: 'agile_stories_backlog',
+      title: 'Stories & Backlog Breakdown',
+      builder: (_) => const AgileStoriesBacklogScreen(),
     ),
     PlanningPage(
       id: 'agile_acceptance_criteria',

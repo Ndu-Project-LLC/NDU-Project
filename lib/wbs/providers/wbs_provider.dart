@@ -11,13 +11,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/models/wbs_templates.dart';
 
-const String _storageKey = 'ndu_wbs_v2';
+const String _legacyStorageKey = 'ndu_wbs_v2';
+const String _storageKeyPrefix = 'ndu_wbs_v2_project_';
 
 class WBSProvider extends ChangeNotifier {
   WBS? _wbs;
   bool _setupComplete = false;
   bool _isLoadingFromStorage = true;
   bool _viewModeSimple = false;
+  String _activeProjectId = 'default';
 
   WBS? get wbs => _wbs;
   bool get setupComplete => _setupComplete;
@@ -30,6 +32,9 @@ class WBSProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  String _storageKeyForProject(String projectId) =>
+      '$_storageKeyPrefix${projectId.isEmpty ? 'default' : projectId}';
+
   WBSProvider() {
     _loadFromStorage();
   }
@@ -37,7 +42,7 @@ class WBSProvider extends ChangeNotifier {
   Future<void> _loadFromStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_storageKey);
+      final raw = prefs.getString(_legacyStorageKey);
       if (raw != null) {
         final data = jsonDecode(raw) as Map<String, dynamic>;
         final state = data['state'] as Map<String, dynamic>? ?? {};
@@ -45,6 +50,8 @@ class WBSProvider extends ChangeNotifier {
         _viewModeSimple = state['viewModeSimple'] as bool? ?? false;
         if (state['wbs'] != null) {
           _wbs = _wbsFromJson(state['wbs'] as Map<String, dynamic>);
+          _activeProjectId =
+              _wbs?.projectId.isNotEmpty == true ? _wbs!.projectId : 'default';
         }
       }
     } catch (e) {
@@ -52,6 +59,32 @@ class WBSProvider extends ChangeNotifier {
     } finally {
       _isLoadingFromStorage = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> _loadProjectScopedStorage(String projectId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = _storageKeyForProject(projectId);
+      final raw = prefs.getString(key);
+      if (raw == null) {
+        _wbs = null;
+        _setupComplete = false;
+        _activeProjectId = projectId;
+        notifyListeners();
+        return;
+      }
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final state = data['state'] as Map<String, dynamic>? ?? {};
+      _setupComplete = state['setupComplete'] as bool? ?? false;
+      _viewModeSimple = state['viewModeSimple'] as bool? ?? _viewModeSimple;
+      _wbs = state['wbs'] != null
+          ? _wbsFromJson(state['wbs'] as Map<String, dynamic>)
+          : null;
+      _activeProjectId = projectId;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error loading project-scoped WBS: $e');
     }
   }
 
@@ -65,7 +98,8 @@ class WBSProvider extends ChangeNotifier {
           'viewModeSimple': _viewModeSimple,
         },
       };
-      await prefs.setString(_storageKey, jsonEncode(data));
+      final key = _storageKeyForProject(_wbs?.projectId ?? _activeProjectId);
+      await prefs.setString(key, jsonEncode(data));
     } catch (e) {
       debugPrint('Error saving WBS: $e');
     }
@@ -79,8 +113,7 @@ class WBSProvider extends ChangeNotifier {
       framework: WBSFramework.values
           .byName(json['framework'] as String? ?? 'waterfallDeliverable'),
       methodology: json['methodology'] != null
-          ? ProjectMethodology.values
-              .byName(json['methodology'] as String)
+          ? ProjectMethodology.values.byName(json['methodology'] as String)
           : ProjectMethodology.waterfall,
       level0: _nodeFromJson(json['level0'] as Map<String, dynamic>),
       aiSuggestions: [],
@@ -138,8 +171,7 @@ class WBSProvider extends ChangeNotifier {
         if (node.isWorkPackage != null) 'isWorkPackage': node.isWorkPackage,
         if (node.aiGenerated) 'aiGenerated': true,
         if (node.aiSource != null) 'aiSource': node.aiSource!.name,
-        if (node.aiConfidence != null)
-          'aiConfidence': node.aiConfidence!.name,
+        if (node.aiConfidence != null) 'aiConfidence': node.aiConfidence!.name,
         if (node.methodology != null) 'methodology': node.methodology,
         if (node.costLineIds != null && node.costLineIds!.isNotEmpty)
           'costLineIds': node.costLineIds,
@@ -176,25 +208,24 @@ class WBSProvider extends ChangeNotifier {
   /// Called when the user switches projects so the WBS tree always reflects
   /// the active project, not a stale project from a previous session.
   void syncToProject(String projectId, String projectName) {
-    if (_wbs == null) return;
+    if (_isLoadingFromStorage) return;
 
-    // If the project ID changed, the old WBS data belongs to a different
-    // project — reset so _autoSetupIfNeeded creates a fresh WBS for the
-    // new project.
-    if (_wbs!.projectId != projectId && _wbs!.projectId != 'default') {
-      _wbs = null;
-      _setupComplete = false;
-      notifyListeners();
-      _saveToStorage();
+    if (_activeProjectId != projectId) {
+      _activeProjectId = projectId;
+      _loadProjectScopedStorage(projectId);
       return;
     }
 
-    // Update the root node name to match the current project name
-    if (_wbs!.projectName != projectName && projectName.isNotEmpty) {
+    if (_wbs == null) return;
+
+    if ((_wbs!.projectName != projectName && projectName.isNotEmpty) ||
+        _wbs!.projectId != projectId) {
       _wbs = _wbs!.copyWith(
         projectId: projectId,
-        projectName: projectName,
-        level0: _wbs!.level0.copyWith(name: projectName),
+        projectName: projectName.isEmpty ? _wbs!.projectName : projectName,
+        level0: _wbs!.level0.copyWith(
+          name: projectName.isEmpty ? _wbs!.level0.name : projectName,
+        ),
       );
       notifyListeners();
       _saveToStorage();
@@ -241,8 +272,8 @@ class WBSProvider extends ChangeNotifier {
       children: [],
     );
 
-    final updatedLevel0 = recalcCodes(_findAndUpdateNode(
-        _wbs!.level0, parentId, (n) => n.copyWith(children: [...n.children, newNode])));
+    final updatedLevel0 = recalcCodes(_findAndUpdateNode(_wbs!.level0, parentId,
+        (n) => n.copyWith(children: [...n.children, newNode])));
     _wbs = _wbs!.copyWith(
       level0: updatedLevel0,
       updatedAt: DateTime.now(),
@@ -372,9 +403,8 @@ class WBSProvider extends ChangeNotifier {
       WBSNode root, String id, WBSNode Function(WBSNode) updater) {
     if (root.id == id) return updater(root);
     return root.copyWith(
-      children: root.children
-          .map((c) => _findAndUpdateNode(c, id, updater))
-          .toList(),
+      children:
+          root.children.map((c) => _findAndUpdateNode(c, id, updater)).toList(),
     );
   }
 
@@ -415,9 +445,8 @@ class WBSProvider extends ChangeNotifier {
       return root.copyWith(children: swap(root.children));
     }
     return root.copyWith(
-      children: root.children
-          .map((c) => _swapNode(c, id, directionUp))
-          .toList(),
+      children:
+          root.children.map((c) => _swapNode(c, id, directionUp)).toList(),
     );
   }
 
@@ -430,6 +459,7 @@ class WBSProvider extends ChangeNotifier {
       }
       return null;
     }
+
     return _wbs == null ? null : find(_wbs!.level0);
   }
 }

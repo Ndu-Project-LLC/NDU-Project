@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-/// Model for agile story/iteration items
+/// Legacy parallel agile story model.
+///
+/// Prefer `AgileTask` persisted via `ExecutionPhaseService` for canonical
+/// backlog/execution/schedule integration. This service is retained only for
+/// backward compatibility with any older flows that still read `agile_stories`.
 class AgileStoryModel {
   final String id;
   final String projectId;
@@ -71,9 +75,18 @@ class AgileStoryModel {
   }
 }
 
+/// Legacy agile story service.
+///
+/// New work should use `AgileTask` + `ExecutionPhaseService` instead of this
+/// parallel `agile_stories` store to avoid divergence from Kanban, backlog,
+/// release, sprint, and schedule flows.
 class AgileService {
-  static CollectionReference<Map<String, dynamic>> _storiesCol(String projectId) =>
-      FirebaseFirestore.instance.collection('projects').doc(projectId).collection('agile_stories');
+  static CollectionReference<Map<String, dynamic>> _storiesCol(
+          String projectId) =>
+      FirebaseFirestore.instance
+          .collection('projects')
+          .doc(projectId)
+          .collection('agile_stories');
 
   static Future<String> createStory({
     required String projectId,
@@ -89,7 +102,8 @@ class AgileService {
     final user = FirebaseAuth.instance.currentUser;
     final userId = createdById ?? user?.uid ?? '';
     final userEmail = createdByEmail ?? user?.email ?? '';
-    final userName = createdByName ?? user?.displayName ?? userEmail.split('@').first;
+    final userName =
+        createdByName ?? user?.displayName ?? userEmail.split('@').first;
 
     final payload = AgileStoryModel(
       id: '',
@@ -139,15 +153,18 @@ class AgileService {
     await _storiesCol(projectId).doc(storyId).delete();
   }
 
-  static Stream<List<AgileStoryModel>> streamStories(String projectId, {String? status, int limit = 50}) {
+  static Stream<List<AgileStoryModel>> streamStories(String projectId,
+      {String? status, int limit = 50}) {
     Query<Map<String, dynamic>> query = _storiesCol(projectId)
         .orderBy('createdAt', descending: true)
         .limit(limit);
-    
+
     if (status != null && status.isNotEmpty) {
       query = query.where('status', isEqualTo: status);
     }
-    
-    return query.snapshots().map((snap) => snap.docs.map(AgileStoryModel.fromDoc).toList());
+
+    return query
+        .snapshots()
+        .map((snap) => snap.docs.map(AgileStoryModel.fromDoc).toList());
   }
 }

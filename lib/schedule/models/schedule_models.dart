@@ -31,7 +31,7 @@ enum ScheduleDomain {
   int get color => switch (this) {
         ScheduleDomain.engineering => 0xFF3B82F6, // blue
         ScheduleDomain.procurement => 0xFF22C55E, // green
-        ScheduleDomain.execution => 0xFFF8BD2A,   // yellow/gold
+        ScheduleDomain.execution => 0xFFF8BD2A, // yellow/gold
         ScheduleDomain.construction => 0xFF909096, // gray
         ScheduleDomain.commissioning => 0xFFC084FC, // purple
       };
@@ -138,7 +138,15 @@ enum TShirtSize { xs, s, m, l, xl }
 class ScheduleActivity {
   final String id;
   final String? wbsNodeId;
+  final String? agileTaskId;
   final String? costLineId;
+  final String? sprintId;
+  final String? releaseId;
+  final String? agileEpicTitle;
+  final String? agileFeatureTitle;
+  final String? sprintLabel;
+  final String? releaseLabel;
+  final String? importSource;
   final int level;
   final String code;
   final String name;
@@ -168,7 +176,15 @@ class ScheduleActivity {
   const ScheduleActivity({
     required this.id,
     this.wbsNodeId,
+    this.agileTaskId,
     this.costLineId,
+    this.sprintId,
+    this.releaseId,
+    this.agileEpicTitle,
+    this.agileFeatureTitle,
+    this.sprintLabel,
+    this.releaseLabel,
+    this.importSource,
     required this.level,
     required this.code,
     required this.name,
@@ -199,7 +215,15 @@ class ScheduleActivity {
   Map<String, dynamic> toJson() => {
         'id': id,
         if (wbsNodeId != null) 'wbsNodeId': wbsNodeId,
+        if (agileTaskId != null) 'agileTaskId': agileTaskId,
         if (costLineId != null) 'costLineId': costLineId,
+        if (sprintId != null) 'sprintId': sprintId,
+        if (releaseId != null) 'releaseId': releaseId,
+        if (agileEpicTitle != null) 'agileEpicTitle': agileEpicTitle,
+        if (agileFeatureTitle != null) 'agileFeatureTitle': agileFeatureTitle,
+        if (sprintLabel != null) 'sprintLabel': sprintLabel,
+        if (releaseLabel != null) 'releaseLabel': releaseLabel,
+        if (importSource != null) 'importSource': importSource,
         'level': level,
         'code': code,
         'name': name,
@@ -214,7 +238,8 @@ class ScheduleActivity {
         if (owner != null) 'owner': owner,
         if (status != null) 'status': status,
         if (progress != null) 'progress': progress,
-        if (estimationMethod != null) 'estimationMethod': estimationMethod!.name,
+        if (estimationMethod != null)
+          'estimationMethod': estimationMethod!.name,
         if (storyPoints != null) 'storyPoints': storyPoints,
         if (tShirtSize != null) 'tShirtSize': tShirtSize!.name,
         if (definitionOfReady != null) 'definitionOfReady': definitionOfReady,
@@ -231,7 +256,15 @@ class ScheduleActivity {
     return ScheduleActivity(
       id: json['id'] as String,
       wbsNodeId: json['wbsNodeId'] as String?,
+      agileTaskId: json['agileTaskId'] as String?,
       costLineId: json['costLineId'] as String?,
+      sprintId: json['sprintId'] as String?,
+      releaseId: json['releaseId'] as String?,
+      agileEpicTitle: json['agileEpicTitle'] as String?,
+      agileFeatureTitle: json['agileFeatureTitle'] as String?,
+      sprintLabel: json['sprintLabel'] as String?,
+      releaseLabel: json['releaseLabel'] as String?,
+      importSource: json['importSource'] as String?,
       level: json['level'] as int,
       code: json['code'] as String,
       name: json['name'] as String,
@@ -240,10 +273,15 @@ class ScheduleActivity {
       domain: ScheduleDomain.values.byName(json['domain'] as String),
       duration: (json['duration'] as num?)?.toDouble(),
       durationUnit: json['durationUnit'] as String?,
-      startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate'] as String) : null,
-      endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate'] as String) : null,
+      startDate: json['startDate'] != null
+          ? DateTime.tryParse(json['startDate'] as String)
+          : null,
+      endDate: json['endDate'] != null
+          ? DateTime.tryParse(json['endDate'] as String)
+          : null,
       dependencies: (json['dependencies'] as List<dynamic>?)
-              ?.map((d) => ActivityDependency.fromJson(d as Map<String, dynamic>))
+              ?.map(
+                  (d) => ActivityDependency.fromJson(d as Map<String, dynamic>))
               .toList() ??
           [],
       owner: json['owner'] as String?,
@@ -275,7 +313,15 @@ class ScheduleActivity {
   ScheduleActivity copyWith({
     String? id,
     String? wbsNodeId,
+    String? agileTaskId,
     String? costLineId,
+    String? sprintId,
+    String? releaseId,
+    String? agileEpicTitle,
+    String? agileFeatureTitle,
+    String? sprintLabel,
+    String? releaseLabel,
+    String? importSource,
     int? level,
     String? code,
     String? name,
@@ -305,7 +351,15 @@ class ScheduleActivity {
     return ScheduleActivity(
       id: id ?? this.id,
       wbsNodeId: wbsNodeId ?? this.wbsNodeId,
+      agileTaskId: agileTaskId ?? this.agileTaskId,
       costLineId: costLineId ?? this.costLineId,
+      sprintId: sprintId ?? this.sprintId,
+      releaseId: releaseId ?? this.releaseId,
+      agileEpicTitle: agileEpicTitle ?? this.agileEpicTitle,
+      agileFeatureTitle: agileFeatureTitle ?? this.agileFeatureTitle,
+      sprintLabel: sprintLabel ?? this.sprintLabel,
+      releaseLabel: releaseLabel ?? this.releaseLabel,
+      importSource: importSource ?? this.importSource,
       level: level ?? this.level,
       code: code ?? this.code,
       name: name ?? this.name,
@@ -504,10 +558,13 @@ class EstimateBasis {
       scopeAlignment: scopeAlignment ?? this.scopeAlignment,
       estimationMethods: estimationMethods ?? this.estimationMethods,
       keyAssumptions: keyAssumptions ?? this.keyAssumptions,
-      procurementConsiderations: procurementConsiderations ?? this.procurementConsiderations,
-      engineeringConsiderations: engineeringConsiderations ?? this.engineeringConsiderations,
+      procurementConsiderations:
+          procurementConsiderations ?? this.procurementConsiderations,
+      engineeringConsiderations:
+          engineeringConsiderations ?? this.engineeringConsiderations,
       constraintsAndRisks: constraintsAndRisks ?? this.constraintsAndRisks,
-      validationBenchmarking: validationBenchmarking ?? this.validationBenchmarking,
+      validationBenchmarking:
+          validationBenchmarking ?? this.validationBenchmarking,
       documentation: documentation ?? this.documentation,
     );
   }
@@ -699,6 +756,7 @@ Map<int, int> countActivities(Schedule schedule) {
       walk(c);
     }
   }
+
   if (schedule.activities.isNotEmpty) {
     walk(schedule.activities[0]);
   }

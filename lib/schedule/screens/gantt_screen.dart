@@ -25,11 +25,14 @@ class GanttScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.bar_chart,
-                      size: 48, color: LightModeColors.accent.withValues(alpha: 0.3)),
+                      size: 48,
+                      color: LightModeColors.accent.withValues(alpha: 0.3)),
                   const SizedBox(height: 16),
                   const Text('No activities yet',
-                      style:
-                          TextStyle(color: Color(0xFF1A1D1F), fontSize: 18, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          color: Color(0xFF1A1D1F),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   const Text(
                     'Use the Builder tab to create activities from work packages, then run CPM to calculate dates.',
@@ -42,10 +45,11 @@ class GanttScreen extends StatelessWidget {
           );
         }
 
-        final baseDate = rows.map((r) => r.startDate).reduce(
-            (a, b) => a.isBefore(b) ? a : b);
-        final maxEndDate = rows.map((r) => r.endDate).reduce(
-            (a, b) => a.isAfter(b) ? a : b);
+        final baseDate = rows
+            .map((r) => r.startDate)
+            .reduce((a, b) => a.isBefore(b) ? a : b);
+        final maxEndDate =
+            rows.map((r) => r.endDate).reduce((a, b) => a.isAfter(b) ? a : b);
 
         final totalDays = maxEndDate.difference(baseDate).inDays + 1;
         final weekCount = (totalDays / 7).ceil().clamp(1, 52);
@@ -118,7 +122,8 @@ class GanttScreen extends StatelessWidget {
                           width: 12,
                           height: 12,
                           decoration: BoxDecoration(
-                              color: LightModeColors.accent.withValues(alpha: 0.3),
+                              color:
+                                  LightModeColors.accent.withValues(alpha: 0.3),
                               border: Border.all(
                                   color: LightModeColors.accent, width: 1.5)),
                         ),
@@ -212,6 +217,7 @@ class GanttScreen extends StatelessWidget {
       result.add(node);
       for (final c in node.children) walk(c);
     }
+
     for (final r in roots) walk(r);
     return result;
   }
@@ -230,6 +236,13 @@ class GanttScreen extends StatelessWidget {
         isCritical: a.isCriticalPath,
         startDate: start,
         endDate: end,
+        sprintLabel: a.sprintLabel ?? '',
+        releaseLabel: a.releaseLabel ?? '',
+        agileEpicTitle: a.agileEpicTitle ?? '',
+        agileFeatureTitle: a.agileFeatureTitle ?? '',
+        hasWbs: a.wbsNodeId != null && a.wbsNodeId!.isNotEmpty,
+        hasAgileStory: a.agileTaskId != null && a.agileTaskId!.isNotEmpty,
+        prerequisiteCount: a.prerequisites?.length ?? 0,
       ));
     }
     result.sort((a, b) => a.startDate.compareTo(b.startDate));
@@ -257,8 +270,8 @@ class _GanttHeaderRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: const BoxDecoration(
             color: Color(0xFFF9FAFB),
-            border: Border(
-                right: BorderSide(color: Color(0xFFE4E7EC), width: 1)),
+            border:
+                Border(right: BorderSide(color: Color(0xFFE4E7EC), width: 1)),
           ),
           child: const Text('Activity',
               style: TextStyle(
@@ -302,6 +315,42 @@ class _GanttRow extends StatelessWidget {
     required this.leftColWidth,
   });
 
+  String _subtitleText() {
+    final parts = <String>[];
+    if (row.agileEpicTitle.isNotEmpty) {
+      parts.add('Epic: ${row.agileEpicTitle}');
+    }
+    if (row.agileFeatureTitle.isNotEmpty) {
+      parts.add('Feature: ${row.agileFeatureTitle}');
+    }
+    if (row.sprintLabel.isNotEmpty) {
+      parts.add(row.sprintLabel);
+    }
+    if (row.releaseLabel.isNotEmpty) {
+      parts.add(row.releaseLabel);
+    }
+    return parts.join(' · ');
+  }
+
+  String _tooltipText() {
+    final parts = <String>[
+      row.name,
+      'Code: ${row.code}',
+      'Start: ${row.startDate.month}/${row.startDate.day}/${row.startDate.year}',
+      'Finish: ${row.endDate.month}/${row.endDate.day}/${row.endDate.year}',
+    ];
+    if (row.agileEpicTitle.isNotEmpty) parts.add('Epic: ${row.agileEpicTitle}');
+    if (row.agileFeatureTitle.isNotEmpty)
+      parts.add('Feature: ${row.agileFeatureTitle}');
+    if (row.sprintLabel.isNotEmpty) parts.add('Sprint: ${row.sprintLabel}');
+    if (row.releaseLabel.isNotEmpty) parts.add('Release: ${row.releaseLabel}');
+    if (row.hasWbs) parts.add('WBS linked');
+    if (row.hasAgileStory) parts.add('Agile story linked');
+    if (row.prerequisiteCount > 0)
+      parts.add('Prerequisites: ${row.prerequisiteCount}');
+    return parts.join('\n');
+  }
+
   @override
   Widget build(BuildContext context) {
     final daysSinceBase = row.startDate.difference(baseDate).inDays;
@@ -323,32 +372,54 @@ class _GanttRow extends StatelessWidget {
                 border: Border(
                     right: BorderSide(color: Color(0xFFE4E7EC), width: 1)),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                        color: Color(row.domainColor),
-                        shape: BoxShape.circle),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(row.code,
-                      style: const TextStyle(
-                          color: Color(0xFF495057),
-                          fontSize: 10,
-                          fontFamily: appFontFamily,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(row.name,
-                        style: const TextStyle(
-                            color: Color(0xFF1A1D1F),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500),
-                        overflow: TextOverflow.ellipsis),
-                  ),
-                ],
+              child: Tooltip(
+                message: _tooltipText(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                              color: Color(row.domainColor),
+                              shape: BoxShape.circle),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(row.code,
+                            style: const TextStyle(
+                                color: Color(0xFF495057),
+                                fontSize: 10,
+                                fontFamily: appFontFamily,
+                                fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(row.name,
+                              style: const TextStyle(
+                                  color: Color(0xFF1A1D1F),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500),
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                      ],
+                    ),
+                    if (_subtitleText().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4, left: 20),
+                        child: Text(
+                          _subtitleText(),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 10,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
             Container(
@@ -426,6 +497,13 @@ class _GanttRowData {
   final bool isCritical;
   final DateTime startDate;
   final DateTime endDate;
+  final String sprintLabel;
+  final String releaseLabel;
+  final String agileEpicTitle;
+  final String agileFeatureTitle;
+  final bool hasWbs;
+  final bool hasAgileStory;
+  final int prerequisiteCount;
 
   const _GanttRowData({
     required this.code,
@@ -434,5 +512,12 @@ class _GanttRowData {
     required this.isCritical,
     required this.startDate,
     required this.endDate,
+    this.sprintLabel = '',
+    this.releaseLabel = '',
+    this.agileEpicTitle = '',
+    this.agileFeatureTitle = '',
+    this.hasWbs = false,
+    this.hasAgileStory = false,
+    this.prerequisiteCount = 0,
   });
 }

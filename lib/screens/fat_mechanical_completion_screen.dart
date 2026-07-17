@@ -5,6 +5,7 @@ import 'package:ndu_project/screens/contract_close_out_screen.dart';
 import 'package:ndu_project/screens/transition_to_prod_team_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -199,6 +200,10 @@ class _FatMechanicalCompletionScreenState
             const SizedBox(height: 12),
             _buildIntroPanel(),
             const SizedBox(height: 16),
+            _buildInsightsHeader(),
+            const SizedBox(height: 16),
+            _buildKanbanBoard(),
+            const SizedBox(height: 16),
             _buildSubsectionPanel(
               title: 'Mechanical Completion',
               description:
@@ -256,6 +261,122 @@ class _FatMechanicalCompletionScreenState
           ],
         ),
       ),
+    );
+  }
+
+  // ── Insights: KPIs + donut + status mix + kanban ────────────────────
+
+  List<_CompletionItem> get _allItems => [
+        ..._mechanicalCompletionItems,
+        ..._fatSatCommissioningItems,
+        ..._finalTurnoverItems,
+      ];
+
+  int _countStatus(String status) =>
+      _allItems.where((i) => i.status == status).length;
+
+  double get _completionPct {
+    final total = _allItems.length;
+    if (total == 0) return 0;
+    final complete = _countStatus('Complete');
+    final na = _countStatus('Not Applicable');
+    return (complete + na) / total;
+  }
+
+  Widget _buildInsightsHeader() {
+    final total = _allItems.length;
+    final complete = _countStatus('Complete');
+    final inProgress = _countStatus('In Progress');
+    final pending = _countStatus('Pending');
+    final na = _countStatus('Not Applicable');
+
+    return LaunchInsightsHeader(
+      sectionTitle: 'Mechanical Completion & Commissioning Progress',
+      sectionSubtitle:
+          'Across Mechanical Completion, FAT/SAT/Commissioning, and Final Turnover',
+      sectionIcon: Icons.engineering,
+      sectionColor: const Color(0xFFD97706),
+      completionPercent: _completionPct,
+      completionLabel: 'COMPLETE',
+      completionCaption:
+          '$complete of $total items complete • $inProgress in progress • $pending pending${na > 0 ? " • $na n/a" : ""}',
+      kpiTiles: [
+        LaunchKpiTile(
+          label: 'Total Items',
+          value: '$total',
+          icon: Icons.checklist_outlined,
+          color: const Color(0xFF2563EB),
+          delta: 'across 3 subsections',
+        ),
+        LaunchKpiTile(
+          label: 'Complete',
+          value: '$complete',
+          icon: Icons.task_alt_outlined,
+          color: const Color(0xFF10B981),
+          delta:
+              '${total == 0 ? 0 : (complete / total * 100).round()}% of total',
+        ),
+        LaunchKpiTile(
+          label: 'In Progress',
+          value: '$inProgress',
+          icon: Icons.pending_actions_outlined,
+          color: const Color(0xFFF59E0B),
+          delta: inProgress > 0 ? 'needs attention' : 'on track',
+        ),
+        LaunchKpiTile(
+          label: 'Pending',
+          value: '$pending',
+          icon: Icons.hourglass_empty_outlined,
+          color: const Color(0xFF64748B),
+          delta: pending > 0 ? 'awaiting start' : 'no blockers',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildKanbanBoard() {
+    final cards = _allItems.map((item) {
+      Color? accent;
+      IconData? icon;
+      if (item.status == 'Complete') {
+        accent = const Color(0xFF10B981);
+        icon = Icons.check_circle_outline;
+      } else if (item.status == 'In Progress') {
+        accent = const Color(0xFFF59E0B);
+        icon = Icons.autorenew;
+      } else if (item.status == 'Not Applicable') {
+        accent = const Color(0xFF6B7280);
+        icon = Icons.remove_circle_outline;
+      } else {
+        accent = const Color(0xFF64748B);
+        icon = Icons.radio_button_unchecked;
+      }
+      return LaunchKanbanCard(
+        title: item.label,
+        subtitle: item.status,
+        status: item.status,
+        icon: icon,
+        accent: accent,
+      );
+    }).toList();
+
+    return Column(
+      children: [
+        LaunchStatusMixBar(
+          title: 'Status Mix — All Subsections',
+          counts: {
+            'Complete': _countStatus('Complete'),
+            'In Progress': _countStatus('In Progress'),
+            'Pending': _countStatus('Pending'),
+            'Not Applicable': _countStatus('Not Applicable'),
+          },
+        ),
+        const SizedBox(height: 12),
+        LaunchKanbanBoard(
+          title: 'Completion Board',
+          cards: cards,
+        ),
+      ],
     );
   }
 

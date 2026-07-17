@@ -11,6 +11,7 @@ import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
+import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -82,6 +83,8 @@ class _ActualVsPlannedGapAnalysisScreenState
  title: 'Scope & Deliverable Reconciliation',
 showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 16),
+            _buildLaunchInsights(),
+            const SizedBox(height: 16),
  _buildMetricsRow(),
  const SizedBox(height: 20),
  _buildScopeGapsPanel(),
@@ -1336,4 +1339,56 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  String _pc(String v) => v.trim().isEmpty ? '-' : v.trim();
+  // Launch Insights: KPIs + completion donut (auto-derived from project data)
+  Widget _buildLaunchInsights() {
+    final projectData = ProjectDataHelper.getData(context);
+    final scopeTotal = projectData.withinScope
+                .where((s) => s.trim().isNotEmpty)
+                .length +
+            projectData.outOfScope.where((s) => s.trim().isNotEmpty).length;
+        final completionPct =
+            scopeTotal == 0 ? 0.0 : (projectData.withinScope.where((s) => s.trim().isNotEmpty).length / scopeTotal);
+    return LaunchInsightsHeader(
+      sectionTitle: 'Scope & Deliverable Reconciliation',
+      sectionSubtitle: 'Planned vs actual scope, deliverables, and acceptance status',
+      sectionIcon: Icons.compare_arrows_outlined,
+      sectionColor: const Color(0xFF06B6D4),
+      completionPercent: completionPct,
+      completionLabel: 'RECONCILED',
+      completionCaption:
+          '${(completionPct * 100).round()}% complete - auto-derived from project data',
+      kpiTiles: [
+        LaunchKpiTile(
+              label: 'In-Scope Items',
+              value: '${projectData.withinScope.where((s) => s.trim().isNotEmpty).length}',
+              icon: Icons.check_circle_outline,
+              color: const Color(0xFF10B981),
+              delta: 'committed scope',
+            ),
+            LaunchKpiTile(
+              label: 'Out-of-Scope',
+              value: '${projectData.outOfScope.where((s) => s.trim().isNotEmpty).length}',
+              icon: Icons.cancel_outlined,
+              color: const Color(0xFFEF4444),
+              delta: 'excluded',
+            ),
+            LaunchKpiTile(
+              label: 'Milestones',
+              value: '${projectData.keyMilestones.length}',
+              icon: Icons.flag_outlined,
+              color: const Color(0xFF2563EB),
+              delta: 'planned checkpoints',
+            ),
+            LaunchKpiTile(
+              label: 'Allowance Burn',
+              value: '\$${projectData.frontEndPlanning.allowanceItems.fold<double>(0, (s, i) => s + i.actualAmount).toStringAsFixed(0)}',
+              icon: Icons.local_fire_department_outlined,
+              color: const Color(0xFFF59E0B),
+              delta: 'actual consumed',
+            ),
+      ],
+    );
+  }
+
+
 }

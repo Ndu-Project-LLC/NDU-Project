@@ -1,4 +1,5 @@
 import 'package:ndu_project/widgets/launch_notes_section.dart';
+import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -83,6 +84,8 @@ showNavigationButtons: false,
  showActivityLogAction: false,
  onExportPdf: _exportPdf),
  const SizedBox(height: 16),
+            _buildLaunchInsights(),
+            const SizedBox(height: 16),
  _buildMetricsRow(),
  const SizedBox(height: 16),
             LaunchNotesSection(
@@ -1125,4 +1128,64 @@ showNavigationButtons: false,
  }
 
  String _pc(String v) => v.trim().isEmpty ? '-' : v.trim();
+  // Launch Insights: KPIs + completion donut (auto-derived from project data)
+  Widget _buildLaunchInsights() {
+    final projectData = ProjectDataHelper.getData(context);
+    final totalContracts =
+            projectData.contractors.length + projectData.vendors.length;
+        final closed = projectData.contractors
+                .where((c) =>
+                    c.status.toLowerCase() == 'closed' ||
+                    c.status.toLowerCase() == 'complete')
+                .length +
+            projectData.vendors
+                .where((v) =>
+                    v.procurementStage.toLowerCase() == 'closed' ||
+                    v.procurementStage.toLowerCase() == 'complete')
+                .length;
+        final completionPct =
+            totalContracts == 0 ? 0.0 : closed / totalContracts;
+    return LaunchInsightsHeader(
+      sectionTitle: 'Vendor & Contract Closeout Progress',
+      sectionSubtitle: 'Final invoices, deliverables, sign-offs, and retention releases',
+      sectionIcon: Icons.handshake_outlined,
+      sectionColor: const Color(0xFF7C3AED),
+      completionPercent: completionPct,
+      completionLabel: 'CLOSED',
+      completionCaption:
+          '${(completionPct * 100).round()}% complete - auto-derived from project data',
+      kpiTiles: [
+        LaunchKpiTile(
+              label: 'Contractors',
+              value: '${projectData.contractors.length}',
+              icon: Icons.construction_outlined,
+              color: const Color(0xFF2563EB),
+              delta: 'to close out',
+            ),
+            LaunchKpiTile(
+              label: 'Vendors',
+              value: '${projectData.vendors.length}',
+              icon: Icons.inventory_2_outlined,
+              color: const Color(0xFFF59E0B),
+              delta: 'final invoices',
+            ),
+            LaunchKpiTile(
+              label: 'Contract Value',
+              value: '\$${projectData.contractors.fold<double>(0, (s, c) => s + c.estimatedCost).toStringAsFixed(0)}',
+              icon: Icons.payments_outlined,
+              color: const Color(0xFFD97706),
+              delta: 'total awarded',
+            ),
+            LaunchKpiTile(
+              label: 'Pending Sign-off',
+              value: '${projectData.contractors.where((c) => c.status.toLowerCase() != 'closed' && c.status.toLowerCase() != 'complete').length}',
+              icon: Icons.pending_actions_outlined,
+              color: const Color(0xFFEF4444),
+              delta: 'awaiting close',
+            ),
+      ],
+    );
+  }
+
+
 }

@@ -1,4 +1,5 @@
 import 'package:ndu_project/widgets/launch_notes_section.dart';
+import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'dart:convert';
 import 'package:ndu_project/utils/download_helper_stub.dart'
@@ -85,6 +86,8 @@ showNavigationButtons: false,
  onAiAssist: _isGenerating ? null : _populateFromAi,
  ),
  const SizedBox(height: 12),
+            _buildLaunchInsights(),
+            const SizedBox(height: 16),
  _buildMetricsRow(),
  const SizedBox(height: 16),
             LaunchNotesSection(
@@ -1106,4 +1109,58 @@ showNavigationButtons: false,
  final s = (v ?? '').toString().trim();
  return s.isEmpty ? fb : s;
  }
+  // Launch Insights: KPIs + completion donut (auto-derived from project data)
+  Widget _buildLaunchInsights() {
+    final projectData = ProjectDataHelper.getData(context);
+    final totalMilestones = projectData.keyMilestones.length;
+        final doneMilestones = projectData.keyMilestones
+            .where((m) =>
+                m.comments.toLowerCase().contains('complete') ||
+                m.comments.toLowerCase().contains('done'))
+            .length;
+        final completionPct =
+            totalMilestones == 0 ? 0.0 : doneMilestones / totalMilestones;
+    return LaunchInsightsHeader(
+      sectionTitle: 'Deployment Transfer Progress',
+      sectionSubtitle: 'Certification, release readiness, and production handoff',
+      sectionIcon: Icons.send_outlined,
+      sectionColor: const Color(0xFF2563EB),
+      completionPercent: completionPct,
+      completionLabel: 'TRANSFERRED',
+      completionCaption:
+          '${(completionPct * 100).round()}% complete - auto-derived from project data',
+      kpiTiles: [
+        LaunchKpiTile(
+              label: 'Team Members',
+              value: '${projectData.teamMembers.length}',
+              icon: Icons.people_outline,
+              color: const Color(0xFF2563EB),
+              delta: 'assigned to project',
+            ),
+            LaunchKpiTile(
+              label: 'Contractors',
+              value: '${projectData.contractors.length}',
+              icon: Icons.construction_outlined,
+              color: const Color(0xFFF59E0B),
+              delta: 'under contract',
+            ),
+            LaunchKpiTile(
+              label: 'Vendors',
+              value: '${projectData.vendors.length}',
+              icon: Icons.inventory_2_outlined,
+              color: const Color(0xFF7C3AED),
+              delta: 'in supply chain',
+            ),
+            LaunchKpiTile(
+              label: 'Milestones Done',
+              value: '${projectData.keyMilestones.where((m) => m.comments.toLowerCase().contains('complete') || m.comments.toLowerCase().contains('done')).length}',
+              icon: Icons.check_circle_outline,
+              color: const Color(0xFF10B981),
+              delta: 'of ${projectData.keyMilestones.length} total',
+            ),
+      ],
+    );
+  }
+
+
 }

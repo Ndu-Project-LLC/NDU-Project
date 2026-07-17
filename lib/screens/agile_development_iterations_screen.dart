@@ -26,6 +26,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/widgets/milestone_picker_dialog.dart';
 class AgileDevelopmentIterationsScreen extends StatefulWidget {
  const AgileDevelopmentIterationsScreen({super.key});
 
@@ -675,9 +677,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
   int selectedStoryPoints = 1;
   String selectedPriority = 'Medium';
   String selectedStatus = 'To-Do';
-  String selectedEpicId = _epics.isNotEmpty ? _epics.first.id : '';
-  String selectedFeatureId = '';
-  Map<String, String> validationErrors = const {};
+   String selectedEpicId = _epics.isNotEmpty ? _epics.first.id : '';
+   String selectedFeatureId = '';
+   List<String> selectedMilestoneIds = [];
+   Map<String, String> validationErrors = const {};
 
  OutlineInputBorder fieldBorder(bool hasError) {
  return OutlineInputBorder(
@@ -841,17 +844,36 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  maxLines: 3,
  ),
  const SizedBox(height: 12),
- const SizedBox(height: 6),
- VoiceTextField(
- controller: iterationNotesController,
- decoration: const InputDecoration(
- labelText: 'Iteration Notes (manual input only)'),
- maxLines: 2,
- ),
- ],
- ),
- ),
- actions: [
+  const SizedBox(height: 6),
+  VoiceTextField(
+  controller: iterationNotesController,
+  decoration: const InputDecoration(
+  labelText: 'Iteration Notes (manual input only)'),
+  maxLines: 2,
+  ),
+  const SizedBox(height: 12),
+  _MilestoneLinkButton(
+    milestoneIds: selectedMilestoneIds,
+    onPick: () async {
+      final data = await _loadMilestonesForPicker();
+      if (data == null) return;
+      final picked = await showDialog<List<String>>(
+        context: dialogContext,
+        builder: (ctx) => MilestonePickerDialog(
+          title: 'Link Milestones',
+          allMilestones: data,
+          selectedIds: selectedMilestoneIds,
+        ),
+      );
+      if (picked != null) {
+        setDialogState(() => selectedMilestoneIds = picked);
+      }
+    },
+  ),
+  ],
+  ),
+  ),
+  actions: [
  TextButton(
  onPressed: () => Navigator.pop(dialogContext),
  child: const Text('Cancel'),
@@ -891,18 +913,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return;
  }
 
-  final newTask = AgileTask(
-    userStory: userStoryController.text,
-    assignedRole: selectedRole,
-    storyPoints: selectedStoryPoints,
-    priority: selectedPriority,
-    status: selectedStatus,
-    taskDescription: taskDescriptionController.text,
-    acceptanceCriteria: acceptanceCriteriaController.text,
-    iterationNotes: iterationNotesController.text,
-    epicId: selectedEpicId,
-    featureId: selectedFeatureId,
-  );
+   final newTask = AgileTask(
+     userStory: userStoryController.text,
+     assignedRole: selectedRole,
+     storyPoints: selectedStoryPoints,
+     priority: selectedPriority,
+     status: selectedStatus,
+     taskDescription: taskDescriptionController.text,
+     acceptanceCriteria: acceptanceCriteriaController.text,
+     iterationNotes: iterationNotesController.text,
+     epicId: selectedEpicId,
+     featureId: selectedFeatureId,
+     milestoneIds: selectedMilestoneIds,
+   );
 
  setState(() {
  _tasks.add(newTask);
@@ -942,27 +965,95 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- Future<void> _exportPdf() async {
- final projectData = ProjectDataHelper.getData(context);
- await PdfExportHelper.exportScreenPdf(
- context: context,
- screenTitle: 'Agile Development Iterations',
- sections: [
- PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
- ]),
- PdfSection.text('Notes', projectData.planningNotes['planning_agile_development_iterations_notes'] ?? 'No data recorded.'),
- ],
- );
- }
+  Future<void> _exportPdf() async {
+    final projectData = ProjectDataHelper.getData(context);
+    await PdfExportHelper.exportScreenPdf(
+      context: context,
+      screenTitle: 'Agile Development Iterations',
+      sections: [
+        PdfSection.keyValue('Project Info', [
+          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+        ]),
+        PdfSection.text('Notes', projectData.planningNotes['planning_agile_development_iterations_notes'] ?? 'No data recorded.'),
+      ],
+    );
+  }
+
+  Future<List<Milestone>?> _loadMilestonesForPicker() async {
+    final data = ProjectDataHelper.getData(context, listen: false);
+    final milestones = data.keyMilestones
+        .where((m) => m.name.trim().isNotEmpty)
+        .toList();
+    if (milestones.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No milestones available. Add them in Front End Planning > Milestone.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return null;
+    }
+    return milestones;
+  }
 }
 
 class _StatCardData {
- const _StatCardData(this.label, this.value, this.subtitle, this.color);
+  const _StatCardData(this.label, this.value, this.subtitle, this.color);
 
- final String label;
- final String value;
- final String subtitle;
- final Color color;
+  final String label;
+  final String value;
+  final String subtitle;
+  final Color color;
+}
+
+class _MilestoneLinkButton extends StatelessWidget {
+  final List<String> milestoneIds;
+  final VoidCallback onPick;
+
+  const _MilestoneLinkButton({
+    required this.milestoneIds,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPick,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF8E1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFFFE082)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.flag_outlined,
+                size: 16, color: Color(0xFFFFC107)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                milestoneIds.isEmpty
+                    ? 'Tap to link FEP milestones...'
+                    : '${milestoneIds.length} milestone${milestoneIds.length == 1 ? '' : 's'} linked',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: milestoneIds.isEmpty
+                      ? const Color(0xFF64748B)
+                      : const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+            const Icon(Icons.edit_outlined,
+                size: 14, color: Color(0xFF64748B)),
+          ],
+        ),
+      ),
+    );
+  }
 }

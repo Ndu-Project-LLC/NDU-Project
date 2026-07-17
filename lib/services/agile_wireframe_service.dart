@@ -7,8 +7,7 @@ import 'package:ndu_project/services/agile_cache_service.dart';
 class AgileWireframeService {
   static final _firestore = FirebaseFirestore.instance;
 
-  static DocumentReference<Map<String, dynamic>> _agileDoc(
-      String projectId) {
+  static DocumentReference<Map<String, dynamic>> _agileDoc(String projectId) {
     return _firestore
         .collection('projects')
         .doc(projectId)
@@ -20,8 +19,7 @@ class AgileWireframeService {
   static String _releasesCacheKey(String projectId) =>
       'agile_wireframe:releases:$projectId';
 
-  static Future<Map<String, dynamic>?> _loadDoc(
-      String projectId) async {
+  static Future<Map<String, dynamic>?> _loadDoc(String projectId) async {
     return AgileCacheService.instance.fetch(_cacheKey(projectId), () async {
       final snapshot = await _agileDoc(projectId).get();
       return snapshot.exists ? snapshot.data() : null;
@@ -162,8 +160,8 @@ class AgileWireframeService {
   static Future<List<AgileReleasePlan>> loadReleasePlans(
       String projectId) async {
     try {
-      return await AgileCacheService.instance.fetch(
-          _releasesCacheKey(projectId), () async {
+      return await AgileCacheService.instance
+          .fetch(_releasesCacheKey(projectId), () async {
         final snapshot =
             await _releasesCol(projectId).orderBy('releaseLabel').get();
         return snapshot.docs
@@ -235,6 +233,65 @@ class AgileWireframeService {
     }
   }
 
+  // ── Scrum Config ──
+
+  static Future<Map<String, dynamic>> loadScrumConfig(String projectId) async {
+    try {
+      final doc = await _loadDoc(projectId);
+      if (doc == null) return {};
+      return (doc['scrumConfig'] as Map<String, dynamic>?) ?? {};
+    } catch (error) {
+      debugPrint('AgileWireframeService.loadScrumConfig error: $error');
+      return {};
+    }
+  }
+
+  static Future<void> saveScrumConfig({
+    required String projectId,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      await _agileDoc(projectId).set({
+        'scrumConfig': data,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      _invalidate(projectId);
+    } catch (error) {
+      debugPrint('AgileWireframeService.saveScrumConfig error: $error');
+      rethrow;
+    }
+  }
+
+  // ── Capacity Planning ──
+
+  static Future<Map<String, dynamic>> loadCapacityPlanning(
+      String projectId) async {
+    try {
+      final doc = await _loadDoc(projectId);
+      if (doc == null) return {};
+      return (doc['capacityPlanning'] as Map<String, dynamic>?) ?? {};
+    } catch (error) {
+      debugPrint('AgileWireframeService.loadCapacityPlanning error: $error');
+      return {};
+    }
+  }
+
+  static Future<void> saveCapacityPlanning({
+    required String projectId,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      await _agileDoc(projectId).set({
+        'capacityPlanning': data,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      _invalidate(projectId);
+    } catch (error) {
+      debugPrint('AgileWireframeService.saveCapacityPlanning error: $error');
+      rethrow;
+    }
+  }
+
   // ── Metrics Config ──
 
   static Future<Map<String, dynamic>> loadMetricsConfig(
@@ -267,8 +324,7 @@ class AgileWireframeService {
 
   // ── Kanban Config ──
 
-  static Future<Map<String, dynamic>> loadKanbanConfig(
-      String projectId) async {
+  static Future<Map<String, dynamic>> loadKanbanConfig(String projectId) async {
     try {
       final doc = await _loadDoc(projectId);
       if (doc == null) return {};

@@ -10,16 +10,25 @@ class Feature {
   // ── P3.3: WBS traceability for agile↔predictive bridge ──
   /// WBS element ID this feature maps to for hybrid traceability.
   String wbsId;
+
   /// OBS element ID (responsible org unit).
   String obsId;
+
   /// CBS element ID (cost account for budget tracking).
   String cbsId;
+
   /// Control Account ID (WBS+OBS intersection for EVM rollup).
   String controlAccountId;
+
   /// List of scope tracking item IDs linked to this feature.
   List<String> scopeTrackingItemIds;
+
+  /// Sprint this feature is assigned to.
+  String? sprintId;
+
   /// Weight (0-1) for weighted completion rollup within the epic.
   double weight;
+
   /// Physical percent complete (0-1) for this feature.
   double percentComplete;
 
@@ -35,11 +44,12 @@ class Feature {
     this.obsId = '',
     this.cbsId = '',
     this.controlAccountId = '',
+    this.sprintId,
     List<String>? scopeTrackingItemIds,
     this.weight = 0,
     this.percentComplete = 0,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
-       scopeTrackingItemIds = scopeTrackingItemIds ?? [];
+  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+        scopeTrackingItemIds = scopeTrackingItemIds ?? [];
 
   Feature copyWith({
     String? title,
@@ -52,6 +62,7 @@ class Feature {
     String? obsId,
     String? cbsId,
     String? controlAccountId,
+    String? sprintId,
     List<String>? scopeTrackingItemIds,
     double? weight,
     double? percentComplete,
@@ -68,7 +79,9 @@ class Feature {
       obsId: obsId ?? this.obsId,
       cbsId: cbsId ?? this.cbsId,
       controlAccountId: controlAccountId ?? this.controlAccountId,
-      scopeTrackingItemIds: scopeTrackingItemIds ?? List.from(this.scopeTrackingItemIds),
+      sprintId: sprintId ?? this.sprintId,
+      scopeTrackingItemIds:
+          scopeTrackingItemIds ?? List.from(this.scopeTrackingItemIds),
       weight: weight ?? this.weight,
       percentComplete: percentComplete ?? this.percentComplete,
     );
@@ -86,6 +99,7 @@ class Feature {
         'obsId': obsId,
         'cbsId': cbsId,
         'controlAccountId': controlAccountId,
+        'sprintId': sprintId,
         'scopeTrackingItemIds': scopeTrackingItemIds,
         'weight': weight,
         'percentComplete': percentComplete,
@@ -96,7 +110,8 @@ class Feature {
         (v is num) ? v.toDouble() : double.tryParse(v?.toString() ?? '') ?? 0;
 
     return Feature(
-      id: json['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id']?.toString() ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       epicId: json['epicId']?.toString() ?? '',
@@ -107,6 +122,7 @@ class Feature {
       obsId: json['obsId']?.toString() ?? '',
       cbsId: json['cbsId']?.toString() ?? '',
       controlAccountId: json['controlAccountId']?.toString() ?? '',
+      sprintId: json['sprintId']?.toString(),
       scopeTrackingItemIds: (json['scopeTrackingItemIds'] as List?)
               ?.map((e) => e.toString())
               .toList() ??

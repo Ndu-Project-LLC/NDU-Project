@@ -7,8 +7,7 @@ import 'package:ndu_project/services/agile_cache_service.dart';
 class EpicFeatureService {
   static final _firestore = FirebaseFirestore.instance;
 
-  static String _epicsCacheKey(String projectId) =>
-      'epics:$projectId';
+  static String _epicsCacheKey(String projectId) => 'epics:$projectId';
   static String _featuresCacheKey(String projectId, String epicId) =>
       'features:$projectId:$epicId';
 
@@ -30,8 +29,8 @@ class EpicFeatureService {
 
   static Future<List<Epic>> loadEpics(String projectId) async {
     try {
-      return await AgileCacheService.instance.fetch(
-          _epicsCacheKey(projectId), () async {
+      return await AgileCacheService.instance.fetch(_epicsCacheKey(projectId),
+          () async {
         final snapshot = await _epicsCol(projectId).orderBy('title').get();
         return snapshot.docs
             .map((doc) => Epic.fromJson({...doc.data(), 'id': doc.id}))
@@ -44,12 +43,41 @@ class EpicFeatureService {
   }
 
   static Stream<List<Epic>> streamEpics(String projectId) {
-    return _epicsCol(projectId)
-        .orderBy('title')
-        .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => Epic.fromJson({...doc.data(), 'id': doc.id}))
-            .toList());
+    return _epicsCol(projectId).orderBy('title').snapshots().map((snap) => snap
+        .docs
+        .map((doc) => Epic.fromJson({...doc.data(), 'id': doc.id}))
+        .toList());
+  }
+
+  static Future<List<Feature>> loadAllFeatures(String projectId) async {
+    try {
+      final epics = await loadEpics(projectId);
+      final results = await Future.wait(
+        epics.map((e) => loadFeatures(projectId, e.id)),
+      );
+      return results.expand((f) => f).toList();
+    } catch (error) {
+      debugPrint('EpicFeatureService.loadAllFeatures error: $error');
+      return [];
+    }
+  }
+
+  static Future<void> assignFeatureToSprint({
+    required String projectId,
+    required Feature feature,
+    required String? sprintId,
+  }) async {
+    try {
+      feature.sprintId = sprintId;
+      await _featuresCol(projectId, feature.epicId)
+          .doc(feature.id)
+          .update({'sprintId': sprintId});
+      AgileCacheService.instance
+          .invalidate(_featuresCacheKey(projectId, feature.epicId));
+    } catch (error) {
+      debugPrint('EpicFeatureService.assignFeatureToSprint error: $error');
+      rethrow;
+    }
   }
 
   static Future<void> saveEpic({
@@ -80,11 +108,12 @@ class EpicFeatureService {
 
   // ── Features ──
 
+  /// Load features for a specific epic.
   static Future<List<Feature>> loadFeatures(
       String projectId, String epicId) async {
     try {
-      return await AgileCacheService.instance.fetch(
-          _featuresCacheKey(projectId, epicId), () async {
+      return await AgileCacheService.instance
+          .fetch(_featuresCacheKey(projectId, epicId), () async {
         final snapshot =
             await _featuresCol(projectId, epicId).orderBy('title').get();
         return snapshot.docs
@@ -103,7 +132,9 @@ class EpicFeatureService {
     required Feature feature,
   }) async {
     try {
-      await _featuresCol(projectId, epicId).doc(feature.id).set(feature.toJson());
+      await _featuresCol(projectId, epicId)
+          .doc(feature.id)
+          .set(feature.toJson());
       AgileCacheService.instance
           .invalidate(_featuresCacheKey(projectId, epicId));
     } catch (error) {

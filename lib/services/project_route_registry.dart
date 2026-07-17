@@ -37,6 +37,8 @@ import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
 import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
 import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
+import 'package:ndu_project/screens/agile_scrum_config_screen.dart';
+import 'package:ndu_project/screens/agile_capacity_planning_screen.dart';
 import 'package:ndu_project/screens/project_plan_screen.dart';
 import 'package:ndu_project/screens/project_baseline_screen.dart';
 
@@ -64,6 +66,8 @@ class ProjectRouteRegistry {
     'technology': () => const PlanningTechnologyScreen(),
     'interface_management': () => const InterfaceManagementScreen(),
     'agile_delivery_model': () => const AgileDeliveryModelScreen(),
+    'agile_scrum_config': () => const AgileScrumConfigScreen(),
+    'agile_capacity_planning': () => const AgileCapacityPlanningScreen(),
     'agile_team_structure': () => const AgileTeamStructureScreen(),
     'agile_kanban_config': () => const AgileKanbanConfigScreen(),
     'agile_epics_features': () => const AgileEpicsFeaturesScreen(),

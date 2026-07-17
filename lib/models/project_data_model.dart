@@ -1387,29 +1387,37 @@ class ProjectGoal {
 }
 
 class PlanningGoal {
+  String id;
   int goalNumber;
   String title;
   String description;
   String targetYear;
   String priority;
+  List<String> milestoneIds;
   List<PlanningMilestone> milestones;
 
   PlanningGoal({
+    String? id,
     required this.goalNumber,
     this.title = '',
     this.description = '',
     this.targetYear = '',
     this.priority = 'Medium Priority',
+    List<String>? milestoneIds,
     List<PlanningMilestone>? milestones,
-  }) : milestones = milestones ?? [PlanningMilestone()];
+  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+        milestoneIds = milestoneIds ?? [],
+        milestones = milestones ?? [PlanningMilestone()];
 
   Map<String, dynamic> toJson() => {
+        'id': id,
         'goalNumber': goalNumber,
         'title': title,
         'description': description,
         'targetYear': targetYear,
         'priority': priority,
         'isHighPriority': priority == 'High Priority',
+        'milestoneIds': milestoneIds,
         'milestones': milestones.map((m) => m.toJson()).toList(),
       };
 
@@ -1417,6 +1425,7 @@ class PlanningGoal {
     final rawPriority = json['priority']?.toString() ?? '';
     final legacyHigh = json['isHighPriority'] == true;
     return PlanningGoal(
+      id: json['id']?.toString(),
       goalNumber: json['goalNumber'] ?? 1,
       title: json['title'] ?? '',
       description: json['description'] ?? '',
@@ -1424,6 +1433,11 @@ class PlanningGoal {
       priority: rawPriority.isNotEmpty
           ? rawPriority
           : (legacyHigh ? 'High Priority' : 'Medium Priority'),
+      milestoneIds: (json['milestoneIds'] as List?)
+              ?.map((m) => m.toString())
+              .where((m) => m.trim().isNotEmpty)
+              .toList() ??
+          const [],
       milestones: (json['milestones'] as List?)
               ?.map((m) => PlanningMilestone.fromJson(m))
               .toList() ??
@@ -1523,6 +1537,7 @@ class LaunchChecklistItem {
 }
 
 class Milestone {
+  String id;
   String name;
   String discipline;
   String dueDate;
@@ -1530,14 +1545,16 @@ class Milestone {
   String comments;
 
   Milestone({
+    String? id,
     this.name = '',
     this.discipline = '',
     this.dueDate = '',
     this.references = '',
     this.comments = '',
-  });
+  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
 
   Map<String, dynamic> toJson() => {
+        'id': id,
         'name': name,
         'discipline': discipline,
         'dueDate': dueDate,
@@ -1547,6 +1564,7 @@ class Milestone {
 
   factory Milestone.fromJson(Map<String, dynamic> json) {
     return Milestone(
+      id: json['id']?.toString(),
       name: json['name'] ?? '',
       discipline: json['discipline'] ?? '',
       dueDate: json['dueDate'] ?? '',
@@ -3904,6 +3922,7 @@ class WorkPackage {
   String acceptingCriteria;
   String designPackageId;
   List<String> procurementItemIds;
+  List<String> milestoneIds;
   String areaOrSystem;
   String contractorOrCrew;
   String releaseStatus;
@@ -3970,6 +3989,7 @@ class WorkPackage {
     this.acceptingCriteria = '',
     this.designPackageId = '',
     List<String>? procurementItemIds,
+    List<String>? milestoneIds,
     this.areaOrSystem = '',
     this.contractorOrCrew = '',
     this.releaseStatus = 'draft',
@@ -3993,6 +4013,7 @@ class WorkPackage {
         requirementIds = requirementIds ?? [],
         deliverables = deliverables ?? [],
         procurementItemIds = procurementItemIds ?? [],
+        milestoneIds = milestoneIds ?? [],
         linkedDesignSpecificationIds = linkedDesignSpecificationIds ?? [],
         readiness = readiness ?? PackageReadinessChecklist(),
         estimateBasis = estimateBasis ?? PackageEstimateBasis(),
@@ -4038,6 +4059,7 @@ class WorkPackage {
         'acceptingCriteria': acceptingCriteria,
         'designPackageId': designPackageId,
         'procurementItemIds': procurementItemIds,
+        'milestoneIds': milestoneIds,
         'areaOrSystem': areaOrSystem,
         'contractorOrCrew': contractorOrCrew,
         'releaseStatus': releaseStatus,
@@ -4132,6 +4154,10 @@ class WorkPackage {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      milestoneIds: (json['milestoneIds'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       areaOrSystem: json['areaOrSystem']?.toString() ?? '',
       contractorOrCrew: json['contractorOrCrew']?.toString() ?? '',
       releaseStatus: json['releaseStatus']?.toString() ?? 'draft',
@@ -4203,6 +4229,7 @@ class WorkPackage {
     String? acceptingCriteria,
     String? designPackageId,
     List<String>? procurementItemIds,
+    List<String>? milestoneIds,
     String? areaOrSystem,
     String? contractorOrCrew,
     String? releaseStatus,
@@ -4256,6 +4283,7 @@ class WorkPackage {
       acceptingCriteria: acceptingCriteria ?? this.acceptingCriteria,
       designPackageId: designPackageId ?? this.designPackageId,
       procurementItemIds: procurementItemIds ?? this.procurementItemIds,
+      milestoneIds: milestoneIds ?? this.milestoneIds,
       areaOrSystem: areaOrSystem ?? this.areaOrSystem,
       contractorOrCrew: contractorOrCrew ?? this.contractorOrCrew,
       releaseStatus: releaseStatus ?? this.releaseStatus,

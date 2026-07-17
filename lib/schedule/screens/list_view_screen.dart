@@ -799,6 +799,8 @@ class _TraceabilityCell extends StatelessWidget {
         return 'Package Import';
       case 'wbs':
         return 'WBS Import';
+      case 'fep_milestone':
+        return 'FEP Milestone';
       default:
         return source;
     }

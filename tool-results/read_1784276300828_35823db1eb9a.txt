@@ -1,0 +1,1361 @@
+     1→/// NDU Project — World-Class Marketing Landing Page
+     2→///
+     3→/// Combines wireframe from Website Update.docx + nav structure from
+     4→/// Website Homepage Outline.pptx + use case strategy from Website Update
+     5→/// Suggestions.docx + inspiration from Jira, Asana, Monday.com.
+     6→///
+     7→/// 12 sections: Hero → Social Proof → Problem → Solution → How It Works →
+     8→/// Differentiators → Use Cases → KAZ AI → Benefits → Pricing → Services →
+     9→/// Final CTA → Footer
+    10→///
+    11→/// Plus: Careers page, Media/Blog links, Partner form
+    12→
+    13→import 'dart:ui';
+    14→import 'package:flutter/material.dart';
+    15→import 'package:go_router/go_router.dart';
+    16→import 'package:ndu_project/theme.dart';
+    17→import 'package:url_launcher/url_launcher.dart';
+    18→
+    19→// ─── Color System ──────────────────────────────────────────────────────────
+    20→const _bg = Color(0xFF0A0E1A);
+    21→const _surface = Color(0xFF111827);
+    22→const _surfaceHigh = Color(0xFF1A2234);
+    23→const _surfaceCard = Color(0xFF151D2E);
+    24→const _textPrimary = Color(0xFFF1F5F9);
+    25→const _textSecondary = Color(0xFF94A3B8);
+    26→const _textMuted = Color(0xFF64748B);
+    27→const _border = Color(0xFF1E293B);
+    28→const _blue = Color(0xFF3B82F6);
+    29→const _blueLight = Color(0xFF60A5FA);
+    30→const _purple = Color(0xFF8B5CF6);
+    31→const _purpleLight = Color(0xFFA78BFA);
+    32→const _green = Color(0xFF10B981);
+    33→const _greenLight = Color(0xFF34D399);
+    34→const _gold = Color(0xFFFBBF24);
+    35→const _goldDeep = Color(0xFFD97706);
+    36→const _red = Color(0xFFEF4444);
+    37→
+    38→// Phase-specific unique colors for "How It Works" section
+    39→const _teal = Color(0xFF14B8A6);      // For Design phase
+    40→const _tealLight = Color(0xFF2DD4BF);
+    41→const _orange = Color(0xFFF97316);     // For Execution phase
+    42→const _orangeLight = Color(0xFFFB923C);
+    43→
+    44→class LandingPageScreen extends StatelessWidget {
+    45→  const LandingPageScreen({super.key});
+    46→
+    47→  static void open(BuildContext context) {
+    48→    Navigator.of(context).push(
+    49→      MaterialPageRoute(builder: (_) => const LandingPageScreen()),
+    50→    );
+    51→  }
+    52→
+    53→  @override
+    54→  Widget build(BuildContext context) {
+    55→    return Scaffold(
+    56→      backgroundColor: _bg,
+    57→      body: Stack(
+    58→        children: [
+    59→          // Atmospheric background
+    60→          Positioned(top: -200, right: -200, child: _glowCircle(500, _blue.withValues(alpha: 0.06))),
+    61→          Positioned(bottom: -300, left: -200, child: _glowCircle(600, _purple.withValues(alpha: 0.04))),
+    62→          CustomScrollView(
+    63→            slivers: [
+    64→              _buildNav(context),
+    65→              SliverList(delegate: SliverChildListDelegate([
+    66→                _HeroSection(),
+    67→                _SocialProofSection(),
+    68→                _ProblemSection(),
+    69→                _SolutionSection(),
+    70→                _HowItWorksSection(),
+    71→                _DifferentiatorsSection(),
+    72→                _UseCasesSection(),
+    73→                _KazAISection(),
+    74→                _BenefitsSection(),
+    75→                _PricingSection(),
+    76→                _ServicesSection(),
+    77→                _FinalCTASection(),
+    78→                _FooterSection(),
+    79→              ])),
+    80→            ],
+    81→          ),
+    82→        ],
+    83→      ),
+    84→    );
+    85→  }
+    86→
+    87→  Widget _glowCircle(double size, Color color) {
+    88→    return Container(
+    89→      width: size, height: size,
+    90→      decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [color, Colors.transparent])),
+    91→    );
+    92→  }
+    93→
+    94→  SliverAppBar _buildNav(BuildContext context) {
+    95→    return SliverAppBar(
+    96→      pinned: true,
+    97→      toolbarHeight: 64,
+    98→      backgroundColor: _bg.withValues(alpha: 0.85),
+    99→      surfaceTintColor: Colors.transparent,
+   100→      flexibleSpace: ClipRect(
+   101→        child: BackdropFilter(
+   102→          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+   103→          child: Container(
+   104→            decoration: BoxDecoration(
+   105→              color: _bg.withValues(alpha: 0.85),
+   106→              border: Border(bottom: BorderSide(color: _border, width: 1)),
+   107→            ),              child: SafeArea(
+   108→              child: Padding(
+   109→                padding: const EdgeInsets.symmetric(horizontal: 48),
+   110→                child: SingleChildScrollView(
+   111→                  scrollDirection: Axis.horizontal,
+   112→                  physics: const BouncingScrollPhysics(),
+   113→                  child: Row(
+   114→                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+   115→                    children: [
+   116→                      // Logo
+   117→                      Row(children: [
+   118→                        Container(width: 32, height: 32, decoration: BoxDecoration(gradient: LinearGradient(colors: [_gold, _goldDeep]), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.trending_up, color: Color(0xFF0A0E1A), size: 18)),
+   119→                        const SizedBox(width: 10),
+   120→                        Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
+   121→                        Text(' Project', style: TextStyle(color: _gold, fontSize: 18, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
+   122→                      ]),
+   123→                      // Nav items (desktop)
+   124→                      if (MediaQuery.sizeOf(context).width > 900)
+   125→                        Row(children: [
+   126→                          _buildSolutionsDropdown(context),
+   127→                          _buildServicesDropdown(context),
+   128→                          _navLink('Why Ndu Project?', () => _scrollTo(context, 'why')),
+   129→                          _navLink('Pricing', () => _scrollTo(context, 'pricing')),
+   130→                          _buildResourcesDropdown(context),
+   131→                          _navLink('KAZ AI', () => _scrollTo(context, 'kaz')),
+   132→                        ]),
+   133→                      // Right side
+   134→                      Row(children: [
+   135→                        // Social icons
+   136→                        _socialIcon(Icons.facebook, 'https://facebook.com/nduproject'),
+   137→                        _socialIcon(Icons.camera_alt_outlined, 'https://instagram.com/nduproject'),
+   138→                        _socialIcon(Icons.business, 'https://linkedin.com/company/nduproject'),
+   139→                        _socialIcon(Icons.play_circle_outline, 'https://youtube.com/@nduproject'),
+   140→                        _socialIcon(Icons.music_note, 'https://tiktok.com/@nduproject'),
+   141→                        const SizedBox(width: 12),
+   142→                        TextButton(onPressed: () => context.go('/sign-in'), child: Text('Sign In', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
+   143→                        const SizedBox(width: 16),
+   144→                        _yellowButton('Start Your Project', () => context.go('/create-account')),
+   145→                      ]),
+   146→                    ],
+   147→                  ),
+   148→                ),
+   149→              ),
+   150→            ),
+   151→          ),
+   152→        ),
+   153→      ),
+   154→    );
+   155→  }
+   156→
+   157→  void _scrollTo(BuildContext context, String key) {
+   158→    final ctx = context;
+   159→    Scrollable.ensureVisible(
+   160→      ctx.findRenderObject() as BuildContext != null ? ctx : ctx,
+   161→      duration: const Duration(milliseconds: 500),
+   162→      curve: Curves.easeInOut,
+   163→    );
+   164→  }
+   165→
+   166→  Widget _navLink(String label, VoidCallback onTap) {
+   167→    return Padding(
+   168→      padding: const EdgeInsets.symmetric(horizontal: 8),
+   169→      child: TextButton(
+   170→        onPressed: onTap,
+   171→        child: Text(label, style: TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily)),
+   172→      ),
+   173→    );
+   174→  }
+   175→
+   176→  Widget _buildSolutionsDropdown(BuildContext context) {
+   177→    return PopupMenuButton<String>(
+   178→      onSelected: (value) {
+   179→        switch (value) {
+   180→          case 'how':
+   181→            _scrollTo(context, 'how');
+   182→            break;
+   183→          case 'diff':
+   184→            _scrollTo(context, 'diff');
+   185→            break;
+   186→          case 'usecases':
+   187→            _scrollTo(context, 'diff');
+   188→            break;
+   189→          case 'demo':
+   190→            _scrollTo(context, 'pricing');
+   191→            break;
+   192→          case 'partner':
+   193→            _scrollTo(context, 'services');
+   194→            break;
+   195→        }
+   196→      },
+   197→      itemBuilder: (context) => const [
+   198→        PopupMenuItem(value: 'how', child: Text('How It Works')),
+   199→        PopupMenuItem(value: 'diff', child: Text('Differentiator')),
+   200→        PopupMenuItem(value: 'usecases', child: Text('Use Cases')),
+   201→        PopupMenuItem(value: 'demo', child: Text('Demo')),
+   202→        PopupMenuItem(value: 'partner', child: Text('Partner with Us')),
+   203→      ],
+   204→      child: Padding(
+   205→        padding: const EdgeInsets.symmetric(horizontal: 8),
+   206→        child: Row(
+   207→          mainAxisSize: MainAxisSize.min,
+   208→          children: [
+   209→            Text('Solutions', style: TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily)),
+   210→            const SizedBox(width: 2),
+   211→            Icon(Icons.keyboard_arrow_down, color: _textMuted, size: 16),
+   212→          ],
+   213→        ),
+   214→      ),
+   215→    );
+   216→  }
+   217→
+   218→  Widget _buildServicesDropdown(BuildContext context) {
+   219→    return PopupMenuButton<String>(
+   220→      onSelected: (value) {
+   221→        switch (value) {
+   222→          case 'services':
+   223→            _scrollTo(context, 'services');
+   224→            break;
+   225→          case 'delivery':
+   226→            _scrollTo(context, 'services');
+   227→            break;
+   228→          case 'training':
+   229→            _scrollTo(context, 'kaz');
+   230→            break;
+   231→          case 'consultation':
+   232→            _scrollTo(context, 'footer');
+   233→            break;
+   234→        }
+   235→      },
+   236→      itemBuilder: (context) => const [
+   237→        PopupMenuItem(value: 'services', child: Text('Services')),
+   238→        PopupMenuItem(value: 'delivery', child: Text('Project Delivery')),
+   239→        PopupMenuItem(value: 'training', child: Text('Training')),
+   240→        PopupMenuItem(value: 'consultation', child: Text('Consultation')),
+   241→      ],
+   242→      child: Padding(
+   243→        padding: const EdgeInsets.symmetric(horizontal: 8),
+   244→        child: Row(
+   245→          mainAxisSize: MainAxisSize.min,
+   246→          children: [
+   247→            Text('Services', style: TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily)),
+   248→            const SizedBox(width: 2),
+   249→            Icon(Icons.keyboard_arrow_down, color: _textMuted, size: 16),
+   250→          ],
+   251→        ),
+   252→      ),
+   253→    );
+   254→  }
+   255→
+   256→  Widget _buildResourcesDropdown(BuildContext context) {
+   257→    return PopupMenuButton<String>(
+   258→      onSelected: (value) {
+   259→        switch (value) {
+   260→          case 'contact':
+   261→            _scrollTo(context, 'footer');
+   262→            break;
+   263→          case 'support':
+   264→            _scrollTo(context, 'footer');
+   265→            break;
+   266→          case 'media':
+   267→            _launchUrl('https://nduproject.tech');
+   268→            break;
+   269→          case 'announcements':
+   270→            _scrollTo(context, 'footer');
+   271→            break;
+   272→        }
+   273→      },
+   274→      itemBuilder: (context) => const [
+   275→        PopupMenuItem(value: 'contact', child: Text('Contact Us')),
+   276→        PopupMenuItem(value: 'support', child: Text('Support')),
+   277→        PopupMenuItem(value: 'media', child: Text('Media')),
+   278→        PopupMenuItem(value: 'announcements', child: Text('Announcements')),
+   279→      ],
+   280→      child: Padding(
+   281→        padding: const EdgeInsets.symmetric(horizontal: 8),
+   282→        child: Row(
+   283→          mainAxisSize: MainAxisSize.min,
+   284→          children: [
+   285→            Text('Resources', style: TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily)),
+   286→            const SizedBox(width: 2),
+   287→            Icon(Icons.keyboard_arrow_down, color: _textMuted, size: 16),
+   288→          ],
+   289→        ),
+   290→      ),
+   291→    );
+   292→  }
+   293→
+   294→  Widget _socialIcon(IconData icon, String url) {
+   295→    return IconButton(
+   296→      icon: Icon(icon, color: _textMuted, size: 16),
+   297→      onPressed: () => _launchUrl(url),
+   298→      constraints: const BoxConstraints(),
+   299→      padding: const EdgeInsets.all(6),
+   300→    );
+   301→  }
+   302→
+   303→  Widget _yellowButton(String label, VoidCallback onTap) {
+   304→    return Container(
+   305→      decoration: BoxDecoration(
+   306→        gradient: LinearGradient(colors: [_gold, _goldDeep]),
+   307→        borderRadius: BorderRadius.circular(24),
+   308→      ),
+   309→      child: Material(
+   310→        color: Colors.transparent,
+   311→        child: InkWell(
+   312→          onTap: onTap,
+   313→          borderRadius: BorderRadius.circular(24),
+   314→          child: Padding(
+   315→            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+   316→            child: Text(
+   317→              label,
+   318→              style: TextStyle(
+   319→                color: _bg,
+   320→                fontSize: 18,
+   321→                fontWeight: FontWeight.w700,
+   322→                fontFamily: appFontFamily,
+   323→              ),
+   324→            ),
+   325→          ),
+   326→        ),
+   327→      ),
+   328→    );
+   329→  }
+   330→}
+   331→
+   332→void _launchUrl(String url) async {
+   333→  final uri = Uri.parse(url);
+   334→  if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+   335→}
+   336→
+   337→// ═════════════════════════════════════════════════════════════════════════
+   338→// SECTION 1: HERO
+   339→// ═════════════════════════════════════════════════════════════════════════
+   340→
+   341→class _HeroSection extends StatelessWidget {
+   342→  @override
+   343→  Widget build(BuildContext context) {
+   344→    final screenHeight = MediaQuery.of(context).size.height;
+   345→    
+   346→    return Container(
+   347→      key: const Key('why'),
+   348→      padding: const EdgeInsets.symmetric(horizontal: 48),
+   349→      height: screenHeight,
+   350→      child: Center(
+   351→        child: ConstrainedBox(
+   352→          constraints: const BoxConstraints(maxWidth: 1200),
+   353→          child: SingleChildScrollView(
+   354→            child: Column(
+   355→              mainAxisAlignment: MainAxisAlignment.center,
+   356→              mainAxisSize: MainAxisSize.min,
+   357→              children: [
+   358→                // Badge
+   359→                Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), decoration: BoxDecoration(color: _blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: _blue.withValues(alpha: 0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [
+   360→                  Icon(Icons.auto_awesome, color: _blue, size: 14),
+   361→                  const SizedBox(width: 6),
+   362→                  Text('Project Delivery Operating System (PDOS)', style: TextStyle(color: _blueLight, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: appFontFamily)),
+   363→                ])),
+   364→                const SizedBox(height: 32),
+   365→                // Headline
+   366→                Text('42% of Projects Fail to meet original scope.\nFix Project Failure Before It Starts',
+   367→                  textAlign: TextAlign.center,
+   368→                  style: TextStyle(color: _textPrimary, fontSize: 42, fontWeight: FontWeight.w800, letterSpacing: -1, height: 1.2, fontFamily: appFontFamily)),
+   369→                const SizedBox(height: 24),
+   370→                // Subheadline
+   371→                Text('Ndu Project is a Project Delivery Operating System — a SaaS platform that integrates AI, analytics, and human decision making to deliver projects from initiation through completion.',
+   372→                  textAlign: TextAlign.center,
+   373→                  style: TextStyle(color: _textSecondary, fontSize: 18, height: 1.6, fontFamily: appFontFamily)),
+   374→                const SizedBox(height: 32),
+   375→                // Value props
+   376→                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+   377→                  _valueProp('Define, plan, and execute in one continuous system'),
+   378→                  const SizedBox(width: 24),
+   379→                  _valueProp('Predict risks, delays, and cost impacts before they happen'),
+   380→                  const SizedBox(width: 24),
+   381→                  _valueProp('Align teams and decisions in real time'),
+   382→                ]),
+   383→                const SizedBox(height: 40),
+   384→                // CTAs
+   385→                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+   386→                  _ctaButton('Request a Demo', _blue, Colors.white, () => context.go('/create-account')),
+   387→                  const SizedBox(width: 16),
+   388→                  _ctaButton('See How It Works', Colors.transparent, _textPrimary, () {}, border: true),
+   389→                ]),
+   390→                const SizedBox(height: 60),
+   391→                // System diagram visual - 5 phases with unique colors (CENTERED)
+   392→                Container(
+   393→                  width: double.infinity,
+   394→                  padding: const EdgeInsets.all(40),
+   395→                  decoration: BoxDecoration(color: _surfaceCard.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(20), border: Border.all(color: _border)),
+   396→                  child: Column(
+   397→                    mainAxisAlignment: MainAxisAlignment.center,
+   398→                    children: [
+   399→                      // Row 1: Initiation → Planning → Design
+   400→                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+   401→                        _phaseNode('Initiation', _blue, Icons.flag_outlined),
+   402→                        _arrow(),
+   403→                        _phaseNode('Planning', _purple, Icons.explore_outlined),
+   404→                        _arrow(),
+   405→                        _phaseNode('Design', _teal, Icons.design_services_outlined),
+   406→                        _arrow(),
+   407→                      ]),
+   408→                      const SizedBox(height: 24),
+   409→                      // Row 2: Execution → Launch (centered)
+   410→                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+   411→                        _phaseNode('Execution', _orange, Icons.build_outlined),
+   412→                        _arrow(),
+   413→                        _phaseNode('Launch', _gold, Icons.rocket_launch_outlined),
+   414→                      ]),
+   415→                    ],
+   416→                  ),
+   417→                ),
+   418→                // AI + Analytics + Human overlay
+   419→                const SizedBox(height: 16),
+   420→                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+   421→                  _overlayChip('AI Guidance', _purple),
+   422→                  _overlayChip('Analytics', _blue),
+   423→                  _overlayChip('Human Decision', _green),
+   424→                ]),
+   425→              ],
+   426→            ),
+   427→          ),
+   428→        ),
+   429→      ),
+   430→    );
+   431→  }
+   432→
+   433→  Widget _valueProp(String text) {
+   434→    return Row(children: [Icon(Icons.check_circle, color: _green, size: 16), const SizedBox(width: 6), Text(text, style: TextStyle(color: _textSecondary, fontSize: 13, fontFamily: appFontFamily))]);
+   435→  }
+   436→
+   437→  Widget _ctaButton(String label, Color bg, Color fg, VoidCallback onTap, {bool border = false}) {
+   438→    return Container(
+   439→      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(24), border: border ? Border.all(color: _border) : null, boxShadow: bg != Colors.transparent ? [BoxShadow(color: bg.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))] : null),
+   440→      child: Material(color: Colors.transparent, child: InkWell(
+   441→        onTap: onTap,
+   442→        borderRadius: BorderRadius.circular(24),
+   443→        child: Padding(padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14), child: Text(label, style: TextStyle(color: fg, fontSize: 15, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
+   444→      )),
+   445→    );
+   446→  }
+   447→
+   448→  Widget _phaseNode(String label, Color color, [IconData? icon]) {
+   449→    return Column(children: [
+   450→      Container(
+   451→        width: 72,
+   452→        height: 72,
+   453→        decoration: BoxDecoration(
+   454→          color: color.withValues(alpha: 0.15),
+   455→          borderRadius: BorderRadius.circular(16),
+   456→          border: Border.all(color: color.withValues(alpha: 0.5), width: 2),
+   457→          boxShadow: [
+   458→            BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 12, offset: const Offset(0, 4)),
+   459→          ],
+   460→        ),
+   461→        child: Icon(icon ?? Icons.circle, color: color, size: 32),
+   462→      ),
+   463→      const SizedBox(height: 8),
+   464→      Text(label, style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+   465→    ]);
+   466→  }
+   467→
+   468→  Widget _arrow() => Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Icon(Icons.arrow_forward, color: _textMuted, size: 20));
+   469→
+   470→  Widget _overlayChip(String label, Color color) {
+   471→    return Container(margin: const EdgeInsets.symmetric(horizontal: 6), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)), child: Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600, fontFamily: appFontFamily)));
+   472→  }
+   473→}
+   474→
+   475→// ═════════════════════════════════════════════════════════════════════════
+   476→// SECTION 2: SOCIAL PROOF
+   477→// ═════════════════════════════════════════════════════════════════════════
+   478→
+   479→class _SocialProofSection extends StatelessWidget {
+   480→  @override
+   481→  Widget build(BuildContext context) {
+   482→    return Container(
+   483→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 40),
+   484→      child: Center(child: ConstrainedBox(
+   485→        constraints: const BoxConstraints(maxWidth: 1200),
+   486→        child: Column(children: [
+   487→          Text('Built from real-world delivery experience across global enterprises and high-growth organizations',
+   488→            textAlign: TextAlign.center,
+   489→            style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
+   490→          const SizedBox(height: 24),
+   491→          // Trust badges
+   492→          Wrap(spacing: 32, runSpacing: 16, alignment: WrapAlignment.center, children: [
+   493→            _trustBadge('NSF I-Corps', Icons.science_outlined),
+   494→            _trustBadge('IdeaVillage Accelerator', Icons.rocket_launch_outlined),
+   495→            _trustBadge('13 Years ExxonMobil', Icons.local_gas_station_outlined),
+   496→            _trustBadge('4 Years IBM', Icons.computer_outlined),
+   497→            _trustBadge('34+ Research Interviews', Icons.people_outline),
+   498→          ]),
+   499→          const SizedBox(height: 32),
+   500→          // Trusted by
+   501→          Text('TRUSTED BY', style: TextStyle(color: _textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 2, fontFamily: appFontFamily)),
+   502→          const SizedBox(height: 16),
+   503→          Wrap(spacing: 24, runSpacing: 12, alignment: WrapAlignment.center, children: [
+   504→            _trustedBy('Start-ups'),
+   505→            _trustedBy('MSMEs'),
+   506→            _trustedBy('Consultants'),
+   507→            _trustedBy('Community Organizations'),
+   508→          ]),
+   509→        ]),
+   510→      )),
+   511→    );
+   512→  }
+   513→
+   514→  Widget _trustBadge(String label, IconData icon) {
+   515→    return Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [Icon(icon, color: _gold, size: 16), const SizedBox(width: 8), Text(label, style: TextStyle(color: _textSecondary, fontSize: 12, fontWeight: FontWeight.w500, fontFamily: appFontFamily))]));
+   516→  }
+   517→
+   518→  Widget _trustedBy(String label) {
+   519→    return Container(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10), decoration: BoxDecoration(color: _surface.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Text(label, style: TextStyle(color: _textPrimary, fontSize: 14, fontWeight: FontWeight.w600, fontFamily: appFontFamily)));
+   520→  }
+   521→}
+   522→
+   523→// ═════════════════════════════════════════════════════════════════════════
+   524→// SECTION 3: THE PROBLEM
+   525→// ═════════════════════════════════════════════════════════════════════════
+   526→
+   527→class _ProblemSection extends StatelessWidget {
+   528→  @override
+   529→  Widget build(BuildContext context) {
+   530→    final problems = [
+   531→      ('No, or rushed, initiation and planning', Icons.timer_off_outlined, _red),
+   532→      ('Fragmented tools for different project stages', Icons.layers_outlined, _red),
+   533→      ('Misalignment between teams and decisions', Icons.group_off_outlined, _red),
+   534→      ('Reactive risk management', Icons.warning_amber_rounded, _red),
+   535→      ('Costly rework and delays', Icons.money_off_csred_outlined, _red),
+   536→    ];
+   537→    return Container(
+   538→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 80),
+   539→      color: _surface.withValues(alpha: 0.3),
+   540→      child: Center(child: ConstrainedBox(
+   541→        constraints: const BoxConstraints(maxWidth: 1200),
+   542→        child: Column(children: [
+   543→          Text('Projects Don\'t Fail in Execution.\nThey Fail Before Execution Begins',
+   544→            textAlign: TextAlign.center,
+   545→            style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, height: 1.3, fontFamily: appFontFamily)),
+   546→          const SizedBox(height: 16),
+   547→          Text('Most project tools focus on tracking work after it starts. But by then, the most critical decisions have already been made… and often made poorly.',
+   548→            textAlign: TextAlign.center,
+   549→            style: TextStyle(color: _textSecondary, fontSize: 16, height: 1.6, fontFamily: appFontFamily)),
+   550→          const SizedBox(height: 40),
+   551→          Wrap(spacing: 20, runSpacing: 20, alignment: WrapAlignment.center, children: problems.map((p) => _problemCard(p.$1, p.$2, p.$3)).toList()),
+   552→          const SizedBox(height: 40),
+   553→          Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _red.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(12), border: Border.all(color: _red.withValues(alpha: 0.2))), child: Text('The issue isn\'t execution. It\'s the lack of a system governing the full lifecycle.', textAlign: TextAlign.center, style: TextStyle(color: _red, fontSize: 16, fontWeight: FontWeight.w600, fontFamily: appFontFamily))),
+   554→        ]),
+   555→      )),
+   556→    );
+   557→  }
+   558→
+   559→  Widget _problemCard(String text, IconData icon, Color color) {
+   560→    return Container(width: 220, padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)), const SizedBox(height: 12), Text(text, textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily))]));
+   561→  }
+   562→}
+   563→
+   564→// ═════════════════════════════════════════════════════════════════════════
+   565→// SECTION 4: THE SOLUTION (PDOS)
+   566→// ═════════════════════════════════════════════════════════════════════════
+   567→
+   568→class _SolutionSection extends StatelessWidget {
+   569→  @override
+   570→  Widget build(BuildContext context) {
+   571→    final caps = [
+   572→      ('End-to-end delivery', 'Continuous lifecycle integration from initiation to launch', Icons.all_inclusive, _blue),
+   573→      ('AI-driven recommendations', 'Predictive analytics for risk and cost', Icons.psychology, _purple),
+   574→      ('Real-time alignment', 'Cross-functional teams in sync', Icons.sync, _green),
+   575→      ('Readiness-based execution', 'Gates ensure work starts right', Icons.verified_outlined, _gold),
+   576→    ];
+   577→    return Container(
+   578→      key: const Key('solution'),
+   579→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 80),
+   580→      child: Center(child: ConstrainedBox(
+   581→        constraints: const BoxConstraints(maxWidth: 1200),
+   582→        child: Column(children: [
+   583→          Text('A New Category: Project Delivery Operating System',
+   584→            textAlign: TextAlign.center,
+   585→            style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+   586→          const SizedBox(height: 16),
+   587→          Text('Ndu Project replaces disconnected tools with a unified system that governs how projects are defined, planned, and delivered.',
+   588→            textAlign: TextAlign.center,
+   589→            style: TextStyle(color: _textSecondary, fontSize: 16, height: 1.6, fontFamily: appFontFamily)),
+   590→          const SizedBox(height: 40),
+   591→          // Capability grid
+   592→          GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 4, crossAxisSpacing: 20, mainAxisSpacing: 20, childAspectRatio: 1.0, children: caps.map((c) => _capCard(c.$1, c.$2, c.$3, c.$4)).toList()),
+   593→          const SizedBox(height: 40),
+   594→          // Comparison table
+   595→          Container(decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(children: [
+   596→            Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: _surfaceHigh.withValues(alpha: 0.5), borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12))), child: Row(children: [Expanded(child: Text('Traditional Tools', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 14, fontWeight: FontWeight.w600, fontFamily: appFontFamily))), Expanded(child: Text('Ndu Project (PDOS)', textAlign: TextAlign.center, style: TextStyle(color: _gold, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: appFontFamily)))])),
+   597→            _compareRow('Focus on tracking', 'Governs full lifecycle'),
+   598→            _compareRow('Reactive insights', 'Predictive analytics'),
+   599→            _compareRow('Siloed workflows', 'Integrated system'),
+   600→            _compareRow('Execution-focused', 'Initiation-first approach'),
+   601→          ])),
+   602→        ]),
+   603→      )),
+   604→    );
+   605→  }
+   606→
+   607→  Widget _capCard(String title, String desc, IconData icon, Color color) {
+   608→    return Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)), const SizedBox(height: 12), Text(title, style: TextStyle(color: _textPrimary, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: appFontFamily)), const SizedBox(height: 6), Text(desc, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]));
+   609→  }
+   610→
+   611→  Widget _compareRow(String trad, String ndu) {
+   612→    return Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: const BoxDecoration(border: Border(top: BorderSide(color: _border))), child: Row(children: [Expanded(child: Row(children: [Icon(Icons.close, color: _red, size: 14), const SizedBox(width: 6), Text(trad, style: TextStyle(color: _textSecondary, fontSize: 13, fontFamily: appFontFamily))])), Expanded(child: Row(children: [Icon(Icons.check, color: _green, size: 14), const SizedBox(width: 6), Text(ndu, style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily))]))]));
+   613→  }
+   614→}
+   615→
+   616→// ═════════════════════════════════════════════════════════════════════════
+   617→// SECTION 5: HOW IT WORKS
+   618→// ═════════════════════════════════════════════════════════════════════════
+   619→
+   620→class _HowItWorksSection extends StatelessWidget {
+   621→  @override
+   622→  Widget build(BuildContext context) {
+   623→    final steps = [
+   624→      ('01', 'Define', 'Structure strong project foundations with disciplined initiation', Icons.foundation_outlined, _blue),
+   625→      ('02', 'Align', 'Integrate planning across engineering, procurement, and execution', Icons.hub_outlined, _purple),
+   626→      ('03', 'Deliver', 'Execute with readiness gates, AI insights, and real-time alignment', Icons.rocket_launch_outlined, _green),
+   627→    ];
+   628→    return Container(
+   629→      key: const Key('how'),
+   630→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 80),
+   631→      color: _surface.withValues(alpha: 0.3),
+   632→      child: Center(child: ConstrainedBox(
+   633→        constraints: const BoxConstraints(maxWidth: 1200),
+   634→        child: Column(children: [
+   635→          Text('How Ndu Project Delivers Results', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+   636→          const SizedBox(height: 8),
+   637→          Text('For projects, programs, and portfolios — Agile, Waterfall, and Hybrid', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
+   638→          const SizedBox(height: 48),
+   639→          Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: steps.map((s) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+   640→            _stepCard(s.$1, s.$2, s.$3, s.$4, s.$5),
+   641→            if (s.$1 != '03') Padding(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40), child: Icon(Icons.arrow_forward, color: _textMuted, size: 28)),
+   642→          ])).toList()),
+   643→        ]),
+   644→      )),
+   645→    );
+   646→  }
+   647→
+   648→  Widget _stepCard(String num, String title, String desc, IconData icon, Color color) {
+   649→    return Container(width: 240, padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)), child: Column(children: [
+   650→      Text(num, style: TextStyle(color: color.withValues(alpha: 0.3), fontSize: 36, fontWeight: FontWeight.w900, fontFamily: appFontFamily)),
+   651→      const SizedBox(height: 8),
+   652→      Container(width: 48, height: 48, decoration: BoxDecoration(gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: Colors.white, size: 24)),
+   653→      const SizedBox(height: 16),
+   654→      Text(title, style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+   655→      const SizedBox(height: 8),
+   656→      Text(desc, textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 13, height: 1.5, fontFamily: appFontFamily)),
+   657→    ]));
+   658→  }
+   659→}
+   660→
+   661→// ═════════════════════════════════════════════════════════════════════════
+   662→// SECTION 6: DIFFERENTIATORS
+   663→// ═════════════════════════════════════════════════════════════════════════
+   664→
+   665→class _DifferentiatorsSection extends StatelessWidget {
+   666→  @override
+   667→  Widget build(BuildContext context) {
+   668→    return Container(
+   669→      key: const Key('diff'),
+   670→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 80),
+   671→      child: Center(child: ConstrainedBox(
+   672→        constraints: const BoxConstraints(maxWidth: 1200),
+   673→        child: Column(children: [
+   674→          Text('Built Differently From Traditional Project Tools', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+   675→          const SizedBox(height: 32),
+   676→          // Value prop statement
+   677→          Container(padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: _purple.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(16), border: Border.all(color: _purple.withValues(alpha: 0.2))), child: Text('Our AI-powered end-to-end platform helps project managers and executives improve profitability through more effective delivery. It reduces implementation costs by 15–30% and cuts rework by 30–50% via structured initiation and planning. Unlike execution-focused tools that primarily track execution across only a few later phases, our platform drives disciplined, integrated delivery across the full project lifecycle.',
+   678→            textAlign: TextAlign.center,
+   679→            style: TextStyle(color: _textPrimary, fontSize: 15, height: 1.7, fontFamily: appFontFamily))),
+   680→          const SizedBox(height: 32),
+   681→          // Stats
+   682→          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+   683→            _stat('15-30%', 'Reduction in\nimplementation costs', _green),
+   684→            _stat('30-50%', 'Reduction in\nrework', _blue),
+   685→            _stat('20 yrs', 'Project delivery\nexpertise', _gold),
+   686→          ]),
+   687→          const SizedBox(height: 32),
+   688→          // Experience badges
+   689→          Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: [
+   690→            _expBadge('ExxonMobil (Energy)', Icons.local_gas_station),
+   691→            _expBadge('IBM (IT)', Icons.computer),
+   692→            _expBadge('Education', Icons.school),
+   693→            _expBadge('Healthcare', Icons.local_hospital),
+   694→            _expBadge('Financial', Icons.account_balance),
+   695→            _expBadge('NSF I-Corps Research', Icons.science),
+   696→            _expBadge('IdeaVillage Accelerator', Icons.rocket_launch),
+   697→          ]),
+   698→        ]),
+   699→      )),
+   700→    );
+   701→  }
+   702→
+   703→  Widget _stat(String value, String label, Color color) {
+   704→    return Container(margin: const EdgeInsets.symmetric(horizontal: 24), child: Column(children: [Text(value, style: TextStyle(color: color, fontSize: 40, fontWeight: FontWeight.w900, fontFamily: appFontFamily)), const SizedBox(height: 4), Text(label, textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]));
+   705→  }
+   706→
+   707→  Widget _expBadge(String label, IconData icon) {
+   708→    return Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [Icon(icon, color: _gold, size: 14), const SizedBox(width: 6), Text(label, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]));
+   709→  }
+   710→}
+   711→
+   712→// ═════════════════════════════════════════════════════════════════════════
+   713→// SECTION 7: USE CASES (Projects We Help You Deliver)
+   714→// ═════════════════════════════════════════════════════════════════════════
+   715→
+   716→class _UseCasesSection extends StatelessWidget {
+   717→  @override
+   718→  Widget build(BuildContext context) {
+   719→    final cases = [
+   720→      ('Launch New Products', 'Turn ideas into market-ready products with structured planning and AI guidance.', Icons.rocket_launch_outlined, _blue),
+   721→      ('Implement New Software', 'Deploy CRM, ERP, or operational systems with stakeholder alignment and risk management.', Icons.computer_outlined, _purple),
+   722→      ('Grow Your Business', 'Manage expansions, new services, and strategic initiatives with confidence.', Icons.trending_up, _green),
+   723→      ('Deliver Community Programs', 'Coordinate grants, events, and community projects from start to finish.', Icons.volunteer_activism_outlined, _gold),
+   724→      ('Manage Multiple Projects', 'Gain visibility across projects, programs, and portfolios.', Icons.dashboard_outlined, _blue),
+   725→    ];
+   726→    return Container(
+   727→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 80),
+   728→      color: _surface.withValues(alpha: 0.3),
+   729→      child: Center(child: ConstrainedBox(
+   730→        constraints: const BoxConstraints(maxWidth: 1200),
+   731→        child: Column(children: [
+   732→          Text('Projects We Help You Deliver', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+   733→          const SizedBox(height: 8),
+   734→          Text('Industry-agnostic — project delivery is the heart of every business', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
+   735→          const SizedBox(height: 40),
+   736→          Wrap(spacing: 20, runSpacing: 20, alignment: WrapAlignment.center, children: cases.map((c) => _useCaseCard(c.$1, c.$2, c.$3, c.$4)).toList()),
+   737→        ]),
+   738→      )),
+   739→    );
+   740→  }
+   741→
+   742→  Widget _useCaseCard(String title, String desc, IconData icon, Color color) {
+   743→    return Container(width: 280, padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 22)), const SizedBox(height: 16), Text(title, style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w700, fontFamily: appFontFamily)), const SizedBox(height: 8), Text(desc, style: TextStyle(color: _textSecondary, fontSize: 13, height: 1.5, fontFamily: appFontFamily))]));
+   744→  }
+   745→}
+   746→
+   747→// ═════════════════════════════════════════════════════════════════════════
+   748→// SECTION 8: KAZ AI
+   749→// ═════════════════════════════════════════════════════════════════════════
+   750→
+   751→class _KazAISection extends StatelessWidget {
+   752→  @override
+   753→  Widget build(BuildContext context) {
+   754→    return Container(
+   755→      key: const Key('kaz'),
+   756→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 80),
+   757→      child: Center(child: ConstrainedBox(
+   758→        constraints: const BoxConstraints(maxWidth: 1200),
+   759→        child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+   760→          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+   761→            Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), decoration: BoxDecoration(color: _purple.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)), child: Text('KAZ AI', style: TextStyle(color: _purpleLight, fontSize: 12, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
+   762→            const SizedBox(height: 16),
+   763→            Text('Your knowledgeable project delivery sidekick', style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+   764→            const SizedBox(height: 16),
+   765→            Text('KAZ AI provides intelligent suggestions, continuity across the project lifecycle, and core AI capabilities within the platform.', style: TextStyle(color: _textSecondary, fontSize: 15, height: 1.6, fontFamily: appFontFamily)),
+   766→            const SizedBox(height: 24),
+   767→            _aiFeature('AI Suggestions', 'Contextual recommendations at every project stage'),
+   768→            _aiFeature('Continuity', 'Knowledge carries across initiation, planning, and execution'),
+   769→            _aiFeature('Core Capabilities', 'Risk prediction, cost forecasting, schedule optimization'),
+   770→          ])),
+   771→          const SizedBox(width: 48),
+   772→          Expanded(child: Container(padding: const EdgeInsets.all(32), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(20), border: Border.all(color: _purple.withValues(alpha: 0.2))), child: Column(children: [
+   773→            Container(width: 64, height: 64, decoration: BoxDecoration(gradient: LinearGradient(colors: [_purple, _blue]), borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.psychology, color: Colors.white, size: 32)),
+   774→            const SizedBox(height: 16),
+   775→            Text('KAZ AI', style: TextStyle(color: _textPrimary, fontSize: 24, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
+   776→            const SizedBox(height: 4),
+   777→            Text('Project Delivery Intelligence', style: TextStyle(color: _purpleLight, fontSize: 13, fontFamily: appFontFamily)),
+   778→            const SizedBox(height: 24),
+   779→            _chatBubble('What risks should I watch for in Phase 2?'),
+   780→            _chatBubble('Suggest a mitigation plan for the supply chain delay.'),
+   781→            _chatBubble('How does this change impact my budget?'),
+   782→          ])),
+   783→          ),
+   784→        ]),
+   785→      )),
+   786→    );
+   787→  }
+   788→
+   789→  Widget _aiFeature(String title, String desc) {
+   790→    return Padding(padding: const EdgeInsets.only(bottom: 16), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(Icons.check_circle, color: _purple, size: 18), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(color: _textPrimary, fontSize: 14, fontWeight: FontWeight.w600, fontFamily: appFontFamily)), Text(desc, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]))]));
+   791→  }
+   792→
+   793→  Widget _chatBubble(String text) {
+   794→    return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: _purple.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)), child: Row(children: [Icon(Icons.auto_awesome, color: _purple, size: 14), const SizedBox(width: 8), Expanded(child: Text(text, style: TextStyle(color: _textPrimary, fontSize: 12, fontFamily: appFontFamily)))]));
+   795→  }
+   796→}
+   797→
+   798→// ═════════════════════════════════════════════════════════════════════════
+   799→// SECTION 9: BENEFITS
+   800→// ═════════════════════════════════════════════════════════════════════════
+   801→
+   802→class _BenefitsSection extends StatelessWidget {
+   803→  @override
+   804→  Widget build(BuildContext context) {
+   805→    final benefits = [
+   806→      ('Reduced rework and cost overruns', Icons.savings_outlined, _green),
+   807→      ('Improved schedule predictability', Icons.schedule_outlined, _blue),
+   808→      ('Faster, higher-quality decisions', Icons.bolt_outlined, _gold),
+   809→      ('Increased project ROI', Icons.trending_up, _purple),
+   810→      ('Scalable, repeatable delivery model', Icons.expand_outlined, _blue),
+   811→    ];
+   812→    return Container(
+   813→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 80),
+   814→      color: _surface.withValues(alpha: 0.3),
+   815→      child: Center(child: ConstrainedBox(
+   816→        constraints: const BoxConstraints(maxWidth: 1200),
+   817→        child: Column(children: [
+   818→          Text('What You Achieve with PDOS', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+   819→          const SizedBox(height: 40),
+   820→          Wrap(spacing: 20, runSpacing: 20, alignment: WrapAlignment.center, children: benefits.map((b) => _benefitCard(b.$1, b.$2, b.$3)).toList()),
+   821→          const SizedBox(height: 32),
+   822→          Container(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12), decoration: BoxDecoration(color: _green.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12), border: Border.all(color: _green.withValues(alpha: 0.2))), child: Text('Up to 30% reduction in rework', style: TextStyle(color: _green, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
+   823→        ]),
+   824→      )),
+   825→    );
+   826→  }
+   827→
+   828→  Widget _benefitCard(String text, IconData icon, Color color) {
+   829→    return Container(width: 260, padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Row(children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)), const SizedBox(width: 14), Expanded(child: Text(text, style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: appFontFamily)))]));
+   830→  }
+   831→}
+   832→
+   833→// ═════════════════════════════════════════════════════════════════════════
+   834→// SECTION 10: PRICING
+   835→// ═════════════════════════════════════════════════════════════════════════
+   836→
+   837→class _PricingSection extends StatefulWidget {
+   838→  @override
+   839→  State<_PricingSection> createState() => _PricingSectionState();
+   840→}
+   841→
+   842→class _PricingSectionState extends State<_PricingSection> {
+   843→  bool _isAnnual = false;
+   844→
+   845→  // Gold/Yellow accent colors matching the design image
+   846→  static const _accentGold = Color(0xFFF59E0B);
+   847→  static const _accentGoldLight = Color(0xFFFEF3C7);
+   848→  static const _accentGoldDark = Color(0xFFD97706);
+   849→
+   850→  @override
+   851→  Widget build(BuildContext context) {
+   852→    return Container(
+   853→      key: const Key('pricing'),
+   854→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 80),
+   855→      color: Colors.white,
+   856→      child: Center(child: ConstrainedBox(
+   857→        constraints: const BoxConstraints(maxWidth: 1280),
+   858→        child: Column(children: [
+   859→          // Back navigation hint
+   860→          Align(alignment: Alignment.centerLeft, child: Row(children: [
+   861→            Icon(Icons.arrow_back, size: 16, color: Colors.grey[600]),
+   862→            const SizedBox(width: 8),
+   863→            Text('Select a plan that fits your needs', style: TextStyle(color: Colors.grey[600], fontSize: 14, fontFamily: appFontFamily)),
+   864→          ])),
+   865→          const SizedBox(height: 32),
+   866→
+   867→          // Main Title
+   868→          Text('Simple, Scalable Pricing for Every Level of Project Delivery',
+   869→            textAlign: TextAlign.center,
+   870→            style: TextStyle(
+   871→              color: const Color(0xFF111827),
+   872→              fontSize: 36,
+   873→              fontWeight: FontWeight.w800,
+   874→              letterSpacing: -0.5,
+   875→              fontFamily: appFontFamily,
+   876→            ),
+   877→          ),
+   878→          const SizedBox(height: 12),
+   879→
+   880→          // Subtitle
+   881→          Text("Whether you're managing a single project or an enterprise portfolio, Ndu Project grows with your organization.",
+   882→            textAlign: TextAlign.center,
+   883→            style: TextStyle(
+   884→              color: Colors.grey[600],
+   885→              fontSize: 15,
+   886→              height: 1.5,
+   887→              fontFamily: appFontFamily,
+   888→            ),
+   889→          ),
+   890→          const SizedBox(height: 8),
+   891→
+   892→          // Underline accent
+   893→          Container(width: 80, height: 3, decoration: BoxDecoration(color: _accentGold, borderRadius: BorderRadius.circular(2))),
+   894→          const SizedBox(height: 40),
+   895→
+   896→          // Monthly/Annual Toggle Row
+   897→          Row(mainAxisAlignment: MainAxisAlignment.end, crossAxisAlignment: CrossAxisAlignment.center, children: [
+   898→            Text("Annual will save 1 month's payment",
+   899→              style: TextStyle(color: Colors.grey[600], fontSize: 12, fontFamily: appFontFamily)),
+   900→            const SizedBox(width: 16),
+   901→            Container(
+   902→              padding: const EdgeInsets.all(4),
+   903→              decoration: BoxDecoration(
+   904→                color: Colors.grey[100],
+   905→                borderRadius: BorderRadius.circular(24),
+   906→                border: Border.all(color: Colors.grey[300]!),
+   907→              ),
+   908→              child: Row(mainAxisSize: MainAxisSize.min, children: [
+   909→                GestureDetector(
+   910→                  onTap: () => setState(() => _isAnnual = false),
+   911→                  child: AnimatedContainer(
+   912→                    duration: const Duration(milliseconds: 200),
+   913→                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+   914→                    decoration: BoxDecoration(
+   915→                      color: !_isAnnual ? _accentGold : Colors.transparent,
+   916→                      borderRadius: BorderRadius.circular(20),
+   917→                    ),
+   918→                    child: Text('Monthly',
+   919→                      style: TextStyle(
+   920→                        color: !_isAnnual ? Colors.white : Colors.grey[600],
+   921→                        fontSize: 13,
+   922→                        fontWeight: FontWeight.w600,
+   923→                        fontFamily: appFontFamily,
+   924→                      ),
+   925→                    ),
+   926→                  ),
+   927→                ),
+   928→                GestureDetector(
+   929→                  onTap: () => setState(() => _isAnnual = true),
+   930→                  child: AnimatedContainer(
+   931→                    duration: const Duration(milliseconds: 200),
+   932→                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+   933→                    decoration: BoxDecoration(
+   934→                      color: _isAnnual ? _accentGold : Colors.transparent,
+   935→                      borderRadius: BorderRadius.circular(20),
+   936→                    ),
+   937→                    child: Text('Annual',
+   938→                      style: TextStyle(
+   939→                        color: _isAnnual ? Colors.white : Colors.grey[600],
+   940→                        fontSize: 13,
+   941→                        fontWeight: FontWeight.w600,
+   942→                        fontFamily: appFontFamily,
+   943→                      ),
+   944→                    ),
+   945→                  ),
+   946→                ),
+   947→              ]),
+   948→            ),
+   949→          ]),
+   950→          const SizedBox(height: 32),
+   951→
+   952→          // Pricing Cards Grid
+   953→          LayoutBuilder(builder: (context, constraints) {
+   954→            final isMobile = constraints.maxWidth < 900;
+   955→            final cardWidth = isMobile ? double.infinity : (constraints.maxWidth - 48) / 4;
+   956→
+   957→            return Wrap(
+   958→              spacing: 16,
+   959→              runSpacing: 16,
+   960→              alignment: WrapAlignment.center,
+   961→              children: [
+   962→                _buildPricingCard(
+   963→                  context: context,
+   964→                  badgeText: 'Regular Project',
+   965→                  badgeColor: _accentGold,
+   966→                  description: 'No Fuss routine project delivered at a fraction of the cost',
+   967→                  price: _isAnnual ? '\$351' : '\$39',
+   968→                  period: _isAnnual ? '/year' : 'per month',
+   969→                  subText: 'First month free',
+   970→                  features: [
+   971→                    'Free for the first month',
+   972→                    '1 user',
+   973→                    'Full project delivery from initiation to Launch',
+   974→                    'Auto AI assist',
+   975→                    'One-time incremental AI assist per section',
+   976→                    'Limited Documentation features',
+   977→                    'Upgrade tier any time',
+   978→                  ],
+   979→                  isSelected: false,
+   980→                  width: cardWidth,
+   981→                ),
+   982→                _buildPricingCard(
+   983→                  context: context,
+   984→                  badgeText: 'Project',
+   985→                  badgeColor: _accentGold,
+   986→                  description: 'Robust project delivered at an affordable rate',
+   987→                  price: _isAnnual ? '\$1161' : '\$129',
+   988→                  period: _isAnnual ? '/year' : 'per month',
+   989→                  features: [
+   990→                    'Maximum 7 users included',
+   991→                    'Robust project delivery with full features including organization planning, design, change management, work breakdown structure, and more',
+   992→                    'Auto AI assist',
+   993→                    'One-time incremental AI assist per section',
+   994→                    'Document print out feature',
+   995→                    'Upgrade tier anytime',
+   996→                  ],
+   997→                  isSelected: false,
+   998→                  width: cardWidth,
+   999→                ),
+  1000→                _buildPricingCard(
+  1001→                  context: context,
+  1002→                  badgeText: 'Program',
+  1003→                  badgeColor: _accentGold,
+  1004→                  showSelectedBadge: true,
+  1005→                  description: 'Up to 3 projects at a discounted rate with interface management',
+  1006→                  price: _isAnnual ? '\$2871' : '\$319',
+  1007→                  period: _isAnnual ? '/year' : 'per month',
+  1008→                  features: [
+  1009→                    'Everything in Project',
+  1010→                    'Maximum 12 users included',
+  1011→                    'Monthly. Annual at a discount.',
+  1012→                    'Interface management',
+  1013→                    'Project dependency tracking',
+  1014→                    'Program level reports for cost, schedule, scope tracking',
+  1015→                  ],
+  1016→                  isSelected: true,
+  1017→                  width: cardWidth,
+  1018→                ),
+  1019→                _buildPricingCard(
+  1020→                  context: context,
+  1021→                  badgeText: 'Portfolio',
+  1022→                  badgeColor: _accentGold,
+  1023→                  description: 'Up to 9 projects at a bulk rate with integrated stewarding',
+  1024→                  price: _isAnnual ? '\$6750' : '\$750',
+  1025→                  period: _isAnnual ? '/year' : 'per month',
+  1026→                  features: [
+  1027→                    'Everything in Program',
+  1028→                    'Maximum 24 users included',
+  1029→                    'Portfolio level reports for cost, schedule, scope tracking',
+  1030→                  ],
+  1031→                  isSelected: false,
+  1032→                  width: cardWidth,
+  1033→                ),
+  1034→              ],
+  1035→            );
+  1036→          }),
+  1037→        ]),
+  1038→      )),
+  1039→    );
+  1040→  }
+  1041→
+  1042→  Widget _buildPricingCard({
+  1043→    required BuildContext context,
+  1044→    required String badgeText,
+  1045→    required Color badgeColor,
+  1046→    required String description,
+  1047→    required String price,
+  1048→    required String period,
+  1049→    String? subText,
+  1050→    required List<String> features,
+  1051→    required bool isSelected,
+  1052→    required double width,
+  1053→    bool showSelectedBadge = false,
+  1054→  }) {
+  1055→    return Container(
+  1056→      width: width,
+  1057→      constraints: const BoxConstraints(minWidth: 260, maxWidth: 320),
+  1058→      padding: const EdgeInsets.all(24),
+  1059→      decoration: BoxDecoration(
+  1060→        color: Colors.white,
+  1061→        borderRadius: BorderRadius.circular(16),
+  1062→        border: Border.all(
+  1063→          color: isSelected ? _accentGoldDark : Colors.grey[300]!,
+  1064→          width: isSelected ? 2 : 1,
+  1065→        ),
+  1066→        boxShadow: isSelected
+  1067→            ? [BoxShadow(color: _accentGold.withValues(alpha: 0.15), blurRadius: 24, offset: const Offset(0, 4))]
+  1068→            : [BoxShadow(color: Colors.grey.withValues(alpha: 0.08), blurRadius: 12)],
+  1069→      ),
+  1070→      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  1071→        // Badge row
+  1072→        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+  1073→          Container(
+  1074→            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+  1075→            decoration: BoxDecoration(
+  1076→              color: _accentGoldLight,
+  1077→              borderRadius: BorderRadius.circular(8),
+  1078→            ),
+  1079→            child: Text(badgeText,
+  1080→              style: TextStyle(
+  1081→                color: _accentGoldDark,
+  1082→                fontSize: 12,
+  1083→                fontWeight: FontWeight.w600,
+  1084→                fontFamily: appFontFamily,
+  1085→              ),
+  1086→            ),
+  1087→          ),
+  1088→          if (showSelectedBadge)
+  1089→            Container(
+  1090→              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+  1091→              decoration: BoxDecoration(
+  1092→                color: _accentGoldLight,
+  1093→                borderRadius: BorderRadius.circular(12),
+  1094→                border: Border.all(color: _accentGold.withValues(alpha: 0.3)),
+  1095→              ),
+  1096→              child: Row(mainAxisSize: MainAxisSize.min, children: [
+  1097→                Icon(Icons.check_circle, color: _accentGoldDark, size: 14),
+  1098→                const SizedBox(width: 4),
+  1099→                Text('Selected',
+  1100→                  style: TextStyle(
+  1101→                    color: _accentGoldDark,
+  1102→                    fontSize: 11,
+  1103→                    fontWeight: FontWeight.w600,
+  1104→                    fontFamily: appFontFamily,
+  1105→                  ),
+  1106→                ),
+  1107→              ]),
+  1108→            ),
+  1109→        ]),
+  1110→        const SizedBox(height: 16),
+  1111→
+  1112→        // Description
+  1113→        Text(description,
+  1114→          style: TextStyle(
+  1115→            color: const Color(0xFF111827),
+  1116→            fontSize: 14,
+  1117→            fontWeight: FontWeight.w500,
+  1118→            height: 1.4,
+  1119→            fontFamily: appFontFamily,
+  1120→          ),
+  1121→        ),
+  1122→        const SizedBox(height: 20),
+  1123→
+  1124→        // Price
+  1125→        Row(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+  1126→          Text(price,
+  1127→            style: TextStyle(
+  1128→              color: const Color(0xFF111827),
+  1129→              fontSize: 36,
+  1130→              fontWeight: FontWeight.w800,
+  1131→              fontFamily: appFontFamily,
+  1132→            ),
+  1133→          ),
+  1134→          const SizedBox(width: 6),
+  1135→          Text(period,
+  1136→            style: TextStyle(
+  1137→              color: Colors.grey[600],
+  1138→              fontSize: 13,
+  1139→              fontFamily: appFontFamily,
+  1140→            ),
+  1141→          ),
+  1142→        ]),
+  1143→
+  1144→        // Sub text (e.g., "First month free")
+  1145→        if (subText != null) ...[
+  1146→          const SizedBox(height: 4),
+  1147→          Text(subText,
+  1148→            style: TextStyle(
+  1149→              color: Colors.grey[500],
+  1150→              fontSize: 12,
+  1151→              fontFamily: appFontFamily,
+  1152→            ),
+  1153→          ),
+  1154→        ],
+  1155→
+  1156→        const SizedBox(height: 20),
+  1157→
+  1158→        // Features list
+  1159→        ...features.map((feature) => Padding(
+  1160→          padding: const EdgeInsets.only(bottom: 10),
+  1161→          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  1162→            Container(
+  1163→              margin: const EdgeInsets.only(top: 3),
+  1164→              width: 8,
+  1165→              height: 8,
+  1166→              decoration: BoxDecoration(
+  1167→                color: _accentGold,
+  1168→                shape: BoxShape.circle,
+  1169→              ),
+  1170→            ),
+  1171→            const SizedBox(width: 10),
+  1172→            Expanded(
+  1173→              child: Text(feature,
+  1174→                style: TextStyle(
+  1175→                  color: Colors.grey[700],
+  1176→                  fontSize: 12.5,
+  1177→                  height: 1.4,
+  1178→                  fontFamily: appFontFamily,
+  1179→                ),
+  1180→              ),
+  1181→            ),
+  1182→          ]),
+  1183→        )),
+  1184→
+  1185→        const SizedBox(height: 24),
+  1186→
+  1187→        // CTA Button
+  1188→        SizedBox(
+  1189→          width: double.infinity,
+  1190→          child: OutlinedButton(
+  1191→            onPressed: () => context.go('/create-account'),
+  1192→            style: OutlinedButton.styleFrom(
+  1193→              foregroundColor: isSelected ? Colors.white : _accentGoldDark,
+  1194→              backgroundColor: isSelected ? _accentGold : Colors.transparent,
+  1195→              side: BorderSide(color: isSelected ? _accentGoldDark : _accentGold),
+  1196→              padding: const EdgeInsets.symmetric(vertical: 14),
+  1197→              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+  1198→            ),
+  1199→            child: Text(isSelected ? 'Selected' : 'Select Plan',
+  1200→              style: TextStyle(
+  1201→                fontSize: 14,
+  1202→                fontWeight: FontWeight.w600,
+  1203→                fontFamily: appFontFamily,
+  1204→              ),
+  1205→            ),
+  1206→          ),
+  1207→        ),
+  1208→      ]),
+  1209→    );
+  1210→  }
+  1211→}
+  1212→
+  1213→// ═════════════════════════════════════════════════════════════════════════
+  1214→// SECTION 11: SERVICES
+  1215→// ═════════════════════════════════════════════════════════════════════════
+  1216→
+  1217→class _ServicesSection extends StatelessWidget {
+  1218→  @override
+  1219→  Widget build(BuildContext context) {
+  1220→    return Container(
+  1221→      key: const Key('services'),
+  1222→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 80),
+  1223→      color: _surface.withValues(alpha: 0.3),
+  1224→      child: Center(child: ConstrainedBox(
+  1225→        constraints: const BoxConstraints(maxWidth: 1200),
+  1226→        child: Column(children: [
+  1227→          Text('Services', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+  1228→          const SizedBox(height: 8),
+  1229→          Text('Beyond software — we help you deliver', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
+  1230→          const SizedBox(height: 40),
+  1231→          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  1232→            _serviceCard('Project Delivery', 'Access our PDOS platform with full lifecycle tools. Start a project now and move from initiation to launch.', Icons.assignment_outlined, _blue, 'Start a Project', () => context.go('/create-account')),
+  1233→            const SizedBox(width: 20),
+  1234→            _serviceCard('Training', 'Ensure individuals, students, and teams are knowledgeable on core project delivery processes. Request training or sign up.', Icons.school_outlined, _green, 'Request Training', () => _launchUrl('https://nduproject.tech')),
+  1235→            const SizedBox(width: 20),
+  1236→            _serviceCard('Consultation', 'Get expert help with your project needs. Book a consultation session with our delivery experts.', Icons.support_agent_outlined, _purple, 'Book Consultation', () => _launchUrl('https://calendar.app.google/aGQDFPpmEK9eDh5W6')),
+  1237→          ]),
+  1238→        ]),
+  1239→      )),
+  1240→    );
+  1241→  }
+  1242→
+  1243→  Widget _serviceCard(String title, String desc, IconData icon, Color color, String cta, VoidCallback onTap) {
+  1244→    return Expanded(child: Container(padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  1245→      Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 22)),
+  1246→      const SizedBox(height: 16),
+  1247→      Text(title, style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+  1248→      const SizedBox(height: 8),
+  1249→      Text(desc, style: TextStyle(color: _textSecondary, fontSize: 13, height: 1.5, fontFamily: appFontFamily)),
+  1250→      const SizedBox(height: 20),
+  1251→      TextButton(onPressed: onTap, child: Row(children: [Text(cta, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)), const SizedBox(width: 4), Icon(Icons.arrow_forward, color: color, size: 14)])),
+  1252→    ])));
+  1253→  }
+  1254→}
+  1255→
+  1256→// ═════════════════════════════════════════════════════════════════════════
+  1257→// SECTION 12: FINAL CTA
+  1258→// ═════════════════════════════════════════════════════════════════════════
+  1259→
+  1260→class _FinalCTASection extends StatelessWidget {
+  1261→  @override
+  1262→  Widget build(BuildContext context) {
+  1263→    return Container(
+  1264→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 100),
+  1265→      child: Center(child: ConstrainedBox(
+  1266→        constraints: const BoxConstraints(maxWidth: 800),
+  1267→        child: Column(children: [
+  1268→          Text('Ready to Transform How You Deliver Projects?', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 36, fontWeight: FontWeight.w800, letterSpacing: -0.5, fontFamily: appFontFamily)),
+  1269→          const SizedBox(height: 16),
+  1270→          Text('Move beyond tracking tools. Implement a system designed for real project success.', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 17, fontFamily: appFontFamily)),
+  1271→          const SizedBox(height: 32),
+  1272→          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+  1273→            Container(decoration: BoxDecoration(gradient: LinearGradient(colors: [_blue, _purple]), borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: _blue.withValues(alpha: 0.3), blurRadius: 16)]), child: Material(color: Colors.transparent, child: InkWell(onTap: () => context.go('/create-account'), borderRadius: BorderRadius.circular(24), child: Padding(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16), child: Text('Start Your Project', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, fontFamily: appFontFamily)))))),
+  1274→            const SizedBox(width: 16),
+  1275→            Container(decoration: BoxDecoration(color: Colors.transparent, borderRadius: BorderRadius.circular(24), border: Border.all(color: _border)), child: Material(color: Colors.transparent, child: InkWell(onTap: () => _launchUrl('mailto:contact@nduproject.com'), borderRadius: BorderRadius.circular(24), child: Padding(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16), child: Text('Contact Us', style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w600, fontFamily: appFontFamily)))))),
+  1276→          ]),
+  1277→          const SizedBox(height: 24),
+  1278→          Text('Execution Doesn\'t Fix Bad Starts.\nNdu Project ensures projects start right, and stay right.', textAlign: TextAlign.center, style: TextStyle(color: _gold, fontSize: 15, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic, height: 1.6, fontFamily: appFontFamily)),
+  1279→        ]),
+  1280→      )),
+  1281→    );
+  1282→  }
+  1283→}
+  1284→
+  1285→// ═════════════════════════════════════════════════════════════════════════
+  1286→// FOOTER
+  1287→// ═════════════════════════════════════════════════════════════════════════
+  1288→
+  1289→class _FooterSection extends StatelessWidget {
+  1290→  @override
+  1291→  Widget build(BuildContext context) {
+  1292→    return Container(
+  1293→      key: const Key('footer'),
+  1294→      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 60),
+  1295→      decoration: BoxDecoration(color: _surface, border: Border(top: BorderSide(color: _border))),
+  1296→      child: Center(child: ConstrainedBox(
+  1297→        constraints: const BoxConstraints(maxWidth: 1200),
+  1298→        child: Column(children: [
+  1299→          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  1300→            // Brand column
+  1301→            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  1302→              Row(children: [Container(width: 28, height: 28, decoration: BoxDecoration(gradient: LinearGradient(colors: [_gold, _goldDeep]), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.trending_up, color: Color(0xFF0A0E1A), size: 16)), const SizedBox(width: 8), Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily)), Text(' Project', style: TextStyle(color: _gold, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily))]),
+  1303→              const SizedBox(height: 12),
+  1304→              Text('The Project Delivery Operating System', style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily)),
+  1305→              const SizedBox(height: 16),
+  1306→              // Social icons
+  1307→              Row(children: [
+  1308→                _footerSocial(Icons.facebook, 'https://facebook.com/nduproject'),
+  1309→                _footerSocial(Icons.camera_alt_outlined, 'https://instagram.com/nduproject'),
+  1310→                _footerSocial(Icons.business, 'https://linkedin.com/company/nduproject'),
+  1311→                _footerSocial(Icons.play_circle_outline, 'https://youtube.com/@nduproject'),
+  1312→                _footerSocial(Icons.music_note, 'https://tiktok.com/@nduproject'),
+  1313→              ]),
+  1314→            ])),
+  1315→            // Product
+  1316→            _footerCol('Product', ['Why Ndu Project', 'How It Works', 'Pricing', 'KAZ AI', 'Demo']),
+  1317→            // Use Cases
+  1318→            _footerCol('Use Cases', ['Launch Products', 'Software Implementation', 'Business Growth', 'Community Programs']),
+  1319→            // About
+  1320→            _footerCol('About', ['Our Story', 'Careers', 'Partners', 'Blog', 'Contact']),
+  1321→            // Contact
+  1322→            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  1323→              Text('Contact', style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+  1324→              const SizedBox(height: 12),
+  1325→              _contactRow(Icons.email_outlined, 'contact@nduproject.com', () => _launchUrl('mailto:contact@nduproject.com')),
+  1326→              _contactRow(Icons.phone_outlined, '+1 (225) 555-0199', () => _launchUrl('https://wa.me/12255550199')),
+  1327→              _contactRow(Icons.location_on_outlined, '5635 Main Street, Suite A-160\nZachary, LA 70791', () {}),
+  1328→              const SizedBox(height: 12),
+  1329→              // Careers link
+  1330→              InkWell(onTap: () => context.go('/careers'), child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: _blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: _blue.withValues(alpha: 0.2))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.work_outline, color: _blue, size: 14), const SizedBox(width: 6), Text('We\'re Hiring — View Careers', style: TextStyle(color: _blueLight, fontSize: 11, fontWeight: FontWeight.w600, fontFamily: appFontFamily))]))),
+  1331→            ])),
+  1332→          ]),
+  1333→          const SizedBox(height: 40),
+  1334→          Divider(color: _border),
+  1335→          const SizedBox(height: 20),
+  1336→          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+  1337→            Text('© 2026 Ndu Project. All rights reserved.', style: TextStyle(color: _textMuted, fontSize: 11, fontFamily: appFontFamily)),
+  1338→            Row(children: [TextButton(onPressed: () {}, child: Text('Privacy', style: TextStyle(color: _textMuted, fontSize: 11, fontFamily: appFontFamily))), TextButton(onPressed: () {}, child: Text('Terms', style: TextStyle(color: _textMuted, fontSize: 11, fontFamily: appFontFamily)))]),
+  1339→          ]),
+  1340→        ]),
+  1341→      )),
+  1342→    );
+  1343→  }
+  1344→
+  1345→  Widget _footerCol(String title, List<String> items) {
+  1346→    return Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  1347→      Text(title, style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+  1348→      const SizedBox(height: 12),
+  1349→      ...items.map((item) => Padding(padding: const EdgeInsets.only(bottom: 8), child: TextButton(onPressed: () {}, style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero), child: Text(item, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))))),
+  1350→    ]));
+  1351→  }
+  1352→
+  1353→  Widget _footerSocial(IconData icon, String url) {
+  1354→    return Padding(padding: const EdgeInsets.only(right: 8), child: IconButton(onPressed: () => _launchUrl(url), icon: Icon(icon, color: _textMuted, size: 18), constraints: const BoxConstraints(), padding: const EdgeInsets.all(6)));
+  1355→  }
+  1356→
+  1357→  Widget _contactRow(IconData icon, String text, VoidCallback onTap) {
+  1358→    return Padding(padding: const EdgeInsets.only(bottom: 8), child: InkWell(onTap: onTap, child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(icon, color: _textMuted, size: 14), const SizedBox(width: 8), Expanded(child: Text(text, style: TextStyle(color: _textSecondary, fontSize: 11, height: 1.4, fontFamily: appFontFamily)))])));
+  1359→  }
+  1360→}
+  1361→

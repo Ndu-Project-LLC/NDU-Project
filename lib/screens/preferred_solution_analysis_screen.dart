@@ -3982,6 +3982,10 @@ class _PreferredSolutionAnalysisScreenState
     required int index,
   }) async {
     await _attemptSelectPreferredFromDialog(index: index);
+    // After successful selection from details, pop back to analysis screen
+    if (mounted) {
+      Navigator.of(context).maybePop();
+    }
   }
 
   // ignore: unused_element

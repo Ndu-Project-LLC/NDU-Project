@@ -41,12 +41,14 @@ class HintService {
 
   /// Should we auto-show the hint for [pageId]?
   ///
+  /// - If user has globally disabled hints, never show (even on first visit)
   /// - If page has NOT been viewed: always true (compulsory)
   /// - If page HAS been viewed: show only if disableViewedHints == false
   static Future<bool> shouldShowHint(String pageId) async {
+    final disableViewed = await disableViewedHints();
+    if (disableViewed) return false;
     final viewed = await hasViewed(pageId);
     if (!viewed) return true;
-    final disableViewed = await disableViewedHints();
     return !disableViewed;
   }
 

@@ -194,6 +194,29 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   ],
                 ),
               ),
+              // ── Bottom navigation ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      icon: const Icon(Icons.arrow_back, size: 18),
+                      label: const Text('Back'),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      icon: const Icon(Icons.arrow_forward, size: 18),
+                      label: const Text('Next: Scope Tracking Plan'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFC812),
+                        foregroundColor: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         );

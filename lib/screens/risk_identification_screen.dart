@@ -441,6 +441,14 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     });
     try {
       if (_solutions.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No solutions found. Please add potential solutions first in the Initiation Phase before generating risks.'),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
         return;
       }
       final provider = ProjectDataHelper.getProvider(context);
@@ -1611,7 +1619,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                   const SizedBox(height: 24),
                   _buildAutoSaveIndicator(),
                   const SizedBox(height: 16),
-                  if (_canUseAdminControls)
+                  // CSV import available to all users
                     Row(
                       children: [
                         Container(

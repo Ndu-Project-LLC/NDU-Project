@@ -2310,7 +2310,8 @@ Return JSON with:
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       final list = (parsed['opportunities'] as List? ?? []);
       final result = <OpportunityItem>[];
-      for (final item in list) {
+      for (var idx = 0; idx < list.length; idx++) {
+        final item = list[idx];
         if (item is! Map) continue;
         final map = item as Map<String, dynamic>;
         final opp = _stripAsterisks(
@@ -2330,7 +2331,7 @@ Return JSON with:
                 .toString()
                 .trim();
         result.add(OpportunityItem(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+          id: "${DateTime.now().microsecondsSinceEpoch}_$idx",
           opportunity: opp,
           discipline: (map['discipline'] ?? '').toString().trim(),
           stakeholder: responsibleRole,
@@ -2912,7 +2913,7 @@ $scaleConstraints
       final list = (parsed['items'] as List? ?? []);
 
       final result = <AllowanceItem>[];
-      for (final item in list) {
+for (final item in list) {
         if (item is! Map) continue;
         final map = item as Map<String, dynamic>;
 
@@ -3245,7 +3246,8 @@ $domainHints
 
       final List list = (parsed['risks'] as List? ?? []);
       final Map<String, List<String>> result = {};
-      for (final item in list) {
+      for (var idx = 0; idx < list.length; idx++) {
+        final item = list[idx];
         final map = item as Map<String, dynamic>;
         final title = _stripAsterisks((map['solution'] ?? '').toString());
         final items = (map['items'] as List? ?? [])
@@ -3570,7 +3572,8 @@ $domainHints
 
       final List list = (parsed['technologies'] as List? ?? []);
       final Map<String, List<String>> result = {};
-      for (final item in list) {
+      for (var idx = 0; idx < list.length; idx++) {
+        final item = list[idx];
         final map = item as Map<String, dynamic>;
         final title = _stripAsterisks((map['solution'] ?? '').toString());
         final items = (map['items'] as List? ?? [])
@@ -6036,7 +6039,8 @@ Remember: Return ONLY a JSON object with key "savings_scenarios".
 
       final List list = (parsed['infrastructure'] as List? ?? []);
       final Map<String, List<String>> result = {};
-      for (final item in list) {
+      for (var idx = 0; idx < list.length; idx++) {
+        final item = list[idx];
         final map = item as Map<String, dynamic>;
         final title = (map['solution'] ?? '').toString();
         final items = (map['items'] as List? ?? [])

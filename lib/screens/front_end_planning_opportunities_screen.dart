@@ -930,7 +930,12 @@ Opportunity generation constraints:
   }
 
   Future<void> _submitOpportunities() async {
-    final oppText = _rows
+    // If any opportunities are selected, only submit those; otherwise submit all
+    final rowsToSubmit = _selectedIds.isNotEmpty
+        ? _rows.where((r) => _selectedIds.contains(r.id)).toList()
+        : _rows;
+
+    final oppText = rowsToSubmit
         .map((r) {
           final parts = <String>[
             r.opportunity.trim(),
@@ -971,7 +976,7 @@ Opportunity generation constraints:
         frontEndPlanning: ProjectDataHelper.updateFEPField(
           current: data.frontEndPlanning,
           opportunities: oppText,
-          opportunityItems: _rows,
+          opportunityItems: rowsToSubmit,
         ),
       ),
     );

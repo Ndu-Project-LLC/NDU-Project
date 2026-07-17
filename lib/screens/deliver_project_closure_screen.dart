@@ -1,4 +1,5 @@
 import 'package:ndu_project/widgets/launch_notes_section.dart';
+import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/download_helper_stub.dart'
@@ -90,6 +91,8 @@ showNavigationButtons: false,
  showActivityLogAction: false,
  onExportPdf: _exportPdf),
  const SizedBox(height: 12),
+            _buildLaunchInsights(),
+            const SizedBox(height: 16),
             LaunchNotesSection(
               controller: _notesController,
               onChanged: (v) {},
@@ -127,6 +130,64 @@ showNavigationButtons: false,
  if (names.isEmpty) return const ['Unassigned'];
  return names;
  }
+
+
+ // Launch Insights: KPIs + completion donut (auto-derived from project data)
+ Widget _buildLaunchInsights() {
+   final projectData = ProjectDataHelper.getData(context);
+   final totalChecks = 4; // charter + milestones + risks + allowances
+       var ready = 0;
+       if (projectData.charterApprovalDate != null) ready++;
+       if (projectData.keyMilestones.isNotEmpty) ready++;
+       if (projectData.frontEndPlanning.riskRegisterItems.isNotEmpty) ready++;
+       if (projectData.frontEndPlanning.allowanceItems.isNotEmpty) ready++;
+       final completionPct = ready / totalChecks;
+   return LaunchInsightsHeader(
+     sectionTitle: 'Launch Readiness Assessment',
+     sectionSubtitle: 'Go-live readiness across people, process, technology & operations',
+     sectionIcon: Icons.fact_check_outlined,
+     sectionColor: const Color(0xFF10B981),
+     completionPercent: completionPct,
+     completionLabel: 'READY',
+     completionCaption:
+         '${(completionPct * 100).round()}% complete - auto-derived from project data',
+     kpiTiles: [
+       LaunchKpiTile(
+             label: 'Charter Approved',
+             value: projectData.charterApprovalDate != null ? 'Yes' : 'No',
+             icon: Icons.verified_outlined,
+             color: projectData.charterApprovalDate != null
+                 ? const Color(0xFF10B981)
+                 : const Color(0xFFEF4444),
+             delta: projectData.charterApprovalDate != null
+                 ? 'planning unlocked'
+                 : 'planning locked',
+           ),
+           LaunchKpiTile(
+             label: 'Milestones',
+             value: '${projectData.keyMilestones.length}',
+             icon: Icons.flag_outlined,
+             color: const Color(0xFF2563EB),
+             delta: '${projectData.keyMilestones.where((m) => m.dueDate.isNotEmpty).length} dated',
+           ),
+           LaunchKpiTile(
+             label: 'Risks Tracked',
+             value: '${projectData.frontEndPlanning.riskRegisterItems.length}',
+             icon: Icons.warning_amber_outlined,
+             color: const Color(0xFFF59E0B),
+             delta: '${projectData.frontEndPlanning.riskRegisterItems.where((r) => r.status.toLowerCase() != 'closed').length} open',
+           ),
+           LaunchKpiTile(
+             label: 'Allowances',
+             value: '${projectData.frontEndPlanning.allowanceItems.length}',
+             icon: Icons.savings_outlined,
+             color: const Color(0xFFD97706),
+             delta: 'contingency tracked',
+           ),
+     ],
+   );
+ }
+
 
  Widget _buildScopeAcceptancePanel() {
  return LaunchDataTable(
@@ -1647,4 +1708,5 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
  ),
  );
  }
+
 }

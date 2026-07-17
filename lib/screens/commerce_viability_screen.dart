@@ -14,6 +14,7 @@ import 'package:ndu_project/services/launch_phase_service.dart';
 import 'package:ndu_project/utils/launch_phase_ai_seed.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
+import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -81,6 +82,8 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
  title: 'Hypercare & Warranty Support',
 showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 20),
+            _buildLaunchInsights(),
+            const SizedBox(height: 16),
  _buildMetricsRow(),
  const SizedBox(height: 20),
  _buildFinancialMetricsPanel(),
@@ -1073,4 +1076,54 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  String _s(dynamic v) => (v ?? '').toString().trim();
  String _ns(dynamic v, String fb) => _s(v).isEmpty ? fb : _s(v);
+  // Launch Insights: KPIs + completion donut (auto-derived from project data)
+  Widget _buildLaunchInsights() {
+    final projectData = ProjectDataHelper.getData(context);
+    final totalProviders =
+            projectData.vendors.length + projectData.contractors.length;
+        final completionPct =
+            totalProviders == 0 ? 0.0 : (projectData.vendors.length / totalProviders).clamp(0.0, 1.0);
+    return LaunchInsightsHeader(
+      sectionTitle: 'Hypercare & Warranty Status',
+      sectionSubtitle: 'Warranty coverage, hypercare tickets, and SLA performance',
+      sectionIcon: Icons.support_agent_outlined,
+      sectionColor: const Color(0xFFD97706),
+      completionPercent: completionPct,
+      completionLabel: 'COVERED',
+      completionCaption:
+          '${(completionPct * 100).round()}% complete - auto-derived from project data',
+      kpiTiles: [
+        LaunchKpiTile(
+              label: 'Vendors',
+              value: '${projectData.vendors.length}',
+              icon: Icons.inventory_2_outlined,
+              color: const Color(0xFF2563EB),
+              delta: 'under warranty',
+            ),
+            LaunchKpiTile(
+              label: 'Contractors',
+              value: '${projectData.contractors.length}',
+              icon: Icons.construction_outlined,
+              color: const Color(0xFFF59E0B),
+              delta: 'warranty providers',
+            ),
+            LaunchKpiTile(
+              label: 'Allowances',
+              value: '${projectData.frontEndPlanning.allowanceItems.length}',
+              icon: Icons.savings_outlined,
+              color: const Color(0xFF7C3AED),
+              delta: 'contingency tracked',
+            ),
+            LaunchKpiTile(
+              label: 'Open Risks',
+              value: '${projectData.frontEndPlanning.riskRegisterItems.where((r) => r.status.toLowerCase() != 'closed').length}',
+              icon: Icons.warning_amber_outlined,
+              color: const Color(0xFFEF4444),
+              delta: 'live during hypercare',
+            ),
+      ],
+    );
+  }
+
+
 }

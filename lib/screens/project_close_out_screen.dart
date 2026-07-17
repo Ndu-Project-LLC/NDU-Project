@@ -1,4 +1,5 @@
 import 'package:ndu_project/widgets/launch_notes_section.dart';
+import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
@@ -95,6 +96,8 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
  title: 'Project Closeout',
 showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 16),
+            _buildLaunchInsights(),
+            const SizedBox(height: 16),
  Row(
  children: [
  const Spacer(),
@@ -1082,6 +1085,65 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  String _s(dynamic v) => (v ?? '').toString().trim();
  String _ns(dynamic v, String fb) => _s(v).isEmpty ? fb : _s(v);
+  // Launch Insights: KPIs + completion donut (auto-derived from project data)
+  Widget _buildLaunchInsights() {
+    final projectData = ProjectDataHelper.getData(context);
+    var checksPassed = 0;
+        if (projectData.charterApprovalDate != null) checksPassed++;
+        final risks = projectData.frontEndPlanning.riskRegisterItems;
+        if (risks.isEmpty || risks.every((r) => r.status.toLowerCase() == 'closed' || r.status.toLowerCase() == 'mitigated')) checksPassed++;
+        final ms = projectData.keyMilestones;
+        if (ms.isEmpty || ms.every((m) => m.comments.toLowerCase().contains('complete') || m.comments.toLowerCase().contains('done'))) checksPassed++;
+        final allowances = projectData.frontEndPlanning.allowanceItems;
+        if (allowances.isEmpty || allowances.every((a) => a.releaseStatus == 'Closed' || a.releaseStatus == 'Consumed')) checksPassed++;
+        final completionPct = checksPassed / 4;
+    return LaunchInsightsHeader(
+      sectionTitle: 'Project Closeout Status',
+      sectionSubtitle: 'Final documentation, archive, lessons learned, and stakeholder sign-off',
+      sectionIcon: Icons.task_alt_outlined,
+      sectionColor: const Color(0xFF10B981),
+      completionPercent: completionPct,
+      completionLabel: 'CLOSED',
+      completionCaption:
+          '${(completionPct * 100).round()}% complete - auto-derived from project data',
+      kpiTiles: [
+        LaunchKpiTile(
+              label: 'Charter Approved',
+              value: projectData.charterApprovalDate != null ? 'Yes' : 'No',
+              icon: Icons.verified_outlined,
+              color: projectData.charterApprovalDate != null
+                  ? const Color(0xFF10B981)
+                  : const Color(0xFFEF4444),
+              delta: projectData.charterApprovalDate != null
+                  ? 'project formally approved'
+                  : 'awaiting approval',
+            ),
+            LaunchKpiTile(
+              label: 'Milestones',
+              value: '${projectData.keyMilestones.length}',
+              icon: Icons.flag_outlined,
+              color: const Color(0xFF2563EB),
+              delta: '${projectData.keyMilestones.where((m) => m.comments.toLowerCase().contains('complete') || m.comments.toLowerCase().contains('done')).length} done',
+            ),
+            LaunchKpiTile(
+              label: 'Risks Logged',
+              value: '${projectData.frontEndPlanning.riskRegisterItems.length}',
+              icon: Icons.warning_amber_outlined,
+              color: const Color(0xFFF59E0B),
+              delta: '${projectData.frontEndPlanning.riskRegisterItems.where((r) => r.status.toLowerCase() == 'closed').length} closed',
+            ),
+            LaunchKpiTile(
+              label: 'Allowances',
+              value: '${projectData.frontEndPlanning.allowanceItems.length}',
+              icon: Icons.savings_outlined,
+              color: const Color(0xFFD97706),
+              delta: 'contingency reconciled',
+            ),
+      ],
+    );
+  }
+
+
 }
 
 enum _CloseOutView { longForm, summarized }

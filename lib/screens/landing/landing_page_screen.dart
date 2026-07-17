@@ -117,9 +117,9 @@ class LandingPageScreen extends StatelessWidget {
                       // Nav items (desktop)
                       if (MediaQuery.sizeOf(context).width > 900)
                         Row(children: [
-                          _navLink('Why Ndu', () => _scrollTo(context, 'why')),
                           _buildSolutionsDropdown(context),
                           _buildServicesDropdown(context),
+                          _navLink('Why Ndu Project?', () => _scrollTo(context, 'why')),
                           _navLink('Pricing', () => _scrollTo(context, 'pricing')),
                           _buildResourcesDropdown(context),
                           _navLink('KAZ AI', () => _scrollTo(context, 'kaz')),

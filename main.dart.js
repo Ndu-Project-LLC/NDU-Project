@@ -297043,9 +297043,9 @@ m=A.a([new A.aR(0,B.ab,B.I.E(0.4),B.wz,30)],t.V)
 h=i?new A.edh(h,g,f,e).$0():new A.edm(this,h,b,g,f,e).$0()
 return A.e6(l,A.jl(new A.O(new A.ai(s,0,s,0),A.ds(r,A.h(l,h,B.w,l,l,new A.n(o,l,n,p,m,l,B.l),l,l,l,l,new A.ai(q,12,q,12),l,l,l),B.bf,l),l),!1,l),l,l,0,0,20,l)},
 bFO(){var s=this,r="Why Ndu Project?"
-return s.a3e(A.a([new A.oQ(B.fq,r,new A.edv(s)),new A.oQ(B.ov,"How It Works",s.ga7o()),new A.oQ(B.vR,"Differentiator",new A.edw(s)),new A.oQ(B.hw,"Trusted By",new A.edx(s)),new A.oQ(B.d4,"KAZ AI",new A.edy(s))],t.Lm),r)},
+return s.a3e(A.a([new A.oQ(B.fq,r,new A.edv(s)),new A.oQ(B.ov,"",s.ga7o()),new A.oQ(B.vR,"Differentiator",new A.edw(s)),new A.oQ(B.hw,"Trusted By",new A.edx(s)),new A.oQ(B.d4,"KAZ AI",new A.edy(s))],t.Lm),r)},
 bDH(){var s=this
-return s.a3e(A.a([new A.oQ(B.ov,"How It Works",s.ga7o()),new A.oQ(B.vR,"Differentiator",new A.ed9(s)),new A.oQ(B.bFA,"Use Cases",new A.eda(s)),new A.oQ(B.bGB,"Demo",new A.edb(s)),new A.oQ(B.Ku,"Partner with Us",new A.edc(s))],t.Lm),"Solutions")},
+return s.a3e(A.a([new A.oQ(B.ov,"",s.ga7o()),new A.oQ(B.vR,"Differentiator",new A.ed9(s)),new A.oQ(B.bFA,"Use Cases",new A.eda(s)),new A.oQ(B.bGB,"Demo",new A.edb(s)),new A.oQ(B.Ku,"Partner with Us",new A.edc(s))],t.Lm),"Solutions")},
 bDm(){var s=this,r="Services"
 return s.a3e(A.a([new A.oQ(B.bED,r,new A.ecY(s)),new A.oQ(B.yP,"Project Delivery",new A.ecZ(s)),new A.oQ(B.mQ,"Training",new A.ed_(s)),new A.oQ(B.X4,"Consultation",new A.ed0(s))],t.Lm),r)},
 bCz(){var s=this
@@ -297111,7 +297111,7 @@ l=B.bd.E(0.08)
 k=A.d(16)
 j=A.F(B.bd.E(0.2),-1,B.p,1)
 k=A.h(f,A.j(B.cvL,B.m,f,B.d,B.e,B.j),B.i,f,f,new A.n(l,f,j,k,f,f,B.l),f,f,f,f,B.ai,f,f,f)
-j=A.b("How It Works \u2014 Project Delivers Results",f,f,f,f,f,A.I(f,f,B.o.E(0.9),f,f,f,f,f,f,f,f,22,f,f,B.J,f,f,!0,f,f,f,f,f,f,f,f),f,f,f)
+j=A.b(" \u2014 Project Delivers Results",f,f,f,f,f,A.I(f,f,B.o.E(0.9),f,f,f,f,f,f,f,f,22,f,f,B.J,f,f,!0,f,f,f,f,f,f,f,f),f,f,f)
 l=A.b("Step-by-Step Project Delivery",f,f,f,f,f,A.I(f,f,B.o.E(0.9),f,f,f,f,f,f,f,f,22,f,f,B.J,f,f,!0,f,f,f,f,f,f,f,f),f,f,f)
 i=B.o.E(0.92)
 h=B.o.E(0.26)
@@ -421607,7 +421607,7 @@ B.MS=s([B.F8,B.u1,B.n6,B.a2A],A.b6("V<lV>"))
 B.cUg=s(["Default sprint length: 2 weeks (10 working days).","Velocity to be calibrated from team capacity."],t.s)
 B.eND=new A.f("Why Ndu Project?",null,null,null,null,null,null,null,null,null,null)
 B.dxx=new A.fK("solution",null,!0,null,B.eND,null,t.wI)
-B.efA=new A.f("How It Works",null,null,null,null,null,null,null,null,null,null)
+B.efA=new A.f("",null,null,null,null,null,null,null,null,null,null)
 B.dxt=new A.fK("howitworks",null,!0,null,B.efA,null,t.wI)
 B.epx=new A.f("Differentiator",null,null,null,null,null,null,null,null,null,null)
 B.dx9=new A.fK("differentiators",null,!0,null,B.epx,null,t.wI)

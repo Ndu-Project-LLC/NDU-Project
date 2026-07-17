@@ -49,6 +49,8 @@ import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
 import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
 import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
+import 'package:ndu_project/screens/agile_scrum_config_screen.dart';
+import 'package:ndu_project/screens/agile_capacity_planning_screen.dart';
 import 'package:ndu_project/screens/agile_team_structure_screen.dart';
 import 'package:ndu_project/screens/agile_epics_features_screen.dart';
 import 'package:ndu_project/screens/agile_stories_backlog_screen.dart';
@@ -145,6 +147,16 @@ class PlanningPhaseNavigation {
       id: 'agile_delivery_model',
       title: 'Agile Delivery Model',
       builder: (_) => const AgileDeliveryModelScreen(),
+    ),
+    PlanningPage(
+      id: 'agile_scrum_config',
+      title: 'Scrum Configuration',
+      builder: (_) => const AgileScrumConfigScreen(),
+    ),
+    PlanningPage(
+      id: 'agile_capacity_planning',
+      title: 'Capacity Planning',
+      builder: (_) => const AgileCapacityPlanningScreen(),
     ),
     PlanningPage(
       id: 'agile_backlog_governance',

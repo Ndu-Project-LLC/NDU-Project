@@ -50,62 +50,10 @@ class BuilderScreen extends StatefulWidget {
 }
 
 class _BuilderScreenState extends State<BuilderScreen> {
-  bool _hasAutoImported = false;
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _hasAutoImported) return;
-      _autoPopulateSchedule();
-    });
-  }
-
-  void _autoPopulateSchedule() {
-    final wbsProvider = context.read<WBSProvider>();
-    final scheduleProvider = context.read<ScheduleProvider>();
-    final projectData = ProjectDataHelper.getData(context, listen: false);
-
-    final wbs = wbsProvider.wbs;
-    final root = scheduleProvider.schedule?.activities[0];
-    if (wbs == null || root == null) return;
-
-    if (root.children.isNotEmpty) {
-      _hasAutoImported = true;
-      return;
-    }
-
-    final methodology = wbs.methodology.name.toLowerCase();
-    final hasWorkPackages = projectData.workPackages.isNotEmpty;
-    final hasAgileStories = methodology != 'waterfall';
-
-    if (methodology == 'waterfall' || methodology == 'hybrid') {
-      if (hasWorkPackages) {
-        unawaited(_createActivitiesFromPackages(autoMode: true));
-        _hasAutoImported = true;
-        return;
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-                'Schedule builder now prefers integrated work packages for waterfall/hybrid projects. Generate work packages first to build the schedule network.'),
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 4),
-          ),
-        );
-      }
-      _hasAutoImported = true;
-      return;
-    }
-
-    if (hasAgileStories) {
-      unawaited(_importStories());
-      _hasAutoImported = true;
-      return;
-    }
-
-    _hasAutoImported = true;
+    // Auto-populate disabled — unified sync runs from ScheduleModuleScreen.
   }
 
   Future<void> _createActivitiesFromPackages({bool autoMode = false}) async {
@@ -1095,6 +1043,12 @@ class _ActivityNode extends StatelessWidget {
 
   List<Widget> _traceabilityChips() {
     final chips = <Widget>[];
+    if (activity.importSource != null && activity.importSource == 'fep_milestone') {
+      chips.add(_miniChip(Icons.flag_outlined, 'FEP Milestone'));
+    } else if (activity.importSource != null &&
+        activity.importSource == 'work_package') {
+      chips.add(_miniChip(Icons.inventory_2_outlined, 'Package Import'));
+    }
     if (activity.wbsNodeId != null && activity.wbsNodeId!.isNotEmpty) {
       chips.add(_miniChip(Icons.account_tree_outlined, 'WBS linked'));
     }

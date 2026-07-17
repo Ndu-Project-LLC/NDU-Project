@@ -150,6 +150,9 @@ class SidebarNavigationService {
     // Agile Delivery Model Section — before Execution Plan
     SidebarItem(
         checkpoint: 'agile_delivery_model', label: 'Agile Delivery Model'),
+    SidebarItem(checkpoint: 'agile_scrum_config', label: 'Scrum Configuration'),
+    SidebarItem(
+        checkpoint: 'agile_capacity_planning', label: 'Capacity Planning'),
     SidebarItem(
         checkpoint: 'agile_backlog_governance', label: 'Backlog Governance'),
     SidebarItem(

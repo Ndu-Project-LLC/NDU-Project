@@ -19,6 +19,7 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/widgets/context_banner.dart';
+import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/screens/setup_wizard_screen.dart';
 import 'package:ndu_project/schedule/screens/builder_screen.dart';
@@ -29,6 +30,8 @@ import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
+import 'package:ndu_project/services/planning_sync_service.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 
 
 class ScheduleModuleScreen extends StatefulWidget {
@@ -50,11 +53,27 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
     length: 3,
     vsync: this,
   );
+  bool _syncedAll = false;
 
   @override
   void initState() {
     super.initState();
     _tabController.addListener(_onTabChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _autoSyncAll());
+  }
+
+  Future<void> _autoSyncAll() async {
+    if (_syncedAll || !mounted) return;
+    _syncedAll = true;
+    final provider = context.read<ScheduleProvider>();
+    final schedule = provider.schedule;
+    if (schedule == null) return;
+    final root = schedule.activities[0];
+    if (root.children.isNotEmpty) return;
+    await PlanningSyncService.syncAll(
+      context: context,
+      provider: provider,
+    );
   }
 
   void _onTabChanged() {
@@ -96,6 +115,38 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                 0,
                 (s, l) => s + _effectiveScheduleContextLineTotal(l))
             : 0.0;
+
+        final data = ProjectDataHelper.getData(context, listen: false);
+        final fepMilestones = data.keyMilestones
+            .where((m) => m.name.trim().isNotEmpty)
+            .toList();
+        final fepMilestoneCount = fepMilestones.length;
+
+        // Count managed-import activities in the tree
+        final tree = schedule.activities;
+        int countBySource(String source) {
+          int c = 0;
+          for (final a in tree) {
+            c += _countWithSource(a, source);
+          }
+          return c;
+        }
+        final syncedPkgs =
+            countBySource(PlanningSyncService.importSourceWorkPackage);
+        final syncedStories =
+            countBySource(PlanningSyncService.importSourceAgileStory);
+        int syncedMstones = 0;
+        for (final a in tree) {
+          syncedMstones += _countWithSource(
+              a, PlanningSyncService.importSourceMilestone);
+        }
+        // Also count children of the Planning Milestones group
+        for (final a in tree) {
+          if (a.name == 'Planning Milestones') {
+            syncedMstones =
+                a.children.length;
+          }
+        }
 
         return ResponsiveScaffold(
           activeItemLabel: 'Schedule',
@@ -143,7 +194,45 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                       value: formatCurrency(costTotal, currency),
                       icon: Icons.attach_money,
                     ),
+                  if (fepMilestoneCount > 0)
+                    ContextBannerItem(
+                      label: 'Planning Milestones',
+                      value: '$syncedMstones / $fepMilestoneCount synced',
+                      icon: Icons.flag_outlined,
+                    ),
+                  if (syncedPkgs > 0 || syncedStories > 0)
+                    ContextBannerItem(
+                      label: 'From Planning',
+                      value: '${syncedPkgs + syncedStories} items synced',
+                      icon: Icons.sync,
+                    ),
                 ],
+              ),
+              // ── Resync button ─────────────────────────────────────
+              if (fepMilestoneCount > 0 || syncedPkgs > 0 || syncedStories > 0)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                  child: Row(
+                    children: [
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: () async {
+                          await PlanningSyncService.syncAll(
+                            context: context,
+                            provider: provider,
+                            replaceExisting: true,
+                          );
+                          if (mounted) setState(() {});
+                        },
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: const Text('Resync from Planning'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.deepPurple,
+                          textStyle: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                ),
               ),
               // Tab content
               Expanded(
@@ -175,5 +264,13 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
       return l.varianceDelta ?? 0;
     }
     return l.total;
+  }
+
+  int _countWithSource(ScheduleActivity a, String source) {
+    int c = a.importSource == source ? 1 : 0;
+    for (final child in a.children) {
+      c += _countWithSource(child, source);
+    }
+    return c;
   }
 }

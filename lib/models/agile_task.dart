@@ -18,6 +18,7 @@ class AgileTask {
   String readinessStatus; // Draft, Ready for Refinement, Ready for Sprint
   List<String> dependencyTaskIds; // Related story/task dependencies
   int backlogOrder; // Planning-phase ordering within feature backlog
+  List<String> milestoneIds; // FEP milestone IDs linked to this task
 
   AgileTask({
     String? id,
@@ -38,7 +39,9 @@ class AgileTask {
     this.readinessStatus = 'Draft',
     List<String>? dependencyTaskIds,
     this.backlogOrder = 0,
+    List<String>? milestoneIds,
   })  : dependencyTaskIds = dependencyTaskIds ?? [],
+        milestoneIds = milestoneIds ?? [],
         id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
 
   AgileTask copyWith({
@@ -59,6 +62,7 @@ class AgileTask {
     String? readinessStatus,
     List<String>? dependencyTaskIds,
     int? backlogOrder,
+    List<String>? milestoneIds,
   }) {
     return AgileTask(
       id: id,
@@ -80,6 +84,7 @@ class AgileTask {
       dependencyTaskIds:
           dependencyTaskIds ?? List<String>.from(this.dependencyTaskIds),
       backlogOrder: backlogOrder ?? this.backlogOrder,
+      milestoneIds: milestoneIds ?? List<String>.from(this.milestoneIds),
     );
   }
 
@@ -101,6 +106,7 @@ class AgileTask {
         'workflowState': workflowState,
         'readinessStatus': readinessStatus,
         'dependencyTaskIds': dependencyTaskIds,
+        'milestoneIds': milestoneIds,
         'backlogOrder': backlogOrder,
       };
 
@@ -129,6 +135,10 @@ class AgileTask {
       workflowState: json['workflowState']?.toString() ?? 'backlog',
       readinessStatus: json['readinessStatus']?.toString() ?? 'Draft',
       dependencyTaskIds: (json['dependencyTaskIds'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      milestoneIds: (json['milestoneIds'] as List?)
               ?.map((e) => e.toString())
               .toList() ??
           [],

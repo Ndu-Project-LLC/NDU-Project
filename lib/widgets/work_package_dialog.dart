@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-
+import 'package:ndu_project/services/milestone_item_linkage_service.dart';
+import 'package:ndu_project/widgets/milestone_picker_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 class WorkPackageDialog extends StatefulWidget {
   const WorkPackageDialog({
@@ -49,11 +50,13 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
   String? _plannedStart;
   String? _plannedEnd;
   late PackageReadinessChecklist _readiness;
+  List<String> _milestoneIds = [];
 
   @override
   void initState() {
     super.initState();
     final wp = widget.initialWorkPackage;
+    _milestoneIds = List<String>.from(wp?.milestoneIds ?? []);
     _titleController = TextEditingController(text: wp?.title ?? '');
     _descriptionController = TextEditingController(text: wp?.description ?? '');
     _ownerController = TextEditingController(text: wp?.owner ?? '');
@@ -281,6 +284,7 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
       acceptingCriteria: _acceptingCriteriaController.text.trim(),
       designPackageId: wp?.designPackageId ?? '',
       procurementItemIds: wp?.procurementItemIds ?? const [],
+      milestoneIds: _milestoneIds,
       areaOrSystem: _areaOrSystemController.text.trim(),
       contractorOrCrew: _contractorOrCrewController.text.trim(),
       releaseStatus: _releaseStatus,
@@ -292,6 +296,30 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
     );
 
     Navigator.of(context).pop(result);
+  }
+
+  Future<void> _pickMilestones() async {
+    final allMilestones = MilestoneItemLinkageService.loadMilestones(context);
+    if (allMilestones.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No milestones available. Add them in Front End Planning > Milestone.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    final picked = await showDialog<List<String>>(
+      context: context,
+      builder: (ctx) => MilestonePickerDialog(
+        title: 'Link Milestones',
+        allMilestones: allMilestones,
+        selectedIds: _milestoneIds,
+      ),
+    );
+    if (picked != null) {
+      setState(() => _milestoneIds = picked);
+    }
   }
 
   @override
@@ -671,6 +699,15 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
                     ),
                   ],
                 ),
+                _Section(
+                  title: 'Linked FEP Milestones',
+                  children: [
+                    _MilestoneLinkChip(
+                      milestoneIds: _milestoneIds,
+                      onPick: _pickMilestones,
+                    ),
+                  ],
+                ),
                 VoiceTextFormField(
                   controller: _notesController,
                   decoration: const InputDecoration(labelText: 'Notes'),
@@ -829,6 +866,55 @@ class _ReadinessCheckbox extends StatelessWidget {
         title: Text(label, style: const TextStyle(fontSize: 12)),
         value: value,
         onChanged: (v) => onChanged(v ?? false),
+      ),
+    );
+  }
+}
+
+class _MilestoneLinkChip extends StatelessWidget {
+  final List<String> milestoneIds;
+  final VoidCallback onPick;
+
+  const _MilestoneLinkChip({
+    required this.milestoneIds,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPick,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF8E1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFFFE082)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.flag_outlined,
+                size: 16, color: Color(0xFFFFC107)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                milestoneIds.isEmpty
+                    ? 'Tap to link FEP milestones...'
+                    : '${milestoneIds.length} milestone${milestoneIds.length == 1 ? '' : 's'} linked',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: milestoneIds.isEmpty
+                      ? const Color(0xFF64748B)
+                      : const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+            const Icon(Icons.edit_outlined,
+                size: 14, color: Color(0xFF64748B)),
+          ],
+        ),
       ),
     );
   }

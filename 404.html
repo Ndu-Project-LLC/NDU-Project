@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    SPA 404 fallback for GitHub Pages.
+
+    GitHub Pages serves static files only — it returns a hard 404 for any
+    path that doesn't exist as a file on disk. This breaks Flutter web's
+    path-based router (e.g. /pricing, /sign-in, /dashboard) because the
+    user's browser hits GitHub's 404 page before Flutter can route.
+
+    Fix: copy index.html here, then add a redirect script that captures
+    the originally-requested path and rewrites it to `/?route=<path>`.
+    Flutter's GoRouter reads the URL and routes to the right screen.
+
+    This is the standard "SPA redirect trick" documented at:
+    https://github.com/rafgraph/spa-github-pages
+  -->
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="NDU Project - Navigate. Deliver. Upgrade.">
+
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="NDU Project">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png?v=NDU_BUILD_STAMP">
+
+  <link rel="icon" type="image/x-icon" href="favicon.ico?v=NDU_BUILD_STAMP"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png?v=NDU_BUILD_STAMP"/>
+
+  <title>NDU Project</title>
+  <link rel="manifest" href="manifest.json?v=NDU_BUILD_STAMP">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    }
+    .loading-container {
+      text-align: center;
+      color: #94a3b8;
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(148, 163, 184, 0.2);
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      animation: ndu-spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes ndu-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .loading-text {
+      font-size: 14px;
+      opacity: 0.7;
+      letter-spacing: 0.02em;
+    }
+    .loading-brand {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 24px;
+      letter-spacing: 0.08em;
+    }
+    .loading-brand .accent {
+      color: #3b82f6;
+    }
+    .loading-container.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+    }
+  </style>
+
+  <!--
+    SPA redirect script — runs BEFORE any other script.
+    GitHub Pages replaces 404 responses with this page's content. We grab
+    the originally-requested URL from the browser and redirect to the
+    root with the path preserved in the hash, so Flutter's router picks
+    it up correctly.
+
+    Two scenarios:
+      1. Direct navigation to /pricing (e.g. user types URL or refreshes
+         on a deep link) → GitHub serves 404.html → we redirect to
+         /#/pricing (hash strategy) OR /?_ndu=...&route=/pricing.
+         Since Flutter is configured with PathUrlStrategy, we redirect
+         to the same path but with a cache-busting query param that
+         forces the browser to load index.html fresh, then Flutter's
+         router reads location.pathname and shows /pricing.
+
+      2. Soft navigation via GoRouter — no 404.html involved; Flutter
+         handles routing in-app.
+  -->
+  <script>
+    (function() {
+      // Capture the originally-requested path BEFORE GitHub Pages serves
+      // this 404.html content. We store it so the Flutter app can read
+      // it after redirect.
+      try {
+        var requestedPath = window.location.pathname + window.location.search + window.location.hash;
+        // Persist the deep link so the Flutter app can pick it up after
+        // the redirect to / completes.
+        sessionStorage.setItem('__ndu_pending_route', requestedPath);
+      } catch (e) {
+        console.warn('[NDU 404] Failed to capture route:', e);
+      }
+
+      // Redirect to root with cache-busting param. The root index.html
+      // will load Flutter, and main() will check sessionStorage for the
+      // pending route and navigate there via GoRouter.
+      var NDU_BUILD = 'NDU_BUILD_STAMP';
+      if (NDU_BUILD === 'NDU_BUILD_STAMP' || !NDU_BUILD) {
+        NDU_BUILD = 'dev-local';
+      }
+      var redirectUrl = new URL('/', window.location.origin);
+      if (NDU_BUILD !== 'dev-local') {
+        redirectUrl.searchParams.set('_ndu', NDU_BUILD);
+      }
+      // Use replace so the 404 URL doesn't appear in browser history.
+      window.location.replace(redirectUrl.toString());
+    })();
+  </script>
+</head>
+<body>
+  <div class="loading-container" id="loading-indicator">
+    <div class="loading-brand">NDU <span class="accent">Project</span></div>
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Redirecting…</div>
+  </div>
+</body>
+</html>

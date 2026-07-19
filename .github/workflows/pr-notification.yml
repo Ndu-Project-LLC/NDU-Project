@@ -1,0 +1,42 @@
+name: PR Notification
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, reopened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send PR notification email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: |
+            [NDU Project] PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}
+          body: |
+            A new Pull Request has been opened and requires your review.
+
+            PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}
+
+            Description:
+            ${{ github.event.pull_request.body }}
+
+            Author: ${{ github.event.pull_request.user.login }}
+            Branch: ${{ github.event.pull_request.head.ref }} → ${{ github.event.pull_request.base.ref }}
+            Changed files: ${{ github.event.pull_request.changed_files }}
+            Additions: +${{ github.event.pull_request.additions }}
+            Deletions: -${{ github.event.pull_request.deletions }}
+
+            Review URL: ${{ github.event.pull_request.html_url }}
+
+            Please review and approve the PR at the URL above.
+
+            — NDU Project CI/CD
+          to: chimmie@nduproject.com
+          from: NDU Project CI
+          convert_markdown: true
+          priority: high

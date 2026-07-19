@@ -11,6 +11,7 @@ jobs:
       - name: Request review from NduProject
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             try {
               await github.rest.pulls.requestReviewers({
@@ -24,34 +25,36 @@ jobs:
               console.log("Could not request reviewer: " + e.message);
             }
 
-      - name: Send email notification via Resend
-        if: secrets.RESEND_API_KEY != null
-        uses: fouadvandenberg/resend-email-action@v1
-        with:
-          api-key: ${{ secrets.RESEND_API_KEY }}
-          from: noreply@nduproject.com
-          to: chimmie@nduproject.com
-          subject: "[NDU Project] PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
-          html: |
-            <h2>Pull Request Requires Your Review</h2>
-            <p><strong>PR #${{ github.event.pull_request.number }}</strong>: ${{ github.event.pull_request.title }}</p>
-            <p><strong>Author:</strong> ${{ github.event.pull_request.user.login }}</p>
-            <p><strong>Branch:</strong> ${{ github.event.pull_request.head.ref }} → ${{ github.event.pull_request.base.ref }}</p>
-            <p><strong>Changed files:</strong> ${{ github.event.pull_request.changed_files }} |
-            <strong>Additions:</strong> +${{ github.event.pull_request.additions }} |
-            <strong>Deletions:</strong> -${{ github.event.pull_request.deletions }}</p>
-            <hr>
-            <p><a href="${{ github.event.pull_request.html_url }}" style="background: #FFC812; color: #151515; padding: 10px 20px; text-decoration: none; border-radius: 8; font-weight: bold;">Review PR on GitHub</a></p>
-            <hr>
-            <p style="color: #888; font-size: 12px;">This is an automated notification from NDU Project CI/CD.</p>
-
-      - name: Fallback — add comment mentioning NduProject
+      - name: Add review request comment
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const pr = context.payload.pull_request;
+            const body = [
+              "## Review Required",
+              "",
+              "@NduProject — This PR requires your review and approval before it can be merged.",
+              "",
+              "| Field | Value |",
+              "|-------|-------|",
+              "| PR Number | #" + pr.number + " |",
+              "| Title | " + pr.title + " |",
+              "| Author | @" + pr.user.login + " |",
+              "| Branch | " + pr.head.ref + " -> " + pr.base.ref + " |",
+              "| Changed files | " + pr.changed_files + " |",
+              "| Additions | +" + pr.additions + " |",
+              "| Deletions | -" + pr.deletions + " |",
+              "",
+              "**[Review this PR](" + pr.html_url + ")**",
+              "",
+              "---",
+              "*To receive email notifications at chimmie@nduproject.com, verify that email in your [GitHub email settings](https://github.com/settings/emails).*"
+            ].join("\n");
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: "@NduProject — This PR requires your review. Please review and approve at " + context.payload.pull_request.html.url
+              body: body
             });
+            console.log("Comment added to PR");

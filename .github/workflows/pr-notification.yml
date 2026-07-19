@@ -8,35 +8,50 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send PR notification email
-        uses: dawidd6/action-send-mail@v3
+      - name: Request review from NduProject
+        uses: actions/github-script@v7
         with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: |
-            [NDU Project] PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}
-          body: |
-            A new Pull Request has been opened and requires your review.
+          script: |
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                reviewers: ["NduProject"]
+              });
+              console.log("Review requested from NduProject");
+            } catch (e) {
+              console.log("Could not request reviewer: " + e.message);
+            }
 
-            PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}
-
-            Description:
-            ${{ github.event.pull_request.body }}
-
-            Author: ${{ github.event.pull_request.user.login }}
-            Branch: ${{ github.event.pull_request.head.ref }} → ${{ github.event.pull_request.base.ref }}
-            Changed files: ${{ github.event.pull_request.changed_files }}
-            Additions: +${{ github.event.pull_request.additions }}
-            Deletions: -${{ github.event.pull_request.deletions }}
-
-            Review URL: ${{ github.event.pull_request.html_url }}
-
-            Please review and approve the PR at the URL above.
-
-            — NDU Project CI/CD
+      - name: Send email notification via Resend
+        if: secrets.RESEND_API_KEY != null
+        uses: fouadvandenberg/resend-email-action@v1
+        with:
+          api-key: ${{ secrets.RESEND_API_KEY }}
+          from: noreply@nduproject.com
           to: chimmie@nduproject.com
-          from: NDU Project CI
-          convert_markdown: true
-          priority: high
+          subject: "[NDU Project] PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+          html: |
+            <h2>Pull Request Requires Your Review</h2>
+            <p><strong>PR #${{ github.event.pull_request.number }}</strong>: ${{ github.event.pull_request.title }}</p>
+            <p><strong>Author:</strong> ${{ github.event.pull_request.user.login }}</p>
+            <p><strong>Branch:</strong> ${{ github.event.pull_request.head.ref }} → ${{ github.event.pull_request.base.ref }}</p>
+            <p><strong>Changed files:</strong> ${{ github.event.pull_request.changed_files }} |
+            <strong>Additions:</strong> +${{ github.event.pull_request.additions }} |
+            <strong>Deletions:</strong> -${{ github.event.pull_request.deletions }}</p>
+            <hr>
+            <p><a href="${{ github.event.pull_request.html_url }}" style="background: #FFC812; color: #151515; padding: 10px 20px; text-decoration: none; border-radius: 8; font-weight: bold;">Review PR on GitHub</a></p>
+            <hr>
+            <p style="color: #888; font-size: 12px;">This is an automated notification from NDU Project CI/CD.</p>
+
+      - name: Fallback — add comment mentioning NduProject
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "@NduProject — This PR requires your review. Please review and approve at " + context.payload.pull_request.html.url
+            });

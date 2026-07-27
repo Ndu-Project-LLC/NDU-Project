@@ -61,9 +61,11 @@ void main() async {
         message.contains('called with invalid state') ||
         message.contains('saved with invalid state') ||
         message.contains('invalid state. Nested arrays') ||
+        message.contains('ListTile background color or ink splashes') ||
         (message.contains('listening to') &&
             message.contains('invalid state'))) {
-      debugPrint('Route state warning suppressed: $message');
+      // Silently suppress — these are benign framework warnings that
+      // don't affect functionality and would only add noise to the console.
       return;
     }
 
@@ -98,10 +100,10 @@ void main() async {
         message.contains('called with invalid state') ||
         message.contains('saved with invalid state') ||
         message.contains('invalid state. Nested arrays') ||
+        message.contains('ListTile background color or ink splashes') ||
         (message.contains('listening to') &&
             message.contains('invalid state'))) {
-      return const SizedBox
-          .shrink(); // Return empty widget for suppressed warnings
+      return const SizedBox.shrink();
     }
 
     // For other errors, show a friendly error screen so the user sees a
@@ -250,7 +252,14 @@ class MyApp extends StatelessWidget {
                     return MediaQuery(
                       // Disable unnecessary animations and transitions on slow devices
                       data: media,
-                      child: child ?? const SizedBox.shrink(),
+                      // Provide a transparent Material ancestor so that all
+                      // ListTile widgets in the app have a Material ancestor,
+                      // preventing the "background color or ink splashes may
+                      // be invisible" warning from DecoratedBox wrappers.
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: child ?? const SizedBox.shrink(),
+                      ),
                     );
                   },
                   // Reduce checkerboard opacity for better performance

@@ -13,6 +13,8 @@ import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/subscription_service.dart';
 
 import 'package:ndu_project/services/security_services.dart';
+import 'package:ndu_project/screens/project_dashboard_screen.dart';
+import 'package:ndu_project/screens/pricing_screen.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -195,6 +197,18 @@ class _SignInScreenState extends State<SignInScreen> {
       if (!mounted) return;
       context.go(target);
     });
+  }
+
+  Widget _buildFallbackScreen(String target) {
+    // Map route paths to screens for fallback navigation
+    switch (target) {
+      case '/dashboard':
+        return const ProjectDashboardScreen();
+      case '/pricing':
+        return const PricingScreen();
+      default:
+        return const ProjectDashboardScreen();
+    }
   }
 
   bool _shouldDeferToAuthWrapper() {
@@ -400,10 +414,11 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
                           children: [
                             Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 SizedBox(
                                   width: 20,
@@ -490,35 +505,6 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // ── Admin Panel button ──────────────────────────────────
-                  Center(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        context.go('/admin-home');
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF1A1D1F),
-                        backgroundColor: Colors.white,
-                        side: const BorderSide(
-                            color: Color(0xFFE4E7EC), width: 1.5),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                      icon: const Icon(Icons.shield_outlined,
-                          size: 18, color: Color(0xFF6B7280)),
-                      label: const Text(
-                        'Admin Panel',
-                        style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF4B5563)),
-                      ),
                     ),
                   ),
                   const SizedBox(height: 20),

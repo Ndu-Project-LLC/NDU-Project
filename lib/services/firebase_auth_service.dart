@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'google_sign_in_adapter.dart' as gadapter;
 
@@ -27,10 +27,20 @@ class FirebaseAuthService {
     bool rememberMe = false,
   }) async {
     if (kIsWeb) {
-      // FirebaseAuth.setPersistence is only implemented by firebase_auth_web.
-      await _auth.setPersistence(
-        rememberMe ? Persistence.LOCAL : Persistence.SESSION,
-      );
+      // FirebaseAuth.setPersistence can hang on web in certain
+      // configurations (e.g. when Firebase isn't fully initialised).
+      // Firebase Auth web already defaults to LOCAL persistence, so
+      // wrap in a non-blocking try-catch with a short timeout to
+      // prevent the sign-in button from spinning forever.
+      try {
+        await _auth
+            .setPersistence(
+              rememberMe ? Persistence.LOCAL : Persistence.SESSION,
+            )
+            .timeout(const Duration(seconds: 3));
+      } catch (e) {
+        debugPrint('[FirebaseAuthService] setPersistence ignored: $e');
+      }
     }
     await setRememberMe(rememberMe);
     final cred = await _auth.signInWithEmailAndPassword(

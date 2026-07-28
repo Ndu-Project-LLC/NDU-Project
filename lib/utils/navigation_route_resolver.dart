@@ -238,6 +238,7 @@ class NavigationRouteResolver {
               projectData?.notes ??
               '',
           solutions: buildSolutionItems(projectData),
+          businessCase: projectData?.businessCase ?? '',
         );
       case 'infrastructure_considerations':
         return InfrastructureConsiderationsScreen(
@@ -245,6 +246,7 @@ class NavigationRouteResolver {
               projectData?.notes ??
               '',
           solutions: buildSolutionItems(projectData),
+          businessCase: projectData?.businessCase ?? '',
         );
       case 'core_stakeholders':
         return CoreStakeholdersScreen(
@@ -252,11 +254,13 @@ class NavigationRouteResolver {
               projectData?.notes ??
               '',
           solutions: buildSolutionItems(projectData),
+          businessCase: projectData?.businessCase ?? '',
         );
       case 'cost_analysis':
         return CostAnalysisScreen(
           notes: projectData?.notes ?? '',
           solutions: buildSolutionItems(projectData),
+          businessCase: projectData?.businessCase ?? '',
         );
       case 'preferred_solution_analysis':
         return PreferredSolutionAnalysisScreen(

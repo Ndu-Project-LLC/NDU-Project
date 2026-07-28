@@ -212,6 +212,14 @@ class _PricingScreenState extends State<PricingScreen> {
     );
   }
 
+  /// Whether the user was redirected here due to no active subscription.
+  bool get _wasRedirectedForSubscription {
+    final router = GoRouter.maybeOf(context);
+    if (router == null) return false;
+    final reason = router.state.uri.queryParameters['reason'];
+    return reason == 'no_subscription';
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -237,6 +245,10 @@ class _PricingScreenState extends State<PricingScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTopNav(context, isDesktop: isDesktop),
+                      if (_wasRedirectedForSubscription) ...[
+                        const SizedBox(height: 16),
+                        _buildSubscriptionRedirectBanner(),
+                      ],
                       const SizedBox(height: 24),
                       _buildTrustStrip(),
                       const SizedBox(height: 28),
@@ -974,6 +986,63 @@ class _PricingScreenState extends State<PricingScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionRedirectBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFCD34D)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.lock_outline,
+              color: Color(0xFFD97706),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Subscription Required',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF92400E),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'You need an active subscription to access NDU Project. Choose a plan below to get started with your workspace.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: const Color(0xFF92400E).withValues(alpha: 0.8),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

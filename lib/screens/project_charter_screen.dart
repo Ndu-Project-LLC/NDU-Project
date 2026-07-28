@@ -60,7 +60,6 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  });
  }
 
- 
  Future<void> _exportPdf() async {
  final projectData = ProjectDataHelper.getData(context);
  final fep = projectData.frontEndPlanning;
@@ -255,52 +254,54 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  /// Navigate to the Core Stakeholders screen so the user can edit the
  /// stakeholders that the charter inherits from the preferred solution.
  void _navigateToCoreStakeholders() {
- try {
- final data = _projectData;
- Navigator.of(context).push(
- MaterialPageRoute<void>(
- builder: (_) => CoreStakeholdersScreen(
- notes: data?.coreStakeholdersData?.notes ?? data?.notes ?? '',
- solutions: const [],
- ),
- ),
- );
- } catch (e) {
- debugPrint('Could not navigate to Core Stakeholders: $e');
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text(
- 'Core Stakeholders page is reachable from the sidebar under Initiation → Core Stakeholders.'),
- duration: Duration(seconds: 4),
- ),
- );
- }
+   try {
+     final data = _projectData;
+     Navigator.of(context).push(
+       MaterialPageRoute<void>(
+         builder: (_) => CoreStakeholdersScreen(
+           notes: data?.coreStakeholdersData?.notes ?? data?.notes ?? '',
+           solutions: const [],
+           businessCase: data?.businessCase ?? '',
+         ),
+       ),
+     );
+   } catch (e) {
+     debugPrint('Could not navigate to Core Stakeholders: $e');
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(
+         content: Text(
+             'Core Stakeholders page is reachable from the sidebar under Initiation → Core Stakeholders.'),
+         duration: Duration(seconds: 4),
+       ),
+     );
+   }
  }
 
  /// Navigate to the Business Case screen so the user can view / edit
  /// the preferred solution that supplies IT considerations and
  /// infrastructure to the charter.
- void _navigateToBusinessCase() {
- try {
- final data = _projectData;
- Navigator.of(context).push(
- MaterialPageRoute<void>(
- builder: (_) => CostAnalysisScreen(
- notes: data?.notes ?? '',
- solutions: const [],
- ),
- ),
- );
- } catch (e) {
- debugPrint('Could not navigate to Business Case: $e');
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text(
- 'Business Case / Cost Analysis page is reachable from the sidebar under Initiation → Cost Analysis.'),
- duration: Duration(seconds: 4),
- ),
- );
- }
+  void _navigateToBusinessCase() {
+    try {
+     final data = _projectData;
+     Navigator.of(context).push(
+       MaterialPageRoute<void>(
+         builder: (_) => CostAnalysisScreen(
+           notes: data?.notes ?? '',
+           solutions: const [],
+           businessCase: data?.businessCase ?? '',
+         ),
+       ),
+     );
+   } catch (e) {
+     debugPrint('Could not navigate to Business Case: $e');
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(
+         content: Text(
+             'Business Case / Cost Analysis page is reachable from the sidebar under Initiation → Cost Analysis.'),
+         duration: Duration(seconds: 4),
+       ),
+     );
+   }
  }
 
  @override

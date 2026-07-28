@@ -664,7 +664,7 @@ class _SummaryGrid extends StatelessWidget {
  title: 'Overall reconciliation health',
  headline: '82% aligned',
  annotation: 'Remaining gaps: 3 critical · 4 moderate',
- accentColor: Color(0xFF2563EB),
+ accentColor: Color(0xFFD97706),
  icon: Icons.insights_outlined,
  bullets: [
  'Material gaps tracked across design, ops, and adoption streams',
@@ -1077,7 +1077,7 @@ class _GapRegisterCard extends StatelessWidget {
  color: const Color(0xFF059669)),
  _Pill(
  label: 'Resolved · ${counts['Resolved'] ?? 0}',
- color: const Color(0xFF2563EB)),
+ color: const Color(0xFFD97706)),
  ],
  ),
  const SizedBox(height: 18),
@@ -1944,7 +1944,7 @@ class _GapEntryRowState extends State<_GapEntryRow> {
  Color _categoryColor(String cat) {
  switch (cat) {
  case 'Scope':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Schedule':
  return const Color(0xFFF59E0B);
  case 'Cost':
@@ -1988,7 +1988,7 @@ class _GapEntryRowState extends State<_GapEntryRow> {
  case 'Low':
  return const Color(0xFF059669);
  case 'Resolved':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  default:
  return const Color(0xFF9CA3AF);
  }
@@ -2262,7 +2262,7 @@ class _RootCauseRowState extends State<_RootCauseRow> {
  case 'Process':
  return const Color(0xFF4F46E5);
  case 'People':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Technology':
  return const Color(0xFF0D9488);
  case 'Requirements':
@@ -2300,7 +2300,7 @@ class _RootCauseRowState extends State<_RootCauseRow> {
  case 'Open':
  return const Color(0xFF9CA3AF);
  case 'Under Investigation':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Remediation In Progress':
  return const Color(0xFFF59E0B);
  case 'Verified Closed':
@@ -3344,7 +3344,7 @@ class _ReconPlanRowState extends State<_ReconPlanRow> {
  Color _phaseColor(String phase) {
  switch (phase) {
  case 'Execution':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Close-out':
  return const Color(0xFF7C3AED);
  case 'Handover':
@@ -3365,7 +3365,7 @@ class _ReconPlanRowState extends State<_ReconPlanRow> {
  case 'Not started':
  return const Color(0xFF9CA3AF);
  case 'In progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'On track':
  return const Color(0xFF10B981);
  case 'At risk':
@@ -3404,7 +3404,7 @@ class _ReconPlanRowState extends State<_ReconPlanRow> {
 
  Color _progressColor(int pct) {
  if (pct >= 80) return const Color(0xFF10B981);
- if (pct >= 50) return const Color(0xFF2563EB);
+ if (pct >= 50) return const Color(0xFFD97706);
  if (pct >= 25) return const Color(0xFFF59E0B);
  return const Color(0xFFEF4444);
  }
@@ -3660,7 +3660,7 @@ class _ImpactAssessmentRowState extends State<_ImpactAssessmentRow> {
  Color _domainColor(String domain) {
  switch (domain) {
  case 'Schedule':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Cost':
  return const Color(0xFF059669);
  case 'Quality':
@@ -3715,7 +3715,7 @@ class _ImpactAssessmentRowState extends State<_ImpactAssessmentRow> {
  case 'Improving':
  return const Color(0xFF10B981);
  case 'Stable':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Needs attention':
  return const Color(0xFFF59E0B);
  case 'Deteriorating':
@@ -4882,7 +4882,7 @@ class _ReconciliationWorkflowCardState
  _WorkflowBoardColumnConfig(
  keyName: 'active',
  label: 'Active',
- accent: Color(0xFF2563EB),
+ accent: Color(0xFFD97706),
  ),
  _WorkflowBoardColumnConfig(
  keyName: 'in_progress',
@@ -5685,7 +5685,7 @@ class _StatusBadge extends StatelessWidget {
  case 'at risk':
  return const Color(0xFFF97316);
  case 'in review':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'not started':
  return const Color(0xFF4B5563);
  case 'complete':
@@ -5727,7 +5727,7 @@ class _TrendPill extends StatelessWidget {
  case 'improving':
  return const Color(0xFF16A34A);
  case 'stable':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'needs attention':
  return const Color(0xFFDC2626);
  default:
@@ -6213,7 +6213,7 @@ InputDecoration _inputDecoration(String hintText, {bool dense = false}) {
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(12),
- borderSide: const BorderSide(color: Color(0xFF93C5FD)),
+ borderSide: const BorderSide(color: Color(0xFFFDE68A)),
  ),
  );
 }

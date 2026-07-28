@@ -995,7 +995,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Define end-to-end user journeys from entry to task completion. Map touchpoints, '
  'decision points, and emotional arcs. Validate journeys against user research '
  'and business objectives before investing in interface design.',
- const Color(0xFF2563EB),
+ const Color(0xFFD97706),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -1908,7 +1908,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFF8B5CF6);
  break;
  case 'Typography':
- color = const Color(0xFF2563EB);
+ color = const Color(0xFFD97706);
  break;
  case 'Layout':
  color = const Color(0xFF10B981);

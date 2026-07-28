@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 
@@ -227,7 +228,14 @@ class _ExecutionPhasePageState extends State<ExecutionPhasePage> {
     }
   }
 
-  void _removeEntry(String sectionKey, int index) {
+  Future<void> _removeEntry(String sectionKey, int index) async {
+    final entry = _sectionData[sectionKey]![index];
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Entry',
+      itemLabel: entry.title,
+    );
+    if (!confirmed) return;
     setState(() => _sectionData[sectionKey]!.removeAt(index));
     _autoSave();
   }

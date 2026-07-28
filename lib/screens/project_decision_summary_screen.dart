@@ -1400,7 +1400,7 @@ class _Header extends StatelessWidget {
  children: [
  CircleAvatar(
  radius: 18,
- backgroundColor: Colors.blue[400],
+ backgroundColor: const Color(0xFFFBBF24),
  child: Text(
  FirebaseAuthService.displayNameOrEmail(fallback: 'U')
  .characters

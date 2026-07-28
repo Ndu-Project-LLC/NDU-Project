@@ -12,13 +12,16 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
+import 'package:provider/provider.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
+import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 enum _TechnologyTab {
  inventory('Technology Inventory'),
- aiIntegrations('AI Integrations'),
+ techStack('Tech Stack'),
  externalIntegrations('External Integrations'),
  definitions('Technology Definitions'),
  aiRecommendations('AI Recommendations');
@@ -151,9 +154,9 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  };
  }));
  break;
- case _TechnologyTab.aiIntegrations:
+ case _TechnologyTab.techStack:
  final text = await ai.generateFepSectionText(
- section: 'AI Integrations',
+ section: 'Tech Stack',
  context:
  '$ctx\nOutput format (one per line): Name | Description | Status | Cost',
  maxTokens: 700,
@@ -260,7 +263,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  case _TechnologyTab.inventory:
  await _openInventoryDialog();
  break;
- case _TechnologyTab.aiIntegrations:
+ case _TechnologyTab.techStack:
  await _openIntegrationDialog(isExternal: false);
  break;
  case _TechnologyTab.externalIntegrations:
@@ -686,7 +689,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  case _TechnologyTab.inventory:
  _inventory.removeAt(index);
  break;
- case _TechnologyTab.aiIntegrations:
+ case _TechnologyTab.techStack:
  _aiIntegrations.removeAt(index);
  break;
  case _TechnologyTab.externalIntegrations:
@@ -877,30 +880,217 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  return '\$$withCommas';
  }
 
- String _buildAiContextForCurrentTab(ProjectDataModel data) {
- String takeNames(List<Map<String, dynamic>> list, String key) {
- if (list.isEmpty) return 'none';
- return list
- .take(8)
- .map((item) => (item[key] ?? '').toString().trim())
- .where((e) => e.isNotEmpty)
- .join(', ');
+String _buildAiContextForCurrentTab(ProjectDataModel data) {
+  String takeNames(List<Map<String, dynamic>> list, String key) {
+    if (list.isEmpty) return 'none';
+    return list
+        .take(8)
+        .map((item) => (item[key] ?? '').toString().trim())
+        .where((e) => e.isNotEmpty)
+        .join(', ');
+  }
+
+  String collectSolutionTechSignals() {
+    return <String>{
+      data.solutionTitle.trim(),
+      data.solutionDescription.trim(),
+      data.frontEndPlanning.technology.trim(),
+      data.frontEndPlanning.requirements.trim(),
+      data.frontEndPlanning.security.trim(),
+      data.notes.trim(),
+      ..._inventory
+          .map((item) => item['name']?.toString().trim() ?? '')
+          .where((value) => value.isNotEmpty),
+      ..._aiIntegrations
+          .map((item) => item['name']?.toString().trim() ?? '')
+          .where((value) => value.isNotEmpty),
+      ..._externalIntegrations
+          .map((item) => item['name']?.toString().trim() ?? '')
+          .where((value) => value.isNotEmpty),
+    }.join(', ');
+  }
+  
+  // AUTO-FEED FROM INITIATION PHASE: IT Considerations
+  String collectInitiationTechData() {
+    final parts = <String>[];
+    
+    // Pull IT Considerations from Project Charter/Initiation
+    if (data.itConsiderationsData != null) {
+      final it = data.itConsiderationsData!;
+      if (it.notes.isNotEmpty) parts.add('IT Notes: \${it.notes}');
+      if (it.hardwareRequirements.isNotEmpty) parts.add('Hardware Requirements: \${it.hardwareRequirements}');
+      if (it.softwareRequirements.isNotEmpty) parts.add('Software Requirements: \${it.softwareRequirements}');
+      if (it.networkRequirements.isNotEmpty) parts.add('Network Requirements: \${it.networkRequirements}');
+      
+      // Pull individual solution IT data items
+      if (it.solutionITData.isNotEmpty) {
+        final solutionItems = it.solutionITData
+            .where((s) => s.coreTechnology.isNotEmpty)
+            .map((s) => '\${s.solutionTitle}: \${s.coreTechnology}')
+            .join('; ');
+        if (solutionItems.isNotEmpty) parts.add('Solution Technologies: $solutionItems');
+      }
+    }
+    
+    // Pull Infrastructure Considerations
+    if (data.infrastructureConsiderationsData != null) {
+      final infra = data.infrastructureConsiderationsData!;
+      if (infra.physicalSpaceRequirements.isNotEmpty) parts.add('Infrastructure Space: \${infra.physicalSpaceRequirements}');
+      if (infra.powerCoolingRequirements.isNotEmpty) parts.add('Power/Cooling: \${infra.powerCoolingRequirements}');
+      if (infra.connectivityRequirements.isNotEmpty) parts.add('Connectivity: \${infra.connectivityRequirements}');
+    }
+    
+    // Pull tech mentions from other planning areas
+    if (data.frontEndPlanning.technology.isNotEmpty) {
+      parts.add('FEP Technology Notes: \${data.frontEndPlanning.technology}');
+    }
+    
+    return parts.isEmpty ? 'No initiation tech data available' : parts.join('\\n');
+  }
+
+  final methodology =
+  ProjectDataHelper.resolvedProjectMethodology(data).name.toUpperCase();
+  final location = data.orgLocation.trim();
+
+  return [
+    'You are preparing enterprise technology planning data.',
+    'IMPORTANT: Incorporate all technology mentions from the Initiation phase into your recommendations.',
+    '',
+    '=== PROJECT IDENTITY ===',
+    'Project Name: \${data.projectName}',
+    'Solution Title: \${data.solutionTitle}',
+    'Solution Description: \${data.solutionDescription}',
+    'Project Objective: \${data.projectObjective}',
+    'Business Case: \${data.businessCase}',
+    '',
+    '=== PROJECT CLASSIFICATION ===',
+    'Industry / Sector: ${data.overallFramework ?? 'Not specified'}',
+    'Delivery Framework: $methodology',
+    'Project Location: \${location.isEmpty ? "Not specified" : location}',
+    '',
+    '=== INITIATION PHASE TECHNOLOGY DATA (Auto-fed from Charter) ===',
+    '\${collectInitiationTechData()}',
+    '',
+    '=== CURRENT PLANNING TECHNOLOGY SIGNALS ===',
+    'Initiation Notes: \${data.notes}',
+    'FEP Technology Notes: \${data.frontEndPlanning.technology}',
+    'Broader Technology Signals: \${collectSolutionTechSignals()}',
+    '',
+    '=== EXISTING TECHNOLOGY INVENTORY ===',
+    'Existing Inventory: \${takeNames(_inventory, "name")}',
+    'Existing Tech Stack: \${takeNames(_aiIntegrations, "name")}',
+    'Existing External Integrations: \${takeNames(_externalIntegrations, "name")}',
+    'Existing Definitions: \${takeNames(_definitions, "term")}',
+    '',
+    '=== GENERATION GUIDELINES ===',
+    if (_selectedTab == _TechnologyTab.techStack)
+      'Return a practical project tech stack covering applications, frameworks, cloud services, data stores, delivery tooling, integrations, and operations tooling.',
+    if (_selectedTab == _TechnologyTab.techStack &&
+        methodology == 'AGILE')
+      'For agile delivery, include backlog, CI/CD, testing, environments, release, observability, and collaboration tooling.',
+    'CRITICAL: Any technology mentioned in the Initiation phase above MUST be included in the Tech Stack.',
+    'Generate concise, realistic entries specific to this project context.',
+  ].join('\\n');
+}
+
+ Future<void> _syncTechnologyCostsToEstimate() async {
+ final costProvider = Provider.of<CostEstimateProvider>(context, listen: false);
+ final estimate = costProvider.estimate;
+ if (estimate == null) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(content: Text('Cost Estimate is not initialized yet.')),
+ );
+ return;
  }
 
- return [
- 'You are preparing enterprise technology planning data.',
- 'Project Name: ${data.projectName}',
- 'Solution Title: ${data.solutionTitle}',
- 'Project Objective: ${data.projectObjective}',
- 'Business Case: ${data.businessCase}',
- 'Initiation Notes: ${data.notes}',
- 'FEP Technology Notes: ${data.frontEndPlanning.technology}',
- 'Existing Inventory: ${takeNames(_inventory, 'name')}',
- 'Existing AI Integrations: ${takeNames(_aiIntegrations, 'name')}',
- 'Existing External Integrations: ${takeNames(_externalIntegrations, 'name')}',
- 'Existing Definitions: ${takeNames(_definitions, 'term')}',
- 'Generate concise, realistic entries specific to this project context.',
- ].join('\n');
+ double? parseAmount(dynamic raw) {
+ final token = raw?.toString() ?? '';
+ final cleaned = token.replaceAll(RegExp(r'[^0-9.]'), '');
+ if (cleaned.isEmpty) return null;
+ return double.tryParse(cleaned);
+ }
+
+ final existingDescriptions = estimate.lines
+ .map((line) => line.description.trim().toLowerCase())
+ .toSet();
+ final additions = <CostLine>[];
+
+ void addCandidate({
+ required String description,
+ required String subCategory,
+ required dynamic amount,
+ }) {
+ final total = parseAmount(amount);
+ if (total == null || total <= 0) return;
+ if (existingDescriptions.contains(description.toLowerCase())) return;
+ additions.add(
+ CostLine(
+ id: '${DateTime.now().microsecondsSinceEpoch}-${additions.length}',
+ category: CostCategory.software,
+ subCategory: subCategory,
+ description: description,
+ total: total,
+ basisSource: CostSourceType.kazAI,
+ basisReference: 'Technology Planning',
+ aiGenerated: true,
+ inSchedule: false,
+ ),
+ );
+ existingDescriptions.add(description.toLowerCase());
+ }
+
+ for (final item in _inventory) {
+ final name = item['name']?.toString().trim() ?? '';
+ if (name.isEmpty) continue;
+ addCandidate(
+ description: 'Technology Inventory: $name',
+ subCategory: item['category']?.toString().trim().isNotEmpty == true
+ ? item['category'].toString().trim()
+ : 'Technology Inventory',
+ amount: item['cost'],
+ );
+ }
+ for (final item in _aiIntegrations) {
+ final name = item['name']?.toString().trim() ?? '';
+ if (name.isEmpty) continue;
+ addCandidate(
+ description: 'Tech Stack: $name',
+ subCategory: 'Tech Stack',
+ amount: item['cost'],
+ );
+ }
+ for (final item in _externalIntegrations) {
+ final name = item['name']?.toString().trim() ?? '';
+ if (name.isEmpty) continue;
+ addCandidate(
+ description: 'External Integration: $name',
+ subCategory: 'External Integrations',
+ amount: item['implementationCost'],
+ );
+ }
+ for (final item in _recommendations) {
+ final name = _recommendationTitle(item).trim();
+ if (name.isEmpty) continue;
+ addCandidate(
+ description: 'Technology Recommendation: $name',
+ subCategory: 'AI Recommendations',
+ amount: item['estimatedCost'],
+ );
+ }
+
+ for (final line in additions) {
+ costProvider.addLine(line);
+ }
+
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(
+ additions.isEmpty
+ ? 'No new technology costs were found to sync.'
+ : 'Technology costs synced to Cost Estimate.',
+ ),
+ ),
+ );
  }
 
  @override
@@ -954,7 +1144,7 @@ onBack: () =>
  const SizedBox(height: 12),
  InnerPageNavigationHint(
  pageId: 'planning_technology',
- pageTitle: 'Technology Planning',
+ pageTitle: 'Tech Sections',
  sections: _TechnologyTab.values.map((tab) => InnerPageSection(
  id: tab.name,
  label: tab.label,
@@ -1043,7 +1233,7 @@ onBack: () =>
  const SizedBox(width: 12),
  Expanded(
  child: _MetricCard(
- title: 'AI Integrations',
+ title: 'Tech Stack',
  value: '${_aiIntegrations.length}',
  rows: [
  _MetricRow(label: 'Deployed', value: '$_deployedCount'),
@@ -1122,6 +1312,12 @@ onBack: () =>
  ),
  ),
  OutlinedButton.icon(
+ onPressed: _syncTechnologyCostsToEstimate,
+ icon: const Icon(Icons.sync_outlined, size: 16),
+ label: const Text('Sync Costs'),
+ ),
+ const SizedBox(width: 8),
+ OutlinedButton.icon(
  onPressed: _regenerating ? null : _regenerateCurrentTab,
  icon: const Icon(Icons.auto_awesome_outlined, size: 16),
  label: Text(_regenerating ? 'Regenerating...' : 'Regenerate'),
@@ -1135,9 +1331,17 @@ onBack: () =>
  ],
  ),
  const SizedBox(height: 16),
+ const Text(
+ 'Use the yellow tab bar above to move between technology planning sections.',
+ style: TextStyle(
+ fontSize: 13,
+ color: Color(0xFF6B7280),
+ ),
+ ),
+ const SizedBox(height: 16),
  switch (_selectedTab) {
  _TechnologyTab.inventory => _buildInventoryContent(),
- _TechnologyTab.aiIntegrations => _buildIntegrationsContent(false),
+ _TechnologyTab.techStack => _buildIntegrationsContent(false),
  _TechnologyTab.externalIntegrations =>
  _buildIntegrationsContent(true),
  _TechnologyTab.definitions => _buildDefinitionsContent(),
@@ -1263,6 +1467,7 @@ onBack: () =>
 
  Widget _buildIntegrationsContent(bool external) {
  final list = external ? _externalIntegrations : _aiIntegrations;
+ final heading = external ? 'External Integrations' : 'Tech Stack';
  final headers = external
  ? const [
  'Name',
@@ -1279,6 +1484,20 @@ onBack: () =>
 
  return Column(
  children: [
+ Align(
+ alignment: Alignment.centerLeft,
+ child: Padding(
+ padding: const EdgeInsets.only(bottom: 12),
+ child: Text(
+ heading,
+ style: const TextStyle(
+ fontSize: 16,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ ),
+ ),
+ ),
  _buildTableHeader(headers, flexes),
  ...List.generate(list.length, (index) {
  final item = list[index];
@@ -1630,7 +1849,7 @@ class _StatusBadge extends StatelessWidget {
  final color = normalized.contains('deployed')
  ? const Color(0xFF166534)
  : normalized.contains('implemented')
- ? const Color(0xFF1D4ED8)
+ ? const Color(0xFFD97706)
  : normalized.contains('dismissed')
  ? const Color(0xFF991B1B)
  : const Color(0xFF92400E);

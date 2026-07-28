@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 class RiskTrackingScreen extends StatefulWidget {
@@ -1783,26 +1784,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  });
  }
 
- void _deleteEscalation(_EscalationReadiness esc) {
- showDialog(
- context: context,
- builder: (context) => AlertDialog(
- title: const Text('Delete escalation path?'),
- content: Text('Are you sure you want to delete ${esc.id}: "${esc.event}"?'),
- actions: [
- TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
- ElevatedButton(
- style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
- onPressed: () {
- setState(() => _escalations.removeWhere((e) => e.id == esc.id));
- Navigator.of(context).pop();
- },
- child: const Text('Delete'),
- ),
- ],
- ),
- );
- }
+  Future<void> _deleteEscalation(_EscalationReadiness esc) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Delete Escalation',
+  itemLabel: esc.event,
+  );
+  if (!confirmed) return;
+  setState(() => _escalations.removeWhere((e) => e.id == esc.id));
+  }
 
  // ─── Generic Chip Helpers ─────────────────────────────────────────────────
 
@@ -2107,26 +2097,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  });
  }
 
- void _deleteRisk(_RiskItem risk) {
- showDialog(
- context: context,
- builder: (context) => AlertDialog(
- title: const Text('Delete risk?'),
- content: Text('Are you sure you want to delete risk ${risk.id}: "${risk.title}"?'),
- actions: [
- TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
- ElevatedButton(
- style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
- onPressed: () {
- setState(() => _risks.removeWhere((r) => r.id == risk.id));
- Navigator.of(context).pop();
- },
- child: const Text('Delete'),
- ),
- ],
- ),
- );
- }
+  Future<void> _deleteRisk(_RiskItem risk) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Delete Risk',
+  itemLabel: risk.title,
+  );
+  if (!confirmed) return;
+  setState(() => _risks.removeWhere((r) => r.id == risk.id));
+  }
 
  // ─── CRUD: Mitigation Plans ───────────────────────────────────────────────
 
@@ -2426,26 +2405,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  });
  }
 
- void _deleteMitigationPlan(_MitigationPlan plan) {
- showDialog(
- context: context,
- builder: (context) => AlertDialog(
- title: const Text('Delete mitigation plan?'),
- content: Text('Are you sure you want to delete ${plan.id}: "${plan.strategy.substring(0, plan.strategy.length > 50 ? 50 : plan.strategy.length)}..."?'),
- actions: [
- TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
- ElevatedButton(
- style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
- onPressed: () {
- setState(() => _plans.removeWhere((p) => p.id == plan.id));
- Navigator.of(context).pop();
- },
- child: const Text('Delete'),
- ),
- ],
- ),
- );
- }
+  Future<void> _deleteMitigationPlan(_MitigationPlan plan) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Delete Mitigation Plan',
+  itemLabel: plan.strategy.length > 60 ? '${plan.strategy.substring(0, 60)}...' : plan.strategy,
+  );
+  if (!confirmed) return;
+  setState(() => _plans.removeWhere((p) => p.id == plan.id));
+  }
 
  // ─── CRUD: Risk Signals ──────────────────────────────────────────────────
 
@@ -2698,26 +2666,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  });
  }
 
- void _deleteSignal(_RiskSignal signal) {
- showDialog(
- context: context,
- builder: (context) => AlertDialog(
- title: const Text('Delete risk signal?'),
- content: Text('Are you sure you want to delete ${signal.id}: "${signal.title}"?'),
- actions: [
- TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
- ElevatedButton(
- style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
- onPressed: () {
- setState(() => _signals.removeWhere((s) => s.id == signal.id));
- Navigator.of(context).pop();
- },
- child: const Text('Delete'),
- ),
- ],
- ),
- );
- }
+  Future<void> _deleteSignal(_RiskSignal signal) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Delete Risk Signal',
+  itemLabel: signal.title,
+  );
+  if (!confirmed) return;
+  setState(() => _signals.removeWhere((s) => s.id == signal.id));
+  }
 
  Future<void> _exportPdf() async {
  final projectData = ProjectDataHelper.getData(context);

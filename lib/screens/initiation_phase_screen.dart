@@ -1490,7 +1490,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  ),
  CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFF3B82F6),
+ backgroundColor: const Color(0xFFFBBF24),
  child: Text(
  FirebaseAuthService.displayNameOrEmail(fallback: 'U')
  .trim()

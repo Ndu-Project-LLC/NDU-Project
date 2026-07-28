@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -15,6 +16,11 @@ import 'package:ndu_project/widgets/premium_edit_dialog.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/table_import_helper.dart';
+import 'package:ndu_project/models/rate_card.dart';
+import 'package:ndu_project/widgets/rate_card_management_dialog.dart';
+import 'package:ndu_project/utils/role_descriptions.dart';
 
 Future<void> _exportPlanningSubsectionPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -71,85 +77,12 @@ class _OrganizationRolesResponsibilitiesScreenState
   ];
   static const String _customRoleOption = 'Custom';
 
-  /// Role bank: maps role title → (description, workstream).
-  /// When a user selects a title from the dropdown, the description is auto-filled.
-  static const Map<String, _RoleBankEntry> _roleBank = {
-    'Project Manager': _RoleBankEntry(
-      description:
-          'Overall project leadership, planning, and coordination across all phases.',
-      workstream: 'Management',
-    ),
-    'Program Manager': _RoleBankEntry(
-      description:
-          'Multi-project program coordination and strategic alignment.',
-      workstream: 'Management',
-    ),
-    'Product Owner': _RoleBankEntry(
-      description:
-          'Agile product owner — backlog prioritization and stakeholder representation.',
-      workstream: 'Management',
-    ),
-    'Scrum Master': _RoleBankEntry(
-      description:
-          'Facilitates Agile ceremonies, removes impediments, and coaches the team on Scrum practices.',
-      workstream: 'Management',
-    ),
-    'Business Analyst': _RoleBankEntry(
-      description:
-          'Elicits, documents, and manages requirements. Bridges business stakeholders and delivery teams.',
-      workstream: 'Management',
-    ),
-    'PMO Lead': _RoleBankEntry(
-      description:
-          'Project Management Office oversight, governance, and standards.',
-      workstream: 'Management',
-    ),
-    'Delivery Manager': _RoleBankEntry(
-      description:
-          'Coordinates delivery across teams, manages dependencies, and ensures timely execution.',
-      workstream: 'Management',
-    ),
-    'Operations Manager': _RoleBankEntry(
-      description:
-          'Manages day-to-day operations, resource allocation, and process optimization.',
-      workstream: 'Operations',
-    ),
-    'Risk Manager': _RoleBankEntry(
-      description:
-          'Identifies, assesses, and mitigates project risks. Maintains the risk register.',
-      workstream: 'Management',
-    ),
-    'Quality Assurance Lead': _RoleBankEntry(
-      description:
-          'Owns quality planning, QA/QC processes, and compliance with standards.',
-      workstream: 'Quality',
-    ),
-    'Change Manager': _RoleBankEntry(
-      description:
-          'Manages organizational change, stakeholder adoption, and transition planning.',
-      workstream: 'Management',
-    ),
-    'Stakeholder Manager': _RoleBankEntry(
-      description:
-          'Manages stakeholder engagement, communication, and alignment throughout the project.',
-      workstream: 'Management',
-    ),
-    'Planning Engineer': _RoleBankEntry(
-      description:
-          'Develops and maintains project schedules, WBS, and progress tracking.',
-      workstream: 'Engineering',
-    ),
-    'Project Coordinator': _RoleBankEntry(
-      description:
-          'Supports project administration, documentation, and meeting coordination.',
-      workstream: 'Management',
-    ),
-    'Portfolio Manager': _RoleBankEntry(
-      description:
-          'Oversees portfolio of projects, prioritizes investments, and aligns with strategic objectives.',
-      workstream: 'Management',
-    ),
-  };
+  /// Reusable helper: looks up a role's description from the shared role bank.
+  /// Returns the description or the empty string if not found.
+  static String _autoDescription(String title) {
+    final entry = getRoleDescription(title);
+    return entry?.description ?? '';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,9 +91,9 @@ class _OrganizationRolesResponsibilitiesScreenState
 
     final List<_MetricData> metrics = [
       _MetricData(
-          'Total Roles', roles.length.toString(), const Color(0xFF3B82F6)),
+          'Total Roles', roles.length.toString(), const Color(0xFFFBBF24)),
       _MetricData(
-          'Deciplines',
+          'Diciplines',
           roles.map<String>((r) => r.workstream).toSet().length.toString(),
           const Color(0xFF10B981)),
     ];
@@ -599,11 +532,11 @@ class _OrganizationRolesResponsibilitiesScreenState
                 if (value == null) return;
                 setDialogState(() {
                   selectedTitle = value;
-                  // Auto-fill description and workstream from role bank
-                  final entry = _roleBank[value];
-                  if (entry != null) {
-                    descController.text = entry.description;
-                    workstreamController.text = entry.workstream;
+                  final autoDesc = _autoDescription(value);
+                  if (autoDesc.isNotEmpty) {
+                    descController.text = autoDesc;
+                    final entry = getRoleDescription(value);
+                    workstreamController.text = entry?.discipline ?? '';
                   }
                 });
               },
@@ -620,7 +553,7 @@ class _OrganizationRolesResponsibilitiesScreenState
               ),
             ],
             const SizedBox(height: 16),
-            PremiumEditDialog.fieldLabel('Decipline'),
+            PremiumEditDialog.fieldLabel('Dicipline'),
             PremiumEditDialog.textField(
                 controller: workstreamController, hint: 'e.g. Management'),
             const SizedBox(height: 16),
@@ -687,11 +620,11 @@ class _OrganizationRolesResponsibilitiesScreenState
                 if (value == null) return;
                 setDialogState(() {
                   selectedTitle = value;
-                  // Auto-fill description and workstream from role bank
-                  final entry = _roleBank[value];
-                  if (entry != null) {
-                    descController.text = entry.description;
-                    workstreamController.text = entry.workstream;
+                  final autoDesc = _autoDescription(value);
+                  if (autoDesc.isNotEmpty) {
+                    descController.text = autoDesc;
+                    final entry = getRoleDescription(value);
+                    workstreamController.text = entry?.discipline ?? '';
                   }
                 });
               },
@@ -708,7 +641,7 @@ class _OrganizationRolesResponsibilitiesScreenState
               ),
             ],
             const SizedBox(height: 16),
-            PremiumEditDialog.fieldLabel('Decipline'),
+            PremiumEditDialog.fieldLabel('Dicipline'),
             PremiumEditDialog.textField(
                 controller: workstreamController, hint: 'e.g. Management'),
             const SizedBox(height: 16),
@@ -1035,7 +968,7 @@ class _OrganizationRaciMatrixScreenState
                             _MetricCard(
                               label: 'Total Roles',
                               value: rows.length.toString(),
-                              accent: const Color(0xFF3B82F6),
+                              accent: const Color(0xFFFBBF24),
                             ),
                             _MetricCard(
                               label: 'Agile Roles',
@@ -1813,6 +1746,28 @@ class _OrganizationStaffingPlanScreenState
     extends State<OrganizationStaffingPlanScreen> {
   bool _didAutoPopulate = false;
 
+  Future<void> _openPersonnelRates() async {
+    final data = ProjectDataHelper.getData(context);
+    final existingCards = List<RateCard>.from(data.rateCards);
+    final result = await RateCardManagementDialog.show(
+      context,
+      existingCards: existingCards,
+    );
+    if (result != null && mounted) {
+      final provider = ProjectDataHelper.getProvider(context);
+      provider.updateField((pd) => pd.copyWith(rateCards: result));
+      await provider.saveToFirebase(checkpoint: 'rate_cards');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${result.length} rate card(s) saved'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _exportPdf() async {
     final projectData = ProjectDataHelper.getData(context);
     await PdfExportHelper.exportScreenPdf(
@@ -1926,63 +1881,11 @@ class _OrganizationStaffingPlanScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        PlanningPhaseHeader(
-                            title: 'Staffing Plan', onExportPdf: _exportPdf),
-                        const SizedBox(height: 16),
-                        // Header row
-                        Row(
-                          children: [
-                            _CircleIconButton(
-                              icon: Icons.arrow_back_ios_new_rounded,
-                              onTap: () => PlanningPhaseNavigation.goToPrevious(
-                                context,
-                                'organization_staffing_plan',
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            _CircleIconButton(
-                              icon: Icons.arrow_forward_ios_rounded,
-                              onTap: () async {
-                                final nextScreen =
-                                    PlanningPhaseNavigation.resolveNextScreen(
-                                          context,
-                                          'organization_staffing_plan',
-                                        ) ??
-                                        const TeamTrainingAndBuildingScreen();
-                                await ProjectDataHelper.saveAndNavigate(
-                                  context: context,
-                                  checkpoint: 'organization_staffing_plan',
-                                  saveInBackground: true,
-                                  nextScreenBuilder: () => nextScreen,
-                                  dataUpdater: (d) => d,
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 16),
-                            const Text(
-                              'Staffing Plan',
-                              style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF111827)),
-                            ),
-                            const Spacer(),
-                            const _UserChip(),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Plan resource needs, staffing timeline, and onboarding cadence.',
-                          style:
-                              TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-                        ),
-                        const SizedBox(height: 24),
-
                         // Metrics row
                         Row(
                           children: [
                             _MetricCard(
-                                label: 'Total Staff',
+                                label: 'Total Personnel',
                                 value: requirements
                                     .fold<int>(0, (sum, r) => sum + r.headcount)
                                     .toString(),
@@ -1995,6 +1898,58 @@ class _OrganizationStaffingPlanScreenState
                           ],
                         ),
                         const SizedBox(height: 24),
+
+                        // Import & Template buttons
+                        Row(
+                          children: [
+                            FilledButton.icon(
+                              onPressed: _showImportDialog,
+                              icon: const Icon(Icons.upload_file_outlined,
+                                  size: 16),
+                              label: const Text('Import'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFF4338CA),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            OutlinedButton.icon(
+                              onPressed: _openPersonnelRates,
+                              icon: const Icon(Icons.attach_money, size: 16),
+                              label: const Text('Rates'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF059669),
+                                side:
+                                    const BorderSide(color: Color(0xFF059669)),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            OutlinedButton.icon(
+                              onPressed: _downloadTemplate,
+                              icon:
+                                  const Icon(Icons.download_outlined, size: 16),
+                              label: const Text('Download Template'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF6B7280),
+                                side:
+                                    const BorderSide(color: Color(0xFFE5E7EB)),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
 
                         // Staffing Table
                         if (requirements.isEmpty)
@@ -2296,6 +2251,544 @@ class _OrganizationStaffingPlanScreenState
       ),
     );
   }
+
+  void _showImportDialog() async {
+    final headers = [
+      'Position',
+      'Headcount',
+      'Monthly Rate',
+      'Planned Months',
+      'Start Date',
+      'End Date',
+      'Status',
+      'Person',
+      'Employment',
+      'Location',
+      'Category',
+      'Notes'
+    ];
+    final sampleRows = [
+      [
+        'Project Manager',
+        '1',
+        '4000',
+        '6',
+        'Jan 2024',
+        'Jun 2024',
+        'Active',
+        '',
+        'FT',
+        'Office',
+        'Employee',
+        ''
+      ],
+      [
+        'Technical Lead',
+        '1',
+        '5000',
+        '8',
+        'Jan 2024',
+        'Aug 2024',
+        'Active',
+        '',
+        'FT',
+        'Office',
+        'Employee',
+        ''
+      ],
+      [
+        'Business Analyst',
+        '1',
+        '3500',
+        '4',
+        'Feb 2024',
+        'May 2024',
+        'Not Started',
+        '',
+        'PT',
+        'Remote',
+        'Contractor',
+        ''
+      ],
+    ];
+
+    final rows = await TableImportHelper.showImportDialog(
+      context,
+      tableTitle: 'Staffing Plan',
+      headers: headers,
+      sampleRows: sampleRows,
+    );
+
+    if (rows == null || rows.isEmpty || !mounted) return;
+
+    final newRequirements = <StaffingRequirement>[];
+    for (final parts in rows) {
+      newRequirements.add(StaffingRequirement(
+        title: parts.isNotEmpty ? parts[0] : '',
+        headcount: parts.length > 1 ? int.tryParse(parts[1]) ?? 1 : 1,
+        monthlyCost: parts.length > 2 ? double.tryParse(parts[2]) ?? 0 : 0,
+        plannedMonths: parts.length > 3 ? double.tryParse(parts[3]) ?? 0 : 0,
+        startDate: parts.length > 4 ? parts[4] : '',
+        endDate: parts.length > 5 ? parts[5] : '',
+        status: parts.length > 6 ? parts[6] : 'Not Started',
+        personName: parts.length > 7 ? parts[7] : '',
+        employmentType: parts.length > 8 ? parts[8] : 'FT',
+        location: parts.length > 9 ? parts[9] : '',
+        employeeType: parts.length > 10 ? parts[10] : 'Employee',
+        notes: parts.length > 11 ? parts[11] : '',
+      ));
+    }
+
+    if (newRequirements.isNotEmpty) {
+      final updated = List<StaffingRequirement>.from(
+        ProjectDataHelper.getProvider(context).projectData.staffingRequirements,
+      )..addAll(newRequirements);
+      await ProjectDataHelper.updateAndSave(
+        context: context,
+        checkpoint: 'organization_staffing_plan',
+        dataUpdater: (d) => d.copyWith(staffingRequirements: updated),
+      );
+      if (mounted) setState(() {});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Imported ${newRequirements.length} positions'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  void _downloadTemplate() {
+    TableImportHelper.downloadTemplate(
+      filename: 'staffing_plan_template.csv',
+      headers: [
+        'Position',
+        'Headcount',
+        'Monthly Rate',
+        'Planned Months',
+        'Start Date',
+        'End Date',
+        'Status',
+        'Person',
+        'Employment',
+        'Location',
+        'Category',
+        'Notes'
+      ],
+      sampleRows: [
+        [
+          'Project Manager',
+          '1',
+          '4000',
+          '6',
+          'Jan 2024',
+          'Jun 2024',
+          'Active',
+          '',
+          'FT',
+          'Office',
+          'Employee',
+          ''
+        ],
+        [
+          'Technical Lead',
+          '1',
+          '5000',
+          '8',
+          'Jan 2024',
+          'Aug 2024',
+          'Active',
+          '',
+          'FT',
+          'Office',
+          'Employee',
+          ''
+        ],
+        [
+          'Business Analyst',
+          '1',
+          '3500',
+          '4',
+          'Feb 2024',
+          'May 2024',
+          'Not Started',
+          '',
+          'PT',
+          'Remote',
+          'Contractor',
+          ''
+        ],
+      ],
+    );
+  }
+}
+
+/// Base Organisation Plan screen.
+/// Captures the project organization structure, staffing sources, working
+/// hours, location, and communication modes.
+class OrganizationBasePlanScreen extends StatefulWidget {
+  const OrganizationBasePlanScreen({super.key});
+
+  @override
+  State<OrganizationBasePlanScreen> createState() =>
+      _OrganizationBasePlanScreenState();
+}
+
+class _OrganizationBasePlanScreenState
+    extends State<OrganizationBasePlanScreen> {
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _staffingSourceController =
+      TextEditingController();
+  final TextEditingController _workingHoursController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _communicationController =
+      TextEditingController();
+  Timer? _saveDebounce;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+  }
+
+  void _loadData() {
+    if (_loaded) return;
+    final data = ProjectDataHelper.getData(context);
+    _descriptionController.text = data.orgPlanDescription;
+    _staffingSourceController.text = data.orgStaffingSource;
+    _workingHoursController.text = data.orgWorkingHours;
+    _locationController.text = data.orgLocation;
+    _communicationController.text = data.orgCommunicationMode;
+    _loaded = true;
+
+    for (final c in [
+      _descriptionController,
+      _staffingSourceController,
+      _workingHoursController,
+      _locationController,
+      _communicationController,
+    ]) {
+      c.addListener(_onFieldChanged);
+    }
+  }
+
+  void _onFieldChanged() {
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(milliseconds: 400), () {
+      if (mounted) _saveData();
+    });
+  }
+
+  void _saveData() {
+    if (!mounted) return;
+    ProjectDataHelper.getProvider(context).updateField(
+      (data) => data.copyWith(
+        orgPlanDescription: _descriptionController.text.trim(),
+        orgStaffingSource: _staffingSourceController.text.trim(),
+        orgWorkingHours: _workingHoursController.text.trim(),
+        orgLocation: _locationController.text.trim(),
+        orgCommunicationMode: _communicationController.text.trim(),
+      ),
+    );
+  }
+
+  Future<void> _exportPdf() async {
+    final projectData = ProjectDataHelper.getData(context);
+    await PdfExportHelper.exportScreenPdf(
+      context: context,
+      screenTitle: 'Base Organisation Plan',
+      sections: [
+        PdfSection.keyValue('Project Info', [
+          {
+            'Project Name': projectData.projectName.isEmpty
+                ? 'N/A'
+                : projectData.projectName
+          },
+          {
+            'Solution Title': projectData.solutionTitle.isEmpty
+                ? 'N/A'
+                : projectData.solutionTitle
+          },
+        ]),
+        PdfSection.text(
+          'Description',
+          projectData.orgPlanDescription.isEmpty
+              ? 'No data recorded.'
+              : projectData.orgPlanDescription,
+        ),
+        PdfSection.keyValue('Organisation Configuration', [
+          {
+            'Staffing Source': projectData.orgStaffingSource.isEmpty
+                ? 'Not specified'
+                : projectData.orgStaffingSource
+          },
+          {
+            'Working Hours': projectData.orgWorkingHours.isEmpty
+                ? 'Not specified'
+                : projectData.orgWorkingHours
+          },
+          {
+            'Location': projectData.orgLocation.isEmpty
+                ? 'Not specified'
+                : projectData.orgLocation
+          },
+          {
+            'Communication Mode': projectData.orgCommunicationMode.isEmpty
+                ? 'Not specified'
+                : projectData.orgCommunicationMode
+          },
+        ]),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _saveDebounce?.cancel();
+    for (final c in [
+      _descriptionController,
+      _staffingSourceController,
+      _workingHoursController,
+      _locationController,
+      _communicationController,
+    ]) {
+      c.removeListener(_onFieldChanged);
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = AppBreakpoints.isMobile(context);
+    final horizontalPadding = isMobile ? 20.0 : 32.0;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DraggableSidebar(
+              openWidth: AppBreakpoints.sidebarWidth(context),
+              child: const InitiationLikeSidebar(
+                activeItemLabel: 'Organization Plan - Base Plan',
+              ),
+            ),
+            Expanded(
+              child: Stack(
+                children: [
+                  MobileSidebarHamburger(
+                    sidebar: const InitiationLikeSidebar(
+                      activeItemLabel: 'Organization Plan - Base Plan',
+                    ),
+                  ),
+                  SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding, vertical: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        PlanningPhaseHeader(
+                          title: 'Base Organisation Plan',
+                          onExportPdf: _exportPdf,
+                        ),
+                        const SizedBox(height: 16),
+                        _TopHeader(
+                          title: 'Organisation Overview',
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                            context,
+                            'organization_base_plan',
+                          ),
+                          onNext: () => PlanningPhaseNavigation.goToNext(
+                            context,
+                            'organization_base_plan',
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Define the project organisation structure, team sourcing, '
+                          'working arrangements, location, and communication methods.',
+                          style:
+                              TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                        ),
+                        const SizedBox(height: 20),
+                        PlanningAiNotesCard(
+                          title: 'Notes',
+                          sectionLabel: 'Base Organisation Plan',
+                          noteKey: 'planning_organization_base_plan',
+                          checkpoint: 'organization_base_plan',
+                          description:
+                              'Capture decisions about the organisational model, reporting lines, and governance.',
+                        ),
+                        const SizedBox(height: 24),
+                        _buildFormSection(),
+                        const SizedBox(height: 24),
+                        LaunchPhaseNavigation(
+                          backLabel: PlanningPhaseNavigation.backLabel(
+                              'organization_base_plan'),
+                          nextLabel: PlanningPhaseNavigation.nextLabel(
+                              'organization_base_plan'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'organization_base_plan'),
+                          onNext: () => PlanningPhaseNavigation.goToNext(
+                              context, 'organization_base_plan'),
+                        ),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
+                  ),
+                  const Positioned(
+                      right: 24,
+                      bottom: 24,
+                      child: KazAiChatBubble(positioned: false)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormSection() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x0A000000), blurRadius: 12, offset: Offset(0, 6)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Organisation Structure & Configuration',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Describe how the project team is organised, staffed, and how they operate.',
+            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 24),
+          _buildFieldCard(
+            icon: Icons.account_tree_outlined,
+            label: 'Organisation Structure Description',
+            hint:
+                'Describe the overall organisation structure, reporting lines, governance model, and key functional areas...',
+            controller: _descriptionController,
+            maxLines: 5,
+          ),
+          const SizedBox(height: 20),
+          _buildFieldCard(
+            icon: Icons.people_outline,
+            label: 'Staffing Source',
+            hint:
+                'e.g. Internal Department, External Hire, Contractor Pool, Mixed',
+            controller: _staffingSourceController,
+          ),
+          const SizedBox(height: 20),
+          _buildFieldCard(
+            icon: Icons.schedule_outlined,
+            label: 'Working Hours',
+            hint: 'e.g. 40 hours/week, Shift-based, Flexible, Part-time',
+            controller: _workingHoursController,
+          ),
+          const SizedBox(height: 20),
+          _buildFieldCard(
+            icon: Icons.location_on_outlined,
+            label: 'Team Location',
+            hint: 'e.g. Office, Remote, Hybrid, Multi-site',
+            controller: _locationController,
+          ),
+          const SizedBox(height: 20),
+          _buildFieldCard(
+            icon: Icons.chat_outlined,
+            label: 'Communication Mode',
+            hint: 'e.g. Email, Teams/Slack, Weekly Meetings, Daily Stand-ups',
+            controller: _communicationController,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFieldCard({
+    required IconData icon,
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    int maxLines = 1,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: const Color(0xFF6B7280)),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF374151),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          VoiceTextField(
+            controller: controller,
+            maxLines: maxLines,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle:
+                  const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide:
+                    const BorderSide(color: Color(0xFFF59E0B), width: 1.5),
+              ),
+              isDense: true,
+            ),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _RaciSeedRole {
@@ -2509,7 +3002,7 @@ class _RaciMatrixTableRow extends StatelessWidget {
               icon: const Icon(
                 Icons.visibility_outlined,
                 size: 18,
-                color: Color(0xFF2563EB),
+                color: Color(0xFFD97706),
               ),
               tooltip: 'View row',
               padding: EdgeInsets.zero,
@@ -2571,8 +3064,8 @@ class _RaciFrameworkCell extends StatelessWidget {
         fgColor = const Color(0xFF6D28D9);
         break;
       case 'waterfall':
-        bgColor = const Color(0xFFDBEAFE);
-        fgColor = const Color(0xFF1D4ED8);
+        bgColor = const Color(0xFFFFF7E6);
+        fgColor = const Color(0xFFD97706);
         break;
       default:
         bgColor = const Color(0xFFFEF3C7);
@@ -2608,7 +3101,7 @@ class _RaciValuePill extends StatelessWidget {
   Widget build(BuildContext context) {
     final normalized = value.trim().toUpperCase();
     final Map<String, ({Color bg, Color fg})> styles = {
-      'R': (bg: const Color(0xFFDBEAFE), fg: const Color(0xFF1D4ED8)),
+      'R': (bg: const Color(0xFFFFF7E6), fg: const Color(0xFFD97706)),
       'A': (bg: const Color(0xFFFEE2E2), fg: const Color(0xFFB91C1C)),
       'C': (bg: const Color(0xFFDCFCE7), fg: const Color(0xFF15803D)),
       'I': (bg: const Color(0xFFF3E8FF), fg: const Color(0xFF7E22CE)),
@@ -3517,15 +4010,4 @@ class _SectionEmptyState extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Entry in the role bank — maps a role title to a description and workstream.
-class _RoleBankEntry {
-  final String description;
-  final String workstream;
-
-  const _RoleBankEntry({
-    required this.description,
-    required this.workstream,
-  });
 }

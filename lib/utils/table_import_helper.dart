@@ -161,13 +161,13 @@ class TableImportHelper {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0F9FF),
+                    color: const Color(0xFFFFF7E6),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFBAE6FD)),
+                    border: Border.all(color: const Color(0xFFFFE6CC)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, size: 16, color: Color(0xFF0284C7)),
+                      const Icon(Icons.info_outline, size: 16, color: Color(0xFFD97706)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -175,7 +175,7 @@ class TableImportHelper {
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF0369A1),
+                            color: Color(0xFFB45309),
                           ),
                         ),
                       ),

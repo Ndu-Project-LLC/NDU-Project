@@ -56,7 +56,7 @@ class PageHintDialog {
                     Row(
                       children: [
                         const Icon(Icons.info_outline,
-                            color: Colors.blue, size: 22),
+                            color: const Color(0xFFD97706), size: 22),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(

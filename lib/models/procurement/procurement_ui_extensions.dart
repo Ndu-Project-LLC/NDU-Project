@@ -22,11 +22,11 @@ extension ProcurementItemStatusUI on ProcurementItemStatus {
   Color get backgroundColor {
     switch (this) {
       case ProcurementItemStatus.planning:
-        return const Color(0xFFEFF6FF);
+        return const Color(0xFFFFF7E6);
       case ProcurementItemStatus.rfqReview:
         return const Color(0xFFFFF7ED);
       case ProcurementItemStatus.vendorSelection:
-        return const Color(0xFFEFF6FF);
+        return const Color(0xFFFFF7E6);
       case ProcurementItemStatus.ordered:
         return const Color(0xFFF1F5F9);
       case ProcurementItemStatus.delivered:
@@ -39,11 +39,11 @@ extension ProcurementItemStatusUI on ProcurementItemStatus {
   Color get textColor {
     switch (this) {
       case ProcurementItemStatus.planning:
-        return const Color(0xFF2563EB);
+        return const Color(0xFFD97706);
       case ProcurementItemStatus.rfqReview:
         return const Color(0xFFEA580C);
       case ProcurementItemStatus.vendorSelection:
-        return const Color(0xFF2563EB);
+        return const Color(0xFFD97706);
       case ProcurementItemStatus.ordered:
         return const Color(0xFF1F2937);
       case ProcurementItemStatus.delivered:
@@ -89,7 +89,7 @@ extension ProcurementPriorityUI on ProcurementPriority {
       case ProcurementPriority.critical:
         return const Color(0xFFFFF1F2);
       case ProcurementPriority.high:
-        return const Color(0xFFEFF6FF);
+        return const Color(0xFFFFF7E6);
       case ProcurementPriority.medium:
         return const Color(0xFFF8FAFC);
       case ProcurementPriority.low:
@@ -102,7 +102,7 @@ extension ProcurementPriorityUI on ProcurementPriority {
       case ProcurementPriority.critical:
         return const Color(0xFFDC2626);
       case ProcurementPriority.high:
-        return const Color(0xFF1D4ED8);
+        return const Color(0xFFD97706);
       case ProcurementPriority.medium:
         return const Color(0xFF475569);
       case ProcurementPriority.low:
@@ -149,7 +149,7 @@ extension RfqStatusUI on RfqStatus {
       case RfqStatus.review:
         return const Color(0xFFFFF7ED);
       case RfqStatus.inMarket:
-        return const Color(0xFFEFF6FF);
+        return const Color(0xFFFFF7E6);
       case RfqStatus.evaluation:
         return const Color(0xFFF5F3FF);
       case RfqStatus.awarded:
@@ -166,7 +166,7 @@ extension RfqStatusUI on RfqStatus {
       case RfqStatus.review:
         return const Color(0xFFF97316);
       case RfqStatus.inMarket:
-        return const Color(0xFF2563EB);
+        return const Color(0xFFD97706);
       case RfqStatus.evaluation:
         return const Color(0xFF6D28D9);
       case RfqStatus.awarded:
@@ -217,7 +217,7 @@ extension PurchaseOrderStatusUI on PurchaseOrderStatus {
       case PurchaseOrderStatus.awaitingApproval:
         return const Color(0xFFFFF7ED);
       case PurchaseOrderStatus.issued:
-        return const Color(0xFFEFF6FF);
+        return const Color(0xFFFFF7E6);
       case PurchaseOrderStatus.inTransit:
         return const Color(0xFFF5F3FF);
       case PurchaseOrderStatus.received:
@@ -234,7 +234,7 @@ extension PurchaseOrderStatusUI on PurchaseOrderStatus {
       case PurchaseOrderStatus.awaitingApproval:
         return const Color(0xFFF97316);
       case PurchaseOrderStatus.issued:
-        return const Color(0xFF2563EB);
+        return const Color(0xFFD97706);
       case PurchaseOrderStatus.inTransit:
         return const Color(0xFF6D28D9);
       case PurchaseOrderStatus.received:

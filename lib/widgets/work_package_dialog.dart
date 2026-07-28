@@ -299,26 +299,52 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
   }
 
   Future<void> _pickMilestones() async {
-    final allMilestones = MilestoneItemLinkageService.loadMilestones(context);
-    if (allMilestones.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No milestones available. Add them in Front End Planning > Milestone.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    List<Milestone> allMilestones;
+    try {
+      allMilestones = MilestoneItemLinkageService.loadMilestones(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not load milestones: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
       return;
     }
-    final picked = await showDialog<List<String>>(
-      context: context,
-      builder: (ctx) => MilestonePickerDialog(
-        title: 'Link Milestones',
-        allMilestones: allMilestones,
-        selectedIds: _milestoneIds,
-      ),
-    );
-    if (picked != null) {
-      setState(() => _milestoneIds = picked);
+    if (allMilestones.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No milestones available. Add them in Front End Planning > Milestone.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+    try {
+      final picked = await showDialog<List<String>>(
+        context: context,
+        builder: (ctx) => MilestonePickerDialog(
+          title: 'Link Milestones',
+          allMilestones: allMilestones,
+          selectedIds: _milestoneIds,
+        ),
+      );
+      if (picked != null && mounted) {
+        setState(() => _milestoneIds = picked);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 

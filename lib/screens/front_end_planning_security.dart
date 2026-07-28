@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 /// Front End Planning – Security screen
 /// Mirrors the provided layout with shared workspace chrome,
 /// large notes area, security text panel, and AI hint + Next controls.
@@ -584,10 +585,15 @@ Security Training:
  _persistSecurityLists(roles: next);
  }
 
- void _removeSecurityRole(String id) {
- final next = _securityRoles.where((item) => item.id != id).toList();
- _persistSecurityLists(roles: next);
- }
+  Future<void> _removeSecurityRole(String id) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Security Role',
+    );
+    if (!confirmed) return;
+    final next = _securityRoles.where((item) => item.id != id).toList();
+    _persistSecurityLists(roles: next);
+  }
 
  Future<void> _addPermission() async {
  final result = await _showPermissionDialog();
@@ -605,11 +611,16 @@ Security Training:
  _persistSecurityLists(permissions: next);
  }
 
- void _removePermission(String id) {
- final next =
- _securityPermissions.where((item) => item.id != id).toList();
- _persistSecurityLists(permissions: next);
- }
+  Future<void> _removePermission(String id) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Permission',
+    );
+    if (!confirmed) return;
+    final next =
+        _securityPermissions.where((item) => item.id != id).toList();
+    _persistSecurityLists(permissions: next);
+  }
 
  Future<void> _addSetting() async {
  final result = await _showSettingDialog();
@@ -627,10 +638,16 @@ Security Training:
  _persistSecurityLists(settings: next);
  }
 
- void _removeSetting(String key) {
- final next = _securitySettings.where((item) => item.key != key).toList();
- _persistSecurityLists(settings: next);
- }
+  Future<void> _removeSetting(String key) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Security Setting',
+      itemLabel: key,
+    );
+    if (!confirmed) return;
+    final next = _securitySettings.where((item) => item.key != key).toList();
+    _persistSecurityLists(settings: next);
+  }
 
  Future<void> _addAccessLog() async {
  final result = await _showAccessLogDialog();
@@ -648,10 +665,15 @@ Security Training:
  _persistSecurityLists(accessLogs: next);
  }
 
- void _removeAccessLog(String id) {
- final next = _securityAccessLogs.where((item) => item.id != id).toList();
- _persistSecurityLists(accessLogs: next);
- }
+  Future<void> _removeAccessLog(String id) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Access Log',
+    );
+    if (!confirmed) return;
+    final next = _securityAccessLogs.where((item) => item.id != id).toList();
+    _persistSecurityLists(accessLogs: next);
+  }
 
  FormValidationResult _validateSecuritySection() {
  return FormValidationEngine.validateForm([
@@ -1239,12 +1261,12 @@ class _BottomOverlay extends StatelessWidget {
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: const [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFD97706)),
  SizedBox(width: 10),
  Text('AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB))),
+ color: Color(0xFFD97706))),
  SizedBox(width: 12),
  Text(
  'Identify security measures and compliance requirements.',

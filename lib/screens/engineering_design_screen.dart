@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 // ─── Data Models ─────────────────────────────────────────────────────────────
 
 class _StructuralItem {
@@ -1097,11 +1098,17 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  // ─── CRUD Operations: Structural ──────────────────────────────────────────
 
- void _removeStructuralItem(String id) {
- setState(() => _structuralItems.removeWhere((item) => item.id == id));
- _scheduleSave();
- _logActivity('Deleted structural row', details: {'itemId': id});
- }
+ Future<void> _removeStructuralItem(String id) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Structural Item',
+    message: 'Delete this architecture layer? This action cannot be undone.',
+  );
+  if (!confirmed) return;
+  setState(() => _structuralItems.removeWhere((item) => item.id == id));
+  _scheduleSave();
+  _logActivity('Deleted structural row', details: {'itemId': id});
+  }
 
  Future<void> _openStructuralItemDialog(
  {_StructuralItem? existing}) async {
@@ -1222,11 +1229,17 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  // ─── CRUD Operations: Components ──────────────────────────────────────────
 
- void _removeComponentItem(String id) {
- setState(() => _componentItems.removeWhere((item) => item.id == id));
- _scheduleSave();
- _logActivity('Deleted component row', details: {'itemId': id});
- }
+ Future<void> _removeComponentItem(String id) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Component Item',
+    message: 'Delete this component? This action cannot be undone.',
+  );
+  if (!confirmed) return;
+  setState(() => _componentItems.removeWhere((item) => item.id == id));
+  _scheduleSave();
+  _logActivity('Deleted component row', details: {'itemId': id});
+  }
 
  Future<void> _openComponentItemDialog(
  {_ComponentItem? existing}) async {
@@ -1348,11 +1361,17 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  // ─── CRUD Operations: Calculations ────────────────────────────────────────
 
- void _removeCalculationItem(String id) {
- setState(() => _calculationItems.removeWhere((item) => item.id == id));
- _scheduleSave();
- _logActivity('Deleted calculation row', details: {'itemId': id});
- }
+ Future<void> _removeCalculationItem(String id) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Calculation',
+    message: 'Delete this calculation? This action cannot be undone.',
+  );
+  if (!confirmed) return;
+  setState(() => _calculationItems.removeWhere((item) => item.id == id));
+  _scheduleSave();
+  _logActivity('Deleted calculation row', details: {'itemId': id});
+  }
 
  Future<void> _openCalculationItemDialog(
  {_CalculationItem? existing}) async {
@@ -1492,11 +1511,17 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  // ─── CRUD Operations: Compliance ──────────────────────────────────────────
 
- void _removeComplianceItem(String id) {
- setState(() => _complianceItems.removeWhere((item) => item.id == id));
- _scheduleSave();
- _logActivity('Deleted compliance row', details: {'itemId': id});
- }
+ Future<void> _removeComplianceItem(String id) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Compliance Item',
+    message: 'Delete this compliance entry? This action cannot be undone.',
+  );
+  if (!confirmed) return;
+  setState(() => _complianceItems.removeWhere((item) => item.id == id));
+  _scheduleSave();
+  _logActivity('Deleted compliance row', details: {'itemId': id});
+  }
 
  Future<void> _openComplianceItemDialog(
  {_ComplianceItem? existing}) async {
@@ -1629,11 +1654,17 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  // ─── CRUD Operations: ECN ─────────────────────────────────────────────────
 
- void _removeEcnItem(String id) {
- setState(() => _ecnItems.removeWhere((item) => item.id == id));
- _scheduleSave();
- _logActivity('Deleted ECN row', details: {'itemId': id});
- }
+ Future<void> _removeEcnItem(String id) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete ECN',
+    message: 'Delete this ECN entry? This action cannot be undone.',
+  );
+  if (!confirmed) return;
+  setState(() => _ecnItems.removeWhere((item) => item.id == id));
+  _scheduleSave();
+  _logActivity('Deleted ECN row', details: {'itemId': id});
+  }
 
  Future<void> _openEcnItemDialog({_EcnItem? existing}) async {
  final ecnIdController =
@@ -1782,11 +1813,17 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
 
  // ─── CRUD Operations: Readiness Gates ─────────────────────────────────────
 
- void _removeReadinessGate(String id) {
- setState(() => _readinessGates.removeWhere((item) => item.id == id));
- _scheduleSave();
- _logActivity('Deleted readiness gate', details: {'itemId': id});
- }
+ Future<void> _removeReadinessGate(String id) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Readiness Gate',
+    message: 'Delete this readiness gate? This action cannot be undone.',
+  );
+  if (!confirmed) return;
+  setState(() => _readinessGates.removeWhere((item) => item.id == id));
+  _scheduleSave();
+  _logActivity('Deleted readiness gate', details: {'itemId': id});
+  }
 
  Future<void> _openReadinessGateDialog({_ReadinessGate? existing}) async {
  final gateController =
@@ -2253,7 +2290,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _openStructuralItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFD97706)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -2432,7 +2469,7 @@ IconButton(
  _openComponentItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFD97706)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -2623,7 +2660,7 @@ IconButton(
  _openCalculationItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFD97706)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -2811,7 +2848,7 @@ IconButton(
  _openComplianceItemDialog(
  existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFD97706)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -3006,7 +3043,7 @@ IconButton(
  onPressed: () =>
  _openEcnItemDialog(existing: item),
  icon: const Icon(Icons.edit_outlined,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFD97706)),
  padding: EdgeInsets.zero,
  constraints:
  const BoxConstraints(minWidth: 28),
@@ -3143,7 +3180,7 @@ IconButton(
  existing: gate),
  icon: const Icon(Icons.edit_outlined,
  size: 14,
- color: Color(0xFF2563EB)),
+ color: Color(0xFFD97706)),
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(
  minWidth: 24, minHeight: 24),

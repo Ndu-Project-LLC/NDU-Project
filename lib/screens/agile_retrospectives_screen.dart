@@ -54,7 +54,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
       icon: Icons.sentiment_satisfied,
       columns: [
         _RetroColumn(id: 'mad', title: 'Mad', color: Colors.red, prompt: 'What made you mad?'),
-        _RetroColumn(id: 'sad', title: 'Sad', color: Colors.blue, prompt: 'What disappointed you?'),
+        _RetroColumn(id: 'sad', title: 'Sad', color: const Color(0xFFD97706), prompt: 'What disappointed you?'),
         _RetroColumn(id: 'glad', title: 'Glad', color: Colors.green, prompt: 'What made you happy?'),
       ],
     ),
@@ -185,7 +185,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
     _feedback.addAll([
       _TeamFeedback(member: 'Sarah Chen', role: 'Tech Lead', avatar: 'SC', color: Colors.green,
           sentiment: 'positive', comment: 'Best sprint yet — SSO shipping was a huge win. Loved the rotating facilitator experiment.'),
-      _TeamFeedback(member: 'Marcus Reed', role: 'Backend Engineer', avatar: 'MR', color: Colors.blue,
+      _TeamFeedback(member: 'Marcus Reed', role: 'Backend Engineer', avatar: 'MR', color: const Color(0xFFD97706),
           sentiment: 'positive', comment: 'Pairing on rate limiting paid off. Would love more mid-sprint refinement time.'),
       _TeamFeedback(member: 'Priya Nair', role: 'Frontend Engineer', avatar: 'PN', color: Colors.purple,
           sentiment: 'mixed', comment: 'Felt rushed toward the end. Story rejection hurt morale — let\'s tighten DoR.'),

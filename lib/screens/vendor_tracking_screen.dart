@@ -15,6 +15,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/vendors_table_widget.dart';
+import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
@@ -574,9 +575,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _removeCustomKpi(String id) {
- setState(() => _customKpiRows.removeWhere((r) => r.id == id));
- }
+  void _removeCustomKpi(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'custom KPI');
+  if (!ok) return;
+  setState(() => _customKpiRows.removeWhere((r) => r.id == id));
+  }
 
  Widget _buildSignalsPanel() {
  if (_projectId == null) {
@@ -868,9 +871,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _removeSignal(String id) {
- setState(() => _customSignalRows.removeWhere((r) => r.id == id));
- }
+  void _removeSignal(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'risk signal');
+  if (!ok) return;
+  setState(() => _customSignalRows.removeWhere((r) => r.id == id));
+  }
 
  Widget _buildActionPanel() {
  return _PanelShell(
@@ -1078,9 +1083,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _removeAction(String id) {
- setState(() => _actionRows.removeWhere((r) => r.id == id));
- }
+  void _removeAction(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'action');
+  if (!ok) return;
+  setState(() => _actionRows.removeWhere((r) => r.id == id));
+  }
 
  void _showAddVendorDialog(BuildContext context) {
  final policy = _crudPolicy;

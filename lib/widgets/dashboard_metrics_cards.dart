@@ -41,7 +41,7 @@ class AssignedActivitiesCard extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.assignment_ind_outlined,
-                  color: Color(0xFF3B82F6), size: 20),
+                  color: Color(0xFFFBBF24), size: 20),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(title,
@@ -52,12 +52,12 @@ class AssignedActivitiesCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withOpacity(0.12),
+                  color: const Color(0xFFFBBF24).withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text('${activities.length}',
                     style: const TextStyle(
-                        color: Color(0xFF3B82F6),
+                        color: Color(0xFFFBBF24),
                         fontWeight: FontWeight.w700,
                         fontSize: 13)),
               ),
@@ -199,7 +199,7 @@ class AssignedActivitiesCard extends StatelessWidget {
       case 'completed':
         return const Color(0xFF10B981);
       case 'acknowledged':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFBBF24);
       case 'rejected':
         return Colors.grey;
       case 'deferred':

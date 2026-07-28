@@ -991,7 +991,7 @@ onBack: () =>
  borderRadius: BorderRadius.circular(20),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFF2563EB).withOpacity(0.3),
+ color: const Color(0xFFD97706).withOpacity(0.3),
  blurRadius: 20,
  offset: const Offset(0, 12),
  ),
@@ -1490,7 +1490,7 @@ onBack: () =>
  textColor = Colors.white;
  break;
  case 'in progress':
- bgColor = const Color(0xFF3B82F6);
+ bgColor = const Color(0xFFFBBF24);
  textColor = Colors.white;
  break;
  case 'overdue':
@@ -1693,7 +1693,7 @@ onBack: () =>
  AlwaysStoppedAnimation<Color>(
  progress >= 1.0
  ? const Color(0xFF10B981)
- : const Color(0xFF3B82F6),
+ : const Color(0xFFFBBF24),
  ),
  ),
  ),
@@ -1933,7 +1933,7 @@ onBack: () =>
  icon: const Icon(
  Icons.visibility_outlined,
  size: 18),
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFD97706),
  tooltip: 'View Details',
  onPressed: () => _showVersionDetails(v),
  ),

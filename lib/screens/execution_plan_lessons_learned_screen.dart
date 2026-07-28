@@ -56,10 +56,7 @@ class ExecutionPlanLessonsLearnedScreen extends StatelessWidget {
  ExecutionPlanHeader(
  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'execution_plan_lessons_learned'),
  onNext: () => PlanningPhaseNavigation.goToNext(context, 'execution_plan_lessons_learned'), onExportPdf: () => _exportPdf(context)),
- const SizedBox(height: 32),
- const SectionIntro(
- title: 'Execution Lessons Learned'),
- const SizedBox(height: 16),
+  const SizedBox(height: 24),
  const CrossReferenceNote(standalonePage: 'Lessons Learned'),
  const SizedBox(height: 24),
  const ExecutionPlanForm(

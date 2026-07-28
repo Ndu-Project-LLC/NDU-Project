@@ -417,6 +417,8 @@ class NavigationRouteResolver {
         return const DeliverablesRoadmapScreen();
       case 'project_baseline':
         return const ProjectBaselineScreen();
+      case 'organization_base_plan':
+        return const OrganizationBasePlanScreen();
       case 'organization_roles_responsibilities':
         return const OrganizationRolesResponsibilitiesScreen();
       case 'organization_raci_matrix':

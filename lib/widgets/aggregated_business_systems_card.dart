@@ -251,7 +251,7 @@ class _AggregatedBusinessSystemsCardState
       childAspectRatio: 2.6,
       children: [
         _statTile('Customers', '$totalCustomers',
-            Icons.people_outline, const Color(0xFF3B82F6)),
+            Icons.people_outline, const Color(0xFFFBBF24)),
         _statTile('Open pipeline', _money(totalPipeline),
             Icons.trending_up, const Color(0xFF10B981)),
         _statTile('Outstanding', _money(totalOutstanding),

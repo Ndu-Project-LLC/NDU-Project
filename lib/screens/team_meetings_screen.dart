@@ -14,6 +14,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/team_meetings_resource_grid.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart' as launch;
+import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -256,10 +257,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Capture agenda templates, pre-reads, and facilitation notes.',
  entries: _agendasPrep,
  onAdd: () => _addAgendaPrep(),
- onRemove: (i) {
- setState(() => _agendasPrep.removeAt(i));
- _autoSave();
- },
+  onRemove: (i) async {
+  final ok = await launchConfirmDelete(context, itemName: 'agenda item');
+  if (!ok) return;
+  setState(() => _agendasPrep.removeAt(i));
+  _autoSave();
+  },
  onEdit: (i, entry) => _editAgendaPrep(i, entry),
  showStatusChip: false,
  ),
@@ -270,10 +273,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  description: 'Log decisions and follow-ups from meetings.',
  entries: _decisionsOutcomes,
  onAdd: () => _addDecisionOutcome(),
- onRemove: (i) {
- setState(() => _decisionsOutcomes.removeAt(i));
- _autoSave();
- },
+  onRemove: (i) async {
+  final ok = await launchConfirmDelete(context, itemName: 'decision');
+  if (!ok) return;
+  setState(() => _decisionsOutcomes.removeAt(i));
+  _autoSave();
+  },
  onEdit: (i, entry) => _editDecisionOutcome(i, entry),
  ),
  ],

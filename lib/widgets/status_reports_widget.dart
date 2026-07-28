@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/progress_quick_actions.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 /// Status Reports & Asks Tracking sub-page
 class StatusReportsWidget extends StatefulWidget {
   const StatusReportsWidget({
@@ -43,7 +44,13 @@ class _StatusReportsWidgetState extends State<StatusReportsWidget> {
     widget.onStatusReportsChanged(updatedList);
   }
 
-  void _delete(int index) {
+  Future<void> _delete(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Status Report',
+      itemLabel: _reports[index].reportType,
+    );
+    if (!confirmed) return;
     final deleted = _reports[index];
     final updated = List<StatusReportRow>.from(_reports);
     updated.removeAt(index);
@@ -60,7 +67,7 @@ class _StatusReportsWidgetState extends State<StatusReportsWidget> {
           children: [
             Icon(Icons.delete_outline, color: Colors.white, size: 18),
             SizedBox(width: 8),
-            Text('Status report deleted'),
+            Text('Status report deleted successfully.'),
             Spacer(),
           ],
         ),
@@ -541,7 +548,7 @@ class _StatusReportRowWidgetState extends State<_StatusReportRowWidget> {
                               : _report.status == 'Draft'
                                   ? const Color(0xFFF59E0B)
                                       .withOpacity(0.1)
-                                  : const Color(0xFF2563EB)
+                                  : const Color(0xFFD97706)
                                       .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -554,7 +561,7 @@ class _StatusReportRowWidgetState extends State<_StatusReportRowWidget> {
                                 ? const Color(0xFF10B981)
                                 : _report.status == 'Draft'
                                     ? const Color(0xFFF59E0B)
-                                    : const Color(0xFF2563EB),
+                                    : const Color(0xFFD97706),
                           ),
                         ),
                       ),

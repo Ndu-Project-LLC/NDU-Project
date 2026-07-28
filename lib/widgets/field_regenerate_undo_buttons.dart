@@ -49,7 +49,7 @@ class FieldRegenerateUndoButtons extends StatelessWidget {
                     height: size,
                     child: const CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Color(0xFF2563EB),
+                      color: Color(0xFFD97706),
                     ),
                   )
                 : Icon(Icons.refresh, size: size, color: Colors.grey.shade700),

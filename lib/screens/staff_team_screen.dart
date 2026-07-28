@@ -15,6 +15,7 @@ import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/staff_team_resource_grid.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart' as launch;
+import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -338,10 +339,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'List onboarding steps and owners to get people productive.',
  entries: _onboardingActions,
  onAdd: () => _addOnboardingAction(),
- onRemove: (i) {
- setState(() => _onboardingActions.removeAt(i));
- _autoSave();
- },
+  onRemove: (i) async {
+  final ok = await launchConfirmDelete(context, itemName: 'onboarding action');
+  if (!ok) return;
+  setState(() => _onboardingActions.removeAt(i));
+  _autoSave();
+  },
  onEdit: (i, entry) => _editOnboardingAction(i, entry),
  ),
  const SizedBox(height: 20),
@@ -350,10 +353,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  description: 'Document gaps or risks in team coverage.',
  entries: _coverageRisks,
  onAdd: () => _addCoverageRisk(),
- onRemove: (i) {
- setState(() => _coverageRisks.removeAt(i));
- _autoSave();
- },
+  onRemove: (i) async {
+  final ok = await launchConfirmDelete(context, itemName: 'coverage risk');
+  if (!ok) return;
+  setState(() => _coverageRisks.removeAt(i));
+  _autoSave();
+  },
  onEdit: (i, entry) => _editCoverageRisk(i, entry),
  ),
  ],
@@ -386,7 +391,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  const Text(
- 'Staff Plan',
+ 'Staffing Plan',
  style: TextStyle(
  fontSize: 22,
  fontWeight: FontWeight.w700,
@@ -394,9 +399,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  ),
  const SizedBox(height: 2),
- Text(
- "Strategize your project's human capital requirements. Identify core roles, determine resource allocation, and align staffing costs with your project's execution timeline.",
- style: const TextStyle(
+ const Text(
+ 'Reflect the planned allocation of project personnel by role and time to support resource planning, workload management, and successful project delivery.',
+ style: TextStyle(
  fontSize: 14,
  fontWeight: FontWeight.w500,
  color: Color(0xFF6B7280),

@@ -141,6 +141,7 @@ import 'package:ndu_project/screens/admin/admin_users_screen.dart';
 import 'package:ndu_project/screens/admin/admin_coupons_screen.dart';
 import 'package:ndu_project/screens/admin/admin_subscription_lookup_screen.dart';
 import 'package:ndu_project/services/access_policy.dart';
+import 'package:ndu_project/services/subscription_service.dart';
 import 'package:ndu_project/services/activity_auto_logger.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -304,7 +305,7 @@ class AppRouter {
   static final GoRouter main = GoRouter(
     debugLogDiagnostics: kDebugMode,
     initialLocation: PlatformRouter.getInitialRoute(),
-    redirect: (context, state) {
+    redirect: (context, state) async {
       // Enforce admin-host policy if a user is present
       User? user;
       try {
@@ -337,6 +338,22 @@ class AppRouter {
       // Friendly default: if authenticated and on the root, go to dashboard
       if (user != null && state.matchedLocation == '/') {
         return '/${AppRoutes.dashboard}';
+      }
+
+      // ── Subscription guard: redirect users without an active subscription
+      // to the pricing page. Only applies to authenticated users on
+      // non-public routes (except pricing itself). The check is async-safe
+      // and cached to avoid repeated Firestore reads. ──
+      if (user != null && !isPublicRoute &&
+          state.matchedLocation != '/${AppRoutes.pricing}' &&
+          state.matchedLocation != '/${AppRoutes.mobilePricing}') {
+        // Skip for admin host (admin portal has its own access control)
+        if (!AccessPolicy.isRestrictedAdminHost()) {
+          final hasSub = await SubscriptionService.hasActiveSubscription();
+          if (!hasSub) {
+            return '/${AppRoutes.pricing}';
+          }
+        }
       }
 
       // ── Auto-log page visits to the project activity log ──

@@ -308,7 +308,7 @@ class _DeliverableRoadmapAgileMapOutScreenState
  _MetricCard(
  label: 'Total Story Points',
  value: '$_totalPoints',
- accent: const Color(0xFF2563EB)),
+ accent: const Color(0xFFD97706)),
  _MetricCard(
  label: 'Progress',
  value: _totalPoints > 0
@@ -1003,7 +1003,7 @@ class _MilestoneRow extends StatelessWidget {
  decoration: BoxDecoration(
  color: (isComplete
  ? const Color(0xFF10B981)
- : const Color(0xFF2563EB))
+ : const Color(0xFFD97706))
  .withOpacity(0.12),
  borderRadius: BorderRadius.circular(8),
  ),
@@ -1012,7 +1012,7 @@ class _MilestoneRow extends StatelessWidget {
  size: 16,
  color: isComplete
  ? const Color(0xFF10B981)
- : const Color(0xFF2563EB),
+ : const Color(0xFFD97706),
  ),
  ),
  const SizedBox(width: 10),

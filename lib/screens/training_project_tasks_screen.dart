@@ -368,7 +368,7 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  children: [
  CircleAvatar(
  radius: 16,
- backgroundColor: Colors.blue[400],
+ backgroundColor: const Color(0xFFFBBF24),
  backgroundImage:
  photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
  child: photoUrl.isEmpty

@@ -1728,7 +1728,7 @@ class _RiskRegister extends StatelessWidget {
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
  borderSide:
- const BorderSide(color: Color(0xFF0084FF), width: 1.5),
+ const BorderSide(color: Color(0xFFD97706), width: 1.5),
  ),
  ),
  style: const TextStyle(fontSize: 14),

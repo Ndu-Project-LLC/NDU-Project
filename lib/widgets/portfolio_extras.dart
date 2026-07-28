@@ -533,7 +533,7 @@ class _PortfolioProjectLogCardState extends State<PortfolioProjectLogCard> {
       case 'execution':
         return const Color(0xFF10B981);
       case 'planning':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFBBF24);
       case 'initiation':
         return const Color(0xFFF59E0B);
       default:

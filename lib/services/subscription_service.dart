@@ -317,29 +317,41 @@ class SubscriptionService {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return null;
 
-      // First check for active subscriptions
+      // Check for active subscriptions — no orderBy to avoid composite index
       var snapshot = await _subscriptionsCollection
           .where('userId', isEqualTo: user.uid)
           .where('status', isEqualTo: SubscriptionStatus.active.name)
-          .orderBy('createdAt', descending: true)
-          .limit(1)
+          .limit(10)
           .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        final subscription = Subscription.fromJson(snapshot.docs.first.data());
+      // Sort client-side by createdAt descending
+      final sortedActive = snapshot.docs..sort((a, b) {
+        final tsA = (a.data()['createdAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        final tsB = (b.data()['createdAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        return tsB.compareTo(tsA);
+      });
+
+      if (sortedActive.isNotEmpty) {
+        final subscription = Subscription.fromJson(sortedActive.first.data());
         if (subscription.isActive) return subscription;
       }
 
-      // Then check for active trials
+      // Check for active trials — no orderBy
       snapshot = await _subscriptionsCollection
           .where('userId', isEqualTo: user.uid)
           .where('status', isEqualTo: SubscriptionStatus.trial.name)
-          .orderBy('createdAt', descending: true)
-          .limit(1)
+          .limit(10)
           .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        final subscription = Subscription.fromJson(snapshot.docs.first.data());
+      // Sort client-side
+      final sortedTrial = snapshot.docs..sort((a, b) {
+        final tsA = (a.data()['createdAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        final tsB = (b.data()['createdAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        return tsB.compareTo(tsA);
+      });
+
+      if (sortedTrial.isNotEmpty) {
+        final subscription = Subscription.fromJson(sortedTrial.first.data());
         if (subscription.isActive) return subscription;
       }
 
@@ -382,15 +394,24 @@ class SubscriptionService {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return Stream.value(null);
 
+    // No orderBy — avoid composite index requirement. Sort client-side.
     return _subscriptionsCollection
         .where('userId', isEqualTo: user.uid)
-        .where('status', isEqualTo: SubscriptionStatus.active.name)
-        .orderBy('createdAt', descending: true)
-        .limit(1)
+        .where('status', whereIn: [
+          SubscriptionStatus.active.name,
+          SubscriptionStatus.trial.name,
+        ])
+        .limit(10)
         .snapshots()
         .map((snapshot) {
       if (snapshot.docs.isEmpty) return null;
-      final subscription = Subscription.fromJson(snapshot.docs.first.data());
+      // Sort client-side by createdAt descending
+      final sorted = snapshot.docs..sort((a, b) {
+        final tsA = (a.data()['createdAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        final tsB = (b.data()['createdAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        return tsB.compareTo(tsA);
+      });
+      final subscription = Subscription.fromJson(sorted.first.data());
       return subscription.isActive ? subscription : null;
     });
   }

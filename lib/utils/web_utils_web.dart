@@ -8,3 +8,21 @@ String? getCurrentHostname() {
 void openUrlInNewWindow(String url) {
   html.window.open(url, '_blank');
 }
+
+void openUrlInNewTab(String url) {
+  html.window.open(url, '_blank');
+}
+
+void copyToClipboard(String text) {
+  try {
+    html.window.navigator.clipboard?.writeText(text);
+  } catch (_) {
+    // Fallback: use a temporary textarea + execCommand
+    final textarea = html.TextAreaElement();
+    textarea.value = text;
+    html.document.body?.append(textarea);
+    textarea.select();
+    html.document.execCommand('copy');
+    textarea.remove();
+  }
+}

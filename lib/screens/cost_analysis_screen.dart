@@ -1636,7 +1636,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                 width: 40,
                 height: 40,
                 decoration: const BoxDecoration(
-                    color: Colors.blue, shape: BoxShape.circle),
+                    color: const Color(0xFFD97706), shape: BoxShape.circle),
                 child: const Icon(Icons.person, color: Colors.white, size: 20),
               ),
               if (!isMobile) ...[
@@ -4265,7 +4265,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           final metadata = [
             Chip(
               avatar: Icon(Icons.attach_money,
-                  size: 16, color: Colors.blue.shade700),
+                  size: 16, color: const Color(0xFF92400E)),
               label: Text('Currency: $_currency'),
             ),
             Chip(

@@ -136,7 +136,7 @@ class _ExecutionWorkPackagesScreenState
     final normalized = status.toLowerCase();
     switch (normalized) {
       case 'in_progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFBBF24);
       case 'complete':
       case 'completed':
         return const Color(0xFF10B981);
@@ -877,7 +877,7 @@ class _ExecutionWorkPackagesScreenState
   };
 
   static const Map<String, Color> _classificationColorMap = {
-    'engineeringEwp': Color(0xFF3B82F6),
+    'engineeringEwp': Color(0xFFFBBF24),
     'procurementPackage': Color(0xFF22C55E),
     'constructionCwp': Color(0xFFF97316),
     'implementationWorkPackage': Color(0xFF8B5CF6),
@@ -1313,7 +1313,7 @@ class _ExecutionWorkPackagesScreenState
                   const SizedBox(width: 4),
                   GestureDetector(
                     onTap: () => _addContractForPackage(wp),
-                    child: const Icon(Icons.add_circle_outline, size: 12, color: Color(0xFF3B82F6)),
+                    child: const Icon(Icons.add_circle_outline, size: 12, color: Color(0xFFFBBF24)),
                   ),
                 ],
               ),
@@ -1351,7 +1351,7 @@ class _ExecutionWorkPackagesScreenState
                       minHeight: 6,
                       backgroundColor: const Color(0xFFE5E7EB),
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF3B82F6)),
+                          Color(0xFFFBBF24)),
                     ),
                   ),
                 ),

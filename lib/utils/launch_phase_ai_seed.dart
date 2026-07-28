@@ -413,7 +413,7 @@ class LaunchPhaseAiSeed {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF005BB3),
+              foregroundColor: const Color(0xFFB45309),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             child: const Text('Understood',

@@ -8,11 +8,13 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/inline_editable_text.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 /// Custom Contracts Table with inline editing, CRUD actions, and AI capabilities
 class ContractsTableWidget extends StatelessWidget {
   const ContractsTableWidget({
@@ -40,51 +42,57 @@ class ContractsTableWidget extends StatelessWidget {
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Table Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+    return ResponsiveDataTableWrapper(
+      minWidth: 1180,
+      maxHeight: 620,
+      title: 'Contracts tracking table',
+      enableFullscreen: true,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Table Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+              ),
+              child: Row(
+                children: [
+                  _TableHeaderCell('Vendor/Party Name', flex: 2),
+                  _TableHeaderCell('Contract Type', flex: 2),
+                  _TableHeaderCell('Status', flex: 2),
+                  _TableHeaderCell('Effective Date', flex: 2),
+                  _TableHeaderCell('Expiry', flex: 2),
+                  _TableHeaderCell('Total Value', flex: 2),
+                  _TableHeaderCell('Actions', flex: 2),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                _TableHeaderCell('Vendor/Party Name', flex: 2),
-                _TableHeaderCell('Contract Type', flex: 2),
-                _TableHeaderCell('Status', flex: 2),
-                _TableHeaderCell('Effective Date', flex: 2),
-                _TableHeaderCell('Expiry', flex: 2),
-                _TableHeaderCell('Total Value', flex: 2),
-                _TableHeaderCell('Actions', flex: 2),
-              ],
-            ),
-          ),
-          // Table Rows
-          ...contracts.map((contract) => _ContractRowWidget(
-                contract: contract,
-                onUpdated: onContractUpdated,
-                onDeleted: onContractDeleted,
-                showDivider: contract != contracts.last,
-              )),
-        ],
+            // Table Rows
+            ...contracts.map((contract) => _ContractRowWidget(
+                  contract: contract,
+                  onUpdated: onContractUpdated,
+                  onDeleted: onContractDeleted,
+                  showDivider: contract != contracts.last,
+                )),
+          ],
+        ),
       ),
     );
   }
@@ -329,6 +337,12 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
   }
 
   Future<void> _deleteContract() async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Contract',
+      itemLabel: _contract.name,
+    );
+    if (!confirmed) return;
     final deleted = _contract;
 
     // Delete via ContractService
@@ -368,7 +382,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
             children: [
               Icon(Icons.delete_outline, color: Colors.white, size: 18),
               SizedBox(width: 8),
-              Text('Contract deleted'),
+              Text('Contract deleted successfully.'),
               Spacer(),
             ],
           ),
@@ -376,7 +390,6 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
             label: 'Undo',
             textColor: Colors.white,
             onPressed: () async {
-              // Restore the contract
               try {
                 final user = FirebaseAuth.instance.currentUser;
                 await ContractService.createContract(
@@ -396,7 +409,6 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                   createdByEmail: deleted.createdByEmail,
                   createdByName: deleted.createdByName,
                 );
-                // Sync to budget
                 await ExecutionPhaseService.syncContractValueToBudget(
                   projectId: deleted.projectId,
                   contractValue: deleted.estimatedValue,
@@ -655,7 +667,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
       'active' => const Color(0xFF10B981),
       'draft' => const Color(0xFFF59E0B),
       'expired' => const Color(0xFFEF4444),
-      'signed' => const Color(0xFF2563EB),
+      'signed' => const Color(0xFFD97706),
       _ => const Color(0xFF9CA3AF),
     };
   }

@@ -105,8 +105,6 @@ class _ExecutionEnablingWorkPlanScreenState extends State<ExecutionEnablingWorkP
   ExecutionPlanHeader(
   onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'execution_enabling_work_plan'),
   onNext: () => PlanningPhaseNavigation.goToNext(context, 'execution_enabling_work_plan'), onExportPdf: () => _exportPdf(context)),
-  const SizedBox(height: 32),
-  const SectionIntro(title: 'Execution Enabling Work Plan'),
   const SizedBox(height: 24),
   const ExecutionPlanForm(
   title: 'Execution Enabling Work Plan',

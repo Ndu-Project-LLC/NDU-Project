@@ -352,7 +352,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildCadenceRow(
  'Weekly',
  'Status reports, risk reviews, sprint planning, timesheet approvals',
- const Color(0xFF2563EB),
+ const Color(0xFFD97706),
  ),
  const SizedBox(height: 10),
  _buildCadenceRow(

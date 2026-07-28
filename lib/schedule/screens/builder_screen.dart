@@ -22,6 +22,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/schedule/services/schedule_cpm_service.dart';
@@ -1423,8 +1424,14 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
     });
   }
 
-  void _removeRow(int index) {
+  Future<void> _removeRow(int index) async {
     if (index < 0 || index >= _rows.length) return;
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Remove Activity',
+      itemLabel: _rows[index].name,
+    );
+    if (!confirmed) return;
     setState(() => _rows.removeAt(index));
   }
 

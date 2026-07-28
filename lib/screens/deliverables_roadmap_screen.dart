@@ -404,7 +404,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  _StatCard(
  label: 'Total Deliverables',
  value: '$_totalCount',
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFD97706),
  ),
  _StatCard(
  label: 'Completed',

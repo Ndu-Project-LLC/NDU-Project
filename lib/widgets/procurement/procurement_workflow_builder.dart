@@ -272,7 +272,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
             height: 26,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFEFF6FF),
+              color: const Color(0xFFFFF7E6),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -280,7 +280,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF1D4ED8),
+                color: Color(0xFFD97706),
               ),
             ),
           ),

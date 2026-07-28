@@ -1646,10 +1646,10 @@ class _ChatBubble extends StatelessWidget {
         height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFF2563EB).withOpacity(0.12),
-          border: Border.all(color: const Color(0xFF2563EB).withOpacity(0.2), width: 1.5),
+          color: const Color(0xFFD97706).withOpacity(0.12),
+          border: Border.all(color: const Color(0xFFD97706).withOpacity(0.2), width: 1.5),
         ),
-        child: const Icon(Icons.person_rounded, color: Color(0xFF2563EB), size: 16),
+        child: const Icon(Icons.person_rounded, color: Color(0xFFD97706), size: 16),
       );
     }
 
@@ -1679,7 +1679,7 @@ class _ChatBubble extends StatelessWidget {
   }
 
   Color _bubbleColor() {
-    if (message.isUser) return const Color(0xFF2563EB).withOpacity(0.1);
+    if (message.isUser) return const Color(0xFFD97706).withOpacity(0.1);
     if (message.isSupportAgent) return Color(0xFFFABD00).withOpacity(0.06);
     return const Color(0xFFF8FAFC);
   }

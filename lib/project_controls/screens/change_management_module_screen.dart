@@ -760,7 +760,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
   Widget _priorityBadge(CMPriority p) {
     final colors = <CMPriority, Color>{
       CMPriority.low: const Color(0xFF6B7280),
-      CMPriority.medium: const Color(0xFF3B82F6),
+      CMPriority.medium: const Color(0xFFFBBF24),
       CMPriority.high: const Color(0xFFF59E0B),
       CMPriority.critical: const Color(0xFFEF4444),
       CMPriority.emergency: const Color(0xFFDC2626),
@@ -776,7 +776,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
   Widget _statusBadge(CMStatus s) {
     final colors = <CMStatus, Color>{
       CMStatus.draft: const Color(0xFF6B7280),
-      CMStatus.submitted: const Color(0xFF3B82F6),
+      CMStatus.submitted: const Color(0xFFFBBF24),
       CMStatus.underReview: const Color(0xFF8B5CF6),
       CMStatus.pendingApproval: const Color(0xFFF59E0B),
       CMStatus.approved: const Color(0xFF10B981),
@@ -876,7 +876,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
               ]),
             ),
             if (cr.isEmergency) Container(margin: const EdgeInsets.only(left: 8), padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: const Color(0xFFDC2626), borderRadius: BorderRadius.circular(4)), child: const Text('EMERGENCY', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700))),
-            if (cr.isAgileRoutineRefinement) Container(margin: const EdgeInsets.only(left: 8), padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: const Color(0xFF3B82F6).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(4)), child: const Text('AGILE', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 9, fontWeight: FontWeight.w700))),
+            if (cr.isAgileRoutineRefinement) Container(margin: const EdgeInsets.only(left: 8), padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: const Color(0xFFFBBF24).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(4)), child: const Text('AGILE', style: TextStyle(color: Color(0xFFFBBF24), fontSize: 9, fontWeight: FontWeight.w700))),
             Container(margin: const EdgeInsets.only(left: 8), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: cr.status.color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)), child: Text(cr.status.label, style: TextStyle(color: cr.status.color, fontSize: 10, fontWeight: FontWeight.w700))),
           ]),
         ),
@@ -3296,7 +3296,7 @@ class _ImpactBarChartPainter extends CustomPainter {
       } else if (lvl <= 1) {
         barColor = const Color(0xFF10B981);
       } else if (lvl <= 2) {
-        barColor = const Color(0xFF3B82F6);
+        barColor = const Color(0xFFFBBF24);
       } else if (lvl <= 3) {
         barColor = const Color(0xFFF59E0B);
       } else if (lvl <= 4) {

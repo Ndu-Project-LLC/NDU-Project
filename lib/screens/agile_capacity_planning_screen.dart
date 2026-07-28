@@ -12,6 +12,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -279,7 +280,15 @@ class _AgileCapacityPlanningScreenState
     _scheduleAutoSave();
   }
 
-  void _removeLeave(int index) {
+  Future<void> _removeLeave(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Leave Entry',
+      itemLabel: _leavePersonCtrls[_leaveEntries[index].id]?.text.isNotEmpty == true
+          ? _leavePersonCtrls[_leaveEntries[index].id]!.text
+          : null,
+    );
+    if (!confirmed) return;
     final l = _leaveEntries[index];
     _leavePersonCtrls.remove(l.id)?.dispose();
     setState(() => _leaveEntries.removeAt(index));
@@ -294,7 +303,15 @@ class _AgileCapacityPlanningScreenState
     _scheduleAutoSave();
   }
 
-  void _removeHoliday(int index) {
+  Future<void> _removeHoliday(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Holiday',
+      itemLabel: _holidayNameCtrls[_holidays[index].id]?.text.isNotEmpty == true
+          ? _holidayNameCtrls[_holidays[index].id]!.text
+          : null,
+    );
+    if (!confirmed) return;
     final h = _holidays[index];
     _holidayNameCtrls.remove(h.id)?.dispose();
     setState(() => _holidays.removeAt(index));

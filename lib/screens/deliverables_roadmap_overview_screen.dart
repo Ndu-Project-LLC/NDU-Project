@@ -509,7 +509,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  return _CategoryInfo(
  title: 'Governance',
  icon: Icons.account_balance,
- color: const Color(0xFF3B82F6),
+ color: const Color(0xFFFBBF24),
  category: category,
  );
  case DeliverableCategory.requirements:

@@ -383,7 +383,7 @@ class _Level1ScheduleScreenState
  _MetricCard(
  label: 'Total Duration',
  value: _totalDurationDays > 0 ? '$_totalDurationDays days' : '--',
- accent: const Color(0xFF3B82F6),
+ accent: const Color(0xFFFBBF24),
  icon: Icons.schedule_outlined,
  ),
  _MetricCard(
@@ -618,7 +618,7 @@ class _Level1ScheduleScreenState
  ? const Color(0xFF10B981)
  : progressPct >= 50
  ? const Color(0xFFF59E0B)
- : const Color(0xFF3B82F6),
+ : const Color(0xFFFBBF24),
  ),
  ),
  ),
@@ -786,7 +786,7 @@ class _Level1ScheduleScreenState
  padding: const EdgeInsets.symmetric(
  horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF7E6),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -794,7 +794,7 @@ class _Level1ScheduleScreenState
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w600,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFD97706),
  ),
  ),
  ),
@@ -860,7 +860,7 @@ class _Level1ScheduleScreenState
  Color _statusColor(String status) {
  final s = status.toLowerCase();
  if (s.contains('complete')) return const Color(0xFF10B981);
- if (s.contains('progress')) return const Color(0xFF3B82F6);
+ if (s.contains('progress')) return const Color(0xFFFBBF24);
  if (s.contains('risk') || s.contains('behind')) {
  return const Color(0xFFEF4444);
  }
@@ -1281,7 +1281,7 @@ class _L1GanttChart extends StatelessWidget {
  width: 20,
  height: 10,
  decoration: BoxDecoration(
- color: const Color(0xFF3B82F6),
+ color: const Color(0xFFFBBF24),
  borderRadius: BorderRadius.circular(3),
  ),
  ),
@@ -1366,7 +1366,7 @@ class _L1GanttChart extends StatelessWidget {
 
  Color _phaseColor(int index) {
  const colors = [
- Color(0xFF3B82F6),
+ Color(0xFFFBBF24),
  Color(0xFF8B5CF6),
  Color(0xFF10B981),
  Color(0xFFF59E0B),
@@ -1949,7 +1949,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  fontSize: 12,
  fontWeight: FontWeight.w600,
  color: isSelected
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFD97706)
  : const Color(0xFF6B7280),
  ),
  ),
@@ -1994,7 +1994,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  _MetricCard(
  label: 'Total Tasks',
  value: '$totalTasks',
- accent: const Color(0xFF3B82F6),
+ accent: const Color(0xFFFBBF24),
  icon: Icons.task_alt_outlined,
  ),
  _MetricCard(
@@ -2107,7 +2107,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  Widget _buildGanttLegend() {
  return Row(
  children: [
- _LegendItem(color: const Color(0xFF3B82F6), label: 'Not Started'),
+ _LegendItem(color: const Color(0xFFFBBF24), label: 'Not Started'),
  const SizedBox(width: 16),
  _LegendItem(color: const Color(0xFFF59E0B), label: 'In Progress'),
  const SizedBox(width: 16),
@@ -2661,7 +2661,7 @@ class _DetailedGanttChart extends StatelessWidget {
  barColor = const Color(0xFFEF4444);
  break;
  default:
- barColor = const Color(0xFF3B82F6);
+ barColor = const Color(0xFFFBBF24);
  }
 
  final baselineTask = baselineTasks
@@ -3168,7 +3168,7 @@ class _ProgressCell extends StatelessWidget {
  ? const Color(0xFF10B981)
  : pct >= 50
  ? const Color(0xFFF59E0B)
- : const Color(0xFF3B82F6),
+ : const Color(0xFFFBBF24),
  ),
  ),
  ),
@@ -3937,7 +3937,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  return _KpiCard(
  label: 'Budget',
  icon: Icons.account_balance_wallet,
- iconColor: const Color(0xFF3B82F6),
+ iconColor: const Color(0xFFFBBF24),
  value: budgetFormatted,
  subtitle: 'total budget',
  status: _summaryData.budgetVariance >= 0 ? 'Under Budget' : 'Over Budget',
@@ -4088,7 +4088,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  statusColor = const Color(0xFF10B981);
  break;
  case 'In Progress':
- statusColor = const Color(0xFF3B82F6);
+ statusColor = const Color(0xFFFBBF24);
  break;
  case 'At Risk':
  statusColor = const Color(0xFFEF4444);
@@ -4284,7 +4284,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  children: [
  Row(
  children: [
- const Icon(Icons.people, size: 18, color: Color(0xFF3B82F6)),
+ const Icon(Icons.people, size: 18, color: Color(0xFFFBBF24)),
  const SizedBox(width: 8),
  const Text(
  'Team Summary',
@@ -4302,7 +4302,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  _buildTeamStatChip(
  label: '${_summaryData.teamMembers.length}',
  subtitle: 'Members',
- color: const Color(0xFF3B82F6),
+ color: const Color(0xFFFBBF24),
  ),
  const SizedBox(width: 12),
  _buildTeamStatChip(

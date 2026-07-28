@@ -248,9 +248,9 @@ class _BottomOverlay extends StatelessWidget {
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: const [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFD97706)),
  SizedBox(width: 10),
- Text('AI', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+ Text('AI', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFD97706))),
  SizedBox(width: 12),
  Text(
  'Generate a summary of all front end planning activities.',

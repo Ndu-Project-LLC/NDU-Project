@@ -14,12 +14,12 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
-import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
@@ -244,7 +244,11 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
   }
 
   Future<void> _deleteSprint(int index) async {
-    final confirmed = await launchConfirmDelete(context, itemName: 'sprint');
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Sprint',
+      itemLabel: _sprints[index].name.isNotEmpty ? _sprints[index].name : null,
+    );
     if (!confirmed || !mounted) return;
     final pid = _projectId;
     if (pid == null) return;

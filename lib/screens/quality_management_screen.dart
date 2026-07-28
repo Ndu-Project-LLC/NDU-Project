@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/cost_of_quality.dart';
 
 import 'package:ndu_project/services/api_key_manager.dart';
+import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/quality_metrics_calculator.dart';
@@ -20,10 +22,12 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/launch_editable_section.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
-enum _QualityTab { plan, targets, qaTracking, qcTracking, metrics }
+enum _QualityTab { plan, objectives, inspection, audit, metrics, coq }
 
 const _dateHint = 'Select date';
 
@@ -179,6 +183,281 @@ List<String> _ownerOptions(BuildContext context) {
 
  final sorted = options.toList()..sort((a, b) => a.compareTo(b));
  return sorted;
+}
+
+String _buildQualityAiContext(ProjectDataModel data) {
+  final methodology =
+  ProjectDataHelper.resolvedProjectMethodology(data).name.toUpperCase();
+  final location = data.orgLocation.trim();
+
+  // Collect risk context for quality risk identification
+  final riskItems = data.frontEndPlanning.riskRegisterItems;
+  final riskContext = riskItems.isNotEmpty
+      ? '\nTop Project Risks: ${riskItems.take(5).map((r) => "${r.riskName} (${r.impactLevel}/${r.likelihood})").join('; ')}'
+      : '';
+  
+  // Collect opportunity context for quality opportunities
+  final opportunityContext = data.frontEndPlanning.opportunityItems.isNotEmpty
+      ? '\nOpportunities: ${data.frontEndPlanning.opportunityItems.take(3).map((o) => o.opportunity.isNotEmpty ? o.opportunity : 'Opportunity').join('; ')}'
+      : '';
+      
+  // IT Considerations from Initiation phase for tech-related quality
+  final itContext = data.itConsiderationsData != null 
+      ? [
+          if (data.itConsiderationsData!.softwareRequirements.isNotEmpty)
+            'Software Requirements: ${data.itConsiderationsData!.softwareRequirements}',
+          if (data.itConsiderationsData!.hardwareRequirements.isNotEmpty)
+            'Hardware Requirements: ${data.itConsiderationsData!.hardwareRequirements}',
+          if (data.itConsiderationsData!.networkRequirements.isNotEmpty)
+            'Network Requirements: ${data.itConsiderationsData!.networkRequirements}',
+        ].join('\n')
+      : '';
+
+  // Team size and structure for scaling quality activities
+  final teamSize = data.teamMembers.length;
+  final roleCount = data.projectRoles.length;
+
+  return [
+    'Generate a comprehensive project quality management package tailored to the current project.',
+    'Use this context to recommend appropriate quality standards, metrics, and activities based on project type, scale, and risks.',
+    '',
+    '=== PROJECT IDENTITY ===',
+    'Project Name: ${data.projectName}',
+    'Solution Title: ${data.solutionTitle}',
+    'Solution Description: ${data.solutionDescription}',
+    'Project Objective: ${data.projectObjective}',
+    'Business Case: ${data.businessCase}',
+    '',
+    '=== PROJECT CLASSIFICATION ===',
+    'Industry / Sector: ${data.overallFramework ?? 'Not specified'}',
+    'Delivery Framework: $methodology',
+    'Project Location: ${location.isEmpty ? 'Not specified' : location}',
+    'Team Size: $teamSize members, $roleCount defined roles',
+    '',
+    '=== TECHNICAL CONTEXT ===',
+    'Technology Notes: ${data.frontEndPlanning.technology}',
+    if (itContext.isNotEmpty) itContext,
+    'Security Context: ${data.frontEndPlanning.security}',
+    'Requirements Summary: ${data.frontEndPlanning.requirements}',
+    '',
+    '=== RISK & OPPORTUNITY CONTEXT ===',
+    if (riskContext.isNotEmpty) riskContext,
+    if (opportunityContext.isNotEmpty) opportunityContext,
+    '',
+    '=== ADDITIONAL NOTES ===',
+    'General Notes: ${data.notes}',
+    '',
+    '=== QUALITY GENERATION GUIDELINES ===',
+    'Based on the above context:',
+    '- Recommend industry-appropriate quality standards (ISO 9001, ISO 25010, ISO 27001, CMMI, etc.)',
+    '- Suggest relevant quality metrics based on project type and framework ($methodology)',
+    '- Identify potential quality risks based on project characteristics',
+    '- Propose inspection and test activities appropriate to the delivery approach',
+    '- Consider team size and location when recommending QA/QC resource needs',
+    '- For agile projects: include sprint-level quality gates, definition of done, continuous integration quality',
+    '- For waterfall projects: include phase-gate quality reviews, milestone inspections',
+    '- Include applicable regulatory/compliance requirements based on industry',
+  ].join('\n');
+}
+
+Map<String, List<LaunchEntry>> _buildExecutionQualitySections(
+ QualityManagementData quality,
+) {
+ return {
+ 'quality_management_plan': [
+ LaunchEntry(
+ title: 'Project Quality Management Plan',
+ details: [
+ quality.qualityPlan,
+ if (quality.reviewCadence.isNotEmpty)
+ 'Review Cadence: ${quality.reviewCadence}',
+ if (quality.escalationPath.isNotEmpty)
+ 'Escalation Path: ${quality.escalationPath}',
+ if (quality.changeControlProcess.isNotEmpty)
+ 'Change Control: ${quality.changeControlProcess}',
+ ].where((value) => value.trim().isNotEmpty).join('\n\n'),
+ status: 'Active',
+ ),
+ ],
+ 'quality_objectives': quality.objectives
+ .map(
+ (objective) => LaunchEntry(
+ title: objective.title,
+ details: [
+ 'Acceptance Criteria: ${objective.acceptanceCriteria}',
+ 'Metric: ${objective.successMetric}',
+ 'Target: ${objective.targetValue}',
+ 'Current: ${objective.currentValue}',
+ 'Owner: ${objective.owner}',
+ 'Requirement: ${objective.linkedRequirement}',
+ 'WBS: ${objective.linkedWbs}',
+ ].join('\n'),
+ status: objective.status,
+ ),
+ )
+ .toList(),
+ 'inspection_test_plan': [
+ ...quality.workflowControls
+ .where((control) => control.type == QualityWorkflowType.qa)
+ .map(
+ (control) => LaunchEntry(
+ title: control.name,
+ details: [
+ 'Method: ${control.method}',
+ 'Tools: ${control.tools}',
+ 'Checklist: ${control.checklist}',
+ 'Frequency: ${control.frequency}',
+ 'Owner: ${control.owner}',
+ 'Standards: ${control.standardsReference}',
+ ].join('\n'),
+ status: 'Inspection Control',
+ ),
+ ),
+ ...quality.qaTaskLog.map(
+ (task) => LaunchEntry(
+ title: task.task,
+ details: [
+ 'Responsible: ${task.responsible}',
+ 'Start: ${task.startDate}',
+ 'End: ${task.endDate}',
+ 'Comments: ${task.comments}',
+ ].join('\n'),
+ status: task.status.name,
+ ),
+ ),
+ ],
+ 'quality_metrics_dashboard': [
+ LaunchEntry(
+ title: 'Quality KPI Dashboard',
+ details: [
+ 'Defect Density: ${quality.metrics.defectDensity.value} ${quality.metrics.defectDensity.unit}'.trim(),
+ 'Customer Satisfaction: ${quality.metrics.customerSatisfaction.value} ${quality.metrics.customerSatisfaction.unit}'.trim(),
+ 'On-Time Delivery: ${quality.metrics.onTimeDelivery.value} ${quality.metrics.onTimeDelivery.unit}'.trim(),
+ 'Target Resolution Days: ${quality.dashboardConfig.targetTimeToResolutionDays}',
+ 'Manual Override: ${quality.dashboardConfig.allowManualMetricsOverride ? 'Enabled' : 'Disabled'}',
+ ].join('\n'),
+ status: 'Tracking',
+ ),
+ ],
+ 'quality_audit_plan': [
+ ...quality.workflowControls
+ .where((control) => control.type == QualityWorkflowType.qc)
+ .map(
+ (control) => LaunchEntry(
+ title: control.name,
+ details: [
+ 'Method: ${control.method}',
+ 'Frequency: ${control.frequency}',
+ 'Owner: ${control.owner}',
+ 'Checklist: ${control.checklist}',
+ ].join('\n'),
+ status: 'Audit Control',
+ ),
+ ),
+ ...quality.auditPlan.map(
+ (audit) => LaunchEntry(
+ title: audit.title,
+ details: [
+ 'Scope: ${audit.scope}',
+ 'Planned Date: ${audit.plannedDate}',
+ 'Completed Date: ${audit.completedDate}',
+ 'Owner: ${audit.owner}',
+ 'Findings: ${audit.findings}',
+ 'Notes: ${audit.notes}',
+ ].join('\n'),
+ status: audit.result.name,
+ ),
+ ),
+ ],
+ 'nonconformance_corrective_actions': quality.correctiveActions
+ .map(
+ (action) => LaunchEntry(
+ title: action.title,
+ details: [
+ 'Root Cause: ${action.rootCause}',
+ 'Action: ${action.action}',
+ 'Owner: ${action.owner}',
+ 'Due Date: ${action.dueDate}',
+ 'Verification: ${action.verificationNotes}',
+ ].join('\n'),
+ status: action.status.name,
+ ),
+ )
+ .toList(),
+ };
+}
+
+List<ScheduleActivity> _syncQualityActivitiesToCalendar(
+ ProjectDataModel data,
+ QualityManagementData quality,
+) {
+ final updated = List<ScheduleActivity>.from(data.scheduleActivities);
+
+ void upsertActivity({
+ required String key,
+ required String title,
+ required String date,
+ required String assignee,
+ }) {
+ final normalizedDate = _normalizedDateText(date);
+ if (normalizedDate.isEmpty) return;
+ final entry = ScheduleActivity(
+ id: key,
+ title: title,
+ assignee: assignee,
+ startDate: normalizedDate,
+ dueDate: normalizedDate,
+ status: 'planned',
+ phase: 'execution',
+ workPackageType: 'execution',
+ discipline: 'Quality',
+ milestone: 'Quality',
+ durationDays: 1,
+ );
+ final index = updated.indexWhere(
+ (activity) => activity.id == key || activity.title == title,
+ );
+ if (index == -1) {
+ updated.add(entry);
+ } else {
+ updated[index] = entry;
+ }
+ }
+
+ for (final control in quality.workflowControls) {
+ upsertActivity(
+ key: 'quality-control-${control.id}',
+ title: 'Quality ${control.type.name.toUpperCase()} Review: ${control.name}',
+ date: control.frequency,
+ assignee: control.owner,
+ );
+ }
+ for (final audit in quality.auditPlan) {
+ upsertActivity(
+ key: 'quality-audit-${audit.id}',
+ title: 'Quality Audit: ${audit.title}',
+ date: audit.plannedDate,
+ assignee: audit.owner,
+ );
+ }
+ for (final task in [...quality.qaTaskLog, ...quality.qcTaskLog]) {
+ upsertActivity(
+ key: 'quality-task-${task.id}',
+ title: 'Quality Task: ${task.task}',
+ date: task.endDate.isNotEmpty ? task.endDate : task.startDate,
+ assignee: task.responsible,
+ );
+ }
+ for (final action in quality.correctiveActions) {
+ upsertActivity(
+ key: 'quality-corrective-${action.id}',
+ title: 'Corrective Action: ${action.title}',
+ date: action.dueDate,
+ assignee: action.owner,
+ );
+ }
+
+ return updated;
 }
 
 List<QualityStandard> _standardsPresets(ProjectDataModel data) {
@@ -343,43 +622,52 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  : InnerPageSectionStatus.available,
  ),
  InnerPageSection(
- id: _QualityTab.targets.name,
- label: 'Targets',
+ id: _QualityTab.objectives.name,
+ label: 'Objectives',
  icon: Icons.flag_outlined,
  stepNumber: 2,
- status: _selectedTab == _QualityTab.targets
+ status: _selectedTab == _QualityTab.objectives
  ? InnerPageSectionStatus.current
  : InnerPageSectionStatus.available,
  ),
  InnerPageSection(
- id: _QualityTab.qaTracking.name,
- label: 'QA Tracking',
+ id: _QualityTab.inspection.name,
+ label: 'Inspection & Test',
  icon: Icons.verified_outlined,
  stepNumber: 3,
- status: _selectedTab == _QualityTab.qaTracking
+ status: _selectedTab == _QualityTab.inspection
  ? InnerPageSectionStatus.current
  : InnerPageSectionStatus.available,
  ),
  InnerPageSection(
- id: _QualityTab.qcTracking.name,
- label: 'QC Tracking',
+ id: _QualityTab.audit.name,
+ label: 'Audit & Register',
  icon: Icons.fact_check_outlined,
  stepNumber: 4,
- status: _selectedTab == _QualityTab.qcTracking
+ status: _selectedTab == _QualityTab.audit
  ? InnerPageSectionStatus.current
  : InnerPageSectionStatus.available,
  ),
- InnerPageSection(
- id: _QualityTab.metrics.name,
- label: 'Metrics',
- icon: Icons.analytics_outlined,
- stepNumber: 5,
- status: _selectedTab == _QualityTab.metrics
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- ),
- ],
- );
+  InnerPageSection(
+  id: _QualityTab.metrics.name,
+  label: 'Metrics',
+  icon: Icons.analytics_outlined,
+  stepNumber: 5,
+  status: _selectedTab == _QualityTab.metrics
+  ? InnerPageSectionStatus.current
+  : InnerPageSectionStatus.available,
+  ),
+  InnerPageSection(
+  id: _QualityTab.coq.name,
+  label: 'Cost of Quality',
+  icon: Icons.account_balance_wallet_outlined,
+  stepNumber: 6,
+  status: _selectedTab == _QualityTab.coq
+  ? InnerPageSectionStatus.current
+  : InnerPageSectionStatus.available,
+  ),
+  ],
+  );
  }
 
  @override
@@ -671,26 +959,31 @@ class _TabStrip extends StatelessWidget {
  tab: _QualityTab.plan,
  ),
  _TabData(
- label: 'Targets',
+ label: 'Objectives',
  icon: Icons.flag_outlined,
- tab: _QualityTab.targets,
+ tab: _QualityTab.objectives,
  ),
  _TabData(
- label: 'QA Tracking',
+ label: 'Inspection & Test',
  icon: Icons.verified_outlined,
- tab: _QualityTab.qaTracking,
+ tab: _QualityTab.inspection,
  ),
  _TabData(
- label: 'QC Tracking',
+ label: 'Audit & Register',
  icon: Icons.fact_check_outlined,
- tab: _QualityTab.qcTracking,
+ tab: _QualityTab.audit,
  ),
- _TabData(
- label: 'Metrics',
- icon: Icons.analytics_outlined,
- tab: _QualityTab.metrics,
- ),
- ];
+  _TabData(
+  label: 'Metrics',
+  icon: Icons.analytics_outlined,
+  tab: _QualityTab.metrics,
+  ),
+  _TabData(
+  label: 'Cost of Quality',
+  icon: Icons.account_balance_wallet_outlined,
+  tab: _QualityTab.coq,
+  ),
+  ];
 
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
@@ -793,14 +1086,16 @@ class _TabContent extends StatelessWidget {
  switch (selectedTab) {
  case _QualityTab.plan:
  return const _QualityPlanView();
- case _QualityTab.targets:
+ case _QualityTab.objectives:
  return const _ObjectivesView();
- case _QualityTab.qaTracking:
+ case _QualityTab.inspection:
  return const _QaTrackingView();
- case _QualityTab.qcTracking:
+ case _QualityTab.audit:
  return const _QcTrackingView();
- case _QualityTab.metrics:
- return const _MetricsView();
+  case _QualityTab.metrics:
+  return const _MetricsView();
+  case _QualityTab.coq:
+  return const _CoqView();
  }
  }
 }
@@ -1019,20 +1314,20 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  padding:
  const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
  decoration: BoxDecoration(
- color: const Color(0xFFE0F2FE),
+ color: const Color(0xFFFFF7E6),
  borderRadius: BorderRadius.circular(6),
  ),
  child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
  Icon(Icons.auto_awesome,
- size: 10, color: Color(0xFF0284C7)),
+ size: 10, color: Color(0xFFD97706)),
  SizedBox(width: 3),
  Text('AI',
  style: TextStyle(
  fontSize: 9,
  fontWeight: FontWeight.w700,
- color: Color(0xFF0284C7))),
+ color: Color(0xFFD97706))),
  ],
  ),
  ),
@@ -1065,10 +1360,7 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
 
  try {
  final project = ProjectDataHelper.getData(context);
- final contextText = ProjectDataHelper.buildFepContext(
- project,
- sectionLabel: 'Quality Management',
- );
+ final contextText = _buildQualityAiContext(project);
 
  final ai = OpenAiServiceSecure();
  final seed = await ai.generateQualitySeedBundle(
@@ -1167,6 +1459,44 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  );
  }
 
+ Future<void> _syncToExecutionTracking() async {
+ final project = ProjectDataHelper.getData(context);
+ final projectId = project.projectId;
+ if (projectId == null || projectId.isEmpty) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text('Project must be saved before syncing execution tracking.'),
+ ),
+ );
+ return;
+ }
+
+ final quality = _qualityData(context);
+ await ExecutionPhaseService.savePageData(
+ projectId: projectId,
+ pageKey: 'execution_quality_tracking',
+ sections: _buildExecutionQualitySections(quality),
+ );
+
+ await ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: 'quality_management',
+ showSnackbar: false,
+ dataUpdater: (data) => data.copyWith(
+ scheduleActivities: _syncQualityActivitiesToCalendar(data, quality),
+ ),
+ );
+
+ if (!mounted) return;
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Execution quality tracking synced and calendar reminders created.',
+ ),
+ ),
+ );
+ }
+
  Future<void> _addStandard() async {
  final result = await showDialog<QualityStandard>(
  context: context,
@@ -1210,20 +1540,25 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  );
  }
 
- Future<void> _removeStandard(int index) async {
- await _updateQualityData(
- context,
- checkpoint: 'quality_management',
- successMessage: 'Standard removed',
- updater: (current) {
- final updated = List<QualityStandard>.from(current.standards);
- if (index >= 0 && index < updated.length) {
- updated.removeAt(index);
- }
- return current.copyWith(standards: updated);
- },
- );
- }
+  Future<void> _removeStandard(int index) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Remove Standard',
+  );
+  if (!confirmed) return;
+  await _updateQualityData(
+  context,
+  checkpoint: 'quality_management',
+  successMessage: 'Standard removed',
+  updater: (current) {
+  final updated = List<QualityStandard>.from(current.standards);
+  if (index >= 0 && index < updated.length) {
+  updated.removeAt(index);
+  }
+  return current.copyWith(standards: updated);
+  },
+  );
+  }
 
  Future<void> _addChangeLog() async {
  final result = await showDialog<QualityChangeEntry>(
@@ -1268,20 +1603,25 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  );
  }
 
- Future<void> _removeChangeLog(int index) async {
- await _updateQualityData(
- context,
- checkpoint: 'quality_management',
- successMessage: 'Change log entry removed',
- updater: (current) {
- final updated = List<QualityChangeEntry>.from(current.qualityChangeLog);
- if (index >= 0 && index < updated.length) {
- updated.removeAt(index);
- }
- return current.copyWith(qualityChangeLog: updated);
- },
- );
- }
+  Future<void> _removeChangeLog(int index) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Remove Change Log Entry',
+  );
+  if (!confirmed) return;
+  await _updateQualityData(
+  context,
+  checkpoint: 'quality_management',
+  successMessage: 'Change log entry removed',
+  updater: (current) {
+  final updated = List<QualityChangeEntry>.from(current.qualityChangeLog);
+  if (index >= 0 && index < updated.length) {
+  updated.removeAt(index);
+  }
+  return current.copyWith(qualityChangeLog: updated);
+  },
+  );
+  }
 
  @override
  Widget build(BuildContext context) {
@@ -1289,11 +1629,11 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
 
  return _PrimaryCard(
  icon: Icons.description_outlined,
- iconBackground: const Color(0xFFEFF6FF),
- iconColor: const Color(0xFF2563EB),
+ iconBackground: const Color(0xFFFFF7E6),
+ iconColor: const Color(0xFFD97706),
  title: 'Quality Plan',
  subtitle:
- 'Define standards, governance cadence, and change/escalation controls for planning quality management',
+ 'Project Quality Management Plan with AI-generated standards, controls, and governance based on project context.',
  actions: [
  ElevatedButton.icon(
  onPressed: _isGenerating ? null : _generateFromContext,
@@ -1306,10 +1646,10 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  : const Icon(Icons.auto_awesome),
  label: const Text('Generate from Context'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
- foregroundColor: Colors.white,
- elevation: 0,
- padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+  backgroundColor: const Color(0xFFFFC812),
+  foregroundColor: Colors.white,
+  elevation: 0,
+  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
  shape:
  RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
  ),
@@ -1318,6 +1658,11 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  onPressed: _applyPresetStandards,
  icon: const Icon(Icons.tune),
  label: const Text('Apply Presets'),
+ ),
+ OutlinedButton.icon(
+ onPressed: _syncToExecutionTracking,
+ icon: const Icon(Icons.sync_outlined),
+ label: const Text('Sync to Execution'),
  ),
  ElevatedButton.icon(
  onPressed: _savePlan,
@@ -1398,7 +1743,7 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  },
  icon: const Icon(Icons.upload_file_outlined, size: 16),
  label: const Text('Import CSV'),
- style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), foregroundColor: const Color(0xFF2563EB), side: const BorderSide(color: Color(0xFF93C5FD))),
+  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), foregroundColor: const Color(0xFFFFC812), side: const BorderSide(color: Color(0xFFFDE68A))),
  ),
  const SizedBox(width: 8),
  ElevatedButton.icon(
@@ -1493,18 +1838,23 @@ class _ObjectivesViewState extends State<_ObjectivesView> {
  );
  }
 
- Future<void> _removeObjective(int index) async {
- await _updateQualityData(
- context,
- checkpoint: 'quality_management',
- successMessage: 'Objective removed',
- updater: (current) {
- final updated = List<QualityObjective>.from(current.objectives);
- if (index >= 0 && index < updated.length) updated.removeAt(index);
- return current.copyWith(objectives: updated);
- },
- );
- }
+  Future<void> _removeObjective(int index) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Remove Objective',
+  );
+  if (!confirmed) return;
+  await _updateQualityData(
+  context,
+  checkpoint: 'quality_management',
+  successMessage: 'Objective removed',
+  updater: (current) {
+  final updated = List<QualityObjective>.from(current.objectives);
+  if (index >= 0 && index < updated.length) updated.removeAt(index);
+  return current.copyWith(objectives: updated);
+  },
+  );
+  }
 
  @override
  Widget build(BuildContext context) {
@@ -1514,7 +1864,7 @@ class _ObjectivesViewState extends State<_ObjectivesView> {
  icon: Icons.flag_outlined,
  iconBackground: const Color(0xFFF3F4FF),
  iconColor: const Color(0xFF7C3AED),
- title: 'Objectives & Targets',
+ title: 'Quality Objectives & Acceptance Criteria',
  subtitle:
  'Define measurable objectives, acceptance criteria, and linked requirements/WBS references.',
  actions: [
@@ -1596,19 +1946,25 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
  );
  }
 
- Future<void> _removeWorkflowControl(QualityWorkflowControl control) async {
- await _updateQualityData(
- context,
- checkpoint: 'quality_management',
- successMessage: 'QA control removed',
- updater: (current) {
- final updated =
- List<QualityWorkflowControl>.from(current.workflowControls)
- ..removeWhere((e) => e.id == control.id);
- return current.copyWith(workflowControls: updated);
- },
- );
- }
+  Future<void> _removeWorkflowControl(QualityWorkflowControl control) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Remove QA Control',
+  itemLabel: control.name,
+  );
+  if (!confirmed) return;
+  await _updateQualityData(
+  context,
+  checkpoint: 'quality_management',
+  successMessage: 'QA control removed',
+  updater: (current) {
+  final updated =
+  List<QualityWorkflowControl>.from(current.workflowControls)
+  ..removeWhere((e) => e.id == control.id);
+  return current.copyWith(workflowControls: updated);
+  },
+  );
+  }
 
  Future<void> _addTask() async {
  final result = await showDialog<QualityTaskEntry>(
@@ -1654,18 +2010,24 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
  );
  }
 
- Future<void> _removeTask(QualityTaskEntry task) async {
- await _updateQualityData(
- context,
- checkpoint: 'quality_management',
- successMessage: 'QA task removed',
- updater: (current) {
- final updated = List<QualityTaskEntry>.from(current.qaTaskLog)
- ..removeWhere((e) => e.id == task.id);
- return current.copyWith(qaTaskLog: updated);
- },
- );
- }
+  Future<void> _removeTask(QualityTaskEntry task) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Remove QA Task',
+  itemLabel: task.task,
+  );
+  if (!confirmed) return;
+  await _updateQualityData(
+  context,
+  checkpoint: 'quality_management',
+  successMessage: 'QA task removed',
+  updater: (current) {
+  final updated = List<QualityTaskEntry>.from(current.qaTaskLog)
+  ..removeWhere((e) => e.id == task.id);
+  return current.copyWith(qaTaskLog: updated);
+  },
+  );
+  }
 
  @override
  Widget build(BuildContext context) {
@@ -1678,7 +2040,7 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
  icon: Icons.verified_outlined,
  iconBackground: const Color(0xFFF3F4FF),
  iconColor: const Color(0xFF7C3AED),
- title: 'QA Tracking',
+ title: 'Inspection & Test Plan',
  subtitle:
  'Track quality assurance controls and task execution with owners, cadence, and completion metrics.',
  actions: [
@@ -1792,11 +2154,17 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  );
  }
 
- Future<void> _removeWorkflowControl(QualityWorkflowControl control) async {
- await _updateQualityData(
- context,
- checkpoint: 'quality_management',
- successMessage: 'QC control removed',
+  Future<void> _removeWorkflowControl(QualityWorkflowControl control) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Remove QC Control',
+  itemLabel: control.name,
+  );
+  if (!confirmed) return;
+  await _updateQualityData(
+  context,
+  checkpoint: 'quality_management',
+  successMessage: 'QC control removed',
  updater: (current) {
  final updated =
  List<QualityWorkflowControl>.from(current.workflowControls)
@@ -1850,11 +2218,17 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  );
  }
 
- Future<void> _removeTask(QualityTaskEntry task) async {
- await _updateQualityData(
- context,
- checkpoint: 'quality_management',
- successMessage: 'QC task removed',
+  Future<void> _removeTask(QualityTaskEntry task) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Remove QC Task',
+  itemLabel: task.task,
+  );
+  if (!confirmed) return;
+  await _updateQualityData(
+  context,
+  checkpoint: 'quality_management',
+  successMessage: 'QC task removed',
  updater: (current) {
  final updated = List<QualityTaskEntry>.from(current.qcTaskLog)
  ..removeWhere((e) => e.id == task.id);
@@ -1907,11 +2281,17 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  );
  }
 
- Future<void> _removeAudit(QualityAuditEntry audit) async {
- await _updateQualityData(
- context,
- checkpoint: 'quality_management',
- successMessage: 'Audit entry removed',
+  Future<void> _removeAudit(QualityAuditEntry audit) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Remove Audit Entry',
+  itemLabel: audit.title,
+  );
+  if (!confirmed) return;
+  await _updateQualityData(
+  context,
+  checkpoint: 'quality_management',
+  successMessage: 'Audit entry removed',
  updater: (current) {
  final updated = List<QualityAuditEntry>.from(current.auditPlan)
  ..removeWhere((e) => e.id == audit.id);
@@ -1972,11 +2352,17 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  );
  }
 
- Future<void> _removeCorrectiveAction(CorrectiveActionEntry entry) async {
- await _updateQualityData(
- context,
- checkpoint: 'quality_management',
- successMessage: 'Corrective action removed',
+  Future<void> _removeCorrectiveAction(CorrectiveActionEntry entry) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Remove Corrective Action',
+  itemLabel: entry.title,
+  );
+  if (!confirmed) return;
+  await _updateQualityData(
+  context,
+  checkpoint: 'quality_management',
+  successMessage: 'Corrective action removed',
  updater: (current) {
  final updated =
  List<CorrectiveActionEntry>.from(current.correctiveActions)
@@ -1997,7 +2383,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  icon: Icons.fact_check_outlined,
  iconBackground: const Color(0xFFF3F4FF),
  iconColor: const Color(0xFF7C3AED),
- title: 'QC Tracking',
+ title: 'Quality Audit Plan & Register',
  subtitle:
  'Track inspections, audit outcomes, and corrective actions with full ownership and due dates.',
  actions: [
@@ -2067,7 +2453,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  ),
  const SizedBox(height: 24),
  _SectionHeader(
- title: 'Corrective Actions',
+ title: 'Nonconformance & Corrective Action Log',
  subtitle:
  'Manage remediation ownership, due dates, and verification closure.',
  ),
@@ -2328,7 +2714,7 @@ class _MetricsViewState extends State<_MetricsView> {
  icon: Icons.analytics_outlined,
  iconBackground: const Color(0xFFF0F9F9),
  iconColor: const Color(0xFF0F766E),
- title: 'Metrics',
+ title: 'Quality Metrics Dashboard',
  subtitle:
  'Auto-computed KPI dashboard from QA/QC logs, audits, and corrective actions.',
  actions: [
@@ -3337,7 +3723,7 @@ class _RoadmapTimeline extends StatelessWidget {
  Color _sourceColor(String source) {
  switch (source) {
  case 'QA Task':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'QC Task':
  return const Color(0xFF7C3AED);
  case 'Audit':
@@ -5599,10 +5985,160 @@ class _TrendLinePainter extends CustomPainter {
  }
 
  @override
- bool shouldRepaint(covariant _TrendLinePainter oldDelegate) {
- return oldDelegate.values != values ||
- oldDelegate.lineColor != lineColor ||
- oldDelegate.areaColor != areaColor ||
- oldDelegate.maxYBuffer != maxYBuffer;
- }
+  bool shouldRepaint(covariant _TrendLinePainter oldDelegate) {
+  return oldDelegate.values != values ||
+  oldDelegate.lineColor != lineColor ||
+  oldDelegate.areaColor != areaColor ||
+  oldDelegate.maxYBuffer != maxYBuffer;
+  }
+}
+
+class _CoqView extends StatelessWidget {
+  const _CoqView();
+
+  @override
+  Widget build(BuildContext context) {
+    final data = ProjectDataHelper.getData(context);
+    final coq = data.costOfQualityData ?? CostOfQualityData();
+
+    Widget _buildCategoryCard({
+      required String title,
+      required String amount,
+      required IconData icon,
+      required Color color,
+    }) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 10,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 12),
+            Text(title,
+                style: const TextStyle(
+                    fontSize: 13, color: Color(0xFF6B7280))),
+            const SizedBox(height: 4),
+            Text(amount,
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: color)),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Cost of Quality Summary',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827))),
+          const SizedBox(height: 6),
+          const Text(
+            'Track prevention, appraisal, and failure costs across the project lifecycle.',
+            style:
+                TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+          ),
+          const SizedBox(height: 24),
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: [
+              SizedBox(
+                width: 240,
+                child: _buildCategoryCard(
+                  title: 'Prevention Costs',
+                  amount: NumberFormat.simpleCurrency(decimalDigits: 0)
+                      .format(coq.totalPrevention),
+                  icon: Icons.shield_outlined,
+                  color: const Color(0xFF059669),
+                ),
+              ),
+              SizedBox(
+                width: 240,
+                child: _buildCategoryCard(
+                  title: 'Appraisal Costs',
+                  amount: NumberFormat.simpleCurrency(decimalDigits: 0)
+                      .format(coq.totalAppraisal),
+                  icon: Icons.search_outlined,
+                  color: const Color(0xFFD97706),
+                ),
+              ),
+              SizedBox(
+                width: 240,
+                child: _buildCategoryCard(
+                  title: 'Internal Failure',
+                  amount: NumberFormat.simpleCurrency(decimalDigits: 0)
+                      .format(coq.totalInternalFailure),
+                  icon: Icons.warning_amber_outlined,
+                  color: const Color(0xFFD97706),
+                ),
+              ),
+              SizedBox(
+                width: 240,
+                child: _buildCategoryCard(
+                  title: 'External Failure',
+                  amount: NumberFormat.simpleCurrency(decimalDigits: 0)
+                      .format(coq.totalExternalFailure),
+                  icon: Icons.error_outline,
+                  color: const Color(0xFFDC2626),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF78350F), Color(0xFF2D5F8A)],
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.account_balance_wallet_outlined,
+                    color: Colors.white, size: 32),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Total Cost of Quality',
+                        style: TextStyle(
+                            fontSize: 13, color: Colors.white70)),
+                    const SizedBox(height: 4),
+                    Text(
+                      NumberFormat.simpleCurrency(decimalDigits: 0)
+                          .format(coq.totalCoq),
+                      style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

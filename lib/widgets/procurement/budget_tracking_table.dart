@@ -218,9 +218,9 @@ class _BudgetStatusBadge extends StatelessWidget {
       case 'within':
       default:
         label = 'Within';
-        background = const Color(0xFFDBEAFE);
-        border = const Color(0xFF93C5FD);
-        foreground = const Color(0xFF1D4ED8);
+        background = const Color(0xFFFFF7E6);
+        border = const Color(0xFFFDE68A);
+        foreground = const Color(0xFFD97706);
         break;
     }
 

@@ -2313,7 +2313,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  _buildSectionHeader(
  icon: Icons.shield_outlined,
- color: const Color(0xFF1D4ED8),
+ color: const Color(0xFFD97706),
  title: 'Constraint And Guardrail Register',
  subtitle:
  'Define architectural constraints, guardrails, ownership, and approval status for design governance.',
@@ -2594,7 +2594,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  colors: [
  Color(0xFF0B1220),
  Color(0xFF152235),
- Color(0xFF1E3A5F),
+ Color(0xFF78350F),
  ],
  ),
  borderRadius: BorderRadius.circular(24),
@@ -2862,7 +2862,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle:
  'Capture assumptions, unresolved blockers, and cross-team context driving feasibility decisions.',
  icon: Icons.edit_note_outlined,
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFD97706),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -2908,7 +2908,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle:
  'Score each feature against the constraint most likely to challenge delivery.',
  icon: Icons.speed_outlined,
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFD97706),
  child: Column(
  children: snapshot.feasibilityItems
  .map(
@@ -3191,14 +3191,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle:
  'Connected versus pending systems around the central project concept.',
  icon: Icons.hub_outlined,
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFD97706),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF7E6),
  borderRadius: BorderRadius.circular(16),
  border: Border.all(color: const Color(0xFFBFDBFE)),
  ),
@@ -3208,7 +3208,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 40,
  height: 40,
  decoration: BoxDecoration(
- color: const Color(0xFF1D4ED8),
+ color: const Color(0xFFD97706),
  borderRadius: BorderRadius.circular(12),
  ),
  child:
@@ -3224,7 +3224,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: TextStyle(
  fontSize: 11.5,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFD97706),
  ),
  ),
  const SizedBox(height: 2),
@@ -3255,14 +3255,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(
  child: Container(
  height: 2,
- color: const Color(0xFF93C5FD),
+ color: const Color(0xFFFDE68A),
  ),
  ),
  Container(
  width: 10,
  height: 10,
  decoration: const BoxDecoration(
- color: Color(0xFF2563EB),
+ color: Color(0xFFD97706),
  shape: BoxShape.circle,
  ),
  ),
@@ -3320,7 +3320,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle:
  'Target values compared against current capacity for digital and physical demand.',
  icon: Icons.monitor_heart_outlined,
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFD97706),
  child: Column(
  children: snapshot.performanceItems
  .map(
@@ -3423,7 +3423,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildFlowStage(
  label: 'Source',
  value: lane.source,
- color: const Color(0xFFDBEAFE),
+ color: const Color(0xFFFFF7E6),
  ),
  _buildFlowStage(
  label: 'Transformation',
@@ -3491,7 +3491,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle:
  'Compliance view across digital controls and physical safety obligations.',
  icon: Icons.shield_outlined,
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFD97706),
  child: Column(
  children: snapshot.protocols
  .map(
@@ -3983,7 +3983,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  _buildSectionHeader(
  icon: Icons.policy_outlined,
- color: const Color(0xFF1D4ED8),
+ color: const Color(0xFFD97706),
  title: 'Constraints & guardrails',
  subtitle:
  'World-class guardrails that clarify what must never drift.',
@@ -4543,7 +4543,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() => _constraints[index].status = value);
  _scheduleSave();
  },
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFD97706),
  enabled: _canEditAlignment && isEditing,
  ),
  ),
@@ -4789,7 +4789,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF1D4ED8), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFD97706), width: 2),
  ),
  ),
  );
@@ -4899,7 +4899,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF1D4ED8), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFD97706), width: 2),
  ),
  ),
  );
@@ -4919,7 +4919,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  icon: isEditing
  ? Icons.check_circle_outline_rounded
  : Icons.edit_outlined,
- color: isEditing ? const Color(0xFF059669) : const Color(0xFF2563EB),
+ color: isEditing ? const Color(0xFF059669) : const Color(0xFFD97706),
  onPressed: _canEditAlignment ? onToggleEdit : null,
  ),
  const SizedBox(width: _technicalAlignmentActionGap),

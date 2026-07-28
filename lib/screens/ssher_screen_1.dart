@@ -77,7 +77,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  color: Colors.blue.withOpacity(0.15),
  shape: BoxShape.circle),
  child: const Icon(Icons.receipt_long,
- size: 18, color: Colors.blue),
+ size: 18, color: const Color(0xFFD97706)),
  ),
  const SizedBox(width: 12),
  const Expanded(
@@ -266,7 +266,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  Colors.blue.withOpacity(0.15),
  shape: BoxShape.circle),
  child: const Icon(Icons.receipt_long,
- size: 18, color: Colors.blue),
+ size: 18, color: const Color(0xFFD97706)),
  ),
  const SizedBox(width: 12),
  const Expanded(

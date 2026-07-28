@@ -483,7 +483,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       case SiteRole.admin:
         return [const Color(0xFF7C3AED), const Color(0xFF8B5CF6)];
       case SiteRole.editor:
-        return [const Color(0xFF2563EB), const Color(0xFF3B82F6)];
+        return [const Color(0xFFD97706), const Color(0xFFFBBF24)];
       case SiteRole.user:
         return [const Color(0xFF059669), const Color(0xFF10B981)];
       case SiteRole.guest:

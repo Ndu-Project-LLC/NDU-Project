@@ -88,7 +88,7 @@ class ProcurementDialogShell extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFFF8FAFF), Color(0xFFEFF6FF)],
+                  colors: [Color(0xFFF8FAFF), Color(0xFFFFF7E6)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -103,7 +103,7 @@ class ProcurementDialogShell extends StatelessWidget {
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFDBEAFE).withOpacity(0.4),
+                        color: const Color(0xFFFFF7E6).withOpacity(0.4),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -125,7 +125,7 @@ class ProcurementDialogShell extends StatelessWidget {
                                 offset: Offset(0, 6)),
                           ],
                         ),
-                        child: Icon(icon, color: const Color(0xFF2563EB)),
+                        child: Icon(icon, color: const Color(0xFFD97706)),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -189,7 +189,7 @@ class ProcurementDialogShell extends StatelessWidget {
                   ElevatedButton(
                     onPressed: onPrimary,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563EB),
+                      backgroundColor: const Color(0xFFD97706),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
@@ -965,13 +965,13 @@ class _ResponsibleMemberPickerDialogState
                                 dense: true,
                                 leading: CircleAvatar(
                                   radius: 14,
-                                  backgroundColor: const Color(0xFFDBEAFE),
+                                  backgroundColor: const Color(0xFFFFF7E6),
                                   child: Text(
                                     member.displayLabel[0].toUpperCase(),
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF1D4ED8),
+                                      color: Color(0xFFD97706),
                                     ),
                                   ),
                                 ),
@@ -1479,7 +1479,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                 'Matched existing ${widget.partnerLabel.toLowerCase()}. Details auto-filled.',
                 style: const TextStyle(
                   fontSize: 11.5,
-                  color: Color(0xFF2563EB),
+                  color: Color(0xFFD97706),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1545,7 +1545,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                         max: 5,
                         divisions: 4,
                         label: _rating.round().toString(),
-                        activeColor: const Color(0xFF2563EB),
+                        activeColor: const Color(0xFFD97706),
                         onChanged: (value) => setState(() => _rating = value),
                       ),
                     ],
@@ -1558,7 +1558,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                       children: [
                         Switch(
                           value: _approved,
-                          thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF2563EB) : null),
+                          thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFFD97706) : null),
                           onChanged: (value) =>
                               setState(() => _approved = value),
                         ),
@@ -1569,7 +1569,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                       children: [
                         Switch(
                           value: _preferred,
-                          thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF2563EB) : null),
+                          thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFFD97706) : null),
                           onChanged: (value) =>
                               setState(() => _preferred = value),
                         ),
@@ -2410,7 +2410,7 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
               max: 1,
               divisions: 10,
               label: '${(_progress * 100).round()}%',
-              activeColor: const Color(0xFF2563EB),
+              activeColor: const Color(0xFFD97706),
               onChanged: (value) => setState(() => _progress = value),
             ),
           ],

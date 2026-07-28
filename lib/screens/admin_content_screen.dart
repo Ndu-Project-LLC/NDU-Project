@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:provider/provider.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
@@ -315,41 +316,27 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
  );
  }
 
- Future<void> _deleteContent(AppContent content) async {
- final confirmed = await showDialog<bool>(
- context: context,
- builder: (context) => AlertDialog(
- title: const Text('Delete Content'),
- content: Text('Are you sure you want to delete "${content.key}"?'),
- actions: [
- TextButton(
- onPressed: () => Navigator.pop(context, false),
- child: const Text('Cancel')),
- ElevatedButton(
- onPressed: () => Navigator.pop(context, true),
- style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
- child: const Text('Delete'),
- ),
- ],
- ),
- );
-
- if (confirmed == true) {
- final success = await AppContentService.deleteContent(content.id);
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text(success
- ? 'Content deleted successfully'
- : 'Failed to delete content'),
- backgroundColor: success ? Colors.green : Colors.red,
- ),
- );
- }
- }
- }
+  Future<void> _deleteContent(AppContent content) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Delete Content',
+  itemLabel: content.key,
+  );
+  if (!confirmed) return;
+  final success = await AppContentService.deleteContent(content.id);
+  if (mounted) {
+  ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+  content: Text(success
+  ? 'Content deleted successfully'
+  : 'Failed to delete content'),
+  backgroundColor: success ? Colors.green : Colors.red,
+  ),
+  );
+  }
+  }
 }
-
+ 
 class _StaticEditBanner extends StatelessWidget {
  const _StaticEditBanner({
  required this.isEnabled,

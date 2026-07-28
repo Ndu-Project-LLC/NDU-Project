@@ -343,7 +343,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Summarize progress against the project baseline for the past week. '
  'Include schedule variance, cost performance index, and upcoming milestones. '
  'Target audience: Project Manager, Team Leads, PMO.',
- const Color(0xFF2563EB),
+ const Color(0xFFD97706),
  ),
  const SizedBox(height: 14),
  _buildReportSection(

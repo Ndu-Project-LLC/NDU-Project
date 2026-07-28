@@ -3,6 +3,7 @@ import 'package:ndu_project/screens/scope_tracking_implementation_screen.dart';
 import 'package:ndu_project/screens/update_ops_maintenance_plans_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
+import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -396,7 +397,9 @@ class _StakeholderAlignmentScreenState
                 }
               });
             },
-            onDeleted: (item) {
+            onDeleted: (item) async {
+              final ok = await launchConfirmDelete(context, itemName: 'stakeholder alignment item');
+              if (!ok) return;
               setState(() {
                 _items.removeWhere((i) => i.id == item.id);
               });

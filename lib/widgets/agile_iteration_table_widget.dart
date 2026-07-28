@@ -7,6 +7,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/inline_editable_text.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 /// Custom Agile Iteration Table with inline editing, CRUD actions, and AI capabilities
 class AgileIterationTableWidget extends StatelessWidget {
@@ -418,7 +419,13 @@ class _AgileTaskRowWidgetState extends State<_AgileTaskRowWidget> {
     }
   }
 
-  void _deleteTask(AgileTask task) {
+  Future<void> _deleteTask(AgileTask task) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Task',
+      itemLabel: task.userStory,
+    );
+    if (!confirmed) return;
     final projectId =
         ProjectDataInherited.maybeOf(context)?.projectData.projectId;
     if (projectId == null) return;
@@ -519,7 +526,7 @@ class _PriorityPill extends StatelessWidget {
       case 'high':
         return const Color(0xFFF59E0B);
       case 'medium':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFBBF24);
       case 'low':
         return const Color(0xFF10B981);
       default:
@@ -570,7 +577,7 @@ class _StatusPill extends StatelessWidget {
       case 'to-do':
         return const Color(0xFF6B7280);
       case 'in-progress':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFBBF24);
       case 'testing':
         return const Color(0xFFF59E0B);
       case 'done':

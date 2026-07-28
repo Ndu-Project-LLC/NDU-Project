@@ -30,6 +30,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -515,7 +516,7 @@ class _AgileProjectBaselineScreenState
  add(
  'No formal risk register entries',
  'The risk register is empty, so only inferred risk is available.',
- const Color(0xFF2563EB),
+ const Color(0xFFD97706),
  );
  }
  return items;
@@ -579,18 +580,24 @@ class _AgileProjectBaselineScreenState
  _scheduleSave();
  }
 
- void _removeAssumption(_AssumptionRowState row) {
- if (_assumptionRows.length == 1) {
- row.clear();
- _scheduleSave();
- return;
- }
- setState(() {
- row.dispose();
- _assumptionRows.remove(row);
- });
- _scheduleSave();
- }
+  Future<void> _removeAssumption(_AssumptionRowState row) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Assumption',
+      itemLabel: row.textController.text.isNotEmpty ? row.textController.text : null,
+    );
+    if (!confirmed) return;
+    if (_assumptionRows.length == 1) {
+      row.clear();
+      _scheduleSave();
+      return;
+    }
+    setState(() {
+      row.dispose();
+      _assumptionRows.remove(row);
+    });
+    _scheduleSave();
+  }
 
  String _describeSprintCadence() {
  final durations = _sprints
@@ -1061,7 +1068,7 @@ onBack: () =>
  children: [
  _MiniPill(
  label: '$_formalRiskCount formal risks',
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFD97706),
  ),
  _MiniPill(
  label: '$_highRiskCount high formal risks',
@@ -1151,7 +1158,7 @@ class _TopHeader extends StatelessWidget {
  Widget build(BuildContext context) {
  final statusColor = switch (status) {
  'Approved' => const Color(0xFF10B981),
- 'Ready' => const Color(0xFF2563EB),
+ 'Ready' => const Color(0xFFD97706),
  _ => const Color(0xFFF59E0B),
  };
 
@@ -1341,7 +1348,7 @@ class _MetricsRow extends StatelessWidget {
  label: 'Capacity Threshold',
  value:
  capacityThreshold == null ? 'Not set' : '$capacityThreshold pts',
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFD97706),
  ),
  _MetricCard(
  label: 'Total Planned Points',
@@ -1872,7 +1879,7 @@ class _ApproverAutocomplete extends StatelessWidget {
  Icon(
  isCreate ? Icons.add_circle : Icons.person,
  size: 18,
- color: isCreate ? Colors.blue : _kMuted,
+ color: isCreate ? const Color(0xFFD97706) : _kMuted,
  ),
  const SizedBox(width: 8),
  Expanded(
@@ -1882,7 +1889,7 @@ class _ApproverAutocomplete extends StatelessWidget {
  : option,
  style: TextStyle(
  fontSize: 14,
- color: isCreate ? Colors.blue : _kHeadline,
+ color: isCreate ? const Color(0xFFD97706) : _kHeadline,
  ),
  ),
  ),

@@ -75,7 +75,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                       label: 'Total Activities',
                       value: '${rows.length}',
                       icon: Icons.list_alt,
-                      color: const Color(0xFF3B82F6),
+                      color: const Color(0xFFFBBF24),
                     ),
                   ),
                   const SizedBox(width: 12),

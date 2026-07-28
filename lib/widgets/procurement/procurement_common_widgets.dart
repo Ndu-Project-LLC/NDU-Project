@@ -72,10 +72,10 @@ class _EmptyStateBody extends StatelessWidget {
           width: iconSize,
           height: iconSize,
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
+            color: const Color(0xFFFFF7E6),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, color: const Color(0xFF2563EB), size: compact ? 20 : 24),
+          child: Icon(icon, color: const Color(0xFFD97706), size: compact ? 20 : 24),
         ),
         SizedBox(height: compact ? 10 : 14),
         Text(
@@ -98,7 +98,7 @@ class _EmptyStateBody extends StatelessWidget {
           ElevatedButton(
             onPressed: onAction,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
+              backgroundColor: const Color(0xFFD97706),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               shape: RoundedRectangleBorder(
@@ -146,7 +146,7 @@ class ProcurementSummaryCard extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
                 color: iconBackground, borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: const Color(0xFF1D4ED8)),
+            child: Icon(icon, color: const Color(0xFFD97706)),
           ),
           const SizedBox(width: 16),
           Column(
@@ -201,9 +201,9 @@ class ProcurementItemStatusPill extends StatelessWidget {
         break;
       case 'pending':
       default:
-        background = const Color(0xFFDBEAFE);
-        border = const Color(0xFF93C5FD);
-        foreground = const Color(0xFF1D4ED8);
+        background = const Color(0xFFFFF7E6);
+        border = const Color(0xFFFDE68A);
+        foreground = const Color(0xFFD97706);
         break;
     }
 

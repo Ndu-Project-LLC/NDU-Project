@@ -29,7 +29,7 @@ enum ScheduleDomain {
       };
 
   int get color => switch (this) {
-        ScheduleDomain.engineering => 0xFF3B82F6, // blue
+        ScheduleDomain.engineering => 0xFFFBBF24, // blue
         ScheduleDomain.procurement => 0xFF22C55E, // green
         ScheduleDomain.execution => 0xFFF8BD2A, // yellow/gold
         ScheduleDomain.construction => 0xFF909096, // gray

@@ -15,6 +15,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -185,7 +186,13 @@ class _AgileAcceptanceCriteriaScreenState
     _scheduleAutoSave();
   }
 
-  void _deleteTemplate() {
+  Future<void> _deleteTemplate() async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Template',
+      itemLabel: _selectedTemplate?.name,
+    );
+    if (!confirmed) return;
     final t = _selectedTemplate;
     if (t == null) return;
     final idx = _templates.indexWhere((x) => x.id == t.id);
@@ -212,10 +219,16 @@ class _AgileAcceptanceCriteriaScreenState
     _scheduleAutoSave();
   }
 
-  void _deleteCriterion(int index) {
+  Future<void> _deleteCriterion(int index) async {
     final t = _selectedTemplate;
     if (t == null || index >= t.criteria.length) return;
     final c = t.criteria[index];
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Criterion',
+      itemLabel: c.description.isNotEmpty ? c.description : null,
+    );
+    if (!confirmed) return;
     _criterionCtrls.remove(c.id);
     setState(() {
       t.criteria.removeAt(index);

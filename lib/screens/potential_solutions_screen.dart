@@ -742,7 +742,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  size: 16,
  color: _solutions.length >= 3
  ? const Color(0xFF9CA3AF)
- : const Color(0xFF2563EB),
+ : const Color(0xFFD97706),
  ),
  const SizedBox(width: 6),
  Text(
@@ -983,7 +983,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  children: [
  CircleAvatar(
  radius: 16,
- backgroundColor: Colors.blue[400],
+ backgroundColor: const Color(0xFFFBBF24),
  child: Text(
  FirebaseAuthService.displayNameOrEmail(fallback: 'U')
  .characters
@@ -1030,7 +1030,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  else
  CircleAvatar(
  radius: 16,
- backgroundColor: Colors.blue[400],
+ backgroundColor: const Color(0xFFFBBF24),
  child: Text(
  FirebaseAuthService.displayNameOrEmail(fallback: 'U')
  .characters
@@ -1730,7 +1730,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  width: 36,
  height: 36,
  decoration: const BoxDecoration(
- color: Color(0xFF2563EB),
+ color: Color(0xFFD97706),
  shape: BoxShape.circle,
  ),
  child: const Icon(

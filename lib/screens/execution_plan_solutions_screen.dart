@@ -104,9 +104,7 @@ class _ExecutionPlanSolutionsScreenState extends State<ExecutionPlanSolutionsScr
   ExecutionPlanHeader(
   onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'execution_plan_strategy'),
   onNext: () => PlanningPhaseNavigation.goToNext(context, 'execution_plan_strategy'), onExportPdf: () => _exportPdf(context)),
-  const SizedBox(height: 32),
-  const SectionIntro(title: 'Executive Plan Strategy'),
-  const SizedBox(height: 28),
+  const SizedBox(height: 24),
   ExecutionPlanForm(
   title: 'Executive Plan Strategy',
   hintText: 'Input your notes here...',

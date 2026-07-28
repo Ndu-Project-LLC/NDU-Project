@@ -1053,6 +1053,77 @@ ${_escape(trimmedText)}
     );
   }
 
+  /// Analyzes current quality data and provides AI-powered recommendations
+  Future<QualityAiAnalysis> analyzeQualityGaps({
+    required String context,
+    required QualityManagementData currentQuality,
+  }) async {
+    final trimmedContext = context.trim();
+    if (trimmedContext.isEmpty) {
+      return QualityAiAnalysis.empty();
+    }
+    if (!OpenAiConfig.isConfigured) {
+      return QualityAiAnalysis.fallback();
+    }
+
+    final uri = OpenAiConfig.chatUri();
+    final headers = OpenAiConfig.headers();
+
+    final currentState = [
+      'CURRENT QUALITY STATE:',
+      '- Objectives: ${currentQuality.objectives.length} defined',
+      '- Standards: ${currentQuality.standards.length} listed',
+      '- Workflow Controls: ${currentQuality.workflowControls.length}',
+      '- Audit Entries: ${currentQuality.auditPlan.length} planned',
+      '- Corrective Actions: ${currentQuality.correctiveActions.length}',
+      '',
+      'ANALYSIS REQUESTED:',
+      '1. Identify missing quality requirements or gaps',
+      '2. Recommend quality activities based on project type',
+      '3. Suggest applicable standards and best practices',
+      '4. Detect gaps in acceptance criteria',
+      '5. Highlight quality risks and likely sources of rework',
+      '6. Recommend quality KPIs specific to this project',
+    ].join('\n');
+
+    final fullContext = '$context\n\n$currentState';
+
+    final body = jsonEncode(OpenAiConfig.wrapBody({
+      'model': OpenAiConfig.model,
+      'temperature': 0.4,
+      'max_completion_tokens': 1500,
+      'response_format': {'type': 'json_object'},
+      'messages': [
+        {
+          'role': 'system',
+          'content': 'You are an expert Quality Management consultant. Analyze quality data and provide actionable recommendations. Return ONLY valid JSON.'
+        },
+        {
+          'role': 'user',
+          'content': fullContext,
+        }
+      ],
+    }));
+
+    try {
+      final response = await _client
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 45));
+      if (response.statusCode == 401) throw Exception('Invalid API key');
+      if (response.statusCode == 429) throw Exception('API quota exceeded');
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception('OpenAI error ${response.statusCode}: ${response.body}');
+      }
+
+      final parsed = jsonDecode(response.body);
+      return QualityAiAnalysis.fromJson(parsed);
+    } catch (e) {
+      debugPrint('analyzeQualityGaps failed: $e');
+      return QualityAiAnalysis.fallback();
+    }
+  }
+
+
   // Generate structured Scope items (Within Scope, Out of Scope)
   Future<Map<String, List<String>>> generateProjectScope({
     required String context,
@@ -6625,7 +6696,7 @@ ${contextNotes.trim().isEmpty ? 'None provided.' : contextNotes}
   }
 
   String _requirementsPrompt(String businessCase) => '''
-Based on this project context, generate 10-20 specific project requirements that must be met for the project to be considered successful.
+Based on this project context, generate 7-20 specific project requirements that must be met for the project to be considered successful.
 
 Each requirement should be:
 - Clear and specific
@@ -6634,6 +6705,7 @@ Each requirement should be:
 - Assigned to a relevant discipline, role, and/or person
 - Tagged to one implementation phase (Initiation, Planning, Design, Execution, Launch, or ALL)
 - Include a short requirement source note or source link
+- Avoid frivolous, duplicate, or low-value items. Keep the list scope-relevant and practical.
 
 Discipline rules:
 - Use a specific discipline value, not a placeholder.
@@ -6932,6 +7004,320 @@ $escaped
     }
 
     return _fallbackSsherEntries(trimmedContext, itemsPerCategory);
+  }
+
+  /// Generates a concise, project-specific Interface Management Plan that
+  /// incorporates the user's additional-interfaces input (from the popup),
+  /// the project context, and the stakeholder management plan. Summarizes how
+  /// interfaces will be stewarded via the register, risk process, and meetings.
+  Future<String> generateInterfaceManagementPlan({
+    required String context,
+    required String additionalInterfaces,
+    required String stakeholderPlanSummary,
+    int maxTokens = 700,
+    double temperature = 0.5,
+  }) async {
+    final trimmedContext = context.trim();
+    if (trimmedContext.isEmpty) return '';
+    if (!OpenAiConfig.isConfigured) {
+      return _fallbackInterfaceManagementPlan(
+          trimmedContext, additionalInterfaces, stakeholderPlanSummary);
+    }
+
+    final uri = OpenAiConfig.chatUri();
+    final headers = OpenAiConfig.headers();
+
+    final body = jsonEncode(OpenAiConfig.wrapBody({
+      'model': OpenAiConfig.model,
+      'temperature': temperature,
+      'max_completion_tokens': maxTokens,
+      'response_format': {'type': 'json_object'},
+      'messages': [
+        {
+          'role': 'system',
+          'content':
+              'You are a senior project interface manager. Write a concise (180-260 words) Interface Management Plan that is SPECIFIC to the project context provided. Reference actual project names, stakeholders, vendors, and scope elements where possible. Summarize how interfaces will be stewarded using the Interface Register, the Risk Management process, coordination meetings, and governance cadence. Always return ONLY valid JSON.'
+        },
+        {
+          'role': 'user',
+          'content': _interfaceManagementPlanPrompt(
+              trimmedContext, additionalInterfaces, stakeholderPlanSummary),
+        },
+      ],
+    }));
+
+    try {
+      final response = await _client
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+            'OpenAI error ${response.statusCode}: ${response.body}');
+      }
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final content = OpenAiConfig.extractContent(data);
+      if (content.isNotEmpty) {
+        final parsed = _decodeJsonSafely(content);
+        final plan = parsed != null
+            ? (parsed['plan'] ?? parsed['summary'] ?? parsed['text'] ?? '')
+                .toString()
+                .trim()
+            : '';
+        if (plan.isNotEmpty) return plan;
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('generateInterfaceManagementPlan failed: $e');
+    }
+
+    return _fallbackInterfaceManagementPlan(
+        trimmedContext, additionalInterfaces, stakeholderPlanSummary);
+  }
+
+  /// Generates interface register entries by analyzing the project context,
+  /// stakeholder plan, vendor/contractor data, and program/portfolio context.
+  /// Returns a list of maps with keys: boundary, interfaceType, partyA,
+  /// partyB, criticality, priority, status, owner, notes.
+  Future<List<Map<String, dynamic>>> generateInterfaceEntries({
+    required String context,
+    required String additionalInterfaces,
+    required String programPortfolioContext,
+    int maxItems = 12,
+    int maxTokens = 1400,
+    double temperature = 0.45,
+  }) async {
+    final trimmedContext = context.trim();
+    if (trimmedContext.isEmpty) return [];
+    if (!OpenAiConfig.isConfigured) {
+      return _fallbackInterfaceEntries(
+          trimmedContext, additionalInterfaces, maxItems);
+    }
+
+    final uri = OpenAiConfig.chatUri();
+    final headers = OpenAiConfig.headers();
+
+    final body = jsonEncode(OpenAiConfig.wrapBody({
+      'model': OpenAiConfig.model,
+      'temperature': temperature,
+      'max_completion_tokens': maxTokens,
+      'response_format': {'type': 'json_object'},
+      'messages': [
+        {
+          'role': 'system',
+          'content':
+              'You are a senior interface management analyst. Identify cross-scope interfaces where project activities might cross with vendors, contractors, other companies, organizations, or businesses. Focus on REAL interfaces (data flow, physical handoff, contractual dependency, organizational coordination). Return up to $maxItems entries. Always return ONLY valid JSON.'
+        },
+        {
+          'role': 'user',
+          'content': _interfaceEntriesPrompt(
+              trimmedContext, additionalInterfaces, programPortfolioContext, maxItems),
+        },
+      ],
+    }));
+
+    try {
+      final response = await _client
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+            'OpenAI error ${response.statusCode}: ${response.body}');
+      }
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final content = OpenAiConfig.extractContent(data);
+      if (content.isNotEmpty) {
+        final parsed = _decodeJsonSafely(content);
+        if (parsed != null) {
+          final list = parsed['entries'] ?? parsed['interfaces'] ?? [];
+          if (list is List) {
+            return list
+                .map((e) {
+                  if (e is Map) {
+                    return {
+                      'boundary': (e['boundary'] ?? e['name'] ?? e['title'] ?? '')
+                          .toString()
+                          .trim(),
+                      'interfaceType': (e['interfaceType'] ?? e['type'] ??
+                              'Organizational')
+                          .toString()
+                          .trim(),
+                      'partyA': (e['partyA'] ?? e['party_a'] ?? e['provider'] ??
+                              'Project Team')
+                          .toString()
+                          .trim(),
+                      'partyB': (e['partyB'] ?? e['party_b'] ??
+                              e['receiver'] ?? e['counterparty'] ?? '')
+                          .toString()
+                          .trim(),
+                      'criticality': (e['criticality'] ?? 'Major')
+                          .toString()
+                          .trim(),
+                      'priority': (e['priority'] ?? 'Medium')
+                          .toString()
+                          .trim(),
+                      'status': (e['status'] ?? 'Pending')
+                          .toString()
+                          .trim(),
+                      'owner': (e['owner'] ?? e['responsible'] ?? '')
+                          .toString()
+                          .trim(),
+                      'notes': (e['notes'] ?? e['description'] ?? '')
+                          .toString()
+                          .trim(),
+                    };
+                  }
+                  return <String, dynamic>{};
+                })
+                .where((m) => m['boundary']!.isNotEmpty)
+                .take(maxItems)
+                .toList();
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('generateInterfaceEntries failed: $e');
+    }
+
+    return _fallbackInterfaceEntries(
+        trimmedContext, additionalInterfaces, maxItems);
+  }
+
+  /// Generates a per-category SSHER plan (Safety Plan, Security Plan, Health Plan,
+  /// Environment Plan, Regulatory Plan). The plan is concise (90-150 words) and
+  /// customized for the project's type, location, and rules.
+  Future<String> generateSsherCategoryPlan({
+    required String context,
+    required String category, // 'safety' | 'security' | 'health' | 'environment' | 'regulatory'
+    int maxTokens = 350,
+    double temperature = 0.5,
+  }) async {
+    final trimmedContext = context.trim();
+    if (trimmedContext.isEmpty) return '';
+    if (!OpenAiConfig.isConfigured) {
+      return _fallbackSsherCategoryPlan(trimmedContext, category);
+    }
+
+    final uri = OpenAiConfig.chatUri();
+    final headers = OpenAiConfig.headers();
+
+    final body = jsonEncode(OpenAiConfig.wrapBody({
+      'model': OpenAiConfig.model,
+      'temperature': temperature,
+      'max_completion_tokens': maxTokens,
+      'response_format': {'type': 'json_object'},
+      'messages': [
+        {
+          'role': 'system',
+          'content':
+              'You are an SSHER strategist. Craft a concise $category plan (90-150 words) tailored to the project\'s type, location, and regulatory environment. Always return ONLY valid JSON matching the requested schema.'
+        },
+        {
+          'role': 'user',
+          'content': _ssherCategoryPlanPrompt(trimmedContext, category),
+        },
+      ],
+    }));
+
+    try {
+      final response = await _client
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+            'OpenAI error ${response.statusCode}: ${response.body}');
+      }
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final content = OpenAiConfig.extractContent(data);
+      if (content.isNotEmpty) {
+        final parsed = _decodeJsonSafely(content);
+        final plan = parsed != null
+            ? (parsed['plan'] ?? parsed['summary'] ?? parsed['text'] ?? '')
+                .toString()
+                .trim()
+            : '';
+        if (plan.isNotEmpty) return plan;
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('generateSsherCategoryPlan failed: $e');
+    }
+
+    return _fallbackSsherCategoryPlan(trimmedContext, category);
+  }
+
+  /// Generates a list of applicable UN Sustainable Development Goals for the
+  /// project, with rationale tied to the project context.
+  Future<List<Map<String, String>>> generateSdgRecommendations({
+    required String context,
+    int maxTokens = 600,
+    double temperature = 0.4,
+  }) async {
+    final trimmedContext = context.trim();
+    if (trimmedContext.isEmpty) return [];
+    if (!OpenAiConfig.isConfigured) {
+      return _fallbackSdgRecommendations(trimmedContext);
+    }
+
+    final uri = OpenAiConfig.chatUri();
+    final headers = OpenAiConfig.headers();
+
+    final body = jsonEncode(OpenAiConfig.wrapBody({
+      'model': OpenAiConfig.model,
+      'temperature': temperature,
+      'max_completion_tokens': maxTokens,
+      'response_format': {'type': 'json_object'},
+      'messages': [
+        {
+          'role': 'system',
+          'content':
+              'You are a sustainability analyst. Identify the UN Sustainable Development Goals (SDGs 1-17) most applicable to this project based on its scope, location, and impact areas. Return ONLY valid JSON.'
+        },
+        {
+          'role': 'user',
+          'content': _ssherSdgPrompt(trimmedContext),
+        },
+      ],
+    }));
+
+    try {
+      final response = await _client
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+            'OpenAI error ${response.statusCode}: ${response.body}');
+      }
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final content = OpenAiConfig.extractContent(data);
+      if (content.isNotEmpty) {
+        final parsed = _decodeJsonSafely(content);
+        if (parsed != null) {
+          final list = parsed['sdgs'] ?? parsed['goals'] ?? [];
+          if (list is List) {
+            return list
+                .map((e) {
+                  if (e is Map) {
+                    return {
+                      'goal': (e['goal'] ?? e['id'] ?? e['number'] ?? '')
+                          .toString(),
+                      'title': (e['title'] ?? e['name'] ?? '').toString(),
+                      'rationale': (e['rationale'] ?? e['reason'] ?? '').toString(),
+                    };
+                  }
+                  return <String, String>{};
+                })
+                .where((m) => m['goal']!.isNotEmpty)
+                .toList();
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('generateSdgRecommendations failed: $e');
+    }
+
+    return _fallbackSdgRecommendations(trimmedContext);
   }
 
   Future<Map<String, List<Map<String, dynamic>>>> generateLaunchPhaseEntries({
@@ -7872,6 +8258,179 @@ $escaped
  ''';
   }
 
+  String _interfaceManagementPlanPrompt(
+      String context, String additionalInterfaces, String stakeholderPlan) {
+    final escapedContext = _escape(context);
+    final escapedAdditional = _escape(additionalInterfaces);
+    final escapedStakeholder = _escape(stakeholderPlan);
+    return '''
+Using the project context below, write a concise Interface Management Plan (180-260 words) that is SPECIFIC to this project. The plan MUST:
+1. Reference actual project name, stakeholders, vendors, contractors, and scope elements from the context
+2. Describe how interfaces will be identified, coordinated, and managed across stakeholders, organizations, systems, disciplines, and deliverables
+3. Explain how the Interface Register will be used as the single source of truth
+4. Reference the Risk Management process for interface-related risks
+5. Define coordination meeting cadence (weekly/monthly) and governance escalation path
+6. Incorporate the user's additional interfaces input below
+
+Return ONLY valid JSON with this exact structure:
+{
+  "plan": "Concise Interface Management Plan text goes here."
+}
+
+User's additional interfaces input:
+"""
+$escapedAdditional
+"""
+
+Stakeholder Management Plan summary:
+"""
+$escapedStakeholder
+"""
+
+Project context:
+"""
+$escapedContext
+"""
+''';
+  }
+
+  String _fallbackInterfaceManagementPlan(
+      String context, String additionalInterfaces, String stakeholderPlan) {
+    final projectName = _extractProjectName(context);
+    final assetName = projectName.isEmpty ? 'this project' : projectName;
+    final addl = additionalInterfaces.trim().isEmpty
+        ? 'No additional interfaces were identified beyond those already captured in the project scope.'
+        : 'Additional interfaces identified by the project team: $additionalInterfaces';
+    return 'Interface Management Plan for $assetName: The project team will maintain an Interface Register as the single source of truth for all internal and external interfaces, including vendors, contractors, and other organizational boundaries. Each interface will have a named owner, a defined criticality (Critical/Major/Minor), a coordination cadence, and a status that is reviewed weekly during the project coordination meeting. Interface-related risks will be captured in the project Risk Register with a reference back to the Interface Register entry, and mitigation actions will be tracked through the standard risk management process. Monthly interface governance reviews will be held with the project sponsor and key stakeholders to escalate unresolved interface issues, confirm handoff readiness, and approve new interfaces. Decision rights for each interface are defined in the RACI matrix. The change control process governs any additions, modifications, or closures of interfaces, with all changes logged in the Interface Change Log for audit traceability. $addl The stakeholder engagement approach is aligned with the Stakeholder Management Plan to ensure consistent communication across all interface parties.';
+  }
+
+  String _interfaceEntriesPrompt(String context, String additionalInterfaces,
+      String programPortfolioContext, int maxItems) {
+    final escapedContext = _escape(context);
+    final escapedAdditional = _escape(additionalInterfaces);
+    final escapedProgram = _escape(programPortfolioContext);
+    return '''
+Analyze the project context below and identify up to $maxItems cross-scope interfaces where project activities might cross with vendors, contractors, other companies, organizations, or businesses. Focus on REAL interfaces — places where data flows, physical handoffs occur, contractual dependencies exist, or organizational coordination is required.
+
+For each interface, provide:
+- boundary: short name (e.g. "Vendor X — Equipment Delivery", "Client IT — System Integration")
+- interfaceType: one of Technical / Contractual / Organizational / Physical / Procedural
+- partyA: the providing party (usually "Project Team" or a specific discipline)
+- partyB: the receiving party (vendor, contractor, client department, external organization)
+- criticality: Critical / Major / Minor
+- priority: High / Medium / Low
+- status: Pending / Active / Closed (default Pending)
+- owner: role or name responsible for coordinating this interface
+- notes: brief description of what crosses the boundary and why it matters
+
+Also incorporate the user's additional interfaces input and any program/portfolio context provided.
+
+Return ONLY valid JSON with this exact structure:
+{
+  "entries": [
+    {
+      "boundary": "...",
+      "interfaceType": "...",
+      "partyA": "...",
+      "partyB": "...",
+      "criticality": "...",
+      "priority": "...",
+      "status": "...",
+      "owner": "...",
+      "notes": "..."
+    }
+  ]
+}
+
+User's additional interfaces input:
+"""
+$escapedAdditional
+"""
+
+Program/Portfolio context (other projects that might share interfaces):
+"""
+$escapedProgram
+"""
+
+Project context:
+"""
+$escapedContext
+"""
+''';
+  }
+
+  List<Map<String, dynamic>> _fallbackInterfaceEntries(
+      String context, String additionalInterfaces, int maxItems) {
+    final projectName = _extractProjectName(context);
+    final assetName = projectName.isEmpty ? 'the project' : projectName;
+    final entries = <Map<String, dynamic>>[
+      {
+        'boundary': 'Client — Project Sponsor',
+        'interfaceType': 'Organizational',
+        'partyA': 'Project Team',
+        'partyB': 'Client Sponsor',
+        'criticality': 'Critical',
+        'priority': 'High',
+        'status': 'Pending',
+        'owner': 'Project Manager',
+        'notes':
+            'Governance interface for $assetName — steering committee decisions, change approvals, and milestone sign-off.',
+      },
+      {
+        'boundary': 'Vendor — Equipment/Service Delivery',
+        'interfaceType': 'Contractual',
+        'partyA': 'Project Team',
+        'partyB': 'Primary Vendor',
+        'criticality': 'Major',
+        'priority': 'High',
+        'status': 'Pending',
+        'owner': 'Procurement Lead',
+        'notes':
+            'Contractual interface for vendor deliverables, acceptance criteria, and SLA tracking.',
+      },
+      {
+        'boundary': 'IT — System Integration',
+        'interfaceType': 'Technical',
+        'partyA': 'Project Team',
+        'partyB': 'Client IT / Infrastructure',
+        'criticality': 'Major',
+        'priority': 'Medium',
+        'status': 'Pending',
+        'owner': 'Technical Lead',
+        'notes':
+            'Technical interface for system integration, data migration, and environment provisioning.',
+      },
+      {
+        'boundary': 'Regulatory — Permits & Compliance',
+        'interfaceType': 'Procedural',
+        'partyA': 'Project Team',
+        'partyB': 'Regulatory Authority',
+        'criticality': 'Critical',
+        'priority': 'High',
+        'status': 'Pending',
+        'owner': 'Compliance Officer',
+        'notes':
+            'Regulatory interface for permits, inspections, and statutory reporting.',
+      },
+    ];
+    // If the user provided additional interfaces, add a generic entry referencing them
+    if (additionalInterfaces.trim().isNotEmpty &&
+        additionalInterfaces.trim().toLowerCase() != 'not applicable') {
+      entries.add({
+        'boundary': 'Additional Interface (user-identified)',
+        'interfaceType': 'Organizational',
+        'partyA': 'Project Team',
+        'partyB': 'See notes',
+        'criticality': 'Major',
+        'priority': 'Medium',
+        'status': 'Pending',
+        'owner': 'Project Manager',
+        'notes': additionalInterfaces.trim(),
+      });
+    }
+    return entries.take(maxItems).toList();
+  }
+
   String _fallbackSsherSummary(String context) {
     final projectName = _extractProjectName(context);
     final assetName = projectName.isEmpty ? 'this project' : projectName;
@@ -7942,7 +8501,13 @@ $escaped
     final escaped = _escape(context);
     return '''
 Using the project inputs below, generate $itemsPerCategory entries for each category (safety, security, health, environment, regulatory).
-Each entry must be realistic and grounded in the project context.
+Each entry must be realistic, grounded in the project context, and customized for the project's type, location, and rules.
+
+For each entry, include:
+- A realistic estimated cost (estimated_cost as a number, e.g. 5000 or 12500.50)
+- The currency (USD unless the project is in Zambia where ZMW applies)
+- The cost frequency (One-time, Recurring, Monthly, Quarterly, or Annual)
+- The cost unit (lump sum, per item, per month, per quarter, etc.)
 
 Return ONLY valid JSON with this exact structure:
 {
@@ -7953,7 +8518,11 @@ Return ONLY valid JSON with this exact structure:
       "teamMember": "Role or owner",
       "concern": "Short, specific concern",
       "riskLevel": "Low|Medium|High",
-      "mitigation": "Short, specific mitigation action"
+      "mitigation": "Short, specific mitigation action",
+      "estimatedCost": "5000",
+      "costCurrency": "USD",
+      "costFrequency": "One-time",
+      "costUnit": "lump sum"
     }
   ]
 }
@@ -8041,6 +8610,23 @@ $escaped
               .toString()
               .trim();
       if (department.isEmpty || concern.isEmpty) return;
+      final estimatedCost = (item['estimatedCost'] ??
+              item['estimated_cost'] ??
+              item['cost'] ??
+              '')
+          .toString()
+          .trim();
+      final costCurrency =
+          (item['costCurrency'] ?? item['cost_currency'] ?? 'USD')
+              .toString()
+              .trim();
+      final costFrequency =
+          (item['costFrequency'] ?? item['cost_frequency'] ?? 'One-time')
+              .toString()
+              .trim();
+      final costUnit = (item['costUnit'] ?? item['cost_unit'] ?? 'lump sum')
+          .toString()
+          .trim();
       entries.add(SsherEntry(
         category: category,
         department: department,
@@ -8049,6 +8635,10 @@ $escaped
         riskLevel: riskLevel,
         mitigation:
             mitigation.isEmpty ? 'Mitigation plan in progress.' : mitigation,
+        estimatedCost: estimatedCost,
+        costCurrency: costCurrency.isEmpty ? 'USD' : costCurrency,
+        costFrequency: costFrequency.isEmpty ? 'One-time' : costFrequency,
+        costUnit: costUnit.isEmpty ? 'lump sum' : costUnit,
       ));
       counts[category] = count + 1;
     }
@@ -8910,6 +9500,10 @@ $escaped
           'riskLevel': 'High',
           'mitigation':
               'Enforce PPE checklists and daily toolbox talks across shifts.',
+          'estimatedCost': '3500',
+          'costCurrency': 'USD',
+          'costFrequency': 'One-time',
+          'costUnit': 'lump sum',
         },
         {
           'department': 'Facilities',
@@ -8919,6 +9513,10 @@ $escaped
           'riskLevel': 'Medium',
           'mitigation':
               'Install signage and conduct evacuation drills before go-live.',
+          'estimatedCost': '1800',
+          'costCurrency': 'USD',
+          'costFrequency': 'One-time',
+          'costUnit': 'lump sum',
         },
       ],
       'security': [
@@ -8930,6 +9528,10 @@ $escaped
           'riskLevel': 'High',
           'mitigation':
               'Complete quarterly access audits and enforce least-privilege roles.',
+          'estimatedCost': '6000',
+          'costCurrency': 'USD',
+          'costFrequency': 'Annual',
+          'costUnit': 'per year',
         },
         {
           'department': 'Facilities',
@@ -8938,6 +9540,10 @@ $escaped
           'riskLevel': 'Medium',
           'mitigation':
               'Align badge provisioning with approved rosters and auto-expire access.',
+          'estimatedCost': '2200',
+          'costCurrency': 'USD',
+          'costFrequency': 'One-time',
+          'costUnit': 'lump sum',
         },
       ],
       'health': [
@@ -8948,6 +9554,10 @@ $escaped
               'Shift fatigue risk during the ${assetName.toLowerCase()} launch window.',
           'riskLevel': 'Medium',
           'mitigation': 'Introduce rotation plans and mandatory rest breaks.',
+          'estimatedCost': '1200',
+          'costCurrency': 'USD',
+          'costFrequency': 'Monthly',
+          'costUnit': 'per month',
         },
         {
           'department': 'Operations',
@@ -8956,6 +9566,10 @@ $escaped
           'riskLevel': 'Low',
           'mitigation':
               'Provide adjustable workstations and ergonomics training.',
+          'estimatedCost': '2800',
+          'costCurrency': 'USD',
+          'costFrequency': 'One-time',
+          'costUnit': 'lump sum',
         },
       ],
       'environment': [
@@ -8967,6 +9581,10 @@ $escaped
           'riskLevel': 'Medium',
           'mitigation':
               'Deploy labeled bins and weekly compliance inspections.',
+          'estimatedCost': '1500',
+          'costCurrency': 'USD',
+          'costFrequency': 'One-time',
+          'costUnit': 'lump sum',
         },
         {
           'department': 'Operations',
@@ -8975,6 +9593,10 @@ $escaped
           'riskLevel': 'Low',
           'mitigation':
               'Schedule equipment use off-peak and track energy KPIs.',
+          'estimatedCost': '900',
+          'costCurrency': 'USD',
+          'costFrequency': 'Monthly',
+          'costUnit': 'per month',
         },
       ],
       'regulatory': [
@@ -8986,6 +9608,10 @@ $escaped
           'riskLevel': 'High',
           'mitigation':
               'Complete audit trail and align reporting calendar with regulators.',
+          'estimatedCost': '4500',
+          'costCurrency': 'USD',
+          'costFrequency': 'Quarterly',
+          'costUnit': 'per quarter',
         },
         {
           'department': 'Legal',
@@ -8995,6 +9621,10 @@ $escaped
           'riskLevel': 'Medium',
           'mitigation':
               'Validate policy updates and secure sign-off before launch.',
+          'estimatedCost': '3000',
+          'costCurrency': 'USD',
+          'costFrequency': 'One-time',
+          'costUnit': 'lump sum',
         },
       ],
     };
@@ -9010,6 +9640,10 @@ $escaped
           concern: item['concern'] ?? '',
           riskLevel: _normalizeRiskLevel(item['riskLevel'] ?? ''),
           mitigation: item['mitigation'] ?? '',
+          estimatedCost: item['estimatedCost'] ?? '5000',
+          costCurrency: item['costCurrency'] ?? 'USD',
+          costFrequency: item['costFrequency'] ?? 'One-time',
+          costUnit: item['costUnit'] ?? 'lump sum',
         ));
       }
     }
@@ -9031,6 +9665,113 @@ $escaped
     if (normalized.startsWith('high')) return 'High';
     if (normalized.startsWith('low')) return 'Low';
     return 'Medium';
+  }
+
+  String _ssherCategoryPlanPrompt(String context, String category) {
+    final escaped = _escape(context);
+    final categoryDescriptions = {
+      'safety':
+          'physical safety hazards on the project site, PPE, emergency response, incident reporting, safe work practices, equipment safety',
+      'security':
+          'physical and information security threats, access control, asset protection, personnel security, cybersecurity, vendor security',
+      'health':
+          'occupational health, mental wellbeing, ergonomics, fatigue management, occupational illness prevention, health surveillance',
+      'environment':
+          'environmental impact, waste management, emissions, energy efficiency, water use, biodiversity, UN Sustainable Development Goals alignment',
+      'regulatory':
+          'applicable laws, permits, licenses, regulatory reporting, compliance obligations, audits, statutory deadlines',
+    };
+    final focus = categoryDescriptions[category] ?? category;
+    final titleCase = category[0].toUpperCase() + category.substring(1);
+    return '''
+Using the project inputs below, write a concise $titleCase Plan (90-150 words) that addresses $focus for this project. The plan MUST be customized to the project's type, location, and applicable regulatory environment. Reference specific project details (project name, location, scope elements) where possible. Be concise, no fluff, no preamble.
+
+Return ONLY valid JSON with this exact structure:
+{
+  "plan": "Concise $titleCase Plan text goes here."
+}
+
+Project context:
+"""
+$escaped
+"""
+''';
+  }
+
+  String _fallbackSsherCategoryPlan(String context, String category) {
+    final projectName = _extractProjectName(context);
+    final assetName = projectName.isEmpty ? 'this project' : projectName;
+    final titleCase = category[0].toUpperCase() + category.substring(1);
+
+    final templates = {
+      'safety':
+          '$titleCase Plan for $assetName: All site personnel must complete pre-mobilization safety inductions before access. A site-specific HSE plan will govern PPE requirements, permit-to-work procedures, and emergency response. Daily toolbox talks will reinforce hazards of the day. Incident reporting follows a 24-hour notification protocol with root-cause analysis for any lost-time event. High-risk activities (working at heights, hot work, confined space) require dedicated JSAs and standby rescuers. Safety performance is reviewed weekly by the project manager and tracked against an TRIR target of zero.',
+      'security':
+          '$titleCase Plan for $assetName: Physical site access is restricted to badged personnel and pre-approved visitors; all entry points are logged. Cyber assets follow least-privilege access with quarterly reviews and MFA enforcement. Vendor credentials are time-boxed and revoked on demobilization. Asset protection includes CCTV coverage at critical zones and secure storage for high-value equipment. Personnel security includes background screening for sensitive roles. Security incidents are escalated within 1 hour to the project manager and corporate security team. A weekly security posture review keeps access rosters aligned with active personnel.',
+      'health':
+          '$titleCase Plan for $assetName: Occupational health surveillance covers pre-deployment medicals, periodic screenings, and ergonomic assessments for at-risk roles. Mental wellbeing support includes EAP access and fatigue management protocols that cap consecutive working hours. Heat/cold stress controls adapt to local climate. Health KPIs (lost-time illness, medical treatment cases) are reported monthly. Site hygiene standards govern sanitation, potable water, and rest facilities. A designated Health Officer coordinates with local medical providers and ensures emergency medical response capability on site during active work.',
+      'environment':
+          '$titleCase Plan for $assetName: An Environmental Management Plan aligned with ISO 14001 governs waste segregation, hazardous material handling, and spill response. Energy and water use are tracked monthly against reduction targets. Applicable UN Sustainable Development Goals (SDGs 6, 7, 9, 11, 12, 13) are integrated into procurement and operations decisions. Biodiversity impacts are assessed for any greenfield work. Emissions are tracked and reported per local regulatory requirements. Environmental incidents trigger immediate containment and a 48-hour written report. A quarterly sustainability review tracks progress against SDG-aligned KPIs.',
+      'regulatory':
+          '$titleCase Plan for $assetName: A regulatory compliance matrix lists every applicable law, permit, and license for the project jurisdiction, with owners and renewal dates. Permits are obtained before any regulated activity begins. Statutory reporting (monthly safety, environmental, employment) is submitted on calendar cadence. Internal audits are conducted quarterly and external audits annually. Any regulatory change is reviewed within 10 business days and reflected in the compliance matrix. Non-conformances trigger corrective action plans with target closure dates. The Compliance Officer reports monthly status to the project sponsor.',
+    };
+
+    return templates[category] ??
+        '$titleCase Plan for $assetName: tailored to project scope, location, and applicable regulatory requirements.';
+  }
+
+  String _ssherSdgPrompt(String context) {
+    final escaped = _escape(context);
+    return '''
+Analyze the project context below and identify the UN Sustainable Development Goals (SDGs 1-17) that are most applicable to this project. For each applicable SDG, provide a brief rationale tied to specific aspects of the project scope, location, or impact areas.
+
+Return ONLY valid JSON with this exact structure:
+{
+  "sdgs": [
+    {
+      "goal": "SDG 6",
+      "title": "Clean Water and Sanitation",
+      "rationale": "Brief, specific rationale tied to the project context."
+    }
+  ]
+}
+
+Project context:
+"""
+$escaped
+"""
+''';
+  }
+
+  List<Map<String, String>> _fallbackSdgRecommendations(String context) {
+    final projectName = _extractProjectName(context);
+    final assetName = projectName.isEmpty ? 'This project' : projectName;
+    return [
+      {
+        'goal': 'SDG 8',
+        'title': 'Decent Work and Economic Growth',
+        'rationale':
+            '$assetName supports decent work through safe working conditions, fair labor practices, and local economic participation.',
+      },
+      {
+        'goal': 'SDG 9',
+        'title': 'Industry, Innovation and Infrastructure',
+        'rationale':
+            '$assetName advances resilient infrastructure and sustainable industrialization through modern delivery practices.',
+      },
+      {
+        'goal': 'SDG 12',
+        'title': 'Responsible Consumption and Production',
+        'rationale':
+            'Waste segregation, energy tracking, and sustainable procurement for $assetName align with responsible production goals.',
+      },
+      {
+        'goal': 'SDG 13',
+        'title': 'Climate Action',
+        'rationale':
+            '$assetName tracks emissions and integrates climate considerations into environmental planning.',
+      },
+    ];
   }
 
   Map<String, dynamic>? _decodeJsonSafely(String content) {

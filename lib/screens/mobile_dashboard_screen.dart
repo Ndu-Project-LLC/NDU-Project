@@ -125,7 +125,7 @@ class MobileDashboardScreen extends StatelessWidget {
  label: 'Projects',
  value: '$projectCount',
  caption: 'Active workspaces',
- color: Colors.blue.shade600,
+ color: const Color(0xFFB45309),
  icon: Icons.folder_open_rounded,
  ),
  _MobileStatusCard(

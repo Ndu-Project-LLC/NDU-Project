@@ -233,7 +233,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
       trailing: _CompactInfoChip(
         label:
             '${snapshot.reviewStages.where((stage) => stage.isComplete).length}/${snapshot.reviewStages.length} gates touched',
-        color: const Color(0xFF2563EB),
+        color: const Color(0xFFD97706),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -790,7 +790,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: entry.locked
                             ? Colors.white.withOpacity(0.08)
-                            : const Color(0xFFEFF6FF),
+                            : const Color(0xFFFFF7E6),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -800,7 +800,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                         size: 18,
                         color: entry.locked
                             ? Colors.white
-                            : const Color(0xFF2563EB),
+                            : const Color(0xFFD97706),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -961,13 +961,13 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                        color: const Color(0xFFFFF7E6),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         Icons.gavel_outlined,
                         size: 18,
-                        color: Color(0xFF2563EB),
+                        color: Color(0xFFD97706),
                       ),
                     ),
                     const SizedBox(width: 12),

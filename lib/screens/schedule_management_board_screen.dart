@@ -45,7 +45,7 @@ class _ScheduleManagementBoardScreenState extends State<ScheduleManagementBoardS
  _ScheduleColumnData(
  title: 'In Progress',
  count: 3,
- background: Color(0xFFEFF6FF),
+ background: Color(0xFFFFF7E6),
  cards: [
  _ScheduleCardData(
  title: 'Foundation Systems',
@@ -379,7 +379,7 @@ class _WorkBreakdownStructure extends StatelessWidget {
  ),
  const SizedBox(height: 24),
  _LegendList(items: const [
- _LegendItem(label: 'Project Cost', color: Color(0xFF2563EB)),
+ _LegendItem(label: 'Project Cost', color: Color(0xFFD97706)),
  _LegendItem(label: 'Schedule Drift', color: Color(0xFFF59E0B)),
  _LegendItem(label: 'Critical Path Impact', color: Color(0xFFFF5A5F)),
  _LegendItem(label: 'Team Utilization', color: Color(0xFF16A34A)),
@@ -399,7 +399,7 @@ class _WorkBreakdownStructure extends StatelessWidget {
  children: const [
  _WbsLane(
  badgeLabel: 'Infrastructure Development',
- badgeColor: Color(0xFF2563EB),
+ badgeColor: Color(0xFFD97706),
  entries: [
  _WbsEntry(title: 'Unassigned Deliverables', subtitle: 'Filter to discipline', statusLabel: 'Unassigned'),
  _WbsEntry(title: 'Safety & Health Risk Assessment', subtitle: 'SSHER', statusLabel: 'Unassigned'),
@@ -772,7 +772,7 @@ class _BoardFooter extends StatelessWidget {
  Widget build(BuildContext context) {
  final legendItems = const [
  _LegendItem(label: 'Completed', color: Color(0xFF16A34A)),
- _LegendItem(label: 'In Progress', color: Color(0xFF2563EB)),
+ _LegendItem(label: 'In Progress', color: Color(0xFFD97706)),
  _LegendItem(label: 'Pending', color: Color(0xFFF59E0B)),
  _LegendItem(label: 'Critical Path', color: Color(0xFFFF5A5F)),
  ];
@@ -858,13 +858,13 @@ class _StatusPill extends StatelessWidget {
  case 'pending':
  case 'progress':
  case 'in progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'design':
  return const Color(0xFF9333EA);
  case 'quality':
  return const Color(0xFF0EA5E9);
  case 'technology':
- return const Color(0xFF1D4ED8);
+ return const Color(0xFFD97706);
  case 'completed':
  return AppSemanticColors.success;
  case 'unassigned':

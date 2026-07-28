@@ -77,7 +77,7 @@ void buildNduProject(App app) {
   // THEME — Matches theme.dart exactly
   // ═══════════════════════════════════════════════════════════════════════
   app.themeColor('primary', 0xFFFFC812);           // Brand yellow
-  app.themeColor('secondary', 0xFF2563EB);         // Info blue
+  app.themeColor('secondary', 0xFFD97706);         // Info blue
   app.themeColor('tertiary', 0xFF16A34A);          // Success green
   app.themeColor('primaryBackground', 0xFFF7FAFC); // Light surface
   app.themeColor('secondaryBackground', 0xFFFFFFFF); // White cards

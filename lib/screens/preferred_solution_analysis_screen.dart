@@ -692,7 +692,7 @@ class _PreferredSolutionAnalysisScreenState
               width: 40,
               height: 40,
               decoration: const BoxDecoration(
-                  color: Colors.blue, shape: BoxShape.circle),
+                  color: const Color(0xFFD97706), shape: BoxShape.circle),
               child: const Icon(Icons.person, color: Colors.white, size: 20)),
           if (!isMobile) ...[
             const SizedBox(width: 12),
@@ -3564,7 +3564,7 @@ class _PreferredSolutionAnalysisScreenState
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF2563EB),
+                        color: Color(0xFFD97706),
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -3573,7 +3573,7 @@ class _PreferredSolutionAnalysisScreenState
                           ? Icons.keyboard_arrow_up
                           : Icons.keyboard_arrow_down,
                       size: 14,
-                      color: const Color(0xFF2563EB),
+                      color: const Color(0xFFD97706),
                     ),
                   ],
                 ),
@@ -6783,21 +6783,21 @@ class _PreferredSolutionDetailsScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: const Color(0xFFFFF7E6),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.blue.shade200),
+                    border: Border.all(color: const Color(0xFFFCD34D)),
                   ),
                   child: Row(
                     children: [
                       Icon(Icons.attach_money,
-                          size: 16, color: Colors.blue.shade700),
+                          size: 16, color: const Color(0xFF92400E)),
                       const SizedBox(width: 6),
                       Text(
                         'Currency: $currency',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: Colors.blue.shade700,
+                          color: const Color(0xFF92400E),
                         ),
                       ),
                     ],
@@ -7059,7 +7059,7 @@ class _PreferredSolutionDetailsScreenState
               _buildStatChip(Icons.warning_amber, '$_riskCount Risks',
                   _riskCount > 0 ? const Color(0xFFEF4444) : Colors.grey),
               _buildStatChip(Icons.computer, '$_techCount Technologies',
-                  _techCount > 0 ? const Color(0xFF3B82F6) : Colors.grey),
+                  _techCount > 0 ? const Color(0xFFFBBF24) : Colors.grey),
               _buildStatChip(Icons.construction, '$_infraCount Infrastructure',
                   _infraCount > 0 ? const Color(0xFF8B5CF6) : Colors.grey),
               _buildStatChip(
@@ -7160,7 +7160,7 @@ class _PreferredSolutionDetailsScreenState
     if (analysis.technologies.isEmpty &&
         (analysis.itConsiderationText?.isEmpty ?? true)) {
       return _buildEmptyState(
-          'No IT considerations recorded', Icons.computer, Colors.blue);
+          'No IT considerations recorded', Icons.computer, const Color(0xFFD97706));
     }
 
     return Column(
@@ -7187,7 +7187,7 @@ class _PreferredSolutionDetailsScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                        color: const Color(0xFFFFF7E6),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: const Color(0xFFBFDBFE)),
                       ),
@@ -7195,7 +7195,7 @@ class _PreferredSolutionDetailsScreenState
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.code,
-                              size: 14, color: Color(0xFF3B82F6)),
+                              size: 14, color: Color(0xFFFBBF24)),
                           const SizedBox(width: 6),
                           Text(
                             tech,
@@ -7470,7 +7470,7 @@ class _PreferredSolutionDetailsScreenState
                     // IT Considerations
                     _buildSectionCard(
                       icon: Icons.computer,
-                      iconColor: const Color(0xFF3B82F6),
+                      iconColor: const Color(0xFFFBBF24),
                       title: 'IT Considerations',
                       subtitle: analysis.technologies.isEmpty
                           ? 'No data'
@@ -7519,7 +7519,7 @@ class _PreferredSolutionDetailsScreenState
                               style: const TextStyle(fontSize: 14, height: 1.6),
                             )
                           : _buildEmptyState('No scope statement provided',
-                              Icons.description, Colors.indigo),
+                              Icons.description, const Color(0xFFD97706)),
                     ),
 
                     const SizedBox(height: 100), // Space for bottom buttons

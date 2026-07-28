@@ -26,6 +26,7 @@ import '../utils/navigation_route_resolver.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/dashboard_stat_card.dart';
 import '../widgets/kaz_ai_chat_bubble.dart';
+import '../widgets/delete_confirmation_dialog.dart';
 import 'initiation_phase_screen.dart';
 import 'portfolio_dashboard_screen.dart';
 import 'program_dashboard_screen.dart';
@@ -82,8 +83,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  if (user == null) return;
  final completed = await ProfileOnboardingService.hasCompleted();
  if (!completed && mounted) {
- // Show as a modal dialog overlay instead of navigating away.
- ProfileOnboardingScreen.show(context);
+ // Show as a modal dialog overlay. After the dialog closes,
+ // navigate to the pricing page so the user can choose a plan.
+ await ProfileOnboardingScreen.show(context);
+ if (!mounted) return;
+ context.go('/${AppRoutes.pricing}');
  }
  } catch (e) {
  // Don't block the dashboard on a Firestore read failure — just log.
@@ -912,7 +916,7 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
  ElevatedButton(
  onPressed: widget.onAddProject,
  style: ElevatedButton.styleFrom(
- backgroundColor: Colors.blue.shade600,
+ backgroundColor: const Color(0xFFB45309),
  foregroundColor: Colors.white,
  elevation: 2,
  shadowColor: Colors.black.withOpacity(0.1),
@@ -1053,20 +1057,23 @@ class _StatusStrip extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  final user = FirebaseAuth.instance.currentUser;
- void openProjectDashboard() {
+ void openWorkspaceDashboard({required bool isBasicPlan}) {
  Navigator.push(
  context,
  MaterialPageRoute(
-     builder: (_) => const ProjectWorkspaceDashboardScreen(isBasicPlan: false)),
+ builder: (_) => ProjectWorkspaceDashboardScreen(
+ isBasicPlan: isBasicPlan,
+ ),
+ ),
  );
  }
 
+ void openProjectDashboard() {
+ openWorkspaceDashboard(isBasicPlan: false);
+ }
+
  void openBasicDashboard() {
- Navigator.push(
- context,
- MaterialPageRoute(
-     builder: (_) => const ProjectWorkspaceDashboardScreen(isBasicPlan: true)),
- );
+ openWorkspaceDashboard(isBasicPlan: true);
  }
 
  void openProgramDashboard() {
@@ -1101,7 +1108,7 @@ class _StatusStrip extends StatelessWidget {
  value: '—',
  subLabel: 'Sign in to view',
  icon: Icons.folder_open_rounded,
- color: Colors.blue.shade600,
+ color: const Color(0xFFB45309),
  onTap: openProjectDashboard,
  ),
  DashboardStatCard(
@@ -1163,7 +1170,7 @@ class _StatusStrip extends StatelessWidget {
  value: '$projectCount',
  subLabel: 'Active workspaces',
  icon: Icons.folder_open_rounded,
- color: Colors.blue.shade600,
+ color: const Color(0xFFB45309),
  onTap: openProjectDashboard,
  ),
  DashboardStatCard(
@@ -2654,8 +2661,8 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (normalized.contains('planning')) return const Color(0xFFFFF1CC);
  if (normalized.contains('front end')) return const Color(0xFFFFF8E1);
  if (normalized.contains('design')) return const Color(0xFFE8E6FF);
- if (normalized.contains('launch')) return const Color(0xFFE0F2FE);
- if (normalized.contains('close')) return const Color(0xFFEFF6FF);
+ if (normalized.contains('launch')) return const Color(0xFFFFF7E6);
+ if (normalized.contains('close')) return const Color(0xFFFFF7E6);
  if (normalized.contains('completed')) return const Color(0xFFE8F0FF);
  if (normalized.contains('initiation') || normalized.contains('idea')) {
  return const Color(0xFFF3F4F8);
@@ -2670,8 +2677,8 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (normalized.contains('front end')) return const Color(0xFF9A6700);
  if (normalized.contains('design')) return const Color(0xFF5941C6);
  if (normalized.contains('launch')) return const Color(0xFF075985);
- if (normalized.contains('close')) return const Color(0xFF1D4ED8);
- if (normalized.contains('completed')) return const Color(0xFF1D4ED8);
+ if (normalized.contains('close')) return const Color(0xFFD97706);
+ if (normalized.contains('completed')) return const Color(0xFFD97706);
  if (normalized.contains('initiation') || normalized.contains('idea')) {
  return const Color(0xFF4A4D57);
  }
@@ -3132,67 +3139,15 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  }
  }
 
- Future<void> _deleteProject(BuildContext context) async {
- final confirmed = await showDialog<bool>(
- context: context,
- builder: (dialogContext) {
- return AlertDialog(
- shape:
- RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
- title: Row(
- children: [
- Container(
- padding: const EdgeInsets.all(8),
- decoration: BoxDecoration(
- color: Colors.red.shade50,
- borderRadius: BorderRadius.circular(10),
- ),
- child: Icon(Icons.warning_amber_rounded,
- color: Colors.red.shade700, size: 24),
- ),
- const SizedBox(width: 12),
- const Text('Delete Project?'),
- ],
- ),
- content: Column(
- mainAxisSize: MainAxisSize.min,
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Are you sure you want to delete "${project.name}"?',
- style:
- const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
- ),
- const SizedBox(height: 12),
- Text(
- 'This action cannot be undone. All project data will be permanently removed.',
- style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
- ),
- ],
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(false),
- child: const Text('Cancel'),
- ),
- ElevatedButton(
- onPressed: () => Navigator.of(dialogContext).pop(true),
- style: ElevatedButton.styleFrom(
- backgroundColor: Colors.red,
- foregroundColor: Colors.white,
- padding:
- const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- ),
- child: const Text('Delete'),
- ),
- ],
- );
- },
- );
-
- if (confirmed != true || !context.mounted) return;
+  Future<void> _deleteProject(BuildContext context) async {
+  final confirmed = await showDeleteConfirmationDialog(
+  context,
+  title: 'Delete Project',
+  itemLabel: project.name,
+  message: 'This action cannot be undone. All project data will be permanently removed.',
+  confirmLabel: 'Delete Project',
+  );
+  if (!confirmed || !context.mounted) return;
 
  // Show loading indicator
  showDialog(
@@ -4027,7 +3982,7 @@ class _DesktopPremiumGreeting extends StatelessWidget {
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
  color: isBasicPlan
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF7E6)
  : const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(8),
  border: Border.all(
@@ -4044,7 +3999,7 @@ class _DesktopPremiumGreeting extends StatelessWidget {
  isBasicPlan ? Icons.star_outline : Icons.workspace_premium_outlined,
  size: 14,
  color: isBasicPlan
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFD97706)
  : const Color(0xFFF59E0B),
  ),
  const SizedBox(width: 4),
@@ -4055,7 +4010,7 @@ class _DesktopPremiumGreeting extends StatelessWidget {
  fontWeight: FontWeight.w700,
  letterSpacing: 0.04,
  color: isBasicPlan
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFD97706)
  : const Color(0xFFB45309),
  ),
  ),

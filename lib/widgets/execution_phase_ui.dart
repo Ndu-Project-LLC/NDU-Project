@@ -301,7 +301,7 @@ class ExecutionMetricData {
     required this.value,
     required this.icon,
     this.helper,
-    this.emphasisColor = const Color(0xFF2563EB),
+    this.emphasisColor = const Color(0xFFD97706),
   });
 
   final String label;
@@ -897,9 +897,9 @@ class _StatusPalette {
         normalized.contains('scheduled') ||
         normalized.contains('aligned')) {
       return const _StatusPalette(
-        Color(0xFFEFF6FF),
+        Color(0xFFFFF7E6),
         Color(0xFFBFDBFE),
-        Color(0xFF1D4ED8),
+        Color(0xFFD97706),
       );
     }
 

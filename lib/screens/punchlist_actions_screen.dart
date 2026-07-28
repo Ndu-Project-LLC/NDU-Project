@@ -447,7 +447,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildInsightListCard(
  title: 'Punchlist insights & prioritisation',
  leadBadge: 'Focus',
- badgeColor: const Color(0xFF2563EB),
+ badgeColor: const Color(0xFFD97706),
  items: _priorityItems,
  footerButtonLabel: 'Send next-step briefings',
  ),
@@ -692,7 +692,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  value: 0.62,
  strokeWidth: 12,
  backgroundColor: Color(0xFFE2E8F0),
- valueColor: AlwaysStoppedAnimation(Color(0xFF2563EB)),
+ valueColor: AlwaysStoppedAnimation(Color(0xFFD97706)),
  ),
  ),
  Column(
@@ -703,7 +703,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: TextStyle(
  fontSize: 24,
  fontWeight: FontWeight.w800,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFD97706),
  ),
  ),
  SizedBox(height: 4),
@@ -726,10 +726,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  crossAxisAlignment: CrossAxisAlignment.start,
  children: const [
  _LegendRow(
- label: 'Closed', color: Color(0xFF2563EB), value: '112'),
+ label: 'Closed', color: Color(0xFFD97706), value: '112'),
  SizedBox(height: 10),
  _LegendRow(
- label: 'In review', color: Color(0xFF60A5FA), value: '34'),
+ label: 'In review', color: Color(0xFFFBBF24), value: '34'),
  SizedBox(height: 10),
  _LegendRow(
  label: 'Field fix pending',
@@ -773,7 +773,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 20),
  _summaryMetric(label: 'Closed', value: '$grandClosed', color: const Color(0xFF22C55E)),
  const SizedBox(width: 20),
- _summaryMetric(label: 'Completion', value: '${grandPct.toStringAsFixed(1)}%', color: const Color(0xFF2563EB)),
+ _summaryMetric(label: 'Completion', value: '${grandPct.toStringAsFixed(1)}%', color: const Color(0xFFD97706)),
  const Spacer(),
  FilledButton.icon(
  onPressed: () => _showDistributionDialog(context),
@@ -782,7 +782,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: FilledButton.styleFrom(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFD97706),
  ),
  ),
  ],
@@ -830,7 +830,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  DataCell(Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- Container(width: 10, height: 10, decoration: const BoxDecoration(color: Color(0xFF3B82F6), shape: BoxShape.circle)),
+ Container(width: 10, height: 10, decoration: const BoxDecoration(color: Color(0xFFFBBF24), shape: BoxShape.circle)),
  const SizedBox(width: 8),
  Text(row.category, style: const TextStyle(fontWeight: FontWeight.w700)),
  ],
@@ -843,8 +843,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  DataCell(_numberCell('${row.closed}', const Color(0xFF22C55E))),
  DataCell(Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
- decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(8)),
- child: Text('${row.total}', style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF1D4ED8))),
+ decoration: BoxDecoration(color: const Color(0xFFFFF7E6), borderRadius: BorderRadius.circular(8)),
+ child: Text('${row.total}', style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFD97706))),
  )),
  DataCell(Row(
  mainAxisSize: MainAxisSize.min,
@@ -857,7 +857,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  value: pct / 100,
  backgroundColor: const Color(0xFFE5E7EB),
  valueColor: AlwaysStoppedAnimation(
- pct >= 70 ? const Color(0xFF22C55E) : pct >= 40 ? const Color(0xFF2563EB) : const Color(0xFFEF4444),
+ pct >= 70 ? const Color(0xFF22C55E) : pct >= 40 ? const Color(0xFFD97706) : const Color(0xFFEF4444),
  ),
  minHeight: 4,
  ),
@@ -866,7 +866,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 4),
  Text('${pct.toStringAsFixed(0)}%', style: TextStyle(
  fontWeight: FontWeight.w700, fontSize: 12,
- color: pct >= 70 ? const Color(0xFF16A34A) : pct >= 40 ? const Color(0xFF2563EB) : const Color(0xFFDC2626),
+ color: pct >= 70 ? const Color(0xFF16A34A) : pct >= 40 ? const Color(0xFFD97706) : const Color(0xFFDC2626),
  )),
  ],
  )),
@@ -876,7 +876,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  DataCell(Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- IconButton(icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF3B82F6)), onPressed: () => _showDistributionDialog(context, editIndex: idx), splashRadius: 18, tooltip: 'Edit'),
+ IconButton(icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFFFBBF24)), onPressed: () => _showDistributionDialog(context, editIndex: idx), splashRadius: 18, tooltip: 'Edit'),
  IconButton(icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)), onPressed: () => _deleteDistributionRow(idx), splashRadius: 18, tooltip: 'Delete'),
  IconButton(
    onPressed: () {
@@ -948,7 +948,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 20),
  _summaryMetric(label: 'Closed Sprint', value: '$totalClosed', color: const Color(0xFF22C55E)),
  const SizedBox(width: 20),
- _summaryMetric(label: 'Avg Velocity', value: '${avgVelocity.toStringAsFixed(0)}%', color: const Color(0xFF2563EB)),
+ _summaryMetric(label: 'Avg Velocity', value: '${avgVelocity.toStringAsFixed(0)}%', color: const Color(0xFFD97706)),
  const SizedBox(width: 20),
  _summaryMetric(label: 'Avg Cycle Time', value: '${avgCycle.toStringAsFixed(1)}d', color: const Color(0xFF7C3AED)),
  const Spacer(),
@@ -959,7 +959,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: FilledButton.styleFrom(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFD97706),
  ),
  ),
  ],
@@ -1023,7 +1023,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  value: row.velocity / 100,
  backgroundColor: const Color(0xFFE5E7EB),
  valueColor: AlwaysStoppedAnimation(
- row.velocity >= 60 ? const Color(0xFF2563EB) : row.velocity >= 40 ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
+ row.velocity >= 60 ? const Color(0xFFD97706) : row.velocity >= 40 ? const Color(0xFFF59E0B) : const Color(0xFFEF4444),
  ),
  minHeight: 8,
  ),
@@ -1033,7 +1033,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Text('${row.velocity}%', style: TextStyle(
  fontWeight: FontWeight.w700,
  fontFeatures: const [FontFeature.tabularFigures()],
- color: row.velocity >= 60 ? const Color(0xFF2563EB) : row.velocity >= 40 ? const Color(0xFFD97706) : const Color(0xFFDC2626),
+ color: row.velocity >= 60 ? const Color(0xFFD97706) : row.velocity >= 40 ? const Color(0xFFD97706) : const Color(0xFFDC2626),
  )),
  ],
  )),
@@ -1071,7 +1071,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  DataCell(Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- IconButton(icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF3B82F6)), onPressed: () => _showVelocityDialog(context, editIndex: idx), splashRadius: 18, tooltip: 'Edit'),
+ IconButton(icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFFFBBF24)), onPressed: () => _showVelocityDialog(context, editIndex: idx), splashRadius: 18, tooltip: 'Edit'),
  IconButton(icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)), onPressed: () => _deleteVelocityRow(idx), splashRadius: 18, tooltip: 'Delete'),
  IconButton(
    onPressed: () {
@@ -1132,7 +1132,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _summaryMetric(label: 'Planned FTE', value: totalPlanned.toStringAsFixed(1), color: const Color(0xFF7C3AED)),
  _summaryMetric(label: 'Allocated FTE', value: totalAllocated.toStringAsFixed(1), color: const Color(0xFF1E293B)),
  _summaryMetric(label: 'Available FTE', value: totalAvailable.toStringAsFixed(1), color: const Color(0xFF22C55E)),
- _summaryMetric(label: 'Avg Utilization', value: '${avgUtilization.toStringAsFixed(0)}%', color: const Color(0xFF2563EB)),
+ _summaryMetric(label: 'Avg Utilization', value: '${avgUtilization.toStringAsFixed(0)}%', color: const Color(0xFFD97706)),
  _summaryMetric(label: 'Avg Productivity', value: '${avgProductivity.toStringAsFixed(0)}%', color: const Color(0xFF0EA5E9)),
  _summaryMetric(label: 'Total OT Hrs', value: '$totalOvertime', color: const Color(0xFFF59E0B)),
  _summaryMetric(label: 'High Risk', value: '$highRiskCount', color: const Color(0xFFEF4444)),
@@ -1144,7 +1144,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: FilledButton.styleFrom(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFD97706),
  ),
  ),
  ],
@@ -1293,7 +1293,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  DataCell(Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- IconButton(icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF3B82F6)), onPressed: () => _showCapacityHealthDialog(context, editIndex: idx), splashRadius: 18, tooltip: 'Edit'),
+ IconButton(icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFFFBBF24)), onPressed: () => _showCapacityHealthDialog(context, editIndex: idx), splashRadius: 18, tooltip: 'Edit'),
  IconButton(icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)), onPressed: () => _deleteCapacityHealthRow(idx), splashRadius: 18, tooltip: 'Delete'),
  IconButton(
    onPressed: () {
@@ -1352,7 +1352,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  _summaryMetric(label: 'Required', value: '$totalRequired', color: const Color(0xFF1E293B)),
  _summaryMetric(label: 'Actual', value: '$totalActual', color: const Color(0xFF22C55E)),
- _summaryMetric(label: 'Avg Coverage', value: '${avgCoverage.toStringAsFixed(0)}%', color: const Color(0xFF2563EB)),
+ _summaryMetric(label: 'Avg Coverage', value: '${avgCoverage.toStringAsFixed(0)}%', color: const Color(0xFFD97706)),
  _summaryMetric(label: 'Total Gap', value: '$totalGap', color: const Color(0xFFEF4444)),
  _summaryMetric(label: 'Absences', value: '$totalAbsences', color: const Color(0xFFF59E0B)),
  _summaryMetric(label: 'Agency Staff', value: '$totalAgency', color: const Color(0xFF7C3AED)),
@@ -1366,7 +1366,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: FilledButton.styleFrom(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFD97706),
  ),
  ),
  ],
@@ -1489,7 +1489,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  DataCell(Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- IconButton(icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF3B82F6)), onPressed: () => _showShiftCoverageDialog(context, editIndex: idx), splashRadius: 18, tooltip: 'Edit'),
+ IconButton(icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFFFBBF24)), onPressed: () => _showShiftCoverageDialog(context, editIndex: idx), splashRadius: 18, tooltip: 'Edit'),
  IconButton(icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)), onPressed: () => _deleteShiftCoverageRow(idx), splashRadius: 18, tooltip: 'Delete'),
  IconButton(
    onPressed: () {
@@ -1592,7 +1592,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  bg = const Color(0xFFF0FDF4); fg = const Color(0xFF16A34A); break;
  case 'improving':
  case 'stable':
- bg = const Color(0xFFEFF6FF); fg = const Color(0xFF2563EB); break;
+ bg = const Color(0xFFFFF7E6); fg = const Color(0xFFD97706); break;
  case 'at risk':
  bg = const Color(0xFFFEF2F2); fg = const Color(0xFFDC2626); break;
  case 'under review':
@@ -1635,7 +1635,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  case 'full':
  bg = const Color(0xFFF0FDF4); fg = const Color(0xFF16A34A); break;
  case 'covered':
- bg = const Color(0xFFEFF6FF); fg = const Color(0xFF2563EB); break;
+ bg = const Color(0xFFFFF7E6); fg = const Color(0xFFD97706); break;
  case 'understaffed':
  bg = const Color(0xFFFEF2F2); fg = const Color(0xFFDC2626); break;
  case 'partial':
@@ -1677,7 +1677,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  case 'none':
  bg = const Color(0xFFF0FDF4); fg = const Color(0xFF16A34A); break;
  case 'low':
- bg = const Color(0xFFEFF6FF); fg = const Color(0xFF2563EB); break;
+ bg = const Color(0xFFFFF7E6); fg = const Color(0xFFD97706); break;
  case 'medium':
  bg = const Color(0xFFFFFBEB); fg = const Color(0xFFD97706); break;
  case 'high':
@@ -2316,7 +2316,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  label: Text(footerButtonLabel),
  style: TextButton.styleFrom(
  padding: EdgeInsets.zero,
- foregroundColor: const Color(0xFF2563EB),
+ foregroundColor: const Color(0xFFD97706),
  textStyle: const TextStyle(fontWeight: FontWeight.w700),
  ),
  ),
@@ -2496,7 +2496,7 @@ extension on _PunchlistSeverity {
  case _PunchlistSeverity.medium:
  return const Color(0xFFFBBF24);
  case _PunchlistSeverity.high:
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case _PunchlistSeverity.critical:
  return const Color(0xFFEF4444);
  }

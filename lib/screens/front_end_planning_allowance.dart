@@ -203,7 +203,7 @@ class _FrontEndPlanningAllowanceScreenState
  ],
  ),
  duration: Duration(seconds: 5),
- backgroundColor: Color(0xFF2563EB),
+ backgroundColor: Color(0xFFD97706),
  behavior: SnackBarBehavior.floating,
  ),
  );
@@ -423,7 +423,7 @@ class _FrontEndPlanningAllowanceScreenState
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(12),
- borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 1.2),
+ borderSide: const BorderSide(color: Color(0xFFFBBF24), width: 1.2),
  ),
  );
  }
@@ -692,7 +692,7 @@ class _FrontEndPlanningAllowanceScreenState
  'Cancel',
  style: TextStyle(
  fontWeight: FontWeight.w600,
- color: Color(0xFF2563EB),
+ color: Color(0xFFD97706),
  ),
  ),
  ),
@@ -850,11 +850,11 @@ class _FrontEndPlanningAllowanceScreenState
  Container(
  padding: const EdgeInsets.all(10),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF7E6),
  borderRadius: BorderRadius.circular(8),
  ),
  child: const Icon(Icons.monetization_on_outlined,
- color: Color(0xFF2563EB), size: 24),
+ color: Color(0xFFD97706), size: 24),
  ),
  const SizedBox(width: 16),
  Expanded(
@@ -932,7 +932,7 @@ class _FrontEndPlanningAllowanceScreenState
  _detailChip(
  icon: Icons.engineering_outlined,
  label: item.responsibleDiscipline,
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFD97706),
  ),
  if (item.triggerContext.isNotEmpty)
  _detailChip(
@@ -1184,7 +1184,7 @@ class _FrontEndPlanningAllowanceScreenState
  width: double.infinity,
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF7E6),
  borderRadius: BorderRadius.circular(12),
  border: Border.all(
  color: const Color(0xFFBFDBFE)),
@@ -1381,17 +1381,17 @@ class _ApplyChip extends StatelessWidget {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: isActive ? const Color(0xFFEFF6FF) : Colors.white,
+ color: isActive ? const Color(0xFFFFF7E6) : Colors.white,
  borderRadius: BorderRadius.circular(16),
  border: Border.all(
- color: isActive ? const Color(0xFF3B82F6) : const Color(0xFFD1D5DB),
+ color: isActive ? const Color(0xFFFBBF24) : const Color(0xFFD1D5DB),
  ),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
  if (isActive) ...[
- const Icon(Icons.check, size: 12, color: Color(0xFF3B82F6)),
+ const Icon(Icons.check, size: 12, color: Color(0xFFFBBF24)),
  const SizedBox(width: 4),
  ],
  Text(
@@ -1492,12 +1492,12 @@ class _BottomOverlayState extends State<_BottomOverlay> {
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ const Icon(Icons.auto_awesome, color: Color(0xFFD97706)),
  const SizedBox(width: 10),
  const Text('AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB))),
+ color: Color(0xFFD97706))),
  const SizedBox(width: 12),
  const Text(
  'Define budget allowances and contingency plans.',

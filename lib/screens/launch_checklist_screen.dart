@@ -629,7 +629,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  label: 'Checklist Items',
  value: '${_checklistItems.length}',
  icon: Icons.checklist_rounded,
- emphasisColor: const Color(0xFF2563EB),
+ emphasisColor: const Color(0xFFD97706),
  ),
  ExecutionMetricData(
  label: 'Approvals Done',

@@ -23,6 +23,7 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
   String? _activeAction;
   bool _loading = false;
   List<Map<String, dynamic>> _suggestions = [];
+  final Set<int> _selectedIndices = {};
   String _disclaimer = '';
   bool _usedFallback = false;
 
@@ -31,14 +32,27 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
   final _siteContextCtrl = TextEditingController();
 
   final _actions = [
-    ('suggest', 'Suggest WBS split', Icons.auto_awesome,
-        'Full Level 1 + Level 2 from global/regional/local projects',
-        LightModeColors.accent),
-    ('expand', 'Expand a node', Icons.search,
-        'Level 2 children for a selected Level 1 node',
-        const Color(0xFF3B82F6)),
-    ('validate', 'Validate WBS', Icons.shield,
-        'Review against best practices', const Color(0xFF8B5CF6)),
+    (
+      'suggest',
+      'Suggest WBS split',
+      Icons.auto_awesome,
+      'Full Level 1 + Level 2 from global/regional/local projects',
+      LightModeColors.accent
+    ),
+    (
+      'expand',
+      'Expand a node',
+      Icons.search,
+      'Level 2 children for a selected Level 1 node',
+      const Color(0xFFFBBF24)
+    ),
+    (
+      'validate',
+      'Validate WBS',
+      Icons.shield,
+      'Review against best practices',
+      const Color(0xFF8B5CF6)
+    ),
   ];
 
   @override
@@ -54,7 +68,8 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
     if (wbs == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('WBS not initialized yet. Please try again.')),
+          const SnackBar(
+              content: Text('WBS not initialized yet. Please try again.')),
         );
       }
       return;
@@ -99,9 +114,8 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
         industry: _industryCtrl.text.trim().isEmpty
             ? null
             : _industryCtrl.text.trim(),
-        region: _regionCtrl.text.trim().isEmpty
-            ? null
-            : _regionCtrl.text.trim(),
+        region:
+            _regionCtrl.text.trim().isEmpty ? null : _regionCtrl.text.trim(),
         siteContext: _siteContextCtrl.text.trim().isEmpty
             ? null
             : _siteContextCtrl.text.trim(),
@@ -110,7 +124,8 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
 
       setState(() {
         _suggestions =
-            (result['suggestions'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+            (result['suggestions'] as List?)?.cast<Map<String, dynamic>>() ??
+                [];
         _disclaimer = result['disclaimer'] ?? '';
         _usedFallback = result['usedFallback'] ?? false;
         _loading = false;
@@ -131,7 +146,8 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Maximum 3 top-level WBS items. Remove one first to add another.'),
+            content: Text(
+                'Maximum 3 top-level WBS items. Remove one first to add another.'),
             backgroundColor: Color(0xFFEF4444),
           ),
         );
@@ -201,6 +217,79 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
     });
   }
 
+  void _applySelectedSuggestions() {
+    final provider = context.read<WBSProvider>();
+    final wbs = provider.wbs;
+    if (wbs == null) return;
+
+    final selected = _selectedIndices.toList()..sort((a, b) => b - a);
+    for (final idx in selected) {
+      if (idx < _suggestions.length) {
+        final s = _suggestions[idx];
+        if (wbs.level0.children.length >= 3) break;
+        final l1Id = provider.addChildNode(
+          wbs.level0.id,
+          s['name'] as String? ?? '',
+          s['description'] as String?,
+        );
+        if (l1Id.isNotEmpty) {
+          provider.updateNode(
+            l1Id,
+            WBSNode(
+              id: l1Id,
+              level: WBSLevel.level1,
+              code: '',
+              name: s['name'] as String? ?? '',
+              description: s['description'] as String?,
+              aiGenerated: true,
+              aiSource: s['aiSource'] != null
+                  ? AISource.values.byName(s['aiSource'] as String)
+                  : null,
+              aiConfidence: s['aiConfidence'] != null
+                  ? AIConfidence.values.byName(s['aiConfidence'] as String)
+                  : null,
+              aiReference: s['aiReference'] as String?,
+              children: const [],
+            ),
+          );
+          final children = s['children'] as List?;
+          if (children != null) {
+            for (final child in children) {
+              final c = child as Map<String, dynamic>;
+              final l2Id = provider.addChildNode(
+                l1Id,
+                c['name'] as String? ?? '',
+                c['description'] as String?,
+              );
+              if (l2Id.isNotEmpty) {
+                provider.updateNode(
+                  l2Id,
+                  WBSNode(
+                    id: l2Id,
+                    level: WBSLevel.level2,
+                    code: '',
+                    name: c['name'] as String? ?? '',
+                    description: c['description'] as String?,
+                    aiGenerated: true,
+                    children: const [],
+                  ),
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+    setState(() {
+      for (final idx in selected) {
+        if (idx < _suggestions.length) {
+          _suggestions.removeAt(idx);
+        }
+      }
+      _selectedIndices.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -228,12 +317,12 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                  color: const Color(0xFFFBBF24).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text('KAZ AI',
                     style: TextStyle(
-                        color: Color(0xFF3B82F6),
+                        color: Color(0xFFFBBF24),
                         fontSize: 11,
                         fontWeight: FontWeight.bold)),
               ),
@@ -257,8 +346,7 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                 const Expanded(
                   child: Text(
                     'All AI-generated WBS nodes must be validated by a qualified SME before baseline.',
-                    style: TextStyle(
-                        color: Color(0xFF6B7280), fontSize: 13),
+                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                   ),
                 ),
               ],
@@ -300,21 +388,18 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: _buildTextField(
-                          'Industry', _industryCtrl,
+                      child: _buildTextField('Industry', _industryCtrl,
                           'e.g. Manufacturing, Oil & Gas'),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _buildTextField(
-                          'Region', _regionCtrl,
+                      child: _buildTextField('Region', _regionCtrl,
                           'e.g. East Africa, Southeast Asia'),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                _buildTextField(
-                    'Site-specific context', _siteContextCtrl,
+                _buildTextField('Site-specific context', _siteContextCtrl,
                     'e.g. Greenfield site, existing grid connection...',
                     maxLines: 3),
               ],
@@ -341,9 +426,7 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                               : Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isActive
-                                ? a.$5
-                                : const Color(0xFFE4E7EC),
+                            color: isActive ? a.$5 : const Color(0xFFE4E7EC),
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -367,8 +450,7 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                             Text(a.$4,
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
-                                    color: Color(0xFF6B7280),
-                                    fontSize: 11)),
+                                    color: Color(0xFF6B7280), fontSize: 11)),
                           ],
                         ),
                       ),
@@ -390,8 +472,8 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                         color: LightModeColors.accent),
                     const SizedBox(height: 12),
                     const Text('KAZ AI is analyzing similar projects...',
-                        style: TextStyle(
-                            color: Color(0xFF6B7280), fontSize: 13)),
+                        style:
+                            TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
                   ],
                 ),
               ),
@@ -412,7 +494,10 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                   style: TextStyle(color: Color(0xFF6B7280), fontSize: 11),
                 ),
               ),
-            ..._suggestions.map((s) => _buildSuggestionCard(s)),
+            ..._suggestions
+                .asMap()
+                .entries
+                .map((e) => _buildSuggestionCard(e.key, e.value)),
             if (_disclaimer.isNotEmpty)
               Container(
                 margin: const EdgeInsets.only(top: 12),
@@ -421,8 +506,7 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                   color: LightModeColors.accent.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                      color: LightModeColors.accent
-                          .withValues(alpha: 0.4)),
+                      color: LightModeColors.accent.withValues(alpha: 0.4)),
                 ),
                 child: Text(_disclaimer,
                     style: const TextStyle(
@@ -445,8 +529,7 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                       color: Color(0xFF9CA3AF), size: 32),
                   SizedBox(height: 8),
                   Text('No suggestions returned for this action.',
-                      style:
-                          TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+                      style: TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
                   SizedBox(height: 4),
                   Text('Try refining the project context inputs above.',
                       style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12)),
@@ -497,8 +580,7 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
     );
   }
 
-  Widget _buildTextField(
-      String label, TextEditingController ctrl, String hint,
+  Widget _buildTextField(String label, TextEditingController ctrl, String hint,
       {int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -538,8 +620,9 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
     );
   }
 
-  Widget _buildSuggestionCard(Map<String, dynamic> s) {
-    final children = (s['children'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+  Widget _buildSuggestionCard(int index, Map<String, dynamic> s) {
+    final children =
+        (s['children'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final aiSource = s['aiSource'] as String?;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -562,20 +645,18 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
           // Level 1 node
           Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: LightModeColors.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Center(
-                  child: Text('L1',
-                      style: TextStyle(
-                          color: Color(0xFFD97706),
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold)),
-                ),
+              Checkbox(
+                value: _selectedIndices.contains(index),
+                onChanged: (checked) {
+                  setState(() {
+                    if (checked == true) {
+                      _selectedIndices.add(index);
+                    } else {
+                      _selectedIndices.remove(index);
+                    }
+                  });
+                },
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -597,13 +678,13 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 1),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF3B82F6)
+                              color: const Color(0xFFFBBF24)
                                   .withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(aiSource.toUpperCase(),
                                 style: const TextStyle(
-                                    color: Color(0xFF3B82F6),
+                                    color: Color(0xFFFBBF24),
                                     fontSize: 9,
                                     fontWeight: FontWeight.bold)),
                           ),
@@ -681,17 +762,20 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
               ),
             ),
           ],
-          // Apply button
+          // Apply single button
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              onPressed: () => _applySuggestion(s),
+            child: OutlinedButton.icon(
+              onPressed: () {
+                _applySuggestion(s);
+                setState(() => _selectedIndices.remove(index));
+              },
               icon: const Icon(Icons.add, size: 14),
-              label: const Text('Add to WBS'),
-              style: FilledButton.styleFrom(
-                backgroundColor: LightModeColors.accent,
-                foregroundColor: LightModeColors.lightOnPrimary,
+              label: const Text('Add Single'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: LightModeColors.accent,
+                side: const BorderSide(color: LightModeColors.accent),
               ),
             ),
           ),

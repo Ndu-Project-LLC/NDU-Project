@@ -155,8 +155,6 @@ class _ExecutionPlanDetailsScreenState extends State<ExecutionPlanDetailsScreen>
   onExportPdf: () => _exportPdf(context)),
   const SizedBox(height: 32),
   if (widget.showPlanDetails) ...[
-  const SectionIntro(title: 'Execution Plan Details'),
-  const SizedBox(height: 28),
   ExecutionPlanForm(
   title: 'Execution Plan Details',
   hintText: 'Input your notes here...',
@@ -187,8 +185,6 @@ class _ExecutionPlanDetailsScreenState extends State<ExecutionPlanDetailsScreen>
   const SizedBox(height: 56),
   ],
   if (widget.showEarlyWorks) ...[
-  const SectionIntro(title: 'Execution Early Works'),
-  const SizedBox(height: 24),
   const ExecutionPlanForm(
   title: 'Execution Early Works',
   hintText:

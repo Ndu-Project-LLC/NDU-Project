@@ -55,10 +55,7 @@ class ExecutionPlanInterfaceManagementPlanScreen extends StatelessWidget {
  ExecutionPlanHeader(
  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'execution_plan_interface_management_plan'),
  onNext: () => PlanningPhaseNavigation.goToNext(context, 'execution_plan_interface_management_plan'), onExportPdf: () => _exportInterfaceManagementPlanPdf(context)),
- const SizedBox(height: 32),
- const SectionIntro(
- title: 'Execution Interface Management Plan'),
- const SizedBox(height: 16),
+  const SizedBox(height: 24),
  const CrossReferenceNote(standalonePage: 'Interface Management'),
  const SizedBox(height: 24),
  const ExecutionPlanForm(

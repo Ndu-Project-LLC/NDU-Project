@@ -23,10 +23,10 @@ class PageRegenerateAllButton extends StatelessWidget {
               height: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Color(0xFF2563EB),
+                color: Color(0xFFD97706),
               ),
             )
-          : const Icon(Icons.refresh, size: 20, color: Color(0xFF2563EB)),
+          : const Icon(Icons.refresh, size: 20, color: Color(0xFFD97706)),
       tooltip: tooltip,
       onPressed: isLoading ? null : () => onRegenerateAll(),
       padding: EdgeInsets.zero,

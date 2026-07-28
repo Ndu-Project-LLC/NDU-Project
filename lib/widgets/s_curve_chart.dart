@@ -7,7 +7,7 @@ class SCurveChart extends StatelessWidget {
     required this.startDate,
     required this.endDate,
     this.height = 300,
-    this.plannedColor = const Color(0xFF3B82F6),
+    this.plannedColor = const Color(0xFFFBBF24),
     this.actualColor = const Color(0xFFF59E0B),
   });
 

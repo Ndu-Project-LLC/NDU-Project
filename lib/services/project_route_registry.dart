@@ -13,6 +13,7 @@ import 'package:ndu_project/screens/stakeholder_management_screen.dart';
 import 'package:ndu_project/screens/ssher_stacked_screen.dart';
 import 'package:ndu_project/screens/quality_management_screen.dart';
 import 'package:ndu_project/screens/execution_plan_screen.dart';
+import 'package:ndu_project/screens/execution_quality_tracking_screen.dart';
 import 'package:ndu_project/screens/design_planning_screen.dart';
 import 'package:ndu_project/screens/planning_technology_screen.dart';
 import 'package:ndu_project/screens/interface_management_screen.dart';
@@ -62,6 +63,8 @@ class ProjectRouteRegistry {
     'ssher': () => const SsherStackedScreen(),
     'quality_management': () => const QualityManagementScreen(),
     'execution_plan': () => const ExecutionPlanScreen(),
+    'execution_quality_tracking': () =>
+        const ExecutionQualityTrackingScreen(),
     'design': () => const DesignPlanningScreen(),
     'technology': () => const PlanningTechnologyScreen(),
     'interface_management': () => const InterfaceManagementScreen(),

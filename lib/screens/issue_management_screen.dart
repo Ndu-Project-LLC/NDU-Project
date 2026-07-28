@@ -133,7 +133,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  .length
  .toString(),
  icon: Icons.autorenew,
- color: Colors.blue),
+ color: const Color(0xFFD97706)),
  _IssueMetric(
  label: 'Resolved',
  value: issueItems
@@ -787,8 +787,8 @@ class _IssueLogRow extends StatelessWidget {
  alignment: Alignment.centerLeft,
  child: _StatusPill(
  label: entry.type,
- background: const Color(0xFFEFF6FF),
- foreground: const Color(0xFF2563EB),
+ background: const Color(0xFFFFF7E6),
+ foreground: const Color(0xFFD97706),
  ),
  ),
  ),

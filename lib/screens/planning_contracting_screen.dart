@@ -22,6 +22,7 @@ import 'package:ndu_project/screens/planning_procurement_screen.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBrandYellow = Color(0xFFFFC812);
@@ -2499,7 +2500,7 @@ Color _rfqStatusColor(String s) {
  return const Color(0xFF22C55E);
  }
  if (l.contains('publish') || l.contains('active')) {
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  }
  if (l.contains('evaluat')) return const Color(0xFFF59E0B);
  return const Color(0xFF64748B);
@@ -2839,6 +2840,11 @@ class _EvaluationTabState extends State<_EvaluationTab> {
  title: 'Bid Evaluation Matrix',
  subtitle:
  'Score vendor responses against weighted criteria per contract',
+ child: ResponsiveDataTableWrapper(
+ minWidth: 1320,
+ maxHeight: 620,
+ title: 'Vendor technical, commercial, and risk evaluation',
+ enableFullscreen: true,
  child: Column(
  children: contracts
  .map((c) => _EvaluationContractRow(
@@ -2848,6 +2854,7 @@ class _EvaluationTabState extends State<_EvaluationTab> {
  .toList(),
  ))
  .toList(),
+ ),
  ),
  );
  },

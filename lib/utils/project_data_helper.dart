@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/models/design_phase_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/project_activity.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/services/project_intelligence_service.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
@@ -739,6 +740,36 @@ class ProjectDataHelper {
     wList('Interface Register',
         _formatInterfaceEntriesForContext(data.interfaceEntries));
 
+    // Section-specific context for Interface Management Plan
+    if ((sectionLabel ?? '').trim().toLowerCase().contains('interface management plan')) {
+      w('Stakeholder Management Notes',
+          data.planningNotes['stakeholder_management_plan']);
+      w('Additional Interfaces Identified',
+          data.planningNotes['additional_interfaces']);
+
+      if (data.vendors.isNotEmpty) {
+        final items = data.vendors.map((v) {
+          final name = v.name.trim();
+          final svc = v.equipmentOrService.trim();
+          return svc.isEmpty ? name : '$name ($svc)';
+        }).where((e) => e.isNotEmpty);
+        wList('Vendors & Contractors', items);
+      }
+
+      if (data.contractors.isNotEmpty) {
+        final items = data.contractors.map((c) {
+          final name = c.name.trim();
+          final svc = c.service.trim();
+          return svc.isEmpty ? name : '$name: $svc';
+        }).where((e) => e.isNotEmpty);
+        wList('Contractors', items);
+      }
+
+      final fep = data.frontEndPlanning;
+      w('FEP Contracting', fep.contractVendorQuotes);
+      w('FEP Procurement', fep.procurement);
+    }
+
     if (data.teamMembers.isNotEmpty) {
       final items = data.teamMembers.map((m) {
         final name = m.name.trim();
@@ -975,7 +1006,267 @@ class ProjectDataHelper {
     return success;
   }
 
-  /// Convert legacy goal format to new format
+  // ── Bidirectional Risk Register Sync ──
+  //
+  // Section-specific risks (e.g. Interface Management, SSHER, Design) are
+  // mirrored into the central `frontEndPlanning.riskRegisterItems` list with
+  // a `sourceSection` tag. Updates to either side propagate to the other.
+
+  /// Upserts a risk into the central Risk Register, tagged with its source
+  /// section via `requirementType`. The `category` field is preserved for
+  /// user/discipline classification (e.g. 'Safety', 'Contractual').
+  /// De-duplication matches on `riskName + requirementType` (the sourceSection).
+  static Future<void> upsertRiskToRegister({
+    required BuildContext context,
+    required String sourceSection,
+    required String riskName,
+    String description = '',
+    String category = '',
+    String impactLevel = 'Medium',
+    String likelihood = 'Medium',
+    String mitigationStrategy = '',
+    String discipline = '',
+    String owner = '',
+    String status = 'Open',
+    String checkpoint = 'risk_register_sync',
+  }) async {
+    await updateAndSave(
+      context: context,
+      checkpoint: checkpoint,
+      showSnackbar: false,
+      dataUpdater: (d) {
+        final items = List<RiskRegisterItem>.from(
+            d.frontEndPlanning.riskRegisterItems);
+        final idx = items.indexWhere((r) =>
+            r.riskName.trim().toLowerCase() == riskName.trim().toLowerCase() &&
+            r.requirementType.trim().toLowerCase() ==
+                sourceSection.trim().toLowerCase());
+        if (idx >= 0) {
+          // Update existing — preserve category if caller didn't provide one
+          items[idx] = RiskRegisterItem(
+            riskName: riskName,
+            description: description.isNotEmpty ? description : items[idx].description,
+            category: category.isNotEmpty ? category : items[idx].category,
+            requirement: items[idx].requirement,
+            requirementType: sourceSection,
+            impactLevel: impactLevel,
+            likelihood: likelihood,
+            mitigationStrategy: mitigationStrategy.isNotEmpty
+                ? mitigationStrategy
+                : items[idx].mitigationStrategy,
+            discipline: discipline.isNotEmpty ? discipline : items[idx].discipline,
+            projectRole: items[idx].projectRole,
+            owner: owner.isNotEmpty ? owner : items[idx].owner,
+            status: status,
+            probabilityNumeric: items[idx].probabilityNumeric,
+            costImpactMin: items[idx].costImpactMin,
+            costImpactMostLikely: items[idx].costImpactMostLikely,
+            costImpactMax: items[idx].costImpactMax,
+            scheduleImpactMin: items[idx].scheduleImpactMin,
+            scheduleImpactMostLikely: items[idx].scheduleImpactMostLikely,
+            scheduleImpactMax: items[idx].scheduleImpactMax,
+            controlAccountId: items[idx].controlAccountId,
+            cbsId: items[idx].cbsId,
+            riskType: items[idx].riskType,
+            responseStrategy: items[idx].responseStrategy,
+            residualProbability: items[idx].residualProbability,
+            residualCostImpact: items[idx].residualCostImpact,
+          );
+        } else {
+          items.add(RiskRegisterItem(
+            riskName: riskName,
+            description: description,
+            category: category.isNotEmpty ? category : sourceSection,
+            requirementType: sourceSection,
+            impactLevel: impactLevel,
+            likelihood: likelihood,
+            mitigationStrategy: mitigationStrategy,
+            discipline: discipline,
+            owner: owner,
+            status: status,
+          ));
+        }
+        return d.copyWith(
+          frontEndPlanning:
+              d.frontEndPlanning.copyWith(riskRegisterItems: items),
+        );
+      },
+    );
+  }
+
+  /// Removes a risk from the central register by name + source section.
+  /// Used when a section-specific risk is deleted.
+  static Future<void> removeRiskFromRegister({
+    required BuildContext context,
+    required String sourceSection,
+    required String riskName,
+    String checkpoint = 'risk_register_sync',
+  }) async {
+    await updateAndSave(
+      context: context,
+      checkpoint: checkpoint,
+      showSnackbar: false,
+      dataUpdater: (d) {
+        final items = List<RiskRegisterItem>.from(
+            d.frontEndPlanning.riskRegisterItems);
+        items.removeWhere((r) =>
+            r.riskName.trim().toLowerCase() == riskName.trim().toLowerCase() &&
+            r.requirementType.trim().toLowerCase() ==
+                sourceSection.trim().toLowerCase());
+        return d.copyWith(
+          frontEndPlanning:
+              d.frontEndPlanning.copyWith(riskRegisterItems: items),
+        );
+      },
+    );
+  }
+
+  /// Returns all risks from the central register that originate from a
+  /// specific source section (matched on `requirementType`).
+  static List<RiskRegisterItem> getRisksForSection(
+      ProjectDataModel data, String sourceSection) {
+    return data.frontEndPlanning.riskRegisterItems
+        .where((r) =>
+            r.requirementType.trim().toLowerCase() ==
+                sourceSection.trim().toLowerCase())
+        .toList();
+  }
+
+  /// One-time migration: backfills `requirementType` on existing risks that
+  /// have no source-section tag. Uses category heuristics to infer the
+  /// originating section. Called on project load.
+  static ProjectDataModel migrateRiskSourceSections(ProjectDataModel data) {
+    final items = data.frontEndPlanning.riskRegisterItems;
+    if (items.isEmpty) return data;
+    bool changed = false;
+    final migrated = items.map((r) {
+      final rt = r.requirementType.trim();
+      if (rt.isNotEmpty) return r;
+      // Infer from category
+      final cat = r.category.trim().toLowerCase();
+      String inferred;
+      if (cat == 'safety' ||
+          cat == 'security' ||
+          cat == 'health' ||
+          cat == 'environment' ||
+          cat == 'regulatory') {
+        inferred = 'SSHER';
+      } else if (cat.contains('interface')) {
+        inferred = 'Interface Management';
+      } else if (cat.contains('design')) {
+        inferred = 'Design Planning';
+      } else if (cat.contains('quality')) {
+        inferred = 'Quality';
+      } else if (cat.contains('execution') || cat.contains('tracking')) {
+        inferred = 'Risk Tracking Workspace';
+      } else {
+        inferred = 'Front End Planning';
+      }
+      changed = true;
+      return RiskRegisterItem(
+        riskName: r.riskName,
+        description: r.description,
+        category: r.category,
+        requirement: r.requirement,
+        requirementType: inferred,
+        impactLevel: r.impactLevel,
+        likelihood: r.likelihood,
+        mitigationStrategy: r.mitigationStrategy,
+        discipline: r.discipline,
+        projectRole: r.projectRole,
+        owner: r.owner,
+        status: r.status,
+        probabilityNumeric: r.probabilityNumeric,
+        costImpactMin: r.costImpactMin,
+        costImpactMostLikely: r.costImpactMostLikely,
+        costImpactMax: r.costImpactMax,
+        scheduleImpactMin: r.scheduleImpactMin,
+        scheduleImpactMostLikely: r.scheduleImpactMostLikely,
+        scheduleImpactMax: r.scheduleImpactMax,
+        controlAccountId: r.controlAccountId,
+        cbsId: r.cbsId,
+        riskType: r.riskType,
+        responseStrategy: r.responseStrategy,
+        residualProbability: r.residualProbability,
+        residualCostImpact: r.residualCostImpact,
+      );
+    }).toList();
+    if (!changed) return data;
+    return data.copyWith(
+      frontEndPlanning:
+          data.frontEndPlanning.copyWith(riskRegisterItems: migrated),
+    );
+  }
+
+  // ── Bidirectional Activities Log Sync ──
+  //
+  // Section-specific register/log actions (e.g. interface created, SSHER
+  // item pushed, quality check added) are mirrored into the central
+  // `ProjectData.activities` list with a `sourceSection` tag.
+
+  /// Logs an activity to the central Project Activities Log with a
+  /// sourceSection tag for traceability. De-duplicates by title +
+  /// sourceSection within the same day.
+  static Future<void> logActivityToCentral({
+    required BuildContext context,
+    required String sourceSection,
+    required String title,
+    String description = '',
+    String phase = 'Planning',
+    String discipline = '',
+    String role = '',
+    String assignedTo = '',
+    String dueDate = '',
+    String status = 'pending',
+    String checkpoint = 'activities_log_sync',
+  }) async {
+    await updateAndSave(
+      context: context,
+      checkpoint: checkpoint,
+      showSnackbar: false,
+      dataUpdater: (d) {
+        final activities = List<ProjectActivity>.from(d.projectActivities);
+        // De-dup: skip if an activity with the same title + sourceSection
+        // was already logged today
+        final today = DateTime.now();
+        final alreadyLogged = activities.any((a) =>
+            a.title == title &&
+            a.sourceSection == sourceSection &&
+            a.createdAt.year == today.year &&
+            a.createdAt.month == today.month &&
+            a.createdAt.day == today.day);
+        if (alreadyLogged) return d;
+        final now = DateTime.now();
+        activities.add(ProjectActivity(
+          id: now.microsecondsSinceEpoch.toString(),
+          title: title,
+          description: description,
+          sourceSection: sourceSection,
+          phase: phase,
+          discipline: discipline,
+          role: role,
+          assignedTo: assignedTo.isEmpty ? null : assignedTo,
+          dueDate: dueDate,
+          createdAt: now,
+          updatedAt: now,
+        ));
+        return d.copyWith(projectActivities: activities);
+      },
+    );
+  }
+
+  /// Returns all activities from the central log that originated from a
+  /// specific source section.
+  static List<ProjectActivity> getActivitiesForSection(
+      ProjectDataModel data, String sourceSection) {
+    return data.projectActivities
+        .where((a) =>
+            a.sourceSection.trim().toLowerCase() ==
+                sourceSection.trim().toLowerCase())
+        .toList();
+  }
+
+
   static List<ProjectGoal> convertLegacyGoals(
       List<Map<String, String>>? legacyGoals) {
     if (legacyGoals == null || legacyGoals.isEmpty) return [];

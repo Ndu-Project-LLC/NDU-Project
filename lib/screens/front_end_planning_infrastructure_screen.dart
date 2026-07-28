@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 class FrontEndPlanningInfrastructureScreen extends StatefulWidget {
  const FrontEndPlanningInfrastructureScreen({super.key});
 
@@ -320,28 +321,15 @@ class _FrontEndPlanningInfrastructureScreenState
  }
  }
 
- Future<void> _deleteInfrastructureItem(
- InfrastructurePlanningItem item,
- ) async {
- final confirmed = await showDialog<bool>(
- context: context,
- builder: (dialogContext) => AlertDialog(
- title: const Text('Delete Infrastructure Item'),
- content: Text('Remove ${item.name.trim()} from this plan?'),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(false),
- child: const Text('Cancel'),
- ),
- ElevatedButton(
- onPressed: () => Navigator.of(dialogContext).pop(true),
- child: const Text('Delete'),
- ),
- ],
- ),
- ) ??
- false;
- if (!confirmed) return;
+  Future<void> _deleteInfrastructureItem(
+    InfrastructurePlanningItem item,
+  ) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Infrastructure Item',
+      itemLabel: item.name.trim(),
+    );
+    if (!confirmed) return;
 
  setState(() {
  _items.removeWhere((entry) => entry.id == item.id);
@@ -781,13 +769,13 @@ class _BottomOverlays extends StatelessWidget {
  ),
  child: Row(
  children: const [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFD97706)),
  SizedBox(width: 8),
  Text(
  'AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB),
+ color: Color(0xFFD97706),
  ),
  ),
  SizedBox(width: 10),

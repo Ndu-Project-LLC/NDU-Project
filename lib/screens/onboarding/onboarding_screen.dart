@@ -209,7 +209,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       const Icon(Icons.arrow_forward, color: Colors.grey),
                       const SizedBox(width: 16),
                       _buildIconCircle(
-                          Icons.design_services_outlined, Colors.blue),
+                          Icons.design_services_outlined, const Color(0xFFD97706)),
                       const SizedBox(width: 16),
                       const Icon(Icons.arrow_forward, color: Colors.grey),
                       const SizedBox(width: 16),
@@ -293,7 +293,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildAvatar(Colors.blue),
+                        _buildAvatar(const Color(0xFFD97706)),
                         const SizedBox(width: 8),
                         _buildAvatar(Colors.green),
                         const SizedBox(width: 8),

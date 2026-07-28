@@ -254,7 +254,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
       actualCost = approvedBudget * 0.96;
       // Build segments by solution
       const segColors = [
-        Color(0xFF2563EB),
+        Color(0xFFD97706),
         Color(0xFFF59E0B),
         Color(0xFF10B981),
         Color(0xFF7C3AED),
@@ -279,7 +279,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
     // Cost estimate items as a second source
     if (segments.isEmpty && projectData.costEstimateItems.isNotEmpty) {
       const segColors = [
-        Color(0xFF2563EB),
+        Color(0xFFD97706),
         Color(0xFFF59E0B),
         Color(0xFF10B981),
         Color(0xFF7C3AED),
@@ -319,7 +319,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
           sectionSubtitle:
               'Live read-out from project cost analysis & cost estimate',
           sectionIcon: Icons.account_balance_wallet,
-          sectionColor: const Color(0xFF1D4ED8),
+          sectionColor: const Color(0xFFD97706),
           completionPercent: utilization.clamp(0.0, 1.0),
           completionLabel: 'BUDGET USED',
           completionCaption:
@@ -329,7 +329,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
               label: 'Approved Budget',
               value: formatter(approvedBudget),
               icon: Icons.account_balance_outlined,
-              color: const Color(0xFF2563EB),
+              color: const Color(0xFFD97706),
               delta: 'from cost analysis',
             ),
             LaunchKpiTile(
@@ -447,16 +447,16 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: const Color(0xFFFFF7E6),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF3B82F6)),
+        border: Border.all(color: const Color(0xFFFBBF24)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.account_balance_wallet, color: Color(0xFF1D4ED8), size: 22),
+              Icon(Icons.account_balance_wallet, color: Color(0xFFD97706), size: 22),
               SizedBox(width: 10),
               Text(
                 'Finalize all financial activities',
@@ -525,7 +525,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
                 .map((h) => Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                        color: const Color(0xFFFFF7E6),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: const Color(0xFFBFDBFE)),
                       ),
@@ -553,7 +553,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: Color(0xFF3B82F6)),
+                borderSide: BorderSide(color: Color(0xFFFBBF24)),
               ),
               contentPadding: EdgeInsets.all(12),
             ),

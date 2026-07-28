@@ -1137,7 +1137,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  case 'sponsor':
  return const Color(0xFF7C3AED);
  case 'operations':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'technical':
  return const Color(0xFF0D9488);
  case 'regulatory':
@@ -1154,7 +1154,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  case 'budget':
  return const Color(0xFFD97706);
  case 'schedule':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'quality':
  return const Color(0xFF0D9488);
  default:
@@ -1171,7 +1171,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  case 'deferred':
  return const Color(0xFFD97706);
  case 'open':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  default:
  return const Color(0xFF6B7280);
  }
@@ -2819,7 +2819,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(12),
- borderSide: const BorderSide(color: Color(0xFF93C5FD)),
+ borderSide: const BorderSide(color: Color(0xFFFDE68A)),
  ),
  );
  }

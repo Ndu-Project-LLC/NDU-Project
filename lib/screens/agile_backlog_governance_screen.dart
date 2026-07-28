@@ -14,6 +14,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -610,7 +611,13 @@ class _AgileBacklogGovernanceScreenState
                     setState(() => e.value.label = label);
                     _scheduleAutoSave();
                   },
-                  () {
+                  () async {
+                    final confirmed = await showDeleteConfirmationDialog(
+                      context,
+                      title: 'Delete Definition of Ready Item',
+                      itemLabel: e.value.label.isNotEmpty ? e.value.label : null,
+                    );
+                    if (!confirmed) return;
                     setState(() => _doRItems.removeAt(e.key));
                     _scheduleAutoSave();
                   },
@@ -674,7 +681,13 @@ class _AgileBacklogGovernanceScreenState
                     setState(() => e.value.label = label);
                     _scheduleAutoSave();
                   },
-                  () {
+                  () async {
+                    final confirmed = await showDeleteConfirmationDialog(
+                      context,
+                      title: 'Delete Definition of Done Item',
+                      itemLabel: e.value.label.isNotEmpty ? e.value.label : null,
+                    );
+                    if (!confirmed) return;
                     setState(() => _doDItems.removeAt(e.key));
                     _scheduleAutoSave();
                   },
@@ -700,7 +713,7 @@ class _AgileBacklogGovernanceScreenState
     _ChecklistItem item,
     ValueChanged<bool> onChecked,
     ValueChanged<String> onLabelChanged,
-    VoidCallback onDelete,
+    Future<void> Function() onDelete,
   ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -733,7 +746,7 @@ class _AgileBacklogGovernanceScreenState
           IconButton(
             icon: const Icon(Icons.delete_outline,
                 size: 16, color: Colors.red),
-            onPressed: onDelete,
+            onPressed: () async => onDelete(),
             constraints:
                 const BoxConstraints(minWidth: 28, minHeight: 28),
             padding: EdgeInsets.zero,
@@ -808,7 +821,13 @@ class _AgileBacklogGovernanceScreenState
                   setState(() => e.value.label = label);
                   _scheduleAutoSave();
                 },
-                () {
+                () async {
+                  final confirmed = await showDeleteConfirmationDialog(
+                    context,
+                    title: 'Delete Working Agreement',
+                    itemLabel: e.value.label.isNotEmpty ? e.value.label : null,
+                  );
+                  if (!confirmed) return;
                   setState(() => _waItems.removeAt(e.key));
                   _scheduleAutoSave();
                 },
@@ -850,20 +869,20 @@ class _AgileBacklogGovernanceScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE0F2FE),
+                    color: const Color(0xFFFFF7E6),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.auto_awesome,
-                          size: 10, color: Color(0xFF0284C7)),
+                          size: 10, color: Color(0xFFD97706)),
                       SizedBox(width: 3),
                       Text('AI',
                           style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0284C7))),
+                              color: Color(0xFFD97706))),
                     ],
                   ),
                 ),

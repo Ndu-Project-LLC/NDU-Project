@@ -1192,10 +1192,10 @@ class _RefinementChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF2563EB) : const Color(0xFFF3F4F6),
+          color: selected ? const Color(0xFFD97706) : const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? const Color(0xFF2563EB) : const Color(0xFFD1D5DB),
+            color: selected ? const Color(0xFFD97706) : const Color(0xFFD1D5DB),
           ),
         ),
         child: Text(

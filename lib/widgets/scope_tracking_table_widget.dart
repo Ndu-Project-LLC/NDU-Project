@@ -8,6 +8,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/inline_editable_text.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 /// Custom Scope Tracking Table with inline editing, CRUD actions, and AI capabilities
@@ -461,6 +462,12 @@ class _ScopeTrackingRowWidgetState extends State<_ScopeTrackingRowWidget> {
   }
 
   Future<void> _deleteItem(ScopeTrackingItem item) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Scope Item',
+      itemLabel: item.scopeItem,
+    );
+    if (!confirmed) return;
     final provider = ProjectDataInherited.maybeOf(context);
     final projectId = provider?.projectData.projectId;
     if (projectId == null || projectId.isEmpty) return;
@@ -529,7 +536,7 @@ class _StatusPill extends StatelessWidget {
       case 'Not Started':
         return const Color(0xFF9CA3AF); // Grey
       case 'In-Progress':
-        return const Color(0xFF2563EB); // Blue
+        return const Color(0xFFD97706); // Blue
       case 'Verified':
         return const Color(0xFF10B981); // Green
       case 'Out-of-Scope':

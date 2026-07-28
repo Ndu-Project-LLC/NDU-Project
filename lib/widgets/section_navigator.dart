@@ -37,6 +37,7 @@ class SectionTab {
     required this.icon,
     required this.label,
     this.badge,
+    this.enabled = true,
   });
 
   /// Icon shown in the tab pill.
@@ -48,6 +49,10 @@ class SectionTab {
   /// Optional badge count (e.g. number of validation issues). When non-null,
   /// a small circular badge is rendered on the right edge of the tab.
   final int? badge;
+
+  /// Whether this tab is interactive. When disabled, the pill is greyed out
+  /// and tapping does nothing.
+  final bool enabled;
 }
 
 class SectionNavigator extends StatelessWidget {
@@ -219,8 +224,9 @@ class SectionNavigator extends StatelessWidget {
               label: tab.label,
               badge: tab.badge,
               isActive: isActive,
+              enabled: tab.enabled,
               accentColor: accent,
-              onTap: () => _selectTab(i),
+              onTap: tab.enabled ? () => _selectTab(i) : () {},
             ),
           ),
         );
@@ -243,8 +249,9 @@ class SectionNavigator extends StatelessWidget {
               label: tab.label,
               badge: tab.badge,
               isActive: isActive,
+              enabled: tab.enabled,
               accentColor: accent,
-              onTap: () => _selectTab(i),
+              onTap: tab.enabled ? () => _selectTab(i) : () {},
             ),
           );
         }),
@@ -268,6 +275,7 @@ class _TabPill extends StatelessWidget {
     required this.accentColor,
     required this.onTap,
     this.badge,
+    this.enabled = true,
   });
 
   final IconData icon;
@@ -276,86 +284,89 @@ class _TabPill extends StatelessWidget {
   final Color accentColor;
   final VoidCallback onTap;
   final int? badge;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: isActive
-                ? accentColor
-                : Colors.white,
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.4,
+      child: AbsorbPointer(
+        absorbing: !enabled,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isActive
-                  ? accentColor
-                  : const Color(0xFFE4E7EC),
-              width: 1,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: isActive ? accentColor : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isActive ? accentColor : const Color(0xFFE4E7EC),
+                  width: 1,
+                ),
+                boxShadow: isActive
+                    ? [
+                        BoxShadow(
+                          color: accentColor.withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 16,
+                    color: isActive ? Colors.white : const Color(0xFF6B7280),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight:
+                            isActive ? FontWeight.w700 : FontWeight.w600,
+                        color:
+                            isActive ? Colors.white : const Color(0xFF1A1D1F),
+                        fontFamily: appFontFamily,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (badge != null && badge! > 0) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? Colors.white.withValues(alpha: 0.25)
+                            : accentColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        badge! > 99 ? '99+' : '$badge',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: isActive ? Colors.white : accentColor,
+                          fontFamily: appFontFamily,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.25),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 16,
-                color: isActive ? Colors.white : const Color(0xFF6B7280),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                    color: isActive
-                        ? Colors.white
-                        : const Color(0xFF1A1D1F),
-                    fontFamily: appFontFamily,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (badge != null && badge! > 0) ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? Colors.white.withValues(alpha: 0.25)
-                        : accentColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    badge! > 99 ? '99+' : '$badge',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: isActive ? Colors.white : accentColor,
-                      fontFamily: appFontFamily,
-                    ),
-                  ),
-                ),
-              ],
-            ],
           ),
         ),
       ),

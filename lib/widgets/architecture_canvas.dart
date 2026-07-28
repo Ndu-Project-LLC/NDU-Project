@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 // ─── Data Models ────────────────────────────────────────────────────────────
 
@@ -63,39 +64,39 @@ extension ArchitectureNodeTypeX on ArchitectureNodeType {
       };
 
   Color get accentColor => switch (this) {
-        ArchitectureNodeType.service => const Color(0xFF2563EB),
+        ArchitectureNodeType.service => const Color(0xFFD97706),
         ArchitectureNodeType.database => const Color(0xFF059669),
         ArchitectureNodeType.api => const Color(0xFF7C3AED),
         ArchitectureNodeType.queue => const Color(0xFFD97706),
         ArchitectureNodeType.cache => const Color(0xFFDC2626),
         ArchitectureNodeType.auth => const Color(0xFF0891B2),
         ArchitectureNodeType.mobileApp => const Color(0xFF4F46E5),
-        ArchitectureNodeType.webApp => const Color(0xFF0284C7),
+        ArchitectureNodeType.webApp => const Color(0xFFD97706),
         ArchitectureNodeType.adminPortal => const Color(0xFF374151),
         ArchitectureNodeType.thirdParty => const Color(0xFFB45309),
         ArchitectureNodeType.loadBalancer => const Color(0xFF65A30D),
         ArchitectureNodeType.cdn => const Color(0xFF6D28D9),
         ArchitectureNodeType.storage => const Color(0xFF0D9488),
-        ArchitectureNodeType.container => const Color(0xFF2563EB),
+        ArchitectureNodeType.container => const Color(0xFFD97706),
         ArchitectureNodeType.iotDevice => const Color(0xFF9333EA),
         ArchitectureNodeType.custom => const Color(0xFF6B7280),
       };
 
   Color get bgColor => switch (this) {
-        ArchitectureNodeType.service => const Color(0xFFEFF6FF),
+        ArchitectureNodeType.service => const Color(0xFFFFF7E6),
         ArchitectureNodeType.database => const Color(0xFFECFDF5),
         ArchitectureNodeType.api => const Color(0xFFF5F3FF),
         ArchitectureNodeType.queue => const Color(0xFFFFFBEB),
         ArchitectureNodeType.cache => const Color(0xFFFEF2F2),
         ArchitectureNodeType.auth => const Color(0xFFECFEFF),
         ArchitectureNodeType.mobileApp => const Color(0xFFEEF2FF),
-        ArchitectureNodeType.webApp => const Color(0xFFF0F9FF),
+        ArchitectureNodeType.webApp => const Color(0xFFFFF7E6),
         ArchitectureNodeType.adminPortal => const Color(0xFFF9FAFB),
         ArchitectureNodeType.thirdParty => const Color(0xFFFFFBEB),
         ArchitectureNodeType.loadBalancer => const Color(0xFFF7FEE7),
         ArchitectureNodeType.cdn => const Color(0xFFF5F3FF),
         ArchitectureNodeType.storage => const Color(0xFFF0FDFA),
-        ArchitectureNodeType.container => const Color(0xFFEFF6FF),
+        ArchitectureNodeType.container => const Color(0xFFFFF7E6),
         ArchitectureNodeType.iotDevice => const Color(0xFFFAF5FF),
         ArchitectureNodeType.custom => const Color(0xFFF9FAFB),
       };
@@ -235,9 +236,17 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
     _openNodeEditor(node);
   }
 
-  void _deleteSelectedNode() {
+  Future<void> _deleteSelectedNode() async {
     final id = _selectedNodeId;
     if (id == null) return;
+    final node = widget.nodes.firstWhere((n) => n.id == id,
+        orElse: () => widget.nodes.first);
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Component',
+      itemLabel: node.label,
+    );
+    if (!confirmed) return;
     final newNodes = widget.nodes.where((e) => e.id != id).toList();
     final newEdges =
         widget.edges.where((e) => e.fromId != id && e.toId != id).toList();
@@ -608,11 +617,11 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
+                          color: const Color(0xFFFFF7E6),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Icon(Icons.account_tree_outlined,
-                            size: 14, color: Color(0xFF2563EB)),
+                            size: 14, color: Color(0xFFD97706)),
                       ),
                       const SizedBox(width: 8),
                       const Text('Architecture Canvas',

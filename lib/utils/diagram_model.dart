@@ -25,9 +25,9 @@ const Map<String, DiagramNodeTypeStyle> diagramNodeStyles = {
     icon: Icons.play_arrow_rounded,
   ),
   'objective': DiagramNodeTypeStyle(
-    fill: Color(0xFFDBEAFE),
-    border: Color(0xFF2563EB),
-    text: Color(0xFF1E3A5F),
+    fill: Color(0xFFFFF7E6),
+    border: Color(0xFFD97706),
+    text: Color(0xFF78350F),
     icon: Icons.flag_rounded,
   ),
   'analysis': DiagramNodeTypeStyle(
@@ -43,9 +43,9 @@ const Map<String, DiagramNodeTypeStyle> diagramNodeStyles = {
     icon: Icons.call_split_rounded,
   ),
   'action': DiagramNodeTypeStyle(
-    fill: Color(0xFFE0F2FE),
-    border: Color(0xFF0284C7),
-    text: Color(0xFF0C4A6E),
+    fill: Color(0xFFFFF7E6),
+    border: Color(0xFFD97706),
+    text: Color(0xFF78350F),
     icon: Icons.arrow_forward_rounded,
   ),
   'validation': DiagramNodeTypeStyle(

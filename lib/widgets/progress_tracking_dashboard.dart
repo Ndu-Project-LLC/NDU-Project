@@ -124,7 +124,7 @@ class ProgressTrackingDashboard extends StatelessWidget {
               helper:
                   '${statusReports.length} total reports with ${recurringDeliverables.length} recurring deliverables in flight',
               icon: Icons.description_outlined,
-              emphasisColor: const Color(0xFF2563EB),
+              emphasisColor: const Color(0xFFD97706),
             ),
           ],
         ),

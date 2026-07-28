@@ -167,7 +167,7 @@ showNavigationButtons: false,
              label: 'Milestones',
              value: '${projectData.keyMilestones.length}',
              icon: Icons.flag_outlined,
-             color: const Color(0xFF2563EB),
+             color: const Color(0xFFD97706),
              delta: '${projectData.keyMilestones.where((m) => m.dueDate.isNotEmpty).length} dated',
            ),
            LaunchKpiTile(

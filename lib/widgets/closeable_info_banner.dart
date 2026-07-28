@@ -20,7 +20,7 @@ class CloseableInfoBanner extends StatelessWidget {
     super.key,
     required this.message,
     this.icon = Icons.auto_awesome,
-    this.iconColor = const Color(0xFF2563EB),
+    this.iconColor = const Color(0xFFD97706),
     this.backgroundColor = const Color(0xFFE6F1FF),
     this.borderColor = const Color(0xFFD7E5FF),
     this.onDismiss,
@@ -76,7 +76,7 @@ class CloseableInfoBanner extends StatelessWidget {
 void showDismissibleSnackBar(
   BuildContext context,
   String message, {
-  Color backgroundColor = const Color(0xFF2563EB),
+  Color backgroundColor = const Color(0xFFD97706),
   Duration duration = const Duration(seconds: 4),
   Color? textColor,
 }) {

@@ -8,6 +8,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/inline_editable_text.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 /// Custom Stakeholder Alignment Table with inline editing, CRUD actions, and AI capabilities
 class StakeholderAlignmentTableWidget extends StatelessWidget {
@@ -471,6 +472,12 @@ class _StakeholderAlignmentRowWidgetState
   }
 
   Future<void> _deleteItem(StakeholderAlignmentItem item) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Stakeholder',
+      itemLabel: item.stakeholderName,
+    );
+    if (!confirmed) return;
     final provider = ProjectDataInherited.maybeOf(context);
     final projectId = provider?.projectData.projectId;
     if (projectId == null || projectId.isEmpty) return;

@@ -984,7 +984,9 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  description: r.description.trim(),
  category: r.category.trim(),
  requirement: r.requirement.trim(),
- requirementType: r.requirementType.trim(),
+ requirementType: r.requirementType.trim().isNotEmpty
+     ? r.requirementType.trim()
+     : 'Front End Planning',
  impactLevel: (r.impact.trim().isNotEmpty
  ? r.impact.trim()
  : r.riskLevel.trim())
@@ -1542,7 +1544,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  borderRadius: BorderRadius.circular(20),
  child: const CircleAvatar(
  radius: 13,
- backgroundColor: Color(0xFF2563EB),
+ backgroundColor: Color(0xFFD97706),
  child: Text('C',
  style: TextStyle(
  color: Colors.white,
@@ -1640,7 +1642,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  style: TextStyle(fontWeight: FontWeight.w700),
  ),
  style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF2563EB),
+ foregroundColor: const Color(0xFFD97706),
  side: const BorderSide(color: Color(0xFFBFDBFE)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12)),
@@ -2188,14 +2190,14 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
  color: rowCanUndo
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF7E6)
  : const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(Icons.undo_rounded,
  size: 16,
  color: rowCanUndo
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFD97706)
  : const Color(0xFF9CA3AF)),
  ),
  ),
@@ -2460,7 +2462,7 @@ class _ExpandableCellTextState extends State<_ExpandableCellText> {
  child: Text(
  _isExpanded ? 'View less' : 'View more',
  style: widget.style.copyWith(
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFD97706),
  fontSize: 12.5,
  fontWeight: FontWeight.w700,
  ),
@@ -2537,11 +2539,11 @@ class _BottomOverlays extends StatelessWidget {
  ),
  child: Row(
  children: const [
- Icon(Icons.lightbulb_outline, color: Color(0xFF2563EB)),
+ Icon(Icons.lightbulb_outline, color: Color(0xFFD97706)),
  SizedBox(width: 8),
  Text('Hint',
  style: TextStyle(
- fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+ fontWeight: FontWeight.w800, color: Color(0xFFD97706))),
  SizedBox(width: 10),
  Text('Focus on major risks associated with each potential solution.',
  style: TextStyle(color: Color(0xFF1F2937))),

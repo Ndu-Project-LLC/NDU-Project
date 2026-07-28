@@ -130,7 +130,7 @@ showNavigationButtons: false,
  label: 'Vendors',
  value: '${_vendors.length}',
  icon: Icons.business_outlined,
- emphasisColor: const Color(0xFF2563EB),
+ emphasisColor: const Color(0xFFD97706),
  helper: '$active active, $closed closed',
  ),
  ExecutionMetricData(

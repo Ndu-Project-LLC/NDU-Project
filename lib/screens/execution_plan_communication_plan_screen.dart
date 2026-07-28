@@ -56,10 +56,7 @@ class ExecutionPlanCommunicationPlanScreen extends StatelessWidget {
  ExecutionPlanHeader(
  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'execution_plan_communication_plan'),
  onNext: () => PlanningPhaseNavigation.goToNext(context, 'execution_plan_communication_plan'), onExportPdf: () => _exportPdf(context)),
- const SizedBox(height: 32),
- const SectionIntro(
- title: 'Execution Plan - Communication Plan'),
- const SizedBox(height: 24),
+  const SizedBox(height: 24),
  const ExecutionPlanForm(
  title: 'Execution Plan - Communication Plan',
  hintText:

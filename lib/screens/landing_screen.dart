@@ -6,7 +6,11 @@ import 'package:ndu_project/screens/pricing_screen.dart';
 import 'package:ndu_project/screens/partner_screen.dart';
 import 'package:ndu_project/screens/use_cases_screen.dart';
 import 'package:ndu_project/screens/how_it_works_screen.dart';
+import 'package:ndu_project/screens/kaz_ai_screen.dart';
+import 'package:ndu_project/screens/differentiator_screen.dart';
+import 'package:ndu_project/screens/trusted_by_screen.dart';
 import 'package:ndu_project/screens/sign_in_screen.dart';
+import 'package:ndu_project/screens/create_account_screen.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -128,7 +132,7 @@ class _LandingScreenState extends State<LandingScreen>
  void _handleStartProject() {
  Navigator.push(
  context,
- MaterialPageRoute(builder: (_) => const PricingScreen()),
+ MaterialPageRoute(builder: (_) => const CreateAccountScreen()),
  );
  }
 
@@ -280,18 +284,12 @@ class _LandingScreenState extends State<LandingScreen>
  SizedBox(height: isDesktop ? 24 : 16),
  _buildHeroSection(context, isDesktop),
  SizedBox(height: isDesktop ? 80 : 60),
- _buildSocialProofBar(isDesktop),
- SizedBox(height: isDesktop ? 80 : 60),
  _buildProblemSection(context, isDesktop || isTablet),
  SizedBox(height: isDesktop ? 80 : 56),
  _buildSolutionSection(context, isDesktop || isTablet),
  SizedBox(height: isDesktop ? 80 : 56),
- _buildHowItWorksSection(context, isDesktop || isTablet),
- SizedBox(height: isDesktop ? 80 : 56),
- _buildDifferentiatorsSection(context, isDesktop || isTablet),
- SizedBox(height: isDesktop ? 80 : 56),
- _buildFeatureGridSection(context, isDesktop || isTablet),
- SizedBox(height: isDesktop ? 80 : 56),
+ // How It Works section removed — content lives on the How It Works subpage
+ // Differentiators + Feature Grid sections moved to Differentiator subpage
  _buildBenefitsSection(context, isDesktop || isTablet),
  SizedBox(height: isDesktop ? 80 : 56),
  _buildKazAiSection(context, isDesktop || isTablet),
@@ -440,6 +438,7 @@ class _LandingScreenState extends State<LandingScreen>
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
+ _buildWhyNduDropdown(),
  _buildSolutionsDropdown(),
  _buildServicesDropdown(),
  _navButton('Pricing', () => _scrollTo(_ctaKey)),
@@ -568,11 +567,10 @@ class _LandingScreenState extends State<LandingScreen>
  return _buildPremiumDropdown(
  label: 'Why Ndu Project?',
  items: [
- _DropdownItem(icon: Icons.lightbulb_outline, label: 'Why Ndu Project?', onTap: () => _scrollTo(_solutionKey)),
  _DropdownItem(icon: Icons.play_circle_outline, label: 'How It Works', onTap: _handleWorkflowTap),
- _DropdownItem(icon: Icons.star_outline, label: 'Differentiator', onTap: () => _scrollTo(_differentiatorsKey)),
- _DropdownItem(icon: Icons.verified_outlined, label: 'Trusted By', onTap: () => _scrollTo(_benefitsKey)),
- _DropdownItem(icon: Icons.auto_awesome, label: 'KAZ AI', onTap: () => _scrollTo(_aiKey)),
+ _DropdownItem(icon: Icons.star_outline, label: 'Differentiator', onTap: () => DifferentiatorScreen.open(context)),
+ _DropdownItem(icon: Icons.verified_outlined, label: 'Trusted By', onTap: () => TrustedByScreen.open(context)),
+ _DropdownItem(icon: Icons.auto_awesome, label: 'KAZ AI', onTap: () => KazAiScreen.open(context)),
  ],
  );
  }
@@ -581,11 +579,6 @@ class _LandingScreenState extends State<LandingScreen>
  return _buildPremiumDropdown(
  label: 'Solutions',
  items: [
- _DropdownItem(icon: Icons.lightbulb_outline, label: 'Why Ndu Project?', onTap: () => _scrollTo(_solutionKey)),
- _DropdownItem(icon: Icons.play_circle_outline, label: 'How It Works', onTap: _handleWorkflowTap),
- _DropdownItem(icon: Icons.star_outline, label: 'Differentiator', onTap: () => _scrollTo(_differentiatorsKey)),
- _DropdownItem(icon: Icons.verified_outlined, label: 'Trusted By', onTap: () => _scrollTo(_benefitsKey)),
- _DropdownItem(icon: Icons.auto_awesome, label: 'KAZ AI', onTap: () => _scrollTo(_aiKey)),
  _DropdownItem(icon: Icons.cases_outlined, label: 'Use Cases', onTap: () => UseCasesScreen.open(context)),
  _DropdownItem(icon: Icons.slideshow_outlined, label: 'Demo', onTap: () => _scrollTo(_benefitsKey)),
  _DropdownItem(icon: Icons.handshake_outlined, label: 'Partner with Us', onTap: () => PartnerScreen.open(context)),
@@ -597,7 +590,6 @@ class _LandingScreenState extends State<LandingScreen>
  return _buildPremiumDropdown(
  label: 'Services',
  items: [
- _DropdownItem(icon: Icons.miscellaneous_services, label: 'Services', onTap: () => _scrollTo(_benefitsKey)),
  _DropdownItem(icon: Icons.delivery_dining_outlined, label: 'Project Delivery', onTap: () => _scrollTo(_benefitsKey)),
  _DropdownItem(icon: Icons.school_outlined, label: 'Training', onTap: () => _scrollTo(_aiKey)),
  _DropdownItem(icon: Icons.support_agent, label: 'Consultation', onTap: () => _scrollTo(_ctaKey)),
@@ -751,17 +743,17 @@ class _LandingScreenState extends State<LandingScreen>
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
  decoration: BoxDecoration(
- color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+ color: const Color(0xFFFBBF24).withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(24),
- border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
+ border: Border.all(color: const Color(0xFFFBBF24).withValues(alpha: 0.3)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: const [
- Icon(Icons.verified, color: Color(0xFF60A5FA), size: 16),
+ Icon(Icons.verified, color: Color(0xFFFBBF24), size: 16),
  SizedBox(width: 8),
  Text('Built from real-world delivery experience across global enterprises and high-growth organizations',
- style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF93C5FD))),
+ style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFFDE68A))),
  ],
  ),
  ),
@@ -770,7 +762,7 @@ class _LandingScreenState extends State<LandingScreen>
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
  decoration: BoxDecoration(
- color: const Color(0xFF3B82F6),
+ color: const Color(0xFFFBBF24),
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Text('NSF I-Corps Validated', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
@@ -845,7 +837,7 @@ class _LandingScreenState extends State<LandingScreen>
  alignment: WrapAlignment.center,
  children: [
  ElevatedButton(
- onPressed: () => _launchExternalLink('https://calendar.app.google/aGQDFPpmEK9eDh5W6'),
+ onPressed: _handleStartProject,
  style: ElevatedButton.styleFrom(
  backgroundColor: LightModeColors.accent,
  foregroundColor: const Color(0xFF151515),
@@ -1002,7 +994,7 @@ class _LandingScreenState extends State<LandingScreen>
  shape: BoxShape.circle,
  gradient: RadialGradient(
  colors: [
- const Color(0xFF3B82F6).withValues(alpha: 0.35),
+ const Color(0xFFFBBF24).withValues(alpha: 0.35),
  Colors.transparent
  ],
  ),
@@ -1035,6 +1027,7 @@ class _LandingScreenState extends State<LandingScreen>
  icon: Icons.event_available_rounded,
  borderColor: const Color(0xFFFBBF24),
  iconColor: const Color(0xFFFBBF24),
+ onTap: () => _launchExternalLink('https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ3YLrj3bvaOPEFguUHp_Sk2X9q4KUZdK8A9rnfMTcKhayGCQrJJmcbeSYGnk71nj2TMdnHxxGTs'),
  ),
  const SizedBox(height: 12),
  _buildServiceCard(
@@ -1043,16 +1036,21 @@ class _LandingScreenState extends State<LandingScreen>
  icon: Icons.groups_rounded,
  borderColor: const Color(0xFF94A3B8),
  iconColor: Colors.white,
+ onTap: () => _launchExternalLink('https://docs.google.com/forms/d/e/1FAIpQLSc1gw6b-T5AlwYWZNO4fjK5KYdlGAmqo5ztQvnlDxSruHi3tQ/viewform'),
  ),
  const SizedBox(height: 24),
  // 5-step process: Initiation → Planning → Design → Execution → Launch
+ // Cards wrap to the next line when there's not enough horizontal
+ // space, preventing overflow. Arrows are vertically centered on
+ // each container via WrapCrossAlignment.center.
  Wrap(
  alignment: WrapAlignment.center,
+ crossAxisAlignment: WrapCrossAlignment.center,
  spacing: 6,
  runSpacing: 12,
  children: [
- _buildDiagramNode('Initiation', Icons.flag_rounded, const Color(0xFF3B82F6)),
- _buildDiagramArrow(const Color(0xFF3B82F6)),
+ _buildDiagramNode('Initiation', Icons.flag_rounded, const Color(0xFFFBBF24)),
+ _buildDiagramArrow(const Color(0xFFFBBF24)),
  _buildDiagramNode('Planning', Icons.architecture_rounded, const Color(0xFF8B5CF6)),
  _buildDiagramArrow(const Color(0xFF8B5CF6)),
  _buildDiagramNode('Design', Icons.design_services_rounded, const Color(0xFFEC4899)),
@@ -1088,10 +1086,10 @@ class _LandingScreenState extends State<LandingScreen>
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(12),
- color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
- border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.25)),
+ color: const Color(0xFFFBBF24).withValues(alpha: 0.12),
+ border: Border.all(color: const Color(0xFFFBBF24).withValues(alpha: 0.25)),
  ),
- child: Text('Unified platform', style: TextStyle(color: const Color(0xFF93C5FD).withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13)),
+ child: Text('Unified platform', style: TextStyle(color: const Color(0xFFFDE68A).withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13)),
  ),
  ],
  ),
@@ -1103,7 +1101,7 @@ class _LandingScreenState extends State<LandingScreen>
  borderRadius: BorderRadius.circular(16),
  gradient: LinearGradient(
  colors: [
- const Color(0xFF3B82F6).withValues(alpha: 0.15),
+ const Color(0xFFFBBF24).withValues(alpha: 0.15),
  const Color(0xFF8B5CF6).withValues(alpha: 0.15),
  ],
  ),
@@ -1182,10 +1180,15 @@ class _LandingScreenState extends State<LandingScreen>
  }
 
  Widget _buildDiagramArrow(Color color) {
+ // Horizontal arrow between two diagram containers. The parent Row
+ // uses IntrinsicHeight + CrossAxisAlignment.center, so this icon is
+ // automatically vertically centered relative to the containers —
+ // pointing from the center of one container horizontally to the
+ // center of the next.
  return Padding(
- padding: const EdgeInsets.symmetric(horizontal: 8),
+ padding: const EdgeInsets.symmetric(horizontal: 6),
  child: Icon(Icons.arrow_forward_rounded,
- color: color.withValues(alpha: 0.8), size: 24),
+ color: color.withValues(alpha: 0.85), size: 28),
  );
  }
 
@@ -1233,11 +1236,11 @@ class _LandingScreenState extends State<LandingScreen>
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(18),
  gradient: const LinearGradient(
- colors: [Color(0xFF3B82F6), Color(0xFF6366F1)],
+ colors: [Color(0xFFFBBF24), Color(0xFF6366F1)],
  ),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+ color: const Color(0xFFFBBF24).withValues(alpha: 0.3),
  blurRadius: 12,
  offset: const Offset(0, 4),
  ),
@@ -1266,7 +1269,7 @@ class _LandingScreenState extends State<LandingScreen>
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(14),
  gradient: const LinearGradient(
- colors: [Color(0xFF3B82F6), Color(0xFF6366F1)],
+ colors: [Color(0xFFFBBF24), Color(0xFF6366F1)],
  ),
  ),
  child: Row(
@@ -1476,7 +1479,7 @@ class _LandingScreenState extends State<LandingScreen>
  'No gaps between phases',
  'Single source of truth',
  ],
- gradient: [Color(0xFF3B82F6), Color(0xFF6366F1)],
+ gradient: [Color(0xFFFBBF24), Color(0xFF6366F1)],
  ),
  const _CapabilityData(
  icon: Icons.sync_rounded,
@@ -1563,19 +1566,19 @@ class _LandingScreenState extends State<LandingScreen>
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(18),
- color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+ color: const Color(0xFFFBBF24).withValues(alpha: 0.12),
  border: Border.all(
- color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
+ color: const Color(0xFFFBBF24).withValues(alpha: 0.3)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: const [
- Icon(Icons.auto_awesome_rounded, color: Color(0xFF3B82F6), size: 16),
+ Icon(Icons.auto_awesome_rounded, color: Color(0xFFFBBF24), size: 16),
  SizedBox(width: 8),
  Text(
  'The Solution',
  style: TextStyle(
- color: Color(0xFF3B82F6),
+ color: Color(0xFFFBBF24),
  fontWeight: FontWeight.w700,
  fontSize: 14,
  ),
@@ -1610,10 +1613,10 @@ class _LandingScreenState extends State<LandingScreen>
  runSpacing: 10,
  children: [
  _credibilityBadge('ExxonMobil Experience', Icons.local_fire_department_outlined, const Color(0xFFF97316)),
- _credibilityBadge('IBM Experience', Icons.computer_outlined, const Color(0xFF3B82F6)),
+ _credibilityBadge('IBM Experience', Icons.computer_outlined, const Color(0xFFFBBF24)),
  _credibilityBadge('PMP Certification', Icons.verified_outlined, const Color(0xFF10B981)),
  _credibilityBadge('PMI-ACP Certification', Icons.speed_outlined, const Color(0xFF8B5CF6)),
- _credibilityBadge('NSF I-Corps Research', Icons.science_outlined, const Color(0xFF3B82F6)),
+ _credibilityBadge('NSF I-Corps Research', Icons.science_outlined, const Color(0xFFFBBF24)),
  _credibilityBadge('IdeaVillage Accelerator', Icons.rocket_launch_outlined, const Color(0xFF8B5CF6)),
  _credibilityBadge('MBA: Project Management', Icons.school_outlined, const Color(0xFF10B981)),
  _credibilityBadge('Energy, Financial, Education, IT, Healthcare', Icons.business_outlined, const Color(0xFFF59E0B)),
@@ -1643,9 +1646,9 @@ class _LandingScreenState extends State<LandingScreen>
  Container(
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
+ color: const Color(0xFFFBBF24).withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.2)),
+ border: Border.all(color: const Color(0xFFFBBF24).withValues(alpha: 0.2)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1660,62 +1663,8 @@ class _LandingScreenState extends State<LandingScreen>
  ],
  ),
  ),
- const SizedBox(height: 44),
- // ── Projects → Programs → Portfolios ──
- Text('How It Works — Project Delivers Results', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.9))),
- const SizedBox(height: 20),
- LayoutBuilder(builder: (context, c) {
- final horizontal = c.maxWidth >= 700;
- final cards = [
- _ScaleCard(num: '01', title: 'Projects', desc: 'Waterfall, Agile and Hybrid Project Delivery', icon: Icons.flag_rounded, color: const Color(0xFF3B82F6)),
- _ScaleCard(num: '02', title: 'Programs', desc: 'Multiple project implementation', icon: Icons.groups_rounded, color: const Color(0xFF8B5CF6)),
- _ScaleCard(num: '03', title: 'Portfolios', desc: 'Project and program stewardship in one glance', icon: Icons.rocket_launch_rounded, color: const Color(0xFF10B981)),
- ];
- if (horizontal) {
- return Row(children: [
- for (int i = 0; i < 3; i++) ...[
- if (i > 0) Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Icon(Icons.arrow_forward, color: Colors.white.withValues(alpha: 0.4), size: 24)),
- Expanded(child: _scaleCardWidget(cards[i])),
- ],
- ]);
- }
- return Column(children: [
- for (int i = 0; i < 3; i++) ...[
- _scaleCardWidget(cards[i]),
- if (i < 2) const SizedBox(height: 12),
- ],
- ]);
- }),
- const SizedBox(height: 36),
- // ── 6-Step Delivery Process ──
- Text('Step-by-Step Project Delivery', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.9))),
- const SizedBox(height: 20),
- LayoutBuilder(builder: (context, c) {
- final cols = c.maxWidth >= 900 ? 3 : (c.maxWidth >= 600 ? 2 : 1);
- final w = cols == 1 ? c.maxWidth : (c.maxWidth - 40) / cols;
- final steps = [
- _DeliveryStep(num: '0', title: 'AI Assisted Due Diligence', color: const Color(0xFF3B82F6), items: ['Editable AI suggestions at every step that prompts the thought process', 'Continuity through all phases which eliminates fragmentation gap', 'Search access for similar applicable go-bys', 'Dynamic dashboards at project, program and portfolio levels', 'Core project delivery process integration with hints']),
- _DeliveryStep(num: '1', title: 'Start Right', color: const Color(0xFFF59E0B), items: ['Guided vital process to identify and analyze potential solutions, initial risks, internal and external stakeholders, IT and infrastructure, Project boundaries including in and out of scope, opportunities', 'Project requirements contracts, procurement and technical framework']),
- _DeliveryStep(num: '2', title: 'Meticulous Planning', color: const Color(0xFF10B981), items: ['Project framework, Team identification, Work Breakdown Structure', 'Safety, Security, Health, Environmental and Regulatory readiness', 'Quality requirements and early design planning', 'Execution planning, interface management, and set delivery plans', 'Cost, Schedule, Scope tracking, and change management alignment']),
- _DeliveryStep(num: '3', title: 'Build', color: const Color(0xFFF59E0B), items: ['Technical specifications, codes, and requirements mapping', 'Tool selection, onboarding, Design and engineering', 'Design and engineering execution (framework dependent)', 'Design work package development and execution mapping', 'Design implementation for success']),
- _DeliveryStep(num: '4', title: 'Execute', color: const Color(0xFF10B981), items: ['Work the plan, implement the design, build the product, facility, item', 'Monitor and control, cost, schedule and changes', 'Iterate as applicable', 'Plan for launch, develop handover plans, operations manuals, etc.']),
- _DeliveryStep(num: '5', title: 'Launch', color: const Color(0xFFF59E0B), items: ['Address punch list or technical debts', 'Commission and start up facility (waterfall). Final release (agile)', 'Close out contracts, vendor agreements, activate warranties', 'Hand over to operation or production team']),
- ];
- return Wrap(spacing: 20, runSpacing: 20, children: steps.map((s) => SizedBox(width: w, child: _deliveryStepCard(s))).toList());
- }),
- const SizedBox(height: 36),
- // ── 3 Pillar Cards ──
- LayoutBuilder(builder: (context, c) {
- final cols = c.maxWidth >= 900 ? 3 : 1;
- final w = cols == 1 ? c.maxWidth : (c.maxWidth - 40) / cols;
- final pillars = [
- _DeliveryStep(num: '', title: 'Proactive and Predictive Analytics', color: const Color(0xFFF59E0B), items: ['Identify risks, cost and schedule impacts in real time', 'Early warning indicators', 'Informed change management and stewardship', 'Variance tracking']),
- _DeliveryStep(num: '', title: 'Real-time Cross-functional Alignment', color: const Color(0xFF10B981), items: ['Keep every stakeholder and team aligned with live dashboards and governance', 'Stakeholder views', 'Approval workflows', 'Role-based access']),
- _DeliveryStep(num: '', title: 'Readiness-based Execution', color: const Color(0xFFF59E0B), items: ['Integrated process that ensures execution within plan launches', 'No-rushed execution', 'Visibility on changes and impact to scope', 'Stakeholder alignment']),
- ];
- return Wrap(spacing: 20, runSpacing: 20, children: pillars.map((p) => SizedBox(width: w, child: _deliveryStepCard(p))).toList());
- }),
- const SizedBox(height: 44),
+ // Moved to How It Works subpage (Step-by-Step Project Delivery section)
+
  // ── Existing capabilities grid ──
  LayoutBuilder(
  builder: (context, constraints) {
@@ -1775,84 +1724,9 @@ class _LandingScreenState extends State<LandingScreen>
  );
  }
 
- Widget _scaleCardWidget(_ScaleCard card) {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: card.color.withValues(alpha: 0.08),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: card.color.withValues(alpha: 0.25)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Container(
- width: 36, height: 36,
- decoration: BoxDecoration(color: card.color, shape: BoxShape.circle),
- child: Center(child: Text(card.num, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white))),
- ),
- const SizedBox(width: 12),
- Icon(card.icon, color: card.color, size: 22),
- ],
- ),
- const SizedBox(height: 12),
- Text(card.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
- const SizedBox(height: 6),
- Text(card.desc, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.6), height: 1.4)),
- ],
- ),
- );
- }
 
- Widget _deliveryStepCard(_DeliveryStep step) {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: step.color.withValues(alpha: 0.06),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: step.color.withValues(alpha: 0.2)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- if (step.num.isNotEmpty)
- Container(
- width: 32, height: 32,
- decoration: BoxDecoration(color: step.color, shape: BoxShape.circle),
- child: Center(child: Text(step.num, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white))),
- )
- else
- Container(
- width: 32, height: 32,
- decoration: BoxDecoration(color: step.color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
- child: Icon(Icons.bolt, color: step.color, size: 18),
- ),
- const SizedBox(width: 12),
- Expanded(
- child: Text(step.title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: step.color)),
- ),
- ],
- ),
- const SizedBox(height: 12),
- ...step.items.map((item) => Padding(
- padding: const EdgeInsets.only(bottom: 6),
- child: Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Icon(Icons.circle, size: 5, color: step.color.withValues(alpha: 0.7)),
- const SizedBox(width: 8),
- Expanded(child: Text(item, style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.65), height: 1.4))),
- ],
- ),
- )),
- ],
- ),
- );
- }
+
+
 
  // ── Section 5: How It Works ───────────────────────────────────────────
  Widget _buildHowItWorksSection(BuildContext context, bool wideLayout) {
@@ -1862,7 +1736,7 @@ class _LandingScreenState extends State<LandingScreen>
  title: 'Initiation',
  description: 'Charter approval, stakeholder alignment, cost-benefit analysis, and preferred solution selection — all gated before planning begins.',
  icon: Icons.flag_rounded,
- color: Color(0xFF3B82F6),
+ color: Color(0xFFFBBF24),
  ),
  _HowItWorksStep(
  number: '02',
@@ -1933,7 +1807,7 @@ class _LandingScreenState extends State<LandingScreen>
  runSpacing: 10,
  children: [
  _methodologyBadge('Agile', Icons.flash_on_rounded, const Color(0xFF10B981)),
- _methodologyBadge('Waterfall', Icons.water_drop_rounded, const Color(0xFF3B82F6)),
+ _methodologyBadge('Waterfall', Icons.water_drop_rounded, const Color(0xFFFBBF24)),
  _methodologyBadge('Hybrid', Icons.merge_rounded, const Color(0xFF8B5CF6)),
  _methodologyBadge('Projects', Icons.assignment_rounded, const Color(0xFFF59E0B)),
  _methodologyBadge('Programs', Icons.view_module_rounded, const Color(0xFF0EA5E9)),
@@ -2090,8 +1964,11 @@ class _LandingScreenState extends State<LandingScreen>
  required IconData icon,
  required Color borderColor,
  required Color iconColor,
+ VoidCallback? onTap,
  }) {
- return Container(
+ return GestureDetector(
+ onTap: onTap,
+ child: Container(
  width: double.infinity,
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
  decoration: BoxDecoration(
@@ -2129,7 +2006,10 @@ class _LandingScreenState extends State<LandingScreen>
  ),
  ),
  ),
+ if (onTap != null)
+ Icon(Icons.open_in_new, size: 14, color: borderColor.withValues(alpha: 0.6)),
  ],
+ ),
  ),
  );
  }
@@ -2188,9 +2068,9 @@ class _LandingScreenState extends State<LandingScreen>
  Container(
  padding: const EdgeInsets.all(24),
  decoration: BoxDecoration(
- color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
+ color: const Color(0xFFFBBF24).withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.2)),
+ border: Border.all(color: const Color(0xFFFBBF24).withValues(alpha: 0.2)),
  ),
  child: const Text(
  'Our AI-powered end-to-end platform helps project managers and executives improve profitability through more effective delivery. It reduces implementation costs by 15–30% and cuts rework by 30–50% via structured initiation and planning. Unlike execution-focused tools that primarily track execution across only a few later phases, our platform drives disciplined, integrated delivery across the full project lifecycle.',
@@ -2203,7 +2083,7 @@ class _LandingScreenState extends State<LandingScreen>
  spacing: 12,
  runSpacing: 12,
  children: [
- _credibilityBadge('NSF I-Corps IdeaLaunch Research', Icons.science_outlined, const Color(0xFF3B82F6)),
+ _credibilityBadge('NSF I-Corps IdeaLaunch Research', Icons.science_outlined, const Color(0xFFFBBF24)),
  _credibilityBadge('Tens of Companies Surveyed', Icons.groups_outlined, const Color(0xFF10B981)),
  _credibilityBadge('IdeaVillage Accelerator', Icons.rocket_launch_outlined, const Color(0xFF8B5CF6)),
  ],
@@ -2369,7 +2249,7 @@ class _LandingScreenState extends State<LandingScreen>
  mainAxisSize: MainAxisSize.min,
  children: [
  Icon(kp.icon,
- color: const Color(0xFF3B82F6), size: 18),
+ color: const Color(0xFFFBBF24), size: 18),
  const SizedBox(width: 10),
  Text(
  kp.label,
@@ -2447,9 +2327,9 @@ class _LandingScreenState extends State<LandingScreen>
  width: itemWidth,
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
  decoration: BoxDecoration(
- color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+ color: const Color(0xFFFBBF24).withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.25)),
+ border: Border.all(color: const Color(0xFFFBBF24).withValues(alpha: 0.25)),
  ),
  child: Center(
  child: Text(
@@ -2486,7 +2366,7 @@ class _LandingScreenState extends State<LandingScreen>
  _OutcomeData(
  icon: Icons.schedule_rounded,
  title: 'Improved Delivery Predictability',
- color: Color(0xFF3B82F6),
+ color: Color(0xFFFBBF24),
  ),
  _OutcomeData(
  icon: Icons.bolt_rounded,
@@ -2690,7 +2570,7 @@ class _LandingScreenState extends State<LandingScreen>
  ),
  child: Text(
  text,
- style: const TextStyle(fontSize: 14, color: Color(0xFFE0F2FE), height: 1.6),
+ style: const TextStyle(fontSize: 14, color: Color(0xFFFFF7E6), height: 1.6),
  ),
  );
  }
@@ -2818,7 +2698,7 @@ class _LandingScreenState extends State<LandingScreen>
  icon: Icons.timeline,
  title: 'Continuity Across Phases',
  description: 'KAZ AI remembers what was decided in Initiation and carries that context into Planning, Execution, and Launch — no more lost handoffs.',
- color: const Color(0xFF3B82F6),
+ color: const Color(0xFFFBBF24),
  ),
  ),
  SizedBox(
@@ -2872,7 +2752,7 @@ class _LandingScreenState extends State<LandingScreen>
  Widget _buildUseCasesSection(BuildContext context, bool wideLayout) {
  final industries = [
  _IndustryData(icon: Icons.bolt, name: 'Energy', demo: 'Solar Farm Expansion', color: const Color(0xFFF59E0B), highlights: ['Business Case', 'Work Breakdown Structure', 'Procurement Planning', 'Contractor Management', 'Project Schedule', 'Risk Register', 'Executive Dashboard']),
- _IndustryData(icon: Icons.computer, name: 'Information Technology', demo: 'AI Customer Support Platform', color: const Color(0xFF3B82F6), highlights: ['Business Case', 'Frontend Planning', 'Sprint Planning', 'Kanban Board', 'Burndown Charts', 'Release Planning']),
+ _IndustryData(icon: Icons.computer, name: 'Information Technology', demo: 'AI Customer Support Platform', color: const Color(0xFFFBBF24), highlights: ['Business Case', 'Frontend Planning', 'Sprint Planning', 'Kanban Board', 'Burndown Charts', 'Release Planning']),
  _IndustryData(icon: Icons.local_hospital, name: 'Healthcare', demo: 'Hospital Imaging Center Construction', color: const Color(0xFFEF4444), highlights: ['Regulatory Planning', 'Equipment Procurement', 'Construction Tracking', 'Budget Control', 'Commissioning']),
  _IndustryData(icon: Icons.school, name: 'Education', demo: 'University Mobile Student App', color: const Color(0xFF10B981), highlights: ['Product Discovery', 'Sprint Planning', 'Stakeholder Management', 'User Acceptance Testing']),
  _IndustryData(icon: Icons.factory, name: 'Manufacturing', demo: 'Smart Manufacturing Transformation', color: const Color(0xFF8B5CF6), highlights: ['Facility Upgrades', 'IoT Integration', 'ERP Integration', 'Agile Software Delivery']),
@@ -2880,14 +2760,14 @@ class _LandingScreenState extends State<LandingScreen>
  ];
 
  final methodologies = [
- _MethodologyData(name: 'Waterfall Projects', desc: 'Designed for engineering, construction, infrastructure, capital projects, and regulated industries.', demos: ['Solar Farm Expansion', 'Hospital Imaging Center Construction'], color: const Color(0xFF3B82F6)),
+ _MethodologyData(name: 'Waterfall Projects', desc: 'Designed for engineering, construction, infrastructure, capital projects, and regulated industries.', demos: ['Solar Farm Expansion', 'Hospital Imaging Center Construction'], color: const Color(0xFFFBBF24)),
  _MethodologyData(name: 'Agile Projects', desc: 'Built for software development, innovation, and product teams.', demos: ['AI Customer Support Platform', 'University Mobile Student App'], color: const Color(0xFF10B981)),
  _MethodologyData(name: 'Hybrid Projects', desc: 'Combines structured planning with iterative execution.', demos: ['Smart Manufacturing Transformation', 'Enterprise EHR Modernization'], color: const Color(0xFF8B5CF6)),
  ];
 
  final demos = [
  _DemoData(title: 'Solar Farm Expansion', industry: 'Energy', methodology: 'Waterfall', icon: Icons.wb_sunny, color: const Color(0xFFF59E0B), experience: ['Project Charter', 'AI-generated WBS', 'Schedule Builder', 'Procurement Planning', 'Contractor Management', 'Risk Dashboard', 'Executive Reporting']),
- _DemoData(title: 'AI Customer Support Platform', industry: 'Information Technology', methodology: 'Agile', icon: Icons.support_agent, color: const Color(0xFF3B82F6), experience: ['Product Vision', 'Product Backlog', 'Sprint Planning', 'AI Story Generation', 'Sprint Boards', 'Sprint Reviews', 'Burndown Charts']),
+ _DemoData(title: 'AI Customer Support Platform', industry: 'Information Technology', methodology: 'Agile', icon: Icons.support_agent, color: const Color(0xFFFBBF24), experience: ['Product Vision', 'Product Backlog', 'Sprint Planning', 'AI Story Generation', 'Sprint Boards', 'Sprint Reviews', 'Burndown Charts']),
  _DemoData(title: 'Hospital Imaging Center Construction', industry: 'Healthcare', methodology: 'Waterfall', icon: Icons.local_hospital, color: const Color(0xFFEF4444), experience: ['Business Case', 'Scope Planning', 'Budget Management', 'Procurement', 'Construction Tracking', 'Equipment Installation', 'Project Closeout']),
  _DemoData(title: 'University Student Mobile App', industry: 'Education', methodology: 'Agile', icon: Icons.school, color: const Color(0xFF10B981), experience: ['User Personas', 'Product Roadmap', 'Sprint Planning', 'Feature Prioritization', 'User Testing', 'Release Management']),
  _DemoData(title: 'Smart Manufacturing Transformation', industry: 'Manufacturing', methodology: 'Hybrid', icon: Icons.factory, color: const Color(0xFF8B5CF6), experience: ['Facility Assessment', 'Engineering Planning', 'ERP Integration', 'IoT Dashboard', 'Agile Software Delivery', 'Executive Reporting']),
@@ -3591,7 +3471,7 @@ class _LandingScreenState extends State<LandingScreen>
  mainAxisSize: MainAxisSize.min,
  children: [
  Icon(cred.icon,
- color: const Color(0xFF3B82F6), size: 20),
+ color: const Color(0xFFFBBF24), size: 20),
  const SizedBox(width: 12),
  Text(
  cred.label,
@@ -3623,7 +3503,7 @@ class _LandingScreenState extends State<LandingScreen>
  begin: Alignment.topLeft,
  end: Alignment.bottomRight,
  colors: [
- const Color(0xFF3B82F6).withValues(alpha: 0.08),
+ const Color(0xFFFBBF24).withValues(alpha: 0.08),
  const Color(0xFF050505),
  const Color(0xFF8B5CF6).withValues(alpha: 0.06),
  ],
@@ -3862,7 +3742,7 @@ class _LandingScreenState extends State<LandingScreen>
  idealFor: 'Individuals, small businesses, project managers, and small teams.',
  features: ['1 Active Project', '1 Owner', 'AI Project Assistant', 'Initiation Phase', 'Planning Phase', 'Design Phase', 'Execution Phase', 'Launch Phase', 'Continuous end-to-end delivery', 'Risk Management', 'Document Management', 'Dashboards', 'PDF Reports'],
  maxTeamSize: '10 Contributors',
- color: const Color(0xFF3B82F6),
+ color: const Color(0xFFFBBF24),
  ),
  _PricingPlanData(
  name: 'Project Pro',
@@ -4020,7 +3900,7 @@ class _LandingScreenState extends State<LandingScreen>
  children: const [
  Row(
  children: [
- Icon(Icons.admin_panel_settings, color: Color(0xFF3B82F6), size: 24),
+ Icon(Icons.admin_panel_settings, color: Color(0xFFFBBF24), size: 24),
  SizedBox(width: 12),
  Text('Role-Based Access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
  ],
@@ -4621,7 +4501,7 @@ class _LandingScreenState extends State<LandingScreen>
  'Remediation roadmap',
  'Executive readout',
  ],
- accent: const Color(0xFF3B82F6),
+ accent: const Color(0xFFFBBF24),
  bookingUrl: 'https://calendar.app.google/aGQDFPpmEK9eDh5W6',
  ),
  _ConsultPackage(
@@ -4918,7 +4798,7 @@ class _LandingScreenState extends State<LandingScreen>
  author: 'Thandiwe M.',
  role: 'Head of Delivery, FinTech scale-up',
  rating: 5,
- avatarColor: const Color(0xFF3B82F6),
+ avatarColor: const Color(0xFFFBBF24),
  ),
  _Review(
  quote:
@@ -7144,7 +7024,7 @@ class _PremiumDropdownItemState extends State<_PremiumDropdownItem> {
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: BoxDecoration(
  color: _isHovered
- ? const Color(0xFF2563EB).withValues(alpha: 0.15)
+ ? const Color(0xFFD97706).withValues(alpha: 0.15)
  : Colors.transparent,
  border: !widget.isLast
  ? Border(
@@ -7163,7 +7043,7 @@ class _PremiumDropdownItemState extends State<_PremiumDropdownItem> {
  height: 32,
  decoration: BoxDecoration(
  color: _isHovered
- ? const Color(0xFF2563EB).withValues(alpha: 0.2)
+ ? const Color(0xFFD97706).withValues(alpha: 0.2)
  : Colors.white.withValues(alpha: 0.06),
  borderRadius: BorderRadius.circular(8),
  ),
@@ -7171,7 +7051,7 @@ class _PremiumDropdownItemState extends State<_PremiumDropdownItem> {
  widget.item.icon,
  size: 16,
  color: _isHovered
- ? const Color(0xFF60A5FA)
+ ? const Color(0xFFFBBF24)
  : Colors.white.withValues(alpha: 0.7),
  ),
  ),
@@ -7197,7 +7077,7 @@ class _PremiumDropdownItemState extends State<_PremiumDropdownItem> {
  child: Icon(
  Icons.arrow_forward_ios,
  size: 12,
- color: const Color(0xFF60A5FA).withValues(alpha: _isHovered ? 1.0 : 0.0),
+ color: const Color(0xFFFBBF24).withValues(alpha: _isHovered ? 1.0 : 0.0),
  ),
  ),
  ],
@@ -7235,22 +7115,7 @@ class _DemoData {
   const _DemoData({required this.title, required this.industry, required this.methodology, required this.icon, required this.color, required this.experience});
 }
 
-class _ScaleCard {
-  final String num;
-  final String title;
-  final String desc;
-  final IconData icon;
-  final Color color;
-  const _ScaleCard({required this.num, required this.title, required this.desc, required this.icon, required this.color});
-}
 
-class _DeliveryStep {
-  final String num;
-  final String title;
-  final Color color;
-  final List<String> items;
-  const _DeliveryStep({required this.num, required this.title, required this.color, required this.items});
-}
 
 class _PricingPlanData {
   final String name;

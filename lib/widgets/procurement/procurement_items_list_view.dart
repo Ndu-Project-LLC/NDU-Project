@@ -96,7 +96,7 @@ class _SummaryMetricsRow extends StatelessWidget {
     final cards = [
       ProcurementSummaryCard(
         icon: Icons.inventory_2_outlined,
-        iconBackground: const Color(0xFFEFF6FF),
+        iconBackground: const Color(0xFFFFF7E6),
         value: '$totalItems',
         label: 'Total Items',
       ),
@@ -276,7 +276,7 @@ class _AddItemButton extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF2563EB),
+        backgroundColor: const Color(0xFFD97706),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -652,7 +652,7 @@ class _TrackableRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFEFF6FF)
+              ? const Color(0xFFFFF7E6)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
@@ -663,7 +663,7 @@ class _TrackableRow extends StatelessWidget {
               height: 28,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF2563EB)
+                    ? const Color(0xFFD97706)
                     : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(8),
               ),

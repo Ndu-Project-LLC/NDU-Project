@@ -563,9 +563,9 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
  description: committedTotal == 0
  ? 'No committed costs yet'
  : 'Reference-only downstream commitments',
- backgroundColor: const Color(0xFFEFF6FF),
- accentColor: const Color(0xFF1D4ED8),
- descriptionColor: const Color(0xFF1D4ED8),
+ backgroundColor: const Color(0xFFFFF7E6),
+ accentColor: const Color(0xFFD97706),
+ descriptionColor: const Color(0xFFD97706),
  badgeLabel: committedTotal == 0 ? null : 'Committed',
  ),
  _CostSummary(
@@ -3196,7 +3196,7 @@ class _CoverageSummaryCard extends StatelessWidget {
  if (reconciliationReport.supersededCount > 0) ...[
  Text(
  '${reconciliationReport.supersededCount} imported line(s) are currently superseded by stronger cost states.',
- style: const TextStyle(fontSize: 13, color: Color(0xFF1D4ED8)),
+ style: const TextStyle(fontSize: 13, color: Color(0xFFD97706)),
  ),
  const SizedBox(height: 12),
  ],
@@ -3423,7 +3423,7 @@ class _BoeSummaryCard extends StatelessWidget {
  value: pct,
  minHeight: 4,
  backgroundColor: Colors.white,
- valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+ valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFD97706)),
  ),
  ),
  ],
@@ -3664,7 +3664,7 @@ class _ContractStrategyCard extends StatelessWidget {
  children: [
  _strategyStat('Total Contract Value', formatCurrency(totalContractValue), const Color(0xFF1E293B)),
  const SizedBox(width: 16),
- _strategyStat('Linked Cost Items', '${contractIds.length} linked', const Color(0xFF2563EB)),
+ _strategyStat('Linked Cost Items', '${contractIds.length} linked', const Color(0xFFD97706)),
  const SizedBox(width: 16),
  _strategyStat('Coverage', '${pctLinkedToContracts.toStringAsFixed(1)}% of total', pctLinkedToContracts > 50 ? const Color(0xFF059669) : const Color(0xFFC2410C)),
  ],
@@ -3768,7 +3768,7 @@ class _ContractStrategyCard extends StatelessWidget {
  switch (status) {
  case ContractStatus.draft: return const Color(0xFF94A3B8);
  case ContractStatus.under_review: return const Color(0xFFC2410C);
- case ContractStatus.approved: return const Color(0xFF2563EB);
+ case ContractStatus.approved: return const Color(0xFFD97706);
  case ContractStatus.executed: return const Color(0xFF059669);
  case ContractStatus.expired: return const Color(0xFF64748B);
  case ContractStatus.terminated: return const Color(0xFFDC2626);
@@ -4219,7 +4219,7 @@ class _ContingencyRiskPanel extends StatelessWidget {
  _ContingencyRow(
  label: 'PERT mean estimate',
  amount: pertMeanTotal,
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFD97706),
  ),
  const SizedBox(height: 4),
  _ContingencyRow(
@@ -4289,7 +4289,7 @@ class _ContingencyRiskPanel extends StatelessWidget {
  forecastTotal,
  Icons.design_services_outlined,
  'Design changes, tech uncertainty, rework',
- const Color(0xFF2563EB),
+ const Color(0xFFD97706),
  ),
  const SizedBox(height: 6),
  _riskDomainTile(
@@ -4510,7 +4510,7 @@ class _CbsTreeWorkspace extends StatelessWidget {
  children: [
  _legendDot(const Color(0xFFB45309), 'Forecast'),
  const SizedBox(width: 16),
- _legendDot(const Color(0xFF1D4ED8), 'Committed'),
+ _legendDot(const Color(0xFFD97706), 'Committed'),
  const SizedBox(width: 16),
  _legendDot(const Color(0xFF047857), 'Actual'),
  const Spacer(),
@@ -4707,7 +4707,7 @@ class _CbsTreeTileState extends State<_CbsTreeTile> {
  width: 8,
  height: 8,
  decoration: BoxDecoration(
- color: hasChildren ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
+ color: hasChildren ? const Color(0xFFD97706) : const Color(0xFF94A3B8),
  shape: BoxShape.circle,
  ),
  ),
@@ -4729,7 +4729,7 @@ class _CbsTreeTileState extends State<_CbsTreeTile> {
  child: _DesignMaturityBadge(designMaturity: node.designMaturity),
  ),
  SizedBox(width: 100, child: Text(formatCurrency(node.planned), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFB45309)), textAlign: TextAlign.right)),
- SizedBox(width: 100, child: Text(node.committed > 0 ? formatCurrency(node.committed) : '-', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: node.committed > 0 ? const Color(0xFF1D4ED8) : const Color(0xFFCBD5E1)), textAlign: TextAlign.right)),
+ SizedBox(width: 100, child: Text(node.committed > 0 ? formatCurrency(node.committed) : '-', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: node.committed > 0 ? const Color(0xFFD97706) : const Color(0xFFCBD5E1)), textAlign: TextAlign.right)),
  SizedBox(width: 100, child: Text(node.actual > 0 ? formatCurrency(node.actual) : '-', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: node.actual > 0 ? const Color(0xFF047857) : const Color(0xFFCBD5E1)), textAlign: TextAlign.right)),
  ],
  ),
@@ -5036,7 +5036,7 @@ class _EarnedValueMetricsRow extends StatelessWidget {
  child: Row(
  children: [
  _evmMetric('BAC', formatCurrency(bac), const Color(0xFF1E293B)),
- _evmMetric('PV', formatCurrency(pv), const Color(0xFF2563EB)),
+ _evmMetric('PV', formatCurrency(pv), const Color(0xFFD97706)),
  _evmMetric('EV', formatCurrency(ev), const Color(0xFF059669)),
  _evmMetric('AC', formatCurrency(ac), const Color(0xFFB45309)),
  _evmMetric('CPI', cpi.toStringAsFixed(2), _evmColor(cpi, 1.0)),
@@ -5553,7 +5553,7 @@ class _BaselineDeltaStrip extends StatelessWidget {
  _DeltaMetric(
  label: 'Baseline',
  value: formatCurrency(baseline),
- tone: const Color(0xFF1D4ED8),
+ tone: const Color(0xFFD97706),
  ),
  _DeltaMetric(
  label: 'Adjustments',
@@ -6896,7 +6896,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
  }
 
  Color _accentForView(_CostView view) => view == _CostView.direct
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFD97706)
  : const Color(0xFF047857);
 
  String _viewLabel(_CostView view) =>
@@ -6949,7 +6949,7 @@ class _TypeSelector extends StatelessWidget {
  children: _CostView.values.map((view) {
  final bool isActive = view == selectedView;
  final Color accent = view == _CostView.direct
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFD97706)
  : const Color(0xFF047857);
  return Expanded(
  child: GestureDetector(
@@ -7337,7 +7337,7 @@ String _costStateLabel(String costState) {
 Color _costStateTone(String costState) {
  switch (costState) {
  case 'committed':
- return const Color(0xFF1D4ED8);
+ return const Color(0xFFD97706);
  case 'actual':
  return const Color(0xFF047857);
  case 'forecast':
@@ -7377,7 +7377,7 @@ Color _designMaturityColor(String designMaturity) {
  case '90%':
  return const Color(0xFF059669);
  case 'IFC':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'AsBuilt':
  return const Color(0xFF7C3AED);
  default:
@@ -7523,11 +7523,11 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
  Container(
  padding: const EdgeInsets.all(10),
  decoration: BoxDecoration(
- color: const Color(0xFFDBEAFE),
+ color: const Color(0xFFFFF7E6),
  borderRadius: BorderRadius.circular(12),
  ),
  child: const Icon(Icons.auto_awesome,
- color: Color(0xFF2563EB), size: 24),
+ color: Color(0xFFD97706), size: 24),
  ),
  const SizedBox(width: 16),
  Expanded(
@@ -7628,12 +7628,12 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
  color: isSelected
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF7E6)
  : Colors.white,
  borderRadius: BorderRadius.circular(16),
  border: Border.all(
  color: isSelected
- ? const Color(0xFF3B82F6)
+ ? const Color(0xFFFBBF24)
  : const Color(0xFFE5E7EB),
  width: isSelected ? 2 : 1,
  ),
@@ -7650,7 +7650,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
  ? Icons.check_circle
  : Icons.circle_outlined,
  color: isSelected
- ? const Color(0xFF3B82F6)
+ ? const Color(0xFFFBBF24)
  : const Color(0xFFCBD5E1),
  size: 22,
  ),
@@ -7715,7 +7715,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
  fontSize: 14,
  fontWeight: FontWeight.w700,
  color: Color(
- 0xFF2563EB), // Blue-600
+ 0xFFD97706), // Blue-600
  ),
  ),
  ],
@@ -7757,7 +7757,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
  onPressed:
  _selectedIndices.isEmpty ? null : _addSelected,
  style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFD97706),
  padding: const EdgeInsets.symmetric(
  horizontal: 24, vertical: 12),
  shape: RoundedRectangleBorder(

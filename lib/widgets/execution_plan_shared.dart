@@ -474,7 +474,7 @@ class InfoBadge extends StatelessWidget {
         color: Color(0xFFDAE9FF),
         shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.info_outline_rounded, color: Color(0xFF2563EB)),
+      child: const Icon(Icons.info_outline_rounded, color: Color(0xFFD97706)),
     );
   }
 }

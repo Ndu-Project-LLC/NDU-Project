@@ -7,6 +7,8 @@ import 'package:ndu_project/utils/table_import_helper.dart';
 import 'dart:async';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+
 class StaffTeamResourceGrid extends StatefulWidget {
   const StaffTeamResourceGrid({
     super.key,
@@ -496,12 +498,12 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
   void _downloadTemplate() {
     TableImportHelper.downloadTemplate(
       filename: 'staffing_needs_template.csv',
-      headers: ['Role', 'Qty', 'Type', 'Start Date', 'Duration (months)', 'Monthly Rate', 'Status'],
+      headers: ['Role', 'Name', 'Qty', 'Employment', 'Category', 'Location', 'Start (Mob.)', 'End (Release)', 'NDU Access', 'Status'],
       sampleRows: [
-        ['Project Manager', '1', 'Internal', 'Jan 2024', '6', '4000', 'Active'],
-        ['Technical Lead', '2', 'Internal', 'Jan 2024', '8', '5000', 'Active'],
-        ['Business Analyst', '1', 'External', 'Feb 2024', '4', '3500', 'Not Started'],
-        ['Quality Assurance', '2', 'Internal', 'Mar 2024', '6', '3000', 'Not Started'],
+        ['Project Manager', '', '1', 'Full Time', 'Employee', 'Houston, TX', 'Jan 2024', 'Dec 2024', 'Yes', 'Active'],
+        ['Technical Lead', '', '2', 'Full Time', 'Employee', 'Houston, TX', 'Jan 2024', 'Nov 2024', 'Yes', 'Active'],
+        ['Business Analyst', '', '1', 'Part Time', 'Contractor', 'Remote', 'Feb 2024', 'Jun 2024', 'No', 'Not Started'],
+        ['Quality Assurance', '', '2', 'Full Time', 'Employee', 'Austin, TX', 'Mar 2024', 'Sep 2024', 'Yes', 'Not Started'],
       ],
     );
   }
@@ -512,7 +514,13 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     widget.onRowsChanged(updated);
   }
 
-  void _removeRow(int index) {
+  Future<void> _removeRow(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Staffing Row',
+      itemLabel: _rows[index].role,
+    );
+    if (!confirmed) return;
     final updated = List<StaffingRow>.from(_rows);
     updated.removeAt(index);
     widget.onRowsChanged(updated);
@@ -900,13 +908,15 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
       ),
       child: const Row(
         children: [
-          _PremiumHeaderCell('Role', flex: 4),
+          _PremiumHeaderCell('Role', flex: 3),
+          _PremiumHeaderCell('Name', flex: 2),
           _PremiumHeaderCell('Qty', flex: 1),
-          _PremiumHeaderCell('Type', flex: 2),
-          _PremiumHeaderCell('Start Date', flex: 2),
-          _PremiumHeaderCell('Duration', flex: 2),
-          _PremiumHeaderCell('Monthly Rate', flex: 2),
-          _PremiumHeaderCell('Subtotal', flex: 2),
+          _PremiumHeaderCell('Employment', flex: 2),
+          _PremiumHeaderCell('Category', flex: 2),
+          _PremiumHeaderCell('Location', flex: 2),
+          _PremiumHeaderCell('Start (Mob.)', flex: 2),
+          _PremiumHeaderCell('End (Release)', flex: 2),
+          _PremiumHeaderCell('NDU Access', flex: 1),
           _PremiumHeaderCell('Status', flex: 2),
           _PremiumHeaderCell('Actions', flex: 2),
         ],
@@ -1151,7 +1161,7 @@ class _PremiumStaffingRowState extends State<_PremiumStaffingRow> {
         return const Color(0xFF059669);
       case 'in progress':
       case 'active':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFD97706);
       case 'planned':
       case 'not started':
         return const Color(0xFF6B7280);
@@ -1170,7 +1180,7 @@ class _PremiumStaffingRowState extends State<_PremiumStaffingRow> {
         return const Color(0xFFECFDF5);
       case 'in progress':
       case 'active':
-        return const Color(0xFFEFF6FF);
+        return const Color(0xFFFFF7E6);
       case 'planned':
       case 'not started':
         return const Color(0xFFF3F4F6);

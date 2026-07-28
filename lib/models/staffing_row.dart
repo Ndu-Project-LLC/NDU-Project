@@ -1,4 +1,6 @@
-/// Model for a staffing requirement row in the Staff Team Orchestration page
+/// Model for a staffing requirement row in the Staff Team Orchestration page.
+/// Extended with individual person tracking, employment type/category split,
+/// NDU project access, location, and release date per user requirements.
 class StaffingRow {
   final String id;
   String role;
@@ -12,6 +14,14 @@ class StaffingRow {
   String notes; // Manual notes only, no AI generation
   String status;
 
+  // ── New fields per user requirements ──
+  String personName; // Name of the person (typeable, with autocomplete)
+  String employmentType; // 'Full Time' or 'Part Time'
+  String category; // 'Employee' or 'Contractor'
+  String endDate; // Release/demobilization date
+  bool nduAccess; // Whether this person will have access to NDU platform
+  String location; // Where the person/role is located
+
   StaffingRow({
     String? id,
     this.role = '',
@@ -24,6 +34,12 @@ class StaffingRow {
     this.skillRequirements = '',
     this.notes = '',
     this.status = 'Not Started',
+    this.personName = '',
+    this.employmentType = 'Full Time',
+    this.category = 'Employee',
+    this.endDate = '',
+    this.nduAccess = false,
+    this.location = '',
   }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
 
   /// Calculate subtotal: quantity × duration × monthlyCost
@@ -54,6 +70,12 @@ class StaffingRow {
     String? skillRequirements,
     String? notes,
     String? status,
+    String? personName,
+    String? employmentType,
+    String? category,
+    String? endDate,
+    bool? nduAccess,
+    String? location,
   }) {
     return StaffingRow(
       id: id,
@@ -67,6 +89,12 @@ class StaffingRow {
       skillRequirements: skillRequirements ?? this.skillRequirements,
       notes: notes ?? this.notes,
       status: status ?? this.status,
+      personName: personName ?? this.personName,
+      employmentType: employmentType ?? this.employmentType,
+      category: category ?? this.category,
+      endDate: endDate ?? this.endDate,
+      nduAccess: nduAccess ?? this.nduAccess,
+      location: location ?? this.location,
     );
   }
 
@@ -82,6 +110,12 @@ class StaffingRow {
         'skillRequirements': skillRequirements,
         'notes': notes,
         'status': status,
+        'personName': personName,
+        'employmentType': employmentType,
+        'category': category,
+        'endDate': endDate,
+        'nduAccess': nduAccess,
+        'location': location,
       };
 
   factory StaffingRow.fromJson(Map<String, dynamic> json) {
@@ -102,6 +136,12 @@ class StaffingRow {
       skillRequirements: json['skillRequirements']?.toString() ?? '',
       notes: json['notes']?.toString() ?? '',
       status: json['status']?.toString() ?? 'Not Started',
+      personName: json['personName']?.toString() ?? '',
+      employmentType: json['employmentType']?.toString() ?? 'Full Time',
+      category: json['category']?.toString() ?? 'Employee',
+      endDate: json['endDate']?.toString() ?? '',
+      nduAccess: json['nduAccess'] == true,
+      location: json['location']?.toString() ?? '',
     );
   }
 }

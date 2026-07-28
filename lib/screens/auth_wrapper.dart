@@ -7,7 +7,6 @@ import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/access_policy.dart';
 import 'package:ndu_project/services/subscription_service.dart'; // Added
-import 'package:ndu_project/screens/pricing_screen.dart'; // Re-added
 import 'package:ndu_project/widgets/restricted_access.dart';
 
 class AuthWrapper extends StatefulWidget {
@@ -117,8 +116,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
  // Client users with active subscription go to Dashboard
  return const _KeyLoader(child: HomeScreen());
  } else {
- // Client users without subscription go to Pricing
- return const _KeyLoader(child: PricingScreen());
+ // Client users without subscription go to the public landing page.
+ return const LandingScreen();
  }
  },
  );

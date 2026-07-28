@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 class BackendDesignScreen extends StatefulWidget {
  const BackendDesignScreen({super.key});
 
@@ -385,7 +386,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  collapsible: true,
  initiallyExpanded: false,
  headerIcon: Icons.dns_outlined,
- headerIconColor: const Color(0xFF2563EB),
+ headerIconColor: const Color(0xFFD97706),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -406,7 +407,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Component topology showing services, data stores, integrations, and structural dependencies. '
  'Each node should have a clear owner, type classification, and lifecycle status. Map connections '
  'to reveal data flow paths and integration touchpoints.',
- const Color(0xFF2563EB),
+ const Color(0xFFD97706),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -731,7 +732,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 4),
  IconButton(
  onPressed: () => _openDataFlowDialog(existing: _dataFlows[i]),
- icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFFD97706)),
  tooltip: 'Edit',
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -876,7 +877,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 4),
  IconButton(
  onPressed: () => _openDesignDocumentDialog(existing: _designDocuments[i]),
- icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFFD97706)),
  tooltip: 'Edit',
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -1138,7 +1139,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(14),
  borderSide: const BorderSide(
- color: Color(0xFF2563EB),
+ color: Color(0xFFD97706),
  width: 1.4,
  ),
  ),
@@ -1195,7 +1196,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(14),
  borderSide: const BorderSide(
- color: Color(0xFF2563EB),
+ color: Color(0xFFD97706),
  width: 1.4,
  ),
  ),
@@ -1377,11 +1378,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteComponent(String id) {
- setState(() => _components.removeWhere((entry) => entry.id == id));
- _scheduleSave();
- _logActivity('Deleted architecture component row', details: {'itemId': id});
- }
+ Future<void> _deleteComponent(String id) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Component',
+    message: 'Delete this architecture component? This action cannot be undone.',
+  );
+  if (!confirmed) return;
+  setState(() => _components.removeWhere((entry) => entry.id == id));
+  _scheduleSave();
+  _logActivity('Deleted architecture component row', details: {'itemId': id});
+  }
 
  void _addQuickArchitectureComponent() {
  final name = _quickComponentNameController.text.trim();
@@ -1418,11 +1425,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteDataFlow(String id) {
- setState(() => _dataFlows.removeWhere((entry) => entry.id == id));
- _scheduleSave();
- _logActivity('Deleted data flow row', details: {'itemId': id});
- }
+ Future<void> _deleteDataFlow(String id) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Data Flow',
+    message: 'Delete this data flow entry? This action cannot be undone.',
+  );
+  if (!confirmed) return;
+  setState(() => _dataFlows.removeWhere((entry) => entry.id == id));
+  _scheduleSave();
+  _logActivity('Deleted data flow row', details: {'itemId': id});
+  }
 
  Future<void> _addDesignDocument() => _openDesignDocumentDialog();
 
@@ -1434,11 +1447,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteDesignDocument(String id) {
- setState(() => _designDocuments.removeWhere((entry) => entry.id == id));
- _scheduleSave();
- _logActivity('Deleted design document row', details: {'itemId': id});
- }
+ Future<void> _deleteDesignDocument(String id) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Design Document',
+    message: 'Delete this design document? This action cannot be undone.',
+  );
+  if (!confirmed) return;
+  setState(() => _designDocuments.removeWhere((entry) => entry.id == id));
+  _scheduleSave();
+  _logActivity('Deleted design document row', details: {'itemId': id});
+  }
 
  Future<void> _addEntity() => _openEntityDialog();
 
@@ -1449,11 +1468,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteEntity(String id) {
- setState(() => _entities.removeWhere((entry) => entry.id == id));
- _scheduleSave();
- _logActivity('Deleted data entity row', details: {'itemId': id});
- }
+ Future<void> _deleteEntity(String id) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Entity',
+    message: 'Delete this data entity? This action cannot be undone.',
+  );
+  if (!confirmed) return;
+  setState(() => _entities.removeWhere((entry) => entry.id == id));
+  _scheduleSave();
+  _logActivity('Deleted data entity row', details: {'itemId': id});
+  }
 
  void _addQuickDataEntity() {
  final name = _quickEntityNameController.text.trim();
@@ -2277,11 +2302,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteField(String id) {
- setState(() => _fields.removeWhere((entry) => entry.id == id));
- _scheduleSave();
- _logActivity('Deleted field row', details: {'itemId': id});
- }
+ Future<void> _deleteField(String id) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Field',
+    message: 'Delete this database field? This action cannot be undone.',
+  );
+  if (!confirmed) return;
+  setState(() => _fields.removeWhere((entry) => entry.id == id));
+  _scheduleSave();
+  _logActivity('Deleted field row', details: {'itemId': id});
+  }
 
  // ─── Table Builders ────────────────────────────────────────────────────────
 
@@ -3195,7 +3226,7 @@ class _SectionHeader extends StatelessWidget {
  icon: const Icon(Icons.add, size: 16),
  label: Text(actionLabel),
  style: TextButton.styleFrom(
- foregroundColor: const Color(0xFF2563EB),
+ foregroundColor: const Color(0xFFD97706),
  padding: EdgeInsets.zero,
  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
  minimumSize: const Size(0, 32),
@@ -3396,7 +3427,7 @@ class _EditCell extends StatelessWidget {
  Widget build(BuildContext context) {
  return IconButton(
  onPressed: onPressed,
- icon: const Icon(Icons.edit_outlined, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.edit_outlined, color: Color(0xFFD97706)),
  tooltip: 'Edit',
  );
  }

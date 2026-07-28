@@ -4,14 +4,14 @@ const String appFontFamily = 'Satoshi';
 const String _appFontFamily = appFontFamily;
 
 class LightModeColors {
-  // Brand: yellow accent like the screenshot logo, neutral blue/green for UI
+  // Brand: yellow accent like the screenshot logo - YELLOW EVERYWHERE
   static const lightPrimary = Color(0xFFFFC812); // Brand yellow
   static const lightOnPrimary = Color(0xFF1C1C1C);
   static const lightPrimaryContainer =
       Color(0xFFFFF4CC); // Soft yellow container
   static const lightOnPrimaryContainer = Color(0xFF3D2E00);
   static const lightSecondary =
-      Color(0xFF2563EB); // Info blue (links, highlights)
+      Color(0xFFD97706); // Amber/Gold (was blue - changed to yellow)
   static const lightOnSecondary = Color(0xFFFFFFFF);
   static const lightTertiary = Color(0xFF16A34A); // Success green
   static const lightOnTertiary = Color(0xFFFFFFFF);
@@ -33,7 +33,7 @@ class DarkModeColors {
   static const darkOnPrimary = Color(0xFF141414);
   static const darkPrimaryContainer = Color(0xFF3A3000);
   static const darkOnPrimaryContainer = Color(0xFFFFF4CC);
-  static const darkSecondary = Color(0xFF93C5FD); // Softer blue for dark mode
+  static const darkSecondary = Color(0xFFFBBF24); // Amber/Gold for dark mode (was blue)
   static const darkOnSecondary = Color(0xFF0B1220);
   static const darkTertiary = Color(0xFF34D399); // Emerald 400
   static const darkOnTertiary = Color(0xFF0B1220);
@@ -58,7 +58,7 @@ class DarkModeColors {
   static const textMuted = Color(0xFF64748B);
   static const successColor = Color(0xFF34D399);
   static const warningColor = Color(0xFFFBBF24);
-  static const infoColor = Color(0xFF60A5FA);
+  static const infoColor = Color(0xFFFBBF24); // Amber/Gold (was blue)
   static const aiColor = Color(0xFFA78BFA);
 }
 
@@ -85,9 +85,9 @@ class AppSemanticColors {
   static const successSurface = Color(0xFFD1FAE5); // Emerald 100
 
   // Info
-  static const info = Color(0xFF2563EB); // Indigo 600
+  static const info = Color(0xFFD97706); // Amber 600 (was Indigo blue)
   static const onInfo = Color(0xFFFFFFFF);
-  static const infoSurface = Color(0xFFE6F0FF); // Soft blue
+  static const infoSurface = Color(0xFFFFF7E6); // Soft amber (was soft blue)
 
   // Warning
   static const warning = Color(0xFFF59E0B); // Amber 600

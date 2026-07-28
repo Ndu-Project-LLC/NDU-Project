@@ -17,21 +17,26 @@ import 'package:ndu_project/widgets/ai_suggesting_textfield.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
+import 'package:ndu_project/widgets/interface_identification_dialog.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/services/activity_log_service.dart';
+import 'package:ndu_project/services/openai_service_secure.dart';
 // ─── Tab definitions ────────────────────────────────────────────────────────
 
 enum _ImTab {
- register('Interface Register'),
- architecture('Architecture'),
- raci('RACI & Governance'),
- risks('Risks & Decisions'),
- handoff('Handoff Readiness'),
- maturity('Maturity'),
- audit('Audit Trail');
+  register('Interface Register'),
+  interfaceTypes('Interface Types'),
+  responsibilities('Responsibilities'),
+  coordination('Coordination & Communication'),
+  dependencyMgmt('Dependency Management'),
+  risks('Interface Risks'),
+  monitoring('Monitoring & Control'),
+  deliverables('Key Deliverables'),
+  audit('Audit Trail');
 
- const _ImTab(this.label);
- final String label;
+  const _ImTab(this.label);
+  final String label;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -82,10 +87,261 @@ class InterfaceManagementScreen extends StatefulWidget {
 }
 
 class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
- _ImTab _selectedTab = _ImTab.register;
+  _ImTab _selectedTab = _ImTab.register;
+  bool _dialogShown = false;
 
- @override
- Widget build(BuildContext context) {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!_dialogShown) {
+        _dialogShown = true;
+        await showInterfaceIdentificationDialog(context);
+        if (mounted) await _autoPopulateFromProjectData(context);
+      }
+    });
+  }
+
+  Future<void> _autoPopulateFromProjectData(BuildContext context) async {
+    final data = ProjectDataHelper.getData(context);
+    if (data.planningNotes['interface_auto_populated'] == 'true') return;
+    if (data.interfaceEntries.isNotEmpty) return;
+
+    final entries = <InterfaceEntry>[];
+    final now = DateTime.now().toIso8601String();
+    final logEntries = List<InterfaceChangeLogEntry>.from(data.interfaceChangeLog);
+
+    // From Vendors
+    for (final v in data.vendors) {
+      final name = v.name.trim();
+      if (name.isEmpty) continue;
+      entries.add(InterfaceEntry(
+        boundary: name,
+        interfaceType: 'Contractual',
+        partyA: 'Project Team',
+        partyB: name,
+        criticality: 'Major',
+        priority: 'Medium',
+        status: 'Pending',
+        notes: 'Vendor interface - ${v.equipmentOrService.trim()}',
+      ));
+    }
+
+    // From Contractors
+    for (final c in data.contractors) {
+      final name = c.name.trim();
+      if (name.isEmpty) continue;
+      entries.add(InterfaceEntry(
+        boundary: name,
+        interfaceType: 'Contractual',
+        partyA: 'Project Team',
+        partyB: name,
+        criticality: 'Major',
+        priority: 'Medium',
+        status: 'Pending',
+        notes: 'Contractor interface - ${c.service.trim()}',
+      ));
+    }
+
+    // From External Integrations (Technology Planning)
+    for (final ext in data.externalIntegrations) {
+      final name = ext['name']?.toString().trim() ?? '';
+      if (name.isEmpty) continue;
+      entries.add(InterfaceEntry(
+        boundary: name,
+        interfaceType: 'Technical',
+        partyA: 'Project Team',
+        partyB: name,
+        criticality: 'Major',
+        priority: 'Medium',
+        status: 'Pending',
+        owner: ext['description']?.toString() ?? '',
+        notes: 'Technical interface from Technology Planning',
+        id: '',
+      ));
+    }
+
+    if (entries.isEmpty) return;
+
+    for (final entry in entries) {
+      logEntries.add(InterfaceChangeLogEntry(
+        interfaceId: entry.id,
+        interfaceName: entry.boundary,
+        action: 'Auto-Populated',
+        newValue: entry.boundary,
+        changedAt: now,
+      ));
+    }
+
+    await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'interface_management',
+      dataUpdater: (d) => d.copyWith(
+        planningNotes: {
+          ...d.planningNotes,
+          'interface_auto_populated': 'true',
+        },
+        interfaceEntries: [...d.interfaceEntries, ...entries],
+        interfaceChangeLog: [...d.interfaceChangeLog, ...logEntries],
+      ),
+      showSnackbar: true,
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Auto-populated ${entries.length} interface(s) from project data'),
+        ),
+      );
+    }
+    unawaited(ActivityLogService.instance.logCheckpointActivity(
+      projectId: data.projectId ?? '',
+      checkpoint: 'interface_management',
+      action: 'Interface Auto-Populated',
+      details: {'count': entries.length},
+    ));
+
+    // After basic auto-populate, kick off AI generation for additional
+    // cross-scope interfaces (vendors, contractors, other orgs, program/portfolio)
+    if (mounted) {
+      unawaited(_aiPopulateInterfaces(context, data));
+    }
+  }
+
+  /// AI-enhanced interface population. Calls generateInterfaceEntries to
+  /// identify cross-scope interfaces with vendors, contractors, other
+  /// companies/organizations, and program/portfolio projects. De-duplicates
+  /// against existing entries by boundary name.
+  Future<void> _aiPopulateInterfaces(
+      BuildContext context, ProjectDataModel data) async {
+    if (data.planningNotes['interface_ai_populated'] == 'true') return;
+
+    final additionalInterfaces =
+        data.planningNotes['additional_interfaces'] ?? 'Not Applicable';
+
+    // Build a compact program/portfolio context from the user's other projects
+    final programPortfolioContext = <String>[];
+    try {
+      // The stakeholder plan summary is read from planning notes
+      final stakeholderPlan =
+          data.planningNotes['stakeholder_management_plan'] ??
+          data.planningNotes['stakeholder_engagement_plan'] ??
+          '';
+      if (stakeholderPlan.isNotEmpty) {
+        programPortfolioContext
+            .add('Stakeholder Management Plan: $stakeholderPlan');
+      }
+    } catch (_) {}
+
+    final projectContext =
+        ProjectDataHelper.buildFepContext(data, sectionLabel: 'Interface Management');
+    if (projectContext.trim().isEmpty) return;
+
+    List<Map<String, dynamic>> aiEntries = [];
+    try {
+      aiEntries = await OpenAiServiceSecure().generateInterfaceEntries(
+        context: projectContext,
+        additionalInterfaces: additionalInterfaces,
+        programPortfolioContext: programPortfolioContext.join('\n\n'),
+        maxItems: 10,
+      );
+    } catch (e) {
+      debugPrint('AI interface generation failed: $e');
+      return;
+    }
+
+    if (!mounted || aiEntries.isEmpty) {
+      // Mark as attempted so we don't retry on every rebuild
+      await ProjectDataHelper.updateAndSave(
+        context: context,
+        checkpoint: 'interface_management',
+        showSnackbar: false,
+        dataUpdater: (d) => d.copyWith(
+          planningNotes: {
+            ...d.planningNotes,
+            'interface_ai_populated': 'true',
+          },
+        ),
+      );
+      return;
+    }
+
+    // De-duplicate against existing entries by boundary name (case-insensitive)
+    final existingBoundaries = data.interfaceEntries
+        .map((e) => e.boundary.trim().toLowerCase())
+        .where((s) => s.isNotEmpty)
+        .toSet();
+
+    final newEntries = <InterfaceEntry>[];
+    final logEntries = <InterfaceChangeLogEntry>[];
+    final now = DateTime.now().toIso8601String();
+
+    for (final m in aiEntries) {
+      final boundary = (m['boundary'] ?? '').toString().trim();
+      if (boundary.isEmpty) continue;
+      if (existingBoundaries.contains(boundary.toLowerCase())) continue;
+      newEntries.add(InterfaceEntry(
+        boundary: boundary,
+        interfaceType: (m['interfaceType'] ?? 'Organizational').toString(),
+        partyA: (m['partyA'] ?? 'Project Team').toString(),
+        partyB: (m['partyB'] ?? '').toString(),
+        criticality: (m['criticality'] ?? 'Major').toString(),
+        priority: (m['priority'] ?? 'Medium').toString(),
+        status: (m['status'] ?? 'Pending').toString(),
+        owner: (m['owner'] ?? '').toString(),
+        notes: (m['notes'] ?? '').toString(),
+      ));
+      existingBoundaries.add(boundary.toLowerCase());
+      logEntries.add(InterfaceChangeLogEntry(
+        interfaceId: '',
+        interfaceName: boundary,
+        action: 'AI-Generated',
+        newValue: boundary,
+        changedAt: now,
+      ));
+    }
+
+    if (newEntries.isEmpty) {
+      await ProjectDataHelper.updateAndSave(
+        context: context,
+        checkpoint: 'interface_management',
+        showSnackbar: false,
+        dataUpdater: (d) => d.copyWith(
+          planningNotes: {
+            ...d.planningNotes,
+            'interface_ai_populated': 'true',
+          },
+        ),
+      );
+      return;
+    }
+
+    await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'interface_management',
+      showSnackbar: false,
+      dataUpdater: (d) => d.copyWith(
+        planningNotes: {
+          ...d.planningNotes,
+          'interface_ai_populated': 'true',
+        },
+        interfaceEntries: [...d.interfaceEntries, ...newEntries],
+        interfaceChangeLog: [...d.interfaceChangeLog, ...logEntries],
+      ),
+    );
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            'KAZ AI identified ${newEntries.length} additional cross-scope interface(s).'),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
  final isMobile = AppBreakpoints.isMobile(context);
  final horizontalPadding = isMobile ? 20.0 : 32.0;
 
@@ -207,7 +463,7 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
  _MetricCard(
  label: 'Total Interfaces',
  value: '$activeInterfaces',
- accent: const Color(0xFF2563EB)),
+ accent: const Color(0xFFD97706)),
  _MetricCard(
  label: 'Critical',
  value: '$criticalCount',
@@ -316,15 +572,17 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
  ],
  ),
  const SizedBox(height: 16),
- switch (_selectedTab) {
- _ImTab.register => const _InterfaceRegisterSection(),
- _ImTab.architecture => const _ArchitectureSection(),
- _ImTab.raci => const _RaciGovernanceSection(),
- _ImTab.risks => const _RisksDecisionsSection(),
- _ImTab.handoff => const _HandoffReadinessSection(),
- _ImTab.maturity => const _MaturitySection(),
- _ImTab.audit => const _AuditTrailSection(),
- },
+  switch (_selectedTab) {
+    _ImTab.register => const _InterfaceRegisterSection(),
+    _ImTab.interfaceTypes => const _InterfaceTypesSection(),
+    _ImTab.responsibilities => const _ResponsibilitiesSection(),
+    _ImTab.coordination => const _CoordinationSection(),
+    _ImTab.dependencyMgmt => const _DependencyMgmtSection(),
+    _ImTab.risks => const _RisksDecisionsSection(),
+    _ImTab.monitoring => const _MonitoringSection(),
+    _ImTab.deliverables => const _DeliverablesSection(),
+    _ImTab.audit => const _AuditTrailSection(),
+  },
  ],
  ),
  );
@@ -361,12 +619,72 @@ class _InterfacePlanCardState extends State<InterfacePlanCard> {
  Timer? _saveDebounce;
  DateTime? _lastSavedAt;
  late String _initialText;
+ bool _isAiGenerating = false;
 
  @override
  void initState() {
  super.initState();
  _initialText =
  ProjectDataHelper.getData(context).planningNotes[_noteKey] ?? '';
+ // Auto-generate the AI plan if empty and the popup has been completed
+ WidgetsBinding.instance.addPostFrameCallback((_) {
+   if (!mounted) return;
+   final data = ProjectDataHelper.getData(context);
+   final planText = (data.planningNotes[_noteKey] ?? '').trim();
+   final popupDone = data.planningNotes['interface_identification_shown'] == 'true';
+   final aiPlanDone = data.planningNotes['interface_plan_ai_generated'] == 'true';
+   if (planText.isEmpty && popupDone && !aiPlanDone) {
+     _generateAiPlan();
+   }
+ });
+ }
+
+ Future<void> _generateAiPlan() async {
+   if (_isAiGenerating) return;
+   setState(() => _isAiGenerating = true);
+   try {
+     final data = ProjectDataHelper.getData(context);
+     final additionalInterfaces =
+         data.planningNotes['additional_interfaces'] ?? 'Not Applicable';
+     final stakeholderPlan =
+         data.planningNotes['stakeholder_management_plan'] ??
+         data.planningNotes['stakeholder_engagement_plan'] ??
+         '';
+     final projectContext = ProjectDataHelper.buildFepContext(
+         data, sectionLabel: 'Interface Management');
+     if (projectContext.trim().isEmpty) {
+       setState(() => _isAiGenerating = false);
+       return;
+     }
+     final plan = await OpenAiServiceSecure().generateInterfaceManagementPlan(
+       context: projectContext,
+       additionalInterfaces: additionalInterfaces,
+       stakeholderPlanSummary: stakeholderPlan,
+     );
+     if (!mounted) return;
+     if (plan.trim().isNotEmpty) {
+       setState(() => _initialText = plan.trim());
+       await ProjectDataHelper.updateAndSave(
+         context: context,
+         checkpoint: 'interface_management',
+         showSnackbar: false,
+         dataUpdater: (d) => d.copyWith(
+           planningNotes: {
+             ...d.planningNotes,
+             _noteKey: plan.trim(),
+             'interface_plan_ai_generated': 'true',
+           },
+         ),
+       );
+       if (mounted) {
+         setState(() => _lastSavedAt = DateTime.now());
+       }
+     }
+   } catch (e) {
+     debugPrint('AI Interface Management Plan generation failed: $e');
+   } finally {
+     if (mounted) setState(() => _isAiGenerating = false);
+   }
  }
 
  @override
@@ -399,32 +717,75 @@ class _InterfacePlanCardState extends State<InterfacePlanCard> {
 
  @override
  Widget build(BuildContext context) {
- return _SectionCard(
- title: 'Interface Plan',
- subtitle:
- 'Describe ownership, cadence, and risk handling so teams coordinate before handoffs.',
+    return _SectionCard(
+      title: 'Interface Management Plan',
+      subtitle:
+          'Define how project interfaces will be identified, coordinated, and managed to ensure effective integration across stakeholders, organizations, systems, disciplines, and deliverables.',
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- AiSuggestingTextField(
- fieldLabel: 'Interface Plan',
- hintText:
- 'Outline the governance rhythm, ownership, and risk mitigations for key interfaces.',
- sectionLabel: 'Interface Management',
- showLabel: false,
- autoGenerate: true,
- autoGenerateSection: 'Interface Management Plan',
+          if (_isAiGenerating)
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7E6),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFBFDBFE)),
+              ),
+              child: const Row(
+                children: [
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'KAZ AI is generating a project-specific Interface Management Plan incorporating your additional interfaces input and stakeholder plan...',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF1E40AF)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          AiSuggestingTextField(
+            fieldLabel: 'Interface Management Plan',
+            hintText:
+                'Define how project interfaces will be identified, coordinated, and managed to ensure effective integration across stakeholders, organizations, systems, disciplines, and deliverables.',
+            sectionLabel: 'Interface Management',
+            showLabel: false,
+            autoGenerate: true,
+            autoGenerateSection: 'Interface Management Plan',
  initialText: _initialText,
  onChanged: _handleChanged,
  ),
- if (_lastSavedAt != null)
- Padding(
- padding: const EdgeInsets.only(top: 8),
- child: Text(
- 'Saved ${TimeOfDay.fromDateTime(_lastSavedAt!).format(context)}',
- style:
- const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
- ),
+ Row(
+   children: [
+     if (_lastSavedAt != null)
+       Padding(
+         padding: const EdgeInsets.only(top: 8),
+         child: Text(
+           'Saved ${TimeOfDay.fromDateTime(_lastSavedAt!).format(context)}',
+           style:
+               const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+         ),
+       ),
+     const Spacer(),
+     TextButton.icon(
+       onPressed: _isAiGenerating ? null : _generateAiPlan,
+       icon: const Icon(Icons.auto_awesome, size: 14),
+       label: const Text('Regenerate AI Plan',
+           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+       style: TextButton.styleFrom(
+         foregroundColor: const Color(0xFFD97706),
+         minimumSize: Size.zero,
+         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+       ),
+     ),
+   ],
  ),
  ],
  ),
@@ -684,17 +1045,27 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
  ),
  )
  else ...[
- // Table header
- _buildTableHeader(),
- // Table rows
- ...entries.asMap().entries.map((mapEntry) {
- final index = mapEntry.key;
- final entry = mapEntry.value;
- return _InterfaceRegisterRow(
- index: index + 1,
- entry: entry,
- );
- }),
+  const SizedBox(height: 4),
+  SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: SizedBox(
+      width: 1180,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTableHeader(),
+          ...entries.asMap().entries.map((mapEntry) {
+            final index = mapEntry.key;
+            final entry = mapEntry.value;
+            return _InterfaceRegisterRow(
+              index: index + 1,
+              entry: entry,
+            );
+          }),
+        ],
+      ),
+    ),
+  ),
  ],
  ],
  );
@@ -720,19 +1091,19 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
  children: [
  const SizedBox(width: 36, child: Text('#', style: headerStyle, textAlign: TextAlign.center)),
  const SizedBox(width: 12),
- const Expanded(flex: 3, child: Text('Boundary / Name', style: headerStyle)),
+          const SizedBox(width: 200, child: Text('Boundary / Name', style: headerStyle, maxLines: 1, overflow: TextOverflow.ellipsis)),
  const SizedBox(width: 12),
- const SizedBox(width: 130, child: Text('Type', style: headerStyle)),
- const SizedBox(width: 12),
- const SizedBox(width: 130, child: Text('Party A', style: headerStyle)),
- const SizedBox(width: 12),
- const SizedBox(width: 130, child: Text('Party B', style: headerStyle)),
- const SizedBox(width: 12),
- const SizedBox(width: 110, child: Text('Criticality', style: headerStyle, textAlign: TextAlign.center)),
- const SizedBox(width: 12),
- const SizedBox(width: 110, child: Text('Priority', style: headerStyle, textAlign: TextAlign.center)),
- const SizedBox(width: 12),
- const SizedBox(width: 110, child: Text('Status', style: headerStyle, textAlign: TextAlign.center)),
+          const SizedBox(width: 110, child: Text('Type', style: headerStyle)),
+          const SizedBox(width: 12),
+          const SizedBox(width: 140, child: Text('Party A', style: headerStyle)),
+          const SizedBox(width: 12),
+          const SizedBox(width: 140, child: Text('Party B', style: headerStyle)),
+          const SizedBox(width: 12),
+          const SizedBox(width: 100, child: Text('Criticality', style: headerStyle, textAlign: TextAlign.center)),
+          const SizedBox(width: 12),
+          const SizedBox(width: 90, child: Text('Priority', style: headerStyle, textAlign: TextAlign.center)),
+          const SizedBox(width: 12),
+          const SizedBox(width: 100, child: Text('Status', style: headerStyle, textAlign: TextAlign.center)),
  const SizedBox(width: 12),
  const SizedBox(width: 80, child: Text('Actions', style: headerStyle, textAlign: TextAlign.center)),
  ],
@@ -833,90 +1204,90 @@ class _InterfaceRegisterRow extends StatelessWidget {
  bottom: BorderSide(color: Color(0xFFE5E7EB)),
  ),
  ),
- child: Row(
- children: [
- SizedBox(
- width: 36,
- child: Text('$index',
- textAlign: TextAlign.center,
- style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
- ),
- const SizedBox(width: 12),
- Expanded(
- flex: 3,
- child: Row(
- children: [
- _HealthDot(entry: entry),
- const SizedBox(width: 6),
- Expanded(
- child: Text(name,
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
- style: const TextStyle(
- fontSize: 12, fontWeight: FontWeight.w600)),
- ),
- ],
- ),
- ),
- const SizedBox(width: 12),
- SizedBox(
- width: 130,
- child: _TypeBadge(type: entry.interfaceType),
- ),
- const SizedBox(width: 12),
- SizedBox(
- width: 130,
- child: Text(entry.partyA.trim(),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
- ),
- const SizedBox(width: 12),
- SizedBox(
- width: 130,
- child: Text(entry.partyB.trim(),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
- ),
- const SizedBox(width: 12),
- SizedBox(
- width: 110,
- child: _CriticalityBadge(criticality: entry.criticality),
- ),
- const SizedBox(width: 12),
- SizedBox(
- width: 110,
- child: _PriorityBadge(priority: entry.priority),
- ),
- const SizedBox(width: 12),
- SizedBox(
- width: 110,
- child: _StatusBadge(label: entry.status),
- ),
- const SizedBox(width: 12),
- SizedBox(
- width: 80,
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- IconButton(
- tooltip: 'Edit',
- onPressed: () =>
- _InterfaceEntryDialog.show(context, entry, const []),
- icon: const Icon(Icons.edit_outlined, size: 16),
- ),
- IconButton(
- tooltip: 'Delete',
- onPressed: () => _deleteEntry(context, entry.id),
- icon: const Icon(Icons.delete_outline,
- size: 16, color: Color(0xFFEF4444)),
- ),
- ],
- ),
- ),
- ],
- ),
+  child: Row(
+    children: [
+      SizedBox(
+        width: 36,
+        child: Text('$index',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+      ),
+      const SizedBox(width: 12),
+      SizedBox(
+        width: 200,
+        child: Row(
+          children: [
+            _HealthDot(entry: entry),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w600)),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(width: 12),
+      SizedBox(
+        width: 110,
+        child: _TypeBadge(type: entry.interfaceType),
+      ),
+      const SizedBox(width: 12),
+      SizedBox(
+        width: 140,
+        child: Text(entry.partyA.trim(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
+      ),
+      const SizedBox(width: 12),
+      SizedBox(
+        width: 140,
+        child: Text(entry.partyB.trim(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
+      ),
+      const SizedBox(width: 12),
+      SizedBox(
+        width: 100,
+        child: _CriticalityBadge(criticality: entry.criticality),
+      ),
+      const SizedBox(width: 12),
+      SizedBox(
+        width: 90,
+        child: _PriorityBadge(priority: entry.priority),
+      ),
+      const SizedBox(width: 12),
+      SizedBox(
+        width: 100,
+        child: _StatusBadge(label: entry.status),
+      ),
+      const SizedBox(width: 12),
+      SizedBox(
+        width: 80,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'Edit',
+              onPressed: () =>
+                  _InterfaceEntryDialog.show(context, entry, const []),
+              icon: const Icon(Icons.edit_outlined, size: 16),
+            ),
+            IconButton(
+              tooltip: 'Delete',
+              onPressed: () => _deleteEntry(context, entry.id),
+              icon: const Icon(Icons.delete_outline,
+                  size: 16, color: Color(0xFFEF4444)),
+            ),
+          ],
+        ),
+      ),
+    ],
+  ),
  );
  }
 
@@ -953,16 +1324,154 @@ class _InterfaceRegisterRow extends StatelessWidget {
  oldValue: entryToDelete.boundary,
  changedAt: DateTime.now().toIso8601String(),
  ));
- await ProjectDataHelper.updateAndSave(
- context: context,
- checkpoint: 'interface_management',
- dataUpdater: (d) => d.copyWith(
- interfaceEntries: entries,
- interfaceChangeLog: logEntries,
- ),
- showSnackbar: false,
- );
- }
+  _removeInterfaceRiskFromGlobal(context: context, interfaceId: id);
+  await ProjectDataHelper.updateAndSave(
+    context: context,
+    checkpoint: 'interface_management',
+    dataUpdater: (d) => d.copyWith(
+      interfaceEntries: entries,
+      interfaceChangeLog: logEntries,
+    ),
+    showSnackbar: false,
+  );
+  unawaited(ActivityLogService.instance.logCheckpointActivity(
+    projectId: data.projectId ?? '',
+    checkpoint: 'interface_management',
+    action: 'Interface Deleted',
+    details: {
+      'interfaceId': id,
+      'interfaceName': entryToDelete.boundary,
+    },
+  ));
+  }
+}
+
+// ─── Risk Sync Helpers ───────────────────────────────────────────────────────
+
+const _kInterfaceRiskCategory = 'Interface';
+
+ExecutionRiskItem _interfaceEntryToRiskItem(InterfaceEntry entry) {
+  return ExecutionRiskItem(
+    id: 'iface_${entry.id}',
+    title: 'Interface Risk: ${entry.boundary.trim().isNotEmpty ? entry.boundary.trim() : entry.id}',
+    description: entry.risk.trim(),
+    category: _kInterfaceRiskCategory,
+    owner: entry.owner.trim(),
+    likelihoodScore: 0,
+    impactScore: 0,
+    probability: '',
+    impact: '',
+    riskScore: 0,
+    status: entry.status,
+    triggerEvents: '',
+    mitigationStrategy: '',
+    nextReview: '',
+    associatedMitigation: '',
+    createdAt: DateTime.now().toIso8601String(),
+    lastModified: DateTime.now().toIso8601String(),
+    controlAccountId: '',
+  );
+}
+
+void _syncInterfaceRiskToGlobal({
+  required BuildContext context,
+  required InterfaceEntry entry,
+  InterfaceEntry? oldEntry,
+}) {
+  final data = ProjectDataHelper.getData(context);
+  var riskItems = List<ExecutionRiskItem>.from(data.executionRiskItems);
+  final existingIdx = riskItems.indexWhere((r) => r.id == 'iface_${entry.id}');
+  final hasNewRisk = entry.risk.trim().isNotEmpty;
+
+  if (!hasNewRisk) {
+    if (existingIdx != -1) {
+      riskItems.removeAt(existingIdx);
+    }
+  } else {
+    final newItem = _interfaceEntryToRiskItem(entry);
+    if (existingIdx != -1) {
+      riskItems[existingIdx] = newItem;
+    } else {
+      riskItems.add(newItem);
+    }
+  }
+
+  if (existingIdx != -1 || hasNewRisk) {
+    ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'interface_management',
+      dataUpdater: (d) => d.copyWith(executionRiskItems: riskItems),
+      showSnackbar: false,
+    );
+  }
+
+  // Also sync to the central FEP Risk Register (bidirectional)
+  if (hasNewRisk) {
+    unawaited(ProjectDataHelper.upsertRiskToRegister(
+      context: context,
+      sourceSection: 'Interface Management',
+      riskName: 'Interface: ${entry.boundary}',
+      description: entry.notes.isNotEmpty
+          ? entry.notes
+          : 'Risk associated with interface ${entry.boundary} (${entry.partyA} ↔ ${entry.partyB})',
+      category: 'Interface Management',
+      impactLevel: entry.criticality.toLowerCase() == 'critical'
+          ? 'High'
+          : entry.criticality.toLowerCase() == 'major'
+              ? 'Medium'
+              : 'Low',
+      likelihood: 'Medium',
+      mitigationStrategy: entry.risk,
+      discipline: entry.interfaceType,
+      owner: entry.owner,
+      status: entry.status,
+    ));
+  } else {
+    unawaited(ProjectDataHelper.removeRiskFromRegister(
+      context: context,
+      sourceSection: 'Interface Management',
+      riskName: 'Interface: ${entry.boundary}',
+    ));
+  }
+
+  // Log to central activities log
+  unawaited(ProjectDataHelper.logActivityToCentral(
+    context: context,
+    sourceSection: 'Interface Management',
+    title: 'Interface ${entry.boundary} — ${hasNewRisk ? "Risk identified" : "Risk cleared"}',
+    description: 'Interface between ${entry.partyA} and ${entry.partyB}. Risk: ${entry.risk}',
+    phase: 'Planning',
+    discipline: entry.interfaceType,
+    role: entry.owner,
+  ));
+}
+
+void _removeInterfaceRiskFromGlobal({
+  required BuildContext context,
+  required String interfaceId,
+}) {
+  final data = ProjectDataHelper.getData(context);
+  final riskItems = List<ExecutionRiskItem>.from(data.executionRiskItems);
+  // Find the interface entry to get its boundary name for central register cleanup
+  final entry = data.interfaceEntries.firstWhere(
+    (e) => e.id == interfaceId,
+    orElse: () => InterfaceEntry(boundary: ''),
+  );
+  riskItems.removeWhere((r) => r.id == 'iface_$interfaceId');
+  ProjectDataHelper.updateAndSave(
+    context: context,
+    checkpoint: 'interface_management',
+    dataUpdater: (d) => d.copyWith(executionRiskItems: riskItems),
+    showSnackbar: false,
+  );
+  // Also remove from central FEP Risk Register
+  if (entry.boundary.isNotEmpty) {
+    unawaited(ProjectDataHelper.removeRiskFromRegister(
+      context: context,
+      sourceSection: 'Interface Management',
+      riskName: 'Interface: ${entry.boundary}',
+    ));
+  }
 }
 
 // ─── Entry Dialog (enhanced with new fields) ─────────────────────────────────
@@ -1017,103 +1526,134 @@ class _InterfaceEntryDialog extends StatefulWidget {
  ('Protocol', old.protocol, result.protocol),
  ('Owner', old.owner, result.owner),
  ('Status', old.status, result.status),
- ('Cadence', old.cadence, result.cadence),
- ('Notes', old.notes, result.notes),
- ];
- for (final (fieldName, oldVal, newVal) in fields) {
- if (oldVal.trim() != newVal.trim()) {
- final action = fieldName == 'Status' ? 'Status Changed' : 'Updated';
- logEntries.add(InterfaceChangeLogEntry(
- interfaceId: result.id,
- interfaceName: name,
- action: action,
- fieldName: fieldName,
- oldValue: oldVal,
- newValue: newVal,
- changedAt: now,
- ));
- }
- }
- }
- ProjectDataHelper.updateAndSave(
- context: context,
- checkpoint: 'interface_management',
- dataUpdater: (d) => d.copyWith(
- interfaceEntries: entries,
- interfaceChangeLog: logEntries,
- ),
- showSnackbar: false,
- );
- });
- }
+  ('Cadence', old.cadence, result.cadence),
+  ('Risk', old.risk, result.risk),
+  ('Notes', old.notes, result.notes),
+  ];
+  for (final (fieldName, oldVal, newVal) in fields) {
+  if (oldVal.trim() != newVal.trim()) {
+  final action = fieldName == 'Status' ? 'Status Changed' : 'Updated';
+  logEntries.add(InterfaceChangeLogEntry(
+  interfaceId: result.id,
+  interfaceName: name,
+  action: action,
+  fieldName: fieldName,
+  oldValue: oldVal,
+  newValue: newVal,
+  changedAt: now,
+  ));
+  }
+  }
+  }
+  _syncInterfaceRiskToGlobal(
+  context: context,
+  entry: result,
+  oldEntry: isCreate ? null : entries[index],
+  );
+  ProjectDataHelper.updateAndSave(
+  context: context,
+  checkpoint: 'interface_management',
+  dataUpdater: (d) => d.copyWith(
+  interfaceEntries: entries,
+  interfaceChangeLog: logEntries,
+  ),
+  showSnackbar: false,
+  );
+  unawaited(ActivityLogService.instance.logCheckpointActivity(
+  projectId: data.projectId ?? '',
+  checkpoint: 'interface_management',
+  action: isCreate ? 'Interface Created' : 'Interface Updated',
+  details: {
+  'interfaceId': result.id,
+  'interfaceName': result.boundary,
+  'hasRisk': result.risk.trim().isNotEmpty,
+  },
+  ));
+  });
+  }
 
- @override
- State<_InterfaceEntryDialog> createState() => _InterfaceEntryDialogState();
+  @override
+  State<_InterfaceEntryDialog> createState() => _InterfaceEntryDialogState();
 }
 
 class _InterfaceEntryDialogState extends State<_InterfaceEntryDialog> {
- late final TextEditingController _boundaryCtrl;
- late final TextEditingController _ownerCtrl;
- late final TextEditingController _partyACtrl;
- late final TextEditingController _partyBCtrl;
- late final TextEditingController _notesCtrl;
+  late final TextEditingController _boundaryCtrl;
+  late final TextEditingController _ownerCtrl;
+  late final TextEditingController _partyACtrl;
+  late final TextEditingController _partyBCtrl;
+  late final TextEditingController _notesCtrl;
+  late final TextEditingController _riskCtrl;
 
  String _interfaceType = '';
  String _priority = '';
  String _criticality = '';
  String _dataFlow = '';
  String _protocol = '';
- String _status = '';
- String _cadence = '';
+  String _status = '';
+  String _cadence = '';
+  String _classification = 'External';
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.initial;
+    _boundaryCtrl = TextEditingController(text: e?.boundary ?? '');
+    _ownerCtrl = TextEditingController(text: e?.owner ?? '');
+    _partyACtrl = TextEditingController(text: e?.partyA ?? '');
+    _partyBCtrl = TextEditingController(text: e?.partyB ?? '');
+    _notesCtrl = TextEditingController(text: e?.notes ?? '');
+    _interfaceType = e?.interfaceType ?? 'Technical';
+    _priority = e?.priority ?? 'Medium';
+    _criticality = e?.criticality ?? 'Major';
+    _dataFlow = e?.dataFlow ?? 'Bidirectional';
+    _protocol = e?.protocol ?? 'API';
+    _status = e?.status ?? 'Pending';
+    _cadence = e?.cadence ?? 'As Needed';
+    _riskCtrl = TextEditingController(text: e?.risk ?? '');
+    // Parse classification from notes if stored
+    if (e?.notes.contains('[Classification: ') == true) {
+      final start = e!.notes.indexOf('[Classification: ') + 17;
+      final end = e.notes.indexOf(']', start);
+      if (end > start) _classification = e.notes.substring(start, end);
+    }
+  }
 
  @override
- void initState() {
- super.initState();
- final e = widget.initial;
- _boundaryCtrl = TextEditingController(text: e?.boundary ?? '');
- _ownerCtrl = TextEditingController(text: e?.owner ?? '');
- _partyACtrl = TextEditingController(text: e?.partyA ?? '');
- _partyBCtrl = TextEditingController(text: e?.partyB ?? '');
- _notesCtrl = TextEditingController(text: e?.notes ?? '');
- _interfaceType = e?.interfaceType ?? 'Technical';
- _priority = e?.priority ?? 'Medium';
- _criticality = e?.criticality ?? 'Major';
- _dataFlow = e?.dataFlow ?? 'Bidirectional';
- _protocol = e?.protocol ?? 'API';
- _status = e?.status ?? 'Pending';
- _cadence = e?.cadence ?? 'As Needed';
- }
+  void dispose() {
+  _boundaryCtrl.dispose();
+  _ownerCtrl.dispose();
+  _partyACtrl.dispose();
+  _partyBCtrl.dispose();
+  _notesCtrl.dispose();
+  _riskCtrl.dispose();
+  super.dispose();
+  }
 
- @override
- void dispose() {
- _boundaryCtrl.dispose();
- _ownerCtrl.dispose();
- _partyACtrl.dispose();
- _partyBCtrl.dispose();
- _notesCtrl.dispose();
- super.dispose();
- }
-
- void _save() {
- final entry = InterfaceEntry(
- id: widget.initial?.id,
- boundary: _boundaryCtrl.text.trim(),
- owner: _ownerCtrl.text.trim(),
- cadence: _cadence,
- risk: widget.initial?.risk ?? '',
- status: _status,
- lastSync: widget.initial?.lastSync ?? '',
- notes: _notesCtrl.text.trim(),
- interfaceType: _interfaceType,
- partyA: _partyACtrl.text.trim(),
- partyB: _partyBCtrl.text.trim(),
- priority: _priority,
- criticality: _criticality,
- dataFlow: _dataFlow,
- protocol: _protocol,
- );
- Navigator.of(context).pop(entry);
- }
+  void _save() {
+    final baseNotes = _notesCtrl.text.trim();
+    final classificationTag = '[Classification: $_classification]';
+    final notes = baseNotes.contains('[Classification:')
+        ? baseNotes.replaceAll(RegExp(r'\[Classification:[^\]]*\]'), classificationTag)
+        : '$classificationTag $baseNotes';
+    final entry = InterfaceEntry(
+      id: widget.initial?.id,
+      boundary: _boundaryCtrl.text.trim(),
+      owner: _ownerCtrl.text.trim(),
+      cadence: _cadence,
+      risk: _riskCtrl.text.trim(),
+      status: _status,
+      lastSync: widget.initial?.lastSync ?? '',
+      notes: notes.trim(),
+      interfaceType: _interfaceType,
+      partyA: _partyACtrl.text.trim(),
+      partyB: _partyBCtrl.text.trim(),
+      priority: _priority,
+      criticality: _criticality,
+      dataFlow: _dataFlow,
+      protocol: _protocol,
+    );
+    Navigator.of(context).pop(entry);
+  }
 
  Widget _field(String label, TextEditingController ctrl, {int maxLines = 1}) {
  return Padding(
@@ -1162,14 +1702,16 @@ class _InterfaceEntryDialogState extends State<_InterfaceEntryDialog> {
  _protocol = v;
  } else if (label == 'Status *') {
  _status = v;
- } else if (label == 'Review Cadence') {
- _cadence = v;
- }
- });
- },
- ),
- );
- }
+  } else if (label == 'Review Cadence') {
+  _cadence = v;
+  } else if (label == 'Classification') {
+  _classification = v;
+  }
+  });
+  },
+  ),
+  );
+  }
 
  @override
  Widget build(BuildContext context) {
@@ -1222,33 +1764,42 @@ class _InterfaceEntryDialogState extends State<_InterfaceEntryDialog> {
  Expanded(child: _dropdown('Priority *', _priority, _kPriorities)),
  ],
  ),
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(child: _field('Party A (Provider) *', _partyACtrl)),
- const SizedBox(width: 12),
- Expanded(child: _field('Party B (Receiver) *', _partyBCtrl)),
- ],
- ),
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(child: _dropdown('Criticality *', _criticality, _kCriticalities)),
- const SizedBox(width: 12),
- Expanded(child: _dropdown('Data Flow', _dataFlow, _kDataFlows)),
- ],
- ),
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(child: _dropdown('Protocol', _protocol, _kProtocols)),
- const SizedBox(width: 12),
- Expanded(child: _dropdown('Status *', _status, _kStatuses)),
- ],
- ),
- _field('Owner', _ownerCtrl),
- _dropdown('Review Cadence', _cadence, _kCadences),
- _field('Notes', _notesCtrl, maxLines: 3),
+  Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(child: _dropdown('Classification', _classification, const ['Internal', 'External'])),
+      const SizedBox(width: 12),
+      Expanded(child: _dropdown('Data Flow', _dataFlow, _kDataFlows)),
+    ],
+  ),
+  const SizedBox(height: 10),
+  Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(child: _field('Party A (Provider) *', _partyACtrl)),
+      const SizedBox(width: 12),
+      Expanded(child: _field('Party B (Receiver) *', _partyBCtrl)),
+    ],
+  ),
+  Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(child: _dropdown('Criticality *', _criticality, _kCriticalities)),
+      const SizedBox(width: 12),
+      Expanded(child: _dropdown('Protocol', _protocol, _kProtocols)),
+    ],
+  ),
+  Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(child: _dropdown('Status *', _status, _kStatuses)),
+      const SizedBox(width: 12),
+      Expanded(child: _dropdown('Review Cadence', _cadence, _kCadences)),
+    ],
+  ),
+  _field('Owner', _ownerCtrl),
+  _field('Risk Description', _riskCtrl, maxLines: 2),
+  _field('Notes', _notesCtrl, maxLines: 3),
  ],
  ),
  ),
@@ -1265,125 +1816,470 @@ class _InterfaceEntryDialogState extends State<_InterfaceEntryDialog> {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TAB 2: Architecture
+// TAB 2: Interface Types (Internal / External)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-class _ArchitectureSection extends StatelessWidget {
- const _ArchitectureSection();
+class _InterfaceTypesSection extends StatelessWidget {
+  const _InterfaceTypesSection();
 
- @override
- Widget build(BuildContext context) {
- final data = ProjectDataHelper.getDataListening(context);
- final entries = data.interfaceEntries;
- final extIntegrations = data.externalIntegrations;
+  @override
+  Widget build(BuildContext context) {
+    final data = ProjectDataHelper.getDataListening(context);
+    final entries = data.interfaceEntries;
+    final extIntegrations = data.externalIntegrations;
 
- // Categorize entries by type
- final technical = entries.where((e) => e.interfaceType.toLowerCase().contains('tech') || e.interfaceType.isEmpty).toList();
- final contractual = entries.where((e) => e.interfaceType.toLowerCase().contains('contract')).toList();
- final organizational = entries.where((e) => e.interfaceType.toLowerCase().contains('org')).toList();
- final physical = entries.where((e) => e.interfaceType.toLowerCase().contains('physical')).toList();
- final procedural = entries.where((e) => e.interfaceType.toLowerCase().contains('procedural')).toList();
+    final technical = entries.where((e) => e.interfaceType.toLowerCase().contains('tech') || e.interfaceType.isEmpty).toList();
+    final contractual = entries.where((e) => e.interfaceType.toLowerCase().contains('contract')).toList();
+    final organizational = entries.where((e) => e.interfaceType.toLowerCase().contains('org')).toList();
+    final physical = entries.where((e) => e.interfaceType.toLowerCase().contains('physical')).toList();
+    final procedural = entries.where((e) => e.interfaceType.toLowerCase().contains('procedural')).toList();
+    final extNames = extIntegrations.map((e) => e['name']?.toString().trim() ?? '').where((n) => n.isNotEmpty).toList();
 
- // Also use external integrations data
- final extNames = extIntegrations.map((e) => e['name']?.toString().trim() ?? '').where((n) => n.isNotEmpty).toList();
+    final internalCount = organizational.length + technical.length + physical.length + procedural.length;
+    final externalCount = contractual.length + extNames.length;
 
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Interface architecture shows how systems connect, what data flows between them, and which protocols govern each connection. This visual summary draws from your Interface Register and Technology Planning data to give teams a shared understanding of integration touchpoints.',
- style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
- ),
- const SizedBox(height: 24),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Interfaces are categorized as Internal (within the project or organization) or External (with vendors, contractors, and other external parties). Each type requires distinct coordination and management approaches.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(child: _MetricCard(label: 'Internal Interfaces', value: '$internalCount', accent: const Color(0xFFD97706))),
+            const SizedBox(width: 12),
+            Expanded(child: _MetricCard(label: 'External Interfaces', value: '$externalCount', accent: const Color(0xFFD97706))),
+          ],
+        ),
+        const SizedBox(height: 24),
+        if (contractual.isNotEmpty || extNames.isNotEmpty) ...[
+          _SectionSubcard(
+            title: 'External Interfaces',
+            subtitle: 'Interfaces with external parties, vendors, contractors, and organizations.',
+            child: Column(
+              children: [
+                ...extNames.map((n) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(children: [const Icon(Icons.link, size: 14, color: Color(0xFFD97706)), const SizedBox(width: 8), Expanded(child: Text(n, style: const TextStyle(fontSize: 12)))]),
+                )),
+                ...contractual.map((e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(children: [const Icon(Icons.business, size: 14, color: Color(0xFFD97706)), const SizedBox(width: 8), Expanded(child: Text('${e.boundary} — ${e.partyB}', style: const TextStyle(fontSize: 12)))]),
+                )),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        _SectionSubcard(
+          title: 'Internal Interfaces',
+          subtitle: 'Cross-disciplinary, system, process, and functional interfaces within the project.',
+          child: Column(
+            children: [
+              if (technical.isNotEmpty) ...[
+                const Text('Technical', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFD97706))),
+                ...technical.map((e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text('  • ${e.boundary} (${e.protocol})', style: const TextStyle(fontSize: 11, color: Color(0xFF374151))),
+                )),
+              ],
+              if (organizational.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                const Text('Organizational', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF10B981))),
+                ...organizational.map((e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text('  • ${e.boundary}: ${e.partyA} ↔ ${e.partyB}', style: const TextStyle(fontSize: 11, color: Color(0xFF374151))),
+                )),
+              ],
+              if (physical.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                const Text('Physical', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF7C3AED))),
+                ...physical.map((e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text('  • ${e.boundary}', style: const TextStyle(fontSize: 11, color: Color(0xFF374151))),
+                )),
+              ],
+              if (procedural.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                const Text('Procedural', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFEC4899))),
+                ...procedural.map((e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text('  • ${e.boundary}', style: const TextStyle(fontSize: 11, color: Color(0xFF374151))),
+                )),
+              ],
+              if (internalCount == 0) const Text('No internal interfaces defined.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
 
- // External Systems layer
- if (extNames.isNotEmpty || contractual.isNotEmpty) ...[
- _ArchitectureLayer(
- title: 'External Systems',
- color: const Color(0xFFFFE4CC),
- borderColor: const Color(0xFFD97706),
- items: [
- ...extNames.map((n) => _ArchCard(title: n, subtitle: 'External', color: const Color(0xFFFFE4CC), dataFlow: null)),
- ...contractual.map((e) => _ArchCard(
- title: e.boundary.trim().isNotEmpty ? e.boundary.trim() : 'Contract',
- subtitle: e.partyA.trim(),
- color: const Color(0xFFFFE4CC),
- dataFlow: e.dataFlow,
- )),
- ],
- ),
- const SizedBox(height: 16),
- _ArrowRow(),
- const SizedBox(height: 16),
- ],
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB 3: Responsibilities
+// ═══════════════════════════════════════════════════════════════════════════════
 
- // API / Protocol layer
- _ArchitectureLayer(
- title: 'Integration Layer',
- color: const Color(0xFFD4E4FF),
- borderColor: const Color(0xFF2563EB),
- items: technical.isEmpty
- ? [_ArchCard(title: 'No technical interfaces defined', subtitle: 'Add entries to the register', color: const Color(0xFFE5E7EB), dataFlow: null)]
- : technical.map((e) => _ArchCard(
- title: e.boundary.trim().isNotEmpty ? e.boundary.trim() : 'Interface',
- subtitle: e.protocol.trim().isNotEmpty ? e.protocol.trim() : 'API',
- color: const Color(0xFFD4E4FF),
- dataFlow: e.dataFlow,
- )).toList(),
- ),
- const SizedBox(height: 16),
- _ArrowRow(),
- const SizedBox(height: 16),
+class _ResponsibilitiesSection extends StatelessWidget {
+  const _ResponsibilitiesSection();
 
- // Internal Systems layer
- _ArchitectureLayer(
- title: 'Internal Systems',
- color: const Color(0xFFD4FFD4),
- borderColor: const Color(0xFF10B981),
- items: organizational.isEmpty
- ? [_ArchCard(title: 'Add organizational interfaces', subtitle: 'Define Party A/B connections', color: const Color(0xFFE5E7EB), dataFlow: null)]
- : organizational.map((e) => _ArchCard(
- title: e.boundary.trim().isNotEmpty ? e.boundary.trim() : 'Interface',
- subtitle: '${e.partyA.trim()} ↔ ${e.partyB.trim()}',
- color: const Color(0xFFD4FFD4),
- dataFlow: e.dataFlow,
- )).toList(),
- ),
- if (physical.isNotEmpty) ...[
- const SizedBox(height: 16),
- _ArrowRow(),
- const SizedBox(height: 16),
- _ArchitectureLayer(
- title: 'Physical Systems',
- color: const Color(0xFFE8D5F5),
- borderColor: const Color(0xFF7C3AED),
- items: physical.map((e) => _ArchCard(
- title: e.boundary.trim().isNotEmpty ? e.boundary.trim() : 'Interface',
- subtitle: '${e.partyA.trim()} ↔ ${e.partyB.trim()}',
- color: const Color(0xFFE8D5F5),
- dataFlow: e.dataFlow,
- )).toList(),
- ),
- ],
- if (procedural.isNotEmpty) ...[
- const SizedBox(height: 16),
- _ArrowRow(),
- const SizedBox(height: 16),
- _ArchitectureLayer(
- title: 'Procedural Interfaces',
- color: const Color(0xFFFFE0E6),
- borderColor: const Color(0xFFEC4899),
- items: procedural.map((e) => _ArchCard(
- title: e.boundary.trim().isNotEmpty ? e.boundary.trim() : 'Interface',
- subtitle: '${e.partyA.trim()} ↔ ${e.partyB.trim()}',
- color: const Color(0xFFFFE0E6),
- dataFlow: e.dataFlow,
- )).toList(),
- ),
- ],
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final data = ProjectDataHelper.getDataListening(context);
+    final entries = data.interfaceEntries;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Interface owners and accountable parties ensure each interface has clear decision-making authority and defined escalation paths.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+        ),
+        const SizedBox(height: 20),
+        if (entries.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: Text('Add interface entries to assign owners and responsibilities.',
+                style: TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+          )
+        else ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF8FAFC),
+              border: Border.fromBorderSide(BorderSide(color: Color(0xFFE5E7EB))),
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
+            ),
+            child: const Row(
+              children: [
+                Expanded(flex: 3, child: Text('Interface', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151)))),
+                SizedBox(width: 8),
+                SizedBox(width: 130, child: Text('Owner', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151)), textAlign: TextAlign.center)),
+                SizedBox(width: 8),
+                SizedBox(width: 130, child: Text('Party A', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151)), textAlign: TextAlign.center)),
+                SizedBox(width: 8),
+                SizedBox(width: 100, child: Text('Authority', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151)), textAlign: TextAlign.center)),
+              ],
+            ),
+          ),
+          ...entries.map((entry) {
+            final name = entry.boundary.trim().isNotEmpty ? entry.boundary.trim() : 'Unnamed';
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              decoration: const BoxDecoration(
+                border: Border(left: BorderSide(color: Color(0xFFE5E7EB)), right: BorderSide(color: Color(0xFFE5E7EB)), bottom: BorderSide(color: Color(0xFFE5E7EB))),
+              ),
+              child: Row(
+                children: [
+                  Expanded(flex: 3, child: Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+                  const SizedBox(width: 8),
+                  SizedBox(width: 130, child: _buildChip(entry.owner.trim(), const Color(0xFFFFF7E6))),
+                  const SizedBox(width: 8),
+                  SizedBox(width: 130, child: _buildChip(entry.partyA.trim(), const Color(0xFFD1FAE5))),
+                  const SizedBox(width: 8),
+                  SizedBox(width: 100, child: _buildChip(entry.partyB.trim(), const Color(0xFFFEF3C7))),
+                ],
+              ),
+            );
+          }),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildChip(String text, Color bg) {
+    if (text.isEmpty) return const Text('-', style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)), textAlign: TextAlign.center);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
+      child: Text(text, style: const TextStyle(fontSize: 11, color: Color(0xFF4B5563)), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB 4: Coordination & Communication
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _CoordinationSection extends StatelessWidget {
+  const _CoordinationSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final data = ProjectDataHelper.getDataListening(context);
+    final entries = data.interfaceEntries;
+
+    final withCadence = entries.where((e) => e.cadence.trim().isNotEmpty).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Interface coordination meetings, communication protocols, and information exchange requirements ensure all parties stay aligned on interface status and issues.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+        ),
+        const SizedBox(height: 20),
+        _SectionSubcard(
+          title: 'Coordination Cadence',
+          subtitle: 'Review rhythm and synchronization frequency per interface.',
+          child: withCadence.isEmpty
+              ? const Text('Set a review cadence in each interface entry to establish coordination rhythm.',
+                  style: TextStyle(color: Color(0xFF6B7280), fontSize: 12))
+              : Column(
+                  children: withCadence.map((e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(children: [
+                      const Icon(Icons.calendar_today, size: 14, color: Color(0xFFD97706)),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text('${e.boundary} — ${e.cadence}', style: const TextStyle(fontSize: 12))),
+                    ]),
+                  )).toList(),
+                ),
+        ),
+        const SizedBox(height: 16),
+        _SectionSubcard(
+          title: 'Communication Protocols',
+          subtitle: 'Protocols and data exchange methods for each interface.',
+          child: entries.where((e) => e.protocol.trim().isNotEmpty).isEmpty
+              ? const Text('Define protocols in each interface entry.',
+                  style: TextStyle(color: Color(0xFF6B7280), fontSize: 12))
+              : Column(
+                  children: entries.where((e) => e.protocol.trim().isNotEmpty).map((e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(children: [
+                      const Icon(Icons.swap_horiz, size: 14, color: Color(0xFF10B981)),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text('${e.boundary}: ${e.protocol} (${e.dataFlow})', style: const TextStyle(fontSize: 12))),
+                    ]),
+                  )).toList(),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB 5: Dependency Management
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _DependencyMgmtSection extends StatelessWidget {
+  const _DependencyMgmtSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final data = ProjectDataHelper.getDataListening(context);
+    final entries = data.interfaceEntries;
+
+    final withRisk = entries.where((e) => e.risk.trim().isNotEmpty).toList();
+    final critical = entries.where((e) => e.criticality.toLowerCase() == 'critical').toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Deliverable, schedule, and resource dependencies between interfaces must be managed to prevent delays and conflicts across the project.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(child: _MetricCard(label: 'Total Dependencies', value: '${entries.length}', accent: const Color(0xFFD97706))),
+            const SizedBox(width: 12),
+            Expanded(child: _MetricCard(label: 'Critical Interfaces', value: '${critical.length}', accent: const Color(0xFFEF4444))),
+            const SizedBox(width: 12),
+            Expanded(child: _MetricCard(label: 'With Risk Notes', value: '${withRisk.length}', accent: const Color(0xFFF59E0B))),
+          ],
+        ),
+        const SizedBox(height: 24),
+        if (entries.isEmpty)
+          const Text('Add interfaces to track dependencies.',
+              style: TextStyle(color: Color(0xFF6B7280), fontSize: 13))
+        else ...[
+          const Text('Dependency Register', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF111827))),
+          const SizedBox(height: 12),
+          ...entries.map((e) => Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Row(children: [
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(e.boundary, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text('${e.partyA} → ${e.partyB}', style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                ]),
+              ),
+              if (e.risk.trim().isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(4)),
+                  child: const Text('Has Risk', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF92400E))),
+                ),
+              ],
+              _CriticalityBadge(criticality: e.criticality),
+            ]),
+          )),
+        ],
+      ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB 7: Monitoring & Control
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _MonitoringSection extends StatelessWidget {
+  const _MonitoringSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final data = ProjectDataHelper.getDataListening(context);
+    final entries = data.interfaceEntries;
+
+    final openCount = entries.where((e) => _isOpenStatus(e.status)).length;
+    final resolvedCount = entries.where((e) => !_isOpenStatus(e.status)).length;
+    final logEntries = List<InterfaceChangeLogEntry>.from(data.interfaceChangeLog)
+      ..sort((a, b) => b.changedAt.compareTo(a.changedAt));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Track interface action items, status, and performance metrics. Regular reporting ensures interfaces remain aligned throughout the project lifecycle.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(child: _MetricCard(label: 'Open Interfaces', value: '$openCount', accent: const Color(0xFFF59E0B))),
+            const SizedBox(width: 12),
+            Expanded(child: _MetricCard(label: 'Resolved/Closed', value: '$resolvedCount', accent: const Color(0xFF10B981))),
+            const SizedBox(width: 12),
+            Expanded(child: _MetricCard(label: 'Total Log Entries', value: '${logEntries.length}', accent: const Color(0xFF6B7280))),
+          ],
+        ),
+        const SizedBox(height: 24),
+        _SectionSubcard(
+          title: 'Interface Status Dashboard',
+          subtitle: 'Quick view of all interface statuses.',
+          child: entries.isEmpty
+              ? const Text('No interfaces to display.', style: TextStyle(color: Color(0xFF6B7280), fontSize: 12))
+              : Column(
+                  children: entries.take(10).map((e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(children: [
+                      Expanded(child: Text(e.boundary, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+                      const SizedBox(width: 8),
+                      _StatusBadge(label: e.status),
+                      const SizedBox(width: 8),
+                      _CriticalityBadge(criticality: e.criticality),
+                    ]),
+                  )).toList(),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB 8: Key Deliverables
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _DeliverablesSection extends StatelessWidget {
+  const _DeliverablesSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'The Interface Management framework produces the following key deliverables to ensure systematic interface coordination throughout the project.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+        ),
+        const SizedBox(height: 24),
+        _DeliverableCard(
+          icon: Icons.description,
+          title: 'Interface Management Plan',
+          desc: 'Defines how project interfaces will be identified, coordinated, monitored, and controlled.',
+        ),
+        const SizedBox(height: 12),
+        _DeliverableCard(
+          icon: Icons.table_chart,
+          title: 'Interface Register',
+          desc: 'Central register of all identified interfaces with status, ownership, and criticality.',
+        ),
+        const SizedBox(height: 12),
+        _DeliverableCard(
+          icon: Icons.assignment_ind,
+          title: 'Responsibility Matrix',
+          desc: 'Maps interface owners, accountable parties, and decision-making authority.',
+        ),
+        const SizedBox(height: 12),
+        _DeliverableCard(
+          icon: Icons.link,
+          title: 'Dependency Register',
+          desc: 'Tracks deliverable, schedule, and resource dependencies across interfaces.',
+        ),
+        const SizedBox(height: 12),
+        _DeliverableCard(
+          icon: Icons.checklist,
+          title: 'Interface Action Log',
+          desc: 'Tracks open actions, decisions, and follow-ups for each interface.',
+        ),
+        const SizedBox(height: 12),
+        _DeliverableCard(
+          icon: Icons.warning_amber,
+          title: 'Interface Risk Register',
+          desc: 'Captures interface-specific risks, assumptions, and conflict resolution procedures.',
+        ),
+        const SizedBox(height: 12),
+        _DeliverableCard(
+          icon: Icons.dashboard,
+          title: 'Interface Status Dashboard',
+          desc: 'Provides at-a-glance status of all interfaces with health indicators.',
+        ),
+      ],
+    );
+  }
+}
+
+class _DeliverableCard extends StatelessWidget {
+  const _DeliverableCard({required this.icon, required this.title, required this.desc});
+  final IconData icon;
+  final String title;
+  final String desc;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(children: [
+        Icon(icon, size: 24, color: const Color(0xFFD97706)),
+        const SizedBox(width: 14),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
+          const SizedBox(height: 2),
+          Text(desc, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+        ])),
+      ]),
+    );
+  }
 }
 
 class _ArchitectureLayer extends StatelessWidget {
@@ -1640,7 +2536,7 @@ class _RaciGovernanceSection extends StatelessWidget {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFDBEAFE),
+ color: const Color(0xFFFFF7E6),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(
@@ -1930,14 +2826,14 @@ class _MaturitySectionState extends State<_MaturitySection> {
  Color _maturityColor(int score) {
  if (score <= 30) return const Color(0xFFEF4444);
  if (score <= 60) return const Color(0xFFF59E0B);
- if (score <= 80) return const Color(0xFF2563EB);
+ if (score <= 80) return const Color(0xFFD97706);
  return const Color(0xFF10B981);
  }
 
  Color _maturityBgColor(int score) {
  if (score <= 30) return const Color(0xFFFEE2E2);
  if (score <= 60) return const Color(0xFFFEF3C7);
- if (score <= 80) return const Color(0xFFDBEAFE);
+ if (score <= 80) return const Color(0xFFFFF7E6);
  return const Color(0xFFD1FAE5);
  }
 
@@ -2037,7 +2933,7 @@ class _MaturitySectionState extends State<_MaturitySection> {
  label: 'Developing', count: developing, color: const Color(0xFFF59E0B)),
  const SizedBox(width: 12),
  _MaturityBreakdownCard(
- label: 'Mature', count: mature, color: const Color(0xFF2563EB)),
+ label: 'Mature', count: mature, color: const Color(0xFFD97706)),
  const SizedBox(width: 12),
  _MaturityBreakdownCard(
  label: 'Optimized', count: optimized, color: const Color(0xFF10B981)),
@@ -2203,7 +3099,7 @@ class _AuditTrailSection extends StatelessWidget {
  case 'Created':
  return const Color(0xFF10B981);
  case 'Updated':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Deleted':
  return const Color(0xFFEF4444);
  case 'Status Changed':
@@ -2699,7 +3595,7 @@ class _StatusBadge extends StatelessWidget {
  final color = normalized.contains('active')
  ? const Color(0xFF166534)
  : normalized.contains('approved') || normalized.contains('resolved')
- ? const Color(0xFF1D4ED8)
+ ? const Color(0xFFD97706)
  : normalized.contains('closed') || normalized.contains('complete')
  ? const Color(0xFF6B7280)
  : normalized.contains('review')
@@ -2735,7 +3631,7 @@ class _TypeBadge extends StatelessWidget {
  if (type.trim().isEmpty) return const SizedBox.shrink();
 
  final color = type.toLowerCase().contains('tech')
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFD97706)
  : type.toLowerCase().contains('contract')
  ? const Color(0xFFD97706)
  : type.toLowerCase().contains('org')

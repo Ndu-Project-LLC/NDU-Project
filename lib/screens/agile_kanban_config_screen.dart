@@ -11,6 +11,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -266,7 +267,13 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
     _scheduleAutoSave();
   }
 
-  void _removeColumn(int index) {
+  Future<void> _removeColumn(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Column',
+      itemLabel: _columns[index].name.isNotEmpty ? _columns[index].name : null,
+    );
+    if (!confirmed) return;
     if (_columns.length <= 2) return;
     final col = _columns[index];
     _nameCtrls.remove(col.id)?.dispose();

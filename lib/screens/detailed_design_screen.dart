@@ -19,6 +19,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 /// ────────────────────────────────────────────────────────────────
 /// Design Specifications Screen
 ///
@@ -161,7 +162,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
  'Centralized entry point for routing, rate-limiting, and authentication. Terminates TLS and enforces policies.',
  status: 'Defined',
  icon: Icons.router_outlined,
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFD97706),
  ),
  _ArchitecturePattern(
  name: 'CQRS + Read Replicas',
@@ -517,7 +518,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  List<Widget> _methodologyOptions() {
  final methods = [
  ('Waterfall', Icons.water_drop_outlined, 'Full upfront spec',
- const Color(0xFF2563EB)),
+ const Color(0xFFD97706)),
  ('Hybrid', Icons.merge_outlined, 'Baseline + iterative detail',
  const Color(0xFF7C3AED)),
  ('Agile', Icons.flash_on_outlined, 'Evolving, just-in-time spec',
@@ -623,7 +624,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  value: '$totalSpecs',
  icon: Icons.description_outlined,
  helper: 'Across ${DesignComponent.specificationTypes.length} spec types',
- emphasisColor: const Color(0xFF2563EB),
+ emphasisColor: const Color(0xFFD97706),
  ),
  ExecutionMetricData(
  label: 'Must-Have Items',
@@ -709,11 +710,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: _ArchitecturePatternCard(
  pattern: pattern,
  onEdit: () => _showArchPatternEditor(entry: pattern, index: index),
- onDelete: () {
- setState(() {
- _archPatterns.removeAt(index);
- });
- },
+  onDelete: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Architecture Pattern',
+    itemLabel: pattern.name,
+  );
+  if (!confirmed) return;
+  setState(() {
+  _archPatterns.removeAt(index);
+  });
+  },
  ),
  );
  }).toList(),
@@ -731,7 +738,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  static const List<MapEntry<IconData, Color>> _archIconOptions = [
  MapEntry(Icons.hub_outlined, Color(0xFF7C3AED)),
- MapEntry(Icons.router_outlined, Color(0xFF2563EB)),
+ MapEntry(Icons.router_outlined, Color(0xFFD97706)),
  MapEntry(Icons.call_split_outlined, Color(0xFF0891B2)),
  MapEntry(Icons.monitor_heart_outlined, Color(0xFF059669)),
  MapEntry(Icons.layers_outlined, Color(0xFFD97706)),
@@ -890,7 +897,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  collapsible: true,
  initiallyExpanded: true,
  headerIcon: Icons.folder_special_outlined,
- headerIconColor: const Color(0xFF2563EB),
+ headerIconColor: const Color(0xFFD97706),
  child: const Center(
  child: Padding(
  padding: EdgeInsets.all(24.0),
@@ -909,7 +916,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  collapsible: true,
  initiallyExpanded: true,
  headerIcon: Icons.folder_special_outlined,
- headerIconColor: const Color(0xFF2563EB),
+ headerIconColor: const Color(0xFFD97706),
  trailing: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
@@ -972,11 +979,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
  });
  },
- onDeleted: (component) {
- setState(() {
- _components.removeWhere((c) => c.id == component.id);
- });
- },
+  onDeleted: (component) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Component',
+    itemLabel: component.componentName,
+  );
+  if (!confirmed) return;
+  setState(() {
+  _components.removeWhere((c) => c.id == component.id);
+  });
+  },
  ),
  );
  }
@@ -1010,7 +1023,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Color _getTypeColor(String type) {
  return switch (type) {
  'Architecture' => const Color(0xFF7C3AED),
- 'Interface' => const Color(0xFF2563EB),
+ 'Interface' => const Color(0xFFD97706),
  'Data' => const Color(0xFF0891B2),
  'Component' => const Color(0xFF059669),
  'Security' => const Color(0xFFDC2626),
@@ -1178,11 +1191,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: const Color(0xFF2563EB).withOpacity(0.1),
+ color: const Color(0xFFD97706).withOpacity(0.1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(Icons.add_rounded,
- size: 20, color: Color(0xFF2563EB)),
+ size: 20, color: Color(0xFFD97706)),
  ),
  const SizedBox(width: 12),
  const Text('Add Design Specification',
@@ -1533,7 +1546,7 @@ class _SecurityControlCard extends StatelessWidget {
  Widget build(BuildContext context) {
  final statusColor = switch (control.status) {
  'Defined' => const Color(0xFF10B981),
- 'In Progress' => const Color(0xFF2563EB),
+ 'In Progress' => const Color(0xFFD97706),
  'Pending' => const Color(0xFFF59E0B),
  _ => const Color(0xFF9CA3AF),
  };
@@ -1612,7 +1625,7 @@ class _NFRCard extends StatelessWidget {
  'Performance' => const Color(0xFFDC2626),
  'Scalability' => const Color(0xFF7C3AED),
  'Availability' => const Color(0xFF059669),
- 'Recoverability' => const Color(0xFF2563EB),
+ 'Recoverability' => const Color(0xFFD97706),
  'Maintainability' => const Color(0xFFD97706),
  _ => const Color(0xFF6B7280),
  };
@@ -1737,7 +1750,7 @@ class _ADRecordCard extends StatelessWidget {
  ],
  ),
  const SizedBox(height: 10),
- _buildADRow('Context', record.context, const Color(0xFF2563EB)),
+ _buildADRow('Context', record.context, const Color(0xFFD97706)),
  const SizedBox(height: 8),
  _buildADRow('Decision', record.decision, const Color(0xFF059669)),
  ],

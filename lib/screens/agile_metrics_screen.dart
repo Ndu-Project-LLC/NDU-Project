@@ -561,7 +561,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildTimeBar('Lead Time', _leadTime, 10, Colors.blue),
+          _buildTimeBar('Lead Time', _leadTime, 10, const Color(0xFFD97706)),
           const SizedBox(height: 14),
           _buildTimeBar('Cycle Time', _cycleTime, 10, _kAccent),
           const SizedBox(height: 14),
@@ -683,7 +683,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
                   _defectTrend.length > 1
                       ? '${((_defectTrend.last.escaped - _defectTrend[_defectTrend.length - 2].escaped) >= 0 ? '+' : '')}${(_defectTrend.last.escaped - _defectTrend[_defectTrend.length - 2].escaped)}'
                       : '0',
-                  Colors.blue),
+                  const Color(0xFFD97706)),
             ],
           ),
         ],

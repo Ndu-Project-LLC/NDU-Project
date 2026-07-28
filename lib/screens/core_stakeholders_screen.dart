@@ -367,7 +367,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  width: 40,
  height: 40,
  decoration: const BoxDecoration(
- color: Colors.blue, shape: BoxShape.circle),
+ color: const Color(0xFFD97706), shape: BoxShape.circle),
  child: const Icon(Icons.person, color: Colors.white, size: 20)),
  if (!isMobile) ...[
  const SizedBox(width: 12),
@@ -887,7 +887,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  width: double.infinity,
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF7E6),
  borderRadius: BorderRadius.circular(8),
  border: Border.all(color: const Color(0xFFBFDBFE)),
  ),
@@ -897,7 +897,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  Row(
  children: [
  const Icon(Icons.business_outlined,
- size: 20, color: Color(0xFF1D4ED8)),
+ size: 20, color: Color(0xFFD97706)),
  const SizedBox(width: 8),
  const Text(
  'Organisation Context',
@@ -916,7 +916,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  label: const Text('Clear',
  style: TextStyle(fontSize: 12)),
  style: TextButton.styleFrom(
- foregroundColor: const Color(0xFF1D4ED8),
+ foregroundColor: const Color(0xFFD97706),
  ),
  ),
  ],

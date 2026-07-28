@@ -744,7 +744,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
                                   IconButton(
                                     tooltip: 'Regenerate this field',
                                     icon: const Icon(Icons.refresh, size: 18),
-                                    color: const Color(0xFF2563EB),
+                                    color: const Color(0xFFD97706),
                                     onPressed: widget.onRegenerate,
                                     padding: EdgeInsets.zero,
                                     constraints: const BoxConstraints(

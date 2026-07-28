@@ -71,7 +71,7 @@ extension CMChangeTypeMeta on CMChangeType {
         CMChangeType.cost => const Color(0xFFD97706),
         CMChangeType.resource => const Color(0xFF06B6D4),
         CMChangeType.procurement => const Color(0xFF10B981),
-        CMChangeType.contract => const Color(0xFF3B82F6),
+        CMChangeType.contract => const Color(0xFFFBBF24),
         CMChangeType.risk => const Color(0xFFEF4444),
         CMChangeType.quality => const Color(0xFF14B8A6),
         CMChangeType.regulatory => const Color(0xFF6B7280),
@@ -115,7 +115,7 @@ extension CMStatusMeta on CMStatus {
 
   Color get color => switch (this) {
         CMStatus.draft => const Color(0xFF6B7280),
-        CMStatus.submitted => const Color(0xFF3B82F6),
+        CMStatus.submitted => const Color(0xFFFBBF24),
         CMStatus.underReview => const Color(0xFFF59E0B),
         CMStatus.pendingApproval => const Color(0xFF8B5CF6),
         CMStatus.approved => const Color(0xFF10B981),
@@ -144,7 +144,7 @@ extension CMPriorityMeta on CMPriority {
 
   Color get color => switch (this) {
         CMPriority.low => const Color(0xFF10B981),
-        CMPriority.medium => const Color(0xFF3B82F6),
+        CMPriority.medium => const Color(0xFFFBBF24),
         CMPriority.high => const Color(0xFFF59E0B),
         CMPriority.critical => const Color(0xFFEF4444),
         CMPriority.emergency => const Color(0xFFDC2626),
@@ -188,7 +188,7 @@ extension ApprovalDecisionMeta on ApprovalDecision {
         ApprovalDecision.pending => const Color(0xFFF59E0B),
         ApprovalDecision.approved => const Color(0xFF10B981),
         ApprovalDecision.rejected => const Color(0xFFEF4444),
-        ApprovalDecision.requestInfo => const Color(0xFF3B82F6),
+        ApprovalDecision.requestInfo => const Color(0xFFFBBF24),
         ApprovalDecision.returnRevision => const Color(0xFFEC4899),
         ApprovalDecision.delegated => const Color(0xFF8B5CF6),
         ApprovalDecision.escalated => const Color(0xFFDC2626),

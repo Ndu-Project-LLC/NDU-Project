@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 const Color _kBackground = Color(0xFFF7F8FC);
 const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
@@ -648,7 +649,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  Color _getPhaseColor(DeliverablePhase phase) {
  switch (phase) {
  case DeliverablePhase.initiation:
- return const Color(0xFF3B82F6);
+ return const Color(0xFFFBBF24);
  case DeliverablePhase.frontEndPlanning:
  return const Color(0xFF8B5CF6);
  case DeliverablePhase.planning:
@@ -811,31 +812,15 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  );
  }
 
- void _deleteDeliverable(AggregatedDeliverable deliverable) {
- showDialog(
- context: context,
- builder: (context) => AlertDialog(
- title: const Text('Delete Deliverable'),
- content: Text(
- 'Are you sure you want to delete "${deliverable.title}"?',
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(context).pop(),
- child: const Text('Cancel'),
- ),
- TextButton(
- onPressed: () async {
- // TODO: Implement delete
- Navigator.of(context).pop();
- },
- style: TextButton.styleFrom(foregroundColor: Colors.red),
- child: const Text('Delete'),
- ),
- ],
- ),
- );
- }
+  Future<void> _deleteDeliverable(AggregatedDeliverable deliverable) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Deliverable',
+      itemLabel: deliverable.title,
+    );
+    if (!confirmed || !mounted) return;
+    // TODO: Implement delete
+  }
 
  static const TextStyle _headerStyle = TextStyle(
  fontSize: 12,

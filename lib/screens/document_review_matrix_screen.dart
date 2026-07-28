@@ -242,7 +242,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  ),
  child: Row(
  children: [
- _buildStatChip('Total', stats.total.toString(), Colors.blue),
+ _buildStatChip('Total', stats.total.toString(), const Color(0xFFD97706)),
  const SizedBox(width: 12),
  _buildStatChip('Pending', stats.pending.toString(), Colors.orange),
  const SizedBox(width: 12),

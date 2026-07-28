@@ -567,7 +567,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  colors: [
  Color(0xFF0F172A),
  Color(0xFF102A43),
- Color(0xFF1E3A5F),
+ Color(0xFF78350F),
  ],
  ),
  borderRadius: BorderRadius.circular(24),
@@ -772,7 +772,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  if (isNarrow) {
  return Column(
  children: [
- _buildMethodologyCard('Waterfall', 'Sequential, phase-gated delivery. All environments and tooling must be fully provisioned before development begins.', Icons.timeline, const Color(0xFF2563EB)),
+ _buildMethodologyCard('Waterfall', 'Sequential, phase-gated delivery. All environments and tooling must be fully provisioned before development begins.', Icons.timeline, const Color(0xFFD97706)),
  const SizedBox(height: 12),
  _buildMethodologyCard('Hybrid', 'Combines waterfall rigour for infrastructure with agile flexibility for feature delivery. Core environments upfront; development evolves iteratively.', Icons.merge_type_outlined, const Color(0xFF7C3AED)),
  const SizedBox(height: 12),
@@ -782,7 +782,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  }
  return Row(
  children: [
- Expanded(child: _buildMethodologyCard('Waterfall', 'Sequential, phase-gated delivery. All environments and tooling must be fully provisioned before development begins.', Icons.timeline, const Color(0xFF2563EB))),
+ Expanded(child: _buildMethodologyCard('Waterfall', 'Sequential, phase-gated delivery. All environments and tooling must be fully provisioned before development begins.', Icons.timeline, const Color(0xFFD97706))),
  const SizedBox(width: 12),
  Expanded(child: _buildMethodologyCard('Hybrid', 'Combines waterfall rigour for infrastructure with agile flexibility for feature delivery. Core environments upfront; development evolves iteratively.', Icons.merge_type_outlined, const Color(0xFF7C3AED))),
  const SizedBox(width: 12),
@@ -1089,7 +1089,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  Expanded(flex: 4, child: Text(item.environment, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)))),
  SizedBox(width: 110, child: Text(item.type, style: const TextStyle(fontSize: 12, color: Color(0xFF475569)))),
  SizedBox(width: 120, child: _buildStatusTag(item.status, color)),
- Expanded(flex: 3, child: Text(item.accessUrl, style: const TextStyle(fontSize: 11, fontFamily: appFontFamily, color: Color(0xFF2563EB)), overflow: TextOverflow.ellipsis)),
+ Expanded(flex: 3, child: Text(item.accessUrl, style: const TextStyle(fontSize: 11, fontFamily: appFontFamily, color: Color(0xFFD97706)), overflow: TextOverflow.ellipsis)),
  SizedBox(width: 120, child: Text(item.owner, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)))),
  SizedBox(width: 110, child: Text(item.targetDate, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
  SizedBox(

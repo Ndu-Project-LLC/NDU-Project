@@ -85,7 +85,7 @@ class _AdminEditToggleState extends State<AdminEditToggle> {
             child: FloatingActionButton.extended(
               onPressed: () =>
                   context.read<AppContentProvider>().toggleEditMode(),
-              backgroundColor: data.isEditMode ? Colors.red : Colors.blue,
+              backgroundColor: data.isEditMode ? Colors.red : const Color(0xFFD97706),
               icon: Icon(data.isEditMode ? Icons.close : Icons.edit),
               label: Text(data.isEditMode ? 'Exit Edit Mode' : 'Edit Content'),
               tooltip: data.isEditMode

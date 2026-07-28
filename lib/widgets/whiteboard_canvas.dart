@@ -148,7 +148,7 @@ class _WhiteboardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final swatches = [
       const Color(0xFF111827),
-      const Color(0xFF2563EB),
+      const Color(0xFFD97706),
       const Color(0xFF10B981),
       const Color(0xFFF59E0B),
       const Color(0xFFEF4444),

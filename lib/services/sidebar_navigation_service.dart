@@ -100,10 +100,10 @@ class SidebarNavigationService {
         checkpoint: 'infrastructure_considerations',
         label: 'Infrastructure Considerations'),
     SidebarItem(checkpoint: 'core_stakeholders', label: 'Core Stakeholders'),
+    SidebarItem(checkpoint: 'cost_analysis', label: 'Initial Cost Estimate'),
     SidebarItem(
         checkpoint: 'preferred_solution_analysis',
         label: 'Preferred Solution Analysis'),
-    SidebarItem(checkpoint: 'cost_analysis', label: 'Initial Cost Estimate'),
 
     // Front End Planning
     SidebarItem(checkpoint: 'fep_summary', label: 'Summary'),
@@ -131,6 +131,9 @@ class SidebarNavigationService {
     SidebarItem(checkpoint: 'requirements', label: 'Requirements'),
     // Organization Plan sub-items
     SidebarItem(
+        checkpoint: 'organization_base_plan',
+        label: 'Base Organisation Plan'),
+    SidebarItem(
         checkpoint: 'organization_roles_responsibilities',
         label: 'Roles & Responsibilities'),
     SidebarItem(checkpoint: 'organization_raci_matrix', label: 'RACI Matrix'),
@@ -143,35 +146,31 @@ class SidebarNavigationService {
     SidebarItem(checkpoint: 'ssher', label: 'SSHER'),
     SidebarItem(checkpoint: 'quality_management', label: 'Quality Management'),
     // Design & Technology — now before Execution Plan
-    SidebarItem(checkpoint: 'design', label: 'Design Planning'),
     SidebarItem(checkpoint: 'technology', label: 'Technology Planning'),
+    SidebarItem(checkpoint: 'design', label: 'Design Planning'),
+    // Agile Delivery Section — before Execution Plan
     SidebarItem(
-        checkpoint: 'interface_management', label: 'Interface Management'),
-    // Agile Delivery Model Section — before Execution Plan
-    SidebarItem(
-        checkpoint: 'agile_delivery_model', label: 'Agile Delivery Model'),
+        checkpoint: 'agile_delivery_model', label: 'Agile Delivery'),
     SidebarItem(checkpoint: 'agile_scrum_config', label: 'Scrum Configuration'),
     SidebarItem(
         checkpoint: 'agile_capacity_planning', label: 'Capacity Planning'),
     SidebarItem(
         checkpoint: 'agile_backlog_governance', label: 'Backlog Governance'),
     SidebarItem(
-        checkpoint: 'agile_team_structure', label: 'Agile Team Structure'),
-    SidebarItem(
         checkpoint: 'agile_kanban_config', label: 'Kanban Configuration'),
     SidebarItem(checkpoint: 'agile_epics_features', label: 'Epics & Features'),
     SidebarItem(
         checkpoint: 'agile_acceptance_criteria',
         label: 'Acceptance Criteria Planning'),
-    SidebarItem(
-        checkpoint: 'agile_sprint_calendar',
-        label: 'Sprint Cadence & Calendar'),
     SidebarItem(checkpoint: 'agile_map_out', label: 'Agile Map Out'),
     SidebarItem(checkpoint: 'agile_release_plan', label: 'Release Plan'),
     SidebarItem(
         checkpoint: 'agile_metrics_planning', label: 'Agile Metrics Planning'),
     // Execution Plan sub-items (full flow matching sidebar order)
     SidebarItem(checkpoint: 'execution_plan', label: 'Execution Plan Overview'),
+    SidebarItem(
+        checkpoint: 'execution_quality_tracking',
+        label: 'Execution Quality Tracking'),
     SidebarItem(
         checkpoint: 'execution_work_packages',
         label: 'Execution Work Packages'),
@@ -228,6 +227,8 @@ class SidebarNavigationService {
     SidebarItem(checkpoint: 'risk_assessment', label: 'Risk Assessment'),
     SidebarItem(checkpoint: 'contracts', label: 'Contract'),
     SidebarItem(checkpoint: 'procurement', label: 'Procurement'),
+    SidebarItem(
+        checkpoint: 'interface_management', label: 'Interface Management'),
     // Schedule & Cost
     SidebarItem(checkpoint: 'schedule', label: 'Schedule'),
     SidebarItem(checkpoint: 'cost_estimate', label: 'Cost Estimate Overview'),

@@ -139,7 +139,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
           mood: risks.length > index ? 'neutral' : 'positive',
           color: [
             Colors.green,
-            Colors.blue,
+            const Color(0xFFD97706),
             Colors.purple,
             Colors.orange,
             Colors.teal,
@@ -606,7 +606,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
           ),
           const SizedBox(height: 12),
           _standupSection('Yesterday', e.yesterday, Icons.history,
-              const Color(0xFF3B82F6)),
+              const Color(0xFFFBBF24)),
           const SizedBox(height: 8),
           _standupSection('Today', e.today, Icons.today, _kAccent),
           const SizedBox(height: 8),

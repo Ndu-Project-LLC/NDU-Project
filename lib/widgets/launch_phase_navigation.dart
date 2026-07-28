@@ -20,17 +20,24 @@ class LaunchPhaseNavigation extends StatelessWidget {
 
   static const _kAccentColor = Color(0xFFFFC812);
 
-  Future<void> _handleNextTap(BuildContext context) async {
+  void _handleNextTap(BuildContext context) {
     if (!nextEnabled) {
-      final continueAnyway = await showProceedWithoutReviewDialog(
-        context,
-        title: 'Please confirm you have reviewed and understood this step',
-        message:
-            'You have not confirmed this page yet. You can continue now and return to update missing information later, or stay and complete it now.',
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Please check the acknowledgment box above before proceeding.'),
+          backgroundColor: Color(0xFFD97706),
+          duration: Duration(seconds: 3),
+        ),
       );
-      if (!continueAnyway) return;
+      return;
     }
-    onNext();
+    showProceedWithoutReviewDialog(
+      context,
+      title: 'Proceed to ${nextLabel.replaceFirst('Next: ', '')}?',
+    ).then((confirmed) {
+      if (confirmed == true) onNext();
+    });
   }
 
   @override
@@ -62,8 +69,10 @@ class LaunchPhaseNavigation extends StatelessWidget {
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: _kAccentColor,
-        foregroundColor: Colors.white,
+        backgroundColor:
+            nextEnabled ? _kAccentColor : const Color(0xFFE5E7EB),
+        foregroundColor:
+            nextEnabled ? Colors.white : const Color(0xFF9CA3AF),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         elevation: 0,

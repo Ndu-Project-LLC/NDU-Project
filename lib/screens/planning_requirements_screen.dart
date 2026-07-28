@@ -20,11 +20,13 @@ import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
+import 'package:ndu_project/widgets/page_hint_dialog.dart';
 class PlanningRequirementsScreen extends StatefulWidget {
  const PlanningRequirementsScreen({super.key});
 
@@ -41,12 +43,13 @@ class _PlanningRequirementsScreenState
  final ScrollController _requirementsHorizontalController = ScrollController();
  final ScrollController _requirementsVerticalController = ScrollController();
 
- bool _isGeneratingRequirements = false;
- bool _isGeneratingRequirementsPlan = false;
- bool _planEditedManually = false;
- bool _settingPlanFromAi = false;
- bool _isRegeneratingRow = false;
- int? _regeneratingRowIndex;
+  bool _isGeneratingRequirements = false;
+  bool _isGeneratingRequirementsPlan = false;
+  bool _planEditedManually = false;
+  bool _settingPlanFromAi = false;
+  bool _isRegeneratingRow = false;
+  int? _regeneratingRowIndex;
+  bool _requirementsConfirmed = false;
 
  Timer? _autoSaveTimer;
  Timer? _planTimer;
@@ -61,39 +64,48 @@ class _PlanningRequirementsScreenState
  'technical manager',
  };
 
- @override
- void initState() {
- super.initState();
- ApiKeyManager.initializeApiKey();
+  @override
+  void initState() {
+    super.initState();
+    ApiKeyManager.initializeApiKey();
 
- WidgetsBinding.instance.addPostFrameCallback((_) async {
- if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
 
- final projectData = ProjectDataHelper.getData(context);
- _notesController.text = projectData.frontEndPlanning.requirementsNotes;
- _requirementsPlanController.text =
- projectData.frontEndPlanning.requirementsPlan;
- _planEditedManually = _requirementsPlanController.text.trim().isNotEmpty;
+      PageHintDialog.showIfNeeded(
+        context: context,
+        pageId: 'planning_requirements',
+        title: 'Review AI-Generated Content',
+        message:
+            'KAZ AI-generated outputs provide a starting point. Please review, edit, and refine all AI-generated requirements and plans to ensure they accurately reflect your project needs before submitting.',
+      );
 
- _notesController.addListener(_handleNotesChanged);
- _requirementsPlanController.addListener(_handlePlanChanged);
+      final projectData = ProjectDataHelper.getData(context);
+      _notesController.text = projectData.frontEndPlanning.requirementsNotes;
+      _requirementsPlanController.text =
+          projectData.frontEndPlanning.requirementsPlan;
+      _planEditedManually = _requirementsPlanController.text.trim().isNotEmpty;
 
- _loadSavedRequirements(projectData);
- await _loadAssignableMembers(projectData);
+      _notesController.addListener(_handleNotesChanged);
+      _requirementsPlanController.addListener(_handlePlanChanged);
 
- if (_rows.isEmpty) {
- _rows.add(_createRow(1));
- }
+      _loadSavedRequirements(projectData);
+      _loadInitiationRequirements(projectData);
+      await _loadAssignableMembers(projectData);
 
- if (_rows.length == 1 &&
- _rows.first.descriptionController.text.trim().isEmpty) {
- await _generateRequirementsFromContext();
- }
+      if (_rows.isEmpty) {
+        _rows.add(_createRow(1));
+      }
 
- _maybeAutoGenerateRequirementsPlan();
- if (mounted) setState(() {});
- });
- }
+      if (_rows.length == 1 &&
+          _rows.first.descriptionController.text.trim().isEmpty) {
+        await _generateRequirementsFromContext();
+      }
+
+      _maybeAutoGenerateRequirementsPlan();
+      if (mounted) setState(() {});
+    });
+  }
 
  _RequirementRow _createRow(int number) {
  return _RequirementRow(
@@ -215,9 +227,70 @@ class _PlanningRequirementsScreenState
  );
  }
  }
- }
+  }
 
- void _replaceRowsSafely(List<_RequirementRow> nextRows) {
+  void _loadInitiationRequirements(ProjectDataModel data) {
+    if (_rows.isNotEmpty &&
+        _rows.any((r) => r.descriptionController.text.trim().isNotEmpty)) {
+      return;
+    }
+
+    final initiationTexts = <String>[];
+    final sources = <String, String>{
+      'Business Case': data.businessCase,
+      'Solution Description': data.solutionDescription,
+      'Project Notes': data.notes,
+      'Potential Solution': data.potentialSolution,
+    };
+
+    for (final entry in sources.entries) {
+      final text = entry.value.trim();
+      if (text.isEmpty) continue;
+      final lines = text.split('\n');
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty) continue;
+        final lower = trimmed.toLowerCase();
+        if (lower.startsWith('- ') || lower.startsWith('• ')) {
+          final cleaned = trimmed.replaceFirst(RegExp(r'^[-•]\s*'), '');
+          if (cleaned.isNotEmpty) {
+            initiationTexts.add(cleaned);
+          }
+        }
+      }
+    }
+
+    for (final goal in data.projectGoals) {
+      final desc = goal.description.trim();
+      if (desc.isNotEmpty) initiationTexts.add(desc);
+    }
+
+    if (initiationTexts.isEmpty) return;
+
+    final deduped = <String>{};
+    final uniqueTexts = <String>[];
+    for (final t in initiationTexts) {
+      final key = t.toLowerCase();
+      if (!deduped.contains(key)) {
+        deduped.add(key);
+        uniqueTexts.add(t);
+      }
+    }
+
+    final newRows = uniqueTexts.asMap().entries.map((entry) {
+      final row = _createRow(entry.key + 1);
+      row.setDescription(entry.value);
+      row.selectedPhase = 'Initiation';
+      row.sourceController.text = 'Initiation Phase';
+      return row;
+    }).toList();
+
+    if (newRows.isNotEmpty) {
+      _replaceRowsSafely(newRows);
+    }
+  }
+
+  void _replaceRowsSafely(List<_RequirementRow> nextRows) {
  final previousRows = List<_RequirementRow>.from(_rows);
  if (!mounted) {
  for (final row in previousRows) {
@@ -345,25 +418,34 @@ class _PlanningRequirementsScreenState
  });
  }
 
- String _requirementsPlanContext() {
- final data = ProjectDataHelper.getData(context);
- final base =
- ProjectDataHelper.buildFepContext(data, sectionLabel: 'Requirements');
- final lines = _rows
- .map((row) => row.descriptionController.text.trim())
- .where((t) => t.isNotEmpty)
- .toList();
- final requirementsList = lines.isEmpty
- ? 'No requirements entered yet.'
- : lines.map((t) => '- $t').join('\n');
+  String _requirementsPlanContext() {
+    final data = ProjectDataHelper.getData(context);
+    final base =
+        ProjectDataHelper.buildFepContext(data, sectionLabel: 'Requirements');
+    final lines = _rows
+        .map((row) => row.descriptionController.text.trim())
+        .where((t) => t.isNotEmpty)
+        .toList();
+    final requirementsList = lines.isEmpty
+        ? 'No requirements entered yet.'
+        : lines.map((t) => '- $t').join('\n');
 
- return '''
+    return '''
 $base
 
 Requirements:
 $requirementsList
+
+IMPORTANT: The Requirements Plan must cover ALL of the following areas:
+1. Requirement Identification Methods – How requirements will be gathered (interviews, workshops, document analysis, prototyping)
+2. Documentation Standards – Format, level of detail, and traceability structure for each requirement
+3. Prioritization Criteria – MoSCoW or weighted scoring framework to rank requirements by business value and urgency
+4. Validation and Acceptance Criteria – How each requirement will be verified (testing, inspection, demonstration, analysis)
+5. Change Management Process – How requirement changes will be proposed, reviewed, approved, and tracked
+6. Traceability Approach – Linking requirements to scope, deliverables, test cases, and verification evidence
+7. Stakeholder Communication – How requirement status updates will be communicated to the project team and sponsors
 ''';
- }
+  }
 
  Future<void> _generateRequirementsPlan({bool force = false}) async {
  if (_isGeneratingRequirementsPlan) return;
@@ -779,8 +861,15 @@ $requirementsList
     _commitAutoSave(showSnack: false);
   }
 
-  void _deleteRow(int index) {
+  Future<void> _deleteRow(int index) async {
     if (index < 0 || index >= _rows.length) return;
+    final label = _rows[index].descriptionController.text.trim();
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Requirement',
+      itemLabel: label.isNotEmpty ? label : null,
+    );
+    if (!confirmed) return;
     setState(() {
       _rows[index].dispose();
       _rows.removeAt(index);
@@ -1149,14 +1238,14 @@ $requirementsList
  ),
  ),
  SizedBox(height: 6),
- Text(
- 'AI-suggested plan for implementing the requirements. You can edit it.',
- style: TextStyle(
- fontSize: 13,
- color: Color(0xFF6B7280),
- height: 1.2,
- ),
- ),
+                  Text(
+                    'Define how project requirements will be identified, documented, prioritized, validated, and managed throughout the project lifecycle.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF6B7280),
+                      height: 1.2,
+                    ),
+                  ),
  ],
  ),
  ),
@@ -1168,13 +1257,13 @@ $requirementsList
  child:
  CircularProgressIndicator(
  strokeWidth: 2,
- color: Color(0xFF2563EB),
+ color: Color(0xFFD97706),
  ),
  )
  : const Icon(
  Icons.auto_fix_high,
  size: 20,
- color: Color(0xFF2563EB),
+ color: Color(0xFFD97706),
  ),
  onPressed:
  _isGeneratingRequirementsPlan
@@ -1214,9 +1303,9 @@ $requirementsList
  ),
  ),
  SizedBox(height: 6),
- Text(
- 'Identify actual needs, conditions, or capabilities that this project must meet to be considered successful',
- style: TextStyle(
+          Text(
+            'Identify and document all requirements needed for successful project delivery',
+            style: TextStyle(
  fontSize: 13,
  color: Color(0xFF6B7280),
  height: 1.2,
@@ -1233,25 +1322,34 @@ $requirementsList
  child:
  CircularProgressIndicator(
  strokeWidth: 2,
- color: Color(0xFF2563EB),
+ color: Color(0xFFD97706),
  ),
  )
  : const Icon(
  Icons.refresh,
  size: 20,
- color: Color(0xFF2563EB),
+ color: Color(0xFFD97706),
  ),
- onPressed: _isGeneratingRequirements
- ? null
- : _confirmRegenerate,
- tooltip: 'Regenerate requirements',
- ),
- ],
- ),
- const SizedBox(height: 14),
- _buildRequirementsTable(context),
- const SizedBox(height: 16),
- _buildActionButtons(),
+  onPressed: _isGeneratingRequirements
+  ? null
+  : _confirmRegenerate,
+  tooltip: 'Regenerate requirements',
+  ),
+  Tooltip(
+  message: 'Full screen view',
+  child: IconButton(
+  icon: const Icon(Icons.fullscreen, size: 20, color: Color(0xFF6B7280)),
+  onPressed: _showFullScreenTable,
+  ),
+  ),
+  ],
+  ),
+  const SizedBox(height: 14),
+  _buildTopActionButtons(),
+  const SizedBox(height: 12),
+  _buildRequirementsTable(context),
+  const SizedBox(height: 16),
+  _buildActionButtons(),
  const SizedBox(height: 24),
  ],
  ),
@@ -1450,7 +1548,7 @@ $requirementsList
                               onPressed: isRowLoading ? null : () => _regenerateRequirementRow(index),
                               icon: isRowLoading
                                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Icon(Icons.refresh, size: 18, color: Color(0xFF2563EB)),
+                                  : const Icon(Icons.refresh, size: 18, color: Color(0xFFD97706)),
                               padding: const EdgeInsets.all(6),
                               constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                               splashRadius: 18,
@@ -1631,11 +1729,12 @@ $requirementsList
         child: Scrollbar(
           controller: _requirementsHorizontalController,
           thumbVisibility: true,
+          scrollbarOrientation: ScrollbarOrientation.bottom,
           child: SingleChildScrollView(
             controller: _requirementsHorizontalController,
             scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: totalWidth),
+            child: SizedBox(
+              width: totalWidth,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1675,6 +1774,7 @@ $requirementsList
                         : Scrollbar(
                             controller: _requirementsVerticalController,
                             thumbVisibility: true,
+                            scrollbarOrientation: ScrollbarOrientation.right,
                             child: ReorderableListView(
                               buildDefaultDragHandles: false,
                               onReorder: _onReorder,
@@ -1691,6 +1791,489 @@ $requirementsList
     );
   }
 
+  void _showFullScreenTable() {
+    final borderColor = const Color(0xFFE5E7EB);
+    final bgHeader = const Color(0xFFF9FAFB);
+    final headerStyle = const TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w700,
+      color: Color(0xFF4B5563),
+    );
+
+    const colW = <double>[64, 612, 190, 180, 190, 190, 150, 260, 468, 56];
+    const totalWidth = 2360.0;
+
+    Widget hCell(String text, double w) {
+      return SizedBox(
+        width: w,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Center(child: Text(text, style: headerStyle, textAlign: TextAlign.center)),
+        ),
+      );
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width - 24,
+            height: MediaQuery.of(context).size.height - 24,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  decoration: const BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+                  ),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Project Requirements (Full Screen)',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      _buildTopActionButtons(),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Scrollbar(
+                    controller: _requirementsHorizontalController,
+                    thumbVisibility: true,
+                    scrollbarOrientation: ScrollbarOrientation.bottom,
+                    child: SingleChildScrollView(
+                      controller: _requirementsHorizontalController,
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: totalWidth,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: bgHeader,
+                                border: Border(bottom: BorderSide(color: borderColor)),
+                              ),
+                              child: Row(
+                                children: [
+                                  hCell('No', colW[0]),
+                                  hCell('Requirement', colW[1]),
+                                  hCell('Requirement type', colW[2]),
+                                  hCell('Discipline', colW[3]),
+                                  hCell('Role', colW[4]),
+                                  hCell('Person', colW[5]),
+                                  hCell('Phase', colW[6]),
+                                  hCell('Requirement source', colW[7]),
+                                  hCell('Comments and Requirement Source Links', colW[8]),
+                                  hCell('', colW[9]),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: _rows.isEmpty
+                                  ? const Center(
+                                      child: Text(
+                                        'No requirements yet. Add one or import from CSV.',
+                                        style: TextStyle(color: Color(0xFF9CA3AF)),
+                                      ),
+                                    )
+                                  : Scrollbar(
+                                      controller: _requirementsVerticalController,
+                                      thumbVisibility: true,
+                                      scrollbarOrientation: ScrollbarOrientation.right,
+                                      child: ReorderableListView(
+                                        buildDefaultDragHandles: false,
+                                        onReorder: _onReorder,
+                                        children: List.generate(_rows.length, (i) => _buildFullScreenDataRow(i)),
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFullScreenDataRow(int index) {
+    final row = _rows[index];
+    final borderColor = const Color(0xFFE5E7EB);
+    final isRowLoading = _isRegeneratingRow && _regeneratingRowIndex == index;
+
+    const colW = <double>[64, 612, 190, 180, 190, 190, 150, 260, 468, 56];
+
+    return Container(
+      key: ValueKey('fs_req_row_$index'),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: borderColor)),
+      ),
+      child: Row(
+        children: [
+          ReorderableDragStartListener(
+            index: index,
+            child: SizedBox(
+              width: colW[0],
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.drag_indicator, size: 18, color: Color(0xFF9CA3AF)),
+                    const SizedBox(width: 2),
+                    Text('${row.number}', style: const TextStyle(fontSize: 14, color: Color(0xFF111827))),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: colW[1],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Tooltip(
+                          message: 'Regenerate (AI)',
+                          child: IconButton(
+                            onPressed: isRowLoading ? null : () => _regenerateRequirementRow(index),
+                            icon: isRowLoading
+                                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Icon(Icons.refresh, size: 18, color: Color(0xFFD97706)),
+                            padding: const EdgeInsets.all(6),
+                            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                            splashRadius: 18,
+                          ),
+                        ),
+                        Tooltip(
+                          message: 'Undo',
+                          child: IconButton(
+                            onPressed: () => _undoRequirementRow(index),
+                            icon: const Icon(Icons.undo, size: 18, color: Color(0xFF6B7280)),
+                            padding: const EdgeInsets.all(6),
+                            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                            splashRadius: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  VoiceTextField(
+                    controller: row.descriptionController,
+                    minLines: 2,
+                    maxLines: null,
+                    onChanged: (_) => _handleRequirementChanged(),
+                    decoration: const InputDecoration(
+                      hintText: 'Requirement description',
+                      hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(
+            width: colW[2],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: _TypeDropdown(
+                value: row.selectedType,
+                onChanged: (value) {
+                  row.selectedType = value;
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+          ),
+          SizedBox(
+            width: colW[3],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: _DisciplineDropdown(
+                value: row.selectedDiscipline,
+                onChanged: (value) {
+                  row.selectedDiscipline = value;
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+          ),
+          SizedBox(
+            width: colW[4],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: VoiceTextField(
+                controller: row.roleController,
+                maxLines: 1,
+                onChanged: (_) => _handleRequirementChanged(),
+                decoration: const InputDecoration(
+                  hintText: 'Role',
+                  hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: colW[5],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: _PersonDropdownField(
+                value: row.personController.text,
+                options: _memberOptions,
+                hint: 'Person',
+                onChanged: (value) {
+                  row.personController.text = value;
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+          ),
+          SizedBox(
+            width: colW[6],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: _PhaseDropdown(
+                value: row.selectedPhase,
+                onChanged: (value) {
+                  row.selectedPhase = value;
+                  _handleRequirementChanged();
+                },
+              ),
+            ),
+          ),
+          SizedBox(
+            width: colW[7],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: VoiceTextField(
+                controller: row.sourceController,
+                maxLines: 1,
+                onChanged: (_) => _handleRequirementChanged(),
+                decoration: const InputDecoration(
+                  hintText: 'Requirement source',
+                  hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: colW[8],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: VoiceTextField(
+                controller: row.commentsController,
+                minLines: 2,
+                maxLines: null,
+                onChanged: (_) => _handleRequirementChanged(),
+                decoration: const InputDecoration(
+                  hintText: 'Comments / source links',
+                  hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: colW[9],
+            child: Center(
+              child: IconButton(
+                icon: const Icon(Icons.delete_outline, size: 20, color: Color(0xFFEF4444)),
+                onPressed: () => _deleteRow(index),
+                tooltip: 'Delete requirement',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopActionButtons() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 36,
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              final rows = await showCsvImportDialog(
+                context,
+                tableTitle: 'Project Requirements',
+                columns: _csvColumns,
+              );
+              if (rows == null || !mounted) return;
+              setState(() {
+                for (final row in rows) {
+                  final newRow = _createRow(_rows.length + 1);
+                  newRow.descriptionController.text = row['description'] ?? '';
+                  newRow.selectedType = _RequirementRow.requirementTypeOptions.contains(row['type']) ? row['type'] : 'Functional';
+                  newRow.selectedDiscipline = _RequirementRow.disciplineOptions.contains(row['discipline']) ? row['discipline'] : 'IT';
+                  newRow.selectedPhase = _RequirementRow.phaseOptions.contains(row['phase']) ? row['phase'] : 'Planning';
+                  newRow.roleController.text = row['role'] ?? '';
+                  newRow.personController.text = row['person'] ?? '';
+                  newRow.sourceController.text = row['source'] ?? '';
+                  newRow.commentsController.text = row['comments'] ?? '';
+                  _rows.add(newRow);
+                }
+              });
+              _scheduleAutoSave(showSnack: false);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${rows.length} requirements imported from CSV'),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.upload_file_outlined, size: 16),
+            label: const Text('Import CSV', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFFD97706),
+              side: const BorderSide(color: Color(0xFFFDE68A)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          height: 36,
+          child: OutlinedButton.icon(
+            onPressed: _downloadTemplate,
+            icon: const Icon(Icons.download, size: 16),
+            label: const Text('Template', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFFD97706),
+              side: const BorderSide(color: Color(0xFFFDE68A)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showRequirementsConfirmation() async {
+    bool confirmChecked = false;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              title: Row(
+                children: [
+                  const Icon(Icons.fact_check_rounded, color: Color(0xFFD97706)),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Please confirm you have reviewed and understood this step',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      'Review all requirements on this page before proceeding. You can return to edit at any time.',
+                      style: TextStyle(fontSize: 13.5, color: Color(0xFF4B5563)),
+                    ),
+                  ),
+                  CheckboxListTile(
+                    dense: true,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    value: confirmChecked,
+                    onChanged: (value) => setDialogState(() => confirmChecked = value ?? false),
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      'I confirm that I have reviewed all requirements on this page.',
+                      style: TextStyle(fontSize: 12.5, color: Color(0xFF111827)),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: confirmChecked
+                      ? () => Navigator.of(dialogContext).pop(true)
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFD24C),
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Confirm & Continue'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true && mounted) {
+      setState(() => _requirementsConfirmed = true);
+    }
+  }
+
  Widget _buildDesktopFooter(BuildContext context) {
  return Container(
  width: double.infinity,
@@ -1700,7 +2283,34 @@ $requirementsList
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  ),
- child: Row(
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Row(
+ children: [
+ Checkbox(
+ value: _requirementsConfirmed,
+ onChanged: (value) {
+ if (value == true) {
+ _showRequirementsConfirmation();
+ } else {
+ setState(() => _requirementsConfirmed = false);
+ }
+ },
+ activeColor: const Color(0xFFD97706),
+ ),
+ const SizedBox(width: 8),
+ GestureDetector(
+ onTap: _showRequirementsConfirmation,
+ child: const Text(
+ 'I confirm that I have reviewed all requirements on this page.',
+ style: TextStyle(fontSize: 13, color: Color(0xFF374151)),
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 8),
+ Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  OutlinedButton(
@@ -1720,7 +2330,7 @@ $requirementsList
  const Expanded(child: SizedBox.shrink()),
  const SizedBox(width: 16),
  ElevatedButton(
- onPressed: _handleSubmit,
+ onPressed: _requirementsConfirmed ? _handleSubmit : null,
  style: ElevatedButton.styleFrom(
  backgroundColor: const Color(0xFFFFD700),
  foregroundColor: Colors.black,
@@ -1736,6 +2346,8 @@ $requirementsList
  'Submit',
  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
  ),
+ ),
+ ],
  ),
  ],
  ),
@@ -1811,8 +2423,8 @@ $requirementsList
  label: const Text('Import CSV', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
  style: OutlinedButton.styleFrom(
  backgroundColor: Colors.white,
- foregroundColor: const Color(0xFF2563EB),
- side: const BorderSide(color: Color(0xFF93C5FD)),
+ foregroundColor: const Color(0xFFD97706),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12),
  ),
@@ -1829,8 +2441,8 @@ $requirementsList
   label: const Text('Template', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
   style: OutlinedButton.styleFrom(
   backgroundColor: Colors.white,
-  foregroundColor: const Color(0xFF2563EB),
-  side: const BorderSide(color: Color(0xFF93C5FD)),
+  foregroundColor: const Color(0xFFD97706),
+  side: const BorderSide(color: Color(0xFFFDE68A)),
   shape: RoundedRectangleBorder(
   borderRadius: BorderRadius.circular(12),
   ),
@@ -2407,13 +3019,13 @@ class _MemberPickerDialogState extends State<_MemberPickerDialog> {
  dense: true,
  leading: CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFFDBEAFE),
+ backgroundColor: const Color(0xFFFFF7E6),
  child: Text(
  member.displayLabel[0].toUpperCase(),
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFD97706),
  ),
  ),
  ),

@@ -9,6 +9,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/launch_data_table.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -412,10 +413,12 @@ class _LongLeadEquipmentOrderingScreenState
  _scheduleSave();
  }
 
- void _deleteCategory(String id) {
- setState(() => _categories.removeWhere((entry) => entry.id == id));
- _scheduleSave();
- }
+  void _deleteCategory(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'equipment category');
+  if (!ok) return;
+  setState(() => _categories.removeWhere((entry) => entry.id == id));
+  _scheduleSave();
+  }
 
  void _addEquipmentItem() {
  _openEquipmentDialog();
@@ -428,10 +431,12 @@ class _LongLeadEquipmentOrderingScreenState
  _scheduleSave();
  }
 
- void _deleteEquipmentItem(String id) {
- setState(() => _equipmentItems.removeWhere((entry) => entry.id == id));
- _scheduleSave();
- }
+  void _deleteEquipmentItem(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'equipment item');
+  if (!ok) return;
+  setState(() => _equipmentItems.removeWhere((entry) => entry.id == id));
+  _scheduleSave();
+  }
 
  void _addAction() {
  _openActionDialog();
@@ -444,10 +449,12 @@ class _LongLeadEquipmentOrderingScreenState
  _scheduleSave();
  }
 
- void _deleteAction(String id) {
- setState(() => _actions.removeWhere((entry) => entry.id == id));
- _scheduleSave();
- }
+  void _deleteAction(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'action');
+  if (!ok) return;
+  setState(() => _actions.removeWhere((entry) => entry.id == id));
+  _scheduleSave();
+  }
 
  Future<void> _openCategoryDialog() async {
  final draft = _EquipmentCategory.empty();

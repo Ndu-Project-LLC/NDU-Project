@@ -19,6 +19,8 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
+import 'package:ndu_project/widgets/milestone_edit_dialog.dart';
 
 const Color _kAccentColor = Color(0xFFFFC107);
 const Color _kPrimaryText = Color(0xFF1E293B);
@@ -26,7 +28,7 @@ const Color _kSecondaryText = Color(0xFF64748B);
 const Color _kBorderColor = Color(0xFFE2E8F0);
 const Color _kCardShadow = Color(0x14000000);
 const Color _kLightYellow = Color(0xFFFFF8E1);
-const Color _kLightBlue = Color(0xFFE0F2FE);
+const Color _kLightBlue = Color(0xFFFFF7E6);
 const Color _kGreenBrand = Color(0xFF22C55E);
 const Color _kLightGray = Color(0xFFF1F5F9);
 const List<String> _kPriorityOptions = [
@@ -89,6 +91,9 @@ class _ProjectFrameworkNextScreenState
   final DateFormat _dateFormat = DateFormat('MMM d, y');
   late final OpenAiServiceSecure _openAi;
   final Set<int> _regeneratingMilestoneSuggestions = <int>{};
+  bool _reviewConfirmed = false;
+  bool _isAutoAssigning = false;
+  bool _showMilestoneTable = false;
 
   // FocusNodes for auto-save on blur
   final List<FocusNode> _titleFocusNodes = List.generate(3, (_) => FocusNode());
@@ -438,8 +443,6 @@ class _ProjectFrameworkNextScreenState
                                       const SizedBox(height: 16),
                                       _buildMilestoneTimelineSection(),
                                       const SizedBox(height: 16),
-                                      _buildMilestoneTableSection(),
-                                      const SizedBox(height: 16),
                                       _buildGoalsSection(isMobile: true),
                                       const SizedBox(height: 24),
                                     ],
@@ -453,8 +456,6 @@ class _ProjectFrameworkNextScreenState
                                       _buildContextSection(),
                                       const SizedBox(height: 16),
                                       _buildMilestoneTimelineSection(),
-                                      const SizedBox(height: 16),
-                                      _buildMilestoneTableSection(),
                                       const SizedBox(height: 16),
                                       _buildGoalsSection(isMobile: false),
                                       const SizedBox(height: 24),
@@ -705,24 +706,41 @@ class _ProjectFrameworkNextScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RichText(
-          text: const TextSpan(
-            children: [
-              TextSpan(
-                  text: 'Project Goals',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: _kPrimaryText)),
-              TextSpan(
-                  text:
-                      ' (Breakdown the project objective into attainable areas)',
-                  style: TextStyle(
-                      fontSize: 13,
-                      color: _kSecondaryText,
-                      fontWeight: FontWeight.w400)),
-            ],
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: RichText(
+                text: const TextSpan(
+                  children: [
+                    TextSpan(
+                        text: 'Goals and Milestones',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: _kPrimaryText)),
+                    TextSpan(
+                        text:
+                            ' Define key project milestones and link each to the applicable project goals to establish project schedule dependencies.',
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: _kSecondaryText,
+                            fontWeight: FontWeight.w400)),
+                  ],
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: _isAutoAssigning ? null : _aiAutoAssignAllMilestones,
+              icon: _isAutoAssigning
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.auto_awesome, size: 16),
+              label: const Text('Auto-Assign'),
+              style: TextButton.styleFrom(foregroundColor: _kAccentColor),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         // Tab navigation
@@ -742,7 +760,7 @@ class _ProjectFrameworkNextScreenState
                 label: 'Goal 2',
                 value: 'Goal 2',
                 isActive: _currentFilter == 'Goal 2',
-                activeColor: const Color(0xFF2563EB),
+                activeColor: const Color(0xFFD97706),
                 activeBgColor: _kLightBlue,
               ),
               const SizedBox(width: 8),
@@ -814,6 +832,22 @@ class _ProjectFrameworkNextScreenState
               );
             }),
           ),
+        const SizedBox(height: 12),
+        Center(
+          child: TextButton.icon(
+            onPressed: () =>
+                setState(() => _showMilestoneTable = !_showMilestoneTable),
+            icon: Icon(
+                _showMilestoneTable
+                    ? Icons.table_chart
+                    : Icons.table_chart_outlined,
+                size: 18),
+            label: Text(
+                '${_showMilestoneTable ? 'Hide' : 'View'} Milestones Table (${_sortedMilestones.length})'),
+            style: TextButton.styleFrom(foregroundColor: _kAccentColor),
+          ),
+        ),
+        if (_showMilestoneTable) _buildMilestoneTableSection(),
       ],
     );
   }
@@ -878,6 +912,9 @@ class _ProjectFrameworkNextScreenState
         _saveData();
       },
       onSuggestMilestones: () => _suggestMilestonesForGoal(index),
+      onAddMilestone: () => _openMilestoneDialog(goalIndex: index),
+      onEditMilestone: (m) =>
+          _openMilestoneDialog(existing: m, goalIndex: index),
     );
   }
 
@@ -892,23 +929,79 @@ class _ProjectFrameworkNextScreenState
           BoxShadow(color: _kCardShadow, blurRadius: 8, offset: Offset(0, -2))
         ],
       ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 48,
-        child: ElevatedButton(
-          onPressed: _navigateToNext,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _kAccentColor,
-            foregroundColor: _kPrimaryText,
-            elevation: 0,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ProceedConfirmationGate(
+            value: _reviewConfirmed,
+            onChanged: (value) {
+              setState(() => _reviewConfirmed = value);
+            },
+            padding: EdgeInsets.zero,
+            label:
+                'I confirm that key stakeholders have aligned on these project milestones for all goals.',
           ),
-          child: const Text('Next',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-        ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: _reviewConfirmed
+                  ? _navigateToNext
+                  : () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'Please check the acknowledgment box above before proceeding.'),
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _kAccentColor,
+                foregroundColor: _kPrimaryText,
+                elevation: 0,
+                disabledBackgroundColor: const Color(0xFFE5E7EB),
+                disabledForegroundColor: const Color(0xFF9CA3AF),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Next',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  bool get _isAgile {
+    final data = ProjectDataHelper.getData(context);
+    return data.overallFramework?.trim().toLowerCase() == 'agile';
+  }
+
+  Future<void> _openMilestoneDialog({
+    Milestone? existing,
+    int? goalIndex,
+  }) async {
+    final result = await showMilestoneEditDialog(
+      context: context,
+      existing: existing,
+      isAgile: _isAgile,
+    );
+    if (result == null) return;
+
+    if (result is Milestone && goalIndex != null) {
+      final id = result.id;
+      if (id.trim().isNotEmpty && !_goalMilestoneIds[goalIndex].contains(id)) {
+        setState(() {
+          _goalMilestoneIds[goalIndex].add(id);
+        });
+        _saveData();
+      }
+    }
+
+    if (mounted) setState(() {});
   }
 
   List<Milestone> get _sortedMilestones {
@@ -1023,6 +1116,90 @@ Rules:
     }
   }
 
+  Future<void> _aiAutoAssignAllMilestones() async {
+    if (_isAutoAssigning) return;
+    final data = ProjectDataHelper.getData(context);
+    final milestones = _sortedMilestones;
+    if (milestones.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No milestones available to assign.')),
+      );
+      return;
+    }
+    final goals = List.generate(
+        3,
+        (i) => {
+              'title': _goalTitleControllers[i].text.trim().isEmpty
+                  ? 'Goal ${i + 1}'
+                  : _goalTitleControllers[i].text.trim(),
+              'description': _goalDescControllers[i].text.trim(),
+            });
+
+    setState(() => _isAutoAssigning = true);
+    try {
+      final prompt = '''
+You are a project planning assistant. Given 3 project goals and a list of milestones, decide which milestones map to which goals.
+
+Goals:
+${goals.asMap().entries.map((e) => 'Goal ${e.key + 1}: "${e.value['title']}" - ${e.value['description']}').join('\n')}
+
+Milestones:
+${milestones.asMap().entries.map((e) => '${e.key}: "${e.value.name.trim()}" (${e.value.dueDate})').join('\n')}
+
+Return ONLY valid JSON: {"assignments": [{"milestoneIndex": 0, "goalIndex": 0}, ...]}
+A milestone can map to multiple goals. Return empty array if none match.
+''';
+
+      final response = await _openAi.generateCompletion(
+        prompt,
+        maxTokens: 800,
+        temperature: 0.3,
+      );
+      if (!mounted) return;
+
+      final json = jsonDecode(response) as Map<String, dynamic>;
+      final assignments = json['assignments'] as List?;
+      if (assignments == null || assignments.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text(
+                    'AI could not determine any milestone-goal mappings.')),
+          );
+        }
+        return;
+      }
+
+      setState(() {
+        for (final a in assignments) {
+          final mi = a['milestoneIndex'] as int?;
+          final gi = a['goalIndex'] as int?;
+          if (mi == null || gi == null || gi < 0 || gi > 2) continue;
+          if (mi < 0 || mi >= milestones.length) continue;
+          final id = milestones[mi].id;
+          if (id.trim().isNotEmpty && !_goalMilestoneIds[gi].contains(id)) {
+            _goalMilestoneIds[gi].add(id);
+          }
+        }
+      });
+      _saveData();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('AI auto-assigned milestones to goals.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Auto-assign failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isAutoAssigning = false);
+    }
+  }
+
   Widget _buildMilestoneTimelineSection() {
     final milestones = _sortedMilestones;
     return _CollapsibleSection(
@@ -1033,34 +1210,66 @@ Rules:
           ? const Text(
               'No milestones available yet. Add them in Front End Planning → Milestone.',
               style: TextStyle(fontSize: 13, color: _kSecondaryText))
-          : SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: milestones.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final milestone = entry.value;
-                  final goalLabels = _goalLabelsForMilestone(milestone.id);
-                  return Row(
+          : SizedBox(
+              height: 160,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: SizedBox(
+                  width: (milestones.length * 200).toDouble().clamp(
+                      200.0, MediaQuery.of(context).size.width * 2),
+                  child: Stack(
+                    alignment: Alignment.topCenter,
                     children: [
-                      _TimelineMilestoneChip(
-                        title: milestone.name.trim().isEmpty
-                            ? 'Untitled milestone'
-                            : milestone.name.trim(),
-                        date: _formatDateString(milestone.dueDate),
-                        discipline: milestone.discipline.trim(),
-                        goalCount: goalLabels.length,
-                      ),
-                      if (i < milestones.length - 1)
-                        Container(
-                          width: 48,
-                          height: 2,
-                          margin: const EdgeInsets.only(bottom: 44),
-                          color: _kBorderColor,
+                      // Timeline bar
+                      Positioned(
+                        top: 18,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: 4,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                _kAccentColor.withValues(alpha: 0.3),
+                                _kAccentColor,
+                                _kAccentColor.withValues(alpha: 0.3),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
+                      ),
+                      // Milestone nodes
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: milestones.asMap().entries.map((entry) {
+                          final i = entry.key;
+                          final milestone = entry.value;
+                          final goalLabels =
+                              _goalLabelsForMilestone(milestone.id);
+                          return SizedBox(
+                            width: 200,
+                            child: GestureDetector(
+                              onTap: () =>
+                                  _openMilestoneDialog(existing: milestone),
+                              child: _TimelineBarNode(
+                                date: _formatDateString(milestone.dueDate),
+                                title: milestone.name.trim().isEmpty
+                                    ? 'Untitled milestone'
+                                    : milestone.name.trim(),
+                                discipline: milestone.discipline.trim(),
+                                goalCount: goalLabels.length,
+                                isFirst: i == 0,
+                                isLast: i == milestones.length - 1,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ],
-                  );
-                }).toList(),
+                  ),
+                ),
               ),
             ),
     );
@@ -1068,90 +1277,133 @@ Rules:
 
   Widget _buildMilestoneTableSection() {
     final milestones = _sortedMilestones;
-    return _CollapsibleSection(
-      title: 'Milestones Table',
-      subtitle:
-          'All shared milestones from FEP, with the goals currently mapped to each milestone.',
-      child: milestones.isEmpty
-          ? const Text('No milestones available yet.',
-              style: TextStyle(fontSize: 13, color: _kSecondaryText))
-          : SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columnSpacing: 20,
-                horizontalMargin: 12,
-                headingRowColor:
-                    WidgetStateProperty.all(const Color(0xFFF5F7FB)),
-                columns: const [
-                  DataColumn(
-                      label: Text('Milestone',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                  DataColumn(
-                      label: Text('Date',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                  DataColumn(
-                      label: Text('Discipline',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                  DataColumn(
-                      label: Text('Mapped Goals',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                  DataColumn(
-                      label: Text('References',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                  DataColumn(
-                      label: Text('Comments',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12,
-                              color: _kPrimaryText))),
-                ],
-                rows: milestones.map((milestone) {
-                  final goalLabels = _goalLabelsForMilestone(milestone.id);
-                  return DataRow(cells: [
-                    DataCell(Text(milestone.name.trim().isEmpty
-                        ? 'Untitled milestone'
-                        : milestone.name.trim())),
-                    DataCell(Text(_formatDateString(milestone.dueDate))),
-                    DataCell(Text(milestone.discipline.trim().isEmpty
-                        ? '—'
-                        : milestone.discipline.trim())),
-                    DataCell(SizedBox(
-                      width: 220,
-                      child: Text(goalLabels.isEmpty
-                          ? 'Unmapped'
-                          : goalLabels.join(', ')),
-                    )),
-                    DataCell(SizedBox(
-                      width: 160,
-                      child: Text(milestone.references.trim().isEmpty
+    if (milestones.isEmpty) {
+      return const Text('No milestones available yet.',
+          style: TextStyle(fontSize: 13, color: _kSecondaryText));
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _kBorderColor),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columnSpacing: 14,
+            horizontalMargin: 12,
+            headingRowHeight: 36,
+            dataRowMinHeight: 40,
+            headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+            columns: const [
+              DataColumn(
+                  label: Text('Milestone',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                          color: Color(0xFF6B7280)))),
+              DataColumn(
+                  label: Text('Date',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                          color: Color(0xFF6B7280)))),
+              DataColumn(
+                  label: Text('Discipline',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                          color: Color(0xFF6B7280)))),
+              DataColumn(
+                  label: Text('Mapped Goals',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                          color: Color(0xFF6B7280)))),
+              DataColumn(
+                  label: Text('References',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                          color: Color(0xFF6B7280)))),
+              DataColumn(
+                  label: Text('Comments',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                          color: Color(0xFF6B7280)))),
+              DataColumn(label: Text('', style: TextStyle(fontSize: 11))),
+            ],
+            rows: milestones.map((milestone) {
+              final goalLabels = _goalLabelsForMilestone(milestone.id);
+              return DataRow(cells: [
+                DataCell(GestureDetector(
+                  onTap: () => _openMilestoneDialog(existing: milestone),
+                  child: Text(
+                      milestone.name.trim().isEmpty
+                          ? 'Untitled milestone'
+                          : milestone.name.trim(),
+                      style: const TextStyle(fontSize: 13)),
+                )),
+                DataCell(GestureDetector(
+                  onTap: () => _openMilestoneDialog(existing: milestone),
+                  child: Text(_formatDateString(milestone.dueDate),
+                      style: const TextStyle(fontSize: 13)),
+                )),
+                DataCell(GestureDetector(
+                  onTap: () => _openMilestoneDialog(existing: milestone),
+                  child: Text(
+                      milestone.discipline.trim().isEmpty
                           ? '—'
-                          : milestone.references.trim()),
-                    )),
-                    DataCell(SizedBox(
-                      width: 220,
-                      child: Text(milestone.comments.trim().isEmpty
-                          ? '—'
-                          : milestone.comments.trim()),
-                    )),
-                  ]);
-                }).toList(),
-              ),
-            ),
+                          : milestone.discipline.trim(),
+                      style: const TextStyle(fontSize: 13)),
+                )),
+                DataCell(SizedBox(
+                  width: 180,
+                  child: GestureDetector(
+                    onTap: () => _openMilestoneDialog(existing: milestone),
+                    child: Text(
+                        goalLabels.isEmpty ? 'Unmapped' : goalLabels.join(', '),
+                        style: const TextStyle(fontSize: 13)),
+                  ),
+                )),
+                DataCell(SizedBox(
+                  width: 140,
+                  child: GestureDetector(
+                    onTap: () => _openMilestoneDialog(existing: milestone),
+                    child: Text(
+                        milestone.references.trim().isEmpty
+                            ? '—'
+                            : milestone.references.trim(),
+                        style: const TextStyle(fontSize: 13)),
+                  ),
+                )),
+                DataCell(SizedBox(
+                  width: 180,
+                  child: GestureDetector(
+                    onTap: () => _openMilestoneDialog(existing: milestone),
+                    child: Text(
+                        milestone.comments.trim().isEmpty
+                            ? '—'
+                            : milestone.comments.trim(),
+                        style: const TextStyle(fontSize: 13)),
+                  ),
+                )),
+                DataCell(InkWell(
+                  onTap: () => _openMilestoneDialog(existing: milestone),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(Icons.edit_outlined,
+                        size: 16, color: Color(0xFF9CA3AF)),
+                  ),
+                )),
+              ]);
+            }).toList(),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1180,11 +1432,13 @@ class _CollapsibleSection extends StatefulWidget {
   final String title;
   final String subtitle;
   final Widget child;
+  final Widget? trailing;
 
   const _CollapsibleSection({
     required this.title,
     required this.subtitle,
     required this.child,
+    this.trailing,
   });
 
   @override
@@ -1269,6 +1523,10 @@ class _CollapsibleSectionState extends State<_CollapsibleSection>
                       ],
                     ),
                   ),
+                  if (widget.trailing != null) ...[
+                    widget.trailing!,
+                    const SizedBox(width: 8),
+                  ],
                   RotationTransition(
                     turns: _anim,
                     child: const Icon(
@@ -1295,78 +1553,146 @@ class _CollapsibleSectionState extends State<_CollapsibleSection>
   }
 }
 
-class _TimelineMilestoneChip extends StatelessWidget {
-  const _TimelineMilestoneChip({
-    required this.title,
+class _TimelineBarNode extends StatelessWidget {
+  const _TimelineBarNode({
     required this.date,
+    required this.title,
     required this.discipline,
     required this.goalCount,
+    required this.isFirst,
+    required this.isLast,
   });
 
-  final String title;
   final String date;
+  final String title;
   final String discipline;
   final int goalCount;
+  final bool isFirst;
+  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 180,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Date label above the node
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: _kAccentColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: _kAccentColor.withValues(alpha: 0.3)),
+          ),
+          child: Text(
+            date,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFB8860B),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Node circle on the timeline
+        Container(
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            color: _kAccentColor,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: _kAccentColor.withValues(alpha: 0.4),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
             child: Container(
-              width: 14,
-              height: 14,
+              width: 8,
+              height: 8,
               decoration: const BoxDecoration(
-                color: _kAccentColor,
+                color: Colors.white,
                 shape: BoxShape.circle,
               ),
             ),
           ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: _kLightYellow,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFFFE082)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _kPrimaryText)),
+        ),
+        const SizedBox(height: 8),
+        // Card below the node
+        Container(
+          width: 170,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: _kBorderColor),
+            boxShadow: [
+              BoxShadow(
+                color: _kCardShadow,
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _kPrimaryText,
+                  height: 1.3,
+                ),
+              ),
+              if (discipline.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text(date,
-                    style:
-                        const TextStyle(fontSize: 12, color: _kSecondaryText)),
-                if (discipline.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(discipline,
-                      style: const TextStyle(
-                          fontSize: 11, color: _kSecondaryText)),
-                ],
-                const SizedBox(height: 6),
-                Text(
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    discipline,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: _kSecondaryText,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(
+                    Icons.flag_outlined,
+                    size: 12,
+                    color: goalCount > 0 ? _kAccentColor : _kSecondaryText,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
                     goalCount == 0
                         ? 'Unmapped'
                         : '$goalCount goal${goalCount == 1 ? '' : 's'}',
-                    style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _kAccentColor)),
-              ],
-            ),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: goalCount > 0 ? _kAccentColor : _kSecondaryText,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -1389,6 +1715,8 @@ class _GoalCardWidget extends StatefulWidget {
     required this.onPriorityChanged,
     required this.onToggleMilestone,
     required this.onSuggestMilestones,
+    required this.onAddMilestone,
+    required this.onEditMilestone,
   });
 
   final int goalIndex;
@@ -1406,6 +1734,8 @@ class _GoalCardWidget extends StatefulWidget {
   final ValueChanged<String> onPriorityChanged;
   final void Function(String milestoneId, bool selected) onToggleMilestone;
   final Future<void> Function() onSuggestMilestones;
+  final VoidCallback onAddMilestone;
+  final void Function(Milestone) onEditMilestone;
 
   @override
   State<_GoalCardWidget> createState() => _GoalCardWidgetState();
@@ -1420,7 +1750,9 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
   }
 
   String _formatMilestoneDate(String raw) {
-    final parsed = DateTime.tryParse(raw);
+    final parsed = DateTime.tryParse(raw) ??
+        DateFormat('MMM d, y').tryParse(raw) ??
+        DateFormat('MMM dd, y').tryParse(raw);
     if (parsed == null) return raw.trim().isEmpty ? 'No date' : raw.trim();
     return _dateFormat.format(parsed);
   }
@@ -1454,20 +1786,21 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
             child: Row(
               children: [
                 Expanded(
-                  child: VoiceTextField(
-                    controller: widget.titleController,
-                    focusNode: widget.titleFocusNode,
-                    decoration: InputDecoration(
-                      hintText: 'Goal ${widget.goalIndex + 1} Title',
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
+                    child: VoiceTextField(
+                      controller: widget.titleController,
+                      focusNode: widget.titleFocusNode,
+                      maxLines: null,
+                      decoration: InputDecoration(
+                        hintText: 'Goal ${widget.goalIndex + 1} Title',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: _kPrimaryText),
                     ),
-                    style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: _kPrimaryText),
-                  ),
                 ),
                 const SizedBox(width: 8),
                 // Priority badge pill
@@ -1598,6 +1931,16 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                                   color: _kPrimaryText),
                             ),
                           ),
+                          InkWell(
+                            onTap: widget.onAddMilestone,
+                            borderRadius: BorderRadius.circular(4),
+                            child: const Padding(
+                              padding: EdgeInsets.all(6),
+                              child: Icon(Icons.add_circle_outline,
+                                  size: 20, color: _kAccentColor),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
                           TextButton.icon(
                             onPressed: widget.isSuggestingMilestones
                                 ? null
@@ -1636,6 +1979,7 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                           final selected = widget.selectedMilestoneIds
                               .contains(milestone.id);
                           return Padding(
+                            key: ValueKey(milestone.id),
                             padding: const EdgeInsets.only(bottom: 8),
                             child: InkWell(
                               onTap: () => widget.onToggleMilestone(
@@ -1667,40 +2011,54 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                                     ),
                                     const SizedBox(width: 6),
                                     Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            milestone.name.trim().isEmpty
-                                                ? 'Untitled milestone'
-                                                : milestone.name.trim(),
-                                            style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: _kPrimaryText),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '${_formatMilestoneDate(milestone.dueDate)}${milestone.discipline.trim().isEmpty ? '' : ' • ${milestone.discipline.trim()}'}',
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: _kSecondaryText),
-                                          ),
-                                          if (milestone.comments
-                                              .trim()
-                                              .isNotEmpty) ...[
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            widget.onEditMilestone(milestone),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              milestone.name.trim().isEmpty
+                                                  ? 'Untitled milestone'
+                                                  : milestone.name.trim(),
+                                              style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: _kPrimaryText),
+                                            ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              milestone.comments.trim(),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
+                                              '${_formatMilestoneDate(milestone.dueDate)}${milestone.discipline.trim().isEmpty ? '' : ' • ${milestone.discipline.trim()}'}',
                                               style: const TextStyle(
                                                   fontSize: 12,
                                                   color: _kSecondaryText),
                                             ),
+                                            if (milestone.comments
+                                                .trim()
+                                                .isNotEmpty) ...[
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                milestone.comments.trim(),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: _kSecondaryText),
+                                              ),
+                                            ],
                                           ],
-                                        ],
+                                        ),
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: () =>
+                                          widget.onEditMilestone(milestone),
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(4),
+                                        child: Icon(Icons.edit_outlined,
+                                            size: 16, color: _kSecondaryText),
                                       ),
                                     ),
                                   ],

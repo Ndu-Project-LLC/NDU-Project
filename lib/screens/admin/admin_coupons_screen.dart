@@ -4,6 +4,7 @@ import 'package:ndu_project/models/coupon_model.dart';
 import 'package:ndu_project/services/coupon_service.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -247,36 +248,21 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
   }
 
   Future<void> _deleteCoupon(CouponModel coupon) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Coupon'),
-        content:
-            Text('Are you sure you want to delete coupon "${coupon.code}"?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Coupon',
+      itemLabel: coupon.code,
     );
-
-    if (confirmed == true) {
-      final success = await CouponService.deleteCoupon(coupon.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                Text(success ? 'Coupon deleted' : 'Failed to delete coupon'),
-            backgroundColor: success ? Colors.green : Colors.red,
-          ),
-        );
-      }
+    if (!confirmed) return;
+    final success = await CouponService.deleteCoupon(coupon.id);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text(success ? 'Coupon deleted' : 'Failed to delete coupon'),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
     }
   }
 }
@@ -372,7 +358,7 @@ class _CouponCard extends StatelessWidget {
                 IconButton(
                   onPressed: onEdit,
                   icon: const Icon(Icons.edit_outlined),
-                  color: Colors.blue,
+                  color: const Color(0xFFD97706),
                   tooltip: 'Edit',
                 ),
                 IconButton(

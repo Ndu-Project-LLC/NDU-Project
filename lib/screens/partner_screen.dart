@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/landing_subpage_action_bar.dart';
 
 class PartnerScreen extends StatelessWidget {
   const PartnerScreen({super.key});
@@ -59,6 +60,8 @@ class PartnerScreen extends StatelessWidget {
         ),
         const Spacer(),
         _buildBackButton(context),
+        const SizedBox(width: 12),
+        const LandingSubpageActions(),
       ],
     );
   }
@@ -146,7 +149,7 @@ class PartnerScreen extends StatelessWidget {
 
   Widget _partnershipOpportunities() {
     final opps = [
-      _POpp(title: 'Project Management Consulting Firms', desc: 'Help your clients establish repeatable delivery processes while leveraging Ndu Project as the technology platform.', tags: ['PM Consulting Firms', 'PMO Advisory Firms', 'Business Transformation Consultants', 'Digital Transformation Consultants'], color: const Color(0xFF3B82F6)),
+      _POpp(title: 'Project Management Consulting Firms', desc: 'Help your clients establish repeatable delivery processes while leveraging Ndu Project as the technology platform.', tags: ['PM Consulting Firms', 'PMO Advisory Firms', 'Business Transformation Consultants', 'Digital Transformation Consultants'], color: const Color(0xFFFBBF24)),
       _POpp(title: 'Technology & Systems Integrators', desc: 'Expand your implementation portfolio by integrating Ndu Project with your clients\' technology ecosystem.', tags: ['Microsoft 365', 'Jira', 'Monday.com', 'Asana', 'Salesforce', 'ERP systems', 'HR platforms'], color: const Color(0xFF8B5CF6)),
       _POpp(title: 'Universities & Educational Institutions', desc: 'Prepare students and professionals with practical project delivery experience through classroom licensing, research collaboration, and workforce development.', tags: ['Student access', 'Faculty collaboration', 'Capstone projects', 'Certification preparation', 'Research initiatives'], color: const Color(0xFF10B981)),
       _POpp(title: 'Government & Economic Development', desc: 'Support small businesses, nonprofits, and public agencies by providing access to structured project delivery tools.', tags: ['Small business support', 'Workforce development', 'Innovation hubs', 'Economic development', 'Public sector transformation'], color: const Color(0xFF06B6D4)),
@@ -317,7 +320,7 @@ class PartnerScreen extends StatelessWidget {
 
 class _PItem {
   final IconData icon; final String title; final String desc; final Color color;
-  const _PItem({required this.icon, required this.title, required this.desc, this.color = const Color(0xFF3B82F6)});
+  const _PItem({required this.icon, required this.title, required this.desc, this.color = const Color(0xFFFBBF24)});
 }
 
 class _POpp {

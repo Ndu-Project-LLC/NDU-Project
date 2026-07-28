@@ -64,9 +64,7 @@ class _ExecutionPlanScreenState extends State<ExecutionPlanScreen> {
  context, 'execution_plan'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'execution_plan'), onExportPdf: _exportPdf),
- const SizedBox(height: 32),
- const SectionIntro(),
- const SizedBox(height: 28),
+  const SizedBox(height: 24),
  ExecutionPlanForm(
  hintText:
  'Describe the sequential, and overall, thought process for executing the project',

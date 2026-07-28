@@ -8,8 +8,8 @@ import '../screens/program_dashboard_mobile_screen.dart';
 class _Tokens {
   static const surfaceContainerLowest = Color(0xFFFFFFFF);
   static const outlineVariant = Color(0xFFC0C6D6);
-  static const primary = Color(0xFF005BB3);
-  static const primaryContainer = Color(0xFF0073DF);
+  static const primary = Color(0xFFB45309);
+  static const primaryContainer = Color(0xFFD97706);
 }
 
 class DashboardBottomNavBar extends StatelessWidget {

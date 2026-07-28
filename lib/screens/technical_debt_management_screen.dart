@@ -1257,15 +1257,21 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _deleteDebtItem(DebtItem item) async {
- final updated = [..._debtItems]
- ..removeWhere((element) => element.id == item.id);
- await _upsertDebtItems(updated);
- if (!mounted) return;
- setState(() => _debtItems = updated);
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Removed debt item ${item.id}.')),
- );
- }
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Debt Item',
+    itemLabel: item.title,
+  );
+  if (!confirmed) return;
+  final updated = [..._debtItems]
+  ..removeWhere((element) => element.id == item.id);
+  await _upsertDebtItems(updated);
+  if (!mounted) return;
+  setState(() => _debtItems = updated);
+  ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(content: Text('Removed debt item ${item.id}.')),
+  );
+  }
 
  void _showAddRemediationTrackDialog() => _showRemediationTrackDialog();
 

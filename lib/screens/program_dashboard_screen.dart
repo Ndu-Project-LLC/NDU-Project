@@ -62,7 +62,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  static const _primaryContainer = Color(0xFFE5E7EB);
  static const _tertiary = Color(0xFFFFC107);
  static const _tertiaryContainer = Color(0xFFFBBF24);
- static const _secondary = Color(0xFF3B82F6);
+ static const _secondary = Color(0xFFFBBF24);
  static const _emerald = Color(0xFF10B981);
  static const _amber = Color(0xFFF59E0B);
  static const _crimson = Color(0xFFEF4444);

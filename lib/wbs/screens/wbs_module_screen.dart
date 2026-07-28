@@ -57,6 +57,7 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
     length: 5,
     vsync: this,
   );
+  bool _wbsReviewedConfirmed = false;
 
   @override
   void initState() {
@@ -79,8 +80,8 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<WBSProvider, ProjectDataProvider>(
-      builder: (context, provider, projectProvider, _) {
+    return Consumer3<WBSProvider, ProjectDataProvider, CostEstimateProvider>(
+      builder: (context, provider, projectProvider, costProvider, _) {
         final wbs = provider.wbs;
 
         // Still loading from storage — wait
@@ -107,6 +108,7 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
             _clamp((projectData.businessCase).trim(), max: 50);
         final fm = wbs.framework;
         final totalNodes = countAllNodes(wbs.level0);
+        final hasCostEstimate = costProvider.estimate != null;
 
         return ResponsiveScaffold(
           activeItemLabel: 'Work Breakdown Structure',
@@ -125,9 +127,13 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
                   icon: Icons.account_tree_outlined,
                   tabs: [
                     SectionTab(icon: Icons.folder_open, label: 'Builder'),
-                    SectionTab(icon: Icons.attach_money_outlined, label: 'Cost by WBS'),
                     SectionTab(icon: Icons.auto_awesome, label: 'AI Generator'),
-                    SectionTab(icon: Icons.check_circle_outline, label: 'Validator'),
+                    SectionTab(
+                        icon: Icons.check_circle_outline, label: 'Validator'),
+                    SectionTab(
+                        icon: Icons.attach_money_outlined,
+                        label: 'Cost by WBS',
+                        enabled: hasCostEstimate),
                     SectionTab(icon: Icons.trending_up, label: 'Export & Link'),
                   ],
                   controller: _tabController,
@@ -167,27 +173,114 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
                   controller: _tabController,
                   children: [
                     const WBSBuilderScreen(),
-                    const CostByWBSTab(),
                     const WBSAIScreen(),
                     const WBSValidatorScreen(),
+                    hasCostEstimate
+                        ? const CostByWBSTab()
+                        : _buildCostByWBSPlaceholder(),
                     const _ExportAndLinkTab(),
                   ],
                 ),
               ),
               // Navigation footer
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                child: LaunchPhaseNavigation(
-                  backLabel: PlanningPhaseNavigation.backLabel('work_breakdown_structure'),
-                  nextLabel: PlanningPhaseNavigation.nextLabel('work_breakdown_structure'),
-                  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'work_breakdown_structure'),
-                  onNext: () => PlanningPhaseNavigation.goToNext(context, 'work_breakdown_structure'),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Confirmation gate
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(14),
+                          border:
+                              Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Checkbox(
+                              value: _wbsReviewedConfirmed,
+                              onChanged: (checked) => setState(
+                                  () => _wbsReviewedConfirmed =
+                                      checked ?? false),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 3),
+                                child: Text(
+                                  'I confirm I have reviewed all information needs before the WBS section can be activated.',
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF334155),
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    LaunchPhaseNavigation(
+                      backLabel: PlanningPhaseNavigation.backLabel(
+                          'work_breakdown_structure'),
+                      nextLabel: PlanningPhaseNavigation.nextLabel(
+                          'work_breakdown_structure'),
+                      onBack: () => PlanningPhaseNavigation.goToPrevious(
+                          context, 'work_breakdown_structure'),
+                      onNext: () => PlanningPhaseNavigation.goToNext(
+                          context, 'work_breakdown_structure'),
+                      nextEnabled: _wbsReviewedConfirmed,
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildCostByWBSPlaceholder() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(48),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.lock_outline, size: 48, color: Color(0xFFD1D5DB)),
+            const SizedBox(height: 16),
+            const Text(
+              'Cost by WBS is not yet available.',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Please complete the Cost Estimate section first to unlock this view.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF9CA3AF),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -371,10 +464,10 @@ class _ExportAndLinkTab extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFFF3F4F6),
                         borderRadius: BorderRadius.circular(10),
-                        border:
-                            Border.all(color: const Color(0xFFE4E7EC)),
+                        border: Border.all(color: const Color(0xFFE4E7EC)),
                       ),
-                      child: Text('${counts.level1 + counts.level2 + counts.level3 + counts.level4 + counts.level5 + counts.level6 + counts.level7 + counts.level8 + 1} nodes',
+                      child: Text(
+                          '${counts.level1 + counts.level2 + counts.level3 + counts.level4 + counts.level5 + counts.level6 + counts.level7 + counts.level8 + 1} nodes',
                           style: const TextStyle(
                               color: Color(0xFF495057),
                               fontSize: 11,
@@ -423,8 +516,7 @@ class _ExportAndLinkTab extends StatelessWidget {
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.preview,
-                            size: 14, color: Color(0xFF6B7280)),
+                        Icon(Icons.preview, size: 14, color: Color(0xFF6B7280)),
                         SizedBox(width: 6),
                         Text('ASCII TREE PREVIEW',
                             style: TextStyle(
@@ -468,7 +560,8 @@ class _ExportAndLinkTab extends StatelessWidget {
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.link, size: 16, color: LightModeColors.accent),
+                        Icon(Icons.link,
+                            size: 16, color: LightModeColors.accent),
                         SizedBox(width: 8),
                         Text('Link to Cost Estimate',
                             style: TextStyle(
@@ -480,8 +573,7 @@ class _ExportAndLinkTab extends StatelessWidget {
                     const SizedBox(height: 8),
                     const Text(
                       'Each Level 2 work package can be linked to one or more Cost Estimate line items. Open the Cost Estimate module from the sidebar to map WBS nodes to cost lines, or use the AI Generator to suggest a baseline breakdown.',
-                      style:
-                          TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                      style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                     ),
                     const SizedBox(height: 14),
                     Wrap(
@@ -650,8 +742,7 @@ class _ExportAndLinkTab extends StatelessWidget {
                     SizedBox(height: 2),
                     Text(
                       'Total estimated cost and WBS↔Cost-Line linkage status.',
-                      style: TextStyle(
-                          color: Color(0xFF6B7280), fontSize: 12),
+                      style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
                     ),
                   ],
                 ),
@@ -689,14 +780,12 @@ class _ExportAndLinkTab extends StatelessWidget {
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline,
-                      size: 14, color: Color(0xFF6B7280)),
+                  Icon(Icons.info_outline, size: 14, color: Color(0xFF6B7280)),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'No Cost Estimate has been set up yet. Open the Cost Estimate module from the sidebar to start adding cost lines and link them to WBS nodes here.',
-                      style: TextStyle(
-                          color: Color(0xFF6B7280), fontSize: 12),
+                      style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
                     ),
                   ),
                 ],
@@ -749,8 +838,8 @@ class _ExportAndLinkTab extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'No cost lines are linked to WBS nodes yet. Open the Cost Estimate module and pick a WBS node from the WBS Reference dropdown on each cost line.',
-                        style: TextStyle(
-                            color: Color(0xFF92400E), fontSize: 12),
+                        style:
+                            TextStyle(color: Color(0xFF92400E), fontSize: 12),
                       ),
                     ),
                   ],
@@ -820,8 +909,7 @@ class _ExportAndLinkTab extends StatelessWidget {
                   color: const Color(0xFFFEF2F2),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: const Color(0xFFFECACA)
-                          .withValues(alpha: 0.7)),
+                      color: const Color(0xFFFECACA).withValues(alpha: 0.7)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -831,8 +919,7 @@ class _ExportAndLinkTab extends StatelessWidget {
                         const Icon(Icons.warning_amber,
                             size: 14, color: Color(0xFFB91C1C)),
                         const SizedBox(width: 8),
-                        const Text(
-                            'Cost lines missing a WBS reference',
+                        const Text('Cost lines missing a WBS reference',
                             style: TextStyle(
                                 color: Color(0xFF7F1D1D),
                                 fontSize: 12,
@@ -873,8 +960,7 @@ class _ExportAndLinkTab extends StatelessWidget {
                                       ? '(no description)'
                                       : l.description,
                                   style: const TextStyle(
-                                      color: Color(0xFF7F1D1D),
-                                      fontSize: 12),
+                                      color: Color(0xFF7F1D1D), fontSize: 12),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                 ),
@@ -958,8 +1044,7 @@ class _ExportAndLinkTab extends StatelessWidget {
     );
   }
 
-  void _copyToClipboard(
-      BuildContext context, String text, String label) async {
+  void _copyToClipboard(BuildContext context, String text, String label) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1027,7 +1112,8 @@ class _ExportAndLinkTab extends StatelessWidget {
     for (var i = 0; i < children.length; i++) {
       final isLast = i == children.length - 1;
       final node = children[i];
-      buf.writeln('$prefix${isLast ? '└── ' : '├── '}${node.code}  ${node.name}');
+      buf.writeln(
+          '$prefix${isLast ? '└── ' : '├── '}${node.code}  ${node.name}');
       _writeAsciiChildren(
           buf, node.children, '$prefix${isLast ? '    ' : '│   '}');
     }
@@ -1038,6 +1124,7 @@ class _ExportAndLinkTab extends StatelessWidget {
       final own = n.costLineIds?.length ?? 0;
       return own + n.children.fold(0, (s, c) => s + count(c));
     }
+
     return count(wbs.level0);
   }
 
@@ -1046,8 +1133,7 @@ class _ExportAndLinkTab extends StatelessWidget {
       final own = n.aiGenerated ? 1 : 0;
       return own + n.children.fold(0, (s, c) => s + count(c));
     }
+
     return count(wbs.level0);
   }
 }
-
-

@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/progress_quick_actions.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 /// Recurring Deliverables Tracking sub-page
 class RecurringDeliverablesWidget extends StatefulWidget {
   const RecurringDeliverablesWidget({
@@ -45,7 +46,13 @@ class _RecurringDeliverablesWidgetState
     widget.onRecurringChanged(updatedList);
   }
 
-  void _delete(int index) {
+  Future<void> _delete(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Recurring Deliverable',
+      itemLabel: _recurring[index].title,
+    );
+    if (!confirmed) return;
     final deleted = _recurring[index];
     final updated = List<RecurringDeliverableRow>.from(_recurring);
     updated.removeAt(index);

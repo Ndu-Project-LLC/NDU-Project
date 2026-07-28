@@ -126,7 +126,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  label: 'Active Warranties',
  value: '$activeWarranties',
  icon: Icons.verified_user_outlined,
- emphasisColor: const Color(0xFF2563EB)),
+ emphasisColor: const Color(0xFFD97706)),
  ExecutionMetricData(
  label: 'Monthly Ops Cost',
  value:
@@ -1097,7 +1097,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
               label: 'Vendors',
               value: '${projectData.vendors.length}',
               icon: Icons.inventory_2_outlined,
-              color: const Color(0xFF2563EB),
+              color: const Color(0xFFD97706),
               delta: 'under warranty',
             ),
             LaunchKpiTile(

@@ -720,7 +720,7 @@ class _RequirementsImplementationScreenState
  const LinearProgressIndicator(
  minHeight: 2,
  backgroundColor: Color(0xFFE5E7EB),
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFD97706),
  ),
  Expanded(
  child: SingleChildScrollView(
@@ -1505,7 +1505,7 @@ class _RequirementsImplementationScreenState
  'to design artifacts, test cases, and source documents. Every mapped '
  'requirement should have an unbroken chain from origin through '
  'implementation to verification.',
- const Color(0xFF2563EB),
+ const Color(0xFFD97706),
  ),
  const SizedBox(height: 12),
  _buildWebGuideCard(
@@ -1805,7 +1805,7 @@ class _RequirementsImplementationScreenState
  onTap: () => _showVerificationPopup(actualIndex),
  child: Container(
  color: isSelected
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF7E6)
  : isStriped
  ? const Color(0xFFF9FAFB)
  : Colors.white,
@@ -3221,7 +3221,7 @@ class _RequirementsImplementationScreenState
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFD97706), width: 2),
  ),
  ),
  );
@@ -3253,7 +3253,7 @@ class _RequirementsImplementationScreenState
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFD97706), width: 2),
  ),
  ),
  items: safeOptions
@@ -3296,7 +3296,7 @@ class _RequirementsImplementationScreenState
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFD97706), width: 2),
  ),
  ),
  items: safeOptions
@@ -3319,7 +3319,7 @@ class _RequirementsImplementationScreenState
  case 'unmapped':
  return const Color(0xFFF59E0B);
  case 'in review':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  default:
  return const Color(0xFF9CA3AF);
  }
@@ -3345,7 +3345,7 @@ class _RequirementsImplementationScreenState
  case 'complete':
  return const Color(0xFF10B981);
  case 'in review':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'pending':
  return const Color(0xFFF59E0B);
  case 'not started':

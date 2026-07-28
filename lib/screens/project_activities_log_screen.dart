@@ -40,7 +40,12 @@ class ProjectActivitiesLogScreen extends StatefulWidget {
  }
  }
 
- ActivityLogPanel.open(context);
+ // Navigate to the FULL Activity Log screen (not the small popup panel).
+ Navigator.of(context).push(
+ MaterialPageRoute<void>(
+ builder: (_) => const ProjectActivitiesLogScreen(),
+ ),
+ );
  }
 
  @override

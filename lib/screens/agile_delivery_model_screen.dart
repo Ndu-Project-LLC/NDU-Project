@@ -6,6 +6,7 @@ import 'package:ndu_project/services/agile_wireframe_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -32,6 +33,26 @@ const List<String> _estimationOptions = [
   'Custom Scale',
 ];
 
+const List<String> _governanceOptions = [
+  'Centralized',
+  'Decentralized',
+  'Federated',
+];
+
+const List<String> _approvalOptions = [
+  'Sprint Planning',
+  'Sprint Review',
+  'Release',
+  'Retro Actions',
+];
+
+const List<String> _complianceOptions = [
+  'Regulatory',
+  'Security',
+  'Audit',
+  'Industry Standard',
+];
+
 class AgileDeliveryModelScreen extends StatefulWidget {
   const AgileDeliveryModelScreen({super.key});
 
@@ -51,45 +72,29 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
   String _selectedFramework = _frameworkOptions[0];
   String _selectedSprintLength = _sprintLengthOptions[1];
   String _selectedEstimationMethod = _estimationOptions[0];
+  String _governanceModel = _governanceOptions[0];
+  final Set<String> _approvalRequirements = {_approvalOptions[0], _approvalOptions[1]};
+  final Set<String> _complianceSettings = {_complianceOptions[0]};
 
   bool _isLoading = true;
   bool _isSaving = false;
   bool _isGenerating = false;
+  bool _isWaterfall = false;
   Timer? _autoSaveDebounce;
 
   static const int _savingIndicatorDuration = 1;
 
   static const List<_FieldConfig> _fields = [
     _FieldConfig(
-      key: 'cadence',
-      label: 'Sprint cadence & calendar',
-      hint: 'Sprint length, ceremonies, and planning calendar.',
-    ),
-    _FieldConfig(
       key: 'release',
-      label: 'Release strategy',
-      hint: 'Release waves, branching, and approval gates.',
-    ),
-    _FieldConfig(
-      key: 'backlog',
-      label: 'Backlog governance',
-      hint: 'Definition of Ready/Done, prioritization, and grooming cadence.',
+      label: 'Release Strategy',
+      hint: 'Define how product increments will be planned, validated, and released to deliver value throughout the project lifecycle. Include: Release Goals (business objectives and value), Release Cadence (frequency — every sprint, every few sprints, or on demand), Release Scope (features/epics targeted per release), Release Criteria (Definition of Done, quality gates, testing, and approval requirements), Deployment Strategy (phased, feature flags, blue-green, canary, or full deployment), Dependencies & Risks (key dependencies, assumptions, and release risks), Rollback & Recovery (approach for handling failed releases), Communication & Training (stakeholder notifications, user readiness, and support plans), Post-Release Support (monitoring, feedback collection, issue resolution, and continuous improvement).',
       fullWidth: true,
     ),
     _FieldConfig(
-      key: 'team',
-      label: 'Team structure & roles',
-      hint: 'Squad ownership, product roles, and cross-functional coverage.',
-    ),
-    _FieldConfig(
       key: 'metrics',
-      label: 'Metrics & reporting',
+      label: 'Metrics & Reporting',
       hint: 'Velocity, throughput, predictability, and quality measures.',
-    ),
-    _FieldConfig(
-      key: 'risks',
-      label: 'Impediment & risk handling',
-      hint: 'Escalation process, dependency tracking, and blockers removal.',
       fullWidth: true,
     ),
   ];
@@ -124,6 +129,15 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     final pid = _projectId;
     if (pid == null) return;
     setState(() => _isLoading = true);
+
+    // Check if this is a Waterfall project — if so, Agile screens are
+    // view-only (greyed out, no AI generation)
+    try {
+      final projectData = ProjectDataHelper.getData(context);
+      final methodology = ProjectDataHelper.resolvedProjectMethodology(projectData);
+      _isWaterfall = methodology == ProjectMethodology.waterfall;
+    } catch (_) {}
+
     try {
       final data = await AgileWireframeService.loadDeliveryModel(pid);
       if (!mounted) return;
@@ -138,7 +152,25 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
             data['sprintLength'] as String? ?? _sprintLengthOptions[1];
         _selectedEstimationMethod =
             data['estimationMethod'] as String? ?? _estimationOptions[0];
+        _governanceModel = data['governanceModel'] as String? ?? _governanceOptions[0];
+        final savedApprovals = data['approvalRequirements'] as List? ?? [];
+        final savedCompliance = data['complianceSettings'] as List? ?? [];
+        _approvalRequirements
+          ..clear()
+          ..addAll(savedApprovals.map((e) => e.toString()));
+        _complianceSettings
+          ..clear()
+          ..addAll(savedCompliance.map((e) => e.toString()));
       });
+
+      // Auto-generate AI content for Agile projects if fields are empty
+      if (!_isWaterfall && mounted) {
+        final allEmpty = _fields.every((f) =>
+            (_controllers[f.key]?.text ?? '').trim().isEmpty);
+        if (allEmpty && !_isGenerating) {
+          _generateWithAI();
+        }
+      }
     } catch (e) {
       debugPrint('Error: $e');
     }
@@ -164,7 +196,27 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       data['framework'] = _selectedFramework;
       data['sprintLength'] = _selectedSprintLength;
       data['estimationMethod'] = _selectedEstimationMethod;
+      data['governanceModel'] = _governanceModel;
+      data['approvalRequirements'] = _approvalRequirements.toList();
+      data['complianceSettings'] = _complianceSettings.toList();
       await AgileWireframeService.saveDeliveryModel(projectId: pid, data: data);
+
+      // Save methodology flag to planningNotes so downstream screens
+      // (Execution Work Packages, Schedule) can read it.
+      final isAgile = _selectedFramework == 'Scrum' || _selectedFramework == 'ScrumBan';
+      final methodology = isAgile ? 'Agile' : (_selectedFramework == 'Kanban' ? 'Agile' : 'Waterfall');
+      await ProjectDataHelper.updateAndSave(
+        context: context,
+        checkpoint: 'agile_delivery_model',
+        dataUpdater: (d) => d.copyWith(
+          planningNotes: {
+            ...d.planningNotes,
+            'planning_schedule_methodology': methodology,
+          },
+        ),
+        showSnackbar: false,
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -205,12 +257,11 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
         '- "framework": "Scrum", "Kanban", or "ScrumBan"\n'
         '- "sprintLength": "1 Week", "2 Weeks", "3 Weeks", or "4 Weeks"\n'
         '- "estimationMethod": "Story Points (Fibonacci)", "T-Shirt Sizes", "Ideal Days", etc.\n'
-        '- "cadence": Sprint cadence & calendar (2-3 sentences)\n'
-        '- "release": Release strategy (2-3 sentences)\n'
-        '- "backlog": Backlog governance (2-3 sentences)\n'
-        '- "team": Team structure & roles (2-3 sentences)\n'
-        '- "metrics": Metrics & reporting (2-3 sentences)\n'
-        '- "risks": Impediment & risk handling (2-3 sentences)',
+        '- "governanceModel": "Centralized", "Decentralized", or "Federated"\n'
+        '- "approvalRequirements": comma-separated list from: Sprint Planning, Sprint Review, Release, Retro Actions\n'
+        '- "complianceSettings": comma-separated list from: Regulatory, Security, Audit, Industry Standard\n'
+        '- "release": Release Strategy (4-6 sentences covering release goals, cadence, scope, criteria, deployment strategy, dependencies & risks, rollback & recovery, communication & training, and post-release support)\n'
+        '- "metrics": Metrics & reporting (2-3 sentences)',
         maxTokens: 1200,
         temperature: 0.5,
       );
@@ -232,6 +283,30 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
         if (_estimationOptions.contains(em)) {
           setState(() => _selectedEstimationMethod = em);
         }
+      }
+      if (parsed.containsKey('governanceModel')) {
+        final gm = parsed['governanceModel']!;
+        if (_governanceOptions.contains(gm)) {
+          setState(() => _governanceModel = gm);
+        }
+      }
+      if (parsed.containsKey('approvalRequirements')) {
+        final raw = parsed['approvalRequirements']!;
+        final items = raw.split(',').map((e) => e.trim()).where((e) => _approvalOptions.contains(e));
+        setState(() {
+          _approvalRequirements
+            ..clear()
+            ..addAll(items);
+        });
+      }
+      if (parsed.containsKey('complianceSettings')) {
+        final raw = parsed['complianceSettings']!;
+        final items = raw.split(',').map((e) => e.trim()).where((e) => _complianceOptions.contains(e));
+        setState(() {
+          _complianceSettings
+            ..clear()
+            ..addAll(items);
+        });
       }
       for (final entry in parsed.entries) {
         if (_controllers.containsKey(entry.key)) {
@@ -383,6 +458,34 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 32),
+                        if (_isWaterfall) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFFDE68A)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.info_outline,
+                                    color: Color(0xFF92400E), size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'This project uses a Waterfall delivery framework. Agile Delivery is not applicable. Switch the project framework to Agile or Hybrid in the Project Details or Design Planning screen to enable Agile features.',
+                                    style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Color(0xFF92400E),
+                                        height: 1.4),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         Row(
                           children: [
                             Expanded(
@@ -392,7 +495,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                                     fontSize: 15, color: _kMuted),
                               ),
                             ),
-                            if (!_isLoading) ...[
+                            if (!_isLoading && !_isWaterfall) ...[
                               const SizedBox(width: 12),
                               OutlinedButton.icon(
                                 onPressed: _isGenerating
@@ -446,6 +549,12 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                           if (_selectedFramework != 'Kanban')
                             const SizedBox(height: 20),
                           _buildEstimationSelector(),
+                          const SizedBox(height: 20),
+                          _buildGovernanceSelector(),
+                          const SizedBox(height: 20),
+                          _buildApprovalSelector(),
+                          const SizedBox(height: 20),
+                          _buildComplianceSelector(),
                           const SizedBox(height: 24),
                           ..._fields.map((f) => _buildField(f)),
                         ],
@@ -590,6 +699,118 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     );
   }
 
+  Widget _buildGovernanceSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Governance Model',
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _kHeadline)),
+        const SizedBox(height: 8),
+        SegmentedButton<String>(
+          segments: _governanceOptions
+              .map((g) => ButtonSegment(value: g, label: Text(g)))
+              .toList(),
+          selected: {_governanceModel},
+          onSelectionChanged: (v) {
+            setState(() => _governanceModel = v.first);
+            _scheduleAutoSave();
+          },
+          style: ButtonStyle(
+            visualDensity: VisualDensity.compact,
+            textStyle: WidgetStateProperty.all(
+                const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _governanceModel == 'Centralized'
+              ? 'Single PMO governs all agile teams.'
+              : _governanceModel == 'Decentralized'
+                  ? 'Each team governs itself with minimal central oversight.'
+                  : 'Central standards with team-level autonomy.',
+          style: const TextStyle(fontSize: 12, color: _kMuted),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildApprovalSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Approval Requirements',
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _kHeadline)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: _approvalOptions.map((opt) {
+            final selected = _approvalRequirements.contains(opt);
+            return FilterChip(
+              label: Text(opt, style: const TextStyle(fontSize: 12)),
+              selected: selected,
+              selectedColor: _kAccent.withOpacity(0.15),
+              checkmarkColor: _kAccent,
+              onSelected: (v) {
+                setState(() {
+                  if (v) {
+                    _approvalRequirements.add(opt);
+                  } else {
+                    _approvalRequirements.remove(opt);
+                  }
+                });
+                _scheduleAutoSave();
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildComplianceSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Compliance Settings',
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _kHeadline)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: _complianceOptions.map((opt) {
+            final selected = _complianceSettings.contains(opt);
+            return FilterChip(
+              label: Text(opt, style: const TextStyle(fontSize: 12)),
+              selected: selected,
+              selectedColor: _kAccent.withOpacity(0.15),
+              checkmarkColor: _kAccent,
+              onSelected: (v) {
+                setState(() {
+                  if (v) {
+                    _complianceSettings.add(opt);
+                  } else {
+                    _complianceSettings.remove(opt);
+                  }
+                });
+                _scheduleAutoSave();
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
   Widget _buildField(_FieldConfig f) {
     final controller = _controllers[f.key];
     final isRegenerating = _fieldIsRegenerating[f.key] ?? false;
@@ -614,20 +835,20 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE0F2FE),
+                    color: const Color(0xFFFFF7E6),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.auto_awesome,
-                          size: 10, color: Color(0xFF0284C7)),
+                          size: 10, color: Color(0xFFD97706)),
                       SizedBox(width: 3),
                       Text('AI',
                           style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0284C7))),
+                              color: Color(0xFFD97706))),
                     ],
                   ),
                 ),

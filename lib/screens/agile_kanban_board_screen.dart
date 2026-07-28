@@ -106,7 +106,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
         _KanbanColumn(
             id: 'ready',
             title: 'Ready',
-            accent: Color(0xFF3B82F6),
+            accent: Color(0xFFFBBF24),
             wipLimit: 8),
         _KanbanColumn(
             id: 'in_progress',
@@ -149,7 +149,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   Color _accentForIndex(int index) {
     const accents = [
       Color(0xFF6B7280),
-      Color(0xFF3B82F6),
+      Color(0xFFFBBF24),
       Color(0xFFF59E0B),
       Color(0xFF8B5CF6),
       Color(0xFFEF4444),
@@ -286,7 +286,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                       story.assignedRole.isNotEmpty
                           ? story.assignedRole
                           : 'Unassigned',
-                      Colors.blue),
+                      const Color(0xFFD97706)),
                   _metaChip(
                       Icons.account_tree_outlined,
                       feature?.title.isNotEmpty == true
@@ -340,7 +340,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
       case 'high':
         return const Color(0xFFF59E0B);
       case 'medium':
-        return const Color(0xFF3B82F6);
+        return const Color(0xFFFBBF24);
       case 'low':
         return const Color(0xFF6B7280);
       default:

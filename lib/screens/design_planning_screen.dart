@@ -31,12 +31,13 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 const Color _kSurface = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kText = Color(0xFF111827);
 const Color _kMuted = Color(0xFF6B7280);
-const Color _kPrimary = Color(0xFF2563EB);
+const Color _kPrimary = Color(0xFFD97706);
 const Color _kSuccess = Color(0xFF0F9D58);
 const Color _kWarning = Color(0xFFF59E0B);
 // Brand colors from HTML design
@@ -46,14 +47,16 @@ const Color _kGray400 = Color(0xFF9CA3AF);
 const Color _kGray500 = Color(0xFF6B7280);
 const Color _kGray700 = Color(0xFF374151);
 const Color _kGray900 = Color(0xFF111827);
-const Color _kBlue50 = Color(0xFFEFF6FF);
-const Color _kBlue600 = Color(0xFF2563EB);
+const Color _kBlue50 = Color(0xFFFFF7E6);
+const Color _kBlue600 = Color(0xFFD97706);
 const String _kSectionProgressNotesKey = 'planning_design_section_progress';
 
 enum _SectionProgressState { pending, complete, notApplicable }
 
 class DesignPlanningScreen extends StatefulWidget {
- const DesignPlanningScreen({super.key});
+ const DesignPlanningScreen({super.key, this.initialSectionId});
+
+ final String? initialSectionId;
 
  static void open(BuildContext context) {
  Navigator.of(context).push(
@@ -330,12 +333,16 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  }
 
  _sectionProgress = progress;
- _activeSectionId = _sectionOrder
- .firstWhere(
- (section) => !_isSectionResolved(section.id),
- orElse: () => _sectionOrder.first,
- )
- .id;
+ final requestedSectionId = widget.initialSectionId;
+ _activeSectionId =
+     _sectionOrder.any((section) => section.id == requestedSectionId)
+         ? requestedSectionId!
+         : _sectionOrder
+             .firstWhere(
+               (section) => !_isSectionResolved(section.id),
+               orElse: () => _sectionOrder.first,
+             )
+             .id;
  _sectionExpanded = {
  for (final section in _sectionOrder)
  section.id: section.id == _activeSectionId,
@@ -369,13 +376,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  _sectionProgress[sectionId] != _SectionProgressState.pending;
 
  bool _canOpenSection(String sectionId) {
- final targetIndex =
- _sectionOrder.indexWhere((section) => section.id == sectionId);
- if (targetIndex <= 0) return true;
- for (var i = 0; i < targetIndex; i++) {
- if (!_isSectionResolved(_sectionOrder[i].id)) return false;
- }
- return true;
+ return _sectionOrder.any((section) => section.id == sectionId);
  }
 
  String? _firstBlockingSectionLabel(String sectionId) {
@@ -1957,7 +1958,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  InnerPageNavigationHint(
  pageId: 'design_planning',
  pageTitle: 'Design Planning Process',
- description: 'This page has 14 guided sections.',
+ description: 'This page has 15 guided sections.',
  accentColor: _kPrimary,
  currentSectionId: _activeSectionId,
  sections: _sectionOrder.asMap().entries.map((entry) {
@@ -2160,10 +2161,16 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  availableSpecifications: specificationOptions,
  owners: owners,
  onChanged: _queueSave,
- onRemove: () {
- setState(() => _document.requirements.removeAt(i));
- _queueSave();
- },
+  onRemove: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Requirement Mapping',
+    itemLabel: _document.requirements[i].requirementText,
+  );
+  if (!confirmed) return;
+  setState(() => _document.requirements.removeAt(i));
+  _queueSave();
+  },
  ),
  if (i != _document.requirements.length - 1)
  const SizedBox(height: 12),
@@ -2185,7 +2192,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'Design Overview',
  subtitle:
  'Document design basis details covering who owns design outcomes, how design will be executed, and what vendor/contract/interface constraints shape the solution.',
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFD97706),
  child: Column(
  children: [
  _AssistActions(
@@ -2301,12 +2308,18 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  data: _document.modules[i],
  owners: owners,
  onChanged: _queueSave,
- onRemove: () {
- setState(() => _document.modules.removeAt(i));
- _queueSave();
- },
- ),
- if (i != _document.modules.length - 1) const SizedBox(height: 12),
+  onRemove: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Module',
+    itemLabel: _document.modules[i].name,
+  );
+  if (!confirmed) return;
+  setState(() => _document.modules.removeAt(i));
+  _queueSave();
+  },
+  ),
+  if (i != _document.modules.length - 1) const SizedBox(height: 12),
  ],
  ],
  ),
@@ -2506,14 +2519,20 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  onUpload: () => _uploadSpecificationArtifact(
  _document.specifications[i].id,
  ),
- onRemove: () {
- final removedId = _document.specifications[i].id;
- setState(() {
- _document.specifications.removeAt(i);
- _specificationRowKeys.remove(removedId);
- });
- _queueSave();
- },
+  onRemove: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Specification',
+    itemLabel: _document.specifications[i].title,
+  );
+  if (!confirmed) return;
+  final removedId = _document.specifications[i].id;
+  setState(() {
+  _document.specifications.removeAt(i);
+  _specificationRowKeys.remove(removedId);
+  });
+  _queueSave();
+  },
  ),
  ),
  if (i != _document.specifications.length - 1)
@@ -2545,14 +2564,20 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  onUpload: () => _uploadSpecificationDocument(
  _document.specificationDocuments[i].id,
  ),
- onRemove: () {
- setState(() =>
- _document.specificationDocuments.removeAt(i));
- _queueSave();
- },
- ),
- if (i != _document.specificationDocuments.length - 1)
- const SizedBox(height: 12),
+  onRemove: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Reference Document',
+    itemLabel: _document.specificationDocuments[i].title,
+  );
+  if (!confirmed) return;
+  setState(() =>
+  _document.specificationDocuments.removeAt(i));
+  _queueSave();
+  },
+  ),
+  if (i != _document.specificationDocuments.length - 1)
+  const SizedBox(height: 12),
  ],
  if (_document.specificationDocuments.isEmpty)
  const _EmptyState(
@@ -2603,13 +2628,19 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  data: _document.deviations[i],
  specificationOptions: specificationOptions,
  onChanged: _queueSave,
- onRemove: () {
- setState(() => _document.deviations.removeAt(i));
- _queueSave();
- },
- ),
- if (i != _document.deviations.length - 1)
- const SizedBox(height: 12),
+  onRemove: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Deviation',
+    itemLabel: _document.deviations[i].description,
+  );
+  if (!confirmed) return;
+  setState(() => _document.deviations.removeAt(i));
+  _queueSave();
+  },
+  ),
+  if (i != _document.deviations.length - 1)
+  const SizedBox(height: 12),
  ],
  if (_document.deviations.isEmpty)
  const _EmptyState(
@@ -2674,12 +2705,18 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  data: _document.journeys[i],
  owners: owners,
  onChanged: _queueSave,
- onRemove: () {
- setState(() => _document.journeys.removeAt(i));
- _queueSave();
- },
- ),
- if (i != _document.journeys.length - 1) const SizedBox(height: 12),
+  onRemove: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete User Journey',
+    itemLabel: _document.journeys[i].name,
+  );
+  if (!confirmed) return;
+  setState(() => _document.journeys.removeAt(i));
+  _queueSave();
+  },
+  ),
+  if (i != _document.journeys.length - 1) const SizedBox(height: 12),
  ],
  const SizedBox(height: 14),
  _SubHeader(
@@ -2698,13 +2735,19 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  data: _document.interfaces[i],
  owners: owners,
  onChanged: _queueSave,
- onRemove: () {
- setState(() => _document.interfaces.removeAt(i));
- _queueSave();
- },
- ),
- if (i != _document.interfaces.length - 1)
- const SizedBox(height: 12),
+  onRemove: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Interface',
+    itemLabel: _document.interfaces[i].name,
+  );
+  if (!confirmed) return;
+  setState(() => _document.interfaces.removeAt(i));
+  _queueSave();
+  },
+  ),
+  if (i != _document.interfaces.length - 1)
+  const SizedBox(height: 12),
  ],
  ],
  ),
@@ -2774,13 +2817,19 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  data: _document.integrations[i],
  owners: owners,
  onChanged: _queueSave,
- onRemove: () {
- setState(() => _document.integrations.removeAt(i));
- _queueSave();
- },
- ),
- if (i != _document.integrations.length - 1)
- const SizedBox(height: 12),
+  onRemove: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Integration',
+    itemLabel: _document.integrations[i].name,
+  );
+  if (!confirmed) return;
+  setState(() => _document.integrations.removeAt(i));
+  _queueSave();
+  },
+  ),
+  if (i != _document.integrations.length - 1)
+  const SizedBox(height: 12),
  ],
  ],
  ),
@@ -2838,13 +2887,24 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  _RiskCard(
  data: _document.risks[i],
  owners: owners,
- onChanged: _queueSave,
- onRemove: () {
- setState(() => _document.risks.removeAt(i));
+ onChanged: () {
  _queueSave();
+ _syncDesignRiskToRegister(_document.risks[i]);
  },
- ),
- if (i != _document.risks.length - 1) const SizedBox(height: 12),
+  onRemove: () async {
+  final removed = _document.risks[i];
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Risk',
+    itemLabel: removed.risk,
+  );
+  if (!confirmed) return;
+  setState(() => _document.risks.removeAt(i));
+  _queueSave();
+  _removeDesignRiskFromRegister(removed);
+  },
+  ),
+  if (i != _document.risks.length - 1) const SizedBox(height: 12),
  ],
  if (_document.risks.isEmpty)
  const _EmptyState(
@@ -2853,6 +2913,50 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  ],
  ),
  );
+ }
+
+ /// Syncs a design-planning risk to the central Risk Register with
+ /// sourceSection='Design Planning'. Debounced via _queueSave caller.
+ void _syncDesignRiskToRegister(DesignRiskEntry risk) {
+ final name = risk.risk.trim();
+ if (name.isEmpty) return;
+ unawaited(ProjectDataHelper.upsertRiskToRegister(
+ context: context,
+ sourceSection: 'Design Planning',
+ riskName: name,
+ description: risk.mitigation,
+ category: 'Design',
+ impactLevel: risk.impact.toLowerCase() == 'high'
+ ? 'High'
+ : risk.impact.toLowerCase() == 'low'
+ ? 'Low'
+ : 'Medium',
+ likelihood: risk.likelihood.toLowerCase() == 'high'
+ ? 'High'
+ : risk.likelihood.toLowerCase() == 'low'
+ ? 'Low'
+ : 'Medium',
+ mitigationStrategy: risk.mitigation,
+ owner: risk.owner,
+ status: risk.status.isEmpty ? 'Open' : risk.status,
+ ));
+ }
+
+ /// Removes a design-planning risk from the central register.
+ void _removeDesignRiskFromRegister(DesignRiskEntry risk) {
+ final name = risk.risk.trim();
+ if (name.isEmpty) return;
+ unawaited(ProjectDataHelper.removeRiskFromRegister(
+ context: context,
+ sourceSection: 'Design Planning',
+ riskName: name,
+ ));
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Design Planning',
+ title: 'Design risk removed: $name',
+ phase: 'Planning',
+ ));
  }
 
  Widget _buildDependenciesSection(List<String> owners) {
@@ -2881,13 +2985,19 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  data: _document.dependencies[i],
  owners: owners,
  onChanged: _queueSave,
- onRemove: () {
- setState(() => _document.dependencies.removeAt(i));
- _queueSave();
- },
- ),
- if (i != _document.dependencies.length - 1)
- const SizedBox(height: 12),
+  onRemove: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Dependency',
+    itemLabel: _document.dependencies[i].name,
+  );
+  if (!confirmed) return;
+  setState(() => _document.dependencies.removeAt(i));
+  _queueSave();
+  },
+  ),
+  if (i != _document.dependencies.length - 1)
+  const SizedBox(height: 12),
  ],
  ],
  ),
@@ -2919,12 +3029,18 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  data: _document.decisions[i],
  owners: owners,
  onChanged: _queueSave,
- onRemove: () {
- setState(() => _document.decisions.removeAt(i));
- _queueSave();
- },
- ),
- if (i != _document.decisions.length - 1) const SizedBox(height: 12),
+  onRemove: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Decision',
+    itemLabel: _document.decisions[i].decision,
+  );
+  if (!confirmed) return;
+  setState(() => _document.decisions.removeAt(i));
+  _queueSave();
+  },
+  ),
+  if (i != _document.decisions.length - 1) const SizedBox(height: 12),
  ],
  ],
  ),
@@ -3000,12 +3116,18 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  data: _document.approvals[i],
  owners: owners,
  onChanged: _queueSave,
- onRemove: () {
- setState(() => _document.approvals.removeAt(i));
- _queueSave();
- },
- ),
- if (i != _document.approvals.length - 1) const SizedBox(height: 12),
+  onRemove: () async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Delete Approval',
+    itemLabel: _document.approvals[i].reviewer,
+  );
+  if (!confirmed) return;
+  setState(() => _document.approvals.removeAt(i));
+  _queueSave();
+  },
+  ),
+  if (i != _document.approvals.length - 1) const SizedBox(height: 12),
  ],
  ],
  ),
@@ -3080,6 +3202,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
       final isSelected = _selectedWbsNodeIds.contains(item.id);
       widgets.add(
         Padding(
+          key: ValueKey('wbs_${item.id}_d$depth'),
           padding: EdgeInsets.only(left: (depth - 1) * 20.0),
           child: Row(
             children: [
@@ -3272,7 +3395,7 @@ class _SectionMeta {
 
 const List<_SectionMeta> _sectionOrder = [
  _SectionMeta('overview', 'Project Overview', _kPrimary),
- _SectionMeta('design_overview', 'Design Overview', Color(0xFF1D4ED8)),
+ _SectionMeta('design_overview', 'Design Overview', Color(0xFFD97706)),
  _SectionMeta('design_specifications_workspace', 'Design Specifications',
  Color(0xFF0F766E)),
  _SectionMeta('deviations', 'Deviations', Color(0xFF0EA5E9)),

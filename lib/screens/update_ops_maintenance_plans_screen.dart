@@ -13,6 +13,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/project_insights_service.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
+import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
@@ -218,7 +219,7 @@ class _UpdateOpsMaintenancePlansScreenState
 
  List<_CoverageItem> _mapCoverage(List<LaunchEntry> entries) {
  final colors = [
- const Color(0xFF2563EB),
+ const Color(0xFFD97706),
  const Color(0xFF10B981),
  const Color(0xFFF59E0B),
  ];
@@ -968,7 +969,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _PremiumPanel(
  icon: Icons.calendar_month_outlined,
  iconColor: const Color(0xFF0EA5E9),
- iconBg: const Color(0xFFE0F2FE),
+ iconBg: const Color(0xFFFFF7E6),
  title: 'Maintenance Windows',
  subtitle: 'Upcoming maintenance schedule',
  child: Column(
@@ -1015,7 +1016,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: const Color(0xFFE0F2FE),
+ color: const Color(0xFFFFF7E6),
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(Icons.schedule_outlined,
@@ -1461,10 +1462,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteCoverage(String id) {
- setState(() => _coverage.removeWhere((item) => item.id == id));
- _scheduleSave();
- }
+  void _deleteCoverage(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'coverage item');
+  if (!ok) return;
+  setState(() => _coverage.removeWhere((item) => item.id == id));
+  _scheduleSave();
+  }
 
  void _addSignal() {
  setState(() {
@@ -1480,10 +1483,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteSignal(String id) {
- setState(() => _signals.removeWhere((item) => item.id == id));
- _scheduleSave();
- }
+  void _deleteSignal(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'signal');
+  if (!ok) return;
+  setState(() => _signals.removeWhere((item) => item.id == id));
+  _scheduleSave();
+  }
 
  void _addMaintenanceWindow() {
  setState(() {
@@ -1502,10 +1507,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteMaintenance(String id) {
- setState(() => _maintenanceWindows.removeWhere((item) => item.id == id));
- _scheduleSave();
- }
+  void _deleteMaintenance(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'maintenance window');
+  if (!ok) return;
+  setState(() => _maintenanceWindows.removeWhere((item) => item.id == id));
+  _scheduleSave();
+  }
 }
 
 // ─── Shared Widgets ──────────────────────────────────────────────────────────
@@ -1627,7 +1634,7 @@ class _PlanRow extends StatelessWidget {
  case 'Ready':
  return const Color(0xFF059669);
  case 'In review':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Pending':
  return const Color(0xFFD97706);
  default:
@@ -1640,7 +1647,7 @@ class _PlanRow extends StatelessWidget {
  case 'Ready':
  return const Color(0xFFECFDF5);
  case 'In review':
- return const Color(0xFFEFF6FF);
+ return const Color(0xFFFFF7E6);
  case 'Pending':
  return const Color(0xFFFEF3C7);
  default:

@@ -54,10 +54,7 @@ class ExecutionPlanConstructionPlanScreen extends StatelessWidget {
  context, 'execution_plan_construction_plan'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'execution_plan_construction_plan'), onExportPdf: () => _exportPdf(context)),
- const SizedBox(height: 32),
- const SectionIntro(
- title: 'Execution Plan - Construction Plan'),
- const SizedBox(height: 24),
+  const SizedBox(height: 24),
  const ExecutionPlanForm(
  title: 'Execution Plan - Construction Plan',
  hintText:

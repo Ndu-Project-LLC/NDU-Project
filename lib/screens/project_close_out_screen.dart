@@ -187,7 +187,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  icon: Icons.assignment_turned_in_outlined,
  emphasisColor: approved == _approvals.length && _approvals.isNotEmpty
  ? const Color(0xFF10B981)
- : const Color(0xFF2563EB),
+ : const Color(0xFFD97706),
  ),
  ExecutionMetricData(
  label: 'Archived Items',
@@ -1122,7 +1122,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
               label: 'Milestones',
               value: '${projectData.keyMilestones.length}',
               icon: Icons.flag_outlined,
-              color: const Color(0xFF2563EB),
+              color: const Color(0xFFD97706),
               delta: '${projectData.keyMilestones.where((m) => m.comments.toLowerCase().contains('complete') || m.comments.toLowerCase().contains('done')).length} done',
             ),
             LaunchKpiTile(

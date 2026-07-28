@@ -725,7 +725,7 @@ class _ExpandableCell extends StatelessWidget {
         text: text,
         maxLines: 1,
         style: const TextStyle(fontSize: 13),
-        expandButtonColor: Colors.blue,
+        expandButtonColor: const Color(0xFFD97706),
       ),
     );
   }
@@ -771,11 +771,11 @@ class _OwnerBadge extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 10,
-          backgroundColor: Colors.blue[100],
+          backgroundColor: const Color(0xFFFDE68A),
           child: Text(name[0].toUpperCase(),
               style: TextStyle(
                   fontSize: 10,
-                  color: Colors.blue[800],
+                  color: const Color(0xFF92400E),
                   fontWeight: FontWeight.bold)),
         ),
         const SizedBox(width: 8),
@@ -801,8 +801,8 @@ class _ContractStatusBadge extends StatelessWidget {
         bg = Colors.grey[100]!;
         break;
       case ContractStatus.under_review:
-        color = Colors.blue[700]!;
-        bg = Colors.blue[50]!;
+        color = const Color(0xFFB45309)!;
+        bg = const Color(0xFFFFF7E6)!;
         break;
       case ContractStatus.approved:
         color = Colors.purple[700]!;

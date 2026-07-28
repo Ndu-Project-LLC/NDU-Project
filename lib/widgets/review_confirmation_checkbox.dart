@@ -6,14 +6,16 @@ class ReviewConfirmationCheckbox extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.padding = const EdgeInsets.only(top: 16),
+    this.label,
   });
 
   final bool value;
   final ValueChanged<bool> onChanged;
   final EdgeInsetsGeometry padding;
+  final String? label;
 
   static const String defaultLabel =
-      'I confirm that I have reviewed all information on this page before proceeding.';
+      'I confirm that the appropriate SMEs and stakeholders have reviewed and approved this information for the next project phase.';
 
   @override
   Widget build(BuildContext context) {
@@ -35,12 +37,12 @@ class ReviewConfirmationCheckbox extends StatelessWidget {
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             const SizedBox(width: 8),
-            const Expanded(
+            Expanded(
               child: Padding(
-                padding: EdgeInsets.only(top: 3),
+                padding: const EdgeInsets.only(top: 3),
                 child: Text(
-                  defaultLabel,
-                  style: TextStyle(
+                  label ?? defaultLabel,
+                  style: const TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF334155),

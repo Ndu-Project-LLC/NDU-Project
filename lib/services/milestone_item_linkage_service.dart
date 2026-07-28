@@ -73,6 +73,11 @@ class MilestoneItemLinkageService {
 
   /// Loads all milestones from the project data.
   static List<Milestone> loadMilestones(BuildContext context) {
-    return ProjectDataHelper.getData(context, listen: false).keyMilestones;
+    try {
+      return ProjectDataHelper.getData(context, listen: false).keyMilestones;
+    } catch (e) {
+      debugPrint('MilestoneItemLinkageService.loadMilestones error: $e');
+      return [];
+    }
   }
 }

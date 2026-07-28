@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -163,7 +164,13 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     _scheduleSave();
   }
 
-  void _deleteStory(AgileTask story) {
+  Future<void> _deleteStory(AgileTask story) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Story',
+      itemLabel: story.userStory.isNotEmpty ? story.userStory : null,
+    );
+    if (!confirmed) return;
     setState(() => _stories.removeWhere((s) => s.id == story.id));
     _scheduleSave();
   }
@@ -455,7 +462,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('WBS linked',
-                      style: TextStyle(fontSize: 11, color: Colors.blue[700])),
+                      style: TextStyle(fontSize: 11, color: const Color(0xFFB45309))),
                 ),
               IconButton(
                 icon: const Icon(Icons.delete_outline,

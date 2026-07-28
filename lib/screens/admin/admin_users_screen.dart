@@ -4,6 +4,7 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 
 class AdminUsersScreen extends StatefulWidget {
@@ -228,37 +229,22 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   }
 
   Future<void> _deleteUser(UserModel user) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete User'),
-        content: Text(
-            'Are you sure you want to delete ${user.displayName}? This action cannot be undone.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete User',
+      itemLabel: user.displayName,
     );
-
-    if (confirmed == true) {
-      final success = await UserService.deleteUser(user.uid);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success
-                ? 'User deleted successfully'
-                : 'Failed to delete user'),
-            backgroundColor: success ? Colors.green : Colors.red,
-          ),
-        );
-      }
+    if (!confirmed) return;
+    final success = await UserService.deleteUser(user.uid);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success
+              ? 'User deleted successfully'
+              : 'Failed to delete user'),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
     }
   }
 }

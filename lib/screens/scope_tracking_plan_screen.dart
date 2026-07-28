@@ -17,6 +17,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/scope_tracking_table_widget.dart';
+import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -242,10 +243,12 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  _scheduleSave();
  }
 
- void _deleteItem(ScopeTrackingItem item) {
- setState(() => _items.removeWhere((i) => i.id == item.id));
- _scheduleSave();
- }
+  void _deleteItem(ScopeTrackingItem item) async {
+  final ok = await launchConfirmDelete(context, itemName: 'scope item');
+  if (!ok) return;
+  setState(() => _items.removeWhere((i) => i.id == item.id));
+  _scheduleSave();
+  }
 
  void _setBaseline() async {
  final projectId = _projectId;
@@ -452,7 +455,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  children: [
  _buildMetricsStrip(
  metrics: [
- _ScopeMetricData('Total Items', total, const Color(0xFF2563EB),
+ _ScopeMetricData('Total Items', total, const Color(0xFFD97706),
  'All scope items', Icons.list),
  _ScopeMetricData('Not Started', notStarted,
  const Color(0xFF9CA3AF), 'Awaiting work', Icons.schedule),
@@ -517,7 +520,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  icon: const Icon(Icons.add, size: 18),
  label: const Text('Add Scope Item'),
  style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFD97706),
  foregroundColor: Colors.white,
  padding:
  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
@@ -818,7 +821,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  _BaselineStatCard(
  label: 'Baseline Scope',
  value: '${baselineItems.length} items',
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFD97706),
  icon: Icons.lock_outline,
  ),
  _BaselineStatCard(
@@ -937,7 +940,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  _compareRow('Baseline Items', '${baseline.length}',
- const Color(0xFF2563EB)),
+ const Color(0xFFD97706)),
  const SizedBox(height: 12),
  _compareRow('Scope Creep', '${creep.length}',
  const Color(0xFFEF4444)),
@@ -1351,7 +1354,7 @@ class _StatusBadge extends StatelessWidget {
  case 'Not Started':
  return const Color(0xFF9CA3AF);
  case 'In-Progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Verified':
  return const Color(0xFF10B981);
  case 'Out-of-Scope':

@@ -255,6 +255,23 @@ class DashboardMetrics {
 class DashboardMetricsService {
   DashboardMetricsService._();
 
+  /// Coerces a dynamic Firestore list value into a `List<Map<String, dynamic>>`.
+  ///
+  /// Firestore returns lists as `List<dynamic>` where each element is a
+  /// `Map<dynamic, dynamic>`. Direct `.cast<Map<String, dynamic>>()` throws
+  /// at runtime because the inner maps aren't typed as `String` keys. This
+  /// helper does a safe per-element coercion, skipping any non-map entries.
+  static List<Map<String, dynamic>> _coerceMapList(dynamic raw) {
+    if (raw is! List) return const [];
+    final out = <Map<String, dynamic>>[];
+    for (final item in raw) {
+      if (item is Map) {
+        out.add(item.map((k, v) => MapEntry(k.toString(), v)));
+      }
+    }
+    return out;
+  }
+
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Load all dashboard metrics for the current user in one pass.
@@ -311,12 +328,11 @@ class DashboardMetricsService {
         final rollup = ProjectStatusRollup.infer(
           projectId: projectId,
           projectName: projectName,
-          scheduleActivities:
-              (pData['scheduleActivities'] as List? ?? []).cast(),
-          costItems: (pData['costEstimateItems'] as List? ?? []).cast(),
-          risks: (pData['risks'] as List? ?? []).cast(),
-          issues: (pData['issues'] as List? ?? []).cast(),
-          qualityItems: (pData['qualityItems'] as List? ?? []).cast(),
+          scheduleActivities: _coerceMapList(pData['scheduleActivities']),
+          costItems: _coerceMapList(pData['costEstimateItems']),
+          risks: _coerceMapList(pData['risks']),
+          issues: _coerceMapList(pData['issues']),
+          qualityItems: _coerceMapList(pData['qualityItems']),
           budgetTotal: (pData['budgetTotal'] as num?)?.toDouble(),
           updatedAt: (pData['updatedAt'] as Timestamp?)?.toDate(),
         );

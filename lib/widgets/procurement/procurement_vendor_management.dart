@@ -245,7 +245,7 @@ class VendorManagementView extends StatelessWidget {
     final metricCards = [
       ProcurementSummaryCard(
         icon: Icons.inventory_2_outlined,
-        iconBackground: const Color(0xFFEFF6FF),
+        iconBackground: const Color(0xFFFFF7E6),
         value: '$totalVendors',
         label: 'Active Vendors',
       ),
@@ -307,7 +307,7 @@ class VendorManagementView extends StatelessWidget {
                   icon: const Icon(Icons.add_rounded, size: 18),
                   label: const Text('Add Vendor'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
+                    backgroundColor: const Color(0xFFD97706),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -401,7 +401,7 @@ class _VendorHealthCard extends StatelessWidget {
 
   Color _scoreColor(double score) {
     if (score >= 0.85) return const Color(0xFF10B981);
-    if (score >= 0.7) return const Color(0xFF2563EB);
+    if (score >= 0.7) return const Color(0xFFD97706);
     return const Color(0xFFF97316);
   }
 
@@ -765,11 +765,11 @@ class _VendorsSection extends StatelessWidget {
               label: const Text('Approved Only'),
               selected: approvedOnly,
               onSelected: onApprovedChanged,
-              selectedColor: const Color(0xFFEFF6FF),
+              selectedColor: const Color(0xFFFFF7E6),
               showCheckmark: false,
               labelStyle: TextStyle(
                 color: approvedOnly
-                    ? const Color(0xFF2563EB)
+                    ? const Color(0xFFD97706)
                     : const Color(0xFF475569),
                 fontWeight: FontWeight.w600,
               ),
@@ -782,7 +782,7 @@ class _VendorsSection extends StatelessWidget {
               showCheckmark: false,
               labelStyle: TextStyle(
                 color: preferredOnly
-                    ? const Color(0xFF2563EB)
+                    ? const Color(0xFFD97706)
                     : const Color(0xFF475569),
                 fontWeight: FontWeight.w600,
               ),

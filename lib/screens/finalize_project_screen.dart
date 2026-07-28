@@ -16,6 +16,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 class FinalizeProjectScreen extends StatefulWidget {
  const FinalizeProjectScreen({super.key});
 
@@ -249,7 +250,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  title: 'Stakeholder Sign-off',
  subtitle: 'Pending approvals',
  value: '',
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFD97706),
  ),
  _SnapshotMetric(
  id: _newId(),
@@ -367,7 +368,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  title: 'Snapshot Metrics',
  value: '${_snapshotMetrics.length}',
  icon: Icons.dashboard_outlined,
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFD97706),
  ),
  ),
  const SizedBox(width: 16),
@@ -491,7 +492,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  title: r['title'] ?? '',
  subtitle: r['subtitle'] ?? '',
  value: r['value'] ?? '',
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFD97706),
  ));
  }
  });
@@ -500,7 +501,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  },
  icon: const Icon(Icons.upload_file_outlined, size: 16),
  label: const Text('Import CSV'),
- style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), foregroundColor: const Color(0xFF2563EB), side: const BorderSide(color: Color(0xFF93C5FD))),
+ style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), foregroundColor: const Color(0xFFD97706), side: const BorderSide(color: Color(0xFFFDE68A))),
  ),
  const SizedBox(width: 8),
  FilledButton.icon(
@@ -907,7 +908,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  },
  icon: const Icon(Icons.upload_file_outlined, size: 16),
  label: const Text('Import CSV'),
- style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), foregroundColor: const Color(0xFF2563EB), side: const BorderSide(color: Color(0xFF93C5FD))),
+ style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), foregroundColor: const Color(0xFFD97706), side: const BorderSide(color: Color(0xFFFDE68A))),
  ),
  const SizedBox(width: 8),
  FilledButton.icon(
@@ -1105,7 +1106,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
  IconButton(
- icon: const Icon(Icons.edit_outlined, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.edit_outlined, color: Color(0xFFD97706)),
  tooltip: 'Edit',
  onPressed: () {
  ScaffoldMessenger.of(context).showSnackBar(
@@ -1502,7 +1503,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  title: '',
  subtitle: '',
  value: '',
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFD97706),
  ));
  });
  _scheduleSave();
@@ -1515,10 +1516,16 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  _scheduleSave();
  }
 
- void _deleteSnapshotMetric(String id) {
- setState(() => _snapshotMetrics.removeWhere((e) => e.id == id));
- _scheduleSave();
- }
+  Future<void> _deleteSnapshotMetric(String id) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Metric',
+      itemLabel: _snapshotMetrics.firstWhere((e) => e.id == id).title,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _snapshotMetrics.removeWhere((e) => e.id == id));
+    _scheduleSave();
+  }
 
  void _addChecklistItem() {
  setState(() {
@@ -1543,10 +1550,16 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  _scheduleSave();
  }
 
- void _deleteChecklistItem(String id) {
- setState(() => _checklist.removeWhere((entry) => entry.id == id));
- _scheduleSave();
- }
+  Future<void> _deleteChecklistItem(String id) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Checklist Item',
+      itemLabel: _checklist.firstWhere((entry) => entry.id == id).title,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _checklist.removeWhere((entry) => entry.id == id));
+    _scheduleSave();
+  }
 
  void _addSignOffItem() {
  setState(() {
@@ -1571,10 +1584,16 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  _scheduleSave();
  }
 
- void _deleteSignOffItem(String id) {
- setState(() => _signOffs.removeWhere((entry) => entry.id == id));
- _scheduleSave();
- }
+  Future<void> _deleteSignOffItem(String id) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Sign-Off',
+      itemLabel: _signOffs.firstWhere((entry) => entry.id == id).name,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _signOffs.removeWhere((entry) => entry.id == id));
+    _scheduleSave();
+  }
 
  void _addInsight() {
  setState(() {
@@ -1590,10 +1609,16 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  _scheduleSave();
  }
 
- void _deleteInsight(String id) {
- setState(() => _insights.removeWhere((entry) => entry.id == id));
- _scheduleSave();
- }
+  Future<void> _deleteInsight(String id) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Insight',
+      itemLabel: _insights.firstWhere((entry) => entry.id == id).title,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _insights.removeWhere((entry) => entry.id == id));
+    _scheduleSave();
+  }
 }
 
 class _CurrentUserProfileChip extends StatelessWidget {

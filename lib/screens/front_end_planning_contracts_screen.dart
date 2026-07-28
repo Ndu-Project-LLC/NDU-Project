@@ -667,6 +667,7 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  String _contractType = 'Not Sure';
  String _paymentType = 'Not Sure';
  String _status = 'Not Started';
+ String _contractStartPhase = 'Initiation';
  DateTime? _startDate;
  DateTime? _endDate;
 
@@ -679,7 +680,8 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  if (contract == null) return;
  _contractNameController.text = contract.name;
  _descriptionController.text = contract.description;
- _estimatedValueController.text = contract.estimatedValue.toStringAsFixed(0);
+ _estimatedValueController.text =
+ contract.estimatedValue > 0 ? contract.estimatedValue.toStringAsFixed(0) : '';
  _scopeController.text = contract.scope;
  _disciplineController.text = contract.discipline;
  _notesController.text = contract.notes;
@@ -742,7 +744,7 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  content: Text('Please complete all required fields.')));
  return;
  }
- // Dates are optional in initiation phase — only validate if both are provided
+// Dates are optional in initiation phase - only validate if both are provided
  if (_startDate != null && _endDate != null && _endDate!.isBefore(_startDate!)) {
  messenger.showSnackBar(const SnackBar(
  content: Text('End Date cannot be before Start Date.')));
@@ -761,17 +763,16 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  return;
  }
 
- // Estimated value is optional in initiation phase — only validate if provided
- final double? estValue =
- _estimatedValueController.text.trim().isEmpty
- ? null
- : double.tryParse(_estimatedValueController.text.trim());
- if (_estimatedValueController.text.trim().isNotEmpty &&
- (estValue == null || estValue <= 0)) {
- messenger.showSnackBar(const SnackBar(
- content: Text('Estimated Value must be a positive number if provided.')));
- return;
- }
+// Estimated value is optional in initiation phase - only validate if provided
+final double? estValue = _estimatedValueController.text.trim().isEmpty
+    ? null
+    : double.tryParse(_estimatedValueController.text.trim());
+if (_estimatedValueController.text.trim().isNotEmpty &&
+    (estValue == null || estValue <= 0)) {
+  messenger.showSnackBar(const SnackBar(
+      content: Text('Estimated Value must be a positive number if provided.')));
+  return;
+}
 
  try {
  if (_isEdit) {
@@ -788,7 +789,7 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  endDate: _endDate,
  scope: _scopeController.text.trim(),
  discipline: _disciplineController.text.trim(),
- notes: _notesController.text.trim(),
+ notes: _notesWithPhase(),
  );
  } else {
  await ContractService.createContract(
@@ -803,7 +804,7 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  endDate: _endDate,
  scope: _scopeController.text.trim(),
  discipline: _disciplineController.text.trim(),
- notes: _notesController.text.trim(),
+ notes: _notesWithPhase(),
  createdById: user.uid,
  createdByEmail: user.email ?? '',
  createdByName: user.displayName ?? (user.email ?? 'User'),
@@ -823,9 +824,17 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  }
  }
 
+ String _notesWithPhase() {
+ final notes = _notesController.text.trim();
+ final phaseLine = 'Contract start phase: $_contractStartPhase';
+ if (notes.isEmpty) return phaseLine;
+ if (notes.contains('Contract start phase:')) return notes;
+ return '$notes\n$phaseLine';
+ }
+
  String _formattedDate(DateTime? date) {
  if (date == null) {
- return 'Pick a date';
+ return 'Optional / TBD';
  }
  final String month = date.month.toString().padLeft(2, '0');
  final String day = date.day.toString().padLeft(2, '0');
@@ -1094,6 +1103,24 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  : 24,
  children: [
  _LabeledField(
+ label: 'Contract Start Phase*',
+ child: _ContractDropdownField(
+ value: _contractStartPhase,
+ items: const [
+ 'Initiation',
+ 'Planning',
+ 'Execution',
+ 'Operations / Closeout'
+ ],
+ onChanged: (value) => setState(() =>
+ _contractStartPhase = value ?? _contractStartPhase),
+ validator: (v) =>
+ (v == null || v.isEmpty)
+ ? 'Required'
+ : null,
+ ),
+ ),
+ _LabeledField(
  label: 'Status*',
  child: _ContractDropdownField(
  value: _status,
@@ -1112,16 +1139,17 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  ),
  ),
  _LabeledField(
- label: 'Estimated Value (\$)',
+ label: 'Cost / Total Value (optional in initiation)',
  child: _ContractTextField(
  controller: _estimatedValueController,
- hintText: 'e.g. 150000',
+ hintText: 'Leave blank if not known yet',
  keyboardType: TextInputType.number,
  validator: (v) {
  final t = v?.trim() ?? '';
+ if (t.isEmpty) return null;
  final d = double.tryParse(t);
  if (d == null || d <= 0) {
- return 'Enter a valid amount';
+ return 'Enter a valid amount or leave blank';
  }
  return null;
  },
@@ -7621,7 +7649,7 @@ class _MilestoneEntry {
  return _MilestoneEntry(
  label: (json['label'] ?? '').toString(),
  date: (json['date'] ?? '').toString(),
- statusColor: Color((json['statusColor'] ?? 0xFF2563EB) as int),
+ statusColor: Color((json['statusColor'] ?? 0xFFD97706) as int),
  );
  }
 
@@ -7928,7 +7956,7 @@ class _ContractMilestoneData {
  return _ContractMilestoneData(
  title: (json['title'] ?? '').toString(),
  value: (json['value'] ?? '').toString(),
- accentColor: Color((json['accentColor'] ?? 0xFF2563EB) as int),
+ accentColor: Color((json['accentColor'] ?? 0xFFD97706) as int),
  emphasize: json['emphasize'] == true,
  );
  }
@@ -8706,7 +8734,7 @@ class _ContractDocumentData {
  return _ContractDocumentData(
  title: (json['title'] ?? '').toString(),
  details: (json['details'] ?? '').toString(),
- accentColor: Color((json['accentColor'] ?? 0xFF2563EB) as int),
+ accentColor: Color((json['accentColor'] ?? 0xFFD97706) as int),
  icon: _iconLookup[codePoint] ?? Icons.description_outlined,
  );
  }

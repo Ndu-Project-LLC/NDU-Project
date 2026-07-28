@@ -173,11 +173,11 @@ class _TimelineListRow extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFEFF6FF) : Colors.white,
+          color: selected ? const Color(0xFFFFF7E6) : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color:
-                selected ? const Color(0xFF93C5FD) : const Color(0xFFE5E7EB),
+                selected ? const Color(0xFFFDE68A) : const Color(0xFFE5E7EB),
           ),
         ),
         child: Column(
@@ -320,13 +320,13 @@ class _TimelineEntry extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
+            color: const Color(0xFFFFF7E6),
             borderRadius: BorderRadius.circular(999),
           ),
           child: const Icon(
             Icons.local_shipping_outlined,
             size: 18,
-            color: Color(0xFF2563EB),
+            color: Color(0xFFD97706),
           ),
         ),
         const SizedBox(width: 12),
@@ -352,7 +352,7 @@ class _TimelineEntry extends StatelessWidget {
                 Text(
                   event.subtext,
                   style:
-                      const TextStyle(fontSize: 12, color: Color(0xFF2563EB)),
+                      const TextStyle(fontSize: 12, color: Color(0xFFD97706)),
                 ),
               ],
               const SizedBox(height: 6),

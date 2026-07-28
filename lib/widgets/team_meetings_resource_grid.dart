@@ -7,8 +7,23 @@ import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'dart:async';
+import 'package:ndu_project/utils/web_utils_stub.dart'
+    if (dart.library.html) 'package:ndu_project/utils/web_utils_web.dart' as web_utils;
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+
+void _copyToClipboard(String text) {
+  try {
+    web_utils.copyToClipboard(text);
+  } catch (_) {}
+}
+
+void _openUrlInNewTab(String url) {
+  try {
+    web_utils.openUrlInNewTab(url);
+  } catch (_) {}
+}
 /// Specialized Resource Grid widget for Team Meetings page
 /// Features: Summary cards, meeting planner table with role integration, AI agenda generation
 class TeamMeetingsResourceGrid extends StatefulWidget {
@@ -137,7 +152,15 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
     widget.onMeetingsChanged(updated);
   }
 
-  void _removeMeeting(int index) {
+  Future<void> _removeMeeting(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Meeting',
+      itemLabel: _meetings[index].meetingType.isNotEmpty
+          ? _meetings[index].meetingType
+          : null,
+    );
+    if (!confirmed) return;
     final updated = List<MeetingRow>.from(_meetings);
     updated.removeAt(index);
     widget.onMeetingsChanged(updated);
@@ -300,7 +323,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
                         horizontal: 12, vertical: 10),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
-                    foregroundColor: const Color(0xFF2563EB),
+                    foregroundColor: const Color(0xFFD97706),
                   ),
                 ),
               ],
@@ -527,19 +550,31 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
     final nextDateController =
         TextEditingController(text: _meeting.nextScheduledDate ?? '');
     final statusController = TextEditingController(text: _meeting.status);
+    final meetingLinkController =
+        TextEditingController(text: _meeting.meetingLink);
+    final locationController =
+        TextEditingController(text: _meeting.location);
+    final organizerEmailController =
+        TextEditingController(text: _meeting.organizerEmail);
+    final attendeeEmailController = TextEditingController();
 
     var selectedParticipants = List<String>.from(_meeting.keyParticipants);
     var selectedMeetingType = _meeting.meetingType;
     var selectedFrequency = _meeting.frequency;
     var selectedStatus = _meeting.status;
+    var selectedTime = _meeting.meetingTime;
+    var attendeeEmails = List<String>.from(_meeting.attendeeEmails);
+    var agendaItems = List<String>.from(_meeting.agendaItems);
+    var reminderMinutes = _meeting.reminderMinutes;
+    final agendaController = TextEditingController();
 
     await showDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Edit Meeting', style: TextStyle(fontSize: 18)),
+          title: const Text('Schedule Meeting', style: TextStyle(fontSize: 18)),
           content: SizedBox(
-            width: 500,
+            width: 560,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -656,19 +691,365 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                     ),
                     keyboardType: TextInputType.number,
                   ),
-                  const SizedBox(height: 12),
-                  // Next Scheduled Date
-                  VoiceTextField(
-                    controller: nextDateController,
-                    decoration: const InputDecoration(
-                      labelText: 'Next Scheduled Date (YYYY-MM-DD)',
-                      hintText: '2024-01-15',
-                      isDense: true,
+                  const SizedBox(height: 16),
+                  // ── Scheduling Section ──
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F7FF),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.event, size: 16, color: Color(0xFF1D4ED8)),
+                            const SizedBox(width: 6),
+                            const Text('Schedule & Location',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1D4ED8))),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Date + Time row
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: DateTime.tryParse(
+                                            nextDateController.text) ??
+                                        DateTime.now(),
+                                    firstDate: DateTime.now()
+                                        .subtract(const Duration(days: 365)),
+                                    lastDate: DateTime.now()
+                                        .add(const Duration(days: 730)),
+                                  );
+                                  if (picked != null) {
+                                    final dateStr =
+                                        '${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                                    nextDateController.text = dateStr;
+                                    setDialogState(() {});
+                                  }
+                                },
+                                child: InputDecorator(
+                                  decoration: const InputDecoration(
+                                    labelText: 'Date',
+                                    isDense: true,
+                                    prefixIcon: Icon(Icons.calendar_today,
+                                        size: 16),
+                                  ),
+                                  child: Text(
+                                    nextDateController.text.isEmpty
+                                        ? 'Select date'
+                                        : nextDateController.text,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: nextDateController.text.isEmpty
+                                          ? const Color(0xFF9CA3AF)
+                                          : const Color(0xFF111827),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () async {
+                                  final parts = selectedTime.split(':');
+                                  final initial = TimeOfDay(
+                                    hour: parts.length == 2
+                                        ? int.tryParse(parts[0]) ?? 9
+                                        : 9,
+                                    minute: parts.length == 2
+                                        ? int.tryParse(parts[1]) ?? 0
+                                        : 0,
+                                  );
+                                  final picked = await showTimePicker(
+                                    context: context,
+                                    initialTime: initial,
+                                  );
+                                  if (picked != null) {
+                                    final timeStr =
+                                        '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                                    setDialogState(() => selectedTime = timeStr);
+                                  }
+                                },
+                                child: InputDecorator(
+                                  decoration: const InputDecoration(
+                                    labelText: 'Time',
+                                    isDense: true,
+                                    prefixIcon:
+                                        Icon(Icons.access_time, size: 16),
+                                  ),
+                                  child: Text(
+                                    selectedTime.isEmpty
+                                        ? 'Select time'
+                                        : selectedTime,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: selectedTime.isEmpty
+                                          ? const Color(0xFF9CA3AF)
+                                          : const Color(0xFF111827),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Meeting Link
+                        VoiceTextField(
+                          controller: meetingLinkController,
+                          decoration: const InputDecoration(
+                            labelText: 'Meeting Link (Zoom, Teams, Google Meet)',
+                            hintText: 'https://zoom.us/j/...',
+                            isDense: true,
+                            prefixIcon: Icon(Icons.videocam, size: 16),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // Location
+                        VoiceTextField(
+                          controller: locationController,
+                          decoration: const InputDecoration(
+                            labelText: 'Location / Room',
+                            hintText: 'Conference Room A, Online, etc.',
+                            isDense: true,
+                            prefixIcon: Icon(Icons.location_on, size: 16),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // Reminder
+                        DropdownButtonFormField<int>(
+                          value: reminderMinutes,
+                          decoration: const InputDecoration(
+                            labelText: 'Reminder',
+                            isDense: true,
+                            prefixIcon:
+                                Icon(Icons.notifications, size: 16),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 0, child: Text('No reminder')),
+                            DropdownMenuItem(value: 5, child: Text('5 minutes before')),
+                            DropdownMenuItem(value: 15, child: Text('15 minutes before')),
+                            DropdownMenuItem(value: 30, child: Text('30 minutes before')),
+                            DropdownMenuItem(value: 60, child: Text('1 hour before')),
+                            DropdownMenuItem(value: 1440, child: Text('1 day before')),
+                          ],
+                          onChanged: (v) =>
+                              setDialogState(() => reminderMinutes = v ?? 30),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  // ── Collaborators Section ──
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0FDF4),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFBBF7D0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.people, size: 16, color: Color(0xFF059669)),
+                            const SizedBox(width: 6),
+                            const Text('Invite Collaborators',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF059669))),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Organizer Email
+                        VoiceTextField(
+                          controller: organizerEmailController,
+                          decoration: const InputDecoration(
+                            labelText: 'Organizer Email',
+                            hintText: 'organizer@company.com',
+                            isDense: true,
+                            prefixIcon: Icon(Icons.person_outline, size: 16),
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        const SizedBox(height: 12),
+                        // Attendee Emails
+                        const Text('Attendee Emails',
+                            style: TextStyle(
+                                fontSize: 12, color: Color(0xFF6B7280))),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: attendeeEmailController,
+                                decoration: const InputDecoration(
+                                  hintText: 'email@company.com',
+                                  isDense: true,
+                                  prefixIcon: Icon(Icons.email, size: 16),
+                                ),
+                                keyboardType: TextInputType.emailAddress,
+                                onFieldSubmitted: (v) {
+                                  final email = v.trim();
+                                  if (email.isNotEmpty &&
+                                      email.contains('@') &&
+                                      !attendeeEmails.contains(email)) {
+                                    setDialogState(() {
+                                      attendeeEmails.add(email);
+                                      attendeeEmailController.clear();
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: () {
+                                final email =
+                                    attendeeEmailController.text.trim();
+                                if (email.isNotEmpty &&
+                                    email.contains('@') &&
+                                    !attendeeEmails.contains(email)) {
+                                  setDialogState(() {
+                                    attendeeEmails.add(email);
+                                    attendeeEmailController.clear();
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.add_circle,
+                                  color: Color(0xFF059669)),
+                            ),
+                          ],
+                        ),
+                        if (attendeeEmails.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: attendeeEmails.map((email) {
+                              return Chip(
+                                label: Text(email,
+                                    style: const TextStyle(fontSize: 11)),
+                                deleteIcon: const Icon(Icons.close, size: 14),
+                                onDeleted: () => setDialogState(
+                                    () => attendeeEmails.remove(email)),
+                                backgroundColor: Colors.white,
+                                side: const BorderSide(
+                                    color: Color(0xFFBBF7D0)),
+                                visualDensity: VisualDensity.compact,
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // ── Agenda Items ──
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.format_list_numbered, size: 16, color: Color(0xFFD97706)),
+                            const SizedBox(width: 6),
+                            const Text('Agenda Items',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFFD97706))),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: agendaController,
+                                decoration: const InputDecoration(
+                                  hintText: 'Add agenda item...',
+                                  isDense: true,
+                                ),
+                                onFieldSubmitted: (v) {
+                                  if (v.trim().isNotEmpty) {
+                                    setDialogState(() {
+                                      agendaItems.add(v.trim());
+                                      agendaController.clear();
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: () {
+                                if (agendaController.text.trim().isNotEmpty) {
+                                  setDialogState(() {
+                                    agendaItems.add(agendaController.text.trim());
+                                    agendaController.clear();
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.add_circle,
+                                  color: Color(0xFFD97706)),
+                            ),
+                          ],
+                        ),
+                        if (agendaItems.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          ...agendaItems.asMap().entries.map((entry) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Row(
+                                children: [
+                                  Text('${entry.key + 1}.',
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFFD97706))),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(entry.value,
+                                        style:
+                                            const TextStyle(fontSize: 12)),
+                                  ),
+                                  InkWell(
+                                    onTap: () => setDialogState(() =>
+                                        agendaItems.removeAt(entry.key)),
+                                    child: const Icon(Icons.close,
+                                        size: 14, color: Color(0xFF9CA3AF)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   // Meeting Objective
-                  const SizedBox(height: 6),
                   VoiceTextField(
                     controller: objectiveController,
                     decoration: const InputDecoration(
@@ -680,7 +1061,6 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                   ),
                   const SizedBox(height: 12),
                   // Action Items
-                  const SizedBox(height: 6),
                   VoiceTextField(
                     controller: actionItemsController,
                     decoration: const InputDecoration(
@@ -693,7 +1073,6 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                   ),
                   const SizedBox(height: 12),
                   // Notes
-                  const SizedBox(height: 6),
                   VoiceTextField(
                     controller: notesController,
                     decoration: const InputDecoration(
@@ -736,6 +1115,64 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
             ),
           ),
           actions: [
+            // Copy Invite
+            if (_meeting.meetingType.isNotEmpty)
+              TextButton.icon(
+                onPressed: () {
+                  final updated = _meeting.copyWith(
+                    meetingType: selectedMeetingType,
+                    frequency: selectedFrequency,
+                    keyParticipants: selectedParticipants,
+                    durationHours: durationController.text.trim(),
+                    meetingObjective: objectiveController.text.trim(),
+                    actionItems: actionItemsController.text.trim(),
+                    notes: notesController.text.trim(),
+                    nextScheduledDate: nextDateController.text.trim().isEmpty
+                        ? null
+                        : nextDateController.text.trim(),
+                    status: selectedStatus,
+                    meetingTime: selectedTime,
+                    meetingLink: meetingLinkController.text.trim(),
+                    location: locationController.text.trim(),
+                    organizerEmail: organizerEmailController.text.trim(),
+                    attendeeEmails: attendeeEmails,
+                    reminderMinutes: reminderMinutes,
+                    agendaItems: agendaItems,
+                  );
+                  _copyInviteToClipboard(context, updated);
+                },
+                icon: const Icon(Icons.copy, size: 16),
+                label: const Text('Copy Invite'),
+              ),
+            // Add to Calendar
+            if (nextDateController.text.isNotEmpty)
+              TextButton.icon(
+                onPressed: () {
+                  final updated = _meeting.copyWith(
+                    meetingType: selectedMeetingType,
+                    frequency: selectedFrequency,
+                    keyParticipants: selectedParticipants,
+                    durationHours: durationController.text.trim(),
+                    meetingObjective: objectiveController.text.trim(),
+                    actionItems: actionItemsController.text.trim(),
+                    notes: notesController.text.trim(),
+                    nextScheduledDate: nextDateController.text.trim().isEmpty
+                        ? null
+                        : nextDateController.text.trim(),
+                    status: selectedStatus,
+                    meetingTime: selectedTime,
+                    meetingLink: meetingLinkController.text.trim(),
+                    location: locationController.text.trim(),
+                    organizerEmail: organizerEmailController.text.trim(),
+                    attendeeEmails: attendeeEmails,
+                    reminderMinutes: reminderMinutes,
+                    agendaItems: agendaItems,
+                  );
+                  _openGoogleCalendar(context, updated);
+                },
+                icon: const Icon(Icons.calendar_today, size: 16),
+                label: const Text('Add to Calendar'),
+              ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: const Text('Cancel'),
@@ -754,6 +1191,13 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                       ? null
                       : nextDateController.text.trim(),
                   status: selectedStatus,
+                  meetingTime: selectedTime,
+                  meetingLink: meetingLinkController.text.trim(),
+                  location: locationController.text.trim(),
+                  organizerEmail: organizerEmailController.text.trim(),
+                  attendeeEmails: attendeeEmails,
+                  reminderMinutes: reminderMinutes,
+                  agendaItems: agendaItems,
                 ));
                 Navigator.of(dialogContext).pop(true);
               },
@@ -764,6 +1208,29 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
       ),
     );
   }
+
+  void _copyInviteToClipboard(BuildContext context, MeetingRow meeting) {
+    final text = meeting.inviteText;
+    _copyToClipboard(text);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Meeting invitation copied to clipboard. Paste into email or chat.'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _openGoogleCalendar(BuildContext context, MeetingRow meeting) {
+    final url = meeting.googleCalendarUrl;
+    _openUrlInNewTab(url);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Opening Google Calendar to create event...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
 
   Future<List<String>?> _showParticipantDialog(
       BuildContext context, List<String> currentSelection) async {
@@ -1223,7 +1690,7 @@ class _ObjectiveCell extends StatelessWidget {
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Color(0xFF2563EB)),
+                        strokeWidth: 2, color: Color(0xFFD97706)),
                   )
                 : const Icon(Icons.refresh, size: 16, color: Color(0xFF64748B)),
             onPressed: isRegenerating ? null : onRegenerate,

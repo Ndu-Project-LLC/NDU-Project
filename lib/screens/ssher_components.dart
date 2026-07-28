@@ -92,8 +92,8 @@ class SsherSectionCard extends StatelessWidget {
  icon: const Icon(Icons.open_in_new, size: 16),
  label: const Text('Full View'),
  style: OutlinedButton.styleFrom(
- foregroundColor: Colors.blue[700],
- side: BorderSide(color: Colors.blue[300]!),
+ foregroundColor: const Color(0xFFB45309),
+ side: BorderSide(color: const Color(0xFFFCD34D)!),
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
  ),
@@ -316,7 +316,7 @@ class ActionButtons extends StatelessWidget {
  onTap: onEdit,
  child: const Padding(
  padding: EdgeInsets.all(4.0),
- child: Icon(Icons.edit_outlined, color: Colors.blue, size: 20),
+ child: Icon(Icons.edit_outlined, color: const Color(0xFFD97706), size: 20),
  ),
  ),
  const SizedBox(width: 6),

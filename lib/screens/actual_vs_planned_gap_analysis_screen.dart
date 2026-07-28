@@ -1376,7 +1376,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
               label: 'Milestones',
               value: '${projectData.keyMilestones.length}',
               icon: Icons.flag_outlined,
-              color: const Color(0xFF2563EB),
+              color: const Color(0xFFD97706),
               delta: 'planned checkpoints',
             ),
             LaunchKpiTile(

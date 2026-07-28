@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/widgets/landing_subpage_action_bar.dart';
 
 class UseCasesScreen extends StatelessWidget {
   const UseCasesScreen({super.key});
@@ -78,6 +79,8 @@ class UseCasesScreen extends StatelessWidget {
         ),
         const Spacer(),
         _backButton(context),
+        const SizedBox(width: 12),
+        const LandingSubpageActions(),
       ],
     );
   }
@@ -152,7 +155,7 @@ class UseCasesScreen extends StatelessWidget {
   Widget _industryGrid(BuildContext context, bool isDesktop) {
     final industries = [
       _Industry(icon: Icons.bolt, name: 'Energy', demo: 'Solar Farm Expansion', color: const Color(0xFFF59E0B), highlights: ['Business Case', 'WBS', 'Procurement', 'Contractor Mgmt', 'Schedule', 'Risk Register', 'Exec Dashboard']),
-      _Industry(icon: Icons.computer, name: 'Information Technology', demo: 'AI Customer Support Platform', color: const Color(0xFF3B82F6), highlights: ['Business Case', 'Frontend Planning', 'Sprint Planning', 'Kanban Board', 'Burndown Charts', 'Release Planning']),
+      _Industry(icon: Icons.computer, name: 'Information Technology', demo: 'AI Customer Support Platform', color: const Color(0xFFFBBF24), highlights: ['Business Case', 'Frontend Planning', 'Sprint Planning', 'Kanban Board', 'Burndown Charts', 'Release Planning']),
       _Industry(icon: Icons.local_hospital, name: 'Healthcare', demo: 'Hospital Imaging Center Construction', color: const Color(0xFFEF4444), highlights: ['Regulatory Planning', 'Equipment Procurement', 'Construction Tracking', 'Budget Control', 'Commissioning']),
       _Industry(icon: Icons.school, name: 'Education', demo: 'University Mobile Student App', color: const Color(0xFF10B981), highlights: ['Product Discovery', 'Sprint Planning', 'Stakeholder Mgmt', 'UAT']),
       _Industry(icon: Icons.factory, name: 'Manufacturing', demo: 'Smart Manufacturing Transformation', color: const Color(0xFF8B5CF6), highlights: ['Facility Upgrades', 'IoT Integration', 'ERP Integration', 'Agile Software Delivery']),
@@ -192,7 +195,7 @@ class UseCasesScreen extends StatelessWidget {
 
   Widget _methodologyGrid(BuildContext context, bool isDesktop) {
     final meths = [
-      _Methodology(name: 'Waterfall Projects', desc: 'Designed for engineering, construction, infrastructure, capital projects, and regulated industries.', demos: ['Solar Farm Expansion', 'Hospital Imaging Center Construction'], color: const Color(0xFF3B82F6)),
+      _Methodology(name: 'Waterfall Projects', desc: 'Designed for engineering, construction, infrastructure, capital projects, and regulated industries.', demos: ['Solar Farm Expansion', 'Hospital Imaging Center Construction'], color: const Color(0xFFFBBF24)),
       _Methodology(name: 'Agile Projects', desc: 'Built for software development, innovation, and product teams.', demos: ['AI Customer Support Platform', 'University Mobile Student App'], color: const Color(0xFF10B981)),
       _Methodology(name: 'Hybrid Projects', desc: 'Combines structured planning with iterative execution.', demos: ['Smart Manufacturing Transformation', 'Enterprise EHR Modernization'], color: const Color(0xFF8B5CF6)),
     ];
@@ -293,7 +296,7 @@ class UseCasesScreen extends StatelessWidget {
   Widget _demoGrid(BuildContext context, bool isDesktop) {
     final demos = [
       _Demo('Solar Farm Expansion', 'Energy', 'Waterfall', Icons.wb_sunny, const Color(0xFFF59E0B), ['Project Charter', 'AI-generated WBS', 'Schedule Builder', 'Procurement Planning', 'Contractor Management', 'Risk Dashboard', 'Executive Reporting']),
-      _Demo('AI Customer Support Platform', 'Information Technology', 'Agile', Icons.support_agent, const Color(0xFF3B82F6), ['Product Vision', 'Product Backlog', 'Sprint Planning', 'AI Story Generation', 'Sprint Boards', 'Sprint Reviews', 'Burndown Charts']),
+      _Demo('AI Customer Support Platform', 'Information Technology', 'Agile', Icons.support_agent, const Color(0xFFFBBF24), ['Product Vision', 'Product Backlog', 'Sprint Planning', 'AI Story Generation', 'Sprint Boards', 'Sprint Reviews', 'Burndown Charts']),
       _Demo('Hospital Imaging Center Construction', 'Healthcare', 'Waterfall', Icons.local_hospital, const Color(0xFFEF4444), ['Business Case', 'Scope Planning', 'Budget Management', 'Procurement', 'Construction Tracking', 'Equipment Installation', 'Project Closeout']),
       _Demo('University Student Mobile App', 'Education', 'Agile', Icons.school, const Color(0xFF10B981), ['User Personas', 'Product Roadmap', 'Sprint Planning', 'Feature Prioritization', 'User Testing', 'Release Management']),
       _Demo('Smart Manufacturing Transformation', 'Manufacturing', 'Hybrid', Icons.factory, const Color(0xFF8B5CF6), ['Facility Assessment', 'Engineering Planning', 'ERP Integration', 'IoT Dashboard', 'Agile Software Delivery', 'Executive Reporting']),

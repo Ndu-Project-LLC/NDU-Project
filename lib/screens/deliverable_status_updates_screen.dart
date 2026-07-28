@@ -276,10 +276,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: const Color(0xFFF0F9FF),
+ color: const Color(0xFFFFF7E6),
  borderRadius: BorderRadius.circular(10),
  ),
- child: Icon(icon, size: 18, color: const Color(0xFF0284C7)),
+ child: Icon(icon, size: 18, color: const Color(0xFFD97706)),
  ),
  const SizedBox(width: 14),
  Expanded(

@@ -40,7 +40,7 @@ class ProgressQuickActions extends StatelessWidget {
             icon: Icons.add,
             label: 'Add',
             onPressed: onAdd,
-            color: const Color(0xFF2563EB),
+            color: const Color(0xFFD97706),
           ),
           if (showRegenerate) ...[
             SizedBox(

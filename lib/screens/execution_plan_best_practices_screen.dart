@@ -57,10 +57,7 @@ class ExecutionPlanBestPracticesScreen extends StatelessWidget {
  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'execution_plan_best_practices'),
  onNext: () => PlanningPhaseNavigation.goToNext(context, 'execution_plan_best_practices'),
  onExportPdf: () => _exportPdf(context)),
- const SizedBox(height: 32),
- const SectionIntro(
- title: 'Execution Plan - Best Practices'),
- const SizedBox(height: 24),
+  const SizedBox(height: 24),
  const ExecutionPlanForm(
  title: 'Execution Plan - Best Practices',
  hintText:

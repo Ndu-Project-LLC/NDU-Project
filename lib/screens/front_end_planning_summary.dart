@@ -304,7 +304,7 @@ class _FrontEndPlanningSummaryScreenState
  ),
  CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFD97706),
  child: Text(
  (projectName.isNotEmpty ? projectName[0] : 'P')
  .toUpperCase(),
@@ -1209,7 +1209,20 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  if (!context.mounted) return;
 
  if (newItems.isNotEmpty) {
+ final remainingSlots = ProjectDataModel.maxProjectGoals - currentList.length;
+ if (remainingSlots <= 0) {
+ if (context.mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text('Maximum of 3 project goals allowed.'),
+ backgroundColor: Colors.red,
+ ),
+ );
+ }
+ return;
+ }
  final newGoals = newItems
+ .take(remainingSlots)
  .map((i) => ProjectGoal(name: i.title, description: i.description))
  .toList();
  final updatedList = List<ProjectGoal>.from(currentList)
@@ -1241,6 +1254,18 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  BuildContext context, String title, List<ProjectGoal> currentList) async {
  final newItem = await _showItemDialog(context, title: 'Add $title');
  if (newItem != null) {
+ final remainingSlots = ProjectDataModel.maxProjectGoals - currentList.length;
+ if (remainingSlots <= 0) {
+ if (context.mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text('Maximum of 3 project goals allowed.'),
+ backgroundColor: Colors.red,
+ ),
+ );
+ }
+ return;
+ }
  final updatedList = List<ProjectGoal>.from(currentList)
  ..add(
  ProjectGoal(name: newItem.title, description: newItem.description));
@@ -1479,7 +1504,7 @@ class _GoalsCard extends StatelessWidget {
  const SizedBox(width: 8),
  IconButton(
  onPressed: onAdd,
- icon: const Icon(Icons.add_circle, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.add_circle, color: Color(0xFFD97706)),
  tooltip: 'Add Item',
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(),
@@ -1589,12 +1614,12 @@ class _BottomOverlay extends StatelessWidget {
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: const [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFD97706)),
  SizedBox(width: 10),
  Text('AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB))),
+ color: Color(0xFFD97706))),
  SizedBox(width: 12),
  Text(
  'Generate a summary of all front end planning activities.',

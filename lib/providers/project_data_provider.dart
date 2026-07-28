@@ -461,8 +461,75 @@ class ProjectDataProvider extends ChangeNotifier {
   ProjectDataModel _decodeProjectData(
       Map<String, dynamic> source, String projectId) {
     final parsed = ProjectDataModel.fromJson(source);
-    return ProjectIntelligenceService.rebuildActivityLog(
-      parsed.copyWith(projectId: projectId),
+    final withProjectId = parsed.copyWith(projectId: projectId);
+    // One-time migration: backfill requirementType (sourceSection tag) on
+    // existing risks that have no source-section tag.
+    final migrated = _migrateRiskSourceSections(withProjectId);
+    return ProjectIntelligenceService.rebuildActivityLog(migrated);
+  }
+
+  /// One-time migration: backfills `requirementType` on existing risks that
+  /// have no source-section tag. Uses category heuristics to infer the
+  /// originating section.
+  ProjectDataModel _migrateRiskSourceSections(ProjectDataModel data) {
+    final items = data.frontEndPlanning.riskRegisterItems;
+    if (items.isEmpty) return data;
+    bool changed = false;
+    final migrated = items.map((r) {
+      final rt = r.requirementType.trim();
+      if (rt.isNotEmpty) return r;
+      final cat = r.category.trim().toLowerCase();
+      String inferred;
+      if (cat == 'safety' ||
+          cat == 'security' ||
+          cat == 'health' ||
+          cat == 'environment' ||
+          cat == 'regulatory') {
+        inferred = 'SSHER';
+      } else if (cat.contains('interface')) {
+        inferred = 'Interface Management';
+      } else if (cat.contains('design')) {
+        inferred = 'Design Planning';
+      } else if (cat.contains('quality')) {
+        inferred = 'Quality';
+      } else if (cat.contains('execution') || cat.contains('tracking')) {
+        inferred = 'Risk Tracking Workspace';
+      } else {
+        inferred = 'Front End Planning';
+      }
+      changed = true;
+      return RiskRegisterItem(
+        riskName: r.riskName,
+        description: r.description,
+        category: r.category,
+        requirement: r.requirement,
+        requirementType: inferred,
+        impactLevel: r.impactLevel,
+        likelihood: r.likelihood,
+        mitigationStrategy: r.mitigationStrategy,
+        discipline: r.discipline,
+        projectRole: r.projectRole,
+        owner: r.owner,
+        status: r.status,
+        probabilityNumeric: r.probabilityNumeric,
+        costImpactMin: r.costImpactMin,
+        costImpactMostLikely: r.costImpactMostLikely,
+        costImpactMax: r.costImpactMax,
+        scheduleImpactMin: r.scheduleImpactMin,
+        scheduleImpactMostLikely: r.scheduleImpactMostLikely,
+        scheduleImpactMax: r.scheduleImpactMax,
+        controlAccountId: r.controlAccountId,
+        cbsId: r.cbsId,
+        riskType: r.riskType,
+        responseStrategy: r.responseStrategy,
+        residualProbability: r.residualProbability,
+        residualCostImpact: r.residualCostImpact,
+      );
+    }).toList();
+    if (!changed) return data;
+    return data.copyWith(
+      frontEndPlanning:
+          data.frontEndPlanning.copyWith(riskRegisterItems: migrated),
     );
   }
 

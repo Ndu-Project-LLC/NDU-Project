@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 class BulletPointEditor extends StatefulWidget {
   final String title;
   final String? subtitle;
@@ -70,7 +71,16 @@ class _BulletPointEditorState extends State<BulletPointEditor> {
     });
   }
 
-  void _removeItem(int index) {
+  Future<void> _removeItem(int index) async {
+    final label = _controllers[index].text.trim();
+    if (label.isNotEmpty) {
+      final confirmed = await showDeleteConfirmationDialog(
+        context,
+        title: 'Remove Item',
+        itemLabel: label,
+      );
+      if (!confirmed) return;
+    }
     if (_controllers.length <= 1) {
       _controllers[0].clear();
       _updateParent();
@@ -140,7 +150,7 @@ class _BulletPointEditorState extends State<BulletPointEditor> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+                        borderSide: const BorderSide(color: Color(0xFFFBBF24)),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 12),
@@ -169,7 +179,7 @@ class _BulletPointEditorState extends State<BulletPointEditor> {
               icon: const Icon(Icons.add, size: 16),
               label: const Text('Add item'),
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF2563EB),
+                foregroundColor: const Color(0xFFD97706),
                 textStyle: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),

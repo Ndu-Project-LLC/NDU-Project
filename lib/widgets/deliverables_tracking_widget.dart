@@ -11,6 +11,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 /// Deliverables Tracking sub-page with Timeline view and full CRUD
 class DeliverablesTrackingWidget extends StatefulWidget {
   const DeliverablesTrackingWidget({
@@ -40,7 +41,13 @@ class _DeliverablesTrackingWidgetState
     widget.onDeliverablesChanged(updatedList);
   }
 
-  void _deleteDeliverable(int index) {
+  Future<void> _deleteDeliverable(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Deliverable',
+      itemLabel: _deliverables[index].title,
+    );
+    if (!confirmed) return;
     final deleted = _deliverables[index];
     final updated = List<DeliverableRow>.from(_deliverables);
     updated.removeAt(index);
@@ -59,7 +66,7 @@ class _DeliverablesTrackingWidgetState
           children: [
             Icon(Icons.delete_outline, color: Colors.white, size: 18),
             SizedBox(width: 8),
-            Text('Deliverable deleted'),
+            Text('Deliverable deleted successfully.'),
             Spacer(),
           ],
         ),
@@ -676,7 +683,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
   Color _getStatusColor(String status) {
     return switch (status) {
       'Completed' => const Color(0xFF10B981),
-      'In Progress' => const Color(0xFF2563EB),
+      'In Progress' => const Color(0xFFD97706),
       'At Risk' => const Color(0xFFF59E0B),
       'Blocked' => const Color(0xFFEF4444),
       _ => const Color(0xFF9CA3AF),

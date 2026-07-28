@@ -20,6 +20,7 @@ import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart'
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
 
 class WBSBuilderScreen extends StatefulWidget {
   const WBSBuilderScreen({super.key});
@@ -170,11 +171,12 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                   treeDepthActual),
               const SizedBox(height: 24),
               // ── Tree View ───────────────────────────────────────────
-              if (provider.viewModeSimple)
-                _buildSimpleView(context, provider, wbs, fm)
-              else
-                _buildAdvancedView(
-                    context, provider, costProvider, wbs, fm, counts),
+              (provider.viewMode == WBSViewMode.advanced)
+                  ? _buildAdvancedView(
+                      context, provider, costProvider, wbs, fm, counts)
+                  : (provider.viewMode == WBSViewMode.simple)
+                      ? _buildSimpleView(context, provider, wbs, fm)
+                      : _buildTableView(context, provider, wbs, fm),
             ],
           ),
         );
@@ -320,16 +322,19 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                   ),
                 ),
               // View mode toggle
-              SegmentedButton<bool>(
+              SegmentedButton<WBSViewMode>(
                 segments: const [
                   ButtonSegment(
-                      value: false,
+                      value: WBSViewMode.advanced,
                       label: Text('Advanced', style: TextStyle(fontSize: 12))),
                   ButtonSegment(
-                      value: true,
+                      value: WBSViewMode.simple,
                       label: Text('Simple', style: TextStyle(fontSize: 12))),
+                  ButtonSegment(
+                      value: WBSViewMode.table,
+                      label: Text('Table', style: TextStyle(fontSize: 12))),
                 ],
-                selected: {provider.viewModeSimple},
+                selected: {provider.viewMode},
                 onSelectionChanged: (v) => provider.setViewMode(v.first),
                 style: SegmentedButton.styleFrom(
                   padding:
@@ -338,7 +343,8 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                   textStyle: const TextStyle(fontSize: 12),
                 ),
               ),
-              if (provider.viewModeSimple) ...[
+              if (provider.viewMode == WBSViewMode.simple ||
+                  provider.viewMode == WBSViewMode.advanced) ...[
                 const SizedBox(width: 8),
                 SegmentedButton<_SimpleAxis>(
                   segments: const [
@@ -367,12 +373,11 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
               const SizedBox(width: 12),
               FilledButton.icon(
                 onPressed: () {
-                  if (wbs.level0.children.length >= 3) {
-                    _showLevel1CapMessage(context);
+                  if (!_canAddLevel1(wbs)) {
+                    _showLevel1CapMessage(context, wbs: wbs);
                     return;
                   }
-                  _showAddNodeDialog(
-                      context, provider, 1, fm.level1Label,
+                  _showAddNodeDialog(context, provider, 1, fm.level1Label,
                       parentId: wbs.level0.id);
                 },
                 icon: const Icon(Icons.add, size: 16),
@@ -430,7 +435,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
       return const SizedBox.shrink();
     final color = switch (methodology) {
       'agile' => const Color(0xFF7C3AED),
-      'waterfall' => const Color(0xFF2563EB),
+      'waterfall' => const Color(0xFFD97706),
       _ => const Color(0xFF059669),
     };
     final label = switch (methodology) {
@@ -777,18 +782,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
   }
 
   Widget _buildSimpleLevelHint(WBSFramework fm) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE4E7EC)),
-      ),
-      child: Text(
-        'Level 0 = Project · Level 1 = ${fm.level1Label} · Level 2 = ${fm.level2Label} · ... up to Level ${fm.maxDepth}',
-        style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 
   Widget _buildSimpleEmptyState(
@@ -819,12 +813,11 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
             children: [
               FilledButton(
                 onPressed: () {
-                  if (provider.wbs!.level0.children.length >= 3) {
-                    _showLevel1CapMessage(context);
+                  if (!_canAddLevel1(provider.wbs!)) {
+                    _showLevel1CapMessage(context, wbs: provider.wbs);
                     return;
                   }
-                  _showAddNodeDialog(
-                      context, provider, 1, fm.level1Label,
+                  _showAddNodeDialog(context, provider, 1, fm.level1Label,
                       parentId: provider.wbs!.level0.id);
                 },
                 style: FilledButton.styleFrom(
@@ -901,6 +894,138 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
   ) {
     return _buildRecursiveTree(
         context, provider, costProvider, wbs.level0, fm, 0);
+  }
+
+  /// Flat table view showing all Level 1 and Level 2 nodes.
+  Widget _buildTableView(
+    BuildContext context,
+    WBSProvider provider,
+    WBS wbs,
+    WBSFramework fm,
+  ) {
+    final children = wbs.level0.children;
+    if (children.isEmpty) {
+      return _buildEmptyState(context, provider, fm);
+    }
+
+    final allRows = <Map<String, dynamic>>[];
+    for (final l1 in children) {
+      allRows.add({
+        'level': 'L1',
+        'code': l1.code,
+        'name': l1.name,
+        'description': l1.description ?? '',
+        'children': l1.children.length,
+        'depth': 0,
+      });
+      for (final l2 in l1.children) {
+        allRows.add({
+          'level': 'L2',
+          'code': l2.code,
+          'name': l2.name,
+          'description': l2.description ?? '',
+          'children': l2.children.length,
+          'depth': 1,
+        });
+      }
+    }
+
+    return SingleChildScrollView(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE4E7EC)),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: DataTable(
+            headingRowColor: WidgetStateProperty.all(const Color(0xFFF9FAFB)),
+            columnSpacing: 24,
+            columns: [
+              DataColumn(
+                label: Text('Level',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        color: Color(0xFF6B7280))),
+              ),
+              DataColumn(
+                label: Text('Code',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        color: Color(0xFF6B7280))),
+              ),
+              DataColumn(
+                label: Text('Name',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        color: Color(0xFF6B7280))),
+              ),
+              DataColumn(
+                label: Text('Description',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        color: Color(0xFF6B7280))),
+              ),
+              DataColumn(
+                numeric: true,
+                label: Text('Children',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                        color: Color(0xFF6B7280))),
+              ),
+            ],
+            rows: allRows.map((row) {
+              final isL1 = row['level'] == 'L1';
+              return DataRow(
+                color: WidgetStateProperty.resolveWith<Color?>((_) {
+                  if (isL1) return const Color(0xFFFFF8E1);
+                  return null;
+                }),
+                cells: [
+                  DataCell(Text(row['level'] as String,
+                      style: TextStyle(
+                        fontWeight: isL1 ? FontWeight.w600 : FontWeight.w400,
+                        fontSize: 12,
+                        color: Color(0xFF6B7280),
+                      ))),
+                  DataCell(Text(row['code'] as String,
+                      style: TextStyle(
+                        fontWeight: isL1 ? FontWeight.w600 : FontWeight.w400,
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                        color: Color(0xFF1A1D1F),
+                      ))),
+                  DataCell(Text(row['name'] as String,
+                      style: TextStyle(
+                        fontWeight: isL1 ? FontWeight.w600 : FontWeight.w500,
+                        fontSize: 13,
+                        color: Color(0xFF1A1D1F),
+                      ))),
+                  DataCell(Text(row['description'] as String,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6B7280),
+                      ))),
+                  DataCell(Text('${row['children']}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6B7280),
+                      ))),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
   }
 
   // ───────────────────────────────────────────────────────────────────────
@@ -1252,7 +1377,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
               // Badges row
               if (node.aiGenerated) ...[
                 const SizedBox(width: 6),
-                _buildBadge('AI', const Color(0xFF3B82F6), 8),
+                _buildBadge('AI', const Color(0xFFFBBF24), 8),
               ],
               if (node.isWorkPackage == true && !isRoot) ...[
                 const SizedBox(width: 4),
@@ -1271,21 +1396,21 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                      color: const Color(0xFFD97706).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
                           color:
-                              const Color(0xFF2563EB).withValues(alpha: 0.25)),
+                              const Color(0xFFD97706).withValues(alpha: 0.25)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.attach_money,
-                            size: 10, color: Color(0xFF2563EB)),
+                            size: 10, color: Color(0xFFD97706)),
                         const SizedBox(width: 2),
                         Text('$linkedCount',
                             style: const TextStyle(
-                                color: Color(0xFF2563EB),
+                                color: Color(0xFFD97706),
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700)),
                       ],
@@ -1555,12 +1680,11 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
             children: [
               FilledButton(
                 onPressed: () {
-                  if (provider.wbs!.level0.children.length >= 3) {
-                    _showLevel1CapMessage(context);
+                  if (!_canAddLevel1(provider.wbs!)) {
+                    _showLevel1CapMessage(context, wbs: provider.wbs);
                     return;
                   }
-                  _showAddNodeDialog(
-                      context, provider, 1, fm.level1Label,
+                  _showAddNodeDialog(context, provider, 1, fm.level1Label,
                       parentId: provider.wbs!.level0.id);
                 },
                 style: FilledButton.styleFrom(
@@ -1595,9 +1719,8 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     String levelLabel, {
     String? parentId,
   }) {
-    if (level == 1 && provider.wbs != null &&
-        provider.wbs!.level0.children.length >= 3) {
-      _showLevel1CapMessage(context);
+    if (level == 1 && provider.wbs != null && !_canAddLevel1(provider.wbs!)) {
+      _showLevel1CapMessage(context, wbs: provider.wbs);
       return;
     }
     final nameCtrl = TextEditingController();
@@ -1895,10 +2018,9 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                       FilledButton(
                         onPressed: () {
                           final wbs = provider.wbs;
-                          if (wbs != null &&
-                              wbs.level0.children.length >= 3) {
+                          if (wbs != null && !_canAddLevel1(wbs)) {
                             Navigator.pop(ctx);
-                            _showLevel1CapMessage(context);
+                            _showLevel1CapMessage(context, wbs: wbs);
                             return;
                           }
                           provider.addNodesFromTemplate(parentId, [t]);
@@ -1932,11 +2054,24 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
 
   // ─── Level 1 cap ────────────────────────────────────────────────────
 
-  void _showLevel1CapMessage(BuildContext context) {
+  bool _canAddLevel1(WBS wbs) {
+    if (wbs.framework == WBSFramework.waterfallDiscipline &&
+        wbs.methodology == ProjectMethodology.waterfall) {
+      return true;
+    }
+    return wbs.level0.children.length < 3;
+  }
+
+  void _showLevel1CapMessage(BuildContext context, {WBS? wbs}) {
+    final isDisciplineUnlimited = wbs != null &&
+        wbs.framework == WBSFramework.waterfallDiscipline &&
+        wbs.methodology == ProjectMethodology.waterfall;
+    final message = isDisciplineUnlimited
+        ? 'Discipline-based WBS allows more than 3 top-level items.'
+        : 'Maximum 3 top-level WBS items — these become the 3 goals. Remove one to add another.';
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-            'Maximum 3 top-level WBS items — these become the 3 goals. Remove one to add another.'),
+      SnackBar(
+        content: Text(message),
         backgroundColor: Color(0xFFEF4444),
       ),
     );
@@ -1952,6 +2087,16 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     try {
       final fm = wbs.framework;
       final existingNames = wbs.level0.children.map((n) => n.name).join(', ');
+      final projectData = ProjectDataHelper.getData(context);
+      final goals = projectData.projectGoals;
+      final goalsContext = goals.isNotEmpty
+          ? 'Project goals:\n${goals.map((g) => "- ${g.name}: ${g.description}").join("\n")}'
+          : '';
+      final planningGoals = projectData.planningGoals;
+      final planningGoalsContext = planningGoals
+              .any((g) => g.title.trim().isNotEmpty)
+          ? 'Planning goals:\n${planningGoals.where((g) => g.title.trim().isNotEmpty).map((g) => "- ${g.title}: ${g.description}").join("\n")}'
+          : '';
       final prompt = '''
 You are a WBS (Work Breakdown Structure) expert. Generate 3-5 Level 1 ${fm.level1Label} nodes for a "${fm.label}" WBS.
 
@@ -1962,6 +2107,8 @@ Level 2 label: ${fm.level2Label}
 Level 3 label: ${fm.level3Label}
 Existing nodes: ${existingNames.isEmpty ? '(none)' : existingNames}
 Methodology: ${wbs.methodology.label}
+${goalsContext}
+${planningGoalsContext}
 
 Output format: pipe-delimited list of node names, one per line.
 Each line: NodeName|Level 1 description
@@ -1973,6 +2120,7 @@ Building Structure|Structural envelope and shell
 Guidelines:
 - Use deliverable-based names (nouns not verbs)
 - Be specific to the project context
+- Align with the project goals listed above
 - Suggest 3-5 nodes
 - Use a pipe separator: name|description
 ''';
@@ -2015,7 +2163,12 @@ Guidelines:
       }
 
       int added = 0;
-      final maxToAdd = 3 - wbs.level0.children.length;
+      final isDisciplineUnlimited =
+          wbs.framework == WBSFramework.waterfallDiscipline &&
+              wbs.methodology == ProjectMethodology.waterfall;
+      final maxToAdd = isDisciplineUnlimited
+          ? 5 - wbs.level0.children.length
+          : 3 - wbs.level0.children.length;
       for (final line in lines.take(maxToAdd > 0 ? maxToAdd : 0)) {
         final parts = line.split('|');
         if (parts.length >= 2) {
@@ -2084,21 +2237,21 @@ Guidelines:
       margin: const EdgeInsets.only(top: 4, bottom: 4),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: const Color(0xFFFFF7E6),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-            color: const Color(0xFF2563EB).withValues(alpha: 0.25), width: 0.8),
+            color: const Color(0xFFD97706).withValues(alpha: 0.25), width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.link, size: 12, color: Color(0xFF2563EB)),
+              const Icon(Icons.link, size: 12, color: Color(0xFFD97706)),
               const SizedBox(width: 6),
               const Text('LINKED COST LINES',
                   style: TextStyle(
-                      color: Color(0xFF2563EB),
+                      color: Color(0xFFD97706),
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8)),

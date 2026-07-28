@@ -71,7 +71,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
     _ActivityItem('Sarah Chen', 'completed', 'NDU-1042: Login validation',
         '12m ago', Icons.check_circle, Colors.green),
     _ActivityItem('Marcus Reed', 'moved', 'NDU-1038: API rate limiting',
-        '34m ago', Icons.swap_horiz, Colors.blue),
+        '34m ago', Icons.swap_horiz, const Color(0xFFD97706)),
     _ActivityItem('Kaz AI', 'flagged', 'Velocity drift detected on Sprint 24',
         '1h ago', Icons.auto_awesome, _kAccent),
     _ActivityItem('Priya Nair', 'commented on', 'NDU-1031: Dashboard widgets',
@@ -429,8 +429,8 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
         sublabel:
             '${(_sprintCompletion * 100).toInt()}% of sprint goal',
         icon: Icons.task_alt,
-        accent: Colors.blue,
-        accentBg: const Color(0xFFDBEAFE),
+        accent: const Color(0xFFD97706),
+        accentBg: const Color(0xFFFFF7E6),
         trend: '6 in progress',
         trendUp: true,
       ),
@@ -606,7 +606,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
               _chip(
                   '${_storiesTotal - _storiesCompleted} Remaining', _kAccent),
               const SizedBox(width: 8),
-              _chip('Day $_sprintDay/$_sprintTotalDays', Colors.blue),
+              _chip('Day $_sprintDay/$_sprintTotalDays', const Color(0xFFD97706)),
               const Spacer(),
               Text(
                   'ETA: ${DateTime.now().add(Duration(days: _sprintTotalDays - _sprintDay)).day}/${DateTime.now().month}',

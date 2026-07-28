@@ -18,16 +18,16 @@ class WBSProvider extends ChangeNotifier {
   WBS? _wbs;
   bool _setupComplete = false;
   bool _isLoadingFromStorage = true;
-  bool _viewModeSimple = false;
+  WBSViewMode _viewMode = WBSViewMode.advanced;
   String _activeProjectId = 'default';
 
   WBS? get wbs => _wbs;
   bool get setupComplete => _setupComplete;
   bool get isLoadingFromStorage => _isLoadingFromStorage;
-  bool get viewModeSimple => _viewModeSimple;
+  WBSViewMode get viewMode => _viewMode;
 
-  void setViewMode(bool simple) {
-    _viewModeSimple = simple;
+  void setViewMode(WBSViewMode mode) {
+    _viewMode = mode;
     notifyListeners();
     _saveToStorage();
   }
@@ -47,7 +47,12 @@ class WBSProvider extends ChangeNotifier {
         final data = jsonDecode(raw) as Map<String, dynamic>;
         final state = data['state'] as Map<String, dynamic>? ?? {};
         _setupComplete = state['setupComplete'] as bool? ?? false;
-        _viewModeSimple = state['viewModeSimple'] as bool? ?? false;
+        _viewMode = state['viewMode'] != null
+          ? WBSViewMode.values.firstWhere(
+              (m) => m.name == state['viewMode'],
+              orElse: () => WBSViewMode.advanced,
+            )
+          : WBSViewMode.advanced;
         if (state['wbs'] != null) {
           _wbs = _wbsFromJson(state['wbs'] as Map<String, dynamic>);
           _activeProjectId =
@@ -77,7 +82,12 @@ class WBSProvider extends ChangeNotifier {
       final data = jsonDecode(raw) as Map<String, dynamic>;
       final state = data['state'] as Map<String, dynamic>? ?? {};
       _setupComplete = state['setupComplete'] as bool? ?? false;
-      _viewModeSimple = state['viewModeSimple'] as bool? ?? _viewModeSimple;
+      _viewMode = state['viewMode'] != null
+          ? WBSViewMode.values.firstWhere(
+              (m) => m.name == state['viewMode'],
+              orElse: () => _viewMode,
+            )
+          : _viewMode;
       _wbs = state['wbs'] != null
           ? _wbsFromJson(state['wbs'] as Map<String, dynamic>)
           : null;
@@ -95,7 +105,7 @@ class WBSProvider extends ChangeNotifier {
         'state': {
           'wbs': _wbs != null ? _wbsToJson(_wbs!) : null,
           'setupComplete': _setupComplete,
-          'viewModeSimple': _viewModeSimple,
+          'viewMode': _viewMode.name,
         },
       };
       final key = _storageKeyForProject(_wbs?.projectId ?? _activeProjectId);

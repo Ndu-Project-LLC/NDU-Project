@@ -302,9 +302,10 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  void _close() {
  if (Navigator.of(context).canPop()) {
  Navigator.of(context).pop();
- } else {
- context.go('/${widget.returnTo}');
  }
+ // After onboarding, navigate to pricing page so the user can
+ // choose a subscription plan
+ context.go('/${AppRoutes.pricing}');
  }
 
  String _reviewInviteSummary() {

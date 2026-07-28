@@ -26,6 +26,7 @@ import 'package:ndu_project/screens/execution_plan_interface_management_screen.d
 import 'package:ndu_project/screens/execution_plan_communication_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_overview_screen.dart';
+import 'package:ndu_project/screens/execution_quality_tracking_screen.dart';
 import 'package:ndu_project/screens/design_planning_screen.dart';
 import 'package:ndu_project/screens/planning_technology_screen.dart';
 import 'package:ndu_project/screens/interface_management_screen.dart';
@@ -88,6 +89,11 @@ class PlanningPhaseNavigation {
       builder: (_) => const PlanningRequirementsScreen(),
     ),
     PlanningPage(
+      id: 'organization_base_plan',
+      title: 'Base Organisation Plan',
+      builder: (_) => const OrganizationBasePlanScreen(),
+    ),
+    PlanningPage(
       id: 'organization_roles_responsibilities',
       title: 'Roles and Responsibilities',
       builder: (_) => const OrganizationRolesResponsibilitiesScreen(),
@@ -128,24 +134,19 @@ class PlanningPhaseNavigation {
       builder: (_) => const QualityManagementScreen(),
     ),
     PlanningPage(
-      id: 'design',
-      title: 'Design Planning',
-      builder: (_) => const DesignPlanningScreen(),
-    ),
-    PlanningPage(
       id: 'technology',
       title: 'Technology Planning',
       builder: (_) => const PlanningTechnologyScreen(),
     ),
     PlanningPage(
-      id: 'interface_management',
-      title: 'Interface Management',
-      builder: (_) => const InterfaceManagementScreen(),
+      id: 'design',
+      title: 'Design Planning',
+      builder: (_) => const DesignPlanningScreen(),
     ),
-    // Agile Delivery Model Section — before Execution Plan
+    // Agile Delivery Section — before Execution Plan
     PlanningPage(
       id: 'agile_delivery_model',
-      title: 'Agile Delivery Model',
+      title: 'Agile Delivery',
       builder: (_) => const AgileDeliveryModelScreen(),
     ),
     PlanningPage(
@@ -162,11 +163,6 @@ class PlanningPhaseNavigation {
       id: 'agile_backlog_governance',
       title: 'Backlog Governance',
       builder: (_) => const AgileBacklogGovernanceScreen(),
-    ),
-    PlanningPage(
-      id: 'agile_team_structure',
-      title: 'Agile Team Structure',
-      builder: (_) => const AgileTeamStructureScreen(),
     ),
     PlanningPage(
       id: 'agile_kanban_config',
@@ -189,11 +185,6 @@ class PlanningPhaseNavigation {
       builder: (_) => const AgileAcceptanceCriteriaScreen(),
     ),
     PlanningPage(
-      id: 'agile_sprint_calendar',
-      title: 'Sprint Cadence & Calendar',
-      builder: (_) => const AgileSprintCalendarScreen(),
-    ),
-    PlanningPage(
       id: 'agile_map_out',
       title: 'Agile Map Out',
       builder: (_) => const DeliverableRoadmapAgileMapOutScreen(),
@@ -213,6 +204,11 @@ class PlanningPhaseNavigation {
       id: 'execution_plan',
       title: 'Execution Plan Overview',
       builder: (_) => const ExecutionPlanScreen(),
+    ),
+    PlanningPage(
+      id: 'execution_quality_tracking',
+      title: 'Execution Quality Tracking',
+      builder: (_) => const ExecutionQualityTrackingScreen(),
     ),
     PlanningPage(
       id: 'execution_plan_strategy',
@@ -326,6 +322,16 @@ class PlanningPhaseNavigation {
       id: 'procurement',
       title: 'Procurement',
       builder: (_) => const PlanningProcurementScreen(),
+    ),
+    PlanningPage(
+      id: 'interface_management',
+      title: 'Interface Management',
+      builder: (_) => const InterfaceManagementScreen(),
+    ),
+    PlanningPage(
+      id: 'agile_delivery_model',
+      title: 'Agile Delivery',
+      builder: (_) => const AgileDeliveryModelScreen(),
     ),
     PlanningPage(
       id: 'schedule',

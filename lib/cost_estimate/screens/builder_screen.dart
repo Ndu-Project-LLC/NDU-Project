@@ -318,13 +318,13 @@ class _BuilderScreenState extends State<BuilderScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 1),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                          color: const Color(0xFFFBBF24).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
                           'AI',
                           style: TextStyle(
-                            color: Color(0xFF3B82F6),
+                            color: Color(0xFFFBBF24),
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
                           ),

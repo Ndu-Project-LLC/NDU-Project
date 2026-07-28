@@ -44,7 +44,7 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
   bool _isLoading = true;
 
   // Hub metrics loaded from prior phases
-  int _totalStaff = 0;
+  int _totalPersonnel = 0;
   int _totalRoles = 0;
   int _upcomingMeetings = 0;
   int _activeTrainings = 0;
@@ -90,7 +90,7 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
             .get();
         final staffData = staffDoc.data() ?? {};
         final rows = staffData['staffingRows'] as List? ?? [];
-        _totalStaff = rows.length;
+        _totalPersonnel = rows.length;
       } catch (_) {}
 
       // Load roles from planning phase (central project doc)
@@ -517,8 +517,8 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
       final isWide = constraints.maxWidth > 900;
       final metrics = [
         _MetricCard(
-          label: 'Total Staff',
-          value: '$_totalStaff',
+          label: 'Total Personnel',
+          value: '$_totalPersonnel',
           icon: Icons.badge_outlined,
           color: const Color(0xFF4F46E5),
         ),
@@ -851,10 +851,10 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
+          colors: [Color(0xFFFFF7E6), Color(0xFFFFF7E6)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF93C5FD)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -864,11 +864,11 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+                  color: const Color(0xFFD97706).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.auto_awesome,
-                    color: Color(0xFF1D4ED8), size: 22),
+                    color: Color(0xFFD97706), size: 22),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -899,7 +899,7 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Icon(Icons.check_circle,
-                        size: 16, color: Color(0xFF2563EB)),
+                        size: 16, color: Color(0xFFD97706)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(

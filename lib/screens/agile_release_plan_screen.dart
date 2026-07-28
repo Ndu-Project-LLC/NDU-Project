@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
@@ -109,7 +110,13 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
     );
   }
 
-  void _deletePlan(int index) {
+  Future<void> _deletePlan(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Release Plan',
+      itemLabel: _plans[index].releaseLabel.isNotEmpty ? _plans[index].releaseLabel : null,
+    );
+    if (!confirmed) return;
     final pid = _projectId;
     final plan = _plans[index];
     if (pid == null) return;
@@ -362,7 +369,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
         borderRadius: BorderRadius.circular(4),
       ),
       child:
-          Text(text, style: TextStyle(fontSize: 11, color: Colors.blue[700])),
+          Text(text, style: TextStyle(fontSize: 11, color: const Color(0xFFB45309))),
     );
   }
 
@@ -382,7 +389,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
       case 'Approved':
         return Colors.green[700]!;
       case 'Ready':
-        return Colors.blue[700]!;
+        return const Color(0xFFB45309)!;
       default:
         return Colors.grey[700]!;
     }

@@ -35,7 +35,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     ('feed', 'Auto-feed costs', Icons.auto_awesome,
         'Propose cost lines from project context', LightModeColors.accent),
     ('rates', 'Suggest rates', Icons.trending_up,
-        'Rate range for a role/industry', const Color(0xFF3B82F6)),
+        'Rate range for a role/industry', const Color(0xFFFBBF24)),
     ('reduce', 'Reduce costs', Icons.shield,
         '3-5 cost-reduction levers', const Color(0xFF16A34A)),
     ('gaps', 'Find gaps', Icons.search,
@@ -145,13 +145,13 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                  color: const Color(0xFFFBBF24).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
                   'KAZ AI',
                   style: TextStyle(
-                    color: Color(0xFF3B82F6),
+                    color: Color(0xFFFBBF24),
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
@@ -412,13 +412,13 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 1),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                        color: const Color(0xFFFBBF24).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
                         'KAZ AI',
                         style: TextStyle(
-                          color: Color(0xFF3B82F6),
+                          color: Color(0xFFFBBF24),
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),

@@ -1254,7 +1254,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
  color: isAuto
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF7E6)
  : const Color(0xFFF3F4F6),
  borderRadius: BorderRadius.circular(4),
  ),
@@ -1263,7 +1263,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  fontSize: 9,
  fontWeight: FontWeight.w600,
  color: isAuto
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFD97706)
  : const Color(0xFF6B7280))),
  ),
  ),
@@ -1613,7 +1613,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildTypeBadge(String type) {
  final isSoftware = type.toLowerCase().contains('software');
  final color =
- isSoftware ? const Color(0xFF2563EB) : const Color(0xFFD97706);
+ isSoftware ? const Color(0xFFD97706) : const Color(0xFFD97706);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(

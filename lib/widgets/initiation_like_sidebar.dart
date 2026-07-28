@@ -42,6 +42,7 @@ import 'package:ndu_project/screens/execution_plan_stakeholder_identification_sc
 import 'package:ndu_project/screens/execution_plan_interface_management_screen.dart';
 import 'package:ndu_project/screens/execution_plan_communication_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
+import 'package:ndu_project/screens/execution_quality_tracking_screen.dart';
 import 'package:ndu_project/screens/planning_technology_screen.dart';
 import 'package:ndu_project/screens/team_management_screen.dart';
 import 'package:ndu_project/screens/planning_contracting_screen.dart';
@@ -197,6 +198,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   };
 
   static const Set<String> _organizationPlanLabels = {
+    'Organization Plan - Base Plan',
     'Organization Plan - Roles & Responsibilities',
     'Organization Plan - RACI Matrix',
     'Organization Plan - Staffing Plan',
@@ -207,6 +209,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   static const Set<String> _executionPlanLabels = {
     'Execution Plan Overview',
+    'Execution Quality Tracking',
     'Execution Work Packages',
     'Executive Plan Strategy',
     'Execution Plan Details',
@@ -226,6 +229,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   static const Set<String> _technologyPlanningLabels = {
     'Technology Planning Overview',
+    'Technology Planning',
   };
 
   static const Set<String> _costEstimateLabels = {
@@ -724,6 +728,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       'deliverable_roadmap',
       'deliverables_roadmap',
       'project_baseline',
+      'organization_base_plan',
       'organization_roles_responsibilities',
       'organization_raci_matrix',
       'organization_staffing_plan',
@@ -854,6 +859,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         notes: data.notes,
         solutions: _buildSolutionItems(data),
       ),
+    );
+  }
+
+  /// Navigate to Initial Cost Estimate module (full cost estimate with Builder/BOE/AI/etc.)
+  void _openInitialCostEstimate() {
+    _navigateWithCheckpoint(
+      'initial_cost_estimate',
+      const CostEstimateModuleScreen(),
     );
   }
 
@@ -1013,6 +1026,13 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     _navigateWithCheckpoint('design', const DesignPlanningScreen());
   }
 
+  void _openDesignSection(String sectionId) {
+    _navigateWithCheckpoint(
+      'design',
+      DesignPlanningScreen(initialSectionId: sectionId),
+    );
+  }
+
   void _openDesignManagement() {
     _navigateWithCheckpoint('design_management',
         const DesignPhaseScreen(activeItemLabel: 'Design Management'));
@@ -1026,6 +1046,13 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openExecutionWorkPackages() {
     _navigateWithCheckpoint(
         'execution_work_packages', const ExecutionWorkPackagesScreen());
+  }
+
+  void _openExecutionQualityTracking() {
+    _navigateWithCheckpoint(
+      'execution_quality_tracking',
+      const ExecutionQualityTrackingScreen(),
+    );
   }
 
   // ignore: unused_element
@@ -1302,6 +1329,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openTeamTraining() {
     _navigateWithCheckpoint(
         'team_training', const TeamTrainingAndBuildingScreen());
+  }
+
+  void _openOrganizationBasePlan() {
+    _navigateWithCheckpoint(
+        'organization_base_plan', const OrganizationBasePlanScreen());
   }
 
   void _openOrganizationRolesResponsibilities() {
@@ -2249,7 +2281,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openCoreStakeholders,
               isActive: widget.activeItemLabel == 'Core Stakeholders'),
           _buildSubSubMenuItem('Initial Cost Estimate',
-              onTap: _openCostAnalysis,
+              onTap: _openInitialCostEstimate,
               isActive: widget.activeItemLabel == 'Initial Cost Estimate'),
           _buildSubExpandableHeader(
             'Executive Summary',
@@ -2360,18 +2392,22 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           isActive: _activeIn(_organizationPlanLabels),
         ),
         if (_organizationPlanExpanded) ...[
+          _buildSubSubMenuItem('Base Organisation Plan',
+              onTap: _openOrganizationBasePlan,
+              isActive: widget.activeItemLabel ==
+                  'Organization Plan - Base Plan'),
           _buildSubSubMenuItem('Roles & Responsibilities',
               onTap: _openOrganizationRolesResponsibilities,
               isActive: widget.activeItemLabel ==
                   'Organization Plan - Roles & Responsibilities'),
-          _buildSubSubMenuItem('RACI Matrix',
-              onTap: _openOrganizationRaciMatrix,
-              isActive:
-                  widget.activeItemLabel == 'Organization Plan - RACI Matrix'),
           _buildSubSubMenuItem('Staffing Plan',
               onTap: _openOrganizationStaffingPlan,
               isActive: widget.activeItemLabel ==
                   'Organization Plan - Staffing Plan'),
+          _buildSubSubMenuItem('RACI Matrix',
+              onTap: _openOrganizationRaciMatrix,
+              isActive:
+                  widget.activeItemLabel == 'Organization Plan - RACI Matrix'),
           _buildSubSubMenuItem('Training & Team Building',
               onTap: _openTeamTraining,
               isActive:
@@ -2389,9 +2425,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         _buildSubMenuItem('Quality Management',
             onTap: _openQualityManagement,
             isActive: widget.activeItemLabel == 'Quality Management'),
-        _buildSubMenuItem('Design Planning',
-            onTap: _openDesign,
-            isActive: widget.activeItemLabel == 'Design Planning'),
         _buildSubExpandableHeader(
           'Technology Planning',
           expanded: _technologyPlanningExpanded,
@@ -2408,6 +2441,54 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             isActive: widget.activeItemLabel == 'Technology Planning',
           ),
         ],
+        _buildSubMenuItem('Design Planning',
+            onTap: _openDesign,
+            isActive: widget.activeItemLabel == 'Design Planning'),
+        _buildSubSubMenuItem('Project Overview',
+            onTap: () => _openDesignSection('overview'),
+            isActive: false),
+        _buildSubSubMenuItem('Design Overview',
+            onTap: () => _openDesignSection('design_overview'),
+            isActive: false),
+        _buildSubSubMenuItem('Design Specifications',
+            onTap: () => _openDesignSection('design_specifications_workspace'),
+            isActive: false),
+        _buildSubSubMenuItem('Deviations',
+            onTap: () => _openDesignSection('deviations'),
+            isActive: false),
+        _buildSubSubMenuItem('Requirements Mapping',
+            onTap: () => _openDesignSection('requirements'),
+            isActive: false),
+        _buildSubSubMenuItem('Architecture Basis',
+            onTap: () => _openDesignSection('architecture'),
+            isActive: false),
+        _buildSubSubMenuItem('UI/UX Basis',
+            onTap: () => _openDesignSection('uiux'),
+            isActive: false),
+        _buildSubSubMenuItem('Technical Basis',
+            onTap: () => _openDesignSection('technical'),
+            isActive: false),
+        _buildSubSubMenuItem('Constraints & Assumptions',
+            onTap: () => _openDesignSection('constraints'),
+            isActive: false),
+        _buildSubSubMenuItem('Risks & Mitigation',
+            onTap: () => _openDesignSection('risks'),
+            isActive: false),
+        _buildSubSubMenuItem('Dependencies',
+            onTap: () => _openDesignSection('dependencies'),
+            isActive: false),
+        _buildSubSubMenuItem('Decision Log',
+            onTap: () => _openDesignSection('decisions'),
+            isActive: false),
+        _buildSubSubMenuItem('Validation',
+            onTap: () => _openDesignSection('validation'),
+            isActive: false),
+        _buildSubSubMenuItem('Approvals',
+            onTap: () => _openDesignSection('approvals'),
+            isActive: false),
+        _buildSubSubMenuItem('Work Packages',
+            onTap: () => _openDesignSection('work_packages'),
+            isActive: false),
         _buildSubMenuItem(
           'Interface Management',
           onTap: lockInterfaceManagement ? null : _openInterfaceManagement,
@@ -2415,7 +2496,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           isDisabled: lockInterfaceManagement,
         ),
         _buildSubExpandableHeader(
-          'Agile Delivery Model',
+          'Agile Delivery',
           expanded: _agileWireframeExpanded,
           onTap: () => setState(() {
             _agileWireframeExpanded = !_agileWireframeExpanded;
@@ -2424,7 +2505,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           isActive: _activeIn(_agileWireframeLabels),
         ),
         if (_agileWireframeExpanded) ...[
-          _buildSubSubMenuItem('Agile Delivery Model',
+          _buildSubSubMenuItem('Agile Delivery',
               onTap: _openAgileDeliveryModel,
               isActive: widget.activeItemLabel ==
                   'Agile Delivery Model - Delivery Model'),
@@ -2479,6 +2560,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             'Overview',
             onTap: _openExecutionPlan,
             isActive: widget.activeItemLabel == 'Execution Plan Overview',
+          ),
+          _buildSubSubMenuItem(
+            'Quality Tracking',
+            onTap: _openExecutionQualityTracking,
+            isActive: widget.activeItemLabel == 'Execution Quality Tracking',
           ),
           _buildSubSubMenuItem(
             'Execution Work Packages',
@@ -3179,7 +3265,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'financial metrics'.contains(query)) {
       results.add(_buildMenuItem(
           Icons.analytics_outlined, 'Initial Cost Estimate',
-          onTap: _openCostAnalysis,
+          onTap: _openInitialCostEstimate,
           isActive: widget.activeItemLabel == 'Initial Cost Estimate'));
     }
     if ('executive summary'.contains(query)) {
@@ -3461,7 +3547,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     if ('agile delivery model'.contains(query) ||
         'agile delivery plan'.contains(query) ||
         'agile delivery'.contains(query)) {
-      results.add(_buildMenuItem(Icons.route_outlined, 'Agile Delivery Model',
+      results.add(_buildMenuItem(Icons.route_outlined, 'Agile Delivery',
           onTap: _openAgileDeliveryModel,
           isActive: widget.activeItemLabel ==
               'Agile Delivery Model - Delivery Model'));
@@ -3598,6 +3684,15 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: _openTeamTraining,
           isActive:
               widget.activeItemLabel == 'Team Training and Team Building'));
+    }
+    if ('base organisation plan'.contains(query) ||
+        'organisation plan'.contains(query) ||
+        'org plan'.contains(query)) {
+      results.add(_buildMenuItem(Icons.account_tree_outlined,
+          'Base Organisation Plan',
+          onTap: _openOrganizationBasePlan,
+          isActive:
+              widget.activeItemLabel == 'Organization Plan - Base Plan'));
     }
     if ('roles and responsibilities'.contains(query) ||
         'roles & responsibilities'.contains(query) ||

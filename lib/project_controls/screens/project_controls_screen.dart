@@ -864,7 +864,7 @@ class _CostControlTab extends StatelessWidget {
               label: 'Total Reserved',
               value: formatter.format(totalReserved),
               icon: Icons.account_balance_wallet_outlined,
-              color: const Color(0xFF2563EB),
+              color: const Color(0xFFD97706),
             ),
             _allowanceSummaryTile(
               label: 'Released',
@@ -986,7 +986,7 @@ class _CostControlTab extends StatelessWidget {
         statusColor = const Color(0xFF6B7280);
         break;
       default:
-        statusColor = const Color(0xFF2563EB);
+        statusColor = const Color(0xFFD97706);
     }
     return Container(
       margin: const EdgeInsets.only(bottom: 10),

@@ -11,6 +11,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -272,7 +273,15 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
     _scheduleAutoSave();
   }
 
-  void _removeAgreement(int index) {
+  Future<void> _removeAgreement(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Working Agreement',
+      itemLabel: _agreementCtrls[_agreements[index].id]?.text.isNotEmpty == true
+          ? _agreementCtrls[_agreements[index].id]!.text
+          : null,
+    );
+    if (!confirmed) return;
     final a = _agreements[index];
     _agreementCtrls.remove(a.id)?.dispose();
     _agreementCatCtrls.remove(a.id)?.dispose();

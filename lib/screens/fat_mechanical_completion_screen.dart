@@ -305,7 +305,7 @@ class _FatMechanicalCompletionScreenState
           label: 'Total Items',
           value: '$total',
           icon: Icons.checklist_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFD97706),
           delta: 'across 3 subsections',
         ),
         LaunchKpiTile(

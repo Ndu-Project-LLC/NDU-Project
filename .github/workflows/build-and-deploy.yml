@@ -1,0 +1,79 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        run: flutter build web --no-tree-shake-icons --release --no-wasm-dry-run --dart2js-optimization O1
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/web/
+
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: build/web/
+
+      - name: Deploy to staging (CHAMA18/Ndu_Project gh-pages)
+        env:
+          GH_TOKEN: ${{ secrets.STAGING_DEPLOY_TOKEN }}
+        run: |
+          cd build/web
+          echo "staging.nduproject.com" > CNAME
+          touch .nojekyll
+          git init -q
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add -A
+          git commit -q -m "deploy: auto build $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/CHAMA18/Ndu_Project.git" HEAD:gh-pages
+
+  deploy-production:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: build/web/
+
+      - name: Deploy to production (CHAMA18/nduproject-production main)
+        env:
+          GH_TOKEN: ${{ secrets.STAGING_DEPLOY_TOKEN }}
+        run: |
+          cd build/web
+          echo "nduproject.com" > CNAME
+          touch .nojekyll
+          git init -q
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add -A
+          git commit -q -m "deploy: auto production build $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/CHAMA18/nduproject-production.git" HEAD:main

@@ -22,6 +22,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -88,11 +89,12 @@ class _AgileEpicsFeaturesScreenState
  }
  });
  if (_selectedEpicId != null) _loadFeatures();
- // ── Auto-populate from AI when no epics exist ──────────────────
- if (_epics.isEmpty && !_isGenerating) {
- _generateEpics();
+ // ── Auto-populate from WBS when no epics exist ──────────────────
+ if (_epics.isEmpty && !_isGenerating && !_isSyncing) {
+   _syncFromWbs(autoMode: true);
  }
  } catch (e) {
+   debugPrint('Epics load error: $e');
  if (mounted) setState(() => _isLoading = false);
  }
  }
@@ -105,29 +107,64 @@ class _AgileEpicsFeaturesScreenState
     if (mounted) setState(() => _features = features);
   }
 
-  Future<void> _syncFromWbs() async {
+  Future<void> _syncFromWbs({bool autoMode = false}) async {
     final pid = _projectId;
     if (pid == null) return;
     setState(() => _isSyncing = true);
     try {
-      final wbsProvider = context.read<WBSProvider>();
-      final wbs = wbsProvider.wbs;
+      // Defensive: WBSProvider might not be in the widget tree
+      WBSProvider? wbsProvider;
+      try {
+        wbsProvider = context.read<WBSProvider>();
+      } catch (_) {
+        if (mounted && !autoMode) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text(
+                    'WBS module not available. Create a WBS first in the Work Breakdown Structure section.')),
+          );
+        }
+        if (mounted) setState(() => _isSyncing = false);
+        // Fall back to AI generation in auto mode
+        if (autoMode && !_isGenerating) {
+          _generateEpics();
+        }
+        return;
+      }
+
+      final wbs = wbsProvider?.wbs;
       if (wbs == null) {
-        if (mounted) {
+        if (mounted && !autoMode) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No WBS found. Create a WBS first.')),
+            const SnackBar(
+                content: Text(
+                    'No WBS found. Create a WBS first in the Work Breakdown Structure section.')),
           );
+        }
+        if (mounted) setState(() => _isSyncing = false);
+        // Fall back to AI generation in auto mode
+        if (autoMode && !_isGenerating) {
+          _generateEpics();
         }
         return;
       }
+
       if (wbs.methodology == ProjectMethodology.waterfall) {
-        if (mounted) {
+        if (mounted && !autoMode) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('WBS is set to Waterfall. Switch to Agile or Hybrid to sync.')),
+            const SnackBar(
+                content: Text(
+                    'WBS is set to Waterfall. Switch to Agile or Hybrid to sync.')),
           );
+        }
+        if (mounted) setState(() => _isSyncing = false);
+        // Fall back to AI generation in auto mode
+        if (autoMode && !_isGenerating) {
+          _generateEpics();
         }
         return;
       }
+
       final result = await WbsAgileSyncService.syncWbsToAgile(
         projectId: pid,
         wbs: wbs,
@@ -136,12 +173,13 @@ class _AgileEpicsFeaturesScreenState
       if (result.total > 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Synced ${result.total} items from WBS: ${result.epicsCreated} epics, ${result.featuresCreated} features, ${result.storiesCreated} stories.'),
+            content: Text(
+                'Synced ${result.total} items from WBS: ${result.epicsCreated} epics, ${result.featuresCreated} features, ${result.storiesCreated} stories.'),
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Color(0xFF059669),
+            backgroundColor: const Color(0xFF059669),
           ),
         );
-      } else {
+      } else if (!autoMode) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('All WBS items already synced. No new items created.'),
@@ -151,10 +189,15 @@ class _AgileEpicsFeaturesScreenState
       }
       _loadData();
     } catch (e) {
-      if (mounted) {
+      debugPrint('WBS sync error: $e');
+      if (mounted && !autoMode) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Sync failed: $e')),
         );
+      }
+      // Fall back to AI generation in auto mode
+      if (autoMode && mounted && !_isGenerating) {
+        _generateEpics();
       }
     }
     if (mounted) setState(() => _isSyncing = false);
@@ -178,10 +221,16 @@ class _AgileEpicsFeaturesScreenState
  EpicFeatureService.saveEpic(projectId: pid, epic: epic);
  }
 
- void _deleteEpic(int index) {
- final pid = _projectId;
- final epic = _epics[index];
- if (pid == null) return;
+  Future<void> _deleteEpic(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Epic',
+      itemLabel: _epics[index].title.isNotEmpty ? _epics[index].title : null,
+    );
+    if (!confirmed) return;
+    final pid = _projectId;
+    final epic = _epics[index];
+    if (pid == null) return;
  EpicFeatureService.deleteEpic(projectId: pid, epicId: epic.id);
  _epicControllers.remove(epic.id);
  _chipControllers.removeWhere((k, _) => k.startsWith('${epic.id}_'));
@@ -212,10 +261,16 @@ class _AgileEpicsFeaturesScreenState
  projectId: pid, epicId: _selectedEpicId!, feature: feature);
  }
 
- void _deleteFeature(int index) {
- final pid = _projectId;
- if (pid == null || _selectedEpicId == null) return;
- final feature = _features[index];
+  Future<void> _deleteFeature(int index) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Feature',
+      itemLabel: _features[index].title.isNotEmpty ? _features[index].title : null,
+    );
+    if (!confirmed) return;
+    final pid = _projectId;
+    if (pid == null || _selectedEpicId == null) return;
+    final feature = _features[index];
  EpicFeatureService.deleteFeature(
  projectId: pid, epicId: _selectedEpicId!, featureId: feature.id);
  _featureControllers.remove(feature.id);

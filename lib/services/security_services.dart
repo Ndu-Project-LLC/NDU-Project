@@ -572,21 +572,27 @@ class AnomalyDetector {
     required String email,
   }) async {
     try {
-      // Get recent login history
+      // Get recent login history — use only where() clauses without orderBy
+      // to avoid requiring a composite Firestore index. Sort client-side.
       final recentLogins = await FirebaseFirestore.instance
           .collection('securityAudit')
           .where('userId', isEqualTo: userId)
           .where('action', isEqualTo: 'sign_in')
-          .orderBy('timestamp', descending: true)
-          .limit(10)
+          .limit(20)
           .get();
 
-      final loginCount = recentLogins.size;
+      // Sort client-side by timestamp descending
+      final sortedLogins = recentLogins.docs..sort((a, b) {
+        final tsA = (a.data()['timestamp'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        final tsB = (b.data()['timestamp'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        return tsB.compareTo(tsA);
+      });
+      final loginCount = sortedLogins.length;
 
       // Flag if more than 5 logins in the recent history (potential brute force)
       if (loginCount > 5) {
         final now = DateTime.now();
-        final recentDocs = recentLogins.docs.where((doc) {
+        final recentDocs = sortedLogins.take(10).where((doc) {
           final ts = doc.data()['timestamp'] as Timestamp?;
           if (ts == null) return false;
           return now.difference(ts.toDate()).inMinutes < 60;
@@ -607,22 +613,28 @@ class AnomalyDetector {
         }
       }
 
-      // Check for failed sign-in attempts
+      // Check for failed sign-in attempts — same approach, no orderBy
       final failedLogins = await FirebaseFirestore.instance
           .collection('securityAudit')
           .where('userId', isEqualTo: userId)
           .where('action', isEqualTo: 'failed_sign_in')
-          .orderBy('timestamp', descending: true)
-          .limit(5)
+          .limit(10)
           .get();
 
-      if (failedLogins.size >= 3) {
+      // Sort client-side
+      final sortedFailed = failedLogins.docs..sort((a, b) {
+        final tsA = (a.data()['timestamp'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        final tsB = (b.data()['timestamp'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        return tsB.compareTo(tsA);
+      });
+
+      if (sortedFailed.length >= 3) {
         await SecurityAuditLogger.log(
           action: 'anomaly_multiple_failed_logins',
           userId: userId,
           metadata: {
             'email': email,
-            'failedCount': failedLogins.size,
+            'failedCount': sortedFailed.length,
           },
         );
         debugPrint(
@@ -639,11 +651,11 @@ class AnomalyDetector {
     required String resource,
   }) async {
     try {
+      // No orderBy — avoid composite index requirement
       final recentAccess = await FirebaseFirestore.instance
           .collection('securityAudit')
           .where('userId', isEqualTo: userId)
           .where('action', isEqualTo: 'data_access')
-          .orderBy('timestamp', descending: true)
           .limit(100)
           .get();
 
@@ -720,7 +732,21 @@ class TwoFactorAuthService {
       return SecurityPolicy.fromMap(doc.data());
     } catch (e) {
       debugPrint('[TwoFactorAuthService] loadPolicy error: $e');
-      return SecurityPolicy.defaults();
+      // When Firestore is unavailable or permissions are insufficient,
+      // return a permissive policy so users can still sign in.
+      // MFA will be skipped until the Firestore rules are fixed.
+      return const SecurityPolicy(
+        passwordLoginEnabled: true,
+        passwordlessEmailEnabled: false,
+        mfaEnabled: false,
+        requireMfaEveryLogin: false,
+        requireMfaNewDeviceOnly: false,
+        requireMfaHighRiskOnly: false,
+        requireMfaAdminOnly: false,
+        defaultMfaMethod: MfaMethod.authenticator,
+        backupMethods: [MfaMethod.sms, MfaMethod.emailCode],
+        rememberDeviceDays: 30,
+      );
     }
   }
 

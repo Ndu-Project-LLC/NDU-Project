@@ -981,22 +981,34 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
   }
 
   Future<List<Milestone>?> _loadMilestonesForPicker() async {
-    final data = ProjectDataHelper.getData(context, listen: false);
-    final milestones = data.keyMilestones
-        .where((m) => m.name.trim().isNotEmpty)
-        .toList();
-    if (milestones.isEmpty) {
+    try {
+      final data = ProjectDataHelper.getData(context, listen: false);
+      final milestones = data.keyMilestones
+          .where((m) => m.name.trim().isNotEmpty)
+          .toList();
+      if (milestones.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No milestones available. Add them in Front End Planning > Milestone.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return null;
+      }
+      return milestones;
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No milestones available. Add them in Front End Planning > Milestone.'),
+          SnackBar(
+            content: Text('Could not load milestones: $e'),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
       return null;
     }
-    return milestones;
   }
 }
 

@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 class ContractsTrackingScreen extends StatefulWidget {
  const ContractsTrackingScreen({super.key});
 
@@ -450,7 +451,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Draft → Legal Review → Signed → Active → Renewal/Expiry. '
  'Each contract should be tracked from initiation through close-out. '
  'Set renewal alerts at 90/60/30-day intervals to avoid lapses.',
- const Color(0xFF2563EB),
+ const Color(0xFFD97706),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -949,21 +950,27 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
  }
 
- Future<void> _deleteContract(ContractModel contract) async {
- final projectId = _projectId;
- if (projectId == null) return;
+  Future<void> _deleteContract(ContractModel contract) async {
+    final confirmed = await showDeleteConfirmationDialog(
+      context,
+      title: 'Delete Contract',
+      itemLabel: contract.name,
+    );
+    if (!confirmed) return;
+    final projectId = _projectId;
+    if (projectId == null) return;
 
- try {
- await ContractService.deleteContract(
- projectId: projectId,
- contractId: contract.id,
- );
- // Sync to Progress Tracking budget (remove value)
- await _syncContractValueToBudget(contract, isDelete: true);
- } catch (e) {
- debugPrint('Error deleting contract: $e');
- }
- }
+    try {
+      await ContractService.deleteContract(
+        projectId: projectId,
+        contractId: contract.id,
+      );
+      // Sync to Progress Tracking budget (remove value)
+      await _syncContractValueToBudget(contract, isDelete: true);
+    } catch (e) {
+      debugPrint('Error deleting contract: $e');
+    }
+  }
 
  // ignore: unused_element
  Future<void> _restoreContract(ContractModel contract) async {
@@ -2377,7 +2384,7 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
  case 'High':
  return const Color(0xFFF59E0B);
  case 'Medium':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Low':
  return const Color(0xFF6B7280);
  default:
@@ -2390,7 +2397,7 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
  case 'Approved':
  return const Color(0xFF10B981);
  case 'In Review':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Pending':
  return const Color(0xFFF59E0B);
  case 'Rejected':
@@ -2432,7 +2439,7 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
  case 'Executive':
  return const Color(0xFFDC2626);
  case 'Engineering':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Risk':
  return const Color(0xFFEA580C);
  case 'Compliance':
@@ -2688,7 +2695,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
  Color _typeColor(String type) {
  switch (type) {
  case 'SLA':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'NDA':
  return const Color(0xFF7C3AED);
  case 'MSA':
@@ -2717,7 +2724,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
  case 'Terminate':
  return const Color(0xFFEF4444);
  case 'Extend':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'Consolidate':
  return const Color(0xFF8B5CF6);
  case 'Transfer':
@@ -2732,7 +2739,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
  case 'On Track':
  return const Color(0xFF10B981);
  case 'In Progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFD97706);
  case 'At Risk':
  return const Color(0xFFF59E0B);
  case 'Overdue':
@@ -3095,7 +3102,7 @@ class _RenewalLaneData {
  if (days <= 0) return const Color(0xFFDC2626);
  if (days <= 30) return const Color(0xFFEF4444);
  if (days <= 60) return const Color(0xFFF97316);
- if (days <= 90) return const Color(0xFF2563EB);
+ if (days <= 90) return const Color(0xFFD97706);
  return const Color(0xFF10B981);
  }
 

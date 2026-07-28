@@ -14,6 +14,7 @@ import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/models/scope_tracking_item.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/scope_tracking_table_widget.dart';
+import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -575,7 +576,7 @@ class _ScopeTrackingImplementationScreenState
         'Scope Adherence',
         '$scopeAdherence%',
         '$inProgressOrVerified of $totalItems items',
-        const Color(0xFF2563EB),
+        const Color(0xFFD97706),
       ),
       _StatCardData(
         'Identified Creep',
@@ -676,7 +677,9 @@ class _ScopeTrackingImplementationScreenState
                 }
               });
             },
-            onDeleted: (item) {
+            onDeleted: (item) async {
+              final ok = await launchConfirmDelete(context, itemName: 'scope tracking item');
+              if (!ok) return;
               setState(() {
                 _items.removeWhere((i) => i.id == item.id);
               });

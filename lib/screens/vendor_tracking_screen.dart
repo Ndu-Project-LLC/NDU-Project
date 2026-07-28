@@ -23,8 +23,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:go_router/go_router.dart';
-
+import 'package:ndu_project/widgets/csv_table_import_button.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 class VendorTrackingScreen extends StatefulWidget {
   const VendorTrackingScreen({super.key});
 
@@ -65,13 +65,572 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
         status: 'Pending invite'),
   ];
 
-  String? get _projectId {
-    try {
-      final provider = ProjectDataInherited.maybeOf(context);
-      return provider?.projectData.projectId;
-    } catch (e) {
-      return null;
-    }
+ String? get _projectId {
+ try {
+ final provider = ProjectDataInherited.maybeOf(context);
+ return provider?.projectData.projectId;
+ } catch (e) {
+ return null;
+ }
+ }
+
+ _VendorCrudPolicy get _crudPolicy {
+ final projectId = _projectId;
+ final user = FirebaseAuth.instance.currentUser;
+ final roleProvider = UserRoleInherited.of(context);
+ final baseRole = roleProvider.siteRole;
+ final isAdminByEmail = UserService.isAdminEmail(user?.email ?? '');
+ final effectiveRole = isAdminByEmail
+ ? SiteRole.admin
+ : baseRole == SiteRole.guest && user != null
+ ? SiteRole.user
+ : baseRole;
+ final hasProject = projectId != null && projectId.isNotEmpty;
+
+ return _VendorCrudPolicy.fromRole(
+ role: effectiveRole,
+ hasProject: hasProject,
+ );
+ }
+
+ @override
+ void initState() {
+ super.initState();
+ WidgetsBinding.instance.addPostFrameCallback((_) => _seedVendorsIfNeeded());
+ }
+
+ Future<void> _seedVendorsIfNeeded() async {
+ if (_isSeedingVendors) return;
+ final projectId = _projectId;
+ final provider = ProjectDataInherited.maybeOf(context);
+ final data = provider?.projectData;
+ if (projectId == null || data == null) return;
+ final contextText = ExecutionPhaseAiSeed.buildContext(
+ context,
+ section: 'Vendor Tracking',
+ );
+
+ final hasVendors = await VendorService.hasAnyVendors(projectId);
+ if (hasVendors) return;
+
+ _isSeedingVendors = true;
+ try {
+ final ai = OpenAiServiceSecure();
+ final vendors = await ai.generateProcurementVendors(
+ projectName: data.projectName,
+ solutionTitle: data.solutionTitle,
+ contextNotes: contextText,
+ count: 5,
+ preferredCategories: const [
+ 'Logistics',
+ 'Technology',
+ 'Operations',
+ 'Facilities',
+ 'Services'
+ ],
+ );
+
+ for (final vendor in vendors) {
+ final name = (vendor['name'] ?? '').toString().trim();
+ final category = (vendor['category'] ?? 'Operations').toString().trim();
+ if (name.isEmpty) continue;
+ await VendorService.createVendor(
+ projectId: projectId,
+ name: name,
+ category: category,
+ sla: '95%',
+ leadTime: '14 days',
+ requiredDeliverables:
+ '. Weekly status updates\n. Deliverables meet quality standards\n. SLA compliance reporting',
+ rating: 'B',
+ status: 'Active',
+ nextReview: 'TBD',
+ onTimeDelivery: 0.8,
+ incidentResponse: 0.85,
+ qualityScore: 0.82,
+ costAdherence: 0.78,
+ notes: 'Auto-generated vendor entry.',
+ );
+ }
+ } catch (e) {
+ debugPrint('Error seeding vendors: $e');
+ } finally {
+ _isSeedingVendors = false;
+ }
+ }
+
+ @override
+ Widget build(BuildContext context) {
+ final padding = AppBreakpoints.pagePadding(context);
+
+ return ResponsiveScaffold(
+ activeItemLabel: 'Vendor Tracking',
+ backgroundColor: Colors.white,
+ floatingActionButton: const KazAiChatBubble(positioned: false),
+ body: SingleChildScrollView(
+ padding: EdgeInsets.all(padding),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ PlanningPhaseHeader(
+ title: 'Vendor Tracking',
+showNavigationButtons: false, onExportPdf: _exportPdf),
+ const SizedBox(height: 24),
+ Column(
+ crossAxisAlignment: CrossAxisAlignment.stretch,
+ children: [
+ _buildVendorRegister(),
+ const SizedBox(height: 20),
+ _buildPerformancePanel(),
+ const SizedBox(height: 20),
+ _buildSignalsPanel(),
+ const SizedBox(height: 20),
+ _buildActionPanel(),
+ ],
+ ),
+ const SizedBox(height: 24),
+ LaunchPhaseNavigation(
+ backLabel: 'Back: Contracts Tracking',
+ nextLabel: 'Next: Detailed Design',
+ onBack: () => ContractsTrackingScreen.open(context),
+ onNext: () => DetailedDesignScreen.open(context),
+ ),
+ ],
+ ),
+ ),
+ );
+ }
+
+ Widget _actionButton(IconData icon, String label, {VoidCallback? onPressed}) {
+ final enabled = onPressed != null;
+ return OutlinedButton.icon(
+ onPressed: onPressed,
+ icon: Icon(icon,
+ size: 18,
+ color: enabled ? const Color(0xFF64748B) : const Color(0xFFCBD5E1)),
+ label: Text(label,
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color:
+ enabled ? const Color(0xFF64748B) : const Color(0xFF94A3B8))),
+ style: OutlinedButton.styleFrom(
+ side: const BorderSide(color: Color(0xFFE2E8F0)),
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+ ),
+ );
+ }
+
+ Widget _buildVendorRegister() {
+ final policy = _crudPolicy;
+ if (_projectId == null || _projectId!.isEmpty) {
+ return _PanelShell(
+ title: 'Vendor scorecard',
+ subtitle: 'Performance, rating, and compliance checkpoints',
+ child: const Center(
+ child: Padding(
+ padding: EdgeInsets.all(24.0),
+ child: Text('No project selected. Please open a project first.',
+ style: TextStyle(color: Color(0xFF64748B))),
+ ),
+ ),
+ );
+ }
+
+ return _PanelShell(
+ title: 'Vendor scorecard',
+ subtitle:
+ 'Performance, rating, SLA, criticality, and compliance checkpoints',
+ trailing: policy.canCreate
+ ? _actionButton(Icons.add, 'Add vendor',
+ onPressed: () => _showAddVendorDialog(context))
+ : null,
+ child: StreamBuilder<List<VendorModel>>(
+ stream: VendorService.streamVendors(_projectId!),
+ builder: (context, snapshot) {
+ if (snapshot.connectionState == ConnectionState.waiting) {
+ return const Center(
+ child: Padding(
+ padding: EdgeInsets.all(24.0),
+ child: CircularProgressIndicator()));
+ }
+
+ if (snapshot.hasError) {
+ return _buildPermissionError(snapshot.error);
+ }
+
+ final vendors = snapshot.data ?? [];
+
+ if (vendors.isEmpty) {
+ return Center(
+ child: Padding(
+ padding: const EdgeInsets.all(24.0),
+ child: Column(
+ children: [
+ Text(
+ policy.canCreate
+ ? 'No vendors found.'
+ : 'No vendors available in your current view.',
+ style: const TextStyle(color: Color(0xFF64748B))),
+ const SizedBox(height: 12),
+ ElevatedButton.icon(
+ onPressed: policy.canCreate
+ ? () => _showAddVendorDialog(context)
+ : null,
+ icon: Icon(
+ policy.canCreate ? Icons.add : Icons.lock_outline,
+ size: 18),
+ label: Text(
+ policy.canCreate ? 'Add First Vendor' : 'Read-only'),
+ ),
+ ],
+ ),
+ ),
+ );
+ }
+
+ return VendorsTableWidget(
+ vendors: vendors,
+ canEdit: policy.canUpdate,
+ canDelete: policy.canDelete,
+ canUseAi: policy.canUpdate,
+ onUpdated: (vendor) {
+ // Vendor updated via table widget
+ },
+ onDeleted: (vendor) {
+ // Vendor deleted via table widget
+ },
+ );
+ },
+ ),
+ );
+ }
+
+ Widget _buildPermissionError(Object? error) {
+ final isPermissionDenied =
+ error is FirebaseException && error.code == 'permission-denied';
+ final message = isPermissionDenied
+ ? 'You are not authorized to view vendors for this project. Contact the project owner or admin to request access.'
+ : 'Error loading vendors: ${error ?? 'Unknown error'}';
+ return Center(
+ child: Padding(
+ padding: const EdgeInsets.all(24.0),
+ child: Text(message, style: const TextStyle(color: Color(0xFFDC2626))),
+ ),
+ );
+ }
+
+ Widget _buildPerformancePanel() {
+ if (_projectId == null) {
+ return _PanelShell(
+ title: 'Performance pulse',
+ subtitle: 'Key service health indicators',
+ child: const SizedBox.shrink(),
+ );
+ }
+
+ return _PanelShell(
+ title: 'Performance pulse',
+ subtitle: 'Key service health indicators',
+ trailing: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ CsvTableImportButton(
+ compact: true,
+ tableTitle: 'KPI Metrics',
+ columns: [
+ CsvColumnSpec(key: 'metric', label: 'Metric', required: true),
+ CsvColumnSpec(key: 'value', label: 'Value (%)', required: true),
+ CsvColumnSpec(key: 'target', label: 'Target (%)', defaultValue: '85'),
+ CsvColumnSpec(key: 'trend', label: 'Trend', allowedValues: ['On target', 'Below target', 'Above target'], defaultValue: 'On target'),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'source', label: 'Source', defaultValue: 'Manual'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ final value = (int.tryParse(row['value'] ?? '0') ?? 0).clamp(0, 100) / 100.0;
+ final target = (int.tryParse(row['target'] ?? '85') ?? 85).clamp(0, 100) / 100.0;
+ _customKpiRows.add(_KpiRow(
+ id: 'custom_${DateTime.now().millisecondsSinceEpoch}_${_customKpiRows.length}',
+ metric: row['metric'] ?? '',
+ value: value,
+ target: target,
+ trend: row['trend'] ?? (value >= target ? 'On target' : 'Below target'),
+ owner: row['owner'] ?? '',
+ source: row['source'] ?? 'Manual',
+ ));
+ }
+ });
+ },
+ ),
+ const SizedBox(width: 8),
+ TextButton.icon(
+ onPressed: () => _showPerformanceEntryDialog(),
+ icon: const Icon(Icons.add_rounded, size: 16),
+ label: const Text('Add metric'),
+ style: TextButton.styleFrom(
+ foregroundColor: const Color(0xFF4154F1),
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+ ),
+ ),
+ ],
+ ),
+ child: StreamBuilder<List<VendorModel>>(
+ stream: VendorService.streamVendors(_projectId!),
+ builder: (context, snapshot) {
+ if (!snapshot.hasData || snapshot.data!.isEmpty) {
+ return const Center(
+ child: Padding(
+ padding: EdgeInsets.all(24.0),
+ child: Text('No vendor data available',
+ style: TextStyle(color: Color(0xFF64748B))),
+ ),
+ );
+ }
+
+ final vendors = snapshot.data!;
+ final onTimeAvg =
+ vendors.map((v) => v.onTimeDelivery).reduce((a, b) => a + b) /
+ vendors.length;
+ final incidentAvg =
+ vendors.map((v) => v.incidentResponse).reduce((a, b) => a + b) /
+ vendors.length;
+ final qualityAvg =
+ vendors.map((v) => v.qualityScore).reduce((a, b) => a + b) /
+ vendors.length;
+ final costAvg =
+ vendors.map((v) => v.costAdherence).reduce((a, b) => a + b) /
+ vendors.length;
+
+ // Build rows: auto-computed + user-added
+ final rows = <_KpiRow>[
+ _KpiRow(id: 'auto_ontime', metric: 'On-time delivery', value: onTimeAvg, target: 0.90, trend: onTimeAvg >= 0.90 ? 'On target' : 'Below target', owner: 'Vendor Manager', source: 'Auto-computed'),
+ _KpiRow(id: 'auto_incident', metric: 'Incident response', value: incidentAvg, target: 0.85, trend: incidentAvg >= 0.85 ? 'On target' : 'Below target', owner: 'Operations Lead', source: 'Auto-computed'),
+ _KpiRow(id: 'auto_quality', metric: 'Quality score', value: qualityAvg, target: 0.80, trend: qualityAvg >= 0.80 ? 'On target' : 'Below target', owner: 'QA Lead', source: 'Auto-computed'),
+ _KpiRow(id: 'auto_cost', metric: 'Cost adherence', value: costAvg, target: 0.85, trend: costAvg >= 0.85 ? 'On target' : 'Below target', owner: 'Finance Lead', source: 'Auto-computed'),
+ ..._customKpiRows,
+ ];
+
+ return Column(
+ children: [
+ // Table header
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+ decoration: BoxDecoration(
+ color: const Color(0xFF1F2937),
+ borderRadius: BorderRadius.circular(8),
+ ),
+ child: const Row(
+ children: [
+ Expanded(flex: 3, child: Text('KPI Metric', style: _perfHeaderStyle)),
+ Expanded(flex: 1, child: Text('Actual', style: _perfHeaderStyle)),
+ Expanded(flex: 1, child: Text('Target', style: _perfHeaderStyle)),
+ Expanded(flex: 1, child: Text('Gap', style: _perfHeaderStyle)),
+ Expanded(flex: 2, child: Text('Trend', style: _perfHeaderStyle)),
+ Expanded(flex: 2, child: Text('Owner', style: _perfHeaderStyle)),
+ Expanded(flex: 1, child: Text('', style: _perfHeaderStyle)),
+ ],
+ ),
+ ),
+ const SizedBox(height: 4),
+ ...rows.asMap().entries.map((entry) {
+ final row = entry.value;
+ final idx = entry.key;
+ final isAuto = row.source == 'Auto-computed';
+ final gap = row.value - row.target;
+ final gapColor = gap >= 0 ? const Color(0xFF059669) : const Color(0xFFDC2626);
+ final barColor = _kpiColor(row.value);
+
+ return Container(
+ margin: const EdgeInsets.only(bottom: 3),
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+ decoration: BoxDecoration(
+ color: idx.isEven ? Colors.white : const Color(0xFFFAFBFD),
+ borderRadius: BorderRadius.circular(6),
+ border: Border.all(color: const Color(0xFFF3F4F6)),
+ ),
+ child: Row(
+ children: [
+ Expanded(
+ flex: 3,
+ child: Row(
+ children: [
+ Expanded(child: Text(row.metric, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
+ const SizedBox(width: 8),
+ SizedBox(
+ width: 60,
+ child: ClipRRect(
+ borderRadius: BorderRadius.circular(3),
+ child: LinearProgressIndicator(
+ value: row.value.clamp(0.0, 1.0),
+ minHeight: 5,
+ backgroundColor: const Color(0xFFE5E7EB),
+ valueColor: AlwaysStoppedAnimation<Color>(barColor),
+ ),
+ ),
+ ),
+ ],
+ ),
+ ),
+ Expanded(
+ flex: 1,
+ child: Text('${(row.value * 100).round()}%',
+ style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: barColor)),
+ ),
+ Expanded(
+ flex: 1,
+ child: Text('${(row.target * 100).round()}%',
+ style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+ ),
+ Expanded(
+ flex: 1,
+ child: Text('${gap >= 0 ? '+' : ''}${(gap * 100).round()}%',
+ style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: gapColor)),
+ ),
+ Expanded(
+ flex: 2,
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+ decoration: BoxDecoration(
+ color: gap >= 0 ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+ borderRadius: BorderRadius.circular(4),
+ ),
+ child: Text(row.trend, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: gapColor)),
+ ),
+ ),
+ Expanded(
+ flex: 2,
+ child: Text(row.owner, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+ ),
+ Expanded(
+ flex: 1,
+ child: isAuto
+ ? const SizedBox.shrink()
+ : Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ InkWell(
+ onTap: () => _showPerformanceEntryDialog(existing: row),
+ child: const Icon(Icons.edit_outlined, size: 14, color: Color(0xFF6B7280)),
+ ),
+ const SizedBox(width: 4),
+ InkWell(
+ onTap: () => _removeCustomKpi(row.id),
+ child: const Icon(Icons.delete_outline, size: 14, color: Color(0xFFEF4444)),
+ ),
+ ],
+ ),
+ ),
+ ],
+ ),
+ );
+ }),
+ if (_customKpiRows.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(top: 6),
+ child: Text('${_customKpiRows.length} custom metric${_customKpiRows.length != 1 ? 's' : ''}',
+ style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+ ),
+ ],
+ );
+ },
+ ),
+ );
+ }
+
+ static const _perfHeaderStyle = TextStyle(
+ fontSize: 10,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFFD1D5DB),
+ letterSpacing: 0.5,
+ );
+
+ Color _kpiColor(double value) {
+ if (value >= 0.80) return const Color(0xFF059669);
+ if (value >= 0.60) return const Color(0xFFD97706);
+ return const Color(0xFFDC2626);
+ }
+
+ void _showPerformanceEntryDialog({_KpiRow? existing}) {
+ final isEdit = existing != null;
+ final metricCtl = TextEditingController(text: existing?.metric ?? '');
+ final valueCtl = TextEditingController(text: existing != null ? '${(existing.value * 100).round()}' : '');
+ final targetCtl = TextEditingController(text: existing != null ? '${(existing.target * 100).round()}' : '85');
+ final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+ final trendCtl = TextEditingController(text: existing?.trend ?? '');
+ showDialog(
+ context: context,
+ builder: (ctx) => AlertDialog(
+ title: Row(
+ children: [
+ Icon(isEdit ? Icons.edit_outlined : Icons.add_circle_outline, size: 20, color: const Color(0xFF4154F1)),
+ const SizedBox(width: 8),
+ Text(isEdit ? 'Edit KPI Metric' : 'Add KPI Metric', style: const TextStyle(fontSize: 16)),
+ ],
+ ),
+ content: SingleChildScrollView(
+ child: SizedBox(
+ width: 480,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ VoiceTextField(controller: metricCtl, decoration: const InputDecoration(labelText: 'Metric name', isDense: true, border: OutlineInputBorder())),
+ const SizedBox(height: 12),
+ Row(children: [
+ Expanded(child: VoiceTextField(controller: valueCtl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Actual %', isDense: true, border: OutlineInputBorder(), suffixText: '%'))),
+ const SizedBox(width: 12),
+ Expanded(child: VoiceTextField(controller: targetCtl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Target %', isDense: true, border: OutlineInputBorder(), suffixText: '%'))),
+ ]),
+ const SizedBox(height: 12),
+ Row(children: [
+ Expanded(child: VoiceTextField(controller: ownerCtl, decoration: const InputDecoration(labelText: 'Owner', isDense: true, border: OutlineInputBorder()))),
+ const SizedBox(width: 12),
+ Expanded(child: VoiceTextField(controller: trendCtl, decoration: const InputDecoration(labelText: 'Trend note', isDense: true, border: OutlineInputBorder()))),
+ ]),
+ ],
+ ),
+ ),
+ ),
+ actions: [
+ TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+ FilledButton(
+ onPressed: () {
+ final val = (int.tryParse(valueCtl.text.trim()) ?? 0).clamp(0, 100) / 100.0;
+ final tgt = (int.tryParse(targetCtl.text.trim()) ?? 85).clamp(0, 100) / 100.0;
+ final row = _KpiRow(
+ id: existing?.id ?? 'custom_${DateTime.now().millisecondsSinceEpoch}',
+ metric: metricCtl.text.trim(),
+ value: val,
+ target: tgt,
+ trend: trendCtl.text.trim().isNotEmpty ? trendCtl.text.trim() : (val >= tgt ? 'On target' : 'Below target'),
+ owner: ownerCtl.text.trim(),
+ source: 'Manual',
+ );
+ setState(() {
+ if (isEdit) {
+ final idx = _customKpiRows.indexWhere((r) => r.id == row.id);
+ if (idx != -1) _customKpiRows[idx] = row;
+ } else {
+ _customKpiRows.add(row);
+ }
+ });
+ Navigator.of(ctx).pop();
+ },
+ style: FilledButton.styleFrom(backgroundColor: const Color(0xFF4154F1), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+ child: Text(isEdit ? 'Save' : 'Add'),
+ ),
+ ],
+ ),
+ );
+ }
+
+  void _removeCustomKpi(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'custom KPI');
+  if (!ok) return;
+  setState(() => _customKpiRows.removeWhere((r) => r.id == id));
   }
 
   _VendorCrudPolicy get _crudPolicy {
@@ -408,10 +967,247 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
   setState(() => _customSignalRows.removeWhere((r) => r.id == id));
   }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _seedVendorsIfNeeded());
+ Widget _buildActionPanel() {
+ return _PanelShell(
+ title: 'Action plan',
+ subtitle: 'Upcoming touchpoints and remediation',
+ trailing: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ CsvTableImportButton(
+ compact: true,
+ tableTitle: 'Action Items',
+ columns: [
+ CsvColumnSpec(key: 'title', label: 'Action Item', required: true),
+ CsvColumnSpec(key: 'priority', label: 'Priority', allowedValues: ['Critical', 'High', 'Medium', 'Low'], defaultValue: 'Medium'),
+ CsvColumnSpec(key: 'dueDate', label: 'Due Date'),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Agenda locked', 'Docs requested', 'Pending invite', 'Completed', 'Overdue'], defaultValue: 'Pending invite'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _actionRows.add(_ActionRow(
+ id: 'act_${DateTime.now().millisecondsSinceEpoch}_${_actionRows.length}',
+ title: row['title'] ?? '',
+ priority: row['priority'] ?? 'Medium',
+ dueDate: row['dueDate'] ?? '',
+ owner: row['owner'] ?? '',
+ status: row['status'] ?? 'Pending invite',
+ ));
+ }
+ });
+ },
+ ),
+ const SizedBox(width: 8),
+ TextButton.icon(
+ onPressed: () => _showActionDialog(),
+ icon: const Icon(Icons.add_rounded, size: 16),
+ label: const Text('Add action'),
+ style: TextButton.styleFrom(
+ foregroundColor: const Color(0xFF4154F1),
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+ ),
+ ),
+ ],
+ ),
+ child: _actionRows.isEmpty
+ ? Center(
+ child: Padding(
+ padding: const EdgeInsets.all(24.0),
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Icon(Icons.event_note_outlined, size: 36, color: const Color(0xFF9CA3AF).withOpacity(0.6)),
+ const SizedBox(height: 8),
+ const Text('No action items yet', style: TextStyle(color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500)),
+ const SizedBox(height: 4),
+ const Text('Add touchpoints, reviews, and remediation tasks.', style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+ ],
+ ),
+ ),
+ )
+ : Column(
+ children: [
+ // Table header
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+ decoration: const BoxDecoration(
+ color: Color(0xFF1F2937),
+ borderRadius: BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
+ ),
+ child: const Row(
+ children: [
+ Expanded(flex: 3, child: Text('Action Item', style: _perfHeaderStyle)),
+ Expanded(flex: 1, child: Text('Priority', style: _perfHeaderStyle)),
+ Expanded(flex: 2, child: Text('Due Date', style: _perfHeaderStyle)),
+ Expanded(flex: 2, child: Text('Owner', style: _perfHeaderStyle)),
+ Expanded(flex: 2, child: Text('Status', style: _perfHeaderStyle)),
+ Expanded(flex: 1, child: Text('', style: _perfHeaderStyle)),
+ ],
+ ),
+ ),
+ ..._actionRows.asMap().entries.map((entry) {
+ final act = entry.value;
+ final idx = entry.key;
+ final prioColor = _severityColor(act.priority);
+ final statusColor = _actionStatusColor(act.status);
+
+ return Container(
+ margin: const EdgeInsets.only(bottom: 3),
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+ decoration: BoxDecoration(
+ color: idx.isEven ? Colors.white : const Color(0xFFFAFBFD),
+ borderRadius: BorderRadius.circular(6),
+ border: Border.all(color: const Color(0xFFF3F4F6)),
+ ),
+ child: Row(
+ children: [
+ Expanded(
+ flex: 3,
+ child: Text(act.title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+ ),
+ Expanded(
+ flex: 1,
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+ decoration: BoxDecoration(color: prioColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+ child: Text(act.priority, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: prioColor), textAlign: TextAlign.center),
+ ),
+ ),
+ Expanded(
+ flex: 2,
+ child: Text(act.dueDate, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+ ),
+ Expanded(
+ flex: 2,
+ child: Text(act.owner, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+ ),
+ Expanded(
+ flex: 2,
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+ decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+ child: Text(act.status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: statusColor), textAlign: TextAlign.center),
+ ),
+ ),
+ Expanded(
+ flex: 1,
+ child: Row(mainAxisSize: MainAxisSize.min, children: [
+ InkWell(onTap: () => _showActionDialog(existing: act), child: const Icon(Icons.edit_outlined, size: 14, color: Color(0xFF6B7280))),
+ const SizedBox(width: 4),
+ InkWell(onTap: () => _removeAction(act.id), child: const Icon(Icons.delete_outline, size: 14, color: Color(0xFFEF4444))),
+ ]),
+ ),
+ ],
+ ),
+ );
+ }),
+ Padding(
+ padding: const EdgeInsets.only(top: 6),
+ child: Text('${_actionRows.length} action${_actionRows.length != 1 ? 's' : ''}',
+ style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Color _actionStatusColor(String status) {
+ switch (status.toLowerCase()) {
+ case 'agenda locked': return const Color(0xFF0EA5E9);
+ case 'docs requested': return const Color(0xFFD97706);
+ case 'pending invite': return const Color(0xFF6366F1);
+ case 'completed': return const Color(0xFF059669);
+ case 'overdue': return const Color(0xFFDC2626);
+ default: return const Color(0xFF6B7280);
+ }
+ }
+
+ void _showActionDialog({_ActionRow? existing}) {
+ final isEdit = existing != null;
+ final titleCtl = TextEditingController(text: existing?.title ?? '');
+ final dueCtl = TextEditingController(text: existing?.dueDate ?? '');
+ final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+ String priority = existing?.priority ?? 'Medium';
+ String status = existing?.status ?? 'Pending invite';
+
+ showDialog(
+ context: context,
+ builder: (ctx) => StatefulBuilder(
+ builder: (ctx, setDState) => AlertDialog(
+ title: Row(children: [
+ Icon(isEdit ? Icons.edit_outlined : Icons.add_circle_outline, size: 20, color: const Color(0xFF4154F1)),
+ const SizedBox(width: 8),
+ Text(isEdit ? 'Edit Action Item' : 'Add Action Item', style: const TextStyle(fontSize: 16)),
+ ]),
+ content: SizedBox(
+ width: 480,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ VoiceTextField(controller: titleCtl, decoration: const InputDecoration(labelText: 'Action item', isDense: true, border: OutlineInputBorder())),
+ const SizedBox(height: 12),
+ Row(children: [
+ Expanded(child: DropdownButtonFormField<String>(
+ value: priority,
+ decoration: const InputDecoration(labelText: 'Priority', isDense: true, border: OutlineInputBorder()),
+ items: ['Critical', 'High', 'Medium', 'Low'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+ onChanged: (v) { if (v != null) setDState(() => priority = v); },
+ )),
+ const SizedBox(width: 12),
+ Expanded(child: DropdownButtonFormField<String>(
+ value: status,
+ decoration: const InputDecoration(labelText: 'Status', isDense: true, border: OutlineInputBorder()),
+ items: ['Agenda locked', 'Docs requested', 'Pending invite', 'Completed', 'Overdue'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+ onChanged: (v) { if (v != null) setDState(() => status = v); },
+ )),
+ ]),
+ const SizedBox(height: 12),
+ Row(children: [
+ Expanded(child: VoiceTextField(controller: dueCtl, decoration: const InputDecoration(labelText: 'Due date', isDense: true, border: OutlineInputBorder(), hintText: 'e.g. Nov 15'))),
+ const SizedBox(width: 12),
+ Expanded(child: VoiceTextField(controller: ownerCtl, decoration: const InputDecoration(labelText: 'Owner', isDense: true, border: OutlineInputBorder()))),
+ ]),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+ FilledButton(
+ onPressed: () {
+ final row = _ActionRow(
+ id: existing?.id ?? 'act_${DateTime.now().millisecondsSinceEpoch}',
+ title: titleCtl.text.trim(),
+ priority: priority,
+ dueDate: dueCtl.text.trim(),
+ owner: ownerCtl.text.trim(),
+ status: status,
+ );
+ setState(() {
+ if (isEdit) {
+ final idx = _actionRows.indexWhere((r) => r.id == row.id);
+ if (idx != -1) _actionRows[idx] = row;
+ } else {
+ _actionRows.add(row);
+ }
+ });
+ Navigator.of(ctx).pop();
+ },
+ style: FilledButton.styleFrom(backgroundColor: const Color(0xFF4154F1), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+ child: Text(isEdit ? 'Save' : 'Add'),
+ ),
+ ],
+ ),
+ ),
+ );
+ }
+
+  void _removeAction(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'action');
+  if (!ok) return;
+  setState(() => _actionRows.removeWhere((r) => r.id == id));
   }
 
   Future<void> _seedVendorsIfNeeded() async {

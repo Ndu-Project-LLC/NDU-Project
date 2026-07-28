@@ -18,7 +18,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 class IssueManagementScreen extends StatefulWidget {
  const IssueManagementScreen({super.key});
 
@@ -298,6 +299,29 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  onSearchChanged: (value) =>
  setState(() => _searchQuery = value),
  onEdit: _handleEditIssue,
+ onImport: (rows) async {
+ for (final row in rows) {
+ final issue = IssueLogItem(
+ id: row['id'] ?? '',
+ title: row['title'] ?? '',
+ description: row['description'] ?? '',
+ type: row['type'] ?? 'Scope',
+ severity: row['severity'] ?? 'Medium',
+ status: row['status'] ?? 'Open',
+ assignee: row['assignee'] ?? '',
+ dueDate: row['dueDate'] ?? '',
+ milestone: row['milestone'] ?? '',
+ );
+ await ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: 'issue_management',
+ dataUpdater: (data) => data.copyWith(
+ issueLogItems: [...data.issueLogItems, issue],
+ ),
+ );
+ }
+ },
+ onAdd: _handleNewIssue,
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
@@ -650,12 +674,16 @@ class _ProjectIssuesLogCard extends StatelessWidget {
  required this.searchQuery,
  required this.onSearchChanged,
  required this.onEdit,
+ this.onImport,
+ this.onAdd,
  });
 
  final List<IssueLogItem> entries;
  final String searchQuery;
  final ValueChanged<String> onSearchChanged;
  final void Function(IssueLogItem) onEdit;
+ final ValueChanged<List<Map<String, String>>>? onImport;
+ final VoidCallback? onAdd;
 
  static const List<int> _columnFlex = [2, 3, 2, 2, 2, 2, 2, 2];
 
@@ -680,6 +708,26 @@ class _ProjectIssuesLogCard extends StatelessWidget {
  fontSize: 18,
  fontWeight: FontWeight.w600,
  color: Color(0xFF111827)),
+ ),
+ const SizedBox(width: 16),
+ if (onImport != null || onAdd != null)
+ CsvEnabledSectionHeader(
+ tableTitle: 'Issues Log',
+ columns: const [
+ CsvColumnSpec(key: 'id', label: 'Issue ID'),
+ CsvColumnSpec(key: 'title', label: 'Title', required: true),
+ CsvColumnSpec(key: 'description', label: 'Description'),
+ CsvColumnSpec(key: 'type', label: 'Type', allowedValues: ['Scope', 'Schedule', 'Cost', 'Quality', 'Risk', 'Other'], defaultValue: 'Scope'),
+ CsvColumnSpec(key: 'severity', label: 'Severity', allowedValues: ['Low', 'Medium', 'High', 'Critical'], defaultValue: 'Medium'),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Open', 'In Progress', 'Resolved', 'Closed'], defaultValue: 'Open'),
+ CsvColumnSpec(key: 'assignee', label: 'Assignee'),
+ CsvColumnSpec(key: 'dueDate', label: 'Due Date'),
+ CsvColumnSpec(key: 'milestone', label: 'Milestone'),
+ ],
+ onImport: onImport ?? (_) {},
+ onAdd: onAdd,
+ addLabel: 'Add Issue',
+ compact: true,
  ),
  const Spacer(),
  SizedBox(

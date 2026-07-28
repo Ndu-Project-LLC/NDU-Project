@@ -13,8 +13,9 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
-import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 const Color _kBackground = Color(0xFFF7F8FC);
 const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
@@ -244,93 +245,95 @@ class _DeliverablesRoadmapDetailedScreenState
     );
   }
 
-  Widget _buildFilterBar() {
-    return Row(
-      children: [
-        Expanded(
-          child: VoiceTextField(
-            decoration: InputDecoration(
-              hintText: 'Search deliverables...',
-              prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: _kCardBorder),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
-            onChanged: (value) {
-              _searchQuery = value;
-              _applyFilters();
-            },
-          ),
-        ),
-        const SizedBox(width: 16),
-        _buildDropdown('Category', _selectedCategory, [
-          'All',
-          'Governance',
-          'Requirements',
-          'Risk & Compliance',
-          'Execution',
-          'Technical',
-          'Quality',
-          'Contracts & Procurement',
-          'Schedule & Cost',
-          'Team & Stakeholders',
-        ], (value) {
-          setState(() {
-            _selectedCategory = value;
-            _applyFilters();
-          });
-        }),
-        const SizedBox(width: 12),
-        _buildDropdown('Status', _selectedStatus, [
-          'All',
-          'Not Started',
-          'In Progress',
-          'Completed',
-          'At Risk',
-          'Blocked',
-        ], (value) {
-          setState(() {
-            _selectedStatus = value;
-            _applyFilters();
-          });
-        }),
-        const SizedBox(width: 12),
-        _buildDropdown('Phase', _selectedPhase, [
-          'All',
-          'Initiation',
-          'Front-End Planning',
-          'Planning',
-          'Design',
-          'Execution',
-          'Launch',
-        ], (value) {
-          setState(() {
-            _selectedPhase = value;
-            _applyFilters();
-          });
-        }),
-        const SizedBox(width: 16),
-        ElevatedButton.icon(
-          onPressed: _showAddDeliverableDialog,
-          icon: const Icon(Icons.add),
-          label: const Text('Add Deliverable'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _kAccent,
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+ Widget _buildFilterBar() {
+ return Row(
+ children: [
+ Expanded(
+ child: VoiceTextField(
+ decoration: InputDecoration(
+ hintText: 'Search deliverables...',
+ prefixIcon: const Icon(Icons.search),
+ border: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(8),
+ borderSide: BorderSide(color: _kCardBorder),
+ ),
+ contentPadding: const EdgeInsets.symmetric(
+ horizontal: 16,
+ vertical: 12,
+ ),
+ ),
+ onChanged: (value) {
+ _searchQuery = value;
+ _applyFilters();
+ },
+ ),
+ ),
+ const SizedBox(width: 16),
+ _buildDropdown('Category', _selectedCategory, [
+ 'All',
+ 'Governance',
+ 'Requirements',
+ 'Risk & Compliance',
+ 'Execution',
+ 'Technical',
+ 'Quality',
+ 'Contracts & Procurement',
+ 'Schedule & Cost',
+ 'Team & Stakeholders',
+ ], (value) {
+ setState(() {
+ _selectedCategory = value;
+ _applyFilters();
+ });
+ }),
+ const SizedBox(width: 12),
+ _buildDropdown('Status', _selectedStatus, [
+ 'All',
+ 'Not Started',
+ 'In Progress',
+ 'Completed',
+ 'At Risk',
+ 'Blocked',
+ ], (value) {
+ setState(() {
+ _selectedStatus = value;
+ _applyFilters();
+ });
+ }),
+ const SizedBox(width: 12),
+ _buildDropdown('Phase', _selectedPhase, [
+ 'All',
+ 'Initiation',
+ 'Front-End Planning',
+ 'Planning',
+ 'Design',
+ 'Execution',
+ 'Launch',
+ ], (value) {
+ setState(() {
+ _selectedPhase = value;
+ _applyFilters();
+ });
+ }),
+ const SizedBox(width: 16),
+ CsvEnabledSectionHeader(
+ tableTitle: 'Deliverables Roadmap',
+ columns: _csvColumns,
+ onImport: _handleCsvImport,
+ onAdd: _showAddDeliverableDialog,
+ addLabel: 'Add Deliverable',
+ addButtonStyle: ElevatedButton.styleFrom(
+ backgroundColor: _kAccent,
+ foregroundColor: Colors.black,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 20,
+ vertical: 16,
+ ),
+ ),
+ ),
+ ],
+ );
+ }
 
   Widget _buildDropdown(
     String label,
@@ -565,416 +568,181 @@ class _DeliverablesRoadmapDetailedScreenState
     );
   }
 
-  Widget _buildTableRow(AggregatedDeliverable deliverable, int index) {
-    final isEven = index.isEven;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: isEven ? Colors.white : const Color(0xFFF9FAFB),
-        border: Border(
-          top: BorderSide(
-            color: const Color(0xFFE5E7EB),
-            width: index == 0 ? 1 : 0.5,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 50,
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF9CA3AF),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  deliverable.title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: _kHeadline,
-                    decoration: deliverable.isCompleted
-                        ? TextDecoration.lineThrough
-                        : null,
-                  ),
-                ),
-                if (deliverable.description.isNotEmpty)
-                  Text(
-                    deliverable.description,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: _kMuted,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
-          ),
-          Expanded(child: _buildPhaseChip(deliverable.phase)),
-          Expanded(child: _buildStatusChip(deliverable.status)),
-          Expanded(child: _buildPriorityChip(deliverable.priority)),
-          Expanded(
-            child: Text(
-              deliverable.assigneeName ?? 'Unassigned',
-              style: _cellStyle,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              deliverable.dueDate != null
-                  ? '${deliverable.dueDate!.month}/${deliverable.dueDate!.day}/${deliverable.dueDate!.year}'
-                  : '-',
-              style: _cellStyle.copyWith(
-                color: deliverable.isOverdue ? Colors.red : null,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              deliverable.sourceTypeLabel,
-              style: _cellStyle,
-            ),
-          ),
-          SizedBox(
-            width: 80,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  onPressed: () => _editDeliverable(deliverable),
-                  tooltip: 'Edit',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outlined, size: 18),
-                  onPressed: () => _deleteDeliverable(deliverable),
-                  tooltip: 'Delete',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+ Future<void> _exportPdf() async {
+ final projectData = ProjectDataHelper.getData(context);
+ await PdfExportHelper.exportScreenPdf(
+ context: context,
+ screenTitle: 'Deliverables Roadmap Detailed',
+ sections: [
+ PdfSection.keyValue('Project Info', [
+ {'Project Name': projectData.projectName ?? 'N/A'},
+ {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+ ]),
+ PdfSection.text('Notes', projectData.planningNotes['planning_deliverables_roadmap_detailed_notes'] ?? 'No data recorded.'),
+ ],
+ );
+ }
 
-  Widget _buildStatusIcon(RoadmapDeliverableStatus status) {
-    IconData icon;
-    Color color;
+ /// CSV column specifications for Deliverables Roadmap import
+ List<CsvColumnSpec> get _csvColumns => [
+   CsvColumnSpec(key: 'title', label: 'Deliverable Name', required: true),
+   CsvColumnSpec(key: 'description', label: 'Description'),
+   CsvColumnSpec(
+     key: 'phase',
+     label: 'Phase',
+     allowedValues: ['Initiation', 'Front-End Planning', 'Planning', 'Design', 'Execution', 'Launch'],
+     defaultValue: 'Planning',
+   ),
+   CsvColumnSpec(
+     key: 'category',
+     label: 'Category',
+     allowedValues: ['Governance', 'Requirements', 'Risk & Compliance', 'Execution', 'Technical', 'Quality', 'Contracts & Procurement', 'Schedule & Cost', 'Team & Stakeholders'],
+     defaultValue: 'Execution',
+   ),
+   CsvColumnSpec(
+     key: 'status',
+     label: 'Status',
+     allowedValues: ['Not Started', 'In Progress', 'Completed', 'At Risk', 'Blocked'],
+     defaultValue: 'Not Started',
+   ),
+   CsvColumnSpec(
+     key: 'priority',
+     label: 'Priority',
+     allowedValues: ['Critical', 'High', 'Medium', 'Low'],
+     defaultValue: 'Medium',
+   ),
+   CsvColumnSpec(key: 'owner', label: 'Owner/Assignee'),
+   CsvColumnSpec(key: 'dueDate', label: 'Due Date', hint: 'YYYY-MM-DD or M/D/YYYY'),
+   CsvColumnSpec(key: 'completionPercent', label: 'Completion %', hint: '0-100', defaultValue: '0'),
+   CsvColumnSpec(key: 'dependencies', label: 'Dependencies', hint: 'Comma-separated IDs or names'),
+ ];
 
-    switch (status) {
-      case RoadmapDeliverableStatus.completed:
-        icon = Icons.check_circle;
-        color = Colors.green;
-        break;
-      case RoadmapDeliverableStatus.inProgress:
-        icon = Icons.sync;
-        color = Colors.orange;
-        break;
-      case RoadmapDeliverableStatus.notStarted:
-        icon = Icons.circle_outlined;
-        color = Colors.grey;
-        break;
-      case RoadmapDeliverableStatus.atRisk:
-        icon = Icons.warning;
-        color = Colors.orange;
-        break;
-      case RoadmapDeliverableStatus.blocked:
-        icon = Icons.block;
-        color = Colors.red;
-        break;
-    }
+ /// Handle CSV import - creates deliverables from imported rows
+ Future<void> _handleCsvImport(List<Map<String, String>> rows) async {
+   final projectId = _projectId;
+   if (projectId == null) return;
 
-    return Icon(icon, color: color, size: 18);
-  }
+   var successCount = 0;
+   var failCount = 0;
 
-  Widget _buildPhaseChip(DeliverablePhase phase) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: _getPhaseColor(phase).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        _getPhaseLabel(phase),
-        style: TextStyle(
-          fontSize: 12,
-          color: _getPhaseColor(phase),
-        ),
-      ),
-    );
-  }
+   for (final row in rows) {
+     try {
+       // Parse phase
+       final phaseStr = row['phase'] ?? 'planning';
+       final phase = DeliverablePhase.values.firstWhere(
+         (p) => p.name.toLowerCase() == phaseStr.toLowerCase().replaceAll('-', '').replaceAll(' ', ''),
+         orElse: () => DeliverablePhase.planning,
+       );
 
-  Widget _buildStatusChip(RoadmapDeliverableStatus status) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: _getStatusColor(status).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        _getStatusLabel(status),
-        style: TextStyle(
-          fontSize: 12,
-          color: _getStatusColor(status),
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
+       // Parse category
+       final categoryStr = row['category'] ?? 'execution';
+       final category = DeliverableCategory.values.firstWhere(
+         (c) => c.name.toLowerCase() == categoryStr.toLowerCase().replaceAll('&', '').replaceAll(' ', ''),
+         orElse: () => DeliverableCategory.execution,
+       );
 
-  Widget _buildPriorityChip(RoadmapDeliverablePriority priority) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: _getPriorityColor(priority).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        _getPriorityLabel(priority),
-        style: TextStyle(
-          fontSize: 12,
-          color: _getPriorityColor(priority),
-        ),
-      ),
-    );
-  }
+       // Parse status
+       final statusStr = row['status'] ?? 'notStarted';
+       RoadmapDeliverableStatus status;
+       switch (statusStr.toLowerCase().replaceAll(' ', '')) {
+         case 'notstarted':
+           status = RoadmapDeliverableStatus.notStarted;
+           break;
+         case 'inprogress':
+           status = RoadmapDeliverableStatus.inProgress;
+           break;
+         case 'completed':
+           status = RoadmapDeliverableStatus.completed;
+           break;
+         case 'atrisk':
+           status = RoadmapDeliverableStatus.atRisk;
+           break;
+         case 'blocked':
+           status = RoadmapDeliverableStatus.blocked;
+           break;
+         default:
+           status = RoadmapDeliverableStatus.notStarted;
+       }
 
-  Color _getPhaseColor(DeliverablePhase phase) {
-    switch (phase) {
-      case DeliverablePhase.initiation:
-        return const Color(0xFF3B82F6);
-      case DeliverablePhase.frontEndPlanning:
-        return const Color(0xFF8B5CF6);
-      case DeliverablePhase.planning:
-        return const Color(0xFF10B981);
-      case DeliverablePhase.design:
-        return const Color(0xFFEC4899);
-      case DeliverablePhase.execution:
-        return const Color(0xFFF59E0B);
-      case DeliverablePhase.launch:
-        return const Color(0xFF14B8A6);
-    }
-  }
+       // Parse priority
+       final priorityStr = row['priority'] ?? 'medium';
+       RoadmapDeliverablePriority priority;
+       switch (priorityStr.toLowerCase()) {
+         case 'critical':
+           priority = RoadmapDeliverablePriority.critical;
+           break;
+         case 'high':
+           priority = RoadmapDeliverablePriority.high;
+           break;
+         case 'medium':
+           priority = RoadmapDeliverablePriority.medium;
+           break;
+         case 'low':
+           priority = RoadmapDeliverablePriority.low;
+           break;
+         default:
+           priority = RoadmapDeliverablePriority.medium;
+       }
 
-  Color _getStatusColor(RoadmapDeliverableStatus status) {
-    switch (status) {
-      case RoadmapDeliverableStatus.completed:
-        return Colors.green;
-      case RoadmapDeliverableStatus.inProgress:
-        return Colors.orange;
-      case RoadmapDeliverableStatus.notStarted:
-        return Colors.grey;
-      case RoadmapDeliverableStatus.atRisk:
-        return Colors.orange;
-      case RoadmapDeliverableStatus.blocked:
-        return Colors.red;
-    }
-  }
+       // Parse due date
+       DateTime? dueDate;
+       final dateStr = row['dueDate'];
+       if (dateStr != null && dateStr.isNotEmpty) {
+         try {
+           dueDate = DateTime.tryParse(dateStr);
+           if (dueDate == null) {
+             final parts = dateStr.split('/');
+             if (parts.length == 3) {
+               dueDate = DateTime(
+                 int.parse(parts[2]),
+                 int.parse(parts[0]),
+                 int.parse(parts[1]),
+               );
+             }
+           }
+         } catch (e) {
+           debugPrint('Failed to parse date: $dateStr');
+         }
+       }
 
-  Color _getPriorityColor(RoadmapDeliverablePriority priority) {
-    switch (priority) {
-      case RoadmapDeliverablePriority.critical:
-        return Colors.red;
-      case RoadmapDeliverablePriority.high:
-        return Colors.orange;
-      case RoadmapDeliverablePriority.medium:
-        return Colors.yellow.shade700;
-      case RoadmapDeliverablePriority.low:
-        return Colors.green;
-    }
-  }
+       // Parse completion percent
+       final completionStr = row['completionPercent'] ?? '0';
+       final completionPercent = double.tryParse(completionStr) ?? 0.0;
 
-  String _getPhaseLabel(DeliverablePhase phase) {
-    switch (phase) {
-      case DeliverablePhase.initiation:
-        return 'Initiation';
-      case DeliverablePhase.frontEndPlanning:
-        return 'Front-End Planning';
-      case DeliverablePhase.planning:
-        return 'Planning';
-      case DeliverablePhase.design:
-        return 'Design';
-      case DeliverablePhase.execution:
-        return 'Execution';
-      case DeliverablePhase.launch:
-        return 'Launch';
-    }
-  }
+       // Parse dependencies
+       final depsStr = row['dependencies'];
+       List<String> dependencies = [];
+       if (depsStr != null && depsStr.isNotEmpty) {
+         dependencies = depsStr.split(',').map((d) => d.trim()).where((d) => d.isNotEmpty).toList();
+       }
 
-  String _getStatusLabel(RoadmapDeliverableStatus status) {
-    switch (status) {
-      case RoadmapDeliverableStatus.notStarted:
-        return 'Not Started';
-      case RoadmapDeliverableStatus.inProgress:
-        return 'In Progress';
-      case RoadmapDeliverableStatus.completed:
-        return 'Completed';
-      case RoadmapDeliverableStatus.atRisk:
-        return 'At Risk';
-      case RoadmapDeliverableStatus.blocked:
-        return 'Blocked';
-    }
-  }
+       await DeliverableAggregationService.instance.createNewDeliverable(
+         projectId: projectId,
+         title: row['title'] ?? '',
+         description: row['description'] ?? '',
+         category: category,
+         assignee: row['owner'] ?? '',
+         dueDate: dueDate,
+         priority: priority,
+       );
+       successCount++;
+     } catch (e) {
+       debugPrint('Error importing deliverable row: $e');
+       failCount++;
+     }
+   }
 
-  String _getPriorityLabel(RoadmapDeliverablePriority priority) {
-    switch (priority) {
-      case RoadmapDeliverablePriority.critical:
-        return 'Critical';
-      case RoadmapDeliverablePriority.high:
-        return 'High';
-      case RoadmapDeliverablePriority.medium:
-        return 'Medium';
-      case RoadmapDeliverablePriority.low:
-        return 'Low';
-    }
-  }
+   await _loadData();
 
-  String _getCategoryLabel(DeliverableCategory category) {
-    switch (category) {
-      case DeliverableCategory.governance:
-        return 'Governance';
-      case DeliverableCategory.requirements:
-        return 'Requirements';
-      case DeliverableCategory.riskCompliance:
-        return 'Risk & Compliance';
-      case DeliverableCategory.execution:
-        return 'Execution';
-      case DeliverableCategory.technical:
-        return 'Technical';
-      case DeliverableCategory.quality:
-        return 'Quality';
-      case DeliverableCategory.contractsProcurement:
-        return 'Contracts & Procurement';
-      case DeliverableCategory.scheduleCost:
-        return 'Schedule & Cost';
-      case DeliverableCategory.teamStakeholders:
-        return 'Team & Stakeholders';
-    }
-  }
-
-  void _showAddDeliverableDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => _AddDeliverableDialog(
-        onSubmit: (deliverable) async {
-          final projectId = _projectId;
-          if (projectId == null) return;
-
-          try {
-            await DeliverableAggregationService.instance.createNewDeliverable(
-              projectId: projectId,
-              title: deliverable['title'],
-              description: deliverable['description'] ?? '',
-              category: deliverable['category'],
-              assignee: deliverable['assignee'],
-              dueDate: deliverable['dueDate'],
-              priority: deliverable['priority'],
-            );
-            _loadData();
-            if (mounted) Navigator.of(context).pop();
-          } catch (e) {
-            debugPrint('Error adding deliverable: $e');
-          }
-        },
-      ),
-    );
-  }
-
-  void _editDeliverable(AggregatedDeliverable deliverable) {
-    showDialog(
-      context: context,
-      builder: (context) => _EditDeliverableDialog(
-        deliverable: deliverable,
-        onSubmit: (updated) async {
-          final projectId = _projectId;
-          if (projectId == null) return;
-
-          try {
-            await DeliverableAggregationService.instance
-                .syncDeliverableToSource(
-              projectId: projectId,
-              deliverable: updated,
-              context: context,
-            );
-            _loadData();
-            if (mounted) Navigator.of(context).pop();
-          } catch (e) {
-            debugPrint('Error updating deliverable: $e');
-          }
-        },
-      ),
-    );
-  }
-
-  void _deleteDeliverable(AggregatedDeliverable deliverable) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Deliverable'),
-        content: Text(
-          'Are you sure you want to delete "${deliverable.title}"?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              // TODO: Implement delete
-              Navigator.of(context).pop();
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static const TextStyle _headerStyle = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0.8,
-    color: Color(0xFF6B7280),
-  );
-
-  static const TextStyle _cellStyle = TextStyle(
-    fontSize: 14,
-    color: Color(0xFF374151),
-  );
-
-  Future<void> _exportPdf() async {
-    final projectData = ProjectDataHelper.getData(context);
-    await PdfExportHelper.exportScreenPdf(
-      context: context,
-      screenTitle: 'Deliverables Roadmap Detailed',
-      sections: [
-        PdfSection.keyValue('Project Info', [
-          {'Project Name': projectData.projectName ?? 'N/A'},
-          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
-        ]),
-        PdfSection.text(
-            'Notes',
-            projectData.planningNotes[
-                    'planning_deliverables_roadmap_detailed_notes'] ??
-                'No data recorded.'),
-      ],
-    );
-  }
+   if (mounted) {
+     ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(
+         content: Text('Imported $successCount deliverables${failCount > 0 ? ' ($failCount failed)' : ''}'),
+         backgroundColor: failCount > 0 ? Colors.orange : Colors.green,
+       ),
+     );
+   }
+ }
 }
 
 class _AddDeliverableDialog extends StatefulWidget {

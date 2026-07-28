@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -490,143 +491,183 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
     );
   }
 
-  Widget _buildSignOffsPanel() {
-    return LaunchDataTable(
-      title: 'Financial & Compliance Sign-Off',
-      subtitle: 'Track approvals from finance, legal, and compliance.',
-      columns: const [
-        LaunchColumn(
-            label: 'Approver',
-            flexible: true,
-            fieldType: LaunchFieldType.text,
-            hint: 'Name'),
-        LaunchColumn(
-            label: 'Role',
-            width: 120,
-            fieldType: LaunchFieldType.text,
-            hint: 'Role'),
-        LaunchColumn(
-            label: 'Status',
-            width: 120,
-            fieldType: LaunchFieldType.dropdown,
-            dropdownItems: ['Pending', 'Approved', 'Rejected']),
-        LaunchColumn(
-            label: 'Date',
-            width: 130,
-            fieldType: LaunchFieldType.date,
-            hint: 'Date'),
-        LaunchColumn(
-            label: 'Notes',
-            flexible: true,
-            fieldType: LaunchFieldType.text,
-            hint: 'Notes')
-      ],
-      rowCount: _signOffs.length,
-      onAddValues: (values) {
-        setState(() {
-          _signOffs.add(LaunchApproval(
-            stakeholder: values['Approver'] ?? '',
-            role: values['Role'] ?? '',
-            status: values['Status'] ?? 'Pending',
-            date: values['Date'] ?? '',
-            notes: values['Notes'] ?? '',
-          ));
-        });
-        _scheduleSave();
-      },
-      csvColumns: const [
-        CsvColumnSpec(
-            key: 'approver', label: 'Approver', sampleValue: 'Jane Smith'),
-        CsvColumnSpec(
-            key: 'role', label: 'Role', sampleValue: 'Finance Director'),
-        CsvColumnSpec(
-            key: 'status',
-            label: 'Status',
-            sampleValue: 'Pending',
-            allowedValues: ['Pending', 'Approved', 'Rejected']),
-        CsvColumnSpec(key: 'date', label: 'Date', sampleValue: '2025-01-15'),
-        CsvColumnSpec(
-            key: 'notes', label: 'Notes', sampleValue: 'Under review'),
-      ],
-      onCsvImport: (rows) async {
-        for (final row in rows) {
-          setState(() {
-            _signOffs.add(LaunchApproval(
-              stakeholder: row['approver'] ?? '',
-              role: row['role'] ?? '',
-              status: row['status'] ?? 'Pending',
-              date: row['date'] ?? '',
-              notes: row['notes'] ?? '',
-            ));
-          });
-        }
-        _scheduleSave();
-      },
-      emptyMessage: 'Track finance and compliance approval status.',
-      cellBuilder: (context, idx) {
-        final item = _signOffs[idx];
-        return LaunchDataRow(
-          onEdit: () => _scheduleSave(),
-          onDelete: () async {
-            final ok = await launchConfirmDelete(context, itemName: 'sign-off');
-            if (!ok || !mounted) return;
-            setState(() => _signOffs.removeAt(idx));
-            _scheduleSave();
-          },
-          onKazAi: () => _regenerateSignOffRow(idx),
-          cells: [
-            LaunchEditableCell(
-              value: item.stakeholder,
-              hint: 'Name',
-              bold: true,
-              expand: true,
-              onChanged: (v) {
-                _signOffs[idx] = item.copyWith(stakeholder: v);
-                _scheduleSave();
-              },
-            ),
-            LaunchEditableCell(
-              value: item.role,
-              hint: 'Role',
-              expand: true,
-              onChanged: (v) {
-                _signOffs[idx] = item.copyWith(role: v);
-                _scheduleSave();
-              },
-            ),
-            LaunchStatusDropdown(
-              value: item.status,
-              items: const ['Pending', 'Approved', 'Rejected'],
-              onChanged: (v) {
-                if (v == null) return;
-                _signOffs[idx] = item.copyWith(status: v);
-                _scheduleSave();
-                setState(() {});
-              },
-            ),
-            LaunchDateCell(
-              value: item.date,
-              hint: 'Date',
-              width: 130,
-              onChanged: (v) {
-                _signOffs[idx] = item.copyWith(date: v);
-                _scheduleSave();
-              },
-            ),
-            LaunchEditableCell(
-              value: item.notes,
-              hint: 'Notes',
-              expand: true,
-              onChanged: (v) {
-                _signOffs[idx] = item.copyWith(notes: v);
-                _scheduleSave();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+ Widget _buildContractsPanel() {
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ // CSV Import Header with enhanced column specs for Contract Close-out
+ Row(
+ mainAxisAlignment: MainAxisAlignment.spaceBetween,
+ children: [
+ const Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ 'Contracts Status',
+ style: TextStyle(
+ fontSize: 18,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ ),
+ SizedBox(height: 4),
+ Text(
+ 'All contracts requiring close-out. Import from execution or add manually.',
+ style: TextStyle(
+ fontSize: 13,
+ color: Color(0xFF6B7280),
+ ),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(width: 16),
+ CsvEnabledSectionHeader(
+ tableTitle: 'Contract Close-out Register',
+ columns: const [
+ CsvColumnSpec(key: 'contractName', label: 'Contract Title', required: true, sampleValue: 'Cloud Services Agreement'),
+ CsvColumnSpec(key: 'contractNumber', label: 'Contract Number', sampleValue: 'CTR-2024-001'),
+ CsvColumnSpec(key: 'vendor', label: 'Vendor/Contractor', required: true, sampleValue: 'Acme Corp'),
+ CsvColumnSpec(key: 'contractValue', label: 'Original Contract Value', sampleValue: '\$100,000'),
+ CsvColumnSpec(key: 'changeOrders', label: 'Change Orders Value', defaultValue: '0', sampleValue: '\$5,000'),
+ CsvColumnSpec(key: 'finalValue', label: 'Final Contract Value', sampleValue: '\$105,000'),
+ CsvColumnSpec(key: 'completionDate', label: 'Actual Completion Date', sampleValue: '2024-12-15'),
+ CsvColumnSpec(key: 'closeOutPhase', label: 'Close-out Phase', allowedValues: ['Physical Complete', 'Administrative Complete', 'Final Account Complete', 'Archived'], defaultValue: 'Physical Complete'),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Not Started', 'In Progress', 'Pending Documentation', 'Pending Sign-off', 'Complete'], defaultValue: 'Not Started'),
+ CsvColumnSpec(key: 'closeOutLead', label: 'Close-out Lead', sampleValue: 'John Smith'),
+ CsvColumnSpec(key: 'lastUpdated', label: 'Last Updated', sampleValue: '2024-12-20'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _contracts.add(LaunchContractItem(
+ contractName: row['contractName'] ?? '',
+ vendor: row['vendor'] ?? '',
+ contractRef: row['contractNumber'] ?? '',
+ value: row['finalValue'].isNotEmpty ? row['finalValue']! : (row['contractValue'] ?? ''),
+ closeOutStatus: _mapCloseOutStatus(row['status'], row['closeOutPhase']),
+ notes: 'Lead: ${row['closeOutLead'] ?? ''}${row['changeOrders'] != null && row['changeOrders']!.isNotEmpty ? ' | Change Orders: ${row['changeOrders']}' : ''}',
+ ));
+ }
+ });
+ _scheduleSave();
+ },
+ onAdd: () => _showAddContractDialog(),
+ addLabel: 'Add Contract',
+ compact: true,
+ ),
+ ],
+ ),
+ const SizedBox(height: 12),
+ // Main data table
+ LaunchDataTable(
+ title: '', // Title shown in custom header above
+ subtitle: null,
+ columns: const [LaunchColumn(label: 'Contract', flexible: true, fieldType: LaunchFieldType.text, hint: 'Contract'), LaunchColumn(label: 'Vendor', width: 130, fieldType: LaunchFieldType.text, hint: 'Vendor'), LaunchColumn(label: 'Ref', width: 130, fieldType: LaunchFieldType.text, hint: 'Ref'), LaunchColumn(label: 'Value', width: 130, fieldType: LaunchFieldType.text, hint: 'Value'), LaunchColumn(label: 'Status', width: 120, fieldType: LaunchFieldType.dropdown, dropdownItems: LaunchContractItem.closeOutStatuses)],
+ rowCount: _contracts.length,
+ onAddValues: (values) {
+ setState(() {
+ _contracts.add(LaunchContractItem(
+ contractName: values['Contract'] ?? '',
+ vendor: values['Vendor'] ?? '',
+ contractRef: values['Ref'] ?? '',
+ value: values['Value'] ?? '',
+ closeOutStatus: values['Status'] ?? 'Open',
+ ));
+ });
+ _scheduleSave();
+ },
+ csvColumns: const [
+ CsvColumnSpec(key: 'contract', label: 'Contract', sampleValue: 'Cloud Services Agreement'),
+ CsvColumnSpec(key: 'vendor', label: 'Vendor', sampleValue: 'Acme Corp'),
+ CsvColumnSpec(key: 'ref', label: 'Ref', sampleValue: 'CTR-001'),
+ CsvColumnSpec(key: 'value', label: 'Value', sampleValue: '\$100,000'),
+ CsvColumnSpec(key: 'status', label: 'Status', sampleValue: 'Open', allowedValues: ['Open', 'In Progress', 'Closed', 'Disputed']),
+ ],
+ onCsvImport: (rows) async {
+ for (final row in rows) {
+ setState(() {
+ _contracts.add(LaunchContractItem(
+ contractName: row['contract'] ?? '',
+ vendor: row['vendor'] ?? '',
+ contractRef: row['ref'] ?? '',
+ value: row['value'] ?? '',
+ closeOutStatus: row['status'] ?? 'Open',
+ ));
+ });
+ }
+ _scheduleSave();
+ },
+ importLabel: 'Import',
+ onImport: _importContracts,
+ emptyMessage: 'Import contracts from execution phase or add manually.',
+ cellBuilder: (context, idx) {
+ final item = _contracts[idx];
+ return LaunchDataRow(
+ onEdit: () => _scheduleSave(),
+ onDelete: () async {
+ final ok = await launchConfirmDelete(context, itemName: 'contract');
+ if (!ok || !mounted) return;
+ setState(() => _contracts.removeAt(idx));
+ _scheduleSave();
+ },
+ onKazAi: () => _regenerateContractRow(idx),
+ cells: [
+ LaunchEditableCell(
+ value: item.contractName,
+ hint: 'Contract',
+ bold: true,
+ expand: true,
+ onChanged: (v) {
+ _contracts[idx] = item.copyWith(contractName: v);
+ _scheduleSave();
+ },
+ ),
+ LaunchEditableCell(
+ value: item.vendor,
+ hint: 'Vendor',
+ width: 120,
+ onChanged: (v) {
+ _contracts[idx] = item.copyWith(vendor: v);
+ _scheduleSave();
+ },
+ ),
+ LaunchEditableCell(
+ value: item.contractRef,
+ hint: 'Ref',
+ width: 130,
+ onChanged: (v) {
+ _contracts[idx] = item.copyWith(contractRef: v);
+ _scheduleSave();
+ },
+ ),
+ LaunchEditableCell(
+ value: item.value,
+ hint: 'Value',
+ width: 130,
+ onChanged: (v) {
+ _contracts[idx] = item.copyWith(value: v);
+ _scheduleSave();
+ },
+ ),
+ LaunchStatusDropdown(
+ value: item.closeOutStatus,
+ items: LaunchContractItem.closeOutStatuses,
+ onChanged: (v) {
+ if (v == null) return;
+ _contracts[idx] = item.copyWith(closeOutStatus: v);
+ _scheduleSave();
+ setState(() {});
+ },
+ ),
+ ],
+ );
+ },
+ ),
+ ],
+ );
+ }
 
   Future<void> _importContracts() async {
     if (_projectId == null) return;
@@ -678,17 +719,60 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
         await _autoPopulateFromPriorPhases();
       }
 
-      final stillEmpty = _contracts.isEmpty &&
-          _closeOutSteps.isEmpty &&
-          _signOffs.isEmpty &&
-          _financialSummary.isEmpty;
-      if (stillEmpty) await _populateFromAi();
-    } catch (e) {
-      debugPrint('Contract close-out load error: $e');
-      if (mounted) setState(() => _isLoading = false);
-    }
-    _suspendSave = false;
-  }
+ /// Maps CSV status/phase values to LaunchContractItem.closeOutStatus
+ String _mapCloseOutStatus(String? status, String? phase) {
+ // Direct status mapping
+ if (status != null && status.isNotEmpty) {
+ switch (status.toLowerCase()) {
+ case 'not started':
+ case 'open':
+ return 'Open';
+ case 'in progress':
+ return 'In Progress';
+ case 'pending documentation':
+ case 'pending sign-off':
+ return 'In Progress';
+ case 'complete':
+ case 'closed':
+ return 'Closed';
+ case 'disputed':
+ return 'Disputed';
+ }
+ }
+ // Fallback to phase-based mapping
+ if (phase != null && phase.isNotEmpty) {
+ switch (phase.toLowerCase()) {
+ case 'physical complete':
+ return 'In Progress';
+ case 'administrative complete':
+ case 'final account complete':
+ return 'In Progress';
+ case 'archived':
+ return 'Closed';
+ }
+ }
+ return 'Open';
+ }
+
+ /// Shows dialog to add a new contract manually
+ void _showAddContractDialog() {
+ showDialog(
+ context: context,
+ builder: (context) => _AddContractDialog(
+ onAdd: (contract) {
+ setState(() => _contracts.add(contract));
+ _scheduleSave();
+ },
+ ),
+ );
+ }
+
+ void _scheduleSave() {
+ if (_suspendSave || !_hasLoaded) return;
+ Future.microtask(() {
+ if (mounted) _persistData();
+ });
+ }
 
   Future<void> _persistData() async {
     if (_projectId == null) return;
@@ -1302,5 +1386,124 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
         ),
       ],
     );
+  }
+}
+
+/// Dialog for adding a new contract manually
+class _AddContractDialog extends StatefulWidget {
+  final void Function(LaunchContractItem) onAdd;
+
+  const _AddContractDialog({required this.onAdd});
+
+  @override
+  State<_AddContractDialog> createState() => _AddContractDialogState();
+}
+
+class _AddContractDialogState extends State<_AddContractDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _contractNameController = TextEditingController();
+  final _vendorController = TextEditingController();
+  final _contractRefController = TextEditingController();
+  final _valueController = TextEditingController();
+  String _closeOutStatus = 'Open';
+
+  @override
+  void dispose() {
+    _contractNameController.dispose();
+    _vendorController.dispose();
+    _contractRefController.dispose();
+    _valueController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Add Contract'),
+      content: Form(
+        key: _formKey,
+        child: SizedBox(
+          width: 450,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _contractNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Contract Title *',
+                  hintText: 'Enter contract name',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _vendorController,
+                decoration: const InputDecoration(
+                  labelText: 'Vendor/Contractor *',
+                  hintText: 'Enter vendor name',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _contractRefController,
+                decoration: const InputDecoration(
+                  labelText: 'Contract Number / Ref',
+                  hintText: 'e.g., CTR-2024-001',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _valueController,
+                decoration: const InputDecoration(
+                  labelText: 'Contract Value',
+                  hintText: 'e.g., $100,000',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _closeOutStatus,
+                decoration: const InputDecoration(
+                  labelText: 'Close-out Status',
+                  border: OutlineInputBorder(),
+                ),
+                items: LaunchContractItem.closeOutStatuses
+                    .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _closeOutStatus = v);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('Add Contract'),
+        ),
+      ],
+    );
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    widget.onAdd(LaunchContractItem(
+      contractName: _contractNameController.text.trim(),
+      vendor: _vendorController.text.trim(),
+      contractRef: _contractRefController.text.trim(),
+      value: _valueController.text.trim(),
+      closeOutStatus: _closeOutStatus,
+    ));
+    Navigator.of(context).pop();
   }
 }

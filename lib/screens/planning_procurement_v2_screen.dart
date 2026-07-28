@@ -34,7 +34,8 @@ import 'package:ndu_project/widgets/procurement/procurement_workflow_builder.dar
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 
 class PlanningProcurementV2Screen extends StatefulWidget {
  const PlanningProcurementV2Screen({super.key});
@@ -533,21 +534,148 @@ class _PlanningProcurementV2ScreenState
  }
 
  Widget _buildItemsTab() {
- final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
- return ProcurementItemsListView(
- items: _items,
- trackableItems: _trackableItems,
- selectedIndex: _selectedTrackableIndex,
- onSelectTrackable: (index) =>
- setState(() => _selectedTrackableIndex = index),
- currencyFormat: currencyFormat,
- onAddItem: _openAddItemDialog,
- onEditItem: (item) => _openEditItemDialog(item),
- onDeleteItem: (item) => _removeItem(item),
- );
- }
+  final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // CSV Import + Add Item header
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Expanded(
+            child: Text(
+              'Procurement Items',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF111827),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          CsvEnabledSectionHeader(
+            tableTitle: 'Procurement Items',
+            columns: const [
+              CsvColumnSpec(key: 'name', label: 'Item/Service Name', required: true),
+              CsvColumnSpec(key: 'description', label: 'Description'),
+              CsvColumnSpec(key: 'category', label: 'Category', allowedValues: ['Materials', 'Equipment', 'Services', 'IT Equipment', 'Construction Services', 'Furniture', 'Security', 'Logistics', 'Other']),
+              CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['planning', 'rfqReview', 'vendorSelection', 'ordered', 'delivered', 'cancelled'], defaultValue: 'planning'),
+              CsvColumnSpec(key: 'priority', label: 'Priority', allowedValues: ['low', 'medium', 'high', 'critical'], defaultValue: 'medium'),
+              CsvColumnSpec(key: 'budget', label: 'Budget (Estimated Cost)', defaultValue: '0'),
+              CsvColumnSpec(key: 'spent', label: 'Actual Spend', defaultValue: '0'),
+              CsvColumnSpec(key: 'responsibleMember', label: 'Responsible Member'),
+              CsvColumnSpec(key: 'requiredByDate', label: 'Needed By Date'),
+              CsvColumnSpec(key: 'notes', label: 'Notes'),
+            ],
+            onImport: _handleProcurementCsvImport,
+            onAdd: _openAddItemDialog,
+            addLabel: 'Add Item',
+          ),
+        ],
+      ),
+      const SizedBox(height: 20),
+      // Items list
+      Expanded(
+        child: ProcurementItemsListView(
+          items: _items,
+          trackableItems: _trackableItems,
+          selectedIndex: _selectedTrackableIndex,
+          onSelectTrackable: (index) =>
+              setState(() => _selectedTrackableIndex = index),
+          currencyFormat: currencyFormat,
+          onAddItem: _openAddItemDialog,
+          onEditItem: (item) => _openEditItemDialog(item),
+          onDeleteItem: (item) => _removeItem(item),
+        ),
+      ),
+    ],
+  );
+}
 
- List<Widget> _buildDialogContextChips() {
+
+
+/// Handles CSV import for procurement items.
+/// Creates new [ProcurementItemModel] instances from parsed CSV rows.
+Future<void> _handleProcurementCsvImport(List<Map<String, String>> rows) async {
+  var successCount = 0;
+  var errorCount = 0;
+
+  for (final row in rows) {
+    try {
+      // Parse budget and spent values
+      final budget = double.tryParse(row['budget'] ?? '0') ?? 0.0;
+      final spent = double.tryParse(row['spent'] ?? '0') ?? 0.0;
+
+      // Parse date fields
+      DateTime? requiredByDate;
+      if (row['requiredByDate'] != null && row['requiredByDate']!.isNotEmpty) {
+        requiredByDate = DateTime.tryParse(row['requiredByDate']!);
+      }
+
+      // Parse status enum
+      final statusValue = row['status'] ?? 'planning';
+      final status = ProcurementItemStatus.values.firstWhere(
+        (e) => e.name == statusValue,
+        orElse: () => ProcurementItemStatus.planning,
+      );
+
+      // Parse priority enum
+      final priorityValue = row['priority'] ?? 'medium';
+      final priority = ProcurementPriority.values.firstWhere(
+        (e) => e.name == priorityValue,
+        orElse: () => ProcurementPriority.medium,
+      );
+
+      final now = DateTime.now();
+      final item = ProcurementItemModel(
+        id: '', // Will be assigned by Firestore
+        projectId: _projectId,
+        name: row['name']?.trim() ?? '',
+        description: row['description']?.trim() ?? '',
+        category: row['category']?.trim() ?? 'Other',
+        status: status,
+        priority: priority,
+        budget: budget,
+        spent: spent,
+        progress: 0.0,
+        notes: row['notes']?.trim() ?? '',
+        projectPhase: 'Planning',
+        responsibleMember: row['responsibleMember']?.trim() ?? '',
+        comments: '',
+        currencyCode: 'USD',
+        requiredByDate: requiredByDate,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await ProcurementService.createItem(item);
+      successCount++;
+    } catch (e) {
+      debugPrint('Error importing procurement item: $e');
+      errorCount++;
+    }
+  }
+
+  if (!mounted) return;
+
+  if (successCount > 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Successfully imported $successCount procurement item(s).${errorCount > 0 ? ' $errorCount failed.' : ''}'),
+        backgroundColor: errorCount > 0 ? Colors.orange : Colors.green,
+      ),
+    );
+  } else if (errorCount > 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Failed to import $errorCount item(s). Check data format.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
+
+List<Widget> _buildDialogContextChips() {
  final data = ProjectDataHelper.getData(context);
  return [
  if (data.projectName.trim().isNotEmpty)

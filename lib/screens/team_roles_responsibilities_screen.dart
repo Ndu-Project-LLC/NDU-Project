@@ -14,9 +14,10 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/launch_data_table.dart';
+import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
-import 'package:ndu_project/utils/table_import_helper.dart';
-import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
 class TeamRolesResponsibilitiesScreen extends StatefulWidget {
  const TeamRolesResponsibilitiesScreen({super.key});
 
@@ -465,6 +466,93 @@ class _TeamRolesResponsibilitiesScreenState
  'Choose a project to view roles & responsibilities.',
  )
  else
+ // View toggle: Cards / Table
+ Row(
+ mainAxisAlignment: MainAxisAlignment.end,
+ children: [
+ Container(
+ decoration: BoxDecoration(
+ color: const Color(0xFFF3F4F6),
+ borderRadius: BorderRadius.circular(8),
+ ),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ _viewToggleBtn('Cards', !_showTableView, () {
+ setState(() => _showTableView = false);
+ }),
+ _viewToggleBtn('Table', _showTableView, () {
+ setState(() => _showTableView = true);
+ }),
+ ],
+ ),
+ ),
+ const SizedBox(width: 8),
+ // CSV Import / Download Template using standardized widget
+ CsvTableImportButton(
+ tableTitle: 'Roles & Responsibilities',
+ compact: true,
+ columns: const [
+ CsvColumnSpec(
+ key: 'title',
+ label: 'Role / Position',
+ required: true,
+ sampleValue: 'Project Manager',
+ ),
+ CsvColumnSpec(
+ key: 'subtitle',
+ label: 'Discipline',
+ sampleValue: 'Management',
+ ),
+ CsvColumnSpec(
+ key: 'responsibilities',
+ label: 'Responsibilities',
+ sampleValue: 'Overall project coordination, stakeholder management',
+ ),
+ CsvColumnSpec(
+ key: 'quantity',
+ label: 'Quantity',
+ sampleValue: '1',
+ ),
+ CsvColumnSpec(
+ key: 'fullName',
+ label: 'Full Name',
+ ),
+ CsvColumnSpec(
+ key: 'department',
+ label: 'Department',
+ ),
+ CsvColumnSpec(
+ key: 'employmentType',
+ label: 'Employment Type',
+ allowedValues: ['Full Time', 'Part Time', 'Contract', 'Consultant'],
+ defaultValue: 'Full Time',
+ sampleValue: 'Full Time',
+ ),
+ CsvColumnSpec(
+ key: 'category',
+ label: 'Category',
+ allowedValues: ['Employee', 'Contractor', 'Consultant'],
+ defaultValue: 'Employee',
+ sampleValue: 'Employee',
+ ),
+ CsvColumnSpec(
+ key: 'accessLevel',
+ label: 'Access Level',
+ allowedValues: ['Full access', 'Limited access', 'Read-only'],
+ defaultValue: 'Full access',
+ ),
+ CsvColumnSpec(
+ key: 'teamPlacement',
+ label: 'Team Placement',
+ sampleValue: 'Core team',
+ ),
+ ],
+ onImport: _importRolesFromCsv,
+ ),
+ ],
+ ),
+ const SizedBox(height: 16),
  StreamBuilder<QuerySnapshot>(
  stream: _rolesCollection(projectId)
  .where('type', isNotEqualTo: 'metadata')

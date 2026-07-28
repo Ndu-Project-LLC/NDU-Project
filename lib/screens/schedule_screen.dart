@@ -27,9 +27,9 @@ import 'package:ndu_project/widgets/work_package_dialog.dart';
 import 'package:ndu_project/widgets/work_package_detail.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
-import 'package:go_router/go_router.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -629,6 +629,116 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   void _addTask() {
     unawaited(_openCreateTaskDialog());
+  }
+
+  /// CSV column specifications for schedule activities import
+  static const _scheduleCsvColumns = <CsvColumnSpec>[
+    CsvColumnSpec(
+      key: 'taskName',
+      label: 'Task Name',
+      required: true,
+      hint: 'Name of the task or activity',
+      sampleValue: 'Foundation Work',
+    ),
+    CsvColumnSpec(
+      key: 'startDate',
+      label: 'Start Date',
+      hint: 'Format: YYYY-MM-DD or MM/DD/YYYY',
+      sampleValue: '2024-03-01',
+    ),
+    CsvColumnSpec(
+      key: 'endDate',
+      label: 'End Date',
+      hint: 'Format: YYYY-MM-DD or MM/DD/YYYY',
+      sampleValue: '2024-03-15',
+    ),
+    CsvColumnSpec(
+      key: 'duration',
+      label: 'Duration (Days)',
+      hint: 'Number of days for the task',
+      sampleValue: '14',
+      defaultValue: '5',
+    ),
+    CsvColumnSpec(
+      key: 'resources',
+      label: 'Resources/Assigned To',
+      hint: 'Person or team assigned to the task',
+      sampleValue: 'John Smith',
+    ),
+    CsvColumnSpec(
+      key: 'predecessors',
+      label: 'Predecessors',
+      hint: 'Comma-separated task IDs or names this task depends on',
+    ),
+    CsvColumnSpec(
+      key: 'status',
+      label: 'Status',
+      allowedValues: ['Not Started', 'In Progress', 'On Hold', 'Completed', 'Delayed', 'At Risk'],
+      defaultValue: 'Not Started',
+      sampleValue: 'Not Started',
+    ),
+    CsvColumnSpec(
+      key: 'progress',
+      label: 'Progress %',
+      hint: 'Completion percentage (0-100)',
+      sampleValue: '0',
+      defaultValue: '0',
+    ),
+    CsvColumnSpec(
+      key: 'priority',
+      label: 'Priority',
+      allowedValues: ['Low', 'Medium', 'High', 'Critical'],
+      defaultValue: 'Medium',
+      sampleValue: 'Medium',
+    ),
+    CsvColumnSpec(
+      key: 'discipline',
+      label: 'Discipline',
+      hint: 'Engineering discipline or category',
+      sampleValue: 'Civil',
+    ),
+  ];
+
+  /// Handles CSV import callback - creates new schedule rows from imported data
+  void _importScheduleFromCsv(List<Map<String, String>> rows) {
+    setState(() {
+      for (final row in rows) {
+        final taskName = row['taskName']?.trim() ?? '';
+        if (taskName.isEmpty) continue; // Skip rows without task name
+
+        // Parse progress percentage
+        final progressStr = row['progress']?.trim() ?? '0';
+        final progressPercent = (double.tryParse(progressStr) ?? 0).clamp(0, 100) / 100;
+
+        // Parse duration
+        final durationStr = row['duration']?.trim() ?? '5';
+        final durationDays = int.tryParse(durationStr) ?? 5;
+
+        // Parse predecessors (comma-separated)
+        final predecessorsStr = row['predecessors']?.trim() ?? '';
+        final predecessorIds = predecessorsStr.isNotEmpty
+            ? predecessorsStr.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList()
+            : <String>[];
+
+        _activityRows.add(_ScheduleRow(
+          id: _nextTaskId(),
+          title: taskName,
+          startDate: row['startDate']?.trim() ?? '',
+          dueDate: row['endDate']?.trim() ?? '',
+          durationDays: durationDays,
+          assignee: row['resources']?.trim() ?? '',
+          status: row['status']?.trim() ?? 'Not Started',
+          priority: row['priority']?.trim() ?? 'Medium',
+          discipline: row['discipline']?.trim() ?? '',
+          progressPercent: progressPercent,
+          predecessorId: predecessorIds.isNotEmpty ? predecessorIds.first : null,
+          dependencyIds: predecessorIds.length > 1 ? predecessorIds.sublist(1) : null,
+          onChanged: _handleActivityChanged,
+        ));
+      }
+    });
+    _handleActivityChanged();
+    _showInfo('Imported ${rows.length} schedule activities from CSV.');
   }
 
   Future<void> _openCreateTaskDialog() async {
@@ -2594,6 +2704,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             _listSortField = field;
             _listSortAscending = ascending;
           }),
+          csvImportHeader: CsvEnabledSectionHeader(
+            tableTitle: 'Project Schedule',
+            columns: _scheduleCsvColumns,
+            onImport: _importScheduleFromCsv,
+            onAdd: _addTask,
+            addLabel: 'Add Task',
+          ),
           child: _TimelineList(
             rows: filteredListRows,
             computed: computed,
@@ -2969,6 +3086,8 @@ class _TimelineWorkspaceCard extends StatelessWidget {
     this.sortField = 'title',
     this.sortAscending = true,
     this.onSortChanged,
+    // CSV Import support
+    this.csvImportHeader,
   });
 
   final VoidCallback onPickStartDate;
@@ -2980,6 +3099,9 @@ class _TimelineWorkspaceCard extends StatelessWidget {
   final String sortField;
   final bool sortAscending;
   final void Function(String field, bool ascending)? onSortChanged;
+  
+  /// Optional CSV-enabled section header for import functionality
+  final Widget? csvImportHeader;
 
   @override
   Widget build(BuildContext context) {
@@ -2988,6 +3110,7 @@ class _TimelineWorkspaceCard extends StatelessWidget {
       runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
+        if (csvImportHeader != null) csvImportHeader!,
         TextButton.icon(
           onPressed: onPickStartDate,
           icon: const Icon(Icons.event_outlined, size: 16),

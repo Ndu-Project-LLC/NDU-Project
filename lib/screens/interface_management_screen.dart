@@ -19,7 +19,10 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:go_router/go_router.dart';
+import 'package:ndu_project/services/activity_log_service.dart';
+import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 // ─── Tab definitions ────────────────────────────────────────────────────────
 
 enum _ImTab {
@@ -280,53 +283,95 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
     );
   }
 
-  Widget _buildTabContent() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _selectedTab.label,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF111827),
-                  ),
-                ),
-              ),
-              if (_selectedTab == _ImTab.register)
-                ElevatedButton.icon(
-                  onPressed: () =>
-                      _InterfaceRegisterSection.showAddDialog(context),
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Add Interface'),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          switch (_selectedTab) {
-            _ImTab.register => const _InterfaceRegisterSection(),
-            _ImTab.architecture => const _ArchitectureSection(),
-            _ImTab.raci => const _RaciGovernanceSection(),
-            _ImTab.risks => const _RisksDecisionsSection(),
-            _ImTab.handoff => const _HandoffReadinessSection(),
-            _ImTab.maturity => const _MaturitySection(),
-            _ImTab.audit => const _AuditTrailSection(),
-          },
-        ],
-      ),
-    );
-  }
+ Widget _buildTabContent() {
+ return Container(
+ width: double.infinity,
+ padding: const EdgeInsets.all(18),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(12),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ Expanded(
+ child: Text(
+ _selectedTab.label,
+ style: const TextStyle(
+ fontSize: 22,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ ),
+ ),
+ if (_selectedTab == _ImTab.register)
+ CsvEnabledSectionHeader(
+ tableTitle: 'Interface Register',
+ columns: const [
+ CsvColumnSpec(key: 'boundary', label: 'Boundary / Name', required: true),
+ CsvColumnSpec(key: 'interfaceType', label: 'Interface Type', allowedValues: ['Technical', 'Contractual', 'Organizational', 'Physical', 'Procedural']),
+ CsvColumnSpec(key: 'partyA', label: 'Party A (Source)', required: true),
+ CsvColumnSpec(key: 'partyB', label: 'Party B (Target)', required: true),
+ CsvColumnSpec(key: 'dataFlow', label: 'Data Flow Direction', allowedValues: ['Bidirectional', 'A to B', 'B to A']),
+ CsvColumnSpec(key: 'protocol', label: 'Protocol', allowedValues: ['API', 'File Transfer', 'Manual', 'Email', 'Shared DB']),
+ CsvColumnSpec(key: 'cadence', label: 'Cadence / Frequency', allowedValues: ['Daily', 'Weekly', 'Bi-weekly', 'Monthly', 'Quarterly', 'As Needed']),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Active', 'Pending', 'Under Review', 'Approved', 'Closed', 'Resolved']),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'priority', label: 'Priority', allowedValues: ['High', 'Medium', 'Low']),
+ CsvColumnSpec(key: 'criticality', label: 'Criticality', allowedValues: ['Critical', 'Major', 'Minor']),
+ CsvColumnSpec(key: 'risk', label: 'Risk'),
+ CsvColumnSpec(key: 'notes', label: 'Notes'),
+ ],
+ onImport: (rows) {
+ final data = ProjectDataHelper.getData(context);
+ final newEntries = rows.map((row) => InterfaceEntry(
+ boundary: row['boundary'] ?? '',
+ interfaceType: row['interfaceType'] ?? '',
+ partyA: row['partyA'] ?? '',
+ partyB: row['partyB'] ?? '',
+ dataFlow: row['dataFlow'] ?? '',
+ protocol: row['protocol'] ?? '',
+ cadence: row['cadence'] ?? '',
+ status: row['status'] ?? '',
+ owner: row['owner'] ?? '',
+ priority: row['priority'] ?? '',
+ criticality: row['criticality'] ?? '',
+ risk: row['risk'] ?? '',
+ notes: row['notes'] ?? '',
+ )).toList();
+ ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: 'interface_management',
+ showSnackbar: true,
+ dataUpdater: (d) => d.copyWith(
+ interfaceEntries: [...d.interfaceEntries, ...newEntries],
+ ),
+ );
+ },
+ onAdd: () => _InterfaceRegisterSection.showAddDialog(context),
+ addLabel: 'Add Interface',
+ ),
+ ],
+ ),
+ const SizedBox(height: 16),
+  switch (_selectedTab) {
+    _ImTab.register => const _InterfaceRegisterSection(),
+    _ImTab.interfaceTypes => const _InterfaceTypesSection(),
+    _ImTab.responsibilities => const _ResponsibilitiesSection(),
+    _ImTab.coordination => const _CoordinationSection(),
+    _ImTab.dependencyMgmt => const _DependencyMgmtSection(),
+    _ImTab.risks => const _RisksDecisionsSection(),
+    _ImTab.monitoring => const _MonitoringSection(),
+    _ImTab.deliverables => const _DeliverablesSection(),
+    _ImTab.audit => const _AuditTrailSection(),
+  },
+ ],
+ ),
+ );
+ }
 
   Future<void> _exportPdf() async {
     final projectData = ProjectDataHelper.getData(context);

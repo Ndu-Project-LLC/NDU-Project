@@ -1001,6 +1001,15 @@ class DesignPlanningWorkItem {
 }
 
 class DesignSpecificationPlanRow {
+  // Static counter for auto-generating spec codes
+  static int _specCodeCounter = 0;
+  
+  /// Generates a unique spec code like "SPEC-001", "SPEC-002", etc.
+  static String _generateSpecCode() {
+    _specCodeCounter++;
+    return 'SPEC-${_specCodeCounter.toString().padLeft(3, '0')}';
+  }
+  
   DesignSpecificationPlanRow({
     String? id,
     this.title = '',
@@ -1018,7 +1027,14 @@ class DesignSpecificationPlanRow {
     this.wbsWorkPackageTitle = '',
     this.uploadedFileName = '',
     this.uploadedStoragePath = '',
+    // New fields with defaults
+    this.specCode = '',                // Will be auto-generated if empty
+    this.subscopePackageId = '',
+    this.subscopePackageTitle = '',
+    this.requirementMappingCount = 0,
+    this.coveragePercent = 0.0,
   })  : id = id ?? _nextSpecRowId(),
+        specCode = (specCode.isNotEmpty) ? specCode : _generateSpecCode(),
         attachedRequirementIds = attachedRequirementIds ?? [];
 
   final String id;
@@ -1037,6 +1053,12 @@ class DesignSpecificationPlanRow {
   String wbsWorkPackageTitle;
   String uploadedFileName;
   String uploadedStoragePath;
+  // New fields
+  String specCode;                    // Auto-generated "SPEC-001", "SPEC-002", etc.
+  String subscopePackageId;           // Link to subscope/work package
+  String subscopePackageTitle;        // Display name for subscope package
+  int requirementMappingCount;        // Count of mapped requirements (calculated)
+  double coveragePercent;             // Coverage percentage (0.0 to 1.0)
 
   factory DesignSpecificationPlanRow.fromJson(Map<String, dynamic> json) {
     final legacyDisciplineArea = json['disciplineArea']?.toString().trim() ??
@@ -1077,6 +1099,12 @@ class DesignSpecificationPlanRow {
           '',
       uploadedFileName: json['uploadedFileName']?.toString() ?? '',
       uploadedStoragePath: json['uploadedStoragePath']?.toString() ?? '',
+      // New fields with backward compatibility
+      specCode: json['specCode']?.toString() ?? json['code']?.toString() ?? '',
+      subscopePackageId: json['subscopePackageId']?.toString() ?? '',
+      subscopePackageTitle: json['subscopePackageTitle']?.toString() ?? '',
+      requirementMappingCount: json['requirementMappingCount'] ?? 0,
+      coveragePercent: (json['coveragePercent'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -1101,6 +1129,12 @@ class DesignSpecificationPlanRow {
         'wbsWorkPackageTitle': wbsWorkPackageTitle,
         'uploadedFileName': uploadedFileName,
         'uploadedStoragePath': uploadedStoragePath,
+        // New fields
+        'specCode': specCode,
+        'subscopePackageId': subscopePackageId,
+        'subscopePackageTitle': subscopePackageTitle,
+        'requirementMappingCount': requirementMappingCount,
+        'coveragePercent': coveragePercent,
       };
 
   static (String?, String?) _parseLegacyDisciplineArea(String raw) {

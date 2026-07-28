@@ -1,0 +1,22 @@
+name: Deploy Firestore Rules
+
+on:
+  push:
+    branches: [ main, staging ]
+    paths:
+      - 'firestore.rules'
+
+jobs:
+  deploy-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+      
+      - name: Deploy Firestore Rules
+        run: firebase deploy --only firestore:rules --project ndu-d3f60
+        env:
+          FIREBASE_TOKEN: ${{ secrets.STAGING_DEPLOY_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ""

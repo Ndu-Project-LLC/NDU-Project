@@ -1,0 +1,4 @@
+env: prod
+flutterflow_ai_build: 23abf951
+flutterflow_ai_version: 0.2.0
+api_base_url: https://api.flutterflow.io/v2

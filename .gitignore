@@ -1,0 +1,52 @@
+# FlutterFlow AI managed
+.env
+.flutterflow/.env
+.flutterflow/sdk/
+.flutterflow/runs.jsonl
+.flutterflow/history/
+.flutterflow/traces/
+.flutterflow/backups/
+.flutterflow/support/
+.flutterflow/workspace.json
+.flutterflow/last_run.json
+.flutterflow/recovery.json
+.flutterflow/plan.md
+.flutterflow/context_meta.json
+.flutterflow/dsl_snapshot_meta.json
+.flutterflow/generated_code_state.json
+dsl_json/
+generated_code/
+.ffai_staging/
+.dart_tool/
+.packages
+build/
+
+# IDE / editor config
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Stray analysis / temp outputs
+analysis_output*.txt
+analyze_output*.txt
+errors*.txt
+lints*.txt
+
+# Last-build ID (build artifact)
+.last_build_id
+
+# Runtime config with local API keys — DO NOT COMMIT
+env-config.js
+web/env-config.js
+
+# Misc generated
+*.pyc

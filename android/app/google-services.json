@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "582544605695",
+    "project_id": "ndu-d3f60",
+    "storage_bucket": "ndu-d3f60.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:582544605695:android:b6cad13b43acd1032aa7ca",
+        "android_client_info": {
+          "package_name": "com.mycompany.CounterApp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "582544605695-daut1t3pcst5va82vgpmavul2fg7gams.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfe35UrYD6OZsLLdibWLlve-HD8ECBM5s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "582544605695-daut1t3pcst5va82vgpmavul2fg7gams.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "582544605695-ila7u26oovr9o2l5ofnvgipfesd73f9p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mycompany.nduprojectprogram"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:582544605695:android:d9d8147e7c2a7cb32aa7ca",
+        "android_client_info": {
+          "package_name": "com.mycompany.nduprojectprogram"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "582544605695-daut1t3pcst5va82vgpmavul2fg7gams.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfe35UrYD6OZsLLdibWLlve-HD8ECBM5s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "582544605695-daut1t3pcst5va82vgpmavul2fg7gams.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "582544605695-ila7u26oovr9o2l5ofnvgipfesd73f9p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mycompany.nduprojectprogram"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

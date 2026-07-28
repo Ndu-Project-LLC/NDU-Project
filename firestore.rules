@@ -1,0 +1,226 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ─── Helper functions ──────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(ownerId) {
+      return isAuthenticated() && request.auth.uid == ownerId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true;
+    }
+
+    // ─── Users collection (own data only) ──────────────────────────────
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAuthenticated() && isAdmin();
+      
+      // User subcollections — only the owner can read/write
+      match /{document=**} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+      
+      // Profile onboarding
+      match /profile/{document=**} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+      
+      // Change management subcollections
+      match /changeRequests/{document=**} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+      match /cmAuditTrail/{document=**} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+      match /cmBaselineHistory/{document=**} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+      
+      // Security subcollection (key rotation, 2FA secrets)
+      match /security/{document=**} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+      
+      // Rate limits (write-only for the user, no read needed)
+      match /rateLimits/{document=**} {
+        allow read: if false;
+        allow write: if isAuthenticated() && request.auth.uid == userId;
+      }
+    }
+    
+    // ─── Projects collection ───────────────────────────────────────────
+    match /projects/{projectId} {
+      function isProjectOwner() {
+        return isAuthenticated()
+          && exists(/databases/$(database)/documents/projects/$(projectId))
+          && request.auth.uid == get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId;
+      }
+
+      function isProjectMember() {
+        return exists(/databases/$(database)/documents/projects/$(projectId))
+          && (
+            request.auth.uid == get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId
+            || request.auth.token.email in get(/databases/$(database)/documents/projects/$(projectId)).data.get('teamMemberEmails', [])
+          )
+          || isAdmin();
+      }
+
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.ownerId ||
+        (resource.data.get('teamMembers', []) is list && request.auth.uid in resource.data.get('teamMembers', [])) ||
+        isAdmin()
+      );
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
+      
+      // All project subcollections — owner has full access, members have read access
+      match /{document=**} {
+        allow read: if isProjectOwner() || isProjectMember();
+        allow write: if isProjectOwner() || isProjectMember();
+      }
+    }
+    
+    // ─── Programs collection ───────────────────────────────────────────
+    match /programs/{programId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
+    }
+    
+    // ─── Portfolios collection ─────────────────────────────────────────
+    match /portfolios/{portfolioId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
+    }
+    
+    // ─── Team invitations ──────────────────────────────────────────────
+    match /teamInvitations/{inviteId} {
+      allow read: if isAuthenticated() && resource.data.inviterUid == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.inviterUid == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.inviterUid == request.auth.uid;
+    }
+    
+    // ─── App content (admin-managed, publicly readable) ────────────────
+    match /app_content/{contentId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /appContent/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // ─── Page hints (publicly readable, admin-writable) ────────────────
+    match /page_hints/{hintId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // ─── Subscriptions (user can only access their own) ────────────────
+    match /subscriptions/{subscriptionId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && (
+        (request.resource.data.userId == request.auth.uid
+          && request.resource.data.isTrial == true && request.resource.data.status == 'trial'
+        ) || isAdmin()
+      );
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Coupons (admin only) ──────────────────────────────────────────
+    match /coupons/{couponId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // ─── Security audit log (write-only for users, admin read) ─────────
+    match /securityAudit/{auditId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Immutable
+    }
+    
+    // ─── Rate limits (write-only, no read) ─────────────────────────────
+    match /rateLimits/{userId}/{action=**} {
+      allow read: if false;
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if false; // Managed by Cloud Functions only
+    }
+    
+    // ─── Pricing configuration (admin only) ────────────────────────────
+    match /pricingConfig/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ─── Collaboration invitations ─────────────────────────────────────
+    // Authenticated users can create invitations (the Invite Collaborator
+    // flow requires email OTP verification before the write happens).
+    // Users can read invitations they sent or that are addressed to them.
+    match /collaboration_invites/{inviteId} {
+      allow read: if isAuthenticated() && (
+        resource.data.invitedByUid == request.auth.uid ||
+        resource.data.email == request.auth.token.email
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.invitedByUid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.invitedByUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.invitedByUid == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // ─── RBAC audit events (append-only, admin-read) ───────────────────
+    // Any authenticated user can append audit events; only admins can read.
+    match /rbac_audit_events/{eventId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Immutable audit trail
+    }
+
+    // ─── Two-factor OTP codes ──────────────────────────────────────────
+    // OTP documents are keyed by email and managed by Cloud Functions.
+    // Users can read their own OTP doc (to verify); writes are CF-only.
+    match /twoFactorCodes/{email} {
+      allow read: if isAuthenticated() && request.auth.token.email == email;
+      allow write: if false; // Managed by Cloud Functions only
+    }
+
+    // ─── Change requests (top-level collection) ────────────────────────
+    // Authenticated users can read and write change requests scoped to
+    // their projects. The collection is queried by projectId.
+    match /change_requests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.requestedByUid == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.requestedByUid == request.auth.uid || isAdmin()
+      );
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+
+    // ─── Default deny all other collections ────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

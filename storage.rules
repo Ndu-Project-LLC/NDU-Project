@@ -1,0 +1,34 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isUserId(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated()
+        && firebasestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // User profile images - users can upload their own, admins can access all
+    match /users/{userId}/{imageFile} {
+      allow read: if isAuthenticated();
+      allow write: if isUserId(userId) || isAdmin();
+    }
+
+    // Project files - only project members can access
+    match /projects/{projectId}/{allPaths=**} {
+      allow read, write: if false; // Deny by default, enable per-use-case
+    }
+
+    // Default deny all
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

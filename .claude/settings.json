@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git stash *)",
+      "Bash(git restore *)",
+      "Bash(git push *)",
+      "Bash(python3)",
+      "Bash(curl -sL -o /tmp/screenshot1.jpg \"https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/bc2946a8-e675-4c64-ba35-66476940564f/8688d15893a42c01d74824413df14c54.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1779452741&Signature=8VaOqIq79hgCRG06PdDlk/5hAuQ=\")",
+      "Bash(curl -sL -o /tmp/screenshot2.png \"https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/bc2946a8-e675-4c64-ba35-66476940564f/429d8ace145d32e87bbc0a6226dc0fa4.png?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1779452741&Signature=fTBf+TgPkXgaghj1BHVM3XhQamA=\")",
+      "Bash(curl -sL -o /tmp/screenshot3.png \"https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/bc2946a8-e675-4c64-ba35-66476940564f/b5f1e4bd2a09c1d93eefb1d06ceefe27.png?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1779452741&Signature=o8EpOTjdfsBKdW/M7sdrZ1DtpSM=\")",
+      "Read(//tmp/**)",
+      "Read(//private/tmp/**)",
+      "Bash(git status *)",
+      "Bash(git commit -m ' *)",
+      "Bash(grep -v \"^$\")"
+    ],
+    "additionalDirectories": [
+      "/tmp",
+      "/private/tmp"
+    ]
+  }
+}

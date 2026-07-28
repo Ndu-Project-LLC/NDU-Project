@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="UI guide for the NDU platform pages, screen clusters, and page-level layout patterns.">
+  <title>NDU Platform UI Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="site-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-kicker">NDU Project</div>
+        <h1>UI Page Guide</h1>
+        <p>High-level and detailed guidance on what each major page family contains from a user-interface perspective.</p>
+      </div>
+
+      <div class="sidebar-panel">
+        <label class="search-label" for="guide-search-input">Search UI surfaces</label>
+        <input id="guide-search-input" type="search" placeholder="Try dashboard, FEP, schedule, admin...">
+        <p class="search-hint">Filters page families, screen patterns, workspace layouts, and primary UI building blocks.</p>
+      </div>
+
+      <nav class="sidebar-nav" id="guide-section-nav" aria-label="UI guide sections"></nav>
+
+      <div class="sidebar-panel sidebar-panel--note">
+        <h2>How to use this page</h2>
+        <p>Use it to orient product, design, QA, support, or implementation teams before they work in a given page cluster.</p>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="page-topbar">
+        <div class="eyebrow">UI Reference</div>
+        <a href="./index.html" class="button button--secondary">Back to Docs Home</a>
+      </div>
+
+      <header class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Screen-by-Screen Orientation</div>
+          <h2>What users see on each major page family.</h2>
+          <p>
+            This guide describes the user interface at the page level: layout structure, panels, cards, tables,
+            sidebars, inputs, AI controls, summaries, and actions. It stays high-level enough for orientation but
+            specific enough to tell a reader what each screen is made of.
+          </p>
+          <div class="hero-actions">
+            <a href="#core-pages" class="button button--primary">Core Pages</a>
+            <a href="#planning-pages" class="button button--secondary">Planning Pages</a>
+            <a href="#operations-pages" class="button button--secondary">Operations Pages</a>
+          </div>
+        </div>
+        <div class="hero-stats" id="guide-hero-stats"></div>
+      </header>
+
+      <section class="content-section" id="ui-principles">
+        <div class="section-heading">
+          <div class="eyebrow">UI Principles</div>
+          <h2>Common page anatomy across the platform</h2>
+          <p class="guide-lead">
+            Most NDU pages share a workspace model: a strong title/header region, sectional content panels, contextual actions,
+            persistence-aware forms, and side navigation that keeps the user oriented inside a long lifecycle journey.
+          </p>
+        </div>
+        <div class="card-grid" id="ui-principles-grid"></div>
+      </section>
+
+      <section class="content-section" id="core-pages">
+        <div class="section-heading">
+          <div class="eyebrow">Core Pages</div>
+          <h2>Entry, account, and dashboard UI</h2>
+          <p class="guide-lead">
+            These pages shape first impression, access flow, pricing context, and top-level workspace navigation.
+          </p>
+        </div>
+        <div class="card-grid card-grid--wide" id="core-pages-grid"></div>
+      </section>
+
+      <section class="content-section" id="planning-pages">
+        <div class="section-heading">
+          <div class="eyebrow">Planning Pages</div>
+          <h2>Framework, Front-End Planning, and analysis UI</h2>
+          <p class="guide-lead">
+            Planning pages usually combine rich cards, guided text areas, AI generation controls, scenario matrices, and summary blocks.
+          </p>
+        </div>
+        <div class="card-grid card-grid--wide" id="planning-pages-grid"></div>
+      </section>
+
+      <section class="content-section" id="design-pages">
+        <div class="section-heading">
+          <div class="eyebrow">Design and Readiness</div>
+          <h2>Technical, design, and implementation-facing screens</h2>
+          <p class="guide-lead">
+            These pages lean toward specification structure, interface records, technical notes, tables, and engineering readiness artifacts.
+          </p>
+        </div>
+        <div class="card-grid card-grid--wide" id="design-pages-grid"></div>
+      </section>
+
+      <section class="content-section" id="operations-pages">
+        <div class="section-heading">
+          <div class="eyebrow">Execution and Operations</div>
+          <h2>How live-delivery pages are composed</h2>
+          <p class="guide-lead">
+            Operational pages move away from narrative forms and toward boards, logs, tracked records, quick actions, and real-time tables.
+          </p>
+        </div>
+        <div class="card-grid card-grid--wide" id="operations-pages-grid"></div>
+      </section>
+
+      <section class="content-section" id="admin-pages">
+        <div class="section-heading">
+          <div class="eyebrow">Admin UI</div>
+          <h2>Back-office and control-surface pages</h2>
+          <p class="guide-lead">
+            The admin runtime emphasizes oversight: lookup, filtering, editable content, management tables, and trust-oriented operational actions.
+          </p>
+        </div>
+        <div class="card-grid card-grid--wide" id="admin-pages-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./ui-guide.js"></script>
+</body>
+</html>

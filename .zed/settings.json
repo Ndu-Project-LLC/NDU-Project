@@ -1,0 +1,25 @@
+{
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/.jj",
+    "**/.sl",
+    "**/.repo",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    "**/.dart_tool",
+    "**/build",
+    "**/android/build",
+    "**/ios/Pods",
+    "**/node_modules",
+    "**/dist",
+    "**/target"
+  ],
+  "project_panel": {
+    "git_status": false
+  }
+}

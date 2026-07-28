@@ -1,0 +1,72 @@
+name: Build and (optionally) deploy Flutter Web
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Flutter Web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Flutter Pub Get
+        run: flutter pub get
+
+      - name: Build Web (release)
+        env:
+          # Secrets are optional; only needed if your app reads these at build time
+          OPENAI_PROXY_API_KEY: ${{ secrets.OPENAI_PROXY_API_KEY }}
+          OPENAI_PROXY_ENDPOINT: ${{ secrets.OPENAI_PROXY_ENDPOINT }}
+        run: |
+          flutter --version
+          # Build the Flutter web app. Pass through any build-time env defines your app expects.
+          # --no-tree-shake-icons is required because icons are loaded dynamically from JSON data
+          # HTML renderer is configured in web/index.html to avoid canvaskit CDN timeout errors
+          flutter build web --release --no-tree-shake-icons \
+            --dart-define=OPENAI_PROXY_API_KEY=${OPENAI_PROXY_API_KEY} \
+            --dart-define=OPENAI_PROXY_ENDPOINT=${OPENAI_PROXY_ENDPOINT}
+
+      - name: Add Azure SWA config into build output (for SPA routing)
+        run: |
+          if [ -f staticwebapp.config.json ]; then
+            cp staticwebapp.config.json build/web/staticwebapp.config.json
+          fi
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-web-build
+          path: build/web
+
+  deploy_swa:
+    name: Deploy to Azure Static Web Apps
+    needs: build
+    if: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: flutter-web-build
+          path: build/web
+
+      - name: Deploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          # We deploy the prebuilt static output
+          app_location: build/web
+          api_location: ''
+          output_location: ''
+          skip_app_build: true

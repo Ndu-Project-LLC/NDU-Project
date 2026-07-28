@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>NDU Project RBAC Role Recommendation Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 14mm 18mm 14mm;
+    }
+    :root {
+      --ink: #13243a;
+      --muted: #5d6b7c;
+      --line: #d8dee6;
+      --soft: #f4f7fa;
+      --soft-2: #eef3f8;
+      --accent: #d2a106;
+      --accent-2: #17365d;
+      --good: #1c7c54;
+      --warn: #ab6c00;
+      --bad: #8c1d18;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: white;
+      font-family: "Liberation Sans", "DejaVu Sans", Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+    }
+    h1, h2, h3, h4 { margin: 0 0 8px 0; }
+    h1 {
+      font-family: "Liberation Serif", "DejaVu Serif", Georgia, serif;
+      font-size: 28pt;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    h2 {
+      font-size: 16pt;
+      margin-top: 28px;
+      padding-top: 8px;
+      border-top: 2px solid var(--accent-2);
+    }
+    h3 {
+      font-size: 12.5pt;
+      margin-top: 18px;
+    }
+    p { margin: 0 0 10px 0; }
+    ul, ol { margin: 8px 0 12px 18px; padding: 0; }
+    li { margin: 0 0 6px 0; }
+    .cover {
+      min-height: 250mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-after: always;
+    }
+    .cover-top {
+      padding: 18mm 16mm;
+      background: linear-gradient(140deg, #f5f8fc 0%, #edf3f8 54%, #fff6d5 100%);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff4cc;
+      color: #6c5300;
+      font-size: 9.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+    .subtitle {
+      font-size: 14pt;
+      color: var(--muted);
+      max-width: 520px;
+      margin-top: 10px;
+    }
+    .cover-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 28px;
+    }
+    .card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      break-inside: avoid;
+    }
+    .label {
+      font-size: 9pt;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    .value {
+      font-size: 11pt;
+      font-weight: 700;
+    }
+    .page-note {
+      color: var(--muted);
+      font-size: 9.5pt;
+      margin-top: 8px;
+    }
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 14px 0 18px;
+    }
+    .summary-strip .card {
+      background: var(--soft);
+      padding: 12px;
+    }
+    .summary-big {
+      font-size: 20pt;
+      font-weight: 800;
+      color: var(--accent-2);
+    }
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: #fffaf0;
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin: 12px 0 14px;
+    }
+    .warning {
+      border-left-color: var(--warn);
+      background: #fff8eb;
+    }
+    .good {
+      border-left-color: var(--good);
+      background: #f2fbf6;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+      align-items: start;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 16px;
+      table-layout: fixed;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 9px;
+      vertical-align: top;
+      word-wrap: break-word;
+    }
+    th {
+      background: var(--soft-2);
+      text-align: left;
+      font-size: 10pt;
+    }
+    td.small, th.small { font-size: 9.2pt; }
+    .role-table td:nth-child(1) { width: 17%; font-weight: 700; }
+    .role-table td:nth-child(2) { width: 16%; }
+    .role-table td:nth-child(3) { width: 38%; }
+    .role-table td:nth-child(4) { width: 29%; }
+    .matrix th, .matrix td { text-align: center; }
+    .matrix th:first-child, .matrix td:first-child { text-align: left; }
+    .matrix td:first-child { font-weight: 700; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 10px;
+    }
+    .legend span {
+      display: inline-block;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 9pt;
+    }
+    .code-ref {
+      font-family: "Noto Sans Mono", "DejaVu Sans Mono", monospace;
+      font-size: 9pt;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      padding: 2px 6px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .footnotes {
+      font-size: 9.2pt;
+      color: var(--muted);
+    }
+    .sources li {
+      margin-bottom: 8px;
+    }
+    .muted { color: var(--muted); }
+    .section-block { break-inside: avoid; }
+    .tight li { margin-bottom: 4px; }
+    .small { font-size: 9.4pt; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <div class="cover-top">
+      <div class="eyebrow">Approval Demo Report</div>
+      <h1>NDU Project RBAC Role Recommendation Report</h1>
+      <p class="subtitle">
+        Suggested role-based access model for the current application, based on the codebase feature surface,
+        current access architecture, and current RBAC guidance from established platforms and security sources.
+      </p>
+
+      <div class="cover-grid">
+        <div class="card">
+          <div class="label">Prepared for</div>
+          <div class="value">NDU Project approval review</div>
+        </div>
+        <div class="card">
+          <div class="label">Prepared on</div>
+          <div class="value">April 7, 2026</div>
+        </div>
+        <div class="card">
+          <div class="label">Current app pattern</div>
+          <div class="value">Single workspace owner + binary admin flag</div>
+        </div>
+        <div class="card">
+          <div class="label">Recommended model</div>
+          <div class="value">Layered system roles + workspace roles + scoped overlays</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <p class="page-note">
+        This report is intended to support role approval first. Enforcement design can follow after approval.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>1. Executive Summary</h2>
+    <div class="summary-strip">
+      <div class="card">
+        <div class="label">Core workspace roles</div>
+        <div class="summary-big">7</div>
+        <div class="muted small">Owner, PM, Lead, Contributor, Reviewer, Viewer, External</div>
+      </div>
+      <div class="card">
+        <div class="label">Optional system roles</div>
+        <div class="summary-big">4</div>
+        <div class="muted small">Platform Owner, Platform Admin, Billing Admin, Content Admin</div>
+      </div>
+      <div class="card">
+        <div class="label">Current state</div>
+        <div class="summary-big">2</div>
+        <div class="muted small">Admin vs non-admin, plus top-level owner fields</div>
+      </div>
+      <div class="card">
+        <div class="label">Main design rule</div>
+        <div class="summary-big">Least privilege</div>
+        <div class="muted small">Deny by default, validate every request, audit role changes</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Recommendation:</strong> approve a layered model instead of adding more boolean flags. For this app,
+      the most practical shape is <strong>base workspace role + scope + optional specialist overlays</strong>.
+      That keeps the model understandable for demos now and enforceable later without role explosion.
+    </div>
+
+    <p>
+      The codebase already covers project, program, portfolio, planning, front-end planning, design, execution,
+      procurement, contracts, vendors, security, SSHER, AI-assisted generation, integrations, billing, and a separate
+      admin domain. A simple <em>admin/member</em> split is too coarse for that surface area.
+    </p>
+    <p>
+      The clean approval set for the workspace side is:
+      <strong>Workspace Owner, Project/Program Manager, Workstream Lead, Contributor, Reviewer/Approver, Viewer, and External Collaborator</strong>.
+      On the system side, the current single admin role should eventually be split into
+      <strong>Platform Owner, Platform Admin, Billing Admin, and Content Admin</strong>.
+    </p>
+  </section>
+
+  <section>
+    <h2>2. What The Current Codebase Shows</h2>
+    <div class="two-col">
+      <div>
+        <h3>Feature surface observed</h3>
+        <ul class="tight">
+          <li>Project, program, and portfolio workspaces</li>
+          <li>Initiation, business case, framework, planning, WBS, and FEP modules</li>
+          <li>Design, technical alignment, architecture, tools integration, and execution modules</li>
+          <li>Issue, risk, change, schedule, stakeholder, and progress tracking</li>
+          <li>Procurement items, RFQs, purchase orders, contracts, vendor tracking, and cost data</li>
+          <li>Security management, SSHER, access logs, and integration configuration</li>
+          <li>Admin domain for users, projects, coupons, subscription lookup, and content management</li>
+        </ul>
+
+        <h3>Current access model in code</h3>
+        <ul class="tight">
+          <li><strong>System access:</strong> a user document carries <span class="code-ref">isAdmin</span> and <span class="code-ref">isActive</span> only.</li>
+          <li><strong>Admin gate:</strong> admin routes check <span class="code-ref">UserService.isCurrentUserAdmin()</span> and block everyone else.</li>
+          <li><strong>Workspace ownership:</strong> projects, programs, and portfolios are created with a single <span class="code-ref">ownerId</span>.</li>
+          <li><strong>Workspace visibility:</strong> list queries are primarily filtered by <span class="code-ref">ownerId</span>, not membership.</li>
+          <li><strong>Security module:</strong> the app already stores role, permission, setting, and access-log records per project.</li>
+          <li><strong>Audit base:</strong> project activity logging already exists and can support RBAC audit trails.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="card">
+          <div class="label">Key code references</div>
+          <p><span class="code-ref">lib/models/user_model.dart:4</span> user model includes <strong>isAdmin</strong>.</p>
+          <p><span class="code-ref">lib/services/user_service.dart:35</span> admin is derived from email/domain and Firestore.</p>
+          <p><span class="code-ref">lib/screens/admin/admin_auth_wrapper.dart:30</span> admin domain gate checks host and admin status.</p>
+          <p><span class="code-ref">lib/services/project_service.dart:628</span> projects are created with a single <strong>ownerId</strong>.</p>
+          <p><span class="code-ref">lib/services/program_service.dart:9</span> programs are created with a single <strong>ownerId</strong>.</p>
+          <p><span class="code-ref">lib/services/portfolio_service.dart:9</span> portfolios are created with a single <strong>ownerId</strong>.</p>
+          <p><span class="code-ref">lib/screens/security_management_screen.dart:45</span> per-project security roles, permissions, settings, and logs are already stored.</p>
+          <p><span class="code-ref">lib/services/activity_log_service.dart:68</span> activity logs already support audit trails.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warning">
+      <strong>Main architecture implication:</strong> the app does not yet have a shared workspace membership model.
+      That means true RBAC enforcement should not be implemented as more flags on the user record. It needs
+      object-scoped membership for <strong>project</strong>, <strong>program</strong>, and <strong>portfolio</strong> resources.
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Research-Based Design Principles Used</h2>
+    <ul>
+      <li><strong>Least privilege:</strong> users should get only the minimum access needed for their job, both horizontally and vertically.</li>
+      <li><strong>Deny by default:</strong> any new resource or endpoint should be blocked until explicitly permitted.</li>
+      <li><strong>Validate on every request:</strong> UI hiding is not enough; backend and data-layer checks must also enforce policy.</li>
+      <li><strong>Separate system roles from workspace roles:</strong> global administration should not be mixed with day-to-day project management.</li>
+      <li><strong>Use role + scope + relationship:</strong> pure RBAC alone becomes brittle once you need object ownership, assigned records, or external sharing.</li>
+      <li><strong>Keep very few owners:</strong> high-privilege owner roles should be limited and narrowly scoped.</li>
+      <li><strong>Support viewers and guests explicitly:</strong> enterprise tools consistently distinguish editors from read-only and external users.</li>
+      <li><strong>Log permission changes and sensitive access:</strong> approval, billing, security, and membership changes should be auditable.</li>
+    </ul>
+
+    <div class="card small">
+      <p><strong>Why that matters here:</strong> NDU Project is not only a planning app. It also holds procurement data, contracts, vendor performance,
+      security settings, integrations, and billing/admin operations. That mix makes coarse roles risky.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Recommended Role Model</h2>
+
+    <h3>4.1 Core workspace roles to approve now</h3>
+    <table class="role-table small">
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Typical user</th>
+          <th>What they should have access to</th>
+          <th>What they should not control</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Workspace Owner</td>
+          <td>Project sponsor, accountable lead, business owner</td>
+          <td>Full access to one project/program/portfolio; membership and role assignment; scope, budget, procurement, design, execution, closure, reports, approvals, archive/delete, ownership transfer, full logs.</td>
+          <td>System-wide user admin, coupons, subscriptions, global content unless separately granted a system role.</td>
+        </tr>
+        <tr>
+          <td>Project/Program Manager</td>
+          <td>PM, delivery lead</td>
+          <td>Full operational control of planning, design coordination, execution, risks, issues, changes, meetings, stakeholders, reports, AI assistance, and most day-to-day workspace updates.</td>
+          <td>Ownership transfer, workspace deletion, global admin actions, final break-glass security overrides, billing admin.</td>
+        </tr>
+        <tr>
+          <td>Workstream Lead</td>
+          <td>Design lead, engineering lead, procurement lead, security lead, ops lead</td>
+          <td>Edit rights inside assigned workstream(s); approve or sign off within delegated module; manage assigned records, deliverables, and team inputs for that module.</td>
+          <td>Other workstreams outside scope, workspace membership, ownership, global admin, unrelated commercial or security areas unless explicitly scoped.</td>
+        </tr>
+        <tr>
+          <td>Contributor</td>
+          <td>Team member, analyst, coordinator</td>
+          <td>Create and update assigned records, draft sections, meeting notes, activities, issue and risk updates, progress entries, and permitted AI generations in assigned areas.</td>
+          <td>Approvals, role management, destructive settings, archive/delete, security administration, commercial approvals.</td>
+        </tr>
+        <tr>
+          <td>Reviewer / Approver</td>
+          <td>Sponsor delegate, governance reviewer, QA approver</td>
+          <td>Read everything in scope, comment, review, approve/reject gates, baselines, or change requests, and add approval notes.</td>
+          <td>General editing of day-to-day workspace content, membership changes, destructive actions, admin domain.</td>
+        </tr>
+        <tr>
+          <td>Viewer / Executive</td>
+          <td>Leadership, auditors, observers</td>
+          <td>Read-only dashboards, reports, exports, milestone status, logs, and approved documents.</td>
+          <td>Any edits, approvals, AI write actions, security changes, procurement editing, admin actions.</td>
+        </tr>
+        <tr>
+          <td>External Collaborator</td>
+          <td>Vendor, consultant, client reviewer</td>
+          <td>Only explicitly shared records or modules, typically procurement, RFQs, contract review packs, vendor responses, or selected status reports.</td>
+          <td>Internal planning, security settings, team data, admin tools, unshared workspace data, ownership or membership controls.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout good">
+      <strong>Recommended approval set:</strong> if you want the cleanest first implementation target, approve these seven workspace roles now.
+      They are broad enough for the whole app but still simple enough to explain and enforce.
+    </div>
+
+    <h3>4.2 Optional system roles to split the current admin role later</h3>
+    <table class="role-table small">
+      <thead>
+        <tr>
+          <th>Role</th>
+          <th>Typical user</th>
+          <th>What they should have access to</th>
+          <th>What they should not control</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Platform Owner</td>
+          <td>Founder, head of platform</td>
+          <td>All admin-domain functions, user lifecycle, global role policy, cross-workspace recovery access, coupons, subscription lookup, content editing, project oversight.</td>
+          <td>Should be very limited in count; do not assign casually.</td>
+        </tr>
+        <tr>
+          <td>Platform Admin</td>
+          <td>Operations or support admin</td>
+          <td>User administration, project oversight, support troubleshooting, read-all access where needed.</td>
+          <td>Billing/coupon authority and global content changes unless explicitly granted.</td>
+        </tr>
+        <tr>
+          <td>Billing Admin</td>
+          <td>Finance or revenue ops</td>
+          <td>Coupons, subscriptions, invoice/support lookup, billing-related reports.</td>
+          <td>User role administration, global content editing, workspace ownership changes.</td>
+        </tr>
+        <tr>
+          <td>Content Admin</td>
+          <td>Content or product operations</td>
+          <td>Inline app content editing and publishing.</td>
+          <td>User admin, billing admin, workspace deletion, security role changes.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="small muted">
+      This split is optional for phase 1, but it is the right long-term replacement for the current single <span class="code-ref">isAdmin</span> flag.
+    </p>
+  </section>
+
+  <section>
+    <h2>5. Workspace Module Access Matrix</h2>
+    <div class="legend">
+      <span>A = administer</span>
+      <span>E = edit/create/delete in normal scope</span>
+      <span>P = approve/comment</span>
+      <span>R = read/export</span>
+      <span>S = assigned or delegated scope only</span>
+      <span>X = no access by default</span>
+    </div>
+
+    <table class="matrix small">
+      <thead>
+        <tr>
+          <th>Module / resource family</th>
+          <th>Owner</th>
+          <th>PM</th>
+          <th>Lead</th>
+          <th>Contributor</th>
+          <th>Reviewer</th>
+          <th>Viewer</th>
+          <th>External</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Workspace settings, members, role assignment</td>
+          <td>A</td>
+          <td>E</td>
+          <td>X</td>
+          <td>X</td>
+          <td>X</td>
+          <td>R</td>
+          <td>X</td>
+        </tr>
+        <tr>
+          <td>Project/program/portfolio create, archive, delete, transfer</td>
+          <td>A</td>
+          <td>X</td>
+          <td>X</td>
+          <td>X</td>
+          <td>X</td>
+          <td>R</td>
+          <td>X</td>
+        </tr>
+        <tr>
+          <td>Initiation, business case, framework, planning, FEP</td>
+          <td>E</td>
+          <td>E</td>
+          <td>E/S</td>
+          <td>E/S</td>
+          <td>P</td>
+          <td>R</td>
+          <td>X</td>
+        </tr>
+        <tr>
+          <td>Design, architecture, technical alignment, deliverables</td>
+          <td>E</td>
+          <td>E</td>
+          <td>E/S</td>
+          <td>E/S</td>
+          <td>P</td>
+          <td>R</td>
+          <td>X</td>
+        </tr>
+        <tr>
+          <td>Execution, issues, risks, changes, schedule, meetings, progress</td>
+          <td>E</td>
+          <td>E</td>
+          <td>E/S</td>
+          <td>E/S</td>
+          <td>P</td>
+          <td>R</td>
+          <td>R/S</td>
+        </tr>
+        <tr>
+          <td>Commercial: procurement, RFQs, POs, contracts, vendors, cost</td>
+          <td>A</td>
+          <td>E</td>
+          <td>E/S</td>
+          <td>E/S</td>
+          <td>P</td>
+          <td>R</td>
+          <td>R/P/S</td>
+        </tr>
+        <tr>
+          <td>Security, SSHER, integrations, access settings</td>
+          <td>A</td>
+          <td>E</td>
+          <td>E/S</td>
+          <td>X</td>
+          <td>P</td>
+          <td>R</td>
+          <td>X</td>
+        </tr>
+        <tr>
+          <td>Approvals, baselines, sign-off, closure gates</td>
+          <td>A</td>
+          <td>E</td>
+          <td>P/S</td>
+          <td>X</td>
+          <td>P</td>
+          <td>R</td>
+          <td>X</td>
+        </tr>
+        <tr>
+          <td>Reports, dashboards, activity logs, audit views</td>
+          <td>R</td>
+          <td>R</td>
+          <td>R</td>
+          <td>R/S</td>
+          <td>R</td>
+          <td>R</td>
+          <td>R/S</td>
+        </tr>
+        <tr>
+          <td>AI generation and regeneration tools</td>
+          <td>E</td>
+          <td>E</td>
+          <td>E/S</td>
+          <td>E/S</td>
+          <td>R</td>
+          <td>R</td>
+          <td>X</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="small">
+      <strong>Interpretation note:</strong> <em>Lead</em> and <em>Contributor</em> should almost always be scoped by module, record assignment,
+      or delegated ownership. That is the main control that keeps the model from becoming too broad.
+    </p>
+  </section>
+
+  <section>
+    <h2>6. Role Detail Recommendations</h2>
+
+    <div class="section-block">
+      <h3>Workspace Owner</h3>
+      <ul class="tight">
+        <li>One accountable owner per workspace, with a hard limit of 2-3 total owners for safety.</li>
+        <li>Can assign PMs, Leads, Contributors, Reviewers, and Viewers.</li>
+        <li>Can approve high-risk actions: archive/delete, ownership transfer, final commercial approvals, security overrides.</li>
+        <li>Should have full audit visibility across activity logs and security access logs.</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h3>Project / Program Manager</h3>
+      <ul class="tight">
+        <li>Best default role for the person running delivery day to day.</li>
+        <li>Should control planning, execution, coordination, AI drafting, reporting, and member assignment within the workspace.</li>
+        <li>Should not control global admin, coupon/subscription actions, or ownership transfer.</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h3>Workstream Lead</h3>
+      <ul class="tight">
+        <li>Use this for procurement lead, security lead, design lead, engineering lead, or ops lead.</li>
+        <li>Give edit rights only for delegated modules and only where they are accountable.</li>
+        <li>Allow module-level approval if you want distributed sign-off without giving full PM or Owner power.</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h3>Contributor</h3>
+      <ul class="tight">
+        <li>Best for the majority of internal team members.</li>
+        <li>Can update assigned records and draft content, but cannot approve, reassign roles, or change workspace settings.</li>
+        <li>Useful for engineering, QA, analysts, coordinators, and operations contributors.</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h3>Reviewer / Approver</h3>
+      <ul class="tight">
+        <li>Use for governance, sponsors, compliance reviewers, or QA sign-off users.</li>
+        <li>Keep this role read-heavy and approval-focused to preserve separation of duties.</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h3>Viewer / Executive</h3>
+      <ul class="tight">
+        <li>Essential for leadership and audit visibility.</li>
+        <li>Should be explicitly read-only, including on AI actions and comments if you want a strict view role.</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h3>External Collaborator</h3>
+      <ul class="tight">
+        <li>Do not treat external parties like normal members.</li>
+        <li>Scope them to shared commercial records or status packs only.</li>
+        <li>Default-deny internal planning, security, staffing, and admin data.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>7. Recommended Enforcement Shape Later</h2>
+    <p>
+      For this app, enforcement should be built around <strong>membership on a workspace object</strong>, not only on the user profile.
+      A practical structure would be:
+    </p>
+    <ul class="tight">
+      <li><span class="code-ref">users/{uid}</span> for account status and system roles.</li>
+      <li><span class="code-ref">projects/{projectId}/members/{uid}</span> for project role, module scopes, and overlays.</li>
+      <li><span class="code-ref">programs/{programId}/members/{uid}</span> and <span class="code-ref">portfolios/{portfolioId}/members/{uid}</span> for higher-level scopes.</li>
+      <li>Optional overlays such as <span class="code-ref">commercial_admin</span>, <span class="code-ref">security_admin</span>, or <span class="code-ref">content_admin</span>.</li>
+      <li>Relationship checks like <span class="code-ref">ownerId</span>, <span class="code-ref">createdById</span>, assigned owner, approver, or explicitly shared external record.</li>
+    </ul>
+
+    <div class="callout">
+      <strong>Recommended policy rule:</strong> allow an action only when all three conditions are satisfied:
+      <strong>(1) role permits it</strong>, <strong>(2) scope covers the target workspace or module</strong>, and
+      <strong>(3) any relationship condition is true</strong> when required, such as record ownership, assignment, or approved external share.
+    </div>
+
+    <h3>Minimum controls that should exist once enforcement starts</h3>
+    <ul class="tight">
+      <li>Deny by default for every write path.</li>
+      <li>Validate permissions in UI, service layer, and Firestore rules or trusted backend paths.</li>
+      <li>Log role changes, membership changes, approvals, billing actions, security changes, and denied access attempts.</li>
+      <li>Separate destructive rights from editing rights.</li>
+      <li>Keep a clear distinction between system roles and workspace roles.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>8. Approval Recommendation</h2>
+    <div class="card">
+      <h3>Approve these now</h3>
+      <ol>
+        <li>Workspace Owner</li>
+        <li>Project / Program Manager</li>
+        <li>Workstream Lead</li>
+        <li>Contributor</li>
+        <li>Reviewer / Approver</li>
+        <li>Viewer / Executive</li>
+        <li>External Collaborator</li>
+      </ol>
+
+      <h3>Approve these as the follow-on admin split</h3>
+      <ol>
+        <li>Platform Owner</li>
+        <li>Platform Admin</li>
+        <li>Billing Admin</li>
+        <li>Content Admin</li>
+      </ol>
+    </div>
+
+    <div class="callout good">
+      <strong>Why this set is the right size:</strong> it is broad enough for the full app, small enough to explain in a demo,
+      and compatible with a later enforcement pass without a redesign.
+    </div>
+  </section>
+
+  <section>
+    <h2>9. Sources</h2>
+
+    <h3>Codebase references reviewed</h3>
+    <ul class="sources small">
+      <li><span class="code-ref">lib/models/user_model.dart:4</span> - system user model with <strong>isAdmin</strong> and <strong>isActive</strong>.</li>
+      <li><span class="code-ref">lib/services/user_service.dart:35</span> - admin derivation and user admin operations.</li>
+      <li><span class="code-ref">lib/screens/admin/admin_auth_wrapper.dart:30</span> - admin host gate and admin-only routing wrapper.</li>
+      <li><span class="code-ref">lib/services/project_service.dart:628</span> - project creation and owner-based visibility.</li>
+      <li><span class="code-ref">lib/services/program_service.dart:9</span> - program owner model.</li>
+      <li><span class="code-ref">lib/services/portfolio_service.dart:9</span> - portfolio owner model.</li>
+      <li><span class="code-ref">lib/routing/app_router.dart:28</span> - wide feature surface across planning, design, execution, security, SSHER, and admin domains.</li>
+      <li><span class="code-ref">lib/screens/security_management_screen.dart:45</span> - project security roles, permissions, settings, and logs.</li>
+      <li><span class="code-ref">lib/models/project_data_model.dart:2055</span> - role and permission data structures already exist in the model layer.</li>
+      <li><span class="code-ref">lib/services/activity_log_service.dart:68</span> - project activity log support.</li>
+      <li><span class="code-ref">lib/services/procurement_service.dart:18</span> - procurement, RFQ, purchase-order, and contract resource families.</li>
+      <li><span class="code-ref">lib/services/contract_service.dart:51</span> and <span class="code-ref">lib/services/vendor_service.dart:5</span> - commercial records include creator metadata and should be role-protected.</li>
+      <li><span class="code-ref">lib/services/tools_integration_service.dart:130</span> - integration/OAuth configuration is sensitive and should be restricted.</li>
+      <li><span class="code-ref">lib/services/subscription_service.dart:180</span> - billing/subscription operations are system-scope, not normal workspace scope.</li>
+    </ul>
+
+    <h3>External research references</h3>
+    <ul class="sources small">
+      <li>OWASP Authorization Cheat Sheet, accessed April 7, 2026: least privilege, deny by default, validate on every request, log authorization events, and prefer role + attribute/relationship checks for complex apps.<br>
+        https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html</li>
+      <li>Microsoft Learn, <em>Best practices for Azure RBAC</em>, updated March 30, 2025: grant only needed access, narrow scope, limit owners, and prefer group assignment.<br>
+        https://learn.microsoft.com/en-us/azure/role-based-access-control/best-practices</li>
+      <li>Atlassian Support, <em>What are permission schemes in Jira?</em>: separate global permissions from space permissions and use space roles so admins can delegate per-space control without granting unwanted access.<br>
+        https://support.atlassian.com/jira-cloud-administration/docs/what-are-permission-schemes-in-jira/</li>
+      <li>monday.com Support, <em>User types explained</em>, modified November 29, 2025: distinct admin, member, viewer, guest, and board-owner patterns support splitting full control from editing, read-only, and external access.<br>
+        https://support.monday.com/hc/en-us/articles/360002144900-User-types-explained</li>
+    </ul>
+  </section>
+</body>
+</html>

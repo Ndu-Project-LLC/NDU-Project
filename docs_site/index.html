@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NDU Platform documentation website for architecture, modules, operations, deployment, and Firebase Hosting.">
+  <title>NDU Platform Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="site-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-kicker">NDU Project</div>
+        <h1>NDU Platform Docs</h1>
+        <p>Operational, architectural, and deployment documentation for the full platform.</p>
+      </div>
+
+      <div class="sidebar-panel">
+        <label class="search-label" for="search-input">Search the platform</label>
+        <input id="search-input" type="search" placeholder="Try AI, procurement, admin, Firebase...">
+        <p class="search-hint">Filters sections, modules, workflows, and deployment guidance in real time.</p>
+      </div>
+
+      <nav class="sidebar-nav" id="section-nav" aria-label="Documentation sections"></nav>
+
+      <div class="sidebar-panel sidebar-panel--note">
+        <h2>Firebase-ready</h2>
+        <p>This site is configured to deploy from <code>docs_site/</code> with Firebase Hosting rewrites enabled.</p>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Documentation Hub</div>
+          <h2>One place to understand the entire NDU platform.</h2>
+          <p>
+            This documentation site maps the product lifecycle, screen clusters, AI systems, data model,
+            billing stack, admin tooling, integrations, and Firebase deployment flow from the current repository.
+          </p>
+          <div class="hero-actions">
+            <a href="#deploy" class="button button--primary">Deployment Guide</a>
+            <a href="#atlas" class="button button--secondary">Route Atlas</a>
+            <a href="./ui-guide.html" class="button button--secondary">UI Page Guide</a>
+          </div>
+        </div>
+
+        <div class="hero-stats" id="hero-stats"></div>
+      </header>
+
+      <section class="quick-strip" id="quick-strip"></section>
+
+      <section class="content-section" id="overview">
+        <div class="section-heading">
+          <div class="eyebrow">Platform Summary</div>
+          <h2>What the platform is built to do</h2>
+          <p>
+            NDU Project is an enterprise project lifecycle platform spanning initiation, planning,
+            design, execution, launch, governance, and close-out across project, program, and portfolio contexts.
+          </p>
+        </div>
+        <div class="card-grid" id="overview-cards"></div>
+      </section>
+
+      <section class="content-section" id="lifecycle">
+        <div class="section-heading">
+          <div class="eyebrow">Lifecycle</div>
+          <h2>How work flows from idea to closure</h2>
+          <p>
+            The platform is organized as a guided operating system for project delivery, with structured outputs
+            at every phase and deep planning support through the Front-End Planning suite.
+          </p>
+        </div>
+        <div class="timeline" id="timeline"></div>
+      </section>
+
+      <section class="content-section" id="capabilities">
+        <div class="section-heading">
+          <div class="eyebrow">Capability Domains</div>
+          <h2>Coverage across planning, delivery, intelligence, and operations</h2>
+          <p>
+            These are the major product capability layers reflected in routes, services, widgets, and operational docs.
+          </p>
+        </div>
+        <div class="feature-columns" id="capability-columns"></div>
+      </section>
+
+      <section class="content-section" id="atlas">
+        <div class="section-heading">
+          <div class="eyebrow">Route Atlas</div>
+          <h2>Screen inventory by product cluster</h2>
+          <p>
+            This atlas mirrors the route taxonomy defined in the Flutter router so implementation and documentation stay aligned.
+          </p>
+        </div>
+        <div class="atlas-grid" id="route-atlas"></div>
+      </section>
+
+      <section class="content-section" id="architecture">
+        <div class="section-heading">
+          <div class="eyebrow">Architecture</div>
+          <h2>How the platform is composed</h2>
+          <p>
+            Flutter drives the client experience, Firebase powers identity and persistence, and service modules coordinate AI,
+            workflow automation, payments, and operational tooling.
+          </p>
+        </div>
+        <div class="card-grid card-grid--wide" id="architecture-cards"></div>
+      </section>
+
+      <section class="content-section" id="data">
+        <div class="section-heading">
+          <div class="eyebrow">Data Model</div>
+          <h2>Project state, collections, and persistence model</h2>
+          <p>
+            The platform revolves around a large shared <code>ProjectDataModel</code> plus Firestore subcollections
+            for execution records, contracts, vendors, issues, stories, and operational artifacts.
+          </p>
+        </div>
+        <div class="matrix" id="data-matrix"></div>
+      </section>
+
+      <section class="content-section" id="ai">
+        <div class="section-heading">
+          <div class="eyebrow">KAZ AI</div>
+          <h2>AI workflows, safety model, and usage boundaries</h2>
+          <p>
+            KAZ AI is used to accelerate planning, summarization, recommendations, diagram generation,
+            and structured content drafting while protecting secrets through a server-side proxy architecture.
+          </p>
+        </div>
+        <div class="card-grid" id="ai-cards"></div>
+      </section>
+
+      <section class="content-section" id="commercial">
+        <div class="section-heading">
+          <div class="eyebrow">Commercial Stack</div>
+          <h2>Billing, subscriptions, coupons, and entitlements</h2>
+          <p>
+            The platform supports multi-provider billing, tiered subscriptions, invoice history,
+            coupon flows, and subscription-aware access experiences.
+          </p>
+        </div>
+        <div class="card-grid" id="commercial-cards"></div>
+      </section>
+
+      <section class="content-section" id="admin">
+        <div class="section-heading">
+          <div class="eyebrow">Admin and Governance</div>
+          <h2>Operational control surfaces</h2>
+          <p>
+            The admin environment provides user operations, subscription lookup, coupon management,
+            content controls, and restricted host-aware routing.
+          </p>
+        </div>
+        <div class="feature-columns" id="admin-columns"></div>
+      </section>
+
+      <section class="content-section" id="integrations">
+        <div class="section-heading">
+          <div class="eyebrow">Integrations</div>
+          <h2>External systems, OAuth, and service boundaries</h2>
+          <p>
+            Beyond Firebase and payments, the platform is structured to support collaboration and whiteboarding integrations,
+            secure key handling, and workflow-linked external tooling.
+          </p>
+        </div>
+        <div class="card-grid" id="integration-cards"></div>
+      </section>
+
+      <section class="content-section" id="deploy">
+        <div class="section-heading">
+          <div class="eyebrow">Deployment</div>
+          <h2>Firebase Hosting and operational rollout</h2>
+          <p>
+            The docs site is static and Hosting-ready. The wider platform also depends on Firestore rules,
+            Cloud Functions, secrets, and environment configuration for AI and payments.
+          </p>
+        </div>
+        <div class="deploy-layout">
+          <div class="deploy-card">
+            <h3>Docs site deploy commands</h3>
+            <pre><code>firebase login
+firebase use ndu-d3f60
+firebase deploy --only hosting</code></pre>
+          </div>
+          <div class="deploy-card">
+            <h3>Full platform deployment order</h3>
+            <ol id="deploy-steps"></ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" id="references">
+        <div class="section-heading">
+          <div class="eyebrow">References</div>
+          <h2>Core repo documentation and code anchors</h2>
+          <p>
+            These references informed this site and are the best starting points when you need deeper implementation detail.
+          </p>
+        </div>
+        <div class="reference-list" id="reference-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

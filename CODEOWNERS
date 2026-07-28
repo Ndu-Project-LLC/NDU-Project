@@ -1,0 +1,21 @@
+# CODEOWNERS — PR approval process for NDU Project
+# All pull requests require approval before merging to main.
+# The designated reviewer is the NduProject account (admin of Ndu-Project-LLC org).
+#
+# To link chimmie@nduproject.com to this approval process:
+# 1. Log in as the NduProject GitHub user
+# 2. Go to https://github.com/settings/emails
+# 3. Add chimmie@nduproject.com as a verified email
+# 4. All PR notifications will then be sent to chimmie@nduproject.com
+#
+# All files in the repository require review
+* @NduProject @CHAMA18
+
+# Source code
+/lib/ @NduProject @CHAMA18
+
+# Build and deploy scripts
+/scripts/ @CHAMA18
+
+# Documentation
+/*.md @NduProject @CHAMA18

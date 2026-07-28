@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build web`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="NDU Project - Navigate. Deliver. Upgrade.">
+
+  <!-- Aggressive cache prevention — ensures users always see the latest version.
+       Combined with the cache-busting script below and the versioned service
+       worker, this guarantees that new deployments are picked up immediately
+       without users needing to hard-refresh. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="NDU Project">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png?v=NDU_BUILD_STAMP">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico?v=NDU_BUILD_STAMP"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png?v=NDU_BUILD_STAMP"/>
+
+  <title>NDU Project</title>
+  <link rel="manifest" href="manifest.json?v=NDU_BUILD_STAMP">
+
+  <!-- Loading spinner — shown immediately on first paint, before Flutter's
+       engine has booted. Provides visual feedback during the ~1-2s it takes
+       for main.dart.js to download and initialize. Once Flutter renders its
+       first frame, this loader is removed by Flutter's host. -->
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    }
+    .loading-container {
+      text-align: center;
+      color: #94a3b8;
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(148, 163, 184, 0.2);
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      animation: ndu-spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes ndu-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .loading-text {
+      font-size: 14px;
+      opacity: 0.7;
+      letter-spacing: 0.02em;
+    }
+    .loading-brand {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 24px;
+      letter-spacing: 0.08em;
+    }
+    .loading-brand .accent {
+      color: #3b82f6;
+    }
+    .loading-container.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+    }
+  </style>
+</head>
+<body>
+  <!-- Pre-Flutter loading UI — replaced by Flutter's first frame -->
+  <div class="loading-container" id="loading-indicator">
+    <div class="loading-brand">NDU <span class="accent">Project</span></div>
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading NDU Project...</div>
+  </div>
+
+  <script>
+    window.addEventListener('flutter-first-frame', function() {
+      var loader = document.getElementById('loading-indicator');
+      if (!loader) return;
+      loader.classList.add('is-hidden');
+      window.setTimeout(function() {
+        if (loader.parentNode) {
+          loader.parentNode.removeChild(loader);
+        }
+      }, 220);
+    });
+  </script>
+
+  <!-- Runtime environment config — loaded BEFORE Flutter so the keys are
+       available when EnvConfigLoader.load() runs in main().
+       See web/env-config.js for documentation. -->
+  <script src="env-config.js?v=NDU_BUILD_STAMP"></script>
+
+  <!-- ULTRA AGGRESSIVE cache bust — guarantees users always see the latest
+       deployment. The pipeline (scripts/stamp_build_version.py) replaces
+       NDU_BUILD_STAMP with the current epoch seconds at build time, so this
+       block effectively re-runs on every new deploy:
+
+       1. Kills ALL existing service workers (prevents stale SW from serving
+          old cached main.dart.js).
+       2. Nukes ALL Cache API entries (clears any cached assets).
+       3. Prevents any new service worker from registering during this boot.
+       4. If the page was loaded WITHOUT a cache-busting `_ndu` query param,
+          OR with an OLD one, force-redirect with the current build stamp.
+          This makes the browser fetch fresh HTML/JS from the origin,
+          bypassing any HTTP cache. -->
+  <script>
+    (function() {
+      // NDU_BUILD_STAMP is replaced at build time by scripts/stamp_build_version.py
+      var NDU_BUILD = 'NDU_BUILD_STAMP';
+      // If the stamp wasn't replaced (e.g. running `flutter run` locally),
+      // fall back to a fixed value so the redirect logic doesn't loop.
+      if (NDU_BUILD === 'NDU_BUILD_STAMP' || !NDU_BUILD) {
+        NDU_BUILD = 'dev-local';
+      }
+      try {
+        // 1. Kill ALL service workers immediately (synchronous attempt).
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            regs.forEach(function(reg) {
+              reg.unregister().then(function() {
+                console.log('[NDU] Killed service worker:', reg.scope);
+              });
+            });
+          });
+          // Prevent any new service worker from registering during this boot.
+          navigator.serviceWorker.register = function() { return Promise.resolve(); };
+        }
+
+        // 2. Nuke ALL Cache API entries.
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            names.forEach(function(name) {
+              caches.delete(name).then(function() {
+                console.log('[NDU] Deleted cache:', name);
+              });
+            });
+          });
+        }
+
+        // 3. Clear build-stamp marker from localStorage.
+        localStorage.removeItem('__ndu_build');
+
+        // 4. Force-redirect with cache-busting `_ndu` param if missing or stale.
+        //    Skipped for `dev-local` builds to avoid redirect loops during
+        //    `flutter run -d chrome`.
+        if (NDU_BUILD !== 'dev-local') {
+          var url = new URL(location.href);
+          if (!url.searchParams.has('_ndu')) {
+            url.searchParams.set('_ndu', NDU_BUILD);
+            localStorage.setItem('__ndu_build', NDU_BUILD);
+            location.replace(url.toString());
+            return; // Page will reload — stop execution here.
+          }
+
+          var loadedBuild = url.searchParams.get('_ndu');
+          if (loadedBuild && loadedBuild !== NDU_BUILD) {
+            url.searchParams.set('_ndu', NDU_BUILD);
+            localStorage.setItem('__ndu_build', NDU_BUILD);
+            location.replace(url.toString());
+            return;
+          }
+        }
+
+        localStorage.setItem('__ndu_build', NDU_BUILD);
+      } catch(e) {
+        console.warn('[NDU] Cache bust error:', e);
+      }
+    })();
+  </script>
+
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script src="flutter_bootstrap.js?v=NDU_BUILD_STAMP" async></script>
+</body>
+</html>

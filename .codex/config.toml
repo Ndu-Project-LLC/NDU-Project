@@ -1,0 +1,9 @@
+[mcp_servers.flutterflow_community]
+command = "npx"
+args = [
+    "-y",
+    "community-ff-mcp",
+]
+
+[mcp_servers.flutterflow_community.env]
+FLUTTERFLOW_API_TOKEN = "b3ec9197-e35d-450e-b520-c653d25ab5c2"

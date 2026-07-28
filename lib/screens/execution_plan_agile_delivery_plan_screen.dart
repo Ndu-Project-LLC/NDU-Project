@@ -1,0 +1,689 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:ndu_project/widgets/execution_plan_shared.dart';
+import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+
+import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/pdf_export_helper.dart';
+class ExecutionPlanAgileDeliveryPlanScreen extends StatelessWidget {
+ const ExecutionPlanAgileDeliveryPlanScreen({super.key});
+
+ static void open(BuildContext context) {
+ Navigator.of(context).push(
+ MaterialPageRoute(
+ builder: (_) => const ExecutionPlanAgileDeliveryPlanScreen()),
+ );
+ }
+
+ @override
+ Widget build(BuildContext context) {
+ final bool isMobile = AppBreakpoints.isMobile(context);
+ final double horizontalPadding = isMobile ? 20 : 40;
+
+ return ResponsiveScaffold(
+ activeItemLabel: 'Agile Delivery Plan',
+ backgroundColor: Colors.white,
+ floatingActionButton: const KazAiChatBubble(positioned: false),
+ body: SingleChildScrollView(
+ padding: EdgeInsets.symmetric(
+ horizontal: horizontalPadding, vertical: 32),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ ExecutionPlanHeader(
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'execution_plan_agile_delivery_plan'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'execution_plan_agile_delivery_plan'),
+ onExportPdf: () => _exportPdf(context)),
+ const SizedBox(height: 32),
+ const _AgileDeliveryPlanSection(),
+ const SizedBox(height: 56),
+ ],
+ ),
+ ),
+ );
+ }
+}
+
+Future<void> _exportPdf(BuildContext context) async {
+ final projectData = ProjectDataHelper.getData(context);
+ await PdfExportHelper.exportScreenPdf(
+ context: context,
+ screenTitle: 'Agile Delivery Plan',
+ sections: [
+ PdfSection.keyValue('Project Info', [
+ {'Project Name': projectData.projectName ?? 'N/A'},
+ ]),
+ ],
+ );
+}
+
+class _AgileDeliveryPlanSection extends StatelessWidget {
+ const _AgileDeliveryPlanSection();
+
+ @override
+ Widget build(BuildContext context) {
+ final bool isMobile = AppBreakpoints.isMobile(context);
+
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text(
+ 'Agile Delivery Plan',
+ style: TextStyle(
+ fontSize: 22,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ ),
+ const SizedBox(height: 24),
+ const PlanDecisionSection(
+ question: 'Will agile delivery be used for this project?',
+ planKeyPrefix: 'execution_agile_delivery_plan',
+ formTitle: 'Agile Delivery Plan Inputs',
+ formSubtitle:
+ 'Define cadence, governance, and delivery guardrails for agile execution.',
+ fields: [
+ PlanFieldConfig(
+ keyName: 'model',
+ label: 'Delivery model',
+ hint: 'Scrum, Kanban, or hybrid approach and rationale.',
+ minLines: 2,
+ maxLines: 4,
+ fullWidth: true,
+ ),
+ PlanFieldConfig(
+ keyName: 'cadence',
+ label: 'Sprint cadence & calendar',
+ hint: 'Sprint length, ceremonies, and planning calendar.',
+ minLines: 2,
+ maxLines: 4,
+ ),
+ PlanFieldConfig(
+ keyName: 'release',
+ label: 'Release strategy',
+ hint: 'Release waves, branching, and approval gates.',
+ minLines: 2,
+ maxLines: 4,
+ ),
+ PlanFieldConfig(
+ keyName: 'backlog',
+ label: 'Backlog governance',
+ hint:
+ 'Definition of Ready/Done, prioritization, and grooming cadence.',
+ minLines: 2,
+ maxLines: 4,
+ fullWidth: true,
+ ),
+ PlanFieldConfig(
+ keyName: 'team',
+ label: 'Team structure & roles',
+ hint:
+ 'Squad ownership, product roles, and cross-functional coverage.',
+ minLines: 2,
+ maxLines: 4,
+ ),
+ PlanFieldConfig(
+ keyName: 'metrics',
+ label: 'Metrics & reporting',
+ hint:
+ 'Velocity, throughput, predictability, and quality measures.',
+ minLines: 2,
+ maxLines: 4,
+ ),
+ PlanFieldConfig(
+ keyName: 'risks',
+ label: 'Impediment & risk handling',
+ hint:
+ 'Escalation process, dependency tracking, and blockers removal.',
+ minLines: 2,
+ maxLines: 4,
+ fullWidth: true,
+ ),
+ ],
+ ),
+ ],
+ );
+ }
+}
+
+class PlanDecisionSection extends StatefulWidget {
+ const PlanDecisionSection({super.key, 
+ required this.question,
+ required this.planKeyPrefix,
+ required this.formTitle,
+ required this.formSubtitle,
+ required this.fields,
+ });
+
+ final String question;
+ final String planKeyPrefix;
+ final String formTitle;
+ final String formSubtitle;
+ final List<PlanFieldConfig> fields;
+
+ @override
+ State<PlanDecisionSection> createState() => PlanDecisionSectionState();
+}
+
+class PlanDecisionSectionState extends State<PlanDecisionSection> {
+ final Map<String, TextEditingController> _controllers = {};
+ Timer? _saveDebounce;
+ bool? _decision;
+ bool _didInit = false;
+ bool _isLoading = true;
+ bool _hasFirestoreDoc = false;
+ bool _isAutoGenerating = false;
+ bool _autoGenerated = false;
+ DateTime? _lastSavedAt;
+
+ @override
+ void initState() {
+ super.initState();
+ for (final field in widget.fields) {
+ _controllers[field.keyName] = TextEditingController();
+ }
+ WidgetsBinding.instance.addPostFrameCallback((_) => _loadFromFirestore());
+ }
+
+ 
+ Future<void> _exportPdf() async {
+ final projectData = ProjectDataHelper.getData(context);
+ await PdfExportHelper.exportScreenPdf(
+ context: context,
+ screenTitle: 'Agile Delivery Plan',
+ sections: [
+ PdfSection.keyValue('Project Info', [
+ {'Project Name': projectData.projectName ?? 'N/A'},
+ ]),
+ PdfSection.text('Notes', projectData.planningNotes['execution_plan_agile_delivery_plan_screen'] ?? 'No data recorded.'),
+ ],
+ );
+ }
+@override
+ void didChangeDependencies() {
+ super.didChangeDependencies();
+ if (_didInit) return;
+ final notes = ProjectDataHelper.getData(context).planningNotes;
+ final savedDecision = notes['${widget.planKeyPrefix}_decision'] ?? '';
+ if (savedDecision == 'yes') {
+ _decision = true;
+ } else if (savedDecision == 'no') {
+ _decision = false;
+ }
+ for (final field in widget.fields) {
+ final key = '${widget.planKeyPrefix}_${field.keyName}';
+ _controllers[field.keyName]?.text = notes[key] ?? '';
+ }
+ _didInit = true;
+ }
+
+ @override
+ void dispose() {
+ _saveDebounce?.cancel();
+ for (final controller in _controllers.values) {
+ controller.dispose();
+ }
+ super.dispose();
+ }
+
+ void _handleDecision(bool value) {
+ setState(() {
+ _decision = value;
+ if (value) {
+ // Allow a retry when users move from "No" to "Yes".
+ _autoGenerated = false;
+ }
+ });
+ _scheduleSave();
+ if (value) {
+ WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoGenerate());
+ }
+ }
+
+ void _scheduleSave() {
+ _saveDebounce?.cancel();
+ _saveDebounce = Timer(const Duration(milliseconds: 700), _saveNow);
+ }
+
+ Future<void> _loadFromFirestore() async {
+ final projectId = ProjectDataHelper.getData(context).projectId;
+ if (projectId == null || projectId.isEmpty) {
+ if (mounted) setState(() => _isLoading = false);
+ await _maybeAutoGenerate();
+ return;
+ }
+ try {
+ final doc = await _docRef(projectId).get();
+ if (doc.exists) {
+ final data = doc.data() ?? {};
+ final decision = (data['decision'] as String?) ?? '';
+ final fields = data['fields'];
+ if (decision == 'yes') {
+ _decision = true;
+ } else if (decision == 'no') {
+ _decision = false;
+ }
+ if (fields is Map) {
+ for (final field in widget.fields) {
+ final value = fields[field.keyName];
+ if (value is String) {
+ _controllers[field.keyName]?.text = value;
+ }
+ }
+ }
+ _lastSavedAt = _readTimestamp(data['updatedAt']);
+ _hasFirestoreDoc = true;
+ }
+ } catch (error) {
+ debugPrint('Failed to load execution plan section: $error');
+ } finally {
+ if (mounted) {
+ setState(() => _isLoading = false);
+ }
+ await _maybeAutoGenerate();
+ }
+ }
+
+ Future<void> _maybeAutoGenerate() async {
+ if (!mounted) return;
+ if (_autoGenerated || _isAutoGenerating) return;
+ if (_decision == false) {
+ return;
+ }
+
+ final hasContent = _controllers.values
+ .any((controller) => controller.text.trim().isNotEmpty);
+ if (hasContent) {
+ _autoGenerated = true;
+ return;
+ }
+
+ final data = ProjectDataHelper.getData(context);
+ final contextText = ProjectDataHelper.buildExecutivePlanContext(
+ data,
+ sectionLabel: widget.formTitle,
+ );
+ if (contextText.trim().isEmpty) {
+ return;
+ }
+
+ setState(() => _isAutoGenerating = true);
+ var generatedAnyField = false;
+ try {
+ final ai = OpenAiServiceSecure();
+ final fieldPrompts = {
+ for (final field in widget.fields)
+ field.keyName: '${field.label}. ${field.hint}'.trim(),
+ };
+ final generated = await ai.generateExecutionPlanSectionFields(
+ section: widget.formTitle,
+ context: contextText,
+ fields: fieldPrompts,
+ );
+ if (!mounted) return;
+ if (generated.isEmpty) return;
+
+ setState(() {
+ _decision ??= true;
+ for (final field in widget.fields) {
+ final value = generated[field.keyName]?.trim() ?? '';
+ if (value.isNotEmpty &&
+ (_controllers[field.keyName]?.text.trim().isEmpty ?? true)) {
+ _controllers[field.keyName]?.text = value;
+ generatedAnyField = true;
+ }
+ }
+ });
+ if (mounted) {
+ await _saveNow();
+ }
+ } catch (e) {
+ debugPrint('Execution plan auto-fill failed: $e');
+ } finally {
+ if (mounted) {
+ setState(() {
+ _isAutoGenerating = false;
+ if (generatedAnyField) {
+ _autoGenerated = true;
+ }
+ });
+ }
+ }
+ }
+
+ Future<void> _saveNow() async {
+ final updates = <String, String>{
+ '${widget.planKeyPrefix}_decision':
+ _decision == null ? '' : (_decision! ? 'yes' : 'no'),
+ };
+ for (final field in widget.fields) {
+ updates['${widget.planKeyPrefix}_${field.keyName}'] =
+ _controllers[field.keyName]?.text.trim() ?? '';
+ }
+ final success = await ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: resolveExecutionCheckpoint(widget.planKeyPrefix),
+ dataUpdater: (data) => data.copyWith(
+ planningNotes: {
+ ...data.planningNotes,
+ ...updates,
+ },
+ ),
+ showSnackbar: false,
+ );
+ final firestoreSaved = await _saveToFirestore(updates);
+ if (mounted && success && firestoreSaved) {
+ setState(() => _lastSavedAt = DateTime.now());
+ }
+ }
+
+ Future<bool> _saveToFirestore(Map<String, String> updates) async {
+ final projectId = ProjectDataHelper.getData(context).projectId;
+ if (projectId == null || projectId.isEmpty) return false;
+ final payload = <String, dynamic>{
+ 'decision': updates['${widget.planKeyPrefix}_decision'] ?? '',
+ 'fields': {
+ for (final field in widget.fields)
+ field.keyName:
+ updates['${widget.planKeyPrefix}_${field.keyName}'] ?? '',
+ },
+ 'updatedAt': FieldValue.serverTimestamp(),
+ };
+ if (!_hasFirestoreDoc) {
+ payload['createdAt'] = FieldValue.serverTimestamp();
+ }
+ try {
+ await _docRef(projectId).set(payload, SetOptions(merge: true));
+ _hasFirestoreDoc = true;
+ return true;
+ } catch (error) {
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(content: Text('Failed to save plan data: $error')),
+ );
+ }
+ return false;
+ }
+ }
+
+ DocumentReference<Map<String, dynamic>> _docRef(String projectId) {
+ return FirebaseFirestore.instance
+ .collection('projects')
+ .doc(projectId)
+ .collection('execution_plan_sections')
+ .doc(widget.planKeyPrefix);
+ }
+
+ DateTime? _readTimestamp(dynamic value) {
+ if (value is Timestamp) return value.toDate();
+ if (value is DateTime) return value;
+ if (value is String) return DateTime.tryParse(value);
+ return null;
+ }
+
+ @override
+ Widget build(BuildContext context) {
+ return Center(
+ child: ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 860),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.stretch,
+ children: [
+ if (_isLoading || _isAutoGenerating)
+ const LinearProgressIndicator(minHeight: 2),
+ _PlanDecisionCard(
+ question: widget.question,
+ decision: _decision,
+ onChanged: _handleDecision,
+ ),
+ if (_decision == true) ...[
+ const SizedBox(height: 20),
+ _PlanInputCard(
+ title: widget.formTitle,
+ subtitle: widget.formSubtitle,
+ fields: widget.fields,
+ controllers: _controllers,
+ onChanged: _scheduleSave,
+ lastSavedAt: _lastSavedAt,
+ ),
+ ],
+ ],
+ ),
+ ),
+ );
+ }
+}
+
+class _PlanDecisionCard extends StatelessWidget {
+ const _PlanDecisionCard({
+ required this.question,
+ required this.decision,
+ required this.onChanged,
+ });
+
+ final String question;
+ final bool? decision;
+ final ValueChanged<bool> onChanged;
+
+ @override
+ Widget build(BuildContext context) {
+ return Container(
+ padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
+ decoration: BoxDecoration(
+ color: const Color(0xFFBDBDBD),
+ borderRadius: BorderRadius.circular(18),
+ ),
+ child: Column(
+ children: [
+ Text(
+ question,
+ textAlign: TextAlign.center,
+ style: const TextStyle(
+ fontSize: 18,
+ fontWeight: FontWeight.w600,
+ color: Colors.white,
+ ),
+ ),
+ const SizedBox(height: 24),
+ Row(
+ mainAxisAlignment: MainAxisAlignment.center,
+ children: [
+ _PlanDecisionButton(
+ label: 'Yes',
+ color: const Color(0xFF22C55E),
+ isSelected: decision == true,
+ onPressed: () => onChanged(true),
+ ),
+ const SizedBox(width: 18),
+ _PlanDecisionButton(
+ label: 'No',
+ color: const Color(0xFFEF4444),
+ isSelected: decision == false,
+ onPressed: () => onChanged(false),
+ ),
+ ],
+ ),
+ ],
+ ),
+ );
+ }
+}
+
+class _PlanDecisionButton extends StatelessWidget {
+ const _PlanDecisionButton({
+ required this.label,
+ required this.color,
+ required this.isSelected,
+ required this.onPressed,
+ });
+
+ final String label;
+ final Color color;
+ final bool isSelected;
+ final VoidCallback onPressed;
+
+ @override
+ Widget build(BuildContext context) {
+ return ElevatedButton(
+ onPressed: onPressed,
+ style: ElevatedButton.styleFrom(
+ backgroundColor: isSelected ? color : Colors.white,
+ foregroundColor: isSelected ? Colors.white : color,
+ padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+ side: BorderSide(color: color, width: 1.4),
+ elevation: 0,
+ ),
+ child: Text(
+ label,
+ style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+ ),
+ );
+ }
+}
+
+class _PlanInputCard extends StatelessWidget {
+ const _PlanInputCard({
+ required this.title,
+ required this.subtitle,
+ required this.fields,
+ required this.controllers,
+ required this.onChanged,
+ required this.lastSavedAt,
+ });
+
+ final String title;
+ final String subtitle;
+ final List<PlanFieldConfig> fields;
+ final Map<String, TextEditingController> controllers;
+ final VoidCallback onChanged;
+ final DateTime? lastSavedAt;
+
+ @override
+ Widget build(BuildContext context) {
+ return Container(
+ padding: const EdgeInsets.all(24),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ boxShadow: const [
+ BoxShadow(
+ color: Color(0x0F000000), blurRadius: 12, offset: Offset(0, 6)),
+ ],
+ ),
+ child: LayoutBuilder(
+ builder: (context, constraints) {
+ final width = constraints.maxWidth;
+ final gap = 16.0;
+ final bool twoCol = width >= 760;
+ final double halfWidth = twoCol ? (width - gap) / 2 : width;
+
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(title,
+ style: const TextStyle(
+ fontSize: 16,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827))),
+ const SizedBox(height: 6),
+ Text(
+ subtitle,
+ style: const TextStyle(
+ fontSize: 13, color: Color(0xFF6B7280), height: 1.4),
+ ),
+ const SizedBox(height: 18),
+ Wrap(
+ spacing: gap,
+ runSpacing: gap,
+ children: fields.map((field) {
+ final fieldWidth = field.fullWidth ? width : halfWidth;
+ return SizedBox(
+ width: fieldWidth,
+ child: _PlanTextField(
+ label: field.label,
+ hint: field.hint,
+ minLines: field.minLines,
+ maxLines: field.maxLines,
+ controller: controllers[field.keyName]!,
+ onChanged: (_) => onChanged(),
+ ),
+ );
+ }).toList(),
+ ),
+ if (lastSavedAt != null) ...[
+ const SizedBox(height: 12),
+ Text(
+ 'Saved ${TimeOfDay.fromDateTime(lastSavedAt!).format(context)}',
+ style:
+ const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+ ),
+ ],
+ ],
+ );
+ },
+ ),
+ );
+ }
+}
+
+class _PlanTextField extends StatelessWidget {
+ const _PlanTextField({
+ required this.label,
+ required this.hint,
+ required this.minLines,
+ required this.maxLines,
+ required this.controller,
+ required this.onChanged,
+ });
+
+ final String label;
+ final String hint;
+ final int minLines;
+ final int maxLines;
+ final TextEditingController controller;
+ final ValueChanged<String> onChanged;
+
+ @override
+ Widget build(BuildContext context) {
+ return VoiceTextField(
+ controller: controller,
+ minLines: minLines,
+ maxLines: maxLines,
+ onChanged: onChanged,
+ decoration: InputDecoration(
+ labelText: label,
+ hintText: hint,
+ alignLabelWithHint: true,
+ border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+ filled: true,
+ fillColor: const Color(0xFFF9FAFB),
+ ),
+ );
+ }
+}
+
+class PlanFieldConfig {
+ const PlanFieldConfig({
+ required this.keyName,
+ required this.label,
+ required this.hint,
+ required this.minLines,
+ required this.maxLines,
+ this.fullWidth = false,
+ });
+
+ final String keyName;
+ final String label;
+ final String hint;
+ final int minLines;
+ final int maxLines;
+ final bool fullWidth;
+}

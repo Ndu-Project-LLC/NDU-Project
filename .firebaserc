@@ -1,0 +1,19 @@
+{
+  "projects": {
+    "default": "ndu-d3f60",
+    "staging": "ndu-d3f60"
+  },
+  "targets": {
+    "ndu-d3f60": {
+      "hosting": {
+        "staging": [
+          "staging-ndu"
+        ],
+        "admin": [
+          "admin-ndu"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

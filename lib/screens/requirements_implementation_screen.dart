@@ -26,6 +26,8 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 
 class RequirementsImplementationScreen extends StatefulWidget {
  const RequirementsImplementationScreen({super.key});
@@ -53,6 +55,40 @@ class _RequirementsImplementationScreenState
  final TextEditingController _sectionApprovalNotesController =
  TextEditingController();
  final List<_DesignSpecDocumentRow> _documents = [];
+
+ /// CSV column specifications for Requirements Traceability Matrix import
+ static List<CsvColumnSpec> get _requirementsCsvColumns => [
+   CsvColumnSpec(key: 'requirementId', label: 'Requirement ID', required: true, hint: 'e.g., REQ-001'),
+   CsvColumnSpec(key: 'title', label: 'Title', required: true, hint: 'Short requirement name'),
+   CsvColumnSpec(key: 'definition', label: 'Definition / Description', required: true, hint: 'Detailed requirement description'),
+   CsvColumnSpec(key: 'owner', label: 'Owner / Stakeholder', defaultValue: 'Unassigned'),
+   CsvColumnSpec(
+     key: 'requirementType',
+     label: 'Requirement Type',
+     allowedValues: ['Functional', 'Non-Functional', 'Technical', 'Business', 'Regulatory', 'Security', 'Performance', 'Usability'],
+     defaultValue: 'Functional',
+   ),
+   CsvColumnSpec(
+     key: 'validationStatus',
+     label: 'Validation Status',
+     allowedValues: ['Mapped', 'Unmapped', 'In Review', 'Verified', 'Deferred'],
+     defaultValue: 'Unmapped',
+   ),
+   CsvColumnSpec(
+     key: 'testMethod',
+     label: 'Verification Method',
+     allowedValues: ['Inspection', 'Analysis', 'Demonstration', 'Test', 'Review', 'Simulation', 'Design walkthrough', 'API walkthrough and contract review', 'Venue safety and operations review', 'Brand and venue coordination review'],
+     defaultValue: 'Design walkthrough',
+   ),
+   CsvColumnSpec(key: 'sourceDocument', label: 'Source Document', hint: 'Reference document or clause'),
+   CsvColumnSpec(
+     key: 'gapStatus',
+     label: 'Gap Status',
+     allowedValues: ['Closed', 'Pending Approval', 'Open', 'Deferred', 'N/A'],
+     defaultValue: 'Pending Approval',
+   ),
+   CsvColumnSpec(key: 'acceptanceCriteria', label: 'Acceptance Criteria', hint: 'Measurable criteria for sign-off'),
+ ];
 
  final List<RequirementRow> _requirementRows = [
  RequirementRow(
@@ -1200,8 +1236,27 @@ class _RequirementsImplementationScreenState
  spacing: 10,
  runSpacing: 10,
  children: [
- _webActionButton(Icons.add, 'Add requirement',
- onPressed: () => _addRequirement(projectData)),
+ // CSV Import with Add Requirement button
+ CsvEnabledSectionHeader(
+ tableTitle: 'Requirements Traceability Matrix',
+ columns: _requirementsCsvColumns,
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _requirementRows.add(RequirementRow.fromMap(row));
+ }
+ });
+ _scheduleSave();
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text('Imported ${rows.length} requirement(s).'),
+ backgroundColor: const Color(0xFF16A34A),
+ ),
+ );
+ },
+ onAdd: () => _addRequirement(projectData),
+ addLabel: 'Add Requirement',
+ ),
  _webActionButton(Icons.sync_outlined, 'Sync from scope',
  onPressed: () async {
  await _syncAndLoad();

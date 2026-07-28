@@ -14,6 +14,8 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 const Color _kBackground = Color(0xFFF7F8FC);
 const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
@@ -316,11 +318,13 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  });
  }),
  const SizedBox(width: 16),
- ElevatedButton.icon(
- onPressed: _showAddDeliverableDialog,
- icon: const Icon(Icons.add),
- label: const Text('Add Deliverable'),
- style: ElevatedButton.styleFrom(
+ CsvEnabledSectionHeader(
+ tableTitle: 'Deliverables Roadmap',
+ columns: _csvColumns,
+ onImport: _handleCsvImport,
+ onAdd: _showAddDeliverableDialog,
+ addLabel: 'Add Deliverable',
+ addButtonStyle: ElevatedButton.styleFrom(
  backgroundColor: _kAccent,
  foregroundColor: Colors.black,
  padding: const EdgeInsets.symmetric(
@@ -847,6 +851,167 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  PdfSection.text('Notes', projectData.planningNotes['planning_deliverables_roadmap_detailed_notes'] ?? 'No data recorded.'),
  ],
  );
+ }
+
+ /// CSV column specifications for Deliverables Roadmap import
+ List<CsvColumnSpec> get _csvColumns => [
+   CsvColumnSpec(key: 'title', label: 'Deliverable Name', required: true),
+   CsvColumnSpec(key: 'description', label: 'Description'),
+   CsvColumnSpec(
+     key: 'phase',
+     label: 'Phase',
+     allowedValues: ['Initiation', 'Front-End Planning', 'Planning', 'Design', 'Execution', 'Launch'],
+     defaultValue: 'Planning',
+   ),
+   CsvColumnSpec(
+     key: 'category',
+     label: 'Category',
+     allowedValues: ['Governance', 'Requirements', 'Risk & Compliance', 'Execution', 'Technical', 'Quality', 'Contracts & Procurement', 'Schedule & Cost', 'Team & Stakeholders'],
+     defaultValue: 'Execution',
+   ),
+   CsvColumnSpec(
+     key: 'status',
+     label: 'Status',
+     allowedValues: ['Not Started', 'In Progress', 'Completed', 'At Risk', 'Blocked'],
+     defaultValue: 'Not Started',
+   ),
+   CsvColumnSpec(
+     key: 'priority',
+     label: 'Priority',
+     allowedValues: ['Critical', 'High', 'Medium', 'Low'],
+     defaultValue: 'Medium',
+   ),
+   CsvColumnSpec(key: 'owner', label: 'Owner/Assignee'),
+   CsvColumnSpec(key: 'dueDate', label: 'Due Date', hint: 'YYYY-MM-DD or M/D/YYYY'),
+   CsvColumnSpec(key: 'completionPercent', label: 'Completion %', hint: '0-100', defaultValue: '0'),
+   CsvColumnSpec(key: 'dependencies', label: 'Dependencies', hint: 'Comma-separated IDs or names'),
+ ];
+
+ /// Handle CSV import - creates deliverables from imported rows
+ Future<void> _handleCsvImport(List<Map<String, String>> rows) async {
+   final projectId = _projectId;
+   if (projectId == null) return;
+
+   var successCount = 0;
+   var failCount = 0;
+
+   for (final row in rows) {
+     try {
+       // Parse phase
+       final phaseStr = row['phase'] ?? 'planning';
+       final phase = DeliverablePhase.values.firstWhere(
+         (p) => p.name.toLowerCase() == phaseStr.toLowerCase().replaceAll('-', '').replaceAll(' ', ''),
+         orElse: () => DeliverablePhase.planning,
+       );
+
+       // Parse category
+       final categoryStr = row['category'] ?? 'execution';
+       final category = DeliverableCategory.values.firstWhere(
+         (c) => c.name.toLowerCase() == categoryStr.toLowerCase().replaceAll('&', '').replaceAll(' ', ''),
+         orElse: () => DeliverableCategory.execution,
+       );
+
+       // Parse status
+       final statusStr = row['status'] ?? 'notStarted';
+       RoadmapDeliverableStatus status;
+       switch (statusStr.toLowerCase().replaceAll(' ', '')) {
+         case 'notstarted':
+           status = RoadmapDeliverableStatus.notStarted;
+           break;
+         case 'inprogress':
+           status = RoadmapDeliverableStatus.inProgress;
+           break;
+         case 'completed':
+           status = RoadmapDeliverableStatus.completed;
+           break;
+         case 'atrisk':
+           status = RoadmapDeliverableStatus.atRisk;
+           break;
+         case 'blocked':
+           status = RoadmapDeliverableStatus.blocked;
+           break;
+         default:
+           status = RoadmapDeliverableStatus.notStarted;
+       }
+
+       // Parse priority
+       final priorityStr = row['priority'] ?? 'medium';
+       RoadmapDeliverablePriority priority;
+       switch (priorityStr.toLowerCase()) {
+         case 'critical':
+           priority = RoadmapDeliverablePriority.critical;
+           break;
+         case 'high':
+           priority = RoadmapDeliverablePriority.high;
+           break;
+         case 'medium':
+           priority = RoadmapDeliverablePriority.medium;
+           break;
+         case 'low':
+           priority = RoadmapDeliverablePriority.low;
+           break;
+         default:
+           priority = RoadmapDeliverablePriority.medium;
+       }
+
+       // Parse due date
+       DateTime? dueDate;
+       final dateStr = row['dueDate'];
+       if (dateStr != null && dateStr.isNotEmpty) {
+         try {
+           dueDate = DateTime.tryParse(dateStr);
+           if (dueDate == null) {
+             final parts = dateStr.split('/');
+             if (parts.length == 3) {
+               dueDate = DateTime(
+                 int.parse(parts[2]),
+                 int.parse(parts[0]),
+                 int.parse(parts[1]),
+               );
+             }
+           }
+         } catch (e) {
+           debugPrint('Failed to parse date: $dateStr');
+         }
+       }
+
+       // Parse completion percent
+       final completionStr = row['completionPercent'] ?? '0';
+       final completionPercent = double.tryParse(completionStr) ?? 0.0;
+
+       // Parse dependencies
+       final depsStr = row['dependencies'];
+       List<String> dependencies = [];
+       if (depsStr != null && depsStr.isNotEmpty) {
+         dependencies = depsStr.split(',').map((d) => d.trim()).where((d) => d.isNotEmpty).toList();
+       }
+
+       await DeliverableAggregationService.instance.createNewDeliverable(
+         projectId: projectId,
+         title: row['title'] ?? '',
+         description: row['description'] ?? '',
+         category: category,
+         assignee: row['owner'] ?? '',
+         dueDate: dueDate,
+         priority: priority,
+       );
+       successCount++;
+     } catch (e) {
+       debugPrint('Error importing deliverable row: $e');
+       failCount++;
+     }
+   }
+
+   await _loadData();
+
+   if (mounted) {
+     ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(
+         content: Text('Imported $successCount deliverables${failCount > 0 ? ' ($failCount failed)' : ''}'),
+         backgroundColor: failCount > 0 ? Colors.orange : Colors.green,
+       ),
+     );
+   }
  }
 }
 

@@ -18,6 +18,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 
 /// Dedicated screen for managing stakeholder status reports during the
 /// execution phase. Status reports are the primary communication vehicle
@@ -60,6 +62,69 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
  bool _autoGenerationTriggered = false;
  bool _isAutoGenerating = false;
  Timer? _autoSaveDebounce;
+
+ /// Column specifications for CSV import/export of status reports
+ static const List<CsvColumnSpec> _csvColumns = [
+   CsvColumnSpec(
+     key: 'reportType',
+     label: 'Report Type',
+     required: true,
+     hint: 'Weekly Update, Stakeholder Brief, Executive Summary, Risk Report',
+     allowedValues: ['Weekly Update', 'Stakeholder Brief', 'Executive Summary', 'Risk Report'],
+     sampleValue: 'Weekly Update',
+   ),
+   CsvColumnSpec(
+     key: 'stakeholder',
+     label: 'Stakeholder',
+     required: true,
+     hint: 'Who this report is for (e.g., Project Sponsors, Steering Committee)',
+     sampleValue: 'Project Sponsors',
+   ),
+   CsvColumnSpec(
+     key: 'reportDate',
+     label: 'Report Date',
+     required: true,
+     hint: 'Date of the report (YYYY-MM-DD or MM/DD/YYYY)',
+     sampleValue: '2024-01-15',
+   ),
+   CsvColumnSpec(
+     key: 'summary',
+     label: 'Summary',
+     hint: 'Prose description of the reporting period progress',
+   ),
+   CsvColumnSpec(
+     key: 'keyWins',
+     label: 'Key Wins',
+     hint: 'Bullet list of accomplishments (use "." separator)',
+   ),
+   CsvColumnSpec(
+     key: 'blockers',
+     label: 'Blockers',
+     hint: 'Issues impeding progress that need escalation',
+   ),
+   CsvColumnSpec(
+     key: 'asks',
+     label: 'Asks',
+     hint: 'Specific requests requiring stakeholder action',
+   ),
+   CsvColumnSpec(
+     key: 'followUps',
+     label: 'Follow-ups',
+     hint: 'Carried-over action items from previous reports',
+   ),
+   CsvColumnSpec(
+     key: 'notes',
+     label: 'Notes',
+     hint: 'Manual notes only, no AI generation',
+   ),
+   CsvColumnSpec(
+     key: 'status',
+     label: 'Status',
+     defaultValue: 'Draft',
+     allowedValues: ['Draft', 'Sent', 'Acknowledged'],
+     sampleValue: 'Draft',
+   ),
+ ];
 
  String? get _projectId {
  try {
@@ -238,6 +303,54 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
  _persistChanges();
  }
 
+ /// Handles CSV import by mapping row data to StatusReportRow objects
+ void _handleCsvImport(List<Map<String, String>> rows) {
+ setState(() {
+   for (final row in rows) {
+     // Parse report date from string
+     DateTime parseDate(String? dateStr) {
+       if (dateStr == null || dateStr.isEmpty) return DateTime.now();
+       try {
+         return DateTime.parse(dateStr);
+       } catch (e) {
+         // Try alternative date formats
+         try {
+           final parts = dateStr.split('/');
+           if (parts.length == 3) {
+             return DateTime(
+               int.parse(parts[2]), // year
+               int.parse(parts[0]), // month
+               int.parse(parts[1]), // day
+             );
+           }
+         } catch (_) {}
+         return DateTime.now();
+       }
+     }
+
+     _statusReports.add(StatusReportRow(
+       reportType: row['reportType'] ?? '',
+       stakeholder: row['stakeholder'] ?? '',
+       reportDate: parseDate(row['reportDate']),
+       summary: row['summary'] ?? '',
+       keyWins: row['keyWins'] ?? '',
+       blockers: row['blockers'] ?? '',
+       asks: row['asks'] ?? '',
+       followUps: row['followUps'] ?? '',
+       notes: row['notes'] ?? '',
+       status: row['status'] ?? 'Draft',
+     ));
+   }
+ });
+ _persistChanges();
+
+ if (mounted) {
+   ScaffoldMessenger.of(context).showSnackBar(
+     SnackBar(content: Text('${rows.length} status report(s) imported from CSV.')),
+   );
+ }
+ }
+
  @override
  Widget build(BuildContext context) {
  final bool isMobile = AppBreakpoints.isMobile(context);
@@ -273,9 +386,20 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  )
  else ...[
+ // CSV Import / Add Report header bar
+ Padding(
+   padding: const EdgeInsets.only(bottom: 12),
+   child: CsvEnabledSectionHeader(
+     tableTitle: 'Status Reports',
+     columns: _csvColumns,
+     onImport: _handleCsvImport,
+     onAdd: _addBlankItem,
+     addLabel: 'Add Report',
+   ),
+ ),
  StatusReportsWidget(
- statusReports: _statusReports,
- onStatusReportsChanged: _handleStatusReportsChanged,
+   statusReports: _statusReports,
+   onStatusReportsChanged: _handleStatusReportsChanged,
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(

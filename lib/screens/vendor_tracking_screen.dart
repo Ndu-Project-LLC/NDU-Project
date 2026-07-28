@@ -24,6 +24,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/csv_table_import_button.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 class VendorTrackingScreen extends StatefulWidget {
  const VendorTrackingScreen({super.key});
 
@@ -316,7 +318,40 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _PanelShell(
  title: 'Performance pulse',
  subtitle: 'Key service health indicators',
- trailing: TextButton.icon(
+ trailing: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ CsvTableImportButton(
+ compact: true,
+ tableTitle: 'KPI Metrics',
+ columns: [
+ CsvColumnSpec(key: 'metric', label: 'Metric', required: true),
+ CsvColumnSpec(key: 'value', label: 'Value (%)', required: true),
+ CsvColumnSpec(key: 'target', label: 'Target (%)', defaultValue: '85'),
+ CsvColumnSpec(key: 'trend', label: 'Trend', allowedValues: ['On target', 'Below target', 'Above target'], defaultValue: 'On target'),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'source', label: 'Source', defaultValue: 'Manual'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ final value = (int.tryParse(row['value'] ?? '0') ?? 0).clamp(0, 100) / 100.0;
+ final target = (int.tryParse(row['target'] ?? '85') ?? 85).clamp(0, 100) / 100.0;
+ _customKpiRows.add(_KpiRow(
+ id: 'custom_${DateTime.now().millisecondsSinceEpoch}_${_customKpiRows.length}',
+ metric: row['metric'] ?? '',
+ value: value,
+ target: target,
+ trend: row['trend'] ?? (value >= target ? 'On target' : 'Below target'),
+ owner: row['owner'] ?? '',
+ source: row['source'] ?? 'Manual',
+ ));
+ }
+ });
+ },
+ ),
+ const SizedBox(width: 8),
+ TextButton.icon(
  onPressed: () => _showPerformanceEntryDialog(),
  icon: const Icon(Icons.add_rounded, size: 16),
  label: const Text('Add metric'),
@@ -325,6 +360,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
  ),
+ ),
+ ],
  ),
  child: StreamBuilder<List<VendorModel>>(
  stream: VendorService.streamVendors(_projectId!),
@@ -593,7 +630,39 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _PanelShell(
  title: 'Risk signals',
  subtitle: 'Active alerts and vendor watch items',
- trailing: TextButton.icon(
+ trailing: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ CsvTableImportButton(
+ compact: true,
+ tableTitle: 'Risk Signals',
+ columns: [
+ CsvColumnSpec(key: 'signal', label: 'Signal', required: true),
+ CsvColumnSpec(key: 'severity', label: 'Severity', allowedValues: ['Critical', 'High', 'Medium', 'Low'], defaultValue: 'Medium'),
+ CsvColumnSpec(key: 'description', label: 'Description'),
+ CsvColumnSpec(key: 'category', label: 'Category'),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Open', 'Monitoring', 'Mitigated', 'Closed'], defaultValue: 'Open'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _customSignalRows.add(_RiskSignalRow(
+ id: 'sig_${DateTime.now().millisecondsSinceEpoch}_${_customSignalRows.length}',
+ signal: row['signal'] ?? '',
+ description: row['description'] ?? '',
+ severity: row['severity'] ?? 'Medium',
+ category: row['category'] ?? '',
+ owner: row['owner'] ?? '',
+ source: 'Manual',
+ status: row['status'] ?? 'Open',
+ ));
+ }
+ });
+ },
+ ),
+ const SizedBox(width: 8),
+ TextButton.icon(
  onPressed: () => _showSignalDialog(),
  icon: const Icon(Icons.add_rounded, size: 16),
  label: const Text('Add signal'),
@@ -602,6 +671,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
  ),
+ ),
+ ],
  ),
  child: StreamBuilder<List<VendorModel>>(
  stream: VendorService.streamVendors(_projectId!),
@@ -881,7 +952,36 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _PanelShell(
  title: 'Action plan',
  subtitle: 'Upcoming touchpoints and remediation',
- trailing: TextButton.icon(
+ trailing: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ CsvTableImportButton(
+ compact: true,
+ tableTitle: 'Action Items',
+ columns: [
+ CsvColumnSpec(key: 'title', label: 'Action Item', required: true),
+ CsvColumnSpec(key: 'priority', label: 'Priority', allowedValues: ['Critical', 'High', 'Medium', 'Low'], defaultValue: 'Medium'),
+ CsvColumnSpec(key: 'dueDate', label: 'Due Date'),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Agenda locked', 'Docs requested', 'Pending invite', 'Completed', 'Overdue'], defaultValue: 'Pending invite'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _actionRows.add(_ActionRow(
+ id: 'act_${DateTime.now().millisecondsSinceEpoch}_${_actionRows.length}',
+ title: row['title'] ?? '',
+ priority: row['priority'] ?? 'Medium',
+ dueDate: row['dueDate'] ?? '',
+ owner: row['owner'] ?? '',
+ status: row['status'] ?? 'Pending invite',
+ ));
+ }
+ });
+ },
+ ),
+ const SizedBox(width: 8),
+ TextButton.icon(
  onPressed: () => _showActionDialog(),
  icon: const Icon(Icons.add_rounded, size: 16),
  label: const Text('Add action'),
@@ -890,6 +990,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
  ),
+ ),
+ ],
  ),
  child: _actionRows.isEmpty
  ? Center(

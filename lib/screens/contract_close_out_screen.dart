@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -236,10 +237,78 @@ showNavigationButtons: false,
  }
 
  Widget _buildContractsPanel() {
- return LaunchDataTable(
- title: 'Contracts Status',
- subtitle:
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ // CSV Import Header with enhanced column specs for Contract Close-out
+ Row(
+ mainAxisAlignment: MainAxisAlignment.spaceBetween,
+ children: [
+ const Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ 'Contracts Status',
+ style: TextStyle(
+ fontSize: 18,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ ),
+ SizedBox(height: 4),
+ Text(
  'All contracts requiring close-out. Import from execution or add manually.',
+ style: TextStyle(
+ fontSize: 13,
+ color: Color(0xFF6B7280),
+ ),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(width: 16),
+ CsvEnabledSectionHeader(
+ tableTitle: 'Contract Close-out Register',
+ columns: const [
+ CsvColumnSpec(key: 'contractName', label: 'Contract Title', required: true, sampleValue: 'Cloud Services Agreement'),
+ CsvColumnSpec(key: 'contractNumber', label: 'Contract Number', sampleValue: 'CTR-2024-001'),
+ CsvColumnSpec(key: 'vendor', label: 'Vendor/Contractor', required: true, sampleValue: 'Acme Corp'),
+ CsvColumnSpec(key: 'contractValue', label: 'Original Contract Value', sampleValue: '\$100,000'),
+ CsvColumnSpec(key: 'changeOrders', label: 'Change Orders Value', defaultValue: '0', sampleValue: '\$5,000'),
+ CsvColumnSpec(key: 'finalValue', label: 'Final Contract Value', sampleValue: '\$105,000'),
+ CsvColumnSpec(key: 'completionDate', label: 'Actual Completion Date', sampleValue: '2024-12-15'),
+ CsvColumnSpec(key: 'closeOutPhase', label: 'Close-out Phase', allowedValues: ['Physical Complete', 'Administrative Complete', 'Final Account Complete', 'Archived'], defaultValue: 'Physical Complete'),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Not Started', 'In Progress', 'Pending Documentation', 'Pending Sign-off', 'Complete'], defaultValue: 'Not Started'),
+ CsvColumnSpec(key: 'closeOutLead', label: 'Close-out Lead', sampleValue: 'John Smith'),
+ CsvColumnSpec(key: 'lastUpdated', label: 'Last Updated', sampleValue: '2024-12-20'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _contracts.add(LaunchContractItem(
+ contractName: row['contractName'] ?? '',
+ vendor: row['vendor'] ?? '',
+ contractRef: row['contractNumber'] ?? '',
+ value: row['finalValue'].isNotEmpty ? row['finalValue']! : (row['contractValue'] ?? ''),
+ closeOutStatus: _mapCloseOutStatus(row['status'], row['closeOutPhase']),
+ notes: 'Lead: ${row['closeOutLead'] ?? ''}${row['changeOrders'] != null && row['changeOrders']!.isNotEmpty ? ' | Change Orders: ${row['changeOrders']}' : ''}',
+ ));
+ }
+ });
+ _scheduleSave();
+ },
+ onAdd: () => _showAddContractDialog(),
+ addLabel: 'Add Contract',
+ compact: true,
+ ),
+ ],
+ ),
+ const SizedBox(height: 12),
+ // Main data table
+ LaunchDataTable(
+ title: '', // Title shown in custom header above
+ subtitle: null,
  columns: const [LaunchColumn(label: 'Contract', flexible: true, fieldType: LaunchFieldType.text, hint: 'Contract'), LaunchColumn(label: 'Vendor', width: 130, fieldType: LaunchFieldType.text, hint: 'Vendor'), LaunchColumn(label: 'Ref', width: 130, fieldType: LaunchFieldType.text, hint: 'Ref'), LaunchColumn(label: 'Value', width: 130, fieldType: LaunchFieldType.text, hint: 'Value'), LaunchColumn(label: 'Status', width: 120, fieldType: LaunchFieldType.dropdown, dropdownItems: LaunchContractItem.closeOutStatuses)],
  rowCount: _contracts.length,
  onAddValues: (values) {
@@ -340,6 +409,8 @@ showNavigationButtons: false,
  ],
  );
  },
+ ),
+ ],
  );
  }
 
@@ -561,6 +632,54 @@ showNavigationButtons: false,
  }
  });
  _scheduleSave();
+ }
+
+ /// Maps CSV status/phase values to LaunchContractItem.closeOutStatus
+ String _mapCloseOutStatus(String? status, String? phase) {
+ // Direct status mapping
+ if (status != null && status.isNotEmpty) {
+ switch (status.toLowerCase()) {
+ case 'not started':
+ case 'open':
+ return 'Open';
+ case 'in progress':
+ return 'In Progress';
+ case 'pending documentation':
+ case 'pending sign-off':
+ return 'In Progress';
+ case 'complete':
+ case 'closed':
+ return 'Closed';
+ case 'disputed':
+ return 'Disputed';
+ }
+ }
+ // Fallback to phase-based mapping
+ if (phase != null && phase.isNotEmpty) {
+ switch (phase.toLowerCase()) {
+ case 'physical complete':
+ return 'In Progress';
+ case 'administrative complete':
+ case 'final account complete':
+ return 'In Progress';
+ case 'archived':
+ return 'Closed';
+ }
+ }
+ return 'Open';
+ }
+
+ /// Shows dialog to add a new contract manually
+ void _showAddContractDialog() {
+ showDialog(
+ context: context,
+ builder: (context) => _AddContractDialog(
+ onAdd: (contract) {
+ setState(() => _contracts.add(contract));
+ _scheduleSave();
+ },
+ ),
+ );
  }
 
  void _scheduleSave() {
@@ -1188,4 +1307,123 @@ showNavigationButtons: false,
   }
 
 
+}
+
+/// Dialog for adding a new contract manually
+class _AddContractDialog extends StatefulWidget {
+  final void Function(LaunchContractItem) onAdd;
+
+  const _AddContractDialog({required this.onAdd});
+
+  @override
+  State<_AddContractDialog> createState() => _AddContractDialogState();
+}
+
+class _AddContractDialogState extends State<_AddContractDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _contractNameController = TextEditingController();
+  final _vendorController = TextEditingController();
+  final _contractRefController = TextEditingController();
+  final _valueController = TextEditingController();
+  String _closeOutStatus = 'Open';
+
+  @override
+  void dispose() {
+    _contractNameController.dispose();
+    _vendorController.dispose();
+    _contractRefController.dispose();
+    _valueController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Add Contract'),
+      content: Form(
+        key: _formKey,
+        child: SizedBox(
+          width: 450,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _contractNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Contract Title *',
+                  hintText: 'Enter contract name',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _vendorController,
+                decoration: const InputDecoration(
+                  labelText: 'Vendor/Contractor *',
+                  hintText: 'Enter vendor name',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _contractRefController,
+                decoration: const InputDecoration(
+                  labelText: 'Contract Number / Ref',
+                  hintText: 'e.g., CTR-2024-001',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _valueController,
+                decoration: const InputDecoration(
+                  labelText: 'Contract Value',
+                  hintText: 'e.g., $100,000',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _closeOutStatus,
+                decoration: const InputDecoration(
+                  labelText: 'Close-out Status',
+                  border: OutlineInputBorder(),
+                ),
+                items: LaunchContractItem.closeOutStatuses
+                    .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _closeOutStatus = v);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('Add Contract'),
+        ),
+      ],
+    );
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    widget.onAdd(LaunchContractItem(
+      contractName: _contractNameController.text.trim(),
+      vendor: _vendorController.text.trim(),
+      contractRef: _contractRefController.text.trim(),
+      value: _valueController.text.trim(),
+      closeOutStatus: _closeOutStatus,
+    ));
+    Navigator.of(context).pop();
+  }
 }

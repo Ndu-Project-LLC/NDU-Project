@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -162,7 +163,65 @@ showNavigationButtons: false,
  }
 
  Widget _buildVendorsPanel() {
- return LaunchDataTable(
+ // Define CSV column specs for Vendor Account Close-out
+ final vendorCsvColumns = [
+ CsvColumnSpec(key: 'vendorName', label: 'Vendor Name', required: true, sampleValue: 'Acme Corporation'),
+ CsvColumnSpec(key: 'contractNumber', label: 'Contract/PO Number', sampleValue: 'PO-2024-001'),
+ CsvColumnSpec(key: 'totalValue', label: 'Total Contract Value', sampleValue: '150000.00'),
+ CsvColumnSpec(key: 'amountPaid', label: 'Amount Paid', sampleValue: '135000.00'),
+ CsvColumnSpec(key: 'amountRemaining', label: 'Amount Remaining', sampleValue: '15000.00'),
+ CsvColumnSpec(key: 'closeOutStatus', label: 'Close-out Status', allowedValues: ['In Progress', 'Pending Final Payment', 'Pending Acceptance', 'Pending Retention', 'Complete', 'Disputed'], defaultValue: 'In Progress'),
+ CsvColumnSpec(key: 'deliverablesAccepted', label: 'All Deliverables Accepted', allowedValues: ['Yes', 'No', 'Partial'], defaultValue: 'No'),
+ CsvColumnSpec(key: 'finalInvoiceReceived', label: 'Final Invoice Received', allowedValues: ['Yes', 'No', 'N/A'], defaultValue: 'No'),
+ CsvColumnSpec(key: 'retentionAmount', label: 'Retention Amount', sampleValue: '7500.00'),
+ CsvColumnSpec(key: 'retentionReleaseDate', label: 'Retention Release Date', sampleValue: '2025-03-15'),
+ CsvColumnSpec(key: 'notes', label: 'Notes/Comments', sampleValue: 'Waiting on final sign-off'),
+ ];
+
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ // Section header with CSV import and Add button
+ Padding(
+ padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+ child: Row(
+ children: [
+ Text(
+ 'Vendor Close-Out Table',
+ style: const TextStyle(
+ fontSize: 18,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ ),
+ const SizedBox(width: 16),
+ CsvEnabledSectionHeader(
+ tableTitle: 'Vendor Account Close-out',
+ columns: vendorCsvColumns,
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _vendors.add(LaunchVendorItem(
+ vendorName: row['vendorName'] ?? '',
+ contractRef: row['contractNumber'] ?? '',
+ accountStatus: row['closeOutStatus'] ?? 'Active',
+ outstandingItems: 'Remaining: ${row['amountRemaining'] ?? '0'}',
+ notes: '${row['deliverablesAccepted'] ?? ''} | ${row['finalInvoiceReceived'] ?? ''} | ${row['notes'] ?? ''}',
+ ));
+ }
+ });
+ _save();
+ },
+ onAdd: () => _showAddVendorDialog(),
+ addLabel: 'Add Vendor',
+ compact: true,
+ ),
+ const Spacer(),
+ ],
+ ),
+ ),
+ // Vendor data table
+ LaunchDataTable(
  title: 'Vendor Close-Out Table',
  subtitle: 'Track each vendor\'s account status and outstanding items.',
  columns: const [LaunchColumn(label: 'Vendor', flexible: true, fieldType: LaunchFieldType.text, hint: 'Vendor'), LaunchColumn(label: 'Contract Ref', width: 120, fieldType: LaunchFieldType.text, hint: 'Ref'), LaunchColumn(label: 'Status', width: 120, fieldType: LaunchFieldType.dropdown, dropdownItems: ['Active', 'Closing', 'Closed']), LaunchColumn(label: 'Outstanding', flexible: true, fieldType: LaunchFieldType.text, hint: 'Items'), LaunchColumn(label: 'Notes', flexible: true, fieldType: LaunchFieldType.text, hint: 'Notes')],
@@ -588,6 +647,66 @@ showNavigationButtons: false,
  }
  });
  _save();
+ }
+
+ /// Shows a dialog to manually add a new vendor
+ void _showAddVendorDialog() {
+ final nameController = TextEditingController();
+ final contractController = TextEditingController();
+
+ showDialog(
+ context: context,
+ builder: (dialogContext) => AlertDialog(
+ title: const Text('Add Vendor'),
+ content: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ TextField(
+ controller: nameController,
+ decoration: const InputDecoration(
+ labelText: 'Vendor Name *',
+ hintText: 'Enter vendor name',
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: contractController,
+ decoration: const InputDecoration(
+ labelText: 'Contract/PO Number',
+ hintText: 'Enter contract reference',
+ border: OutlineInputBorder(),
+ ),
+ ),
+ ],
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.of(dialogContext).pop(),
+ child: const Text('Cancel'),
+ ),
+ FilledButton(
+ onPressed: () {
+ if (nameController.text.trim().isEmpty) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(content: Text('Vendor name is required')));
+ return;
+ }
+ setState(() {
+ _vendors.add(LaunchVendorItem(
+ vendorName: nameController.text.trim(),
+ contractRef: contractController.text.trim(),
+ accountStatus: 'Active',
+ ));
+ });
+ _save();
+ Navigator.of(dialogContext).pop();
+ },
+ child: const Text('Add Vendor'),
+ ),
+ ],
+ ),
+ );
  }
 
  void _save() {

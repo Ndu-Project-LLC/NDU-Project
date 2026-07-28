@@ -21,6 +21,8 @@ import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 class BackendDesignScreen extends StatefulWidget {
  const BackendDesignScreen({super.key});
 
@@ -498,7 +500,33 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _PanelShell(
  title: 'System architecture register',
  subtitle: 'Map services, data stores, integrations, and infrastructure blocks',
- trailing: _actionButton(Icons.add, 'Add component', onPressed: _addComponent),
+ trailing: CsvEnabledSectionHeader(
+      tableTitle: 'Architecture Components',
+      columns: [
+        CsvColumnSpec(key: 'name', label: 'Component Name', required: true),
+        CsvColumnSpec(key: 'type', label: 'Type', allowedValues: _componentTypes, defaultValue: 'Service'),
+        CsvColumnSpec(key: 'responsibility', label: 'Responsibility', required: true),
+        CsvColumnSpec(key: 'owner', label: 'Owner'),
+        CsvColumnSpec(key: 'status', label: 'Status', allowedValues: _componentStatuses, defaultValue: 'Planned'),
+      ],
+      onImport: (rows) {
+        setState(() {
+          for (final row in rows) {
+            _components.add(_ArchitectureComponent(
+              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              name: row['name'] ?? '',
+              type: row['type'] ?? 'Service',
+              responsibility: row['responsibility'] ?? '',
+              owner: row['owner'] ?? '',
+              status: row['status'] ?? 'Planned',
+            ));
+          }
+        });
+      },
+      onAdd: _addComponent,
+      addLabel: 'Add component',
+      compact: true,
+    ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -522,7 +550,31 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _PanelShell(
  title: 'Data architecture register',
  subtitle: 'Entity definitions, primary keys, and field-level constraints',
- trailing: _actionButton(Icons.add, 'Add entity', onPressed: _addEntity),
+ trailing: CsvEnabledSectionHeader(
+      tableTitle: 'Database Entities',
+      columns: [
+        CsvColumnSpec(key: 'name', label: 'Entity Name', required: true),
+        CsvColumnSpec(key: 'primaryKey', label: 'Primary Key', required: true),
+        CsvColumnSpec(key: 'owner', label: 'Owner'),
+        CsvColumnSpec(key: 'description', label: 'Description'),
+      ],
+      onImport: (rows) {
+        setState(() {
+          for (final row in rows) {
+            _entities.add(_DbEntity(
+              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              name: row['name'] ?? '',
+              primaryKey: row['primaryKey'] ?? '',
+              owner: row['owner'] ?? '',
+              description: row['description'] ?? '',
+            ));
+          }
+        });
+      },
+      onAdd: _addEntity,
+      addLabel: 'Add entity',
+      compact: true,
+    ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -628,10 +680,44 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 16),
  // Fields table
- _SectionHeader(
- title: 'Field definitions',
- actionLabel: 'Add field',
- onAction: _addField,
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.center,
+ children: [
+ Expanded(
+ child: Text(
+ 'Field definitions',
+ style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+ ),
+ ),
+ const SizedBox(width: 12),
+ CsvEnabledSectionHeader(
+ tableTitle: 'Database Field Definitions',
+ columns: [
+ CsvColumnSpec(key: 'table', label: 'Entity/Table', required: true),
+ CsvColumnSpec(key: 'field', label: 'Field Name', required: true),
+ CsvColumnSpec(key: 'type', label: 'Type'),
+ CsvColumnSpec(key: 'constraints', label: 'Constraints'),
+ CsvColumnSpec(key: 'notes', label: 'Notes'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _fields.add(_DbField(
+ id: DateTime.now().microsecondsSinceEpoch.toString(),
+ table: row['table'] ?? '',
+ field: row['field'] ?? '',
+ type: row['type'] ?? '',
+ constraints: row['constraints'] ?? '',
+ notes: row['notes'] ?? '',
+ ));
+ }
+ });
+ },
+ onAdd: _addField,
+ addLabel: 'Add field',
+ compact: false,
+ ),
+ ],
  ),
  const SizedBox(height: 10),
  _buildFieldsTable(),
@@ -646,7 +732,31 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _PanelShell(
  title: 'Interface contracts & data flows',
  subtitle: 'API specifications, integration protocols, and operational handoff agreements',
- trailing: _actionButton(Icons.add, 'Add data flow', onPressed: _addDataFlow),
+ trailing: CsvEnabledSectionHeader(
+ tableTitle: 'Data Flows',
+ columns: [
+ CsvColumnSpec(key: 'source', label: 'Source', required: true),
+ CsvColumnSpec(key: 'destination', label: 'Destination', required: true),
+ CsvColumnSpec(key: 'protocol', label: 'Protocol', allowedValues: _protocolOptions, defaultValue: 'HTTP'),
+ CsvColumnSpec(key: 'notes', label: 'Notes'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _dataFlows.add(_ArchitectureDataFlow(
+ id: DateTime.now().microsecondsSinceEpoch.toString(),
+ source: row['source'] ?? '',
+ destination: row['destination'] ?? '',
+ protocol: row['protocol'] ?? 'HTTP',
+ notes: row['notes'] ?? '',
+ ));
+ }
+ });
+ },
+ onAdd: _addDataFlow,
+ addLabel: 'Add data flow',
+ compact: true,
+ ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -770,7 +880,33 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _PanelShell(
  title: 'Design documents & security',
  subtitle: 'Architecture documents, security policies, and operational runbooks',
- trailing: _actionButton(Icons.add, 'Add document', onPressed: _addDesignDocument),
+ trailing: CsvEnabledSectionHeader(
+ tableTitle: 'Design Documents',
+ columns: [
+ CsvColumnSpec(key: 'title', label: 'Title', required: true),
+ CsvColumnSpec(key: 'description', label: 'Description'),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: _documentStatuses, defaultValue: 'Draft'),
+ CsvColumnSpec(key: 'location', label: 'Location'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _designDocuments.add(_DesignDocument(
+ id: DateTime.now().microsecondsSinceEpoch.toString(),
+ title: row['title'] ?? '',
+ description: row['description'] ?? '',
+ owner: row['owner'] ?? '',
+ status: row['status'] ?? 'Draft',
+ location: row['location'] ?? '',
+ ));
+ }
+ });
+ },
+ onAdd: _addDesignDocument,
+ addLabel: 'Add document',
+ compact: true,
+ ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [

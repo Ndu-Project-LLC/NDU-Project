@@ -17,6 +17,8 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
+import 'package:ndu_project/widgets/csv_table_import_button.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:file_picker/file_picker.dart';
 class TeamRolesResponsibilitiesScreen extends StatefulWidget {
  const TeamRolesResponsibilitiesScreen({super.key});
@@ -406,13 +408,68 @@ class _TeamRolesResponsibilitiesScreenState
  ),
  ),
  const SizedBox(width: 8),
- // CSV download
- _iconActionBtn(Icons.download_outlined, 'Download Template',
- () => _downloadRolesTemplate()),
- const SizedBox(width: 4),
- // CSV import
- _iconActionBtn(Icons.upload_file_outlined, 'Import CSV',
- () => _importRolesCsv()),
+ // CSV Import / Download Template using standardized widget
+ CsvTableImportButton(
+ tableTitle: 'Roles & Responsibilities',
+ compact: true,
+ columns: const [
+ CsvColumnSpec(
+ key: 'title',
+ label: 'Role / Position',
+ required: true,
+ sampleValue: 'Project Manager',
+ ),
+ CsvColumnSpec(
+ key: 'subtitle',
+ label: 'Discipline',
+ sampleValue: 'Management',
+ ),
+ CsvColumnSpec(
+ key: 'responsibilities',
+ label: 'Responsibilities',
+ sampleValue: 'Overall project coordination, stakeholder management',
+ ),
+ CsvColumnSpec(
+ key: 'quantity',
+ label: 'Quantity',
+ sampleValue: '1',
+ ),
+ CsvColumnSpec(
+ key: 'fullName',
+ label: 'Full Name',
+ ),
+ CsvColumnSpec(
+ key: 'department',
+ label: 'Department',
+ ),
+ CsvColumnSpec(
+ key: 'employmentType',
+ label: 'Employment Type',
+ allowedValues: ['Full Time', 'Part Time', 'Contract', 'Consultant'],
+ defaultValue: 'Full Time',
+ sampleValue: 'Full Time',
+ ),
+ CsvColumnSpec(
+ key: 'category',
+ label: 'Category',
+ allowedValues: ['Employee', 'Contractor', 'Consultant'],
+ defaultValue: 'Employee',
+ sampleValue: 'Employee',
+ ),
+ CsvColumnSpec(
+ key: 'accessLevel',
+ label: 'Access Level',
+ allowedValues: ['Full access', 'Limited access', 'Read-only'],
+ defaultValue: 'Full access',
+ ),
+ CsvColumnSpec(
+ key: 'teamPlacement',
+ label: 'Team Placement',
+ sampleValue: 'Core team',
+ ),
+ ],
+ onImport: _importRolesFromCsv,
+ ),
  ],
  ),
  const SizedBox(height: 16),
@@ -1105,7 +1162,56 @@ class _TeamRolesResponsibilitiesScreenState
  }
  }
 
-  // ── CSV Import ────────────────────────────────────────────────────
+  // ── CSV Import (Standardized) ─────────────────────────────────────
+  /// Handles import from the standardized CsvTableImportButton widget.
+  /// Rows are already validated and mapped to column keys.
+  Future<void> _importRolesFromCsv(List<Map<String, String>> rows) async {
+    final provider = ProjectDataInherited.maybeOf(context);
+    final projectId = provider?.projectData.projectId;
+    if (projectId == null || projectId.isEmpty) return;
+
+    int added = 0;
+    for (final row in rows) {
+      final title = row['title']?.trim() ?? '';
+      if (title.isEmpty) continue;
+
+      final responsibilitiesStr = row['responsibilities']?.trim() ?? '';
+      final responsibilities = responsibilitiesStr.isNotEmpty
+          ? responsibilitiesStr.split(';').map((r) => r.trim()).where((r) => r.isNotEmpty).toList()
+          : <String>[];
+
+      final qtyStr = row['quantity']?.trim() ?? '1';
+      final quantity = int.tryParse(qtyStr) ?? 1;
+
+      final data = _RoleCardData(
+        title: title,
+        subtitle: row['subtitle']?.trim() ?? 'General',
+        responsibilities: responsibilities,
+        workItems: [],
+        fullName: row['fullName']?.trim() ?? '',
+        department: row['department']?.trim() ?? '',
+        employmentType: row['employmentType']?.trim() ?? 'Full Time',
+        category: row['category']?.trim() ?? 'Employee',
+        accessLevel: row['accessLevel']?.trim() ?? 'Full access',
+        teamPlacement: row['teamPlacement']?.trim() ?? 'Core team',
+        quantity: quantity,
+      );
+      await _rolesCollection(projectId).add(data.toMap());
+      added++;
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: added > 0
+            ? Text('$added role${added == 1 ? "" : "s"} imported successfully.')
+            : const Text('No valid roles found in import.'),
+        backgroundColor: added > 0 ? const Color(0xFF10B981) : const Color(0xFFD97706),
+      ),
+    );
+  }
+
+  // ── Legacy CSV Import (kept for backward compatibility) ────────────
   Future<void> _importRolesCsv() async {
     try {
       final result = await FilePicker.pickFiles(

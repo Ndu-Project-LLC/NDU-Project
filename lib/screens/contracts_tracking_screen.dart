@@ -24,6 +24,8 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 class ContractsTrackingScreen extends StatefulWidget {
  const ContractsTrackingScreen({super.key});
 
@@ -556,6 +558,27 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _PanelShell(
  title: 'Contract register',
  subtitle: 'Track scope, owners, and renewal milestones',
+ trailing: CsvEnabledSectionHeader(
+   tableTitle: 'Contracts Register',
+   compact: true,
+   columns: const [
+     CsvColumnSpec(key: 'name', label: 'Contract Name', required: true),
+     CsvColumnSpec(key: 'contractorName', label: 'Vendor/Supplier', required: true),
+     CsvColumnSpec(key: 'contractType', label: 'Contract Type', allowedValues: ['Fixed Price', 'Time & Material', 'Cost Plus', 'Retainer', 'Purchase Order', 'Lump Sum', 'Unit Price']),
+     CsvColumnSpec(key: 'paymentType', label: 'Payment Type', allowedValues: ['Milestone-based', 'Monthly', 'On Completion', 'Advance Payment', 'Quarterly']),
+     CsvColumnSpec(key: 'estimatedValue', label: 'Contract Value'),
+     CsvColumnSpec(key: 'startDate', label: 'Start Date'),
+     CsvColumnSpec(key: 'endDate', label: 'End Date'),
+     CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Draft', 'Under Review', 'Active', 'On Hold', 'Completed', 'Terminated', 'Expired'], defaultValue: 'Draft'),
+     CsvColumnSpec(key: 'owner', label: 'Contract Owner'),
+     CsvColumnSpec(key: 'discipline', label: 'Discipline'),
+     CsvColumnSpec(key: 'description', label: 'Description'),
+     CsvColumnSpec(key: 'notes', label: 'Notes'),
+   ],
+   onImport: (rows) => _importContractsFromCsv(rows),
+   onAdd: () => _showAddContractDialog(context),
+   addLabel: 'Add Contract',
+ ),
  child: StreamBuilder<List<ContractModel>>(
  stream: contractsStream,
  builder: (context, snapshot) {
@@ -1878,6 +1901,78 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() => _approvalCheckpoints.removeWhere((item) => item.id == checkpoint.id));
  _scheduleSave();
  }
+ }
+
+ /// Import contracts from CSV data via CsvEnabledSectionHeader
+ Future<void> _importContractsFromCsv(List<Map<String, String>> rows) async {
+   final projectId = _projectId;
+   if (projectId == null || !mounted) {
+     return;
+   }
+
+   final user = FirebaseAuth.instance.currentUser;
+   if (user == null) return;
+
+   var successCount = 0;
+   var errorCount = 0;
+
+   for (final row in rows) {
+     try {
+       // Parse dates
+       DateTime? startDate;
+       DateTime? endDate;
+       if (row['startDate'] != null && row['startDate']!.isNotEmpty) {
+         startDate = DateTime.tryParse(row['startDate']!);
+       }
+       if (row['endDate'] != null && row['endDate']!.isNotEmpty) {
+         endDate = DateTime.tryParse(row['endDate']!);
+       }
+
+       // Parse value
+       double estimatedValue = 0.0;
+       if (row['estimatedValue'] != null && row['estimatedValue']!.isNotEmpty) {
+         estimatedValue = double.tryParse(row['estimatedValue']!) ?? 0.0;
+       }
+
+       await ContractService.createContract(
+         projectId: projectId,
+         name: row['name'] ?? '',
+         description: row['description'] ?? '',
+         contractType: row['contractType'] ?? 'Fixed Price',
+         paymentType: row['paymentType'] ?? 'Milestone-based',
+         status: row['status'] ?? 'Draft',
+         estimatedValue: estimatedValue,
+         startDate: startDate,
+         endDate: endDate,
+         scope: row['notes'] ?? '', // Use notes as scope summary
+         discipline: row['discipline'] ?? 'General',
+         notes: row['notes'] ?? '',
+         createdById: user.uid,
+         createdByEmail: user.email ?? '',
+         createdByName: user.displayName ?? user.email ?? 'Unknown',
+       );
+       successCount++;
+     } catch (e) {
+       debugPrint('Error importing contract from CSV: $e');
+       errorCount++;
+     }
+   }
+
+   if (mounted && successCount > 0) {
+     ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(
+         content: Text('Successfully imported $successCount contract(s)${errorCount > 0 ? ' ($errorCount failed)' : ''}'),
+         backgroundColor: Colors.green,
+       ),
+     );
+   } else if (mounted && errorCount > 0) {
+     ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(
+         content: Text('Failed to import $errorCount contract(s). Check the data format.'),
+         backgroundColor: Colors.red,
+       ),
+     );
+   }
  }
 
  void _showAddContractDialog(BuildContext context) {

@@ -16,6 +16,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 class LessonsLearnedScreen extends StatefulWidget {
  const LessonsLearnedScreen({super.key});
 
@@ -177,6 +179,49 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  }
  } catch (e) { debugPrint('Error: $e'); }
  return null;
+ }
+
+ /// Handles CSV import for Lessons Learned data.
+ /// Maps imported rows to LessonRecord and saves via ProjectDataHelper.
+ Future<void> _handleCsvImport(List<Map<String, String>> rows) async {
+   if (rows.isEmpty) return;
+
+   try {
+     await ProjectDataHelper.updateAndSave(
+       context: context,
+       checkpoint: 'lessons_learned',
+       showSnackbar: false,
+       dataUpdater: (current) {
+         final lessons = List<LessonRecord>.from(current.lessonsLearned);
+         for (final row in rows) {
+           lessons.insert(
+             0,
+             LessonRecord(
+               lesson: row['lesson'] ?? '',
+               category: row['category'] ?? '',
+               type: row['type'] ?? 'Insight',
+               phase: row['phase'] ?? '',
+               status: row['status'] ?? '',
+               submittedBy: row['submittedBy'] ?? '',
+               notes: '',
+               impact: row['impact'] ?? 'Medium',
+               highlight: false,
+               dateSubmitted: _parseDate(row['date'] ?? ''),
+             ),
+           );
+         }
+         return current.copyWith(lessonsLearned: lessons);
+       },
+     );
+
+     if (!mounted) return;
+     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+       content: Text('${rows.length} lesson(s) imported successfully.')));
+   } catch (e) {
+     if (!mounted) return;
+     ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(content: Text('Error importing lessons: $e'), backgroundColor: Colors.red));
+   }
  }
 
  List<_LessonEntry> get _filteredEntries {
@@ -592,19 +637,22 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  ),
  ),
  const SizedBox(width: 12),
- ElevatedButton.icon(
- onPressed: () => _openLessonDialog(),
- icon: const Icon(Icons.add, size: 18),
- label: const Text('Add Lesson'),
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFFFD700),
- foregroundColor: Colors.black,
- elevation: 0,
- padding: const EdgeInsets.symmetric(
- horizontal: 20, vertical: 14),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- ),
+ CsvEnabledSectionHeader(
+ tableTitle: 'Lessons Learned',
+ columns: [
+   CsvColumnSpec(key: 'lesson', label: 'Lesson Description', required: true),
+   CsvColumnSpec(key: 'type', label: 'Type', allowedValues: ['Success', 'Challenge', 'Insight']),
+   CsvColumnSpec(key: 'category', label: 'Category', required: true),
+   CsvColumnSpec(key: 'phase', label: 'Phase', required: true),
+   CsvColumnSpec(key: 'impact', label: 'Impact', allowedValues: ['High', 'Medium', 'Low']),
+   CsvColumnSpec(key: 'status', label: 'Status'),
+   CsvColumnSpec(key: 'submittedBy', label: 'Submitted By', required: true),
+   CsvColumnSpec(key: 'date', label: 'Date Identified'),
+ ],
+ onImport: _handleCsvImport,
+ onAdd: () => _openLessonDialog(),
+ addLabel: 'Add Lesson',
+ compact: false,
  ),
  ],
  ),
@@ -654,19 +702,22 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  ),
  const SizedBox(width: 12),
  Expanded(
- child: ElevatedButton.icon(
- onPressed: () => _openLessonDialog(),
- icon: const Icon(Icons.add, size: 18),
- label: const Text('Add Lesson'),
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFFFD700),
- foregroundColor: Colors.black,
- elevation: 0,
- padding: const EdgeInsets.symmetric(
- horizontal: 20, vertical: 14),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- ),
+ child: CsvEnabledSectionHeader(
+ tableTitle: 'Lessons Learned',
+ columns: [
+   CsvColumnSpec(key: 'lesson', label: 'Lesson Description', required: true),
+   CsvColumnSpec(key: 'type', label: 'Type', allowedValues: ['Success', 'Challenge', 'Insight']),
+   CsvColumnSpec(key: 'category', label: 'Category', required: true),
+   CsvColumnSpec(key: 'phase', label: 'Phase', required: true),
+   CsvColumnSpec(key: 'impact', label: 'Impact', allowedValues: ['High', 'Medium', 'Low']),
+   CsvColumnSpec(key: 'status', label: 'Status'),
+   CsvColumnSpec(key: 'submittedBy', label: 'Submitted By', required: true),
+   CsvColumnSpec(key: 'date', label: 'Date Identified'),
+ ],
+ onImport: _handleCsvImport,
+ onAdd: () => _openLessonDialog(),
+ addLabel: 'Add',
+ compact: true,
  ),
  ),
  ],

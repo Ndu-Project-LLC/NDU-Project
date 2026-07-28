@@ -20,6 +20,8 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/role_descriptions.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
+import 'package:ndu_project/widgets/csv_table_import_button.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 
 const Color _kAccent = Color(0xFFFFC107);
 const Color _kPrimaryText = Color(0xFF1E293B);
@@ -27,6 +29,15 @@ const Color _kSecondaryText = Color(0xFF64748B);
 const Color _kBorderColor = Color(0xFFE2E8F0);
 const Color _kCardShadow = Color(0x14000000);
 const Color _kLightYellow = Color(0xFFFFF8E1);
+
+/// CSV column specifications for Team Member import
+const List<CsvColumnSpec> _teamMemberCsvColumns = [
+  CsvColumnSpec(key: 'name', label: 'Full Name', required: true, sampleValue: 'John Smith'),
+  CsvColumnSpec(key: 'role', label: 'Role', required: true, sampleValue: 'Project Manager'),
+  CsvColumnSpec(key: 'email', label: 'Work Email', hint: 'name@company.com', sampleValue: 'john.smith@company.com'),
+  CsvColumnSpec(key: 'responsibilities', label: 'Key Responsibilities', hint: 'Key responsibilities for this role', sampleValue: 'Overall project delivery, stakeholder management'),
+  CsvColumnSpec(key: 'reportsTo', label: 'Reports To', hint: 'Name or ID of supervisor (optional)'),
+];
 
 class TeamManagementScreen extends StatefulWidget {
   const TeamManagementScreen({super.key});
@@ -636,6 +647,42 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
   ),
+  ),
+  const SizedBox(width: 10),
+  CsvTableImportButton(
+    tableTitle: 'Team Members',
+    columns: _teamMemberCsvColumns,
+    onImport: (rows) async {
+      for (final row in rows) {
+        final member = TeamMember(
+          name: row['name'] ?? '',
+          role: row['role'] ?? '',
+          email: row['email'] ?? '',
+          responsibilities: row['responsibilities'] ?? '',
+          reportsTo: row['reportsTo'] ?? '',
+        );
+        await _persistMember(member);
+        // Update provider data
+        if (!mounted) return;
+        final currentMembers = context.read<ProjectDataProvider>().projectData.teamMembers;
+        final updated = [...currentMembers, member];
+        await ProjectDataHelper.updateAndSave(
+          context: context,
+          checkpoint: 'team_management',
+          dataUpdater: (data) => data.copyWith(teamMembers: updated),
+          showSnackbar: false,
+        );
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${rows.length} team member(s) imported successfully'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    },
+    compact: true,
   ),
   const SizedBox(width: 10),
   ElevatedButton.icon(

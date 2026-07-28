@@ -2589,6 +2589,122 @@ $c
   }
 
   String _fepSectionPrompt({required String section, required String context}) {
+    final s = section.toLowerCase().trim();
+    if (s.contains('team training') || s.contains('team building')) {
+      return _teamTrainingPrompt(section, context);
+    }
+    if (s.contains('base organisation') || s.contains('base organization')) {
+      return _orgPlanPrompt(section, context);
+    }
+    if (s.contains('raci')) {
+      return _raciMatrixPrompt(section, context);
+    }
+    return _genericFepSectionPrompt(section: section, context: context);
+  }
+
+  String _teamTrainingPrompt(String section, String context) {
+    final s = _escape(section);
+    final c = _escape(context);
+    return '''
+Draft the "$s" section from the project context below.
+
+Use the project's technology definitions, team structure, milestones, and org config to suggest:
+
+1. **Discipline-Specific Training**: Based on the project's technology stack and scope, suggest 3-5 specific training topics per discipline. For physical projects suggest safety certs, equipment operation, site protocols. For digital projects suggest platform certs, language/framework training, security training.
+2. **Onboarding Plan**: Recommend onboarding timing relative to project milestones. For global/multi-site teams, stagger onboarding across time zones over 2-4 weeks with async materials. For co-located teams, propose a 1-2 week intensive onboarding.
+3. **Team Building Cadence**: Suggest team building activities at project kickoff, phase transitions, and quarterly. Tailor to team size and distribution.
+4. **Role-Specific Requirements**: Reference specific roles/disciplines from the context for targeted training.
+
+Best-practice benchmarks:
+- Co-located teams: onboarding in 1-2 weeks
+- Remote/hybrid teams: 2-4 weeks with async materials
+- Global/multi-site teams: 4-8 weeks staggered by timezone
+- Discipline training: schedule 2-4 weeks BEFORE the relevant work package starts
+- Team building: at kickoff, each phase transition, and quarterly
+
+Return ONLY valid JSON:
+{
+  "text": "write-up with concise paragraphs and bullet points"
+}
+
+Keep it 150-350 words. Be specific and actionable. No placeholders.
+
+Project context:
+"""
+$c
+"""
+''';
+  }
+
+  String _orgPlanPrompt(String section, String context) {
+    final s = _escape(section);
+    final c = _escape(context);
+    return '''
+Draft the "$s" section from the project context below.
+
+Suggest:
+
+1. **Organisational Model**: Recommend functional, matrix, or projectised structure based on project framework (agile/waterfall/hybrid), team size, and complexity.
+2. **Staffing Strategy**: Suggest internal vs contractor vs mixed sourcing based on context.
+3. **Communication Structure**: Recommend communication modes and cadence based on location (co-located/remote/hybrid/multi-site).
+4. **Governance & Reporting Lines**: Suggest reporting structure and governance checkpoints.
+
+Best-practice benchmarks:
+- <10 people: Simple hierarchy or flat structure
+- 10-50 people: Functional or lightweight matrix
+- 50+ people: Strong matrix or projectised
+- Co-located: Daily standups + weekly syncs
+- Distributed: Async-first tools + weekly video syncs
+
+Return ONLY valid JSON:
+{
+  "text": "write-up with concise paragraphs and bullet points"
+}
+
+Keep it 150-350 words. Be specific and actionable. No placeholders.
+
+Project context:
+"""
+$c
+"""
+''';
+  }
+
+  String _raciMatrixPrompt(String section, String context) {
+    final s = _escape(section);
+    final c = _escape(context);
+    return '''
+Draft the "$s" section from the project context below.
+
+Suggest a RACI matrix covering:
+
+1. **Key Activities**: List 6-10 core project activities (e.g., requirements, design, procurement, execution, testing, handover) based on project type and framework.
+2. **Role Coverage**: Identify R (Responsible), A (Accountable), C (Consulted), I (Informed) for each activity. Map to specific roles/disciplines from the context.
+3. **Framework Alignment**: For agile projects, include backlog refinement, sprint planning, reviews, retrospectives. For waterfall, include stage gates, sign-offs, deliverables review. For hybrid, blend both.
+4. **Governance Touchpoints**: Add key approval points for compliance and quality.
+
+Best-practice guidelines:
+- Each activity MUST have exactly one A (Accountable)
+- Activities with no A assigned create accountability gaps
+- Avoid assigning A to more than 2-3 activities per role without deputies
+- For small teams (<10), the PM or lead typically holds A for most activities
+- For large teams (50+), delegate A to work package leads, keep PM as A only for integration-level activities
+
+Return ONLY valid JSON:
+{
+  "text": "write-up with concise paragraphs and bullet points"
+}
+
+Keep it 150-350 words. Be specific and actionable. No placeholders.
+
+Project context:
+"""
+$c
+"""
+''';
+  }
+
+  String _genericFepSectionPrompt({required String section, required String context}) {
     final s = _escape(section);
     final c = _escape(context);
     return '''

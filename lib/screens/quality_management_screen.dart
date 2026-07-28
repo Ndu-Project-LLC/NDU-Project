@@ -262,128 +262,180 @@ String _buildQualityAiContext(ProjectDataModel data) {
 
 Map<String, List<LaunchEntry>> _buildExecutionQualitySections(
  QualityManagementData quality,
+ ProjectDataModel projectData,
 ) {
+ final wpMap = {for (final wp in projectData.workPackages) wp.id: wp.title};
+ final coq = projectData.costOfQualityData;
+
+ String wpLabel(String id) {
+  if (id.isEmpty) return '';
+  return wpMap[id] ?? '';
+ }
+
  return {
- 'quality_management_plan': [
- LaunchEntry(
- title: 'Project Quality Management Plan',
- details: [
- quality.qualityPlan,
- if (quality.reviewCadence.isNotEmpty)
- 'Review Cadence: ${quality.reviewCadence}',
- if (quality.escalationPath.isNotEmpty)
- 'Escalation Path: ${quality.escalationPath}',
- if (quality.changeControlProcess.isNotEmpty)
- 'Change Control: ${quality.changeControlProcess}',
- ].where((value) => value.trim().isNotEmpty).join('\n\n'),
- status: 'Active',
- ),
- ],
- 'quality_objectives': quality.objectives
- .map(
- (objective) => LaunchEntry(
- title: objective.title,
- details: [
- 'Acceptance Criteria: ${objective.acceptanceCriteria}',
- 'Metric: ${objective.successMetric}',
- 'Target: ${objective.targetValue}',
- 'Current: ${objective.currentValue}',
- 'Owner: ${objective.owner}',
- 'Requirement: ${objective.linkedRequirement}',
- 'WBS: ${objective.linkedWbs}',
- ].join('\n'),
- status: objective.status,
- ),
- )
- .toList(),
- 'inspection_test_plan': [
- ...quality.workflowControls
- .where((control) => control.type == QualityWorkflowType.qa)
- .map(
- (control) => LaunchEntry(
- title: control.name,
- details: [
- 'Method: ${control.method}',
- 'Tools: ${control.tools}',
- 'Checklist: ${control.checklist}',
- 'Frequency: ${control.frequency}',
- 'Owner: ${control.owner}',
- 'Standards: ${control.standardsReference}',
- ].join('\n'),
- status: 'Inspection Control',
- ),
- ),
- ...quality.qaTaskLog.map(
- (task) => LaunchEntry(
- title: task.task,
- details: [
- 'Responsible: ${task.responsible}',
- 'Start: ${task.startDate}',
- 'End: ${task.endDate}',
- 'Comments: ${task.comments}',
- ].join('\n'),
- status: task.status.name,
- ),
- ),
- ],
- 'quality_metrics_dashboard': [
- LaunchEntry(
- title: 'Quality KPI Dashboard',
- details: [
- 'Defect Density: ${quality.metrics.defectDensity.value} ${quality.metrics.defectDensity.unit}'.trim(),
- 'Customer Satisfaction: ${quality.metrics.customerSatisfaction.value} ${quality.metrics.customerSatisfaction.unit}'.trim(),
- 'On-Time Delivery: ${quality.metrics.onTimeDelivery.value} ${quality.metrics.onTimeDelivery.unit}'.trim(),
- 'Target Resolution Days: ${quality.dashboardConfig.targetTimeToResolutionDays}',
- 'Manual Override: ${quality.dashboardConfig.allowManualMetricsOverride ? 'Enabled' : 'Disabled'}',
- ].join('\n'),
- status: 'Tracking',
- ),
- ],
- 'quality_audit_plan': [
- ...quality.workflowControls
- .where((control) => control.type == QualityWorkflowType.qc)
- .map(
- (control) => LaunchEntry(
- title: control.name,
- details: [
- 'Method: ${control.method}',
- 'Frequency: ${control.frequency}',
- 'Owner: ${control.owner}',
- 'Checklist: ${control.checklist}',
- ].join('\n'),
- status: 'Audit Control',
- ),
- ),
- ...quality.auditPlan.map(
- (audit) => LaunchEntry(
- title: audit.title,
- details: [
- 'Scope: ${audit.scope}',
- 'Planned Date: ${audit.plannedDate}',
- 'Completed Date: ${audit.completedDate}',
- 'Owner: ${audit.owner}',
- 'Findings: ${audit.findings}',
- 'Notes: ${audit.notes}',
- ].join('\n'),
- status: audit.result.name,
- ),
- ),
- ],
- 'nonconformance_corrective_actions': quality.correctiveActions
- .map(
- (action) => LaunchEntry(
- title: action.title,
- details: [
- 'Root Cause: ${action.rootCause}',
- 'Action: ${action.action}',
- 'Owner: ${action.owner}',
- 'Due Date: ${action.dueDate}',
- 'Verification: ${action.verificationNotes}',
- ].join('\n'),
- status: action.status.name,
- ),
- )
- .toList(),
+  'quality_management_plan': [
+   LaunchEntry(
+    title: 'Project Quality Management Plan',
+    details: [
+     quality.qualityPlan,
+     if (quality.reviewCadence.isNotEmpty)
+      'Review Cadence: ${quality.reviewCadence}',
+     if (quality.escalationPath.isNotEmpty)
+      'Escalation Path: ${quality.escalationPath}',
+     if (quality.changeControlProcess.isNotEmpty)
+      'Change Control: ${quality.changeControlProcess}',
+    ].where((value) => value.trim().isNotEmpty).join('\n\n'),
+    status: 'Active',
+   ),
+  ],
+  'quality_objectives': quality.objectives
+      .map(
+       (objective) => LaunchEntry(
+        title: objective.title,
+        details: [
+         'Acceptance Criteria: ${objective.acceptanceCriteria}',
+         'Metric: ${objective.successMetric}',
+         'Target: ${objective.targetValue}',
+         'Current: ${objective.currentValue}',
+         'Owner: ${objective.owner}',
+         'Requirement: ${objective.linkedRequirement}',
+         'WBS: ${objective.linkedWbs}',
+         if (wpLabel(objective.linkedWorkPackageId).isNotEmpty)
+          'Work Package: ${wpLabel(objective.linkedWorkPackageId)}',
+        ].join('\n'),
+        status: objective.status,
+       ),
+      )
+      .toList(),
+  'inspection_test_plan': [
+   ...quality.workflowControls
+       .where((control) => control.type == QualityWorkflowType.qa)
+       .map(
+        (control) => LaunchEntry(
+         title: control.name,
+         details: [
+          'Method: ${control.method}',
+          'Tools: ${control.tools}',
+          'Checklist: ${control.checklist}',
+          'Frequency: ${control.frequency}',
+          'Owner: ${control.owner}',
+          'Standards: ${control.standardsReference}',
+          if (wpLabel(control.linkedWorkPackageId).isNotEmpty)
+           'Work Package: ${wpLabel(control.linkedWorkPackageId)}',
+         ].join('\n'),
+         status: 'Inspection Control',
+        ),
+       ),
+   ...quality.qaTaskLog.map(
+    (task) => LaunchEntry(
+     title: task.task,
+     details: [
+      'Responsible: ${task.responsible}',
+      'Start: ${task.startDate}',
+      'End: ${task.endDate}',
+      'Comments: ${task.comments}',
+      if (wpLabel(task.linkedWorkPackageId).isNotEmpty)
+       'Work Package: ${wpLabel(task.linkedWorkPackageId)}',
+     ].join('\n'),
+     status: task.status.name,
+    ),
+   ),
+  ],
+  'quality_metrics_dashboard': [
+   LaunchEntry(
+    title: 'Quality KPI Dashboard',
+    details: [
+     'Defect Density: ${quality.metrics.defectDensity.value} ${quality.metrics.defectDensity.unit}'.trim(),
+     'Customer Satisfaction: ${quality.metrics.customerSatisfaction.value} ${quality.metrics.customerSatisfaction.unit}'.trim(),
+     'On-Time Delivery: ${quality.metrics.onTimeDelivery.value} ${quality.metrics.onTimeDelivery.unit}'.trim(),
+     'Target Resolution Days: ${quality.dashboardConfig.targetTimeToResolutionDays}',
+     'Manual Override: ${quality.dashboardConfig.allowManualMetricsOverride ? 'Enabled' : 'Disabled'}',
+     if (quality.customKpis.isNotEmpty) '\nCustom KPIs:',
+     ...quality.customKpis.map((k) => '  ${k.name}: ${k.value} ${k.unit} (target: ${k.targetValue}) [${k.category}]'),
+    ].join('\n'),
+    status: 'Tracking',
+   ),
+  ],
+  'quality_audit_plan': [
+   ...quality.workflowControls
+       .where((control) => control.type == QualityWorkflowType.qc)
+       .map(
+        (control) => LaunchEntry(
+         title: control.name,
+         details: [
+          'Method: ${control.method}',
+          'Frequency: ${control.frequency}',
+          'Owner: ${control.owner}',
+          'Checklist: ${control.checklist}',
+          if (wpLabel(control.linkedWorkPackageId).isNotEmpty)
+           'Work Package: ${wpLabel(control.linkedWorkPackageId)}',
+         ].join('\n'),
+         status: 'Audit Control',
+        ),
+       ),
+   ...quality.auditPlan.map(
+    (audit) => LaunchEntry(
+     title: audit.title,
+     details: [
+      'Scope: ${audit.scope}',
+      'Planned Date: ${audit.plannedDate}',
+      'Completed Date: ${audit.completedDate}',
+      'Owner: ${audit.owner}',
+      'Findings: ${audit.findings}',
+      'Notes: ${audit.notes}',
+      if (wpLabel(audit.linkedWorkPackageId).isNotEmpty)
+       'Work Package: ${wpLabel(audit.linkedWorkPackageId)}',
+     ].join('\n'),
+     status: audit.result.name,
+    ),
+   ),
+  ],
+  'nonconformance_corrective_actions': quality.correctiveActions
+      .map(
+       (action) => LaunchEntry(
+        title: action.title,
+        details: [
+         'Root Cause: ${action.rootCause}',
+         'Action: ${action.action}',
+         'Owner: ${action.owner}',
+         'Due Date: ${action.dueDate}',
+         'Verification: ${action.verificationNotes}',
+         if (wpLabel(action.linkedWorkPackageId).isNotEmpty)
+          'Work Package: ${wpLabel(action.linkedWorkPackageId)}',
+        ].join('\n'),
+        status: action.status.name,
+       ),
+      )
+      .toList(),
+  if (coq != null) ...{
+   'cost_of_quality': [
+    LaunchEntry(
+     title: 'Prevention Costs',
+     details: coq.preventionCosts.map((e) => '${e.description}: \$${e.actualCost} (${e.scope} - ${e.performerRole})').join('\n'),
+     status: '\$${coq.totalPrevention.toStringAsFixed(0)}',
+    ),
+    LaunchEntry(
+     title: 'Appraisal Costs',
+     details: coq.appraisalCosts.map((e) => '${e.description}: \$${e.actualCost} (${e.scope} - ${e.performerRole})').join('\n'),
+     status: '\$${coq.totalAppraisal.toStringAsFixed(0)}',
+    ),
+    LaunchEntry(
+     title: 'Internal Failure Costs',
+     details: coq.internalFailureCosts.map((e) => '${e.description}: \$${e.actualCost} (${e.scope} - ${e.performerRole})').join('\n'),
+     status: '\$${coq.totalInternalFailure.toStringAsFixed(0)}',
+    ),
+    LaunchEntry(
+     title: 'External Failure Costs',
+     details: coq.externalFailureCosts.map((e) => '${e.description}: \$${e.actualCost} (${e.scope} - ${e.performerRole})').join('\n'),
+     status: '\$${coq.totalExternalFailure.toStringAsFixed(0)}',
+    ),
+    LaunchEntry(
+     title: 'Total Cost of Quality',
+     details: 'Total: \$${coq.totalCoq.toStringAsFixed(0)}',
+     status: 'Summary',
+    ),
+   ],
+  },
  };
 }
 
@@ -1475,7 +1527,7 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  await ExecutionPhaseService.savePageData(
  projectId: projectId,
  pageKey: 'execution_quality_tracking',
- sections: _buildExecutionQualitySections(quality),
+  sections: _buildExecutionQualitySections(quality, project),
  );
 
  await ProjectDataHelper.updateAndSave(
@@ -2642,14 +2694,114 @@ class _MetricsViewState extends State<_MetricsView> {
  return 'Closed';
  case CorrectiveActionStatus.overdue:
  return 'Overdue';
+  }
  }
+
+ Color _categoryColor(String category) {
+  switch (category) {
+    case 'prevention': return const Color(0xFF059669);
+    case 'appraisal': return const Color(0xFFD97706);
+    case 'internalFailure': return const Color(0xFFEA580C);
+    case 'externalFailure': return const Color(0xFFDC2626);
+    case 'outcome': return const Color(0xFF2563EB);
+    default: return const Color(0xFF6B7280);
+  }
+ }
+
+ Future<void> _addCustomKpi() async {
+  final result = await showDialog<QualityKpi>(
+    context: context,
+    builder: (_) => const _CustomKpiDialog(),
+  );
+  if (!mounted || result == null) return;
+  await _updateQualityData(
+    context,
+    checkpoint: 'quality_management',
+    successMessage: 'KPI added',
+    updater: (current) {
+      final updated = List<QualityKpi>.from(current.customKpis)..add(result);
+      return current.copyWith(customKpis: updated);
+    },
+  );
+ }
+
+ Future<void> _editCustomKpi(int index) async {
+  final quality = _qualityData(context);
+  if (index < 0 || index >= quality.customKpis.length) return;
+  final result = await showDialog<QualityKpi>(
+    context: context,
+    builder: (_) => _CustomKpiDialog(initialValue: quality.customKpis[index]),
+  );
+  if (!mounted || result == null) return;
+  await _updateQualityData(
+    context,
+    checkpoint: 'quality_management',
+    successMessage: 'KPI updated',
+    updater: (current) {
+      final updated = List<QualityKpi>.from(current.customKpis);
+      updated[index] = result;
+      return current.copyWith(customKpis: updated);
+    },
+  );
+ }
+
+ Future<void> _removeCustomKpi(int index) async {
+  final confirmed = await showDeleteConfirmationDialog(
+    context,
+    title: 'Remove KPI',
+  );
+  if (!confirmed) return;
+  await _updateQualityData(
+    context,
+    checkpoint: 'quality_management',
+    successMessage: 'KPI removed',
+    updater: (current) {
+      final updated = List<QualityKpi>.from(current.customKpis);
+      if (index >= 0 && index < updated.length) updated.removeAt(index);
+      return current.copyWith(customKpis: updated);
+    },
+  );
+ }
+
+ Future<void> _syncKpisFromObjectives() async {
+  final quality = _qualityData(context);
+  final existingNames = quality.customKpis.map((k) => k.name.toLowerCase()).toSet();
+  final newKpis = <QualityKpi>[];
+  for (final obj in quality.objectives) {
+    if (obj.successMetric.isNotEmpty && !existingNames.contains(obj.successMetric.toLowerCase())) {
+      newKpis.add(QualityKpi(
+        name: obj.successMetric,
+        value: obj.currentValue,
+        targetValue: obj.targetValue,
+        category: 'outcome',
+        description: obj.title,
+      ));
+    }
+  }
+  if (newKpis.isEmpty) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No new KPIs to sync from objectives')),
+      );
+    }
+    return;
+  }
+  await _updateQualityData(
+    context,
+    checkpoint: 'quality_management',
+    successMessage: '${newKpis.length} KPIs synced from objectives',
+    updater: (current) {
+      final updated = List<QualityKpi>.from(current.customKpis)..addAll(newKpis);
+      return current.copyWith(customKpis: updated);
+    },
+  );
  }
 
  @override
  Widget build(BuildContext context) {
- final quality = _qualityData(context, listen: true);
- final computed = QualityMetricsCalculator.computeSnapshot(quality);
- final roadmapItems = _buildRoadmap(quality);
+  final quality = _qualityData(context, listen: true);
+  final computed = QualityMetricsCalculator.computeSnapshot(quality);
+  final roadmapItems = _buildRoadmap(quality);
 
  final statusTallies = computed.statusTallies;
  final priorityTallies = computed.priorityTallies;
@@ -2881,11 +3033,160 @@ class _MetricsViewState extends State<_MetricsView> {
  subtitle:
  'Chronological view of QA/QC tasks, audits, and corrective actions.',
  ),
- const SizedBox(height: 12),
- _RoadmapTimeline(items: roadmapItems),
- ],
- ),
- );
+  const SizedBox(height: 12),
+  _RoadmapTimeline(items: roadmapItems),
+  const SizedBox(height: 28),
+  _SectionHeader(
+   title: 'Custom Quality KPIs',
+   subtitle: 'Define and track project-specific quality indicators.',
+   trailing: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+     OutlinedButton.icon(
+      onPressed: _syncKpisFromObjectives,
+      icon: const Icon(Icons.sync_outlined, size: 16),
+      label: const Text('Sync from Objectives'),
+     ),
+     const SizedBox(width: 8),
+     ElevatedButton.icon(
+      onPressed: _addCustomKpi,
+      icon: const Icon(Icons.add, size: 16),
+      label: const Text('Add KPI'),
+     ),
+    ],
+   ),
+  ),
+  const SizedBox(height: 10),
+  if (quality.customKpis.isEmpty)
+   Container(
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+     color: const Color(0xFFF9FAFB),
+     borderRadius: BorderRadius.circular(12),
+     border: Border.all(color: const Color(0xFFE5E7EB)),
+    ),
+    child: const Center(
+     child: Text(
+      'No custom KPIs defined. Add metrics that your quality plan is tracking.',
+      style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+     ),
+    ),
+   )
+  else
+   Table(
+    columnWidths: const {
+     0: FlexColumnWidth(2),
+     1: FlexColumnWidth(1.5),
+     2: FlexColumnWidth(1.5),
+     3: FlexColumnWidth(1),
+     4: FlexColumnWidth(1),
+     5: FixedColumnWidth(80),
+    },
+    border: TableBorder.all(color: const Color(0xFFE5E7EB), width: 1),
+    children: [
+     TableRow(
+      decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),
+      children: ['Name', 'Value', 'Target', 'Category', 'Trend', '']
+          .map((h) => Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text(h,
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF6B7280))),
+              ))
+          .toList(),
+     ),
+     for (final kpi in quality.customKpis)
+      TableRow(
+       children: [
+        Padding(
+         padding: const EdgeInsets.all(10),
+         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+           Text(kpi.name.isEmpty ? 'Unnamed KPI' : kpi.name,
+               style: const TextStyle(
+                   fontSize: 13, fontWeight: FontWeight.w600)),
+           if (kpi.description.isNotEmpty)
+            Text(kpi.description,
+                style: const TextStyle(
+                    fontSize: 11, color: Color(0xFF9CA3AF))),
+          ],
+         ),
+        ),
+        Padding(
+         padding: const EdgeInsets.all(10),
+         child: Text(
+          '${kpi.value}${kpi.unit.isNotEmpty ? ' ${kpi.unit}' : ''}',
+          style: const TextStyle(fontSize: 13),
+         ),
+        ),
+        Padding(
+         padding: const EdgeInsets.all(10),
+         child: Text(
+          kpi.targetValue.isEmpty ? '-' : kpi.targetValue,
+          style: const TextStyle(fontSize: 13),
+         ),
+        ),
+        Padding(
+         padding: const EdgeInsets.all(10),
+         child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+           color: _categoryColor(kpi.category),
+           borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+           kpi.category,
+           style: const TextStyle(
+               fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white),
+          ),
+         ),
+        ),
+        Padding(
+         padding: const EdgeInsets.all(10),
+         child: Icon(
+          kpi.trendDirection == 'up'
+              ? Icons.trending_up
+              : kpi.trendDirection == 'down'
+                  ? Icons.trending_down
+                  : Icons.trending_flat,
+          color: kpi.trendDirection == 'up'
+              ? const Color(0xFF16A34A)
+              : kpi.trendDirection == 'down'
+                  ? const Color(0xFFDC2626)
+                  : const Color(0xFF9CA3AF),
+          size: 18,
+         ),
+        ),
+        Padding(
+         padding: const EdgeInsets.all(6),
+         child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+           IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 16),
+            onPressed: () => _editCustomKpi(quality.customKpis.indexOf(kpi)),
+            tooltip: 'Edit KPI',
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+           ),
+           IconButton(
+            icon: const Icon(Icons.delete_outline, size: 16),
+            onPressed: () => _removeCustomKpi(quality.customKpis.indexOf(kpi)),
+            tooltip: 'Remove KPI',
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+           ),
+          ],
+         ),
+        ),
+       ],
+      ),
+    ],
+   ),
+  ],
+  ),
+  );
  }
 }
 
@@ -3316,51 +3617,57 @@ class _TaskLogTable extends StatelessWidget {
  }
 
  return _DataTableShell(
- table: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
- columns: const [
- DataColumn(label: Text('Task')),
- DataColumn(label: Text('% Complete')),
- DataColumn(label: Text('Responsible')),
- DataColumn(label: Text('Start')),
- DataColumn(label: Text('End')),
- DataColumn(label: Text('Duration')),
- DataColumn(label: Text('Status')),
- DataColumn(label: Text('Priority')),
- DataColumn(label: Text('Comments')),
- DataColumn(label: Text('Actions')),
- ],
- rows: [
- for (final task in tasks)
- DataRow(cells: [
- DataCell(SizedBox(width: 170, child: Text(task.task))),
- DataCell(Text('${task.percentComplete.toStringAsFixed(0)}%')),
- DataCell(SizedBox(width: 130, child: Text(task.responsible))),
- DataCell(Text(task.startDate)),
- DataCell(Text(task.endDate)),
- DataCell(Text(
- task.durationDays == null ? '-' : '${task.durationDays} d',
- )),
- DataCell(_StatusChipText(label: _statusLabel(task.status))),
- DataCell(_StatusChipText(label: _priorityLabel(task.priority))),
- DataCell(SizedBox(width: 200, child: Text(task.comments))),
- DataCell(Row(
- children: [
- IconButton(
- icon: const Icon(Icons.edit_outlined, size: 18),
- onPressed: () => onEdit(task),
- ),
- IconButton(
- icon: const Icon(Icons.delete_outline, size: 18),
- color: const Color(0xFFDC2626),
- onPressed: () => onRemove(task),
- ),
- ],
- )),
- ]),
- ],
- ),
- );
+  table: DataTable(
+  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+  columns: const [
+  DataColumn(label: Text('Task')),
+  DataColumn(label: Text('% Complete')),
+  DataColumn(label: Text('Responsible')),
+  DataColumn(label: Text('Work Package')),
+  DataColumn(label: Text('Start')),
+  DataColumn(label: Text('End')),
+  DataColumn(label: Text('Duration')),
+  DataColumn(label: Text('Status')),
+  DataColumn(label: Text('Priority')),
+  DataColumn(label: Text('Comments')),
+  DataColumn(label: Text('Actions')),
+  ],
+  rows: [
+  for (final task in tasks)
+  DataRow(cells: [
+  DataCell(SizedBox(width: 170, child: Text(task.task))),
+  DataCell(Text('${task.percentComplete.toStringAsFixed(0)}%')),
+  DataCell(SizedBox(width: 130, child: Text(task.responsible))),
+  DataCell(SizedBox(width: 120, child: Builder(builder: (context) {
+   final wpList = ProjectDataHelper.getData(context).workPackages;
+   final matches = wpList.where((w) => w.id == task.linkedWorkPackageId);
+   return Text(matches.isNotEmpty ? matches.first.title : '-', style: const TextStyle(fontSize: 11));
+  }))),
+  DataCell(Text(task.startDate)),
+  DataCell(Text(task.endDate)),
+  DataCell(Text(
+  task.durationDays == null ? '-' : '${task.durationDays} d',
+  )),
+  DataCell(_StatusChipText(label: _statusLabel(task.status))),
+  DataCell(_StatusChipText(label: _priorityLabel(task.priority))),
+  DataCell(SizedBox(width: 200, child: Text(task.comments))),
+  DataCell(Row(
+  children: [
+  IconButton(
+  icon: const Icon(Icons.edit_outlined, size: 18),
+  onPressed: () => onEdit(task),
+  ),
+  IconButton(
+  icon: const Icon(Icons.delete_outline, size: 18),
+  color: const Color(0xFFDC2626),
+  onPressed: () => onRemove(task),
+  ),
+  ],
+  )),
+  ]),
+  ],
+  ),
+  );
  }
 }
 
@@ -3400,50 +3707,56 @@ class _AuditPlanTable extends StatelessWidget {
  }
 
  return _DataTableShell(
- table: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
- columns: const [
- DataColumn(label: Text('Audit')),
- DataColumn(label: Text('Scope')),
- DataColumn(label: Text('Planned')),
- DataColumn(label: Text('Completed')),
- DataColumn(label: Text('Owner')),
- DataColumn(label: Text('Result')),
- DataColumn(label: Text('Actions')),
- ],
- rows: [
- for (final audit in audits)
- DataRow(cells: [
- DataCell(SizedBox(width: 180, child: Text(audit.title))),
- DataCell(SizedBox(width: 220, child: Text(audit.scope))),
- DataCell(Text(audit.plannedDate)),
- DataCell(Text(audit.completedDate)),
- DataCell(SizedBox(width: 130, child: Text(audit.owner))),
- DataCell(_StatusChipText(label: _resultLabel(audit.result))),
- DataCell(Row(
- children: [
- if (audit.result == AuditResultStatus.fail ||
- audit.result == AuditResultStatus.conditional)
- IconButton(
- tooltip: 'Create corrective action',
- icon: const Icon(Icons.rule_folder_outlined, size: 18),
- onPressed: () => onCreateCorrectiveAction(audit),
- ),
- IconButton(
- icon: const Icon(Icons.edit_outlined, size: 18),
- onPressed: () => onEdit(audit),
- ),
- IconButton(
- icon: const Icon(Icons.delete_outline, size: 18),
- color: const Color(0xFFDC2626),
- onPressed: () => onRemove(audit),
- ),
- ],
- )),
- ]),
- ],
- ),
- );
+  table: DataTable(
+  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+  columns: const [
+  DataColumn(label: Text('Audit')),
+  DataColumn(label: Text('Scope')),
+  DataColumn(label: Text('Work Package')),
+  DataColumn(label: Text('Planned')),
+  DataColumn(label: Text('Completed')),
+  DataColumn(label: Text('Owner')),
+  DataColumn(label: Text('Result')),
+  DataColumn(label: Text('Actions')),
+  ],
+  rows: [
+  for (final audit in audits)
+  DataRow(cells: [
+  DataCell(SizedBox(width: 180, child: Text(audit.title))),
+  DataCell(SizedBox(width: 220, child: Text(audit.scope))),
+  DataCell(SizedBox(width: 120, child: Builder(builder: (context) {
+   final wpList = ProjectDataHelper.getData(context).workPackages;
+   final matches = wpList.where((w) => w.id == audit.linkedWorkPackageId);
+   return Text(matches.isNotEmpty ? matches.first.title : '-', style: const TextStyle(fontSize: 11));
+  }))),
+  DataCell(Text(audit.plannedDate)),
+  DataCell(Text(audit.completedDate)),
+  DataCell(SizedBox(width: 130, child: Text(audit.owner))),
+  DataCell(_StatusChipText(label: _resultLabel(audit.result))),
+  DataCell(Row(
+  children: [
+  if (audit.result == AuditResultStatus.fail ||
+  audit.result == AuditResultStatus.conditional)
+  IconButton(
+  tooltip: 'Create corrective action',
+  icon: const Icon(Icons.rule_folder_outlined, size: 18),
+  onPressed: () => onCreateCorrectiveAction(audit),
+  ),
+  IconButton(
+  icon: const Icon(Icons.edit_outlined, size: 18),
+  onPressed: () => onEdit(audit),
+  ),
+  IconButton(
+  icon: const Icon(Icons.delete_outline, size: 18),
+  color: const Color(0xFFDC2626),
+  onPressed: () => onRemove(audit),
+  ),
+  ],
+  )),
+  ]),
+  ],
+  ),
+  );
  }
 }
 
@@ -3960,7 +4273,7 @@ class _QualityObjectiveDialog extends StatefulWidget {
  _QualityObjectiveDialogState();
 }
 
-class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
+ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
  late final TextEditingController _title;
  late final TextEditingController _acceptance;
  late final TextEditingController _metric;
@@ -3970,23 +4283,25 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
  late final TextEditingController _linkedWbs;
  late final TextEditingController _status;
  late String _owner;
+ late String _selectedWpId;
 
  @override
  void initState() {
- super.initState();
- final initial = widget.initialValue;
- _title = TextEditingController(text: initial?.title ?? '');
- _acceptance =
- TextEditingController(text: initial?.acceptanceCriteria ?? '');
- _metric = TextEditingController(text: initial?.successMetric ?? '');
- _target = TextEditingController(text: initial?.targetValue ?? '');
- _current = TextEditingController(text: initial?.currentValue ?? '');
- _linkedReq = TextEditingController(text: initial?.linkedRequirement ?? '');
- _linkedWbs = TextEditingController(text: initial?.linkedWbs ?? '');
- _status = TextEditingController(text: initial?.status ?? 'Draft');
- _owner = initial?.owner.isNotEmpty == true
- ? initial!.owner
- : widget.ownerOptions.first;
+  super.initState();
+  final initial = widget.initialValue;
+  _title = TextEditingController(text: initial?.title ?? '');
+  _acceptance =
+  TextEditingController(text: initial?.acceptanceCriteria ?? '');
+  _metric = TextEditingController(text: initial?.successMetric ?? '');
+  _target = TextEditingController(text: initial?.targetValue ?? '');
+  _current = TextEditingController(text: initial?.currentValue ?? '');
+  _linkedReq = TextEditingController(text: initial?.linkedRequirement ?? '');
+  _linkedWbs = TextEditingController(text: initial?.linkedWbs ?? '');
+  _status = TextEditingController(text: initial?.status ?? 'Draft');
+  _owner = initial?.owner.isNotEmpty == true
+  ? initial!.owner
+  : widget.ownerOptions.first;
+  _selectedWpId = initial?.linkedWorkPackageId ?? '';
  }
 
  @override
@@ -4012,18 +4327,19 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
  }
 
  Navigator.of(context).pop(
- QualityObjective(
- id: widget.initialValue?.id ?? _newId(),
- title: _title.text.trim(),
- acceptanceCriteria: _acceptance.text.trim(),
- successMetric: _metric.text.trim(),
- targetValue: _target.text.trim(),
- currentValue: _current.text.trim(),
- owner: _owner,
- linkedRequirement: _linkedReq.text.trim(),
- linkedWbs: _linkedWbs.text.trim(),
- status: _status.text.trim().isEmpty ? 'Draft' : _status.text.trim(),
- ),
+  QualityObjective(
+  id: widget.initialValue?.id ?? _newId(),
+  title: _title.text.trim(),
+  acceptanceCriteria: _acceptance.text.trim(),
+  successMetric: _metric.text.trim(),
+  targetValue: _target.text.trim(),
+  currentValue: _current.text.trim(),
+  owner: _owner,
+  linkedRequirement: _linkedReq.text.trim(),
+  linkedWbs: _linkedWbs.text.trim(),
+  linkedWorkPackageId: _selectedWpId,
+  status: _status.text.trim().isEmpty ? 'Draft' : _status.text.trim(),
+  ),
  );
  }
 
@@ -4123,6 +4439,19 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
  controller: _linkedWbs,
  decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
+ _FieldLabel('Linked Work Package'),
+ DropdownButtonFormField<String>(
+ value: _selectedWpId.isEmpty ? null : _selectedWpId,
+ decoration: _inputDecoration(context, 'Optional - link to a work package'),
+ items: [
+  const DropdownMenuItem(value: '', child: Text('None')),
+  ...ProjectDataHelper.getData(context).workPackages.map(
+   (wp) => DropdownMenuItem(value: wp.id, child: Text(wp.title.isEmpty ? wp.packageCode : wp.title)),
+  ),
+ ],
+ onChanged: (v) => setState(() => _selectedWpId = v ?? ''),
+ ),
+ const SizedBox(height: 10),
  _FieldLabel('Status'),
  VoiceTextField(
  controller: _status,
@@ -4157,28 +4486,30 @@ class _WorkflowControlDialog extends StatefulWidget {
 }
 
 class _WorkflowControlDialogState extends State<_WorkflowControlDialog> {
- late final TextEditingController _name;
- late final TextEditingController _method;
- late final TextEditingController _tools;
- late final TextEditingController _checklist;
- late final TextEditingController _frequency;
- late final TextEditingController _standards;
- late String _owner;
+  late final TextEditingController _name;
+  late final TextEditingController _method;
+  late final TextEditingController _tools;
+  late final TextEditingController _checklist;
+  late final TextEditingController _frequency;
+  late final TextEditingController _standards;
+  late String _owner;
+  late String _selectedWpId;
 
- @override
- void initState() {
- super.initState();
- final initial = widget.initialValue;
- _name = TextEditingController(text: initial?.name ?? '');
- _method = TextEditingController(text: initial?.method ?? '');
- _tools = TextEditingController(text: initial?.tools ?? '');
- _checklist = TextEditingController(text: initial?.checklist ?? '');
- _frequency = TextEditingController(text: initial?.frequency ?? '');
- _standards = TextEditingController(text: initial?.standardsReference ?? '');
- _owner = initial?.owner.isNotEmpty == true
- ? initial!.owner
- : widget.ownerOptions.first;
- }
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialValue;
+    _name = TextEditingController(text: initial?.name ?? '');
+    _method = TextEditingController(text: initial?.method ?? '');
+    _tools = TextEditingController(text: initial?.tools ?? '');
+    _checklist = TextEditingController(text: initial?.checklist ?? '');
+    _frequency = TextEditingController(text: initial?.frequency ?? '');
+    _standards = TextEditingController(text: initial?.standardsReference ?? '');
+    _owner = initial?.owner.isNotEmpty == true
+      ? initial!.owner
+      : widget.ownerOptions.first;
+    _selectedWpId = initial?.linkedWorkPackageId ?? '';
+  }
 
  @override
  void dispose() {
@@ -4317,35 +4648,37 @@ class _QualityTaskDialog extends StatefulWidget {
 }
 
 class _QualityTaskDialogState extends State<_QualityTaskDialog> {
- late final TextEditingController _task;
- late final TextEditingController _percent;
- late final TextEditingController _start;
- late final TextEditingController _end;
- late final TextEditingController _comments;
- late String _responsible;
- late QualityTaskStatus _status;
- late QualityTaskPriority _priority;
+  late final TextEditingController _task;
+  late final TextEditingController _percent;
+  late final TextEditingController _start;
+  late final TextEditingController _end;
+  late final TextEditingController _comments;
+  late String _responsible;
+  late QualityTaskStatus _status;
+  late QualityTaskPriority _priority;
+  late String _selectedWpId;
 
- @override
- void initState() {
- super.initState();
- final initial = widget.initialValue;
- _task = TextEditingController(text: initial?.task ?? '');
- _percent = TextEditingController(
- text: (initial?.percentComplete ?? 0).toStringAsFixed(0));
- _start = TextEditingController(
- text: _normalizedDateText(initial?.startDate ?? ''),
- );
- _end = TextEditingController(
- text: _normalizedDateText(initial?.endDate ?? ''),
- );
- _comments = TextEditingController(text: initial?.comments ?? '');
- _responsible = initial?.responsible.isNotEmpty == true
- ? initial!.responsible
- : widget.ownerOptions.first;
- _status = initial?.status ?? QualityTaskStatus.notStarted;
- _priority = initial?.priority ?? QualityTaskPriority.minimal;
- }
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialValue;
+    _task = TextEditingController(text: initial?.task ?? '');
+    _percent = TextEditingController(
+      text: (initial?.percentComplete ?? 0).toStringAsFixed(0));
+    _start = TextEditingController(
+      text: _normalizedDateText(initial?.startDate ?? ''),
+    );
+    _end = TextEditingController(
+      text: _normalizedDateText(initial?.endDate ?? ''),
+    );
+    _comments = TextEditingController(text: initial?.comments ?? '');
+    _responsible = initial?.responsible.isNotEmpty == true
+      ? initial!.responsible
+      : widget.ownerOptions.first;
+    _status = initial?.status ?? QualityTaskStatus.notStarted;
+    _priority = initial?.priority ?? QualityTaskPriority.minimal;
+    _selectedWpId = initial?.linkedWorkPackageId ?? '';
+  }
 
  Future<void> _pickStartDate() async {
  final picked = await _showQualityDatePicker(
@@ -4405,23 +4738,24 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
 
  final duration = _durationDays(_start.text.trim(), endText);
 
- Navigator.of(context).pop(
- QualityTaskEntry(
- id: widget.initialValue?.id ?? _newId(),
- task: _task.text.trim(),
- percentComplete: percent,
- responsible: _responsible,
- startDate: _start.text.trim(),
- endDate: endText,
- durationDays: duration,
- status: _status,
- priority: _priority,
- comments: _comments.text.trim(),
- resolvedDate: _status == QualityTaskStatus.complete
- ? _formatDate(endDate ?? DateTime.now())
- : null,
- ),
- );
+    Navigator.of(context).pop(
+      QualityTaskEntry(
+        id: widget.initialValue?.id ?? _newId(),
+        task: _task.text.trim(),
+        percentComplete: percent,
+        responsible: _responsible,
+        startDate: _start.text.trim(),
+        endDate: endText,
+        durationDays: duration,
+        status: _status,
+        priority: _priority,
+        comments: _comments.text.trim(),
+        resolvedDate: _status == QualityTaskStatus.complete
+          ? _formatDate(endDate ?? DateTime.now())
+          : null,
+        linkedWorkPackageId: _selectedWpId,
+      ),
+    );
  }
 
  @override
@@ -4568,8 +4902,21 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
  ),
  ],
  ),
- const SizedBox(height: 10),
- _FieldLabel('Comments'),
+  const SizedBox(height: 10),
+  _FieldLabel('Linked Work Package'),
+  DropdownButtonFormField<String>(
+    value: _selectedWpId.isEmpty ? null : _selectedWpId,
+    decoration: _inputDecoration(context, 'Optional - link to a work package'),
+    items: [
+      const DropdownMenuItem(value: '', child: Text('None')),
+      ...ProjectDataHelper.getData(context).workPackages.map(
+        (wp) => DropdownMenuItem(value: wp.id, child: Text(wp.title.isEmpty ? wp.packageCode : wp.title)),
+      ),
+    ],
+    onChanged: (v) => setState(() => _selectedWpId = v ?? ''),
+  ),
+  const SizedBox(height: 10),
+  _FieldLabel('Comments'),
  VoiceTextField(
  controller: _comments,
  minLines: 2,
@@ -4603,34 +4950,36 @@ class _QualityAuditDialog extends StatefulWidget {
 }
 
 class _QualityAuditDialogState extends State<_QualityAuditDialog> {
- late final TextEditingController _title;
- late final TextEditingController _scope;
- late final TextEditingController _planned;
- late final TextEditingController _completed;
- late final TextEditingController _findings;
- late final TextEditingController _notes;
- late String _owner;
- late AuditResultStatus _result;
+  late final TextEditingController _title;
+  late final TextEditingController _scope;
+  late final TextEditingController _planned;
+  late final TextEditingController _completed;
+  late final TextEditingController _findings;
+  late final TextEditingController _notes;
+  late String _owner;
+  late AuditResultStatus _result;
+  late String _selectedWpId;
 
- @override
- void initState() {
- super.initState();
- final initial = widget.initialValue;
- _title = TextEditingController(text: initial?.title ?? '');
- _scope = TextEditingController(text: initial?.scope ?? '');
- _planned = TextEditingController(
- text: _normalizedDateText(initial?.plannedDate ?? ''),
- );
- _completed = TextEditingController(
- text: _normalizedDateText(initial?.completedDate ?? ''),
- );
- _findings = TextEditingController(text: initial?.findings ?? '');
- _notes = TextEditingController(text: initial?.notes ?? '');
- _owner = initial?.owner.isNotEmpty == true
- ? initial!.owner
- : widget.ownerOptions.first;
- _result = initial?.result ?? AuditResultStatus.pending;
- }
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialValue;
+    _title = TextEditingController(text: initial?.title ?? '');
+    _scope = TextEditingController(text: initial?.scope ?? '');
+    _planned = TextEditingController(
+      text: _normalizedDateText(initial?.plannedDate ?? ''),
+    );
+    _completed = TextEditingController(
+      text: _normalizedDateText(initial?.completedDate ?? ''),
+    );
+    _findings = TextEditingController(text: initial?.findings ?? '');
+    _notes = TextEditingController(text: initial?.notes ?? '');
+    _owner = initial?.owner.isNotEmpty == true
+      ? initial!.owner
+      : widget.ownerOptions.first;
+    _result = initial?.result ?? AuditResultStatus.pending;
+    _selectedWpId = initial?.linkedWorkPackageId ?? '';
+  }
 
  Future<void> _pickPlannedDate() async {
  final picked = await _showQualityDatePicker(
@@ -4690,19 +5039,20 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
  completedText = _formatDate(DateTime.now());
  }
 
- Navigator.of(context).pop(
- QualityAuditEntry(
- id: widget.initialValue?.id ?? _newId(),
- title: _title.text.trim(),
- scope: _scope.text.trim(),
- plannedDate: _planned.text.trim(),
- completedDate: completedText,
- owner: _owner,
- result: _result,
- findings: _findings.text.trim(),
- notes: _notes.text.trim(),
- ),
- );
+    Navigator.of(context).pop(
+      QualityAuditEntry(
+        id: widget.initialValue?.id ?? _newId(),
+        title: _title.text.trim(),
+        scope: _scope.text.trim(),
+        plannedDate: _planned.text.trim(),
+        completedDate: completedText,
+        owner: _owner,
+        result: _result,
+        findings: _findings.text.trim(),
+        notes: _notes.text.trim(),
+        linkedWorkPackageId: _selectedWpId,
+      ),
+    );
  }
 
  @override
@@ -4815,8 +5165,21 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
  ),
  ],
  ),
- const SizedBox(height: 10),
- _FieldLabel('Findings'),
+  const SizedBox(height: 10),
+  _FieldLabel('Linked Work Package'),
+  DropdownButtonFormField<String>(
+    value: _selectedWpId.isEmpty ? null : _selectedWpId,
+    decoration: _inputDecoration(context, 'Optional - link to a work package'),
+    items: [
+      const DropdownMenuItem(value: '', child: Text('None')),
+      ...ProjectDataHelper.getData(context).workPackages.map(
+        (wp) => DropdownMenuItem(value: wp.id, child: Text(wp.title.isEmpty ? wp.packageCode : wp.title)),
+      ),
+    ],
+    onChanged: (v) => setState(() => _selectedWpId = v ?? ''),
+  ),
+  const SizedBox(height: 10),
+  _FieldLabel('Findings'),
  VoiceTextField(
  controller: _findings,
  minLines: 2,
@@ -4859,32 +5222,34 @@ class _CorrectiveActionDialog extends StatefulWidget {
 }
 
 class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
- late final TextEditingController _title;
- late final TextEditingController _rootCause;
- late final TextEditingController _action;
- late final TextEditingController _dueDate;
- late final TextEditingController _verification;
- late String _owner;
- late CorrectiveActionStatus _status;
- String? _validationMessage;
+  late final TextEditingController _title;
+  late final TextEditingController _rootCause;
+  late final TextEditingController _action;
+  late final TextEditingController _dueDate;
+  late final TextEditingController _verification;
+  late String _owner;
+  late CorrectiveActionStatus _status;
+  late String _selectedWpId;
+  String? _validationMessage;
 
- @override
- void initState() {
- super.initState();
- final initial = widget.initialValue;
- _title = TextEditingController(text: initial?.title ?? '');
- _rootCause = TextEditingController(text: initial?.rootCause ?? '');
- _action = TextEditingController(text: initial?.action ?? '');
- _dueDate = TextEditingController(
- text: _normalizedDateText(initial?.dueDate ?? ''),
- );
- _verification =
- TextEditingController(text: initial?.verificationNotes ?? '');
- _owner = initial?.owner.isNotEmpty == true
- ? initial!.owner
- : widget.ownerOptions.first;
- _status = initial?.status ?? CorrectiveActionStatus.open;
- }
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialValue;
+    _title = TextEditingController(text: initial?.title ?? '');
+    _rootCause = TextEditingController(text: initial?.rootCause ?? '');
+    _action = TextEditingController(text: initial?.action ?? '');
+    _dueDate = TextEditingController(
+      text: _normalizedDateText(initial?.dueDate ?? ''),
+    );
+    _verification =
+      TextEditingController(text: initial?.verificationNotes ?? '');
+    _owner = initial?.owner.isNotEmpty == true
+      ? initial!.owner
+      : widget.ownerOptions.first;
+    _status = initial?.status ?? CorrectiveActionStatus.open;
+    _selectedWpId = initial?.linkedWorkPackageId ?? '';
+  }
 
  Future<void> _pickDueDate() async {
  final picked = await _showQualityDatePicker(
@@ -4932,25 +5297,26 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
  _validationMessage = null;
  if (!mounted) return;
 
- Navigator.of(context).pop(
- CorrectiveActionEntry(
- id: widget.initialValue?.id ?? _newId(),
- auditEntryId: widget.initialValue?.auditEntryId ?? '',
- title: _title.text.trim().isEmpty
- ? 'Corrective Action'
- : _title.text.trim(),
- rootCause: _rootCause.text.trim(),
- action: _action.text.trim(),
- owner: _owner,
- dueDate: _formatDate(due),
- status: _status,
- createdAt: widget.initialValue?.createdAt ?? now.toIso8601String(),
- closedAt: _status == CorrectiveActionStatus.closed
- ? now.toIso8601String()
- : (widget.initialValue?.closedAt ?? ''),
- verificationNotes: _verification.text.trim(),
- ),
- );
+    Navigator.of(context).pop(
+      CorrectiveActionEntry(
+        id: widget.initialValue?.id ?? _newId(),
+        auditEntryId: widget.initialValue?.auditEntryId ?? '',
+        title: _title.text.trim().isEmpty
+          ? 'Corrective Action'
+          : _title.text.trim(),
+        rootCause: _rootCause.text.trim(),
+        action: _action.text.trim(),
+        owner: _owner,
+        dueDate: _formatDate(due),
+        status: _status,
+        createdAt: widget.initialValue?.createdAt ?? now.toIso8601String(),
+        closedAt: _status == CorrectiveActionStatus.closed
+          ? now.toIso8601String()
+          : (widget.initialValue?.closedAt ?? ''),
+        verificationNotes: _verification.text.trim(),
+        linkedWorkPackageId: _selectedWpId,
+      ),
+    );
  }
 
  @override
@@ -5046,8 +5412,21 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
  if (value != null) setState(() => _status = value);
  },
  ),
- const SizedBox(height: 10),
- _FieldLabel('Verification Notes'),
+  const SizedBox(height: 10),
+  _FieldLabel('Linked Work Package'),
+  DropdownButtonFormField<String>(
+    value: _selectedWpId.isEmpty ? null : _selectedWpId,
+    decoration: _inputDecoration(context, 'Optional - link to a work package'),
+    items: [
+      const DropdownMenuItem(value: '', child: Text('None')),
+      ...ProjectDataHelper.getData(context).workPackages.map(
+        (wp) => DropdownMenuItem(value: wp.id, child: Text(wp.title.isEmpty ? wp.packageCode : wp.title)),
+      ),
+    ],
+    onChanged: (v) => setState(() => _selectedWpId = v ?? ''),
+  ),
+  const SizedBox(height: 10),
+  _FieldLabel('Verification Notes'),
  VoiceTextField(
  controller: _verification,
  minLines: 2,
@@ -5688,14 +6067,155 @@ class _MetricsEditDialogState extends State<_MetricsEditDialog> {
  }
 }
 
+class _CustomKpiDialog extends StatefulWidget {
+  const _CustomKpiDialog({this.initialValue});
+  final QualityKpi? initialValue;
+  @override
+  State<_CustomKpiDialog> createState() => _CustomKpiDialogState();
+}
+
+class _CustomKpiDialogState extends State<_CustomKpiDialog> {
+  late final TextEditingController _name;
+  late final TextEditingController _value;
+  late final TextEditingController _unit;
+  late final TextEditingController _targetValue;
+  late final TextEditingController _change;
+  late final TextEditingController _description;
+  late String _trendDirection;
+  late String _category;
+
+  @override
+  void initState() {
+    super.initState();
+    final kpi = widget.initialValue;
+    _name = TextEditingController(text: kpi?.name ?? '');
+    _value = TextEditingController(text: kpi?.value ?? '');
+    _unit = TextEditingController(text: kpi?.unit ?? '');
+    _targetValue = TextEditingController(text: kpi?.targetValue ?? '');
+    _change = TextEditingController(text: kpi?.change ?? '');
+    _description = TextEditingController(text: kpi?.description ?? '');
+    _trendDirection = kpi?.trendDirection ?? 'neutral';
+    _category = kpi?.category ?? 'process';
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _value.dispose();
+    _unit.dispose();
+    _targetValue.dispose();
+    _change.dispose();
+    _description.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    if (_name.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('KPI name is required')),
+      );
+      return;
+    }
+    Navigator.of(context).pop(QualityKpi(
+      id: widget.initialValue?.id,
+      name: _name.text.trim(),
+      value: _value.text.trim(),
+      unit: _unit.text.trim(),
+      targetValue: _targetValue.text.trim(),
+      change: _change.text.trim(),
+      trendDirection: _trendDirection,
+      category: _category,
+      description: _description.text.trim(),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.initialValue == null ? 'Add Quality KPI' : 'Edit Quality KPI'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _FieldLabel('KPI Name *'),
+            VoiceTextField(controller: _name, decoration: _inputDecoration(context, 'e.g. Defect Density')),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _FieldLabel('Current Value'),
+                  VoiceTextField(controller: _value, decoration: _inputDecoration(context, 'e.g. 2.3')),
+                ])),
+                const SizedBox(width: 8),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _FieldLabel('Unit'),
+                  VoiceTextField(controller: _unit, decoration: _inputDecoration(context, 'e.g. per 1000 LOC')),
+                ])),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _FieldLabel('Target Value'),
+            VoiceTextField(controller: _targetValue, decoration: _inputDecoration(context, 'e.g. < 1.0')),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _FieldLabel('Category'),
+                  DropdownButtonFormField<String>(
+                    value: _category,
+                    decoration: _inputDecoration(context, ''),
+                    items: const [
+                      DropdownMenuItem(value: 'prevention', child: Text('Prevention')),
+                      DropdownMenuItem(value: 'appraisal', child: Text('Appraisal')),
+                      DropdownMenuItem(value: 'internalFailure', child: Text('Internal Failure')),
+                      DropdownMenuItem(value: 'externalFailure', child: Text('External Failure')),
+                      DropdownMenuItem(value: 'process', child: Text('Process')),
+                      DropdownMenuItem(value: 'outcome', child: Text('Outcome')),
+                    ],
+                    onChanged: (v) { if (v != null) setState(() => _category = v); },
+                  ),
+                ])),
+                const SizedBox(width: 8),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  _FieldLabel('Trend'),
+                  DropdownButtonFormField<String>(
+                    value: _trendDirection,
+                    decoration: _inputDecoration(context, ''),
+                    items: const [
+                      DropdownMenuItem(value: 'neutral', child: Text('Neutral')),
+                      DropdownMenuItem(value: 'up', child: Text('Up')),
+                      DropdownMenuItem(value: 'down', child: Text('Down')),
+                    ],
+                    onChanged: (v) { if (v != null) setState(() => _trendDirection = v); },
+                  ),
+                ])),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _FieldLabel('Change'),
+            VoiceTextField(controller: _change, decoration: _inputDecoration(context, 'e.g. +0.5 from last quarter')),
+            const SizedBox(height: 10),
+            _FieldLabel('Description'),
+            VoiceTextField(controller: _description, minLines: 2, maxLines: 3, decoration: _inputDecoration(context, 'Optional description')),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        ElevatedButton(onPressed: _save, child: const Text('Save')),
+      ],
+    );
+  }
+}
+
 class _MetricSummaryData {
- const _MetricSummaryData({
- required this.title,
- required this.value,
- required this.changeLabel,
- required this.changeContext,
- required this.trend,
- });
+  const _MetricSummaryData({
+    required this.title,
+    required this.value,
+    required this.changeLabel,
+    required this.changeContext,
+    required this.trend,
+  });
 
  final String title;
  final String value;
@@ -5993,19 +6513,148 @@ class _TrendLinePainter extends CustomPainter {
   }
 }
 
-class _CoqView extends StatelessWidget {
+class _CoqView extends StatefulWidget {
   const _CoqView();
+  @override
+  State<_CoqView> createState() => _CoqViewState();
+}
+
+class _CoqViewState extends State<_CoqView> {
+  String _selectedScope = 'All';
+
+  List<CoQEntry> _filteredEntries(CostOfQualityData coq) {
+    final all = [
+      ...coq.preventionCosts.map((e) => ('Prevention', e)),
+      ...coq.appraisalCosts.map((e) => ('Appraisal', e)),
+      ...coq.internalFailureCosts.map((e) => ('Internal Failure', e)),
+      ...coq.externalFailureCosts.map((e) => ('External Failure', e)),
+    ];
+    if (_selectedScope == 'All') return all.map((e) => e.$2).toList();
+    return all.where((e) => e.$2.scope == _selectedScope).map((e) => e.$2).toList();
+  }
+
+  String _entryCategory(CostOfQualityData coq, CoQEntry entry) {
+    if (coq.preventionCosts.any((e) => e.id == entry.id)) return 'Prevention';
+    if (coq.appraisalCosts.any((e) => e.id == entry.id)) return 'Appraisal';
+    if (coq.internalFailureCosts.any((e) => e.id == entry.id)) return 'Internal Failure';
+    return 'External Failure';
+  }
+
+  List<CoQEntry> _entriesForCategory(CostOfQualityData coq, String category) {
+    switch (category) {
+      case 'Prevention': return coq.preventionCosts;
+      case 'Appraisal': return coq.appraisalCosts;
+      case 'Internal Failure': return coq.internalFailureCosts;
+      default: return coq.externalFailureCosts;
+    }
+  }
+
+  double _scopeTotal(List<CoQEntry> entries, String scope) {
+    if (scope == 'All') return entries.fold(0.0, (s, e) => s + e.actualCost);
+    return entries.where((e) => e.scope == scope).fold(0.0, (s, e) => s + e.actualCost);
+  }
+
+  Future<void> _addEntry(String category) async {
+    final result = await showDialog<CoQEntry>(
+      context: context,
+      builder: (_) => _CoqEntryDialog(category: category),
+    );
+    if (!mounted || result == null) return;
+    await _updateCostOfQuality(context, category: category, add: result);
+  }
+
+  Future<void> _editEntry(String category, CoQEntry entry) async {
+    final result = await showDialog<CoQEntry>(
+      context: context,
+      builder: (_) => _CoqEntryDialog(initialValue: entry, category: category),
+    );
+    if (!mounted || result == null) return;
+    await _updateCostOfQuality(context, category: category, update: entry.id, updated: result);
+  }
+
+  Future<void> _removeEntry(String category, CoQEntry entry) async {
+    final confirmed = await showDeleteConfirmationDialog(context, title: 'Remove CoQ Entry');
+    if (!confirmed) return;
+    await _updateCostOfQuality(context, category: category, remove: entry.id);
+  }
+
+  Future<void> _updateCostOfQuality(
+    BuildContext context, {
+    required String category,
+    CoQEntry? add,
+    String? update,
+    CoQEntry? updated,
+    String? remove,
+  }) async {
+    final success = await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'quality_management',
+      showSnackbar: false,
+      dataUpdater: (data) {
+        final current = data.costOfQualityData ?? CostOfQualityData.empty();
+        CostOfQualityData newCoq;
+        switch (category) {
+          case 'Prevention':
+            var list = List<CoQEntry>.from(current.preventionCosts);
+            if (add != null) list.add(add);
+            if (update != null && updated != null) { final i = list.indexWhere((e) => e.id == update); if (i >= 0) list[i] = updated; }
+            if (remove != null) list.removeWhere((e) => e.id == remove);
+            newCoq = current.copyWith(preventionCosts: list);
+            break;
+          case 'Appraisal':
+            var list = List<CoQEntry>.from(current.appraisalCosts);
+            if (add != null) list.add(add);
+            if (update != null && updated != null) { final i = list.indexWhere((e) => e.id == update); if (i >= 0) list[i] = updated; }
+            if (remove != null) list.removeWhere((e) => e.id == remove);
+            newCoq = current.copyWith(appraisalCosts: list);
+            break;
+          case 'Internal Failure':
+            var list = List<CoQEntry>.from(current.internalFailureCosts);
+            if (add != null) list.add(add);
+            if (update != null && updated != null) { final i = list.indexWhere((e) => e.id == update); if (i >= 0) list[i] = updated; }
+            if (remove != null) list.removeWhere((e) => e.id == remove);
+            newCoq = current.copyWith(internalFailureCosts: list);
+            break;
+          default:
+            var list = List<CoQEntry>.from(current.externalFailureCosts);
+            if (add != null) list.add(add);
+            if (update != null && updated != null) { final i = list.indexWhere((e) => e.id == update); if (i >= 0) list[i] = updated; }
+            if (remove != null) list.removeWhere((e) => e.id == remove);
+            newCoq = current.copyWith(externalFailureCosts: list);
+        }
+        return data.copyWith(costOfQualityData: newCoq);
+      },
+    );
+    if (context.mounted && success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cost of quality updated'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Color(0xFF16A34A),
+        ),
+      );
+    }
+  }
+
+  Color _scopeBadgeColor(String scope) {
+    switch (scope) {
+      case '3rd Party': return const Color(0xFF2563EB);
+      case 'Regulatory': return const Color(0xFF7C3AED);
+      default: return const Color(0xFF059669);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final data = ProjectDataHelper.getData(context);
-    final coq = data.costOfQualityData ?? CostOfQualityData();
+    final data = ProjectDataHelper.getData(context, listen: true);
+    final coq = data.costOfQualityData ?? CostOfQualityData.empty();
 
-    Widget _buildCategoryCard({
+    Widget buildCategoryCard({
       required String title,
       required String amount,
       required IconData icon,
       required Color color,
+      required List<CoQEntry> entries,
     }) {
       return Container(
         padding: const EdgeInsets.all(20),
@@ -6013,132 +6662,301 @@ class _CoqView extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE5E7EB)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0A000000),
-              blurRadius: 10,
-              offset: Offset(0, 6),
-            ),
-          ],
+          boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 12),
-            Text(title,
-                style: const TextStyle(
-                    fontSize: 13, color: Color(0xFF6B7280))),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Icon(icon, color: color, size: 28),
+              TextButton.icon(
+                onPressed: () => _addEntry(title),
+                icon: const Icon(Icons.add, size: 14),
+                label: const Text('Add', style: TextStyle(fontSize: 12)),
+              ),
+            ]),
+            const SizedBox(height: 8),
+            Text(title, style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
             const SizedBox(height: 4),
-            Text(amount,
-                style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: color)),
+            Text(amount, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: color)),
+            const SizedBox(height: 10),
+            if (entries.isNotEmpty) ...[
+              const Divider(height: 1),
+              const SizedBox(height: 8),
+              for (final scope in ['Internal', '3rd Party', 'Regulatory'])
+                if (_scopeTotal(entries, scope) > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                      Text('  $scope', style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                      Text(NumberFormat.simpleCurrency(decimalDigits: 0).format(_scopeTotal(entries, scope)),
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                    ]),
+                  ),
+            ],
           ],
         ),
       );
     }
+
+    final categories = [
+      ('Prevention', coq.totalPrevention, Icons.shield_outlined, const Color(0xFF059669), coq.preventionCosts),
+      ('Appraisal', coq.totalAppraisal, Icons.search_outlined, const Color(0xFFD97706), coq.appraisalCosts),
+      ('Internal Failure', coq.totalInternalFailure, Icons.warning_amber_outlined, const Color(0xFFEA580C), coq.internalFailureCosts),
+      ('External Failure', coq.totalExternalFailure, Icons.error_outline, const Color(0xFFDC2626), coq.externalFailureCosts),
+    ];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Cost of Quality Summary',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827))),
+          const Text('Cost of Quality', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF111827))),
           const SizedBox(height: 6),
-          const Text(
-            'Track prevention, appraisal, and failure costs across the project lifecycle.',
-            style:
-                TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+          const Text('Track prevention, appraisal, and failure costs by scope and performer.',
+              style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5)),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            children: ['All', 'Internal', '3rd Party', 'Regulatory'].map((scope) {
+              final selected = _selectedScope == scope;
+              return FilterChip(
+                label: Text(scope, style: TextStyle(fontSize: 13, color: selected ? Colors.white : const Color(0xFF374151))),
+                selected: selected,
+                onSelected: (_) => setState(() => _selectedScope = scope),
+                selectedColor: const Color(0xFF374151),
+                backgroundColor: const Color(0xFFF3F4F6),
+              );
+            }).toList(),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           Wrap(
             spacing: 16,
             runSpacing: 16,
-            children: [
-              SizedBox(
-                width: 240,
-                child: _buildCategoryCard(
-                  title: 'Prevention Costs',
-                  amount: NumberFormat.simpleCurrency(decimalDigits: 0)
-                      .format(coq.totalPrevention),
-                  icon: Icons.shield_outlined,
-                  color: const Color(0xFF059669),
-                ),
+            children: categories.map((c) => SizedBox(
+              width: 240,
+              child: buildCategoryCard(
+                title: c.$1,
+                amount: NumberFormat.simpleCurrency(decimalDigits: 0).format(c.$2),
+                icon: c.$3,
+                color: c.$4,
+                entries: c.$5,
               ),
-              SizedBox(
-                width: 240,
-                child: _buildCategoryCard(
-                  title: 'Appraisal Costs',
-                  amount: NumberFormat.simpleCurrency(decimalDigits: 0)
-                      .format(coq.totalAppraisal),
-                  icon: Icons.search_outlined,
-                  color: const Color(0xFFD97706),
-                ),
-              ),
-              SizedBox(
-                width: 240,
-                child: _buildCategoryCard(
-                  title: 'Internal Failure',
-                  amount: NumberFormat.simpleCurrency(decimalDigits: 0)
-                      .format(coq.totalInternalFailure),
-                  icon: Icons.warning_amber_outlined,
-                  color: const Color(0xFFD97706),
-                ),
-              ),
-              SizedBox(
-                width: 240,
-                child: _buildCategoryCard(
-                  title: 'External Failure',
-                  amount: NumberFormat.simpleCurrency(decimalDigits: 0)
-                      .format(coq.totalExternalFailure),
-                  icon: Icons.error_outline,
-                  color: const Color(0xFFDC2626),
-                ),
-              ),
-            ],
+            )).toList(),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF78350F), Color(0xFF2D5F8A)],
-              ),
+              gradient: const LinearGradient(colors: [Color(0xFF78350F), Color(0xFF2D5F8A)]),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(
+            child: Row(children: [
+              const Icon(Icons.account_balance_wallet_outlined, color: Colors.white, size: 32),
+              const SizedBox(width: 16),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Total Cost of Quality', style: TextStyle(fontSize: 13, color: Colors.white70)),
+                const SizedBox(height: 4),
+                Text(NumberFormat.simpleCurrency(decimalDigits: 0).format(coq.totalCoq),
+                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white)),
+              ]),
+            ]),
+          ),
+          const SizedBox(height: 24),
+          _SectionHeader(title: 'Quality Cost Entries', subtitle: '${_filteredEntries(coq).length} entries${_selectedScope != 'All' ? ' (filtered: $_selectedScope)' : ''}'),
+          const SizedBox(height: 10),
+          if (_filteredEntries(coq).isEmpty)
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E7EB))),
+              child: const Center(child: Text('No entries yet. Add quality cost items using the + buttons above.', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13))),
+            )
+          else
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(2.5),
+                1: FlexColumnWidth(1.2),
+                2: FlexColumnWidth(1),
+                3: FlexColumnWidth(1.5),
+                4: FlexColumnWidth(1),
+                5: FlexColumnWidth(1),
+                6: FlexColumnWidth(1),
+                7: FixedColumnWidth(70),
+              },
+              border: TableBorder.all(color: const Color(0xFFE5E7EB), width: 1),
               children: [
-                const Icon(Icons.account_balance_wallet_outlined,
-                    color: Colors.white, size: 32),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Total Cost of Quality',
-                        style: TextStyle(
-                            fontSize: 13, color: Colors.white70)),
-                    const SizedBox(height: 4),
-                    Text(
-                      NumberFormat.simpleCurrency(decimalDigits: 0)
-                          .format(coq.totalCoq),
-                      style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white),
-                    ),
-                  ],
+                TableRow(
+                  decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),
+                  children: ['Description', 'Category', 'Scope', 'Performer', 'Freq', 'Est.', 'Actual', '']
+                      .map((h) => Padding(padding: const EdgeInsets.all(8), child: Text(h, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)))))
+                      .toList(),
                 ),
+                for (final entry in _filteredEntries(coq))
+                  TableRow(
+                    children: [
+                      Padding(padding: const EdgeInsets.all(8), child: Text(entry.description.isEmpty ? '-' : entry.description, style: const TextStyle(fontSize: 12))),
+                      Padding(padding: const EdgeInsets.all(8), child: Text(_entryCategory(coq, entry), style: const TextStyle(fontSize: 11))),
+                      Padding(padding: const EdgeInsets.all(8), child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(color: _scopeBadgeColor(entry.scope), borderRadius: BorderRadius.circular(4)),
+                        child: Text(entry.scope, style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w600)),
+                      )),
+                      Padding(padding: const EdgeInsets.all(8), child: Text(entry.performerRole.isEmpty ? '-' : entry.performerRole, style: const TextStyle(fontSize: 11))),
+                      Padding(padding: const EdgeInsets.all(8), child: Text(entry.frequency, style: const TextStyle(fontSize: 11))),
+                      Padding(padding: const EdgeInsets.all(8), child: Text(NumberFormat.simpleCurrency(decimalDigits: 0).format(entry.estimatedCost), style: const TextStyle(fontSize: 11))),
+                      Padding(padding: const EdgeInsets.all(8), child: Text(NumberFormat.simpleCurrency(decimalDigits: 0).format(entry.actualCost), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600))),
+                      Padding(padding: const EdgeInsets.all(4), child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        IconButton(icon: const Icon(Icons.edit_outlined, size: 14), onPressed: () => _editEntry(_entryCategory(coq, entry), entry), constraints: const BoxConstraints(minWidth: 28, minHeight: 28)),
+                        IconButton(icon: const Icon(Icons.delete_outline, size: 14), onPressed: () => _removeEntry(_entryCategory(coq, entry), entry), constraints: const BoxConstraints(minWidth: 28, minHeight: 28)),
+                      ])),
+                    ],
+                  ),
               ],
             ),
-          ),
         ],
       ),
+    );
+  }
+}
+
+class _CoqEntryDialog extends StatefulWidget {
+  const _CoqEntryDialog({required this.category, this.initialValue});
+  final String category;
+  final CoQEntry? initialValue;
+  @override
+  State<_CoqEntryDialog> createState() => _CoqEntryDialogState();
+}
+
+class _CoqEntryDialogState extends State<_CoqEntryDialog> {
+  late final TextEditingController _description;
+  late final TextEditingController _performerRole;
+  late final TextEditingController _wbsReference;
+  late final TextEditingController _estimatedCost;
+  late final TextEditingController _actualCost;
+  late final TextEditingController _notes;
+  late String _scope;
+  late String _frequency;
+  late String _status;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.initialValue;
+    _description = TextEditingController(text: e?.description ?? '');
+    _performerRole = TextEditingController(text: e?.performerRole ?? '');
+    _wbsReference = TextEditingController(text: e?.wbsReference ?? '');
+    _estimatedCost = TextEditingController(text: e?.estimatedCost.toString() ?? '');
+    _actualCost = TextEditingController(text: e?.actualCost.toString() ?? '');
+    _notes = TextEditingController(text: e?.notes ?? '');
+    _scope = e?.scope ?? 'Internal';
+    _frequency = e?.frequency ?? 'One-time';
+    _status = e?.status ?? 'Planned';
+  }
+
+  @override
+  void dispose() {
+    _description.dispose();
+    _performerRole.dispose();
+    _wbsReference.dispose();
+    _estimatedCost.dispose();
+    _actualCost.dispose();
+    _notes.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    Navigator.of(context).pop(CoQEntry(
+      id: widget.initialValue?.id,
+      description: _description.text.trim(),
+      scope: _scope,
+      performerRole: _performerRole.text.trim(),
+      wbsReference: _wbsReference.text.trim(),
+      estimatedCost: double.tryParse(_estimatedCost.text.trim()) ?? 0,
+      actualCost: double.tryParse(_actualCost.text.trim()) ?? 0,
+      frequency: _frequency,
+      status: _status,
+      notes: _notes.text.trim(),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.initialValue == null ? 'Add CoQ Entry' : 'Edit CoQ Entry'),
+      content: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          _FieldLabel('Description *'),
+          VoiceTextField(controller: _description, decoration: _inputDecoration(context, 'e.g. Third-party inspection')),
+          const SizedBox(height: 10),
+          _FieldLabel('Scope'),
+          DropdownButtonFormField<String>(
+            value: _scope,
+            decoration: _inputDecoration(context, ''),
+            items: const [
+              DropdownMenuItem(value: 'Internal', child: Text('Internal')),
+              DropdownMenuItem(value: '3rd Party', child: Text('3rd Party')),
+              DropdownMenuItem(value: 'Regulatory', child: Text('Regulatory')),
+            ],
+            onChanged: (v) { if (v != null) setState(() => _scope = v); },
+          ),
+          const SizedBox(height: 10),
+          _FieldLabel('Performer / Role'),
+          VoiceTextField(controller: _performerRole, decoration: _inputDecoration(context, 'e.g. QA Engineer, Vendor')),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _FieldLabel('Frequency'),
+              DropdownButtonFormField<String>(
+                value: _frequency,
+                decoration: _inputDecoration(context, ''),
+                items: const [
+                  DropdownMenuItem(value: 'One-time', child: Text('One-time')),
+                  DropdownMenuItem(value: 'Monthly', child: Text('Monthly')),
+                  DropdownMenuItem(value: 'Quarterly', child: Text('Quarterly')),
+                  DropdownMenuItem(value: 'Annual', child: Text('Annual')),
+                ],
+                onChanged: (v) { if (v != null) setState(() => _frequency = v); },
+              ),
+            ])),
+            const SizedBox(width: 8),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _FieldLabel('Status'),
+              DropdownButtonFormField<String>(
+                value: _status,
+                decoration: _inputDecoration(context, ''),
+                items: const [
+                  DropdownMenuItem(value: 'Planned', child: Text('Planned')),
+                  DropdownMenuItem(value: 'In Progress', child: Text('In Progress')),
+                  DropdownMenuItem(value: 'Completed', child: Text('Completed')),
+                ],
+                onChanged: (v) { if (v != null) setState(() => _status = v); },
+              ),
+            ])),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _FieldLabel('Estimated Cost'),
+              VoiceTextField(controller: _estimatedCost, decoration: _inputDecoration(context, '0')),
+            ])),
+            const SizedBox(width: 8),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _FieldLabel('Actual Cost'),
+              VoiceTextField(controller: _actualCost, decoration: _inputDecoration(context, '0')),
+            ])),
+          ]),
+          const SizedBox(height: 10),
+          _FieldLabel('WBS Reference'),
+          VoiceTextField(controller: _wbsReference, decoration: _inputDecoration(context, 'e.g. WBS 3.2.1')),
+          const SizedBox(height: 10),
+          _FieldLabel('Notes'),
+          VoiceTextField(controller: _notes, minLines: 2, maxLines: 3, decoration: _inputDecoration(context, 'Optional')),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        ElevatedButton(onPressed: _save, child: const Text('Save')),
+      ],
     );
   }
 }

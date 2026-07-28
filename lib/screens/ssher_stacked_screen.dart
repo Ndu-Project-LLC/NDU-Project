@@ -28,7 +28,7 @@ import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/screens/cost_estimate_module_screen.dart';
 
 /// Six categories: Safety, Security, Health, Environment, Regulatory, Cost (Cost tab is a roll-up)
-enum _SsherCategory { safety, security, health, environment, regulatory, cost }
+enum _SsherCategory { safety, security, health, environment, regulatory, cost, traceability }
 
 String _categoryKey(_SsherCategory category) => category.name;
 
@@ -76,6 +76,8 @@ String _categoryPlanHeading(_SsherCategory cat) {
       return 'Regulatory Plan';
     case _SsherCategory.cost:
       return 'SSHER Cost Summary';
+    case _SsherCategory.traceability:
+      return 'Traceability Dashboard';
   }
 }
 
@@ -94,6 +96,8 @@ String _categoryLabel(_SsherCategory cat) {
       return 'Regulatory';
     case _SsherCategory.cost:
       return 'Cost Summary';
+    case _SsherCategory.traceability:
+      return 'Traceability';
   }
 }
 
@@ -155,19 +159,21 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
     _healthEntries = [];
     _environmentEntries = [];
     _regulatoryEntries = [];
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {
           _selectedCategory = _SsherCategory.values[_tabController.index];
-          // Track tab visits (exclude cost tab from the requirement)
-          if (_selectedCategory != _SsherCategory.cost) {
+          // Track tab visits (exclude cost & traceability tabs)
+          if (_selectedCategory != _SsherCategory.cost &&
+              _selectedCategory != _SsherCategory.traceability) {
             _visitedTabs.add(_selectedCategory);
           }
           // Save the visit state
           _saveTabsVisited();
           // Generate the category plan on first visit
-          if (_selectedCategory != _SsherCategory.cost) {
+          if (_selectedCategory != _SsherCategory.cost &&
+              _selectedCategory != _SsherCategory.traceability) {
             _ensureCategoryPlanLoaded(_selectedCategory);
           }
         });
@@ -573,6 +579,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
         return _regulatoryEntries;
       case _SsherCategory.cost:
         return _allEntries();
+      case _SsherCategory.traceability:
+        return _allEntries();
     }
   }
 
@@ -674,6 +682,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
     }
 
     final projectData = ProjectDataHelper.getData(context);
+    final costEstimateProvider = context.read<CostEstimateProvider>();
     final input = await showDialog<SsherItemInput>(
       context: context,
       builder: (ctx) => AddSsherItemDialog(
@@ -696,11 +705,19 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
           linkedRiskIds: entry.linkedRiskIds,
           linkedStaffingRoleIds: entry.linkedStaffingRoleIds,
           linkedRequirementIds: entry.linkedRequirementIds,
+          costLineIds: entry.costItemIds,
+          scheduleActivityIds: entry.scheduleActivityIds,
+          techScopeComponentIds: entry.techScopeComponentIds,
+          relatedWbsId: entry.relatedWbsId,
           notes: entry.notes,
         ),
         riskRegisterItems: projectData.frontEndPlanning.riskRegisterItems,
         staffingRows: projectData.frontEndPlanning.staffingRows,
         requirementItems: projectData.frontEndPlanning.requirementItems,
+        costLines: costEstimateProvider.estimate?.lines ?? [],
+        scheduleActivities: projectData.scheduleActivities,
+        wbsTree: projectData.wbsTree,
+        techScopeOptions: projectData.technologyDefinitions.map((e) => e['name']?.toString() ?? '').toList(),
       ),
     );
 
@@ -719,6 +736,10 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
       entry.linkedRiskIds = List<String>.from(input.linkedRiskIds);
       entry.linkedStaffingRoleIds = List<String>.from(input.linkedStaffingRoleIds);
       entry.linkedRequirementIds = List<String>.from(input.linkedRequirementIds);
+      entry.costItemIds = List<String>.from(input.costLineIds);
+      entry.scheduleActivityIds = List<String>.from(input.scheduleActivityIds);
+      entry.techScopeComponentIds = List<String>.from(input.techScopeComponentIds);
+      entry.relatedWbsId = input.relatedWbsId;
       entry.notes = input.notes;
     });
     await _saveEntries();
@@ -739,6 +760,10 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
       linkedRiskIds: List<String>.from(input.linkedRiskIds),
       linkedStaffingRoleIds: List<String>.from(input.linkedStaffingRoleIds),
       linkedRequirementIds: List<String>.from(input.linkedRequirementIds),
+      costItemIds: List<String>.from(input.costLineIds),
+      scheduleActivityIds: List<String>.from(input.scheduleActivityIds),
+      techScopeComponentIds: List<String>.from(input.techScopeComponentIds),
+      relatedWbsId: input.relatedWbsId,
       notes: input.notes,
     );
     setState(() => _entriesForCategory(category).add(entry));
@@ -780,6 +805,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
         return _regulatoryAccent;
       case _SsherCategory.cost:
         return _costAccent;
+      case _SsherCategory.traceability:
+        return const Color(0xFF6366F1);
     }
   }
 
@@ -797,6 +824,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
         return Icons.gavel;
       case _SsherCategory.cost:
         return Icons.attach_money;
+      case _SsherCategory.traceability:
+        return Icons.account_tree_outlined;
     }
   }
 
@@ -1462,6 +1491,219 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
     );
   }
 
+  // ── Traceability Tab ──
+  Widget _buildTraceabilityTab(bool isMobile) {
+    final allEntries = _allEntries();
+    final untraced = _findUntracedEntries();
+    final fullyTraced = allEntries.where((e) => _traceabilityScore(e) >= 6/7).length;
+    final partialTraced = allEntries.length - fullyTraced - untraced.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Summary cards
+        Row(
+          children: [
+            _traceabilitySummaryCard('Total Entries', allEntries.length.toString(), const Color(0xFF6366F1), Icons.list),
+            const SizedBox(width: 12),
+            _traceabilitySummaryCard('Fully Traced', fullyTraced.toString(), const Color(0xFF047857), Icons.check_circle),
+            const SizedBox(width: 12),
+            _traceabilitySummaryCard('Partially Traced', partialTraced.toString(), const Color(0xFFD97706), Icons.adjust),
+            const SizedBox(width: 12),
+            _traceabilitySummaryCard('Untraced', untraced.length.toString(), const Color(0xFFDC2626), Icons.error_outline),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // Untraced items warning
+        if (untraced.isNotEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF2F2),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFFECACA)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.warning_amber, color: Color(0xFFDC2626), size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '${untraced.length} SSHER entr${untraced.length == 1 ? 'y has' : 'ies have'} no traceability links. Click "Trace Now" to link to cost, schedule, tech scope, or WBS elements.',
+                    style: const TextStyle(fontSize: 13, color: Color(0xFF7F1D1D)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Traceability table header
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: _Palette.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              const SizedBox(width: 40),
+              const SizedBox(width: 12),
+              const Expanded(flex: 3, child: Text('Concern', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _Palette.outline))),
+              const SizedBox(width: 12),
+              const SizedBox(width: 80, child: Text('Category', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _Palette.outline))),
+              const SizedBox(width: 12),
+              const SizedBox(width: 50, child: Text('Cost', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _Palette.outline), textAlign: TextAlign.center)),
+              const SizedBox(width: 4),
+              const SizedBox(width: 50, child: Text('Sched', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _Palette.outline), textAlign: TextAlign.center)),
+              const SizedBox(width: 4),
+              const SizedBox(width: 50, child: Text('Tech', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _Palette.outline), textAlign: TextAlign.center)),
+              const SizedBox(width: 4),
+              const SizedBox(width: 50, child: Text('WBS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _Palette.outline), textAlign: TextAlign.center)),
+              const SizedBox(width: 4),
+              const SizedBox(width: 50, child: Text('Risk', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _Palette.outline), textAlign: TextAlign.center)),
+              const SizedBox(width: 4),
+              const SizedBox(width: 50, child: Text('Staff', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _Palette.outline), textAlign: TextAlign.center)),
+              const SizedBox(width: 4),
+              const SizedBox(width: 50, child: Text('Req', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _Palette.outline), textAlign: TextAlign.center)),
+              const SizedBox(width: 12),
+              const SizedBox(width: 70, child: Text('Score', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _Palette.outline), textAlign: TextAlign.center)),
+              const SizedBox(width: 12),
+              const SizedBox(width: 70),
+            ],
+          ),
+        ),
+
+        // Traceability rows
+        Expanded(
+          child: ListView.builder(
+            itemCount: allEntries.length,
+            itemBuilder: (context, index) {
+              final entry = allEntries[index];
+              final score = _traceabilityScore(entry);
+              final isUntraced = score == 0;
+              return _buildTraceabilityRow(entry, score, isUntraced);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _traceabilitySummaryCard(String label, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 8),
+            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: color)),
+            Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTraceabilityRow(SsherEntry entry, double score, bool isUntraced) {
+    final accent = isUntraced ? const Color(0xFFDC2626) : _accentForCategory(
+      _SsherCategory.values.firstWhere(
+        (c) => c.name == entry.category,
+        orElse: () => _SsherCategory.safety,
+      ),
+    );
+
+    final linkDots = <Widget>[
+      _traceabilityDot(entry.costItemIds.isNotEmpty, const Color(0xFF047857)),
+      const SizedBox(width: 4),
+      _traceabilityDot(entry.scheduleActivityIds.isNotEmpty, const Color(0xFF047857)),
+      const SizedBox(width: 4),
+      _traceabilityDot(entry.techScopeComponentIds.isNotEmpty, const Color(0xFF047857)),
+      const SizedBox(width: 4),
+      _traceabilityDot(entry.relatedWbsId.isNotEmpty, const Color(0xFF047857)),
+      const SizedBox(width: 4),
+      _traceabilityDot(entry.linkedRiskIds.isNotEmpty, const Color(0xFF047857)),
+      const SizedBox(width: 4),
+      _traceabilityDot(entry.linkedStaffingRoleIds.isNotEmpty, const Color(0xFF047857)),
+      const SizedBox(width: 4),
+      _traceabilityDot(entry.linkedRequirementIds.isNotEmpty, const Color(0xFF047857)),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: _Palette.surfaceVariant.withOpacity(0.5))),
+        color: isUntraced ? const Color(0xFFFFF5F5) : null,
+      ),
+      child: Row(
+        children: [
+          Icon(isUntraced ? Icons.error_outline : Icons.check_circle_outline,
+               size: 16, color: isUntraced ? const Color(0xFFDC2626) : const Color(0xFF047857)),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 3,
+            child: Text(
+              entry.concern.length > 40 ? '${entry.concern.substring(0, 40)}...' : entry.concern,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _Palette.onBackground),
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 80,
+            child: Text(_categoryLabel(_SsherCategory.values.firstWhere(
+              (c) => c.name == entry.category, orElse: () => _SsherCategory.safety,
+            )), style: const TextStyle(fontSize: 11, color: _Palette.onSurfaceVariant)),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(width: 400, child: Row(children: linkDots)),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 70,
+            child: Text('${(score * 100).toInt()}%',
+              style: TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w700,
+                color: score >= 0.85 ? const Color(0xFF047857) : score >= 0.4 ? const Color(0xFFD97706) : const Color(0xFFDC2626),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 70,
+            child: TextButton(
+              onPressed: () => _editEntry(entry),
+              child: const Text('Trace Now', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _traceabilityDot(bool linked, Color activeColor) {
+    return Container(
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        color: linked ? activeColor : _Palette.surfaceVariant,
+        shape: BoxShape.circle,
+        border: linked ? null : Border.all(color: _Palette.outline),
+      ),
+      child: linked
+          ? const Icon(Icons.check, size: 10, color: Colors.white)
+          : const Icon(Icons.close, size: 10, color: _Palette.outline),
+    );
+  }
+
   // ── Phase Navigation Tabs (Scrollable Pills with check marks) ──
   Widget _buildPhaseTabs(bool isMobile) {
     final categories = _SsherCategory.values;
@@ -1488,7 +1730,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
             final isSelected = cat == _selectedCategory;
             final icon = _iconForCategory(cat);
             final label = _categoryLabel(cat);
-            final isVisited = cat == _SsherCategory.cost
+            final isVisited = (cat == _SsherCategory.cost || cat == _SsherCategory.traceability)
                 ? false
                 : _visitedTabs.contains(cat);
 
@@ -1500,7 +1742,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
                   onTap: () {
                     setState(() => _selectedCategory = cat);
                     _tabController.animateTo(cat.index);
-                    if (cat != _SsherCategory.cost) {
+                    if (cat != _SsherCategory.cost &&
+                        cat != _SsherCategory.traceability) {
                       _visitedTabs.add(cat);
                       _saveTabsVisited();
                       _ensureCategoryPlanLoaded(cat);
@@ -1569,6 +1812,9 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
 
   // ── Data Cards Section ──
   Widget _buildDataCardsSection(bool isMobile, bool allowCsv) {
+    if (_selectedCategory == _SsherCategory.traceability) {
+      return _buildTraceabilityTab(isMobile);
+    }
     if (_selectedCategory == _SsherCategory.cost) {
       return _buildCostSummaryTab(isMobile);
     }
@@ -2707,11 +2953,39 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
         .any((r) => r.description.trim().toLowerCase() == expectedActivityTitle);
 
     return {
-      'costEstimate': inCostEstimate,
-      'riskRegister': inRiskRegister,
-      'schedule': inSchedule,
-      'requirements': inRequirements,
+      'costEstimate': inCostEstimate || entry.costItemIds.isNotEmpty,
+      'riskRegister': inRiskRegister || entry.linkedRiskIds.isNotEmpty,
+      'schedule': inSchedule || entry.scheduleActivityIds.isNotEmpty,
+      'requirements': inRequirements || entry.linkedRequirementIds.isNotEmpty,
     };
+  }
+
+  // ── Traceability helpers ──
+
+  double _traceabilityScore(SsherEntry entry) {
+    final links = [
+      entry.costItemIds.isNotEmpty,
+      entry.scheduleActivityIds.isNotEmpty,
+      entry.techScopeComponentIds.isNotEmpty,
+      entry.relatedWbsId.isNotEmpty,
+      entry.linkedRiskIds.isNotEmpty,
+      entry.linkedStaffingRoleIds.isNotEmpty,
+      entry.linkedRequirementIds.isNotEmpty,
+    ];
+    final linked = links.where((l) => l).length;
+    return linked / links.length;
+  }
+
+  List<SsherEntry> _findUntracedEntries() {
+    return _allEntries().where((entry) =>
+      entry.costItemIds.isEmpty &&
+      entry.scheduleActivityIds.isEmpty &&
+      entry.techScopeComponentIds.isEmpty &&
+      entry.relatedWbsId.isEmpty &&
+      entry.linkedRiskIds.isEmpty &&
+      entry.linkedStaffingRoleIds.isEmpty &&
+      entry.linkedRequirementIds.isEmpty
+    ).toList();
   }
 
   // ── Logs / Checklists / Documents per-entry operations ──
@@ -4078,9 +4352,19 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
           ),
         );
         return;
+      case _SsherCategory.traceability:
+        // Traceability tab is a read-only dashboard
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('The Traceability tab is a read-only dashboard. Add items in Safety, Security, Health, Environment, or Regulatory tabs.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        return;
     }
 
     final projectData = ProjectDataHelper.getData(context);
+    final costEstimateProvider = context.read<CostEstimateProvider>();
     final result = await showDialog<SsherItemInput>(
       context: context,
       builder: (ctx) => AddSsherItemDialog(
@@ -4092,6 +4376,10 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
         riskRegisterItems: projectData.frontEndPlanning.riskRegisterItems,
         staffingRows: projectData.frontEndPlanning.staffingRows,
         requirementItems: projectData.frontEndPlanning.requirementItems,
+        costLines: costEstimateProvider.estimate?.lines ?? [],
+        scheduleActivities: projectData.scheduleActivities,
+        wbsTree: projectData.wbsTree,
+        techScopeOptions: projectData.technologyDefinitions.map((e) => e['name']?.toString() ?? '').toList(),
       ),
     );
     if (result == null) return;
@@ -5578,7 +5866,24 @@ class _ExpandableSsherRowState extends State<_ExpandableSsherRow> {
                 const SizedBox(width: 12),
                 // Sync Status (Cost / Risk / Schedule / Requirements)
                 _buildSyncStatusChips(),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
+                // Traceability score
+                SizedBox(
+                  width: 36,
+                  child: Text(
+                    '${(widget.syncStatus.values.where((v) => v).length / widget.syncStatus.values.length * 100).toInt()}%',
+                    style: TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.w700,
+                      color: widget.syncStatus.values.where((v) => v).length / widget.syncStatus.values.length >= 0.85
+                        ? const Color(0xFF047857)
+                        : widget.syncStatus.values.where((v) => v).length / widget.syncStatus.values.length >= 0.4
+                          ? const Color(0xFFD97706)
+                          : const Color(0xFFDC2626),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 // Actions (edit + delete)
                 SizedBox(
                   width: 70,

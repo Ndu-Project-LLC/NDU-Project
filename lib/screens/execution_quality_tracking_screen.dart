@@ -59,6 +59,12 @@ class ExecutionQualityTrackingScreen extends StatelessWidget {
           description:
               'Track nonconformances, root causes, corrective actions, due dates, and verification closure.',
         ),
+        ExecutionSectionSpec(
+          key: 'cost_of_quality',
+          title: 'Cost of Quality',
+          description:
+              'Track prevention, appraisal, and failure costs by scope and performer.',
+        ),
       ],
       navigation: PhaseNavigationSpec(
         backLabel:

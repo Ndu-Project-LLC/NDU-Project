@@ -457,6 +457,89 @@ class ProjectDataHelper {
       buf.writeln();
     }
 
+    // ── Team & Organisation Context (for training / org plan AI sections) ──
+    if (data.teamMembers.isNotEmpty) {
+      buf.writeln('Team Members:');
+      for (final m in data.teamMembers) {
+        final name = m.name.trim();
+        final role = m.role.trim();
+        if (name.isNotEmpty) {
+          buf.writeln('- ${name}${role.isNotEmpty ? ' ($role)' : ''}');
+        }
+      }
+      buf.writeln();
+    }
+
+    if (data.projectRoles.isNotEmpty) {
+      buf.writeln('Project Roles / Disciplines:');
+      for (final r in data.projectRoles) {
+        final title = r.title.trim();
+        final ws = r.workstream.trim();
+        if (title.isNotEmpty) {
+          buf.writeln('- $title${ws.isNotEmpty ? ' — $ws' : ''}');
+        }
+      }
+      buf.writeln();
+    }
+
+    if (data.staffingRequirements.isNotEmpty) {
+      buf.writeln('Staffing Requirements:');
+      for (final s in data.staffingRequirements) {
+        final role = s.title.trim();
+        final count = s.headcount;
+        if (role.isNotEmpty) {
+          buf.writeln('- $role${count > 0 ? ' (x$count)' : ''}');
+        }
+      }
+      buf.writeln();
+    }
+
+    if (data.technologyDefinitions.isNotEmpty) {
+      buf.writeln('Technology Definitions:');
+      for (final t in data.technologyDefinitions) {
+        final name = (t['name'] ?? '').toString().trim();
+        final desc = (t['description'] ?? '').toString().trim();
+        if (name.isNotEmpty) {
+          buf.writeln('- $name${desc.isNotEmpty ? ': $desc' : ''}');
+        }
+      }
+      buf.writeln();
+    }
+
+    final orgParts = <String>[];
+    if (data.orgStaffingSource.trim().isNotEmpty) {
+      orgParts.add('Staffing source: ${data.orgStaffingSource.trim()}');
+    }
+    if (data.orgLocation.trim().isNotEmpty) {
+      orgParts.add('Location: ${data.orgLocation.trim()}');
+    }
+    if (data.orgWorkingHours.trim().isNotEmpty) {
+      orgParts.add('Hours: ${data.orgWorkingHours.trim()}');
+    }
+    if (data.orgCommunicationMode.trim().isNotEmpty) {
+      orgParts.add('Communication: ${data.orgCommunicationMode.trim()}');
+    }
+    if (orgParts.isNotEmpty) {
+      buf.writeln('Organisation Configuration:');
+      for (final part in orgParts) {
+        buf.writeln('- $part');
+      }
+      buf.writeln();
+    }
+
+    if (data.executionRiskItems.isNotEmpty) {
+      buf.writeln('Execution Risks:');
+      for (final r in data.executionRiskItems) {
+        final title = r.title.trim();
+        final impact = r.impact.trim();
+        final prob = r.probability.trim();
+        if (title.isNotEmpty) {
+          buf.writeln('- $title${impact.isNotEmpty ? ' [Impact: $impact]' : ''}${prob.isNotEmpty ? ' (P: $prob)' : ''}');
+        }
+      }
+      buf.writeln();
+    }
+
     if ((sectionLabel ?? '').isNotEmpty) {
       buf.writeln('Target Section: ${sectionLabel!.trim()}');
     }

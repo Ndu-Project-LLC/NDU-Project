@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/staffing_row.dart';
+import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 
 class SsherItemInput {
   final String department;
@@ -18,6 +19,10 @@ class SsherItemInput {
   final List<String> linkedRiskIds;
   final List<String> linkedStaffingRoleIds;
   final List<String> linkedRequirementIds;
+  final List<String> costLineIds;
+  final List<String> scheduleActivityIds;
+  final List<String> techScopeComponentIds;
+  final String relatedWbsId;
   final String notes;
 
   SsherItemInput({
@@ -33,10 +38,17 @@ class SsherItemInput {
     List<String>? linkedRiskIds,
     List<String>? linkedStaffingRoleIds,
     List<String>? linkedRequirementIds,
+    List<String>? costLineIds,
+    List<String>? scheduleActivityIds,
+    List<String>? techScopeComponentIds,
+    this.relatedWbsId = '',
     this.notes = '',
   })  : linkedRiskIds = linkedRiskIds ?? [],
         linkedStaffingRoleIds = linkedStaffingRoleIds ?? [],
-        linkedRequirementIds = linkedRequirementIds ?? [];
+        linkedRequirementIds = linkedRequirementIds ?? [],
+        costLineIds = costLineIds ?? [],
+        scheduleActivityIds = scheduleActivityIds ?? [],
+        techScopeComponentIds = techScopeComponentIds ?? [];
 }
 
 class AddSsherItemDialog extends StatefulWidget {
@@ -57,6 +69,10 @@ class AddSsherItemDialog extends StatefulWidget {
   final List<RiskRegisterItem> riskRegisterItems;
   final List<StaffingRow> staffingRows;
   final List<RequirementItem> requirementItems;
+  final List<CostLine> costLines;
+  final List<ScheduleActivity> scheduleActivities;
+  final List<WorkItem> wbsTree;
+  final List<String> techScopeOptions;
 
   const AddSsherItemDialog({
     super.key,
@@ -91,6 +107,10 @@ class AddSsherItemDialog extends StatefulWidget {
     this.riskRegisterItems = const [],
     this.staffingRows = const [],
     this.requirementItems = const [],
+    this.costLines = const [],
+    this.scheduleActivities = const [],
+    this.wbsTree = const [],
+    this.techScopeOptions = const [],
   });
 
   @override
@@ -113,6 +133,10 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
   late List<String> _selectedRiskIds;
   late List<String> _selectedStaffingIds;
   late List<String> _selectedRequirementIds;
+  late List<String> _selectedCostLineIds;
+  late List<String> _selectedScheduleActivityIds;
+  late List<String> _selectedTechScopeIds;
+  late String _relatedWbsId;
   bool _showIntegrations = false;
 
   late TextEditingController _costUnitCtrl;
@@ -134,6 +158,10 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
     _selectedRiskIds = List<String>.from(widget.initialData?.linkedRiskIds ?? []);
     _selectedStaffingIds = List<String>.from(widget.initialData?.linkedStaffingRoleIds ?? []);
     _selectedRequirementIds = List<String>.from(widget.initialData?.linkedRequirementIds ?? []);
+    _selectedCostLineIds = List<String>.from(widget.initialData?.costLineIds ?? []);
+    _selectedScheduleActivityIds = List<String>.from(widget.initialData?.scheduleActivityIds ?? []);
+    _selectedTechScopeIds = List<String>.from(widget.initialData?.techScopeComponentIds ?? []);
+    _relatedWbsId = widget.initialData?.relatedWbsId ?? '';
 
     if (!widget.departmentOptions.contains(_department)) {
       _department = widget.departmentOptions.first;
@@ -327,7 +355,7 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'Cross-Discipline Integration (${_selectedRiskIds.length + _selectedStaffingIds.length + _selectedRequirementIds.length} linked)',
+                                      'Cross-Discipline Integration (${_selectedRiskIds.length + _selectedStaffingIds.length + _selectedRequirementIds.length + _selectedCostLineIds.length + _selectedScheduleActivityIds.length + _selectedTechScopeIds.length + (_relatedWbsId.isNotEmpty ? 1 : 0)} linked)',
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
@@ -415,13 +443,111 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
                                 }).toList(),
                               ),
                             ],
+                            // Cost Lines linkage
+                            if (widget.costLines.isNotEmpty) ...[
+                              _sectionLabel('Linked Cost Lines', colorScheme),
+                              Wrap(
+                                children: widget.costLines.map((cl) {
+                                  final key = cl.id;
+                                  final selected = _selectedCostLineIds.contains(key);
+                                  return _integrationChip(
+                                    label: cl.description.length > 30
+                                        ? '${cl.description.substring(0, 30)}...'
+                                        : cl.description,
+                                    subtitle: '\$${cl.total.toStringAsFixed(2)}',
+                                    selected: selected,
+                                    onTap: (v) => setState(() {
+                                      if (v) {
+                                        _selectedCostLineIds.add(key);
+                                      } else {
+                                        _selectedCostLineIds.remove(key);
+                                      }
+                                    }),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                            // Schedule Activities linkage
+                            if (widget.scheduleActivities.isNotEmpty) ...[
+                              _sectionLabel('Linked Schedule Activities', colorScheme),
+                              Wrap(
+                                children: widget.scheduleActivities.map((sa) {
+                                  final key = sa.id;
+                                  final selected = _selectedScheduleActivityIds.contains(key);
+                                  return _integrationChip(
+                                    label: sa.title.length > 30
+                                        ? '${sa.title.substring(0, 30)}...'
+                                        : sa.title,
+                                    subtitle: sa.dueDate.isNotEmpty ? sa.dueDate : '',
+                                    selected: selected,
+                                    onTap: (v) => setState(() {
+                                      if (v) {
+                                        _selectedScheduleActivityIds.add(key);
+                                      } else {
+                                        _selectedScheduleActivityIds.remove(key);
+                                      }
+                                    }),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                            // Tech Scope Components linkage
+                            if (widget.techScopeOptions.isNotEmpty) ...[
+                              _sectionLabel('Linked Tech Scope Components', colorScheme),
+                              Wrap(
+                                children: widget.techScopeOptions.asMap().entries.map((entry) {
+                                  final desc = entry.value;
+                                  if (desc.isEmpty) return const SizedBox.shrink();
+                                  final selected = _selectedTechScopeIds.contains(desc);
+                                  return _integrationChip(
+                                    label: desc.length > 40
+                                        ? '${desc.substring(0, 40)}...'
+                                        : desc,
+                                    subtitle: '',
+                                    selected: selected,
+                                    onTap: (v) => setState(() {
+                                      if (v) {
+                                        _selectedTechScopeIds.add(desc);
+                                      } else {
+                                        _selectedTechScopeIds.remove(desc);
+                                      }
+                                    }),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                            // Related WBS dropdown
+                            if (widget.wbsTree.isNotEmpty) ...[
+                              _sectionLabel('Related WBS Element', colorScheme),
+                              DropdownButtonFormField<String>(
+                                value: _relatedWbsId.isEmpty ? null : _relatedWbsId,
+                                items: _flattenWbsTree(widget.wbsTree).map((item) {
+                                  final label = item.wbsCode.isNotEmpty
+                                      ? '${item.wbsCode} — ${item.title}'
+                                      : item.title;
+                                  return DropdownMenuItem(
+                                    value: item.id,
+                                    child: Text(label, overflow: TextOverflow.ellipsis),
+                                  );
+                                }).toList(),
+                                onChanged: (v) => setState(() => _relatedWbsId = v ?? ''),
+                                decoration: _inputDecoration('Select WBS Element', theme, colorScheme),
+                                dropdownColor: colorScheme.surface,
+                                style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
+                                isExpanded: true,
+                              ),
+                            ],
                             if (widget.riskRegisterItems.isEmpty &&
                                 widget.staffingRows.isEmpty &&
-                                widget.requirementItems.isEmpty)
+                                widget.requirementItems.isEmpty &&
+                                widget.costLines.isEmpty &&
+                                widget.scheduleActivities.isEmpty &&
+                                widget.techScopeOptions.isEmpty &&
+                                widget.wbsTree.isEmpty)
                               Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                                 child: Text(
-                                  'No risk register, staffing, or requirement items found. Add them in earlier sections to enable linkage.',
+                                  'No integration sources found. Add data in earlier sections to enable cross-discipline linkage.',
                                   style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic),
                                 ),
                               ),
@@ -573,6 +699,17 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
     ];
   }
 
+  List<WorkItem> _flattenWbsTree(List<WorkItem> items) {
+    final result = <WorkItem>[];
+    for (final item in items) {
+      result.add(item);
+      if (item.children.isNotEmpty) {
+        result.addAll(_flattenWbsTree(item.children));
+      }
+    }
+    return result;
+  }
+
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     Navigator.pop(
@@ -590,6 +727,10 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
         linkedRiskIds: _selectedRiskIds,
         linkedStaffingRoleIds: _selectedStaffingIds,
         linkedRequirementIds: _selectedRequirementIds,
+        costLineIds: _selectedCostLineIds,
+        scheduleActivityIds: _selectedScheduleActivityIds,
+        techScopeComponentIds: _selectedTechScopeIds,
+        relatedWbsId: _relatedWbsId,
         notes: _notesCtrl.text.trim(),
       ),
     );

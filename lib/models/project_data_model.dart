@@ -8023,6 +8023,81 @@ class QualityStandard {
   }
 }
 
+class QualityKpi {
+  final String id;
+  String name;
+  String value;
+  String unit;
+  String targetValue;
+  String change;
+  String trendDirection; // 'up', 'down', 'neutral'
+  String category; // 'prevention', 'appraisal', 'internalFailure', 'externalFailure', 'process', 'outcome'
+  String description;
+
+  QualityKpi({
+    String? id,
+    this.name = '',
+    this.value = '',
+    this.unit = '',
+    this.targetValue = '',
+    this.change = '',
+    this.trendDirection = 'neutral',
+    this.category = 'process',
+    this.description = '',
+  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+
+  factory QualityKpi.empty() => QualityKpi();
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'value': value,
+    'unit': unit,
+    'targetValue': targetValue,
+    'change': change,
+    'trendDirection': trendDirection,
+    'category': category,
+    'description': description,
+  };
+
+  factory QualityKpi.fromJson(Map<String, dynamic> json) {
+    return QualityKpi(
+      id: json['id']?.toString(),
+      name: json['name']?.toString() ?? '',
+      value: json['value']?.toString() ?? '',
+      unit: json['unit']?.toString() ?? '',
+      targetValue: json['targetValue']?.toString() ?? '',
+      change: json['change']?.toString() ?? '',
+      trendDirection: json['trendDirection']?.toString() ?? 'neutral',
+      category: json['category']?.toString() ?? 'process',
+      description: json['description']?.toString() ?? '',
+    );
+  }
+
+  QualityKpi copyWith({
+    String? name,
+    String? value,
+    String? unit,
+    String? targetValue,
+    String? change,
+    String? trendDirection,
+    String? category,
+    String? description,
+  }) {
+    return QualityKpi(
+      id: id,
+      name: name ?? this.name,
+      value: value ?? this.value,
+      unit: unit ?? this.unit,
+      targetValue: targetValue ?? this.targetValue,
+      change: change ?? this.change,
+      trendDirection: trendDirection ?? this.trendDirection,
+      category: category ?? this.category,
+      description: description ?? this.description,
+    );
+  }
+}
+
 class QualityObjective {
   final String id;
   final String title;
@@ -8033,6 +8108,7 @@ class QualityObjective {
   final String owner;
   final String linkedRequirement;
   final String linkedWbs;
+  final String linkedWorkPackageId;
   final String status;
 
   QualityObjective({
@@ -8045,6 +8121,7 @@ class QualityObjective {
     required this.owner,
     required this.linkedRequirement,
     required this.linkedWbs,
+    this.linkedWorkPackageId = '',
     required this.status,
   });
 
@@ -8058,6 +8135,7 @@ class QualityObjective {
     owner: '',
     linkedRequirement: '',
     linkedWbs: '',
+    linkedWorkPackageId: '',
     status: 'Draft',
   );
 
@@ -8071,6 +8149,7 @@ class QualityObjective {
     'owner': owner,
     'linkedRequirement': linkedRequirement,
     'linkedWbs': linkedWbs,
+    'linkedWorkPackageId': linkedWorkPackageId,
     'status': status,
   };
 
@@ -8085,6 +8164,7 @@ class QualityObjective {
       owner: json['owner']?.toString() ?? '',
       linkedRequirement: json['linkedRequirement']?.toString() ?? '',
       linkedWbs: json['linkedWbs']?.toString() ?? '',
+      linkedWorkPackageId: json['linkedWorkPackageId']?.toString() ?? '',
       status: json['status']?.toString() ?? 'Draft',
     );
   }
@@ -8098,6 +8178,7 @@ class QualityObjective {
     String? owner,
     String? linkedRequirement,
     String? linkedWbs,
+    String? linkedWorkPackageId,
     String? status,
   }) {
     return QualityObjective(
@@ -8110,6 +8191,7 @@ class QualityObjective {
       owner: owner ?? this.owner,
       linkedRequirement: linkedRequirement ?? this.linkedRequirement,
       linkedWbs: linkedWbs ?? this.linkedWbs,
+      linkedWorkPackageId: linkedWorkPackageId ?? this.linkedWorkPackageId,
       status: status ?? this.status,
     );
   }
@@ -8125,6 +8207,7 @@ class QualityWorkflowControl {
   final String frequency;
   final String owner;
   final String standardsReference;
+  final String linkedWorkPackageId;
 
   QualityWorkflowControl({
     required this.id,
@@ -8136,6 +8219,7 @@ class QualityWorkflowControl {
     required this.frequency,
     required this.owner,
     required this.standardsReference,
+    this.linkedWorkPackageId = '',
   });
 
   factory QualityWorkflowControl.empty(QualityWorkflowType type) =>
@@ -8149,6 +8233,7 @@ class QualityWorkflowControl {
         frequency: '',
         owner: '',
         standardsReference: '',
+        linkedWorkPackageId: '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -8161,6 +8246,7 @@ class QualityWorkflowControl {
     'frequency': frequency,
     'owner': owner,
     'standardsReference': standardsReference,
+    'linkedWorkPackageId': linkedWorkPackageId,
   };
 
   factory QualityWorkflowControl.fromJson(Map<String, dynamic> json) {
@@ -8174,6 +8260,7 @@ class QualityWorkflowControl {
       frequency: json['frequency']?.toString() ?? '',
       owner: json['owner']?.toString() ?? '',
       standardsReference: json['standardsReference']?.toString() ?? '',
+      linkedWorkPackageId: json['linkedWorkPackageId']?.toString() ?? '',
     );
   }
 
@@ -8186,6 +8273,7 @@ class QualityWorkflowControl {
     String? frequency,
     String? owner,
     String? standardsReference,
+    String? linkedWorkPackageId,
   }) {
     return QualityWorkflowControl(
       id: id,
@@ -8197,6 +8285,7 @@ class QualityWorkflowControl {
       frequency: frequency ?? this.frequency,
       owner: owner ?? this.owner,
       standardsReference: standardsReference ?? this.standardsReference,
+      linkedWorkPackageId: linkedWorkPackageId ?? this.linkedWorkPackageId,
     );
   }
 }
@@ -8211,6 +8300,7 @@ class QualityAuditEntry {
   final AuditResultStatus result;
   final String findings;
   final String notes;
+  final String linkedWorkPackageId;
 
   QualityAuditEntry({
     required this.id,
@@ -8222,6 +8312,7 @@ class QualityAuditEntry {
     required this.result,
     required this.findings,
     required this.notes,
+    this.linkedWorkPackageId = '',
   });
 
   factory QualityAuditEntry.empty() => QualityAuditEntry(
@@ -8234,6 +8325,7 @@ class QualityAuditEntry {
     result: AuditResultStatus.pending,
     findings: '',
     notes: '',
+    linkedWorkPackageId: '',
   );
 
   Map<String, dynamic> toJson() => {
@@ -8246,6 +8338,7 @@ class QualityAuditEntry {
     'result': result.index,
     'findings': findings,
     'notes': notes,
+    'linkedWorkPackageId': linkedWorkPackageId,
   };
 
   factory QualityAuditEntry.fromJson(Map<String, dynamic> json) {
@@ -8259,6 +8352,7 @@ class QualityAuditEntry {
       result: _parseAuditResultStatus(json['result']),
       findings: json['findings']?.toString() ?? '',
       notes: json['notes']?.toString() ?? '',
+      linkedWorkPackageId: json['linkedWorkPackageId']?.toString() ?? '',
     );
   }
 
@@ -8271,6 +8365,7 @@ class QualityAuditEntry {
     AuditResultStatus? result,
     String? findings,
     String? notes,
+    String? linkedWorkPackageId,
   }) {
     return QualityAuditEntry(
       id: id,
@@ -8282,6 +8377,7 @@ class QualityAuditEntry {
       result: result ?? this.result,
       findings: findings ?? this.findings,
       notes: notes ?? this.notes,
+      linkedWorkPackageId: linkedWorkPackageId ?? this.linkedWorkPackageId,
     );
   }
 }
@@ -8298,6 +8394,7 @@ class QualityTaskEntry {
   final QualityTaskPriority priority;
   final String comments;
   final String? resolvedDate;
+  final String linkedWorkPackageId;
 
   QualityTaskEntry({
     required this.id,
@@ -8311,6 +8408,7 @@ class QualityTaskEntry {
     required this.priority,
     required this.comments,
     required this.resolvedDate,
+    this.linkedWorkPackageId = '',
   });
 
   factory QualityTaskEntry.empty() => QualityTaskEntry(
@@ -8325,6 +8423,7 @@ class QualityTaskEntry {
     priority: QualityTaskPriority.minimal,
     comments: '',
     resolvedDate: null,
+    linkedWorkPackageId: '',
   );
 
   Map<String, dynamic> toJson() => {
@@ -8339,6 +8438,7 @@ class QualityTaskEntry {
     'priority': priority.index,
     'comments': comments,
     'resolvedDate': resolvedDate,
+    'linkedWorkPackageId': linkedWorkPackageId,
   };
 
   factory QualityTaskEntry.fromJson(Map<String, dynamic> json) {
@@ -8367,6 +8467,7 @@ class QualityTaskEntry {
       priority: _parseQualityTaskPriority(json['priority']),
       comments: json['comments']?.toString() ?? '',
       resolvedDate: json['resolvedDate']?.toString(),
+      linkedWorkPackageId: json['linkedWorkPackageId']?.toString() ?? '',
     );
   }
 
@@ -8381,6 +8482,7 @@ class QualityTaskEntry {
     QualityTaskPriority? priority,
     String? comments,
     String? resolvedDate,
+    String? linkedWorkPackageId,
   }) {
     return QualityTaskEntry(
       id: id,
@@ -8394,6 +8496,7 @@ class QualityTaskEntry {
       priority: priority ?? this.priority,
       comments: comments ?? this.comments,
       resolvedDate: resolvedDate ?? this.resolvedDate,
+      linkedWorkPackageId: linkedWorkPackageId ?? this.linkedWorkPackageId,
     );
   }
 }
@@ -8410,6 +8513,7 @@ class CorrectiveActionEntry {
   final String createdAt;
   final String closedAt;
   final String verificationNotes;
+  final String linkedWorkPackageId;
 
   CorrectiveActionEntry({
     required this.id,
@@ -8423,6 +8527,7 @@ class CorrectiveActionEntry {
     required this.createdAt,
     required this.closedAt,
     required this.verificationNotes,
+    this.linkedWorkPackageId = '',
   });
 
   factory CorrectiveActionEntry.empty() {
@@ -8439,6 +8544,7 @@ class CorrectiveActionEntry {
       createdAt: now,
       closedAt: '',
       verificationNotes: '',
+      linkedWorkPackageId: '',
     );
   }
 
@@ -8454,6 +8560,7 @@ class CorrectiveActionEntry {
     'createdAt': createdAt,
     'closedAt': closedAt,
     'verificationNotes': verificationNotes,
+    'linkedWorkPackageId': linkedWorkPackageId,
   };
 
   factory CorrectiveActionEntry.fromJson(Map<String, dynamic> json) {
@@ -8469,6 +8576,7 @@ class CorrectiveActionEntry {
       createdAt: json['createdAt']?.toString() ?? '',
       closedAt: json['closedAt']?.toString() ?? '',
       verificationNotes: json['verificationNotes']?.toString() ?? '',
+      linkedWorkPackageId: json['linkedWorkPackageId']?.toString() ?? '',
     );
   }
 
@@ -8483,6 +8591,7 @@ class CorrectiveActionEntry {
     String? createdAt,
     String? closedAt,
     String? verificationNotes,
+    String? linkedWorkPackageId,
   }) {
     return CorrectiveActionEntry(
       id: id,
@@ -8496,6 +8605,7 @@ class CorrectiveActionEntry {
       createdAt: createdAt ?? this.createdAt,
       closedAt: closedAt ?? this.closedAt,
       verificationNotes: verificationNotes ?? this.verificationNotes,
+      linkedWorkPackageId: linkedWorkPackageId ?? this.linkedWorkPackageId,
     );
   }
 }
@@ -9179,6 +9289,7 @@ class QualityManagementData {
   final List<QualityChangeEntry> qualityChangeLog;
   final QualityDashboardConfig dashboardConfig;
   final QualityComputedSnapshot? computedSnapshot;
+  final List<QualityKpi> customKpis;
 
   QualityManagementData({
     required this.qualityPlan,
@@ -9199,6 +9310,7 @@ class QualityManagementData {
     required this.qualityChangeLog,
     required this.dashboardConfig,
     required this.computedSnapshot,
+    required this.customKpis,
   });
 
   factory QualityManagementData.empty() {
@@ -9221,6 +9333,7 @@ class QualityManagementData {
       qualityChangeLog: [],
       dashboardConfig: QualityDashboardConfig.empty(),
       computedSnapshot: null,
+      customKpis: [],
     );
   }
 
@@ -9243,6 +9356,7 @@ class QualityManagementData {
     'qualityChangeLog': qualityChangeLog.map((c) => c.toJson()).toList(),
     'dashboardConfig': dashboardConfig.toJson(),
     'computedSnapshot': computedSnapshot?.toJson(),
+    'customKpis': customKpis.map((k) => k.toJson()).toList(),
   };
 
   factory QualityManagementData.fromJson(Map<String, dynamic> json) {
@@ -9376,6 +9490,11 @@ class QualityManagementData {
               Map<String, dynamic>.from(json['computedSnapshot'] as Map),
             )
           : null,
+      customKpis:
+          (json['customKpis'] as List?)
+              ?.map((e) => QualityKpi.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 
@@ -9398,6 +9517,7 @@ class QualityManagementData {
     List<QualityChangeEntry>? qualityChangeLog,
     QualityDashboardConfig? dashboardConfig,
     QualityComputedSnapshot? computedSnapshot,
+    List<QualityKpi>? customKpis,
   }) {
     return QualityManagementData(
       qualityPlan: qualityPlan ?? this.qualityPlan,
@@ -9418,6 +9538,7 @@ class QualityManagementData {
       qualityChangeLog: qualityChangeLog ?? this.qualityChangeLog,
       dashboardConfig: dashboardConfig ?? this.dashboardConfig,
       computedSnapshot: computedSnapshot ?? this.computedSnapshot,
+      customKpis: customKpis ?? this.customKpis,
     );
   }
 }

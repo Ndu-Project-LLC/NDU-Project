@@ -358,6 +358,36 @@ class _BuilderScreenState extends State<BuilderScreen>
                   style: const TextStyle(
                       color: Color(0xFF6B7280), fontSize: 11),
                 ),
+                if (line.basisReference != null && line.basisReference!.contains('SSHER:'))
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: InkWell(
+                      onTap: () => _navigateToSsher(line.basisReference!),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.account_tree_outlined, size: 10, color: Color(0xFF6366F1)),
+                            const SizedBox(width: 4),
+                            Text(
+                              'SSHER: ${line.basisReference!.replaceAll('SSHER:', '')}',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF6366F1),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -429,6 +459,10 @@ class _BuilderScreenState extends State<BuilderScreen>
         ],
       ),
     );
+  }
+
+  void _navigateToSsher(String basisRef) {
+    Navigator.of(context).pushNamed('/planning/ssher-stacked');
   }
 
   void _showAddLineDialog(

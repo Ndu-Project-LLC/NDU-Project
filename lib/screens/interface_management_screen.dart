@@ -1263,8 +1263,9 @@ class _InterfaceRegisterRow extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: Text(name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: null,
+                  softWrap: true,
+                  overflow: TextOverflow.visible,
                   style: const TextStyle(
                       fontSize: 12, fontWeight: FontWeight.w600)),
             ),
@@ -1280,17 +1281,19 @@ class _InterfaceRegisterRow extends StatelessWidget {
       SizedBox(
         width: 140,
         child: Text(entry.partyA.trim(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
+            maxLines: null,
+            softWrap: true,
+            overflow: TextOverflow.visible,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)))},
       ),
       const SizedBox(width: 12),
       SizedBox(
         width: 140,
         child: Text(entry.partyB.trim(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
+            maxLines: null,
+            softWrap: true,
+            overflow: TextOverflow.visible,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)))},
       ),
       const SizedBox(width: 12),
       SizedBox(
@@ -3086,8 +3089,9 @@ class _MaturityBar extends StatelessWidget {
  Expanded(
  flex: 3,
  child: Text(name,
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
+ maxLines: null,
+ softWrap: true,
+ overflow: TextOverflow.visible,
  style: const TextStyle(
  fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
  ),
@@ -3254,8 +3258,9 @@ class _AuditTrailSection extends StatelessWidget {
  Expanded(
  flex: 2,
  child: Text(entry.interfaceName.trim().isNotEmpty ? entry.interfaceName.trim() : 'Unnamed',
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
+ maxLines: null,
+ softWrap: true,
+ overflow: TextOverflow.visible,
  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
  ),
  const SizedBox(width: 12),
@@ -3274,7 +3279,9 @@ class _AuditTrailSection extends StatelessWidget {
  const SizedBox(width: 4),
  Flexible(
  child: Text(entry.action,
- overflow: TextOverflow.ellipsis,
+ maxLines: null,
+ softWrap: true,
+ overflow: TextOverflow.visible,
  style: TextStyle(
  fontSize: 10,
  fontWeight: FontWeight.w600,

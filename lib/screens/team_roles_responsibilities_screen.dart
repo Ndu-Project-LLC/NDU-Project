@@ -1089,6 +1089,7 @@ class _TeamRolesResponsibilitiesScreenState
  constraints: BoxConstraints(minWidth: tableWidth),
  child: SingleChildScrollView(
  child: DataTable(
+                    dataRowMaxHeight: double.infinity,
  headingRowColor: MaterialStateProperty.all(const Color(0xFFF8FAFC)),
  border: TableBorder.all(color: const Color(0xFFE5E7EB), width: 1),
  columnSpacing: 20,
@@ -1116,7 +1117,7 @@ class _TeamRolesResponsibilitiesScreenState
   }
   },
   )),
- DataCell(Text(desc, style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)), maxLines: 2, overflow: TextOverflow.ellipsis)),
+ DataCell(Text(desc, style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)), maxLines: null, softWrap: true, overflow: TextOverflow.visible)),
  DataCell(Text(data.fullName, style: const TextStyle(fontSize: 13))),
  DataCell(Row(
  mainAxisSize: MainAxisSize.min,

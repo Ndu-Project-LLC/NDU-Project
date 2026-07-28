@@ -234,7 +234,7 @@ class _ProjectActivitiesLogScreenState
  title: Text(
  option,
  style: const TextStyle(fontSize: 13),
- overflow: TextOverflow.ellipsis,
+ overflow: TextOverflow.visible,
  ),
  onChanged: (_) {
  setModalState(() {
@@ -1964,7 +1964,7 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  columnSpacing: 16,
  showBottomBorder: true,
  dataRowMinHeight: 56,
- dataRowMaxHeight: 74,
+ dataRowMaxHeight: double.infinity,
  headingTextStyle: const TextStyle(
  fontWeight: FontWeight.w700,
  fontSize: 12,
@@ -2132,8 +2132,9 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  padding: const EdgeInsets.symmetric(vertical: 4),
  child: Text(
  text,
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
+ maxLines: null,
+ overflow: TextOverflow.visible,
+              softWrap: true,
  ),
  ),
  ),
@@ -2333,7 +2334,7 @@ class _TableHeaderCell extends StatelessWidget {
  width: width,
  child: Text(
  label,
- overflow: TextOverflow.ellipsis,
+ overflow: TextOverflow.visible,
  ),
  );
  }

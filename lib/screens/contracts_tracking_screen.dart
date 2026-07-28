@@ -2588,8 +2588,8 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
  const SizedBox(height: 4),
  Text(
  c.description,
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
+ maxLines: null, softWrap: true,
+ overflow: TextOverflow.visible,
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w500,

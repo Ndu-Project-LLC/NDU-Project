@@ -785,7 +785,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Text(sig.signal, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
- Text(sig.description, style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)), maxLines: 1, overflow: TextOverflow.ellipsis),
+ Text(sig.description, style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)), maxLines: null, softWrap: true, overflow: TextOverflow.visible),
  ],
  ),
  ),

@@ -21,6 +21,8 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -77,12 +79,14 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- if (_isLoading) const LinearProgressIndicator(minHeight: 2),
- PlanningPhaseHeader(
+ if (_isLoading) const LinearProgressIndicator(minHeight: 2),            PlanningPhaseHeader(
  title: 'Hypercare & Warranty Support',
 showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 20),
-            _buildLaunchInsights(),
+            // Context Banner showing upstream data from previous screens
+            ContextBanner.fromService(screenId: 'commerce_viability'),
+            const SizedBox(height: 16),
+ _buildLaunchInsights(),
             const SizedBox(height: 16),
  _buildMetricsRow(),
  const SizedBox(height: 20),
@@ -766,17 +770,21 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _persistData() async {
  if (_projectId == null) return;
- try {
- await LaunchPhaseService.saveCommerceViability(
- projectId: _projectId!,
- warranties: _warranties,
- opsCosts: _opsCosts,
- financialMetrics: _financialMetrics,
- recommendations: _recommendations,
- decision: _decision);
- } catch (e) {
- debugPrint('Commerce save error: $e');
- }
+ try {      await LaunchPhaseService.saveCommerceViability(
+        projectId: _projectId!,
+        warranties: _warranties,
+        opsCosts: _opsCosts,
+        financialMetrics: _financialMetrics,
+        recommendations: _recommendations,
+        decision: _decision);
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildHypercareContext(projectData),
+      );
+    } catch (e) {
+      debugPrint('Commerce save error: $e');
+    }
  }
 
  Future<void> _autoPopulateFromPriorPhases() async {

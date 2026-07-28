@@ -16,6 +16,8 @@ import 'package:ndu_project/screens/planning_requirements_screen.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/planning_goal_milestone_mapping_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -136,6 +138,14 @@ class _ProjectFrameworkNextScreenState
         },
       ),
     );
+
+    // Publish context to PlanningPhaseContextService for downstream screens
+    if (mounted) {
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildProjectDetailsContext(projectData),
+      );
+    }
   }
 
   @override
@@ -415,6 +425,8 @@ class _ProjectFrameworkNextScreenState
                       onForward: () => PlanningPhaseNavigation.goToNext(
                           context, 'project_goals_milestones'),
                       onExportPdf: _exportPdf),
+                  // Context Banner showing upstream data from previous screens
+                  ContextBanner.fromService(screenId: 'project_goals_milestones'),
                   Expanded(
                     child: Stack(
                       children: [

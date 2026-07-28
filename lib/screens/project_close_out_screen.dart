@@ -19,6 +19,8 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -91,11 +93,13 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- if (_isLoading) const LinearProgressIndicator(minHeight: 2),
- PlanningPhaseHeader(
+ if (_isLoading) const LinearProgressIndicator(minHeight: 2),            PlanningPhaseHeader(
  title: 'Project Closeout',
 showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 16),
+            // Context Banner showing upstream data from previous screens
+            ContextBanner.fromService(screenId: 'project_close_out'),
+            const SizedBox(height: 16),
             _buildLaunchInsights(),
             const SizedBox(height: 16),
  Row(
@@ -702,16 +706,20 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _persistData() async {
  if (_projectId == null) return;
- try {
- await LaunchPhaseService.saveProjectCloseOut(
- projectId: _projectId!,
- closeOutChecklist: _closeOutChecklist,
- approvals: _approvals,
- archive: _archive,
- lessonsLearned: _lessonsLearned);
- } catch (e) {
- debugPrint('Close-out save error: $e');
- }
+ try {      await LaunchPhaseService.saveProjectCloseOut(
+        projectId: _projectId!,
+        closeOutChecklist: _closeOutChecklist,
+        approvals: _approvals,
+        archive: _archive,
+        lessonsLearned: _lessonsLearned);
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildProjectCloseoutContext(projectData),
+      );
+    } catch (e) {
+      debugPrint('Close-out save error: $e');
+    }
  }
 
  Future<void> _autoPopulateFromPriorPhases() async {

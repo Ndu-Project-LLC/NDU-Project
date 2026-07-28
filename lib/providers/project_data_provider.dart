@@ -8,6 +8,7 @@ import 'package:ndu_project/services/activity_log_service.dart';
 import 'package:ndu_project/services/activity_auto_logger.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/services/project_intelligence_service.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
 
 /// Provider that manages project data state across the entire application
 class ProjectDataProvider extends ChangeNotifier {
@@ -367,6 +368,10 @@ class ProjectDataProvider extends ChangeNotifier {
     // Track the most-recently-loaded project for router-level auto-logging.
     lastKnownProjectId = projectId;
 
+    // Set the project ID for context persistence and load saved contexts.
+    PlanningPhaseContextService.instance.setCurrentProject(projectId);
+    unawaited(PlanningPhaseContextService.instance.loadContexts());
+
     // Skip if already loaded and cached, but only if data is valid
     if (_cachedProjectId == projectId &&
         _projectData.projectId == projectId &&
@@ -567,6 +572,8 @@ class ProjectDataProvider extends ChangeNotifier {
     _lastError = null;
     _cachedProjectId = null; // Clear cache
     if (hadData) notifyListeners(); // Only notify if there was data to clear
+    // Clear context service when project is reset.
+    PlanningPhaseContextService.instance.clearAll();
   }
 
   /// Update initiation phase data

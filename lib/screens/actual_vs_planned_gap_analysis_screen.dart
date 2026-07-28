@@ -22,6 +22,8 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 class ActualVsPlannedGapAnalysisScreen extends StatefulWidget {
  const ActualVsPlannedGapAnalysisScreen({super.key});
@@ -78,11 +80,13 @@ class _ActualVsPlannedGapAnalysisScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- if (_isLoading) const LinearProgressIndicator(minHeight: 2),
- PlanningPhaseHeader(
+ if (_isLoading) const LinearProgressIndicator(minHeight: 2),            PlanningPhaseHeader(
  title: 'Scope & Deliverable Reconciliation',
 showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 16),
+            // Context Banner showing upstream data from previous screens
+            ContextBanner.fromService(screenId: 'actual_vs_planned_gap_analysis'),
+            const SizedBox(height: 16),
             _buildLaunchInsights(),
             const SizedBox(height: 16),
  _buildMetricsRow(),
@@ -867,17 +871,21 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _persistData() async {
  if (_projectId == null) return;
- try {
- await LaunchPhaseService.saveGapAnalysis(
- projectId: _projectId!,
- scopeGaps: _scopeGaps,
- milestoneVariances: _milestoneVariances,
- budgetVariances: _budgetVariances,
- rootCauses: _rootCauses,
- followUpActions: _followUpActions);
- } catch (e) {
- debugPrint('Gap analysis save error: $e');
- }
+ try {      await LaunchPhaseService.saveGapAnalysis(
+        projectId: _projectId!,
+        scopeGaps: _scopeGaps,
+        milestoneVariances: _milestoneVariances,
+        budgetVariances: _budgetVariances,
+        rootCauses: _rootCauses,
+        followUpActions: _followUpActions);
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildScopeReconciliationContext(projectData),
+      );
+    } catch (e) {
+      debugPrint('Gap analysis save error: $e');
+    }
  }
 
  Future<void> _autoPopulateFromPriorPhases() async {

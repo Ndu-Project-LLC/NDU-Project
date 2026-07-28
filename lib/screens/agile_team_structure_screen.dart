@@ -17,6 +17,8 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -136,22 +138,25 @@ class _AgileTeamStructureScreenState
  void _scheduleAutoSave() {
  _autoSaveDebounce?.cancel();
  _autoSaveDebounce = Timer(const Duration(milliseconds: 500), () => _performSave());
- }
-
- Future<void> _performSave() async {
- if (_isSaving) return;
- setState(() => _isSaving = true);
- try {
- await _saveData();
- if (mounted) {
- ScaffoldMessenger.of(context).clearSnackBars();
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Saved'), duration: Duration(seconds: 1)),
- );
- }
- } catch (e) { debugPrint('Error: $e'); }
- if (mounted) setState(() => _isSaving = false);
- }
+ }  Future<void> _performSave() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+    try {
+      await _saveData();
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildAgileTeamStructureContext(projectData),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Saved'), duration: Duration(seconds: 1)),
+        );
+      }
+    } catch (e) { debugPrint('Error: $e'); }
+    if (mounted) setState(() => _isSaving = false);
+  }
 
  // ── Field history tracking for undo/redo ─────────────────────────────
  void _recordFieldHistory(String key, String value, {bool isAi = false}) {
@@ -475,14 +480,15 @@ class _AgileTeamStructureScreenState
  padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- PlanningPhaseHeader(
- title: 'Agile Team Structure',
-onBack: () => PlanningPhaseNavigation.goToPrevious(
- context, 'agile_team_structure'),
- onForward: () => PlanningPhaseNavigation.goToNext(
- context, 'agile_team_structure'), onExportPdf: _exportPdf),
- const SizedBox(height: 32),
+ children: [                        PlanningPhaseHeader(
+                          title: 'Agile Team Structure',
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'agile_team_structure'),
+                          onForward: () => PlanningPhaseNavigation.goToNext(
+                              context, 'agile_team_structure'), onExportPdf: _exportPdf),
+                        const SizedBox(height: 32),
+                        // Context Banner showing upstream data from previous screens
+                        ContextBanner.fromService(screenId: 'agile_team_structure'),
  Row(
  children: [
  Expanded(

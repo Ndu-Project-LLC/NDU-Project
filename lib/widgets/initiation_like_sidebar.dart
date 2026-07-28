@@ -147,6 +147,8 @@ import 'package:ndu_project/screens/stakeholder_alignment_screen.dart';
 import 'package:ndu_project/screens/update_ops_maintenance_plans_screen.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/launch_phase_progress_indicator.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -2017,6 +2019,89 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     );
   }
 
+  /// Builds the Launch Phase header with a context progress badge.
+  Widget _buildLaunchPhaseHeader() {
+    const activeColor = Color(0xFFD97706);
+    final isActive = _activeIn(_launchPhaseLabels);
+
+    // Compute progress from context service
+    final service = PlanningPhaseContextService.instance;
+    final flowOrder = PlanningPhaseContextService.launchFlowOrder;
+    final completedCount = flowOrder.where((id) => service.hasContext(id)).length;
+    final totalCount = flowOrder.length;
+    final progressText = '$completedCount/$totalCount';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+      child: InkWell(
+        onTap: () => setState(() {
+          _launchPhaseExpanded = !_launchPhaseExpanded;
+          _sharedLaunchPhaseExpanded = _launchPhaseExpanded;
+        }),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isActive ? activeColor.withOpacity(0.08) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: isActive
+                ? Border.all(color: activeColor.withOpacity(0.20))
+                : null,
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.rocket_launch_outlined,
+                  size: 20, color: isActive ? activeColor : Colors.black87),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'Launch Phase',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isActive ? activeColor : Colors.black87,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ),
+              // Progress badge
+              if (completedCount > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: completedCount == totalCount
+                        ? const Color(0xFF10B981).withOpacity(0.1)
+                        : activeColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: completedCount == totalCount
+                          ? const Color(0xFF10B981).withOpacity(0.3)
+                          : activeColor.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Text(
+                    progressText,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: completedCount == totalCount
+                          ? const Color(0xFF10B981)
+                          : activeColor,
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 8),
+              Icon(
+                  _launchPhaseExpanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                  color: Colors.grey[600],
+                  size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildExpandableHeader(IconData icon, String title,
       {required bool expanded,
       required VoidCallback onTap,
@@ -3042,17 +3127,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             onTap: _openFinalizeProject,
             isActive: widget.activeItemLabel == 'Finalize Project'),
       ],
-      _buildExpandableHeader(
-        Icons.rocket_launch_outlined,
-        'Launch Phase',
-        expanded: _launchPhaseExpanded,
-        onTap: () => setState(() {
-          _launchPhaseExpanded = !_launchPhaseExpanded;
-          _sharedLaunchPhaseExpanded = _launchPhaseExpanded;
-        }),
-        isActive: _activeIn(_launchPhaseLabels),
-      ),
+      _buildLaunchPhaseHeader(),
       if (_launchPhaseExpanded) ...[
+        // Visual progress indicator showing context flow
+        LaunchPhaseProgressIndicator(
+          activeItemLabel: widget.activeItemLabel,
+        ),
         _buildSubMenuItem('Launch Readiness Assessment',
             onTap: _openDeliverProjectClosure,
             isActive: widget.activeItemLabel == 'Launch Readiness Assessment'),

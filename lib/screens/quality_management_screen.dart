@@ -23,6 +23,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 enum _QualityTab { plan, targets, qaTracking, qcTracking, metrics }
 
 const _dateHint = 'Select date';
@@ -70,6 +72,14 @@ Future<bool> _updateQualityData(
  behavior: SnackBarBehavior.floating,
  backgroundColor: Color(0xFFDC2626),
  ),
+ );
+ }
+
+ // Publish context to PlanningPhaseContextService for downstream screens
+ if (context.mounted && success) {
+ final projectData = ProjectDataHelper.getData(context);
+ PlanningPhaseContextService.instance.publishContext(
+ PlanningContextBuilder.buildQualityContext(projectData),
  );
  }
 
@@ -407,6 +417,9 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  children: [
  PlanningPhaseHeader(title: 'Quality Management', onExportPdf: _exportPdf),
  const SizedBox(height: 16),
+ // Context Banner showing upstream data from previous screens
+ ContextBanner.fromService(screenId: 'quality_management'),
+ const SizedBox(height: 16),
  // Hamburger + title row for mobile
  Row(
  children: [
@@ -489,6 +502,9 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  PlanningPhaseHeader(title: 'Quality Management', onExportPdf: _exportPdf),
+ const SizedBox(height: 16),
+ // Context Banner showing upstream data from previous screens
+ ContextBanner.fromService(screenId: 'quality_management'),
  const SizedBox(height: 16),
  const _PageHeader(),
  const SizedBox(height: 24),

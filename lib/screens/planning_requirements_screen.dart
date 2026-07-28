@@ -25,6 +25,8 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 class PlanningRequirementsScreen extends StatefulWidget {
  const PlanningRequirementsScreen({super.key});
 
@@ -997,6 +999,12 @@ $requirementsList
  );
  provider.saveToFirebase(checkpoint: 'requirements');
 
+ // Publish context to PlanningPhaseContextService for downstream screens
+ final projectData = ProjectDataHelper.getData(context);
+ PlanningPhaseContextService.instance.publishContext(
+ PlanningContextBuilder.buildRequirementsContext(projectData),
+ );
+
  if (showSnack) {
  _showAutoSaveSnack();
  }
@@ -1124,6 +1132,9 @@ $requirementsList
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  PlanningPhaseHeader(title: 'Requirements', onExportPdf: _exportPdf),
+ const SizedBox(height: 16),
+ // Context Banner showing upstream data from previous screens
+ ContextBanner.fromService(screenId: 'requirements'),
  const SizedBox(height: 16),
  _roundedField(
  controller: _notesController,

@@ -8,6 +8,8 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 class ExecutionPlanScreen extends StatefulWidget {
  const ExecutionPlanScreen({super.key});
@@ -19,14 +21,18 @@ class ExecutionPlanScreen extends StatefulWidget {
 class _ExecutionPlanScreenState extends State<ExecutionPlanScreen> {
  @override
  void initState() {
- super.initState();
- WidgetsBinding.instance.addPostFrameCallback((_) async {
+ super.initState(); WidgetsBinding.instance.addPostFrameCallback((_) async {
  final provider = ProjectDataInherited.maybeOf(context);
  final pid = provider?.projectData.projectId;
  if (pid != null && pid.isNotEmpty) {
- await ProjectNavigationService.instance
- .saveLastPage(pid, 'execution_plan');
+   await ProjectNavigationService.instance
+       .saveLastPage(pid, 'execution_plan');
  }
+ // Publish context to PlanningPhaseContextService for downstream screens
+ final projectData = ProjectDataHelper.getData(context);
+ PlanningPhaseContextService.instance.publishContext(
+   PlanningContextBuilder.buildExecutionPlanContext(projectData),
+ );
  });
  }
 
@@ -65,6 +71,9 @@ class _ExecutionPlanScreenState extends State<ExecutionPlanScreen> {
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'execution_plan'), onExportPdf: _exportPdf),
  const SizedBox(height: 32),
+ // Context Banner showing upstream data from previous screens
+ ContextBanner.fromService(screenId: 'execution_plan'),
+ const SizedBox(height: 16),
  const SectionIntro(),
  const SizedBox(height: 28),
  ExecutionPlanForm(

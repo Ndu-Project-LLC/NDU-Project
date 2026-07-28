@@ -24,6 +24,8 @@ import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 class TransitionToProdTeamScreen extends StatefulWidget {
  const TransitionToProdTeamScreen({super.key});
@@ -87,6 +89,9 @@ showNavigationButtons: false,
  ),
  const SizedBox(height: 12),
             _buildLaunchInsights(),
+ const SizedBox(height: 16),
+            // Context Banner showing upstream data from previous screens
+            ContextBanner.fromService(screenId: 'transition_to_prod_team'),
             const SizedBox(height: 16),
  _buildMetricsRow(),
  const SizedBox(height: 16),
@@ -723,17 +728,21 @@ showNavigationButtons: false,
 
  Future<void> _persistData() async {
  if (_projectId == null) return;
- try {
- await LaunchPhaseService.saveTransitionToProd(
- projectId: _projectId!,
- teamRoster: _teamRoster,
- handoverChecklist: _handoverChecklist,
- knowledgeTransfers: _knowledgeTransfers,
- signOffs: _signOffs,
- );
- } catch (e) {
- debugPrint('Transition save error: $e');
- }
+ try {      await LaunchPhaseService.saveTransitionToProd(
+        projectId: _projectId!,
+        teamRoster: _teamRoster,
+        handoverChecklist: _handoverChecklist,
+        knowledgeTransfers: _knowledgeTransfers,
+        signOffs: _signOffs,
+      );
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildDeploymentTransferContext(projectData),
+      );
+    } catch (e) {
+      debugPrint('Transition save error: $e');
+    }
  }
 
  Future<void> _populateFromAi() async {

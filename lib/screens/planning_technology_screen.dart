@@ -12,6 +12,8 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -110,9 +112,16 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  technologyDefinitions: _definitions,
  aiRecommendations: _recommendations,
  ),
- );
- await provider.saveToFirebase(checkpoint: checkpoint);
- }
+ );await provider.saveToFirebase(checkpoint: checkpoint);
+
+    // Publish context to PlanningPhaseContextService for downstream screens
+    if (context.mounted) {
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildTechnologyContext(projectData),
+      );
+    }
+  }
 
  Future<void> _regenerateCurrentTab() async {
  if (_regenerating) return;
@@ -947,6 +956,9 @@ onBack: () =>
  context,
  'technology',
  ), onExportPdf: _exportPdf),
+ const SizedBox(height: 18),
+ // Context Banner showing upstream data from previous screens
+ ContextBanner.fromService(screenId: 'technology'),
  const SizedBox(height: 18),
  _buildTopMetrics(),
  const SizedBox(height: 14),

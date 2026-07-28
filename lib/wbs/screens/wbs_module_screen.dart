@@ -35,6 +35,7 @@ import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart'
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 
@@ -108,6 +109,13 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
         final fm = wbs.framework;
         final totalNodes = countAllNodes(wbs.level0);
 
+        // Publish context to PlanningPhaseContextService for downstream screens
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          PlanningPhaseContextService.instance.publishContext(
+            PlanningContextBuilder.buildWBSContext(projectData),
+          );
+        });
+
         return ResponsiveScaffold(
           activeItemLabel: 'Work Breakdown Structure',
           appBarTitle: 'Work Breakdown Structure',
@@ -116,6 +124,8 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
           backgroundColor: Colors.white,
           body: Column(
             children: [
+              // ── Context Banner showing upstream data from Project Details ──
+              ContextBanner.fromService(screenId: 'work_breakdown_structure'),
               // ── World-class Section Navigator ─────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),

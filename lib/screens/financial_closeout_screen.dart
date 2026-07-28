@@ -10,6 +10,8 @@ import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 /// Section 7 — Financial Closeout
 ///
@@ -119,6 +121,11 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
         'notes': _notesController.text.trim(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildFinancialCloseoutContext(projectData),
+      );
     } catch (e) {
       debugPrint('Financial Closeout save error: $e');
     }
@@ -146,6 +153,9 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
               showNavigationButtons: false,
               showActivityLogAction: false,
             ),
+            const SizedBox(height: 12),
+            // Context Banner showing upstream data from previous screens
+            ContextBanner.fromService(screenId: 'financial_closeout'),
             const SizedBox(height: 12),
             _buildIntroPanel(),
             const SizedBox(height: 16),

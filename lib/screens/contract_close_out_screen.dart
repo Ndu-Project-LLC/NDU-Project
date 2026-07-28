@@ -3,6 +3,8 @@ import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 import 'package:ndu_project/models/launch_phase_models.dart';
 import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
@@ -77,13 +79,15 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- if (_isLoading) const LinearProgressIndicator(minHeight: 2),
- PlanningPhaseHeader(
- title: 'Vendor & Contract Closeout',
-showNavigationButtons: false,
- showActivityLogAction: false,
+ if (_isLoading) const LinearProgressIndicator(minHeight: 2),PlanningPhaseHeader(
+              title: 'Vendor & Contract Closeout',
+              showNavigationButtons: false,
+              showActivityLogAction: false,
  onExportPdf: _exportPdf),
  const SizedBox(height: 16),
+            // Context Banner showing upstream data from previous screens
+            ContextBanner.fromService(screenId: 'contract_close_out'),
+            const SizedBox(height: 16),
             _buildLaunchInsights(),
             const SizedBox(height: 16),
  _buildMetricsRow(),
@@ -607,17 +611,21 @@ showNavigationButtons: false,
 
  Future<void> _persistData() async {
  if (_projectId == null) return;
- try {
- await LaunchPhaseService.saveContractCloseOut(
- projectId: _projectId!,
- contracts: _contracts,
- closeOutSteps: _closeOutSteps,
- signOffs: _signOffs,
- financialSummary: _financialSummary,
- );
- } catch (e) {
- debugPrint('Contract close-out save error: $e');
- }
+ try {      await LaunchPhaseService.saveContractCloseOut(
+        projectId: _projectId!,
+        contracts: _contracts,
+        closeOutSteps: _closeOutSteps,
+        signOffs: _signOffs,
+        financialSummary: _financialSummary,
+      );
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildVendorCloseoutContext(projectData),
+      );
+    } catch (e) {
+      debugPrint('Contract close-out save error: $e');
+    }
  }
 
  Future<void> _autoPopulateFromPriorPhases() async {

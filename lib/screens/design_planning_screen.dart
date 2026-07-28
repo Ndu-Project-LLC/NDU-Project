@@ -24,6 +24,8 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 // import 'package:ndu_project/widgets/launch_phase_navigation.dart'; // removed: UI redesign
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
@@ -651,6 +653,11 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  if (success) {
  _pendingSave = false;
  _lastSavedAt = DateTime.now();
+ // Publish context to PlanningPhaseContextService for downstream screens
+ final projectData = ProjectDataHelper.getData(context);
+ PlanningPhaseContextService.instance.publishContext(
+ PlanningContextBuilder.buildDesignContext(projectData),
+ );
  }
  _saveIndicatorNotifier.value = _SaveIndicatorState(
  saving: _saving,
@@ -1705,6 +1712,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  children: [
  PlanningPhaseHeader(
  title: 'Design Planning', onExportPdf: _exportPdf),
+ // Context Banner showing upstream data from previous screens
+ ContextBanner.fromService(screenId: 'design'),
  _buildPageContext(projectData),
  Expanded(
  child: SingleChildScrollView(

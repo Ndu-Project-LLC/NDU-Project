@@ -1,5 +1,7 @@
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/download_helper_stub.dart'
@@ -92,6 +94,9 @@ showNavigationButtons: false,
  onExportPdf: _exportPdf),
  const SizedBox(height: 12),
             _buildLaunchInsights(),
+            const SizedBox(height: 16),
+            // Context Banner showing upstream data from previous screens
+            ContextBanner.fromService(screenId: 'deliver_project_closure'),
             const SizedBox(height: 16),
             LaunchNotesSection(
               controller: _notesController,
@@ -719,19 +724,23 @@ showNavigationButtons: false,
 
  Future<void> _persistData() async {
  if (_projectId == null) return;
- try {
- await LaunchPhaseService.saveDeliverProject(
- projectId: _projectId!,
- scopeItems: _scopeItems,
- milestones: _milestones,
- outstandingItems: _outstandingItems,
- riskFollowUps: _riskFollowUps,
- closureNotes: _closureNotes,
- );
- } catch (e) {
- debugPrint('Deliver project save error: $e');
- }
- }
+ try {      await LaunchPhaseService.saveDeliverProject(
+        projectId: _projectId!,
+        scopeItems: _scopeItems,
+        milestones: _milestones,
+        outstandingItems: _outstandingItems,
+        riskFollowUps: _riskFollowUps,
+        closureNotes: _closureNotes,
+      );
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildLaunchReadinessContext(projectData),
+      );
+    } catch (e) {
+      debugPrint('Deliver project save error: $e');
+    }
+  }
 
  Future<void> _autoPopulateFromPriorPhases() async {
  if (_projectId == null) return;

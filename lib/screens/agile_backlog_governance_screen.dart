@@ -15,6 +15,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -243,6 +245,15 @@ class _AgileBacklogGovernanceScreenState
       data['dod_use_checklist'] = _showDoDChecklist;
       await AgileWireframeService.saveBacklogGovernance(
           projectId: pid, data: data);
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      final prioritization = _controllers['prioritization_framework']?.text ?? '';
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildBacklogGovernanceContext(
+          projectData,
+          prioritizationFramework: prioritization.isNotEmpty ? prioritization : null,
+        ),
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -472,6 +483,8 @@ class _AgileBacklogGovernanceScreenState
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 32),
+                        // Context Banner showing upstream data from previous screens
+                        ContextBanner.fromService(screenId: 'agile_backlog_governance'),
                         Row(
                           children: [
                             Expanded(

@@ -22,6 +22,8 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -81,11 +83,13 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- if (_isLoading) const LinearProgressIndicator(minHeight: 2),
- PlanningPhaseHeader(
+ if (_isLoading) const LinearProgressIndicator(minHeight: 2),            PlanningPhaseHeader(
  title: 'Team Demobilization & Operations/Production Transition',
 showNavigationButtons: false, showExportPdf: false, showAiAssist: false),
  const SizedBox(height: 16),
+            // Context Banner showing upstream data from previous screens
+            ContextBanner.fromService(screenId: 'demobilize_team'),
+            const SizedBox(height: 16),
             _buildLaunchInsights(),
             const SizedBox(height: 16),
  _buildMetricsRow(),
@@ -802,17 +806,21 @@ showNavigationButtons: false, showExportPdf: false, showAiAssist: false),
 
  Future<void> _persistData() async {
  if (_projectId == null) return;
- try {
- await LaunchPhaseService.saveDemobilizeTeam(
- projectId: _projectId!,
- teamRoster: _teamRoster,
- knowledgeTransfers: _knowledgeTransfers,
- vendorOffboarding: _vendorOffboarding,
- communications: _communications,
- debriefNotes: _debriefNotes);
- } catch (e) {
- debugPrint('Demobilize save error: $e');
- }
+ try {      await LaunchPhaseService.saveDemobilizeTeam(
+        projectId: _projectId!,
+        teamRoster: _teamRoster,
+        knowledgeTransfers: _knowledgeTransfers,
+        vendorOffboarding: _vendorOffboarding,
+        communications: _communications,
+        debriefNotes: _debriefNotes);
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildDemobilizeContext(projectData),
+      );
+    } catch (e) {
+      debugPrint('Demobilize save error: $e');
+    }
  }
 
  Future<void> _autoPopulateFromPriorPhases() async {

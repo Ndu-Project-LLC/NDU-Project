@@ -10,6 +10,8 @@ import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 /// Section 3 — FAT, Mechanical Completion & Commission Solution
 ///
@@ -121,8 +123,7 @@ class _FatMechanicalCompletionScreenState
 
   Future<void> _persistData() async {
     if (_projectId == null) return;
-    try {
-      await FirebaseFirestore.instance
+    try {      await FirebaseFirestore.instance
           .collection('projects')
           .doc(_projectId!)
           .collection('execution_phase_sections')
@@ -130,12 +131,16 @@ class _FatMechanicalCompletionScreenState
           .set({
         'mechanicalCompletion':
             _mechanicalCompletionItems.map((e) => e.toMap()).toList(),
-        'fatSatCommissioning':
-            _fatSatCommissioningItems.map((e) => e.toMap()).toList(),
+        'fatSatCommissioning': _fatSatCommissioningItems.map((e) => e.toMap()).toList(),
         'finalTurnover': _finalTurnoverItems.map((e) => e.toMap()).toList(),
         'notes': _notesController.text.trim(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildFATMechanicalContext(projectData),
+      );
     } catch (e) {
       debugPrint('FAT Mechanical Completion save error: $e');
     }
@@ -197,6 +202,9 @@ class _FatMechanicalCompletionScreenState
               showNavigationButtons: false,
               showActivityLogAction: false,
             ),
+            const SizedBox(height: 12),
+            // Context Banner showing upstream data from previous screens
+            ContextBanner.fromService(screenId: 'fat_mechanical_completion'),
             const SizedBox(height: 12),
             _buildIntroPanel(),
             const SizedBox(height: 16),

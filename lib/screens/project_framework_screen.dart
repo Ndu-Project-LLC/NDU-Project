@@ -25,6 +25,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
 
 // ─── Design Tokens ───────────────────────────────────────────────────────────
 class _Tokens {
@@ -361,46 +362,49 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
  return (data.designManagementData ?? DesignManagementData()).copyWith(
  methodology: mappedMethodology,
  );
- }
+ }  Future<void> _saveData() async {
+    if (!mounted) return;
 
- Future<void> _saveData() async {
- if (!mounted) return;
+    final projectGoals = _goals
+        .map((g) => ProjectGoal(
+              name: g.nameController.text.trim(),
+              description: g.controller.text.trim(),
+              framework: g.framework,
+            ))
+        .toList();
 
- final projectGoals = _goals
- .map((g) => ProjectGoal(
- name: g.nameController.text.trim(),
- description: g.controller.text.trim(),
- framework: g.framework,
- ))
- .toList();
-
- try {
- await ProjectDataHelper.updateAndSave(
- context: context,
- checkpoint: 'project_framework',
- dataUpdater: (data) {
- return data.copyWith(
- projectName: _projectNameController.text.trim(),
- projectObjective: _projectObjectiveController.text.trim(),
- overallFramework: _selectedOverallFramework,
- projectGoals: projectGoals,
- designManagementData: _syncedDesignManagementData(data),
- );
- },
- showSnackbar: false,
- );
- } catch (e) {
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Error saving data: ${e.toString()}'),
- backgroundColor: Colors.red,
- duration: const Duration(seconds: 3),
- ),
- );
- }
- }
- }
+    try {
+      await ProjectDataHelper.updateAndSave(
+        context: context,
+        checkpoint: 'project_framework',
+        dataUpdater: (data) {
+          // Publish context to PlanningPhaseContextService for downstream screens
+          final projectData = data.copyWith(
+            projectName: _projectNameController.text.trim(),
+            projectObjective: _projectObjectiveController.text.trim(),
+            overallFramework: _selectedOverallFramework,
+            projectGoals: projectGoals,
+            designManagementData: _syncedDesignManagementData(data),
+          );
+          PlanningPhaseContextService.instance.publishContext(
+            PlanningContextBuilder.buildProjectDetailsContext(projectData),
+          );
+          return projectData;
+        },
+        showSnackbar: false,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving data: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
 
  Future<void> _ensureProjectObjectiveSummary(
  ProjectDataModel projectData) async {

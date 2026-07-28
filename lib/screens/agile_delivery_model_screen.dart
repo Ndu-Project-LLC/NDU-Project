@@ -15,6 +15,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/services/planning_phase_context_service.dart';
+import 'package:ndu_project/widgets/context_banner.dart';
 
 const Color _kBackground = Colors.white;
 const Color _kMuted = Color(0xFF6B7280);
@@ -165,6 +167,16 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       data['sprintLength'] = _selectedSprintLength;
       data['estimationMethod'] = _selectedEstimationMethod;
       await AgileWireframeService.saveDeliveryModel(projectId: pid, data: data);
+      // Publish context to PlanningPhaseContextService for downstream screens
+      final projectData = ProjectDataHelper.getData(context);
+      final deliveryData = {
+        'framework': _selectedFramework,
+        'sprintLength': _selectedSprintLength,
+        'estimationMethod': _selectedEstimationMethod,
+      };
+      PlanningPhaseContextService.instance.publishContext(
+        PlanningContextBuilder.buildAgileDeliveryModelContext(projectData, deliveryData),
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -383,6 +395,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 32),
+                        // Context Banner showing upstream data from previous screens
+                        ContextBanner.fromService(screenId: 'agile_delivery_model'),
                         Row(
                           children: [
                             Expanded(

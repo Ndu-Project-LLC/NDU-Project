@@ -58,7 +58,6 @@ import 'package:ndu_project/cost_estimate/screens/cost_estimate_module_screen.da
 import 'package:ndu_project/schedule/screens/schedule_module_screen.dart';
 import 'package:ndu_project/project_controls/screens/project_controls_screen.dart';
 import 'package:ndu_project/project_controls/screens/change_management_module_screen.dart';
-import 'package:ndu_project/screens/landing_screen.dart';
 import 'package:ndu_project/screens/landing/careers_page_screen.dart';
 import 'package:ndu_project/screens/execution_plan_screen.dart';
 import 'package:ndu_project/screens/execution_work_packages_screen.dart';
@@ -141,6 +140,8 @@ import 'package:ndu_project/screens/admin/admin_users_screen.dart';
 import 'package:ndu_project/screens/admin/admin_coupons_screen.dart';
 import 'package:ndu_project/screens/admin/admin_subscription_lookup_screen.dart';
 import 'package:ndu_project/services/access_policy.dart';
+import 'package:ndu_project/services/user_service.dart';
+import 'package:ndu_project/services/subscription_service.dart';
 import 'package:ndu_project/services/activity_auto_logger.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -304,7 +305,7 @@ class AppRouter {
   static final GoRouter main = GoRouter(
     debugLogDiagnostics: kDebugMode,
     initialLocation: PlatformRouter.getInitialRoute(),
-    redirect: (context, state) {
+    redirect: (context, state) async {
       // Enforce admin-host policy if a user is present
       User? user;
       try {
@@ -338,6 +339,25 @@ class AppRouter {
       if (user != null && state.matchedLocation == '/') {
         return '/${AppRoutes.dashboard}';
       }
+
+      // ── Subscription guard: redirect users without an active subscription
+      // to the pricing page. Only applies to authenticated users on
+      // non-public routes (except pricing itself). The check is async-safe
+      // and cached to avoid repeated Firestore reads. ──
+      if (user != null && !isPublicRoute &&
+          state.matchedLocation != '/${AppRoutes.pricing}' &&
+          state.matchedLocation != '/${AppRoutes.mobilePricing}') {
+        // Skip for admin host (admin portal has its own access control)
+        // Also skip for admin users (by email) — admins don't need subscriptions
+        final isAdminUser = UserService.isAdminEmail(user.email ?? '');
+        if (!AccessPolicy.isRestrictedAdminHost() && !isAdminUser) {
+          final hasSub = await SubscriptionService.hasActiveSubscription();
+          if (!hasSub) {
+            return '/${AppRoutes.pricing}?reason=no_subscription';
+          }
+        }
+      }
+
 
       // ── Auto-log page visits to the project activity log ──
       // Every navigation to a project screen (anything other than the public

@@ -253,6 +253,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 VoiceTextField(
+                  enableVoice: false,
                   enableKazAi: false,
                   enableTextFormatting: false,
                   controller: emailController,
@@ -490,6 +491,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             SizedBox(
                               height: 52,
                               child: VoiceTextField(
+                                enableVoice: false,
                                 enableKazAi: false,
                                 enableTextFormatting: false,
                                 controller: _companyController,
@@ -534,6 +536,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             SizedBox(
                               height: 52,
                               child: VoiceTextField(
+                                enableVoice: false,
                                 enableKazAi: false,
                                 enableTextFormatting: false,
                                 controller: _emailController,
@@ -813,6 +816,7 @@ class _NameField extends StatelessWidget {
         SizedBox(
           height: 52,
           child: VoiceTextField(
+            enableVoice: false,
             enableKazAi: false,
             enableTextFormatting: false,
             controller: controller,

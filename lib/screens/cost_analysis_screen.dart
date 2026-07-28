@@ -52,12 +52,14 @@ import 'package:ndu_project/widgets/csv_table_import_button.dart';
 class CostAnalysisScreen extends StatefulWidget {
   final String notes;
   final List<AiSolutionItem> solutions;
+  final String businessCase;
   final int? initialStepIndex;
   final int? initialSolutionIndex;
   const CostAnalysisScreen(
       {super.key,
       required this.notes,
       required this.solutions,
+      this.businessCase = '',
       this.initialStepIndex,
       this.initialSolutionIndex});
 
@@ -2047,6 +2049,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         builder: (_) => RiskIdentificationScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -2059,6 +2062,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         builder: (_) => ITConsiderationsScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -2071,6 +2075,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         builder: (_) => InfrastructureConsiderationsScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -2083,6 +2088,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         builder: (_) => CoreStakeholdersScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -2095,7 +2101,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
         builder: (_) => PreferredSolutionAnalysisScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
-          businessCase: '',
+          businessCase: widget.businessCase,
         ),
       ),
     );

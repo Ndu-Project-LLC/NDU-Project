@@ -445,11 +445,194 @@ class _DocumentReviewMatrixScreenState
  ),
  child: Column(
  children: [
- _buildTableHeader(),
- if (_filteredDocuments.isEmpty)
- _buildEmptyState()
- else
- _buildTableRows(),
+ Icon(Icons.description_outlined,
+ size: 64, color: _kMuted.withOpacity(0.5)),
+ const SizedBox(height: 16),
+ Text(
+ 'No documents found',
+ style: TextStyle(
+ fontSize: 18,
+ fontWeight: FontWeight.w500,
+ color: _kMuted,
+ ),
+ ),
+ const SizedBox(height: 8),
+ Text(
+ 'Try adjusting your filters or search terms',
+ style: TextStyle(
+ fontSize: 14,
+ color: _kMuted,
+ ),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildTableRows() {
+ return Column(
+ children: [
+ for (var i = 0; i < _filteredDocuments.length; i++)
+ _buildTableRow(_filteredDocuments[i], i),
+ ],
+ );
+ }
+
+ Widget _buildTableRow(DocumentReviewItem doc, int index) {
+ final isEven = index.isEven;
+ return InkWell(
+ onTap: () => _showDocumentPreview(doc),
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+ decoration: BoxDecoration(
+ color: doc.isOverdue
+ ? Colors.red.withOpacity(0.05)
+ : (isEven ? Colors.white : const Color(0xFFF9FAFB)),
+ border: Border(
+ top: BorderSide(
+ color: const Color(0xFFE5E7EB),
+ width: index == 0 ? 1 : 0.5,
+ ),
+ ),
+ ),
+ child: Row(
+ children: [
+ SizedBox(
+ width: 50,
+ child: Center(
+ child: Text(
+ '${index + 1}',
+ style: const TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF9CA3AF),
+ ),
+ ),
+ ),
+ ),
+ Expanded(
+ flex: 2,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ doc.documentName,
+ style: TextStyle(
+ fontSize: 14,
+ fontWeight: FontWeight.w500,
+ color: _kHeadline,
+ ),
+ ),
+ if (doc.description.isNotEmpty)
+ Text(
+ doc.description,
+ style: TextStyle(
+ fontSize: 12,
+ color: _kMuted,
+ ),
+ maxLines: null,
+ softWrap: true,
+ overflow: TextOverflow.visible,
+ ),
+ ],
+ ),
+ ),
+ Expanded(child: Text(doc.phaseLabel, style: _cellStyle)),
+ Expanded(child: Text(doc.categoryLabel, style: _cellStyle)),
+ Expanded(child: _buildStatusChip(doc.status)),
+ Expanded(
+ child: Text(
+ doc.primaryReviewerName ?? 'Unassigned',
+ style: _cellStyle,
+ ),
+ ),
+ Expanded(
+ child: Text(
+ doc.finalApproverName ?? 'Unassigned',
+ style: _cellStyle,
+ ),
+ ),
+ Expanded(
+ child: Text(
+ doc.reviewDueDate != null
+ ? '${doc.reviewDueDate!.month}/${doc.reviewDueDate!.day}'
+ : '-',
+ style: _cellStyle.copyWith(
+ color: doc.isOverdue ? Colors.red : null,
+ ),
+ ),
+ ),
+ Expanded(
+ child: Center(
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+ decoration: BoxDecoration(
+ color: Colors.grey.withOpacity(0.1),
+ borderRadius: BorderRadius.circular(12),
+ ),
+ child: Text('v${doc.version}'),
+ ),
+ ),
+ ),
+ SizedBox(
+ width: 60,
+ child: Row(
+ mainAxisAlignment: MainAxisAlignment.center,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.visibility_outlined, size: 18),
+ onPressed: () => _showDocumentPreview(doc),
+ tooltip: 'Preview',
+ ),
+ PopupMenuButton<String>(
+ icon: const Icon(Icons.more_vert, size: 18),
+ onSelected: (action) => _handleMenuAction(action, doc),
+ itemBuilder: (context) => [
+ const PopupMenuItem(
+ value: 'assign',
+ child: Row(
+ children: [
+ Icon(Icons.person_add_outlined, size: 18),
+ SizedBox(width: 12),
+ Text('Assign Reviewer'),
+ ],
+ ),
+ ),
+ const PopupMenuItem(
+ value: 'approve',
+ child: Row(
+ children: [
+ Icon(Icons.check_circle_outline, size: 18),
+ SizedBox(width: 12),
+ Text('Approve'),
+ ],
+ ),
+ ),
+ const PopupMenuItem(
+ value: 'reject',
+ child: Row(
+ children: [
+ Icon(Icons.cancel_outlined, size: 18),
+ SizedBox(width: 12),
+ Text('Reject'),
+ ],
+ ),
+ ),
+ const PopupMenuItem(
+ value: 'request_changes',
+ child: Row(
+ children: [
+ Icon(Icons.edit_outlined, size: 18),
+ SizedBox(width: 12),
+ Text('Request Changes'),
+ ],
+ ),
+ ),
+ ],
+ ),
+ ],
+ ),
+ ),
  ],
  ),
  ),

@@ -959,8 +959,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(
  flex: 3,
  child: Text(item.description,
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
+ maxLines: null, softWrap: true, overflow: TextOverflow.visible,
  style: const TextStyle(
  fontSize: 11, color: Color(0xFF6B7280))),
  ),
@@ -1049,8 +1048,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(
  flex: 3,
  child: Text(item.detail,
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
+ maxLines: null, softWrap: true, overflow: TextOverflow.visible,
  style: const TextStyle(
  fontSize: 11, color: Color(0xFF6B7280))),
  ),
@@ -1241,8 +1239,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(
  flex: 3,
  child: Text(signal.description,
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
+ maxLines: null, softWrap: true, overflow: TextOverflow.visible,
  style: const TextStyle(
  fontSize: 11,
  color: Color(0xFF6B7280))),

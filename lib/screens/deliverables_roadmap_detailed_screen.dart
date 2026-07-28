@@ -402,11 +402,93 @@ class _DeliverablesRoadmapDetailedScreenState
  ),
  child: Column(
  children: [
- _buildTableHeader(),
- if (_filteredDeliverables.isEmpty)
- _buildEmptyState()
- else
- _buildTableRows(),
+ Icon(Icons.search_off, size: 64, color: _kMuted.withOpacity(0.5)),
+ const SizedBox(height: 16),
+ Text(
+ 'No deliverables found',
+ style: TextStyle(
+ fontSize: 18,
+ fontWeight: FontWeight.w500,
+ color: _kMuted,
+ ),
+ ),
+ const SizedBox(height: 8),
+ Text(
+ 'Try adjusting your filters or search terms',
+ style: TextStyle(
+ fontSize: 14,
+ color: _kMuted,
+ ),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildTableRows() {
+ return Column(
+ children: [
+ for (var i = 0; i < _filteredDeliverables.length; i++)
+ _buildTableRow(_filteredDeliverables[i], i),
+ ],
+ );
+ }
+
+ Widget _buildTableRow(AggregatedDeliverable deliverable, int index) {
+ final isEven = index.isEven;
+ return Container(
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+ decoration: BoxDecoration(
+ color: isEven ? Colors.white : const Color(0xFFF9FAFB),
+ border: Border(
+ top: BorderSide(
+ color: const Color(0xFFE5E7EB),
+ width: index == 0 ? 1 : 0.5,
+ ),
+ ),
+ ),
+ child: Row(
+ children: [
+ SizedBox(
+ width: 50,
+ child: Center(
+ child: Text(
+ '${index + 1}',
+ style: const TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF9CA3AF),
+ ),
+ ),
+ ),
+ ),
+ Expanded(
+ flex: 2,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ deliverable.title,
+ style: TextStyle(
+ fontSize: 14,
+ fontWeight: FontWeight.w500,
+ color: _kHeadline,
+ decoration: deliverable.isCompleted
+ ? TextDecoration.lineThrough
+ : null,
+ ),
+ ),
+ if (deliverable.description.isNotEmpty)
+ Text(
+ deliverable.description,
+ style: TextStyle(
+ fontSize: 12,
+ color: _kMuted,
+ ),
+ maxLines: null,
+ softWrap: true,
+ overflow: TextOverflow.visible,
+ ),
  ],
  ),
  ),

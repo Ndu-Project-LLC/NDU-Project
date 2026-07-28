@@ -870,6 +870,9 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  entries[i].lesson,
  style: cellStyle.copyWith(
  fontWeight: FontWeight.w600),
+  maxLines: null,
+  softWrap: true,
+  overflow: TextOverflow.visible,
  ),
  ),
  Expanded(

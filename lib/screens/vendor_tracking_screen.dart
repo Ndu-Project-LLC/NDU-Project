@@ -87,10 +87,325 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
             : baseRole;
     final hasProject = projectId != null && projectId.isNotEmpty;
 
-    return _VendorCrudPolicy.fromRole(
-      role: effectiveRole,
-      hasProject: hasProject,
-    );
+ return _PanelShell(
+ title: 'Risk signals',
+ subtitle: 'Active alerts and vendor watch items',
+ trailing: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ CsvTableImportButton(
+ compact: true,
+ tableTitle: 'Risk Signals',
+ columns: [
+ CsvColumnSpec(key: 'signal', label: 'Signal', required: true),
+ CsvColumnSpec(key: 'severity', label: 'Severity', allowedValues: ['Critical', 'High', 'Medium', 'Low'], defaultValue: 'Medium'),
+ CsvColumnSpec(key: 'description', label: 'Description'),
+ CsvColumnSpec(key: 'category', label: 'Category'),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Open', 'Monitoring', 'Mitigated', 'Closed'], defaultValue: 'Open'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _customSignalRows.add(_RiskSignalRow(
+ id: 'sig_${DateTime.now().millisecondsSinceEpoch}_${_customSignalRows.length}',
+ signal: row['signal'] ?? '',
+ description: row['description'] ?? '',
+ severity: row['severity'] ?? 'Medium',
+ category: row['category'] ?? '',
+ owner: row['owner'] ?? '',
+ source: 'Manual',
+ status: row['status'] ?? 'Open',
+ ));
+ }
+ });
+ },
+ ),
+ const SizedBox(width: 8),
+ TextButton.icon(
+ onPressed: () => _showSignalDialog(),
+ icon: const Icon(Icons.add_rounded, size: 16),
+ label: const Text('Add signal'),
+ style: TextButton.styleFrom(
+ foregroundColor: const Color(0xFF4154F1),
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+ ),
+ ),
+ ],
+ ),
+ child: StreamBuilder<List<VendorModel>>(
+ stream: VendorService.streamVendors(_projectId!),
+ builder: (context, snapshot) {
+ // Build auto-detected signals
+ final autoSignals = <_RiskSignalRow>[];
+ if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+ final vendors = snapshot.data!;
+ final atRiskCount = vendors.where((v) => v.status == 'At risk').length;
+ final watchCount = vendors.where((v) => v.status == 'Watch').length;
+ final lowSlaCount = vendors.where((v) {
+ final slaNum = double.tryParse(v.sla.replaceAll('%', '')) ?? 0;
+ return slaNum < 80;
+ }).length;
+
+ if (atRiskCount > 0) {
+ autoSignals.add(_RiskSignalRow(
+ id: 'auto_atrisk', signal: 'At-risk vendors',
+ description: '$atRiskCount vendor${atRiskCount > 1 ? 's' : ''} require immediate attention.',
+ severity: 'Critical', category: 'Vendor status',
+ owner: 'Vendor Manager', source: 'Auto-detected',
+ status: 'Open',
+ ));
+ }
+ if (watchCount > 0) {
+ autoSignals.add(_RiskSignalRow(
+ id: 'auto_watch', signal: 'Watchlist items',
+ description: '$watchCount vendor${watchCount > 1 ? 's' : ''} on watchlist.',
+ severity: 'High', category: 'Vendor status',
+ owner: 'Procurement Lead', source: 'Auto-detected',
+ status: 'Monitoring',
+ ));
+ }
+ if (lowSlaCount > 0) {
+ autoSignals.add(_RiskSignalRow(
+ id: 'auto_sla', signal: 'SLA breaches',
+ description: '$lowSlaCount vendor${lowSlaCount > 1 ? 's' : ''} below 80% SLA.',
+ severity: 'High', category: 'SLA performance',
+ owner: 'Operations Lead', source: 'Auto-detected',
+ status: 'Open',
+ ));
+ }
+ }
+
+ final allSignals = [...autoSignals, ..._customSignalRows];
+
+ if (allSignals.isEmpty) {
+ return Center(
+ child: Padding(
+ padding: const EdgeInsets.all(24.0),
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Icon(Icons.shield_outlined, size: 36, color: const Color(0xFF10B981).withOpacity(0.6)),
+ const SizedBox(height: 8),
+ const Text('No active risk signals', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w600)),
+ ],
+ ),
+ ),
+ );
+ }
+
+ return Column(
+ children: [
+ // Table header
+ Container(
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+ decoration: const BoxDecoration(
+ color: Color(0xFF1F2937),
+ borderRadius: BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
+ ),
+ child: const Row(
+ children: [
+ Expanded(flex: 3, child: Text('Signal', style: _perfHeaderStyle)),
+ Expanded(flex: 1, child: Text('Severity', style: _perfHeaderStyle)),
+ Expanded(flex: 2, child: Text('Category', style: _perfHeaderStyle)),
+ Expanded(flex: 2, child: Text('Owner', style: _perfHeaderStyle)),
+ Expanded(flex: 1, child: Text('Status', style: _perfHeaderStyle)),
+ Expanded(flex: 1, child: Text('', style: _perfHeaderStyle)),
+ ],
+ ),
+ ),
+ ...allSignals.asMap().entries.map((entry) {
+ final sig = entry.value;
+ final idx = entry.key;
+ final isAuto = sig.source == 'Auto-detected';
+ final sevColor = _severityColor(sig.severity);
+ final statusColor = _signalStatusColor(sig.status);
+
+ return Container(
+ margin: const EdgeInsets.only(bottom: 3),
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+ decoration: BoxDecoration(
+ color: idx.isEven ? Colors.white : const Color(0xFFFAFBFD),
+ borderRadius: BorderRadius.circular(6),
+ border: Border(
+ left: BorderSide(color: sevColor, width: 3),
+ top: BorderSide(color: const Color(0xFFF3F4F6)),
+ right: BorderSide(color: const Color(0xFFF3F4F6)),
+ bottom: BorderSide(color: const Color(0xFFF3F4F6)),
+ ),
+ ),
+ child: Column(
+ children: [
+ Row(
+ children: [
+ Expanded(
+ flex: 3,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(sig.signal, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+ Text(sig.description, style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)), maxLines: null, softWrap: true, overflow: TextOverflow.visible),
+ ],
+ ),
+ ),
+ Expanded(
+ flex: 1,
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+ decoration: BoxDecoration(color: sevColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+ child: Text(sig.severity, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: sevColor), textAlign: TextAlign.center),
+ ),
+ ),
+ Expanded(flex: 2, child: Text(sig.category, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)))),
+ Expanded(flex: 2, child: Text(sig.owner, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)))),
+ Expanded(
+ flex: 1,
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+ decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+ child: Text(sig.status, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: statusColor), textAlign: TextAlign.center),
+ ),
+ ),
+ Expanded(
+ flex: 1,
+ child: isAuto
+ ? const SizedBox.shrink()
+ : Row(mainAxisSize: MainAxisSize.min, children: [
+ InkWell(onTap: () => _showSignalDialog(existing: sig), child: const Icon(Icons.edit_outlined, size: 14, color: Color(0xFF6B7280))),
+ const SizedBox(width: 4),
+ InkWell(onTap: () => _removeSignal(sig.id), child: const Icon(Icons.delete_outline, size: 14, color: Color(0xFFEF4444))),
+ ]),
+ ),
+ ],
+ ),
+ ],
+ ),
+ );
+ }),
+ if (_customSignalRows.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(top: 6),
+ child: Text('${_customSignalRows.length} custom signal${_customSignalRows.length != 1 ? 's' : ''}',
+ style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+ ),
+ ],
+ );
+ },
+ ),
+ );
+ }
+
+ Color _severityColor(String sev) {
+ switch (sev.toLowerCase()) {
+ case 'critical': return const Color(0xFFDC2626);
+ case 'high': return const Color(0xFFEA580C);
+ case 'medium': return const Color(0xFFD97706);
+ case 'low': return const Color(0xFF059669);
+ default: return const Color(0xFF6B7280);
+ }
+ }
+
+ Color _signalStatusColor(String status) {
+ switch (status.toLowerCase()) {
+ case 'open': return const Color(0xFFDC2626);
+ case 'monitoring': return const Color(0xFFD97706);
+ case 'mitigated': return const Color(0xFF059669);
+ case 'closed': return const Color(0xFF9CA3AF);
+ default: return const Color(0xFF6B7280);
+ }
+ }
+
+ void _showSignalDialog({_RiskSignalRow? existing}) {
+ final isEdit = existing != null;
+ final signalCtl = TextEditingController(text: existing?.signal ?? '');
+ final descCtl = TextEditingController(text: existing?.description ?? '');
+ final ownerCtl = TextEditingController(text: existing?.owner ?? '');
+ final catCtl = TextEditingController(text: existing?.category ?? '');
+ String severity = existing?.severity ?? 'Medium';
+ String status = existing?.status ?? 'Open';
+
+ showDialog(
+ context: context,
+ builder: (ctx) => StatefulBuilder(
+ builder: (ctx, setDState) => AlertDialog(
+ title: Row(children: [
+ Icon(isEdit ? Icons.edit_outlined : Icons.warning_amber_rounded, size: 20, color: const Color(0xFF4154F1)),
+ const SizedBox(width: 8),
+ Text(isEdit ? 'Edit Risk Signal' : 'Add Risk Signal', style: const TextStyle(fontSize: 16)),
+ ]),
+ content: SingleChildScrollView(
+ child: SizedBox(
+ width: 480,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ VoiceTextField(controller: signalCtl, decoration: const InputDecoration(labelText: 'Signal name', isDense: true, border: OutlineInputBorder())),
+ const SizedBox(height: 12),
+ VoiceTextField(controller: descCtl, decoration: const InputDecoration(labelText: 'Description', isDense: true, border: OutlineInputBorder()), maxLines: 2),
+ const SizedBox(height: 12),
+ Row(children: [
+ Expanded(child: DropdownButtonFormField<String>(
+ value: severity,
+ decoration: const InputDecoration(labelText: 'Severity', isDense: true, border: OutlineInputBorder()),
+ items: ['Critical', 'High', 'Medium', 'Low'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+ onChanged: (v) { if (v != null) setDState(() => severity = v); },
+ )),
+ const SizedBox(width: 12),
+ Expanded(child: DropdownButtonFormField<String>(
+ value: status,
+ decoration: const InputDecoration(labelText: 'Status', isDense: true, border: OutlineInputBorder()),
+ items: ['Open', 'Monitoring', 'Mitigated', 'Closed'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+ onChanged: (v) { if (v != null) setDState(() => status = v); },
+ )),
+ ]),
+ const SizedBox(height: 12),
+ Row(children: [
+ Expanded(child: VoiceTextField(controller: ownerCtl, decoration: const InputDecoration(labelText: 'Owner', isDense: true, border: OutlineInputBorder()))),
+ const SizedBox(width: 12),
+ Expanded(child: VoiceTextField(controller: catCtl, decoration: const InputDecoration(labelText: 'Category', isDense: true, border: OutlineInputBorder()))),
+ ]),
+ ],
+ ),
+ ),
+ ),
+ actions: [
+ TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
+ FilledButton(
+ onPressed: () {
+ final row = _RiskSignalRow(
+ id: existing?.id ?? 'sig_${DateTime.now().millisecondsSinceEpoch}',
+ signal: signalCtl.text.trim(),
+ description: descCtl.text.trim(),
+ severity: severity,
+ category: catCtl.text.trim(),
+ owner: ownerCtl.text.trim(),
+ source: 'Manual',
+ status: status,
+ );
+ setState(() {
+ if (isEdit) {
+ final idx = _customSignalRows.indexWhere((r) => r.id == row.id);
+ if (idx != -1) _customSignalRows[idx] = row;
+ } else {
+ _customSignalRows.add(row);
+ }
+ });
+ Navigator.of(ctx).pop();
+ },
+ style: FilledButton.styleFrom(backgroundColor: const Color(0xFF4154F1), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+ child: Text(isEdit ? 'Save' : 'Add'),
+ ),
+ ],
+ ),
+ ),
+ );
+ }
+
+  void _removeSignal(String id) async {
+  final ok = await launchConfirmDelete(context, itemName: 'risk signal');
+  if (!ok) return;
+  setState(() => _customSignalRows.removeWhere((r) => r.id == id));
   }
 
   @override

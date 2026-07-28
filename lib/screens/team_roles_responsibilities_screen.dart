@@ -1146,6 +1146,317 @@ class _TeamRolesResponsibilitiesScreenState
  }
  }
 
+ // ── View toggle button ───────────────────────────────────────────
+ Widget _viewToggleBtn(String label, bool active, VoidCallback onTap) {
+ return InkWell(
+ onTap: onTap,
+ borderRadius: BorderRadius.circular(8),
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+ decoration: BoxDecoration(
+ color: active ? const Color(0xFFF59E0B) : Colors.transparent,
+ borderRadius: BorderRadius.circular(8),
+ ),
+ child: Text(
+ label,
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: active ? Colors.white : const Color(0xFF6B7280),
+ ),
+ ),
+ ),
+ );
+ }
+
+ Widget _iconActionBtn(IconData icon, String tooltip, VoidCallback onTap) {
+ return Tooltip(
+ message: tooltip,
+ child: InkWell(
+ onTap: onTap,
+ borderRadius: BorderRadius.circular(8),
+ child: Container(
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+ decoration: BoxDecoration(
+ color: const Color(0xFFF3F4F6),
+ borderRadius: BorderRadius.circular(8),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Icon(icon, size: 18, color: const Color(0xFF6B7280)),
+ ),
+ ),
+ );
+ }
+
+ // ── Roles Table View ──────────────────────────────────────────────
+  Widget _buildRolesTableView(List<QueryDocumentSnapshot> docs, double maxWidth) {
+    final provider = ProjectDataInherited.maybeOf(context);
+    final projectId = provider?.projectData.projectId ?? '';
+  final roles = docs.map((doc) {
+ final data = _RoleCardData.fromMap(
+ (doc.data() as Map).cast<String, dynamic>());
+ return (doc: doc, data: data);
+ }).toList();
+
+ final tableWidth = maxWidth > 1200 ? maxWidth : 1200.0;
+
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: BoxConstraints(minWidth: tableWidth),
+ child: SingleChildScrollView(
+ child: DataTable(
+                    dataRowMaxHeight: double.infinity,
+ headingRowColor: MaterialStateProperty.all(const Color(0xFFF8FAFC)),
+ border: TableBorder.all(color: const Color(0xFFE5E7EB), width: 1),
+ columnSpacing: 20,
+ horizontalMargin: 16,
+ columns: const [
+ DataColumn(label: Text('Role / Position', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF374151)))),
+ DataColumn(label: Text('Discipline', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF374151)))),
+ DataColumn(label: Text('Qty', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF374151))), numeric: true),
+ DataColumn(label: Text('Description', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF374151)))),
+ DataColumn(label: Text('Name', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF374151)))),
+ DataColumn(label: Text('Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF374151)))),
+ ],
+ rows: roles.map((entry) {
+ final data = entry.data;
+ final doc = entry.doc;
+ final desc = data.responsibilities.isNotEmpty ? data.responsibilities.first : '';
+ return DataRow(cells: [
+ DataCell(Text(data.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
+ DataCell(Text(data.subtitle, style: const TextStyle(fontSize: 13))),
+  DataCell(_InlineQtyEditor(
+  initialQty: data.quantity,
+  onChanged: (newQty) {
+  if (newQty > 0 && newQty != data.quantity) {
+  _rolesCollection(projectId).doc(doc.id).update({'quantity': newQty});
+  }
+  },
+  )),
+ DataCell(Text(desc, style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)), maxLines: null, softWrap: true, overflow: TextOverflow.visible)),
+ DataCell(Text(data.fullName, style: const TextStyle(fontSize: 13))),
+ DataCell(Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF5B6572)),
+ onPressed: () => _showMemberDialog(existingId: doc.id, existingData: data),
+ tooltip: 'Edit',
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFD64545)),
+ onPressed: () => _confirmDeleteMember(doc.id, data.title),
+ tooltip: 'Delete',
+ ),
+ ],
+ )),
+ ]);
+ }).toList(),
+ ),
+ ),
+ ),
+ );
+ }
+
+ // ── CSV Template Download ─────────────────────────────────────────
+ void _downloadRolesTemplate() {
+ final headers = ['Role / Position', 'Discipline', 'Quantity', 'Description'];
+ final sb = StringBuffer();
+ sb.writeln(headers.join(','));
+ for (final role in _standardRoles) {
+ sb.writeln('"${role.title}","${role.discipline}",0,"${role.description}"');
+ }
+ final csv = sb.toString();
+ // Use download helper
+ try {
+ dl.downloadFile(csv.codeUnits, 'roles_responsibilities_template.csv', mimeType: 'text/csv');
+ } catch (_) {
+ // Fallback: copy to clipboard
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(content: Text('Template generated. Copy from console.')),
+ );
+ debugPrint(csv);
+ }
+ }
+
+  // ── CSV Import (Standardized) ─────────────────────────────────────
+  /// Handles import from the standardized CsvTableImportButton widget.
+  /// Rows are already validated and mapped to column keys.
+  Future<void> _importRolesFromCsv(List<Map<String, String>> rows) async {
+    final provider = ProjectDataInherited.maybeOf(context);
+    final projectId = provider?.projectData.projectId;
+    if (projectId == null || projectId.isEmpty) return;
+
+    int added = 0;
+    for (final row in rows) {
+      final title = row['title']?.trim() ?? '';
+      if (title.isEmpty) continue;
+
+      final responsibilitiesStr = row['responsibilities']?.trim() ?? '';
+      final responsibilities = responsibilitiesStr.isNotEmpty
+          ? responsibilitiesStr.split(';').map((r) => r.trim()).where((r) => r.isNotEmpty).toList()
+          : <String>[];
+
+      final qtyStr = row['quantity']?.trim() ?? '1';
+      final quantity = int.tryParse(qtyStr) ?? 1;
+
+      final data = _RoleCardData(
+        title: title,
+        subtitle: row['subtitle']?.trim() ?? 'General',
+        responsibilities: responsibilities,
+        workItems: [],
+        fullName: row['fullName']?.trim() ?? '',
+        department: row['department']?.trim() ?? '',
+        employmentType: row['employmentType']?.trim() ?? 'Full Time',
+        category: row['category']?.trim() ?? 'Employee',
+        accessLevel: row['accessLevel']?.trim() ?? 'Full access',
+        teamPlacement: row['teamPlacement']?.trim() ?? 'Core team',
+        quantity: quantity,
+      );
+      await _rolesCollection(projectId).add(data.toMap());
+      added++;
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: added > 0
+            ? Text('$added role${added == 1 ? "" : "s"} imported successfully.')
+            : const Text('No valid roles found in import.'),
+        backgroundColor: added > 0 ? const Color(0xFF10B981) : const Color(0xFFD97706),
+      ),
+    );
+  }
+
+  // ── Legacy CSV Import (kept for backward compatibility) ────────────
+  Future<void> _importRolesCsv() async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) return;
+
+      final file = result.files.first;
+      final bytes = file.bytes;
+      if (bytes == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not read file.'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
+        );
+        return;
+      }
+
+      final csv = utf8.decode(bytes);
+      final lines = csv.split(RegExp(r'[\r\n]+')).where((l) => l.trim().isNotEmpty).toList();
+      if (lines.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('CSV file is empty.'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
+        );
+        return;
+      }
+
+      // Parse header row to find column indices
+      final headers = _parseCsvRow(lines.first);
+      final titleIdx = headers.indexWhere((h) => h.toLowerCase().contains('role') || h.toLowerCase().contains('position'));
+      final disciplineIdx = headers.indexWhere((h) => h.toLowerCase().contains('discipline'));
+      final qtyIdx = headers.indexWhere((h) => h.toLowerCase().contains('quant') || h.toLowerCase().contains('qty') || h.toLowerCase().contains('headcount'));
+      final descIdx = headers.indexWhere((h) => h.toLowerCase().contains('description') || h.toLowerCase().contains('responsibilities'));
+
+      if (titleIdx == -1) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('CSV must have a "Role / Position" column.'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
+        );
+        return;
+      }
+
+      final provider = ProjectDataInherited.maybeOf(context);
+      final projectId = provider?.projectData.projectId;
+      if (projectId == null || projectId.isEmpty) return;
+
+      int added = 0;
+      for (var i = 1; i < lines.length; i++) {
+        final row = _parseCsvRow(lines[i]);
+        if (row.length <= titleIdx) continue;
+        final title = row[titleIdx].trim();
+        if (title.isEmpty) continue;
+
+        final discipline = disciplineIdx >= 0 && disciplineIdx < row.length
+            ? row[disciplineIdx].trim()
+            : 'General';
+        final description = descIdx >= 0 && descIdx < row.length
+            ? row[descIdx].trim()
+            : '';
+        final qty = qtyIdx >= 0 && qtyIdx < row.length
+            ? int.tryParse(row[qtyIdx].trim()) ?? 0
+            : 0;
+
+        if (qty <= 0) continue;
+
+        final data = _RoleCardData(
+          title: title,
+          subtitle: discipline,
+          responsibilities: description.isNotEmpty ? [description] : [],
+          workItems: [],
+          quantity: qty,
+        );
+        await _rolesCollection(projectId).add(data.toMap());
+        added++;
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: added > 0
+              ? Text('$added role${added == 1 ? "" : "s"} imported from CSV.')
+              : const Text('No valid roles found in CSV. Ensure quantities > 0.'),
+          backgroundColor: added > 0 ? const Color(0xFF10B981) : const Color(0xFFD97706),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error importing CSV: $e'),
+          backgroundColor: const Color(0xFFEF4444),
+        ),
+      );
+    }
+  }
+
+  /// Parses a CSV row handling quoted fields.
+  List<String> _parseCsvRow(String line) {
+    final result = <String>[];
+    bool inQuotes = false;
+    final current = StringBuffer();
+    for (var i = 0; i < line.length; i++) {
+      final char = line[i];
+      if (char == '"') {
+        inQuotes = !inQuotes;
+      } else if (char == ',' && !inQuotes) {
+        result.add(current.toString().trim());
+        current.clear();
+      } else {
+        current.write(char);
+      }
+    }
+    result.add(current.toString().trim());
+    return result;
+  }
+
  Future<void> _exportPdf() async {
  final projectData = ProjectDataHelper.getData(context);
  await PdfExportHelper.exportScreenPdf(

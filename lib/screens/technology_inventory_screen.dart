@@ -224,10 +224,20 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  ],
  rows: _items.map((it) {
  return DataRow(cells: [
- DataCell(Center(child: Text(it['name'] ?? ''))),
+ DataCell(Center(child: Text(it['name'] ?? '', maxLines: null, softWrap: true, overflow: TextOverflow.visible))),
  DataCell(
- Center(child: Text(it['category'] ?? ''))),
- DataCell(Center(child: Text(it['notes'] ?? ''))),
+ Center(child: Text(it['category'] ?? '', maxLines: null, softWrap: true, overflow: TextOverflow.visible))),
+ DataCell(
+                                      SizedBox(
+                                        width: 200,
+                                        child: Text(
+                                          it['notes'] ?? '',
+                                          maxLines: null,
+                                          softWrap: true,
+                                          overflow: TextOverflow.visible,
+                                        ),
+                                      ),
+                                    ),
  ]);
  }).toList(),
  ),

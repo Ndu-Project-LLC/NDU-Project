@@ -1057,6 +1057,7 @@ class _PreferredSolutionAnalysisScreenState
         builder: (_) => ITConsiderationsScreen(
           notes: _notesController.text,
           solutions: _solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -1069,6 +1070,7 @@ class _PreferredSolutionAnalysisScreenState
         builder: (_) => InfrastructureConsiderationsScreen(
           notes: _notesController.text,
           solutions: _solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -1081,6 +1083,7 @@ class _PreferredSolutionAnalysisScreenState
         builder: (_) => CoreStakeholdersScreen(
           notes: _notesController.text,
           solutions: _solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -1093,6 +1096,7 @@ class _PreferredSolutionAnalysisScreenState
         builder: (_) => CostAnalysisScreen(
           notes: _notesController.text,
           solutions: _solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -1105,6 +1109,7 @@ class _PreferredSolutionAnalysisScreenState
         builder: (_) => CostAnalysisScreen(
           notes: _notesController.text,
           solutions: _solutions,
+          businessCase: widget.businessCase,
           initialStepIndex: 1,
           initialSolutionIndex: index,
         ),

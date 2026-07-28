@@ -256,6 +256,7 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
 
                 // Email
                 VoiceTextFormField(
+        enableVoice: false,
         enableKazAi: false,
         enableTextFormatting: false,
                   controller: _emailController,

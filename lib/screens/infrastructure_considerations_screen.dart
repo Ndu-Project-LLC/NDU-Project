@@ -52,8 +52,9 @@ class _InfrastructureAutoFillPreviewRow {
 class InfrastructureConsiderationsScreen extends StatefulWidget {
  final String notes;
  final List<AiSolutionItem> solutions;
+ final String businessCase;
  const InfrastructureConsiderationsScreen(
- {super.key, required this.notes, required this.solutions});
+ {super.key, required this.notes, required this.solutions, this.businessCase = ''});
 
  @override
  State<InfrastructureConsiderationsScreen> createState() =>
@@ -1055,68 +1056,70 @@ class _InfrastructureConsiderationsScreenState
  builder: (_) => const PotentialSolutionsScreen(),
  ),
  );
- }
+ }  void _openRiskIdentification() {
+  Navigator.push(
+  context,
+  MaterialPageRoute(
+  builder: (_) => RiskIdentificationScreen(
+  notes: _notesController.text,
+  solutions: widget.solutions,
+  businessCase: widget.businessCase,
+  ),
+  ),
+  );
+  }
 
- void _openRiskIdentification() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => RiskIdentificationScreen(
- notes: _notesController.text,
- solutions: widget.solutions,
- ),
- ),
- );
- }
+  void _openITConsiderations() {
+  Navigator.push(
+  context,
+  MaterialPageRoute(
+  builder: (_) => ITConsiderationsScreen(
+  notes: _notesController.text,
+  solutions: widget.solutions,
+  businessCase: widget.businessCase,
+  ),
+  ),
+  );
+  }
 
- void _openITConsiderations() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => ITConsiderationsScreen(
- notes: _notesController.text,
- solutions: widget.solutions,
- ),
- ),
- );
- }
+  void _openCoreStakeholders() {
+  Navigator.push(
+  context,
+  MaterialPageRoute(
+  builder: (_) => CoreStakeholdersScreen(
+  notes: _notesController.text,
+  solutions: widget.solutions,
+  businessCase: widget.businessCase,
+  ),
+  ),
+  );
+  }
 
- void _openCoreStakeholders() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => CoreStakeholdersScreen(
- notes: _notesController.text,
- solutions: widget.solutions,
- ),
- ),
- );
- }
+  void _openCostAnalysis() {
+  Navigator.push(
+  context,
+  MaterialPageRoute(
+  builder: (_) => CostAnalysisScreen(
+  notes: _notesController.text,
+  solutions: widget.solutions,
+  businessCase: widget.businessCase,
+  ),
+  ),
+  );
+  }
 
- void _openCostAnalysis() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => CostAnalysisScreen(
- notes: _notesController.text,
- solutions: widget.solutions,
- ),
- ),
- );
- }
-
- void _openPreferredSolutionAnalysis() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => PreferredSolutionAnalysisScreen(
- notes: _notesController.text,
- solutions: widget.solutions,
- businessCase: '',
- ),
- ),
- );
- }
+  void _openPreferredSolutionAnalysis() {
+  Navigator.push(
+  context,
+  MaterialPageRoute(
+  builder: (_) => PreferredSolutionAnalysisScreen(
+  notes: _notesController.text,
+  solutions: widget.solutions,
+  businessCase: widget.businessCase,
+  ),
+  ),
+  );
+  }
 
  Widget _buildMainContent() {
  final isMobile = AppBreakpoints.isMobile(context);

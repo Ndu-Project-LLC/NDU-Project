@@ -135,6 +135,7 @@ class _MobileForgotPasswordScreenState
 
                 // Email
                 VoiceTextFormField(
+        enableVoice: false,
         enableKazAi: false,
         enableTextFormatting: false,
                   controller: _emailController,

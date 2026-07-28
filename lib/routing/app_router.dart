@@ -305,7 +305,7 @@ class AppRouter {
   static final GoRouter main = GoRouter(
     debugLogDiagnostics: kDebugMode,
     initialLocation: PlatformRouter.getInitialRoute(),
-    redirect: (context, state) {
+    redirect: (context, state) async {
       // Enforce admin-host policy if a user is present
       User? user;
       try {

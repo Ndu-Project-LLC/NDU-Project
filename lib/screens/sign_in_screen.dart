@@ -99,14 +99,12 @@ class _SignInScreenState extends State<SignInScreen> {
         // Sign out first so the user can't access protected routes
         // without completing 2FA. They'll re-authenticate after verification.
         final policy = await TwoFactorAuthService.loadPolicy();
-        final twoFactorEnabled = await TwoFactorAuthService.isEnabled();
         final trustedDevice = await TwoFactorAuthService.isTrustedDevice(
           refreshed.uid,
           rememberDays: policy.rememberDeviceDays,
         );
         if (!mounted) return;
         final requiresMfa = policy.mfaEnabled &&
-            twoFactorEnabled &&
             !_isGoogleProvider(refreshed) &&
             (!policy.requireMfaNewDeviceOnly || !trustedDevice);
         if (requiresMfa) {
@@ -376,6 +374,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         SizedBox(
                           height: 54,
                           child: VoiceTextField(
+                            enableVoice: false,
                             enableKazAi: false,
                             enableTextFormatting: false,
                             controller: _emailController,

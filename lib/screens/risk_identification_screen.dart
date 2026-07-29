@@ -1334,6 +1334,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         builder: (_) => ITConsiderationsScreen(
           notes: _notesController.text,
           solutions: _solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -1346,6 +1347,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         builder: (_) => InfrastructureConsiderationsScreen(
           notes: _notesController.text,
           solutions: _solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -1358,6 +1360,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         builder: (_) => CoreStakeholdersScreen(
           notes: _notesController.text,
           solutions: _solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -1370,6 +1373,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         builder: (_) => CostAnalysisScreen(
           notes: _notesController.text,
           solutions: _solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );

@@ -974,33 +974,35 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  final projectData = provider.projectData;
 
  Widget? screen;
- switch (checkpoint) {
- case 'core_stakeholders':
- screen = CoreStakeholdersScreen(
- notes: projectData.coreStakeholdersData?.notes ?? projectData.notes,
- solutions: projectData.potentialSolutions
- .map((s) =>
- AiSolutionItem(title: s.title, description: s.description))
- .toList(),
- );
- break;
- case 'it_considerations':
- screen = ITConsiderationsScreen(
- notes: projectData.itConsiderationsData?.notes ?? projectData.notes,
- solutions: projectData.potentialSolutions
- .map((s) =>
- AiSolutionItem(title: s.title, description: s.description))
- .toList(),
- );
- break;
- case 'infrastructure_considerations':
- screen = InfrastructureConsiderationsScreen(
- notes: projectData.infrastructureConsiderationsData?.notes ??
- projectData.notes,
- solutions: projectData.potentialSolutions
- .map((s) =>
- AiSolutionItem(title: s.title, description: s.description))
- .toList(),
+ switch (checkpoint) {  case 'core_stakeholders':
+  screen = CoreStakeholdersScreen(
+  notes: projectData.coreStakeholdersData?.notes ?? projectData.notes,
+  solutions: projectData.potentialSolutions
+  .map((s) =>
+  AiSolutionItem(title: s.title, description: s.description))
+  .toList(),
+  businessCase: projectData.businessCase,
+  );
+  break;
+  case 'it_considerations':
+  screen = ITConsiderationsScreen(
+  notes: projectData.itConsiderationsData?.notes ?? projectData.notes,
+  solutions: projectData.potentialSolutions
+  .map((s) =>
+  AiSolutionItem(title: s.title, description: s.description))
+  .toList(),
+  businessCase: projectData.businessCase,
+  );
+  break;
+  case 'infrastructure_considerations':
+  screen = InfrastructureConsiderationsScreen(
+  notes: projectData.infrastructureConsiderationsData?.notes ??
+  projectData.notes,
+  solutions: projectData.potentialSolutions
+  .map((s) =>
+  AiSolutionItem(title: s.title, description: s.description))
+  .toList(),
+  businessCase: projectData.businessCase,
  );
  break;
  }
@@ -2214,63 +2216,65 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  alignment: 0.1,
  );
  }
- }
+ }  void _openITConsiderations() {
+    _requireBusinessCaseBefore('IT Considerations', () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ITConsiderationsScreen(
+            notes: _notesController.text.trim(),
+            solutions: const [],
+            businessCase: _businessCaseController.text.trim(),
+          ),
+        ),
+      );
+    });
+  }
 
- void _openITConsiderations() {
- _requireBusinessCaseBefore('IT Considerations', () {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => ITConsiderationsScreen(
- notes: _notesController.text.trim(),
- solutions: const [],
- ),
- ),
- );
- });
- }
+  void _openInfrastructureConsiderations() {
+    _requireBusinessCaseBefore('Infrastructure Considerations', () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => InfrastructureConsiderationsScreen(
+            notes: _notesController.text.trim(),
+            solutions: const [],
+            businessCase: _businessCaseController.text.trim(),
+          ),
+        ),
+      );
+    });
+  }
 
- void _openInfrastructureConsiderations() {
- _requireBusinessCaseBefore('Infrastructure Considerations', () {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => InfrastructureConsiderationsScreen(
- notes: _notesController.text.trim(),
- solutions: const [],
- ),
- ),
- );
- });
- }
+  void _openCoreStakeholders() {
+    _requireBusinessCaseBefore('Core Stakeholders', () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CoreStakeholdersScreen(
+            notes: _notesController.text.trim(),
+            solutions: const [],
+            businessCase: _businessCaseController.text.trim(),
+          ),
+        ),
+      );
+    });
+  }
 
- void _openCoreStakeholders() {
- _requireBusinessCaseBefore('Core Stakeholders', () {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => CoreStakeholdersScreen(
- notes: _notesController.text.trim(),
- solutions: const [],
- ),
- ),
- );
- });
- }
-
- void _openCostAnalysis() {
- _requireBusinessCaseBefore('Initial Cost Estimate', () {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => CostAnalysisScreen(
- notes: _notesController.text.trim(),
- solutions: const [],
- ),
- ),
- );
- });
- }
+  void _openCostAnalysis() {
+    _requireBusinessCaseBefore('Initial Cost Estimate', () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CostAnalysisScreen(
+            notes: _notesController.text.trim(),
+            solutions: const [],
+            businessCase: _businessCaseController.text.trim(),
+          ),
+        ),
+      );
+    });
+  }
 
  void _openPreferredSolutionAnalysis() {
  _requireBusinessCaseBefore('Preferred Solution Analysis', () {

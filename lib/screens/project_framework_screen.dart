@@ -1725,10 +1725,10 @@ class _MobileGoalsSection extends StatelessWidget {
             canUndoDesc: canUndoField('goal_desc_${goals[i].id}'),
             canRedoDesc: canRedoField('goal_desc_${goals[i].id}'),
             onRegenerateDesc: () => regenerateGoalDesc(goals[i].id),
-            onUndoDesc: () => undoField(
-                'goal_desc_${goals[i].id}', goals[i].controller),
-            onRedoDesc: () => redoField(
-                'goal_desc_${goals[i].id}', goals[i].controller),
+            onUndoDesc: () =>
+                undoField('goal_desc_${goals[i].id}', goals[i].controller),
+            onRedoDesc: () =>
+                redoField('goal_desc_${goals[i].id}', goals[i].controller),
           ),
         ),
     ];
@@ -1754,7 +1754,7 @@ class _MobileGoalsSection extends StatelessWidget {
                   ),
                   SizedBox(height: 2),
                   Text(
-                    'Define up to three key project goals that will serve as the basis for developing the Work Breakdown Structure (WBS).',
+                    'three key project goals that will serve as the basis for developing the Work Breakdown Structure (WBS).',
                     style: TextStyle(
                         fontSize: 11,
                         color: _Tokens.onSurfaceVariant,
@@ -1776,8 +1776,8 @@ class _MobileGoalsSection extends StatelessWidget {
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.add, size: 16,
-                          color: _Tokens.primaryOnContainer),
+                      Icon(Icons.add,
+                          size: 16, color: _Tokens.primaryOnContainer),
                       SizedBox(width: 4),
                       Text(
                         'Add Goal',

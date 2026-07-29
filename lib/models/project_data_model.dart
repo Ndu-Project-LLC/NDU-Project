@@ -289,6 +289,13 @@ class ProjectDataModel {
   // Preferred Solution Reference
   String? preferredSolutionId;
 
+  // Project Location & Classification
+  String country = '';
+  String location = '';
+  String city = '';
+  String projectCategory = '';
+  String projectIndustry = '';
+
   ProjectDataModel({
     this.projectName = '',
     this.solutionTitle = '',
@@ -393,6 +400,11 @@ class ProjectDataModel {
     this.launchPhaseData,
     String? costBenefitCurrency,
     this.preferredSolutionId,
+    this.country = '',
+    this.location = '',
+    this.city = '',
+    this.projectCategory = '',
+    this.projectIndustry = '',
     List<PlanningDashboardItem>? withinScopeItems,
     List<PlanningDashboardItem>? outOfScopeItems,
     List<PlanningDashboardItem>? assumptionItems,
@@ -610,6 +622,11 @@ class ProjectDataModel {
     Map<String, FieldHistory>? fieldHistories,
     String? costBenefitCurrency,
     String? preferredSolutionId,
+    String? country,
+    String? location,
+    String? city,
+    String? projectCategory,
+    String? projectIndustry,
     List<StakeholderEntry>? stakeholderEntries,
     List<EngagementPlanEntry>? engagementPlanEntries,
     QualityManagementData? qualityManagementData,
@@ -797,6 +814,11 @@ class ProjectDataModel {
       fieldHistories: fieldHistories ?? this.fieldHistories,
       costBenefitCurrency: costBenefitCurrency ?? this.costBenefitCurrency,
       preferredSolutionId: preferredSolutionId ?? this.preferredSolutionId,
+      country: country ?? this.country,
+      location: location ?? this.location,
+      city: city ?? this.city,
+      projectCategory: projectCategory ?? this.projectCategory,
+      projectIndustry: projectIndustry ?? this.projectIndustry,
       stakeholderEntries: stakeholderEntries ?? this.stakeholderEntries,
       engagementPlanEntries:
           engagementPlanEntries ?? this.engagementPlanEntries,
@@ -1002,6 +1024,11 @@ class ProjectDataModel {
       ),
       'costBenefitCurrency': costBenefitCurrency,
       'preferredSolutionId': preferredSolutionId,
+      'country': country,
+      'location': location,
+      'city': city,
+      'projectCategory': projectCategory,
+      'projectIndustry': projectIndustry,
       'stakeholderEntries': stakeholderEntries.map((e) => e.toJson()).toList(),
       'engagementPlanEntries': engagementPlanEntries
           .map((e) => e.toJson())
@@ -1434,6 +1461,11 @@ class ProjectDataModel {
           : {},
       costBenefitCurrency: json['costBenefitCurrency']?.toString() ?? 'USD',
       preferredSolutionId: json['preferredSolutionId']?.toString(),
+      country: json['country']?.toString() ?? '',
+      location: json['location']?.toString() ?? '',
+      city: json['city']?.toString() ?? '',
+      projectCategory: json['projectCategory']?.toString() ?? '',
+      projectIndustry: json['projectIndustry']?.toString() ?? '',
       stakeholderEntries:
           (json['stakeholderEntries'] as List?)
               ?.map((e) => StakeholderEntry.fromJson(e))

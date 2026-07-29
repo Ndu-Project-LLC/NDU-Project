@@ -1373,63 +1373,65 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  ),
  );
- }
+ }  void _openITConsiderations() {
+    final notes = _notesController.text.trim();
+    final solutions = _collectSolutions();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ITConsiderationsScreen(
+          notes: notes,
+          solutions: solutions,
+          businessCase: _incomingBusinessCase,
+        ),
+      ),
+    );
+  }
 
- void _openITConsiderations() {
- final notes = _notesController.text.trim();
- final solutions = _collectSolutions();
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => ITConsiderationsScreen(
- notes: notes,
- solutions: solutions,
- ),
- ),
- );
- }
+  void _openInfrastructureConsiderations() {
+    final notes = _notesController.text.trim();
+    final solutions = _collectSolutions();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => InfrastructureConsiderationsScreen(
+          notes: notes,
+          solutions: solutions,
+          businessCase: _incomingBusinessCase,
+        ),
+      ),
+    );
+  }
 
- void _openInfrastructureConsiderations() {
- final notes = _notesController.text.trim();
- final solutions = _collectSolutions();
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => InfrastructureConsiderationsScreen(
- notes: notes,
- solutions: solutions,
- ),
- ),
- );
- }
+  void _openCoreStakeholders() {
+    final notes = _notesController.text.trim();
+    final solutions = _collectSolutions();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CoreStakeholdersScreen(
+          notes: notes,
+          solutions: solutions,
+          businessCase: _incomingBusinessCase,
+        ),
+      ),
+    );
+  }
 
- void _openCoreStakeholders() {
- final notes = _notesController.text.trim();
- final solutions = _collectSolutions();
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => CoreStakeholdersScreen(
- notes: notes,
- solutions: solutions,
- ),
- ),
- );
- }
-
- void _openCostAnalysis() {
- final notes = _notesController.text.trim();
- final solutions = _collectSolutions();
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => CostAnalysisScreen(
- notes: notes,
- solutions: solutions,
- ),
- ),
- );
- }
+  void _openCostAnalysis() {
+    final notes = _notesController.text.trim();
+    final solutions = _collectSolutions();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CostAnalysisScreen(
+          notes: notes,
+          solutions: solutions,
+          businessCase: _incomingBusinessCase,
+        ),
+      ),
+    );
+  }
 
  void _openPreferredSolutionAnalysis() {
  final notes = _notesController.text.trim();

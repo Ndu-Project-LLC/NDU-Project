@@ -50,13 +50,12 @@ class _StakeholderAutoFillPreviewRow {
  final String title;
  final List<String> internalItems;
  final List<String> externalItems;
-}
-
-class CoreStakeholdersScreen extends StatefulWidget {
- final String notes;
- final List<AiSolutionItem> solutions;
- const CoreStakeholdersScreen(
- {super.key, required this.notes, required this.solutions});
+}class CoreStakeholdersScreen extends StatefulWidget {
+  final String notes;
+  final List<AiSolutionItem> solutions;
+  final String businessCase;
+  const CoreStakeholdersScreen(
+      {super.key, required this.notes, required this.solutions, this.businessCase = ''});
 
  @override
  State<CoreStakeholdersScreen> createState() => _CoreStakeholdersScreenState();
@@ -683,68 +682,70 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  builder: (_) => const PotentialSolutionsScreen(),
  ),
  );
- }
+ }  void _openRiskIdentification() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RiskIdentificationScreen(
+          notes: _notesController.text,
+          solutions: widget.solutions,
+          businessCase: widget.businessCase,
+        ),
+      ),
+    );
+  }
 
- void _openRiskIdentification() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => RiskIdentificationScreen(
- notes: _notesController.text,
- solutions: widget.solutions,
- ),
- ),
- );
- }
+  void _openITConsiderations() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ITConsiderationsScreen(
+          notes: _notesController.text,
+          solutions: widget.solutions,
+          businessCase: widget.businessCase,
+        ),
+      ),
+    );
+  }
 
- void _openITConsiderations() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => ITConsiderationsScreen(
- notes: _notesController.text,
- solutions: widget.solutions,
- ),
- ),
- );
- }
+  void _openInfrastructureConsiderations() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => InfrastructureConsiderationsScreen(
+          notes: _notesController.text,
+          solutions: widget.solutions,
+          businessCase: widget.businessCase,
+        ),
+      ),
+    );
+  }
 
- void _openInfrastructureConsiderations() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => InfrastructureConsiderationsScreen(
- notes: _notesController.text,
- solutions: widget.solutions,
- ),
- ),
- );
- }
+  void _openCostAnalysis() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CostAnalysisScreen(
+          notes: _notesController.text,
+          solutions: widget.solutions,
+          businessCase: widget.businessCase,
+        ),
+      ),
+    );
+  }
 
- void _openCostAnalysis() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => CostAnalysisScreen(
- notes: _notesController.text,
- solutions: widget.solutions,
- ),
- ),
- );
- }
-
- void _openPreferredSolutionAnalysis() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => PreferredSolutionAnalysisScreen(
- notes: _notesController.text,
- solutions: widget.solutions,
- businessCase: '',
- ),
- ),
- );
- }
+  void _openPreferredSolutionAnalysis() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PreferredSolutionAnalysisScreen(
+          notes: _notesController.text,
+          solutions: widget.solutions,
+          businessCase: widget.businessCase,
+        ),
+      ),
+    );
+  }
 
  // ==================== REDESIGNED UI METHODS ====================
 

@@ -1,4 +1,4 @@
-import 'dart:async';
+ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -701,7 +701,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
 /// Get AI-powered gap analysis warnings for specifications
 Future<List<String>> _getSpecWarnings() async {
  final warnings = <String>[];
- 
+
  // Check for specs without requirement mappings
  final unmappedSpecs = _document.specifications
      .where((s) => s.attachedRequirementIds.isEmpty)
@@ -711,7 +711,7 @@ Future<List<String>> _getSpecWarnings() async {
      '${unmappedSpecs.length} specification(s) not mapped to any requirement.',
    );
  }
- 
+
  // Check for specs without WBS/package mapping
  final unscopedSpecs = _document.specifications
      .where((s) => s.subscopePackageId.isEmpty && s.wbsWorkPackageId.isEmpty)
@@ -721,7 +721,7 @@ Future<List<String>> _getSpecWarnings() async {
      '${unscopedSpecs.length} specification(s) not linked to any work package or scope.',
    );
  }
- 
+
  // Check for requirements without spec coverage
  if (_document.requirements.isNotEmpty) {
    final coveredReqIds = <String>{};
@@ -733,30 +733,30 @@ Future<List<String>> _getSpecWarnings() async {
      warnings.add('$uncoveredReqs requirement(s) lack specification coverage.');
    }
  }
- 
+
  return warnings;
 }
 
-/// Run AI suggestion for requirement mappings  
+/// Run AI suggestion for requirement mappings
 Future<void> _runAiSuggestMappings() async {
  showDialog(
    context: context,
    barrierDismissible: false,
    builder: (context) => const Center(child: CircularProgressIndicator()),
  );
- 
+
  try {
    final suggestions = <_MappingSuggestion>[];
    final unmappedSpecs = _document.specifications
        .where((s) => s.attachedRequirementIds.isEmpty).toList();
-   
+
    final mappedReqIds = <String>{};
    for (final spec in _document.specifications) {
      mappedReqIds.addAll(spec.attachedRequirementIds);
    }
    final unmappedReqs = _document.requirements
        .where((r) => !mappedReqIds.contains(r.id)).toList();
-   
+
    for (final spec in unmappedSpecs) {
      for (final req in unmappedReqs) {
        final specWords = spec.title.toLowerCase().split(' ');
@@ -771,18 +771,18 @@ Future<void> _runAiSuggestMappings() async {
        }
      }
    }
-   
+
    suggestions.sort((a, b) => b.confidence.compareTo(a.confidence));
    Navigator.of(context).pop();
    if (!mounted) return;
-   
+
    if (suggestions.isEmpty) {
      ScaffoldMessenger.of(context).showSnackBar(
        const SnackBar(content: Text('No mapping suggestions found.'), backgroundColor: Colors.blue),
      );
      return;
    }
-   
+
    await showDialog(
      context: context,
      builder: (context) => _AiMappingSuggestionsDialog(
@@ -1018,8 +1018,8 @@ Future<void> _runAiSuggestMappings() async {
  DataCell(SizedBox(
  width: 150,
  child: Text(
- item.subscopePackageTitle.isNotEmpty 
-     ? item.subscopePackageTitle 
+ item.subscopePackageTitle.isNotEmpty
+     ? item.subscopePackageTitle
      : (item.wbsWorkPackageTitle.isNotEmpty ? item.wbsWorkPackageTitle : '-'),
  maxLines: 2,
  softWrap: true,
@@ -1162,7 +1162,7 @@ Future<void> _runAiSuggestMappings() async {
  Widget _buildCoverageIndicator(double coverage) {
    Color color;
    String text;
-   
+
    if (coverage >= 0.9) {
      color = Colors.green;
      text = '${(coverage * 100).toInt()}%';
@@ -1176,7 +1176,7 @@ Future<void> _runAiSuggestMappings() async {
      color = Colors.grey;
      text = '0%';
    }
-   
+
    return Row(
      mainAxisSize: MainAxisSize.min,
      children: [

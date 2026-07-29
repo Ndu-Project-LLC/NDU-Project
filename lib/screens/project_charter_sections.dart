@@ -676,6 +676,7 @@ class _MetaInfoCard extends StatelessWidget {
 class CharterProjectDefinition extends StatelessWidget {
   final ProjectDataModel? data;
   final VoidCallback? onEdit;
+  final VoidCallback? onGenerate;
 
   /// Project Purpose is sourced from Project Details. The charter only
   /// reflects that content, so the card links back for edits instead of
@@ -685,6 +686,7 @@ class CharterProjectDefinition extends StatelessWidget {
     super.key,
     required this.data,
     this.onEdit,
+    this.onGenerate,
   });
 
   @override

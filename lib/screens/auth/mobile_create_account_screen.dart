@@ -265,6 +265,7 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
                   children: [
                     Expanded(
                       child: VoiceTextFormField(
+        enableVoice: false,
         enableKazAi: false,
         enableTextFormatting: false,
                         controller: _firstNameController,
@@ -288,6 +289,7 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: VoiceTextFormField(
+        enableVoice: false,
         enableKazAi: false,
         enableTextFormatting: false,
                         controller: _lastNameController,
@@ -315,6 +317,7 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
 
                 // Company Name
                 VoiceTextFormField(
+        enableVoice: false,
         enableKazAi: false,
         enableTextFormatting: false,
                   controller: _companyController,
@@ -333,6 +336,7 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
 
                 // Email
                 VoiceTextFormField(
+        enableVoice: false,
         enableKazAi: false,
         enableTextFormatting: false,
                   controller: _emailController,

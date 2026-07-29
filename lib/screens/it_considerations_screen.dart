@@ -53,8 +53,9 @@ class _ItAutoFillPreviewRow {
 class ITConsiderationsScreen extends StatefulWidget {
   final String notes;
   final List<AiSolutionItem> solutions;
+  final String businessCase;
   const ITConsiderationsScreen(
-      {super.key, required this.notes, required this.solutions});
+      {super.key, required this.notes, required this.solutions, this.businessCase = ''});
 
   @override
   State<ITConsiderationsScreen> createState() => _ITConsiderationsScreenState();
@@ -1071,6 +1072,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
         builder: (_) => RiskIdentificationScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -1408,6 +1410,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
         builder: (_) => InfrastructureConsiderationsScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -1458,6 +1461,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
         builder: (_) => CoreStakeholdersScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -1470,6 +1474,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
         builder: (_) => CostAnalysisScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
+          businessCase: widget.businessCase,
         ),
       ),
     );
@@ -1482,7 +1487,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
         builder: (_) => PreferredSolutionAnalysisScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
-          businessCase: '',
+          businessCase: widget.businessCase,
         ),
       ),
     );

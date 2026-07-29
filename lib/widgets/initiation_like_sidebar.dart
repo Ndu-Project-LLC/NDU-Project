@@ -825,6 +825,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       ITConsiderationsScreen(
         notes: data.itConsiderationsData?.notes ?? data.notes,
         solutions: _buildSolutionItems(data),
+        businessCase: data.businessCase,
       ),
     );
   }
@@ -836,6 +837,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       InfrastructureConsiderationsScreen(
         notes: data.infrastructureConsiderationsData?.notes ?? data.notes,
         solutions: _buildSolutionItems(data),
+        businessCase: data.businessCase,
       ),
     );
   }
@@ -847,6 +849,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       CoreStakeholdersScreen(
         notes: data.coreStakeholdersData?.notes ?? data.notes,
         solutions: _buildSolutionItems(data),
+        businessCase: data.businessCase,
       ),
     );
   }
@@ -858,6 +861,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       CostAnalysisScreen(
         notes: data.notes,
         solutions: _buildSolutionItems(data),
+        businessCase: data.businessCase,
       ),
     );
   }

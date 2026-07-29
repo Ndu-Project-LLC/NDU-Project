@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/screens/landing_screen.dart';
 import 'package:ndu_project/screens/home_screen.dart';
+import 'package:ndu_project/screens/pricing_screen.dart';
 import 'package:ndu_project/screens/admin/admin_home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
@@ -76,9 +77,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
  );
  }
  final user = snapshot.data;
- if (user != null) {
- // Create or update user record in Firestore
- UserService.createOrUpdateUser(user);
+ if (user != null) { // Create or update user record in Firestore
+   // Fire-and-forget with error handling — don't let Firestore errors
+   // block navigation or show unhandled promise rejections in the console.
+   UserService.createOrUpdateUser(user).catchError((e) {
+     debugPrint('[AuthWrapper] createOrUpdateUser failed (non-blocking): $e');
+   });
 
  // Host-aware access guard: if running on admin.nduproject.com, allow only
  // nduproject.com emails or the designated Gmail

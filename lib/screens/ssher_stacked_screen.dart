@@ -1085,6 +1085,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
                 onBack: () =>
                     PlanningPhaseNavigation.goToPrevious(context, 'ssher'),
                 onNext: () => _handleNextWithConfirmation(),
+                onSkip: () => PlanningPhaseNavigation.goToSkip(context, 'ssher'),
+                pageTitle: 'SSHER',
               ),
             ),
 

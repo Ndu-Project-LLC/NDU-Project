@@ -765,6 +765,9 @@ onBack: () =>
  context, 'agile_project_baseline'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'agile_project_baseline'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, 'agile_project_baseline'),
+ pageTitle: 'Agile Project Baseline',
  ),
  const SizedBox(height: 40),
  ],

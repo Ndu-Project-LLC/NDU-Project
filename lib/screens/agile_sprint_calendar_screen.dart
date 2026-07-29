@@ -424,6 +424,9 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
                           context, 'agile_sprint_calendar'),
                       onNext: () => PlanningPhaseNavigation.goToNext(
                           context, 'agile_sprint_calendar'),
+                      onSkip: () => PlanningPhaseNavigation.goToSkip(
+                          context, 'agile_sprint_calendar'),
+                      pageTitle: 'Agile Sprint Calendar',
                     ),
                     const SizedBox(height: 48),
                   ],

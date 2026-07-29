@@ -580,6 +580,8 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  nextLabel: PlanningPhaseNavigation.nextLabel('agile_epics_features'),
  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'agile_epics_features'),
  onNext: () => PlanningPhaseNavigation.goToNext(context, 'agile_epics_features'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(context, 'agile_epics_features'),
+ pageTitle: 'Agile Epics Features',
  ),
  const SizedBox(height: 40),
  ],

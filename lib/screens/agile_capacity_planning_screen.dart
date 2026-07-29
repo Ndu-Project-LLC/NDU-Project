@@ -383,6 +383,9 @@ class _AgileCapacityPlanningScreenState
                               context, 'agile_capacity_planning'),
                           onNext: () => PlanningPhaseNavigation.goToNext(
                               context, 'agile_capacity_planning'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                              context, 'agile_capacity_planning'),
+                          pageTitle: 'Agile Capacity Planning',
                         ),
                         const SizedBox(height: 40),
                       ],

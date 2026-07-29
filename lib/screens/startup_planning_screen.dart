@@ -118,6 +118,9 @@ class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
  context, 'startup_planning'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'startup_planning'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, 'startup_planning'),
+ pageTitle: 'Startup Planning',
  ),
  const SizedBox(height: 40),
  ],

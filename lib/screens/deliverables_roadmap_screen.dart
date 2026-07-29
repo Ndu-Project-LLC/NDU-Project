@@ -390,6 +390,9 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  context, 'deliverables_roadmap'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'deliverables_roadmap'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, 'deliverables_roadmap'),
+ pageTitle: 'Deliverables Roadmap',
  ),
  ],
  ),

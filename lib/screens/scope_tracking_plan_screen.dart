@@ -372,6 +372,9 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  context, 'scope_tracking_plan'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'scope_tracking_plan'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, 'scope_tracking_plan'),
+ pageTitle: 'Scope Tracking Plan',
  ),
  const SizedBox(height: 40),
  ],

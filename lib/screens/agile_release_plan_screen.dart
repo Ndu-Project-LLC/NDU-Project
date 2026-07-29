@@ -201,6 +201,9 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                               context, 'agile_release_plan'),
                           onNext: () => PlanningPhaseNavigation.goToNext(
                               context, 'agile_release_plan'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                              context, 'agile_release_plan'),
+                          pageTitle: 'Agile Release Plan',
                         ),
                         const SizedBox(height: 40),
                       ],

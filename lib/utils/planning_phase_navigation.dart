@@ -65,6 +65,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/navigation_route_resolver.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
+import 'package:ndu_project/widgets/skip_confirmation_dialog.dart';
 
 class PlanningPhaseNavigation {
   static final List<PlanningPage> pages = [
@@ -615,6 +616,43 @@ class PlanningPhaseNavigation {
     if (index > 0) {
       Navigator.of(context).pop();
     }
+  }
+
+  /// Shows a skip confirmation dialog and, if confirmed, navigates to the next page
+  /// while marking the current page as "Not Applicable".
+  static void goToSkip(BuildContext context, String currentId) {
+    final currentPage = pages.where((p) => p.id == currentId).firstOrNull;
+    final pageTitle = currentPage?.title ?? currentId;
+
+    SkipConfirmationDialog.show(
+      context,
+      pageTitle: pageTitle,
+    ).then((confirmed) {
+      if (confirmed == true) {
+        // Mark page as skipped in provider if available
+        final provider = ProjectDataInherited.maybeOf(context);
+        if (provider != null) {
+          unawaited(provider.flushAutoSave());
+          // Mark this page as not applicable in the project data
+          provider.markPageSkipped(currentId);
+        }
+        
+        // Navigate to next page after skipping
+        goToNext(context, currentId);
+      }
+    });
+  }
+
+  /// Returns true if there is a next page to navigate to (for enabling skip button)
+  static bool hasNextPage(String currentId) {
+    if (_usesSidebarOrder(currentId)) {
+      final isBasicPlan =
+          ProjectDataInherited.instance?.projectData.isBasicPlanProject ?? false;
+      return SidebarNavigationService.instance
+          .getNextAccessibleItem(currentId, isBasicPlan) !=
+          null;
+    }
+    return nextPage(currentId) != null;
   }
 }
 

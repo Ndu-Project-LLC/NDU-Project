@@ -357,6 +357,9 @@ class _Level1ScheduleScreenState
  context, 'project_plan_level1_schedule'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'project_plan_level1_schedule'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, 'project_plan_level1_schedule'),
+ pageTitle: 'Project Plan Level 1 Schedule',
  ),
  const SizedBox(height: 80),
  ],
@@ -1832,6 +1835,10 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  'project_plan_detailed_schedule'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'project_plan_detailed_schedule'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context,
+ 'project_plan_detailed_schedule'),
+ pageTitle: 'Project Plan Detailed Schedule',
  ),
  const SizedBox(height: 80),
  ],
@@ -3648,6 +3655,10 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  'project_plan_condensed_summary'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'project_plan_condensed_summary'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context,
+ 'project_plan_condensed_summary'),
+ pageTitle: 'Project Plan Condensed Summary',
  ),
  const SizedBox(height: 80),
  ],
@@ -4676,6 +4687,9 @@ class _ProjectPlanSectionScreen extends StatelessWidget {
  context, config.checkpoint),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, config.checkpoint),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, config.checkpoint),
+ pageTitle: config.title,
  ),
  const SizedBox(height: 40),
  ],

@@ -368,6 +368,9 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
                               context, 'agile_scrum_config'),
                           onNext: () => PlanningPhaseNavigation.goToNext(
                               context, 'agile_scrum_config'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                              context, 'agile_scrum_config'),
+                          pageTitle: 'Agile Scrum Config',
                         ),
                         const SizedBox(height: 40),
                       ],

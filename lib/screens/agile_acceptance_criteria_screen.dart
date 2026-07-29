@@ -464,6 +464,9 @@ class _AgileAcceptanceCriteriaScreenState
                           onNext: () =>
                               PlanningPhaseNavigation.goToNext(
                                   context, 'agile_acceptance_criteria'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                                  context, 'agile_acceptance_criteria'),
+                          pageTitle: 'Agile Acceptance Criteria',
                         ),
                         const SizedBox(height: 40),
                       ],

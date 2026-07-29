@@ -570,6 +570,9 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                           onNext: () =>
                               PlanningPhaseNavigation.goToNext(
                                   context, 'agile_delivery_model'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                                  context, 'agile_delivery_model'),
+                          pageTitle: 'Agile Delivery Model',
                         ),
                         const SizedBox(height: 40),
                       ],

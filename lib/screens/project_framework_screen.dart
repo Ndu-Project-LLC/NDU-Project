@@ -832,6 +832,8 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
             PlanningPhaseNavigation.goToPrevious(context, 'project_framework'),
         onNext: () => _handleNextPressed(),
         nextEnabled: _reviewConfirmed,
+        onSkip: () =>
+            PlanningPhaseNavigation.goToSkip(context, 'project_framework'),
       ),
       // ── Floating Chat Bubble ──
       floatingActionButton: const KazAiChatBubble(positioned: false),
@@ -1000,6 +1002,9 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
                                           context, 'project_framework'),
                                   onNext: () => _handleNextPressed(),
                                   nextEnabled: _reviewConfirmed,
+                                  onSkip: () => PlanningPhaseNavigation.goToSkip(
+                                      context, 'project_framework'),
+                                  pageTitle: 'Project Framework',
                                 ),
                                 const SizedBox(height: 40),
                               ],
@@ -1214,6 +1219,7 @@ class _MobileBottomNav extends StatelessWidget {
     required this.onBack,
     required this.onNext,
     required this.nextEnabled,
+    this.onSkip,
   });
 
   final String backLabel;
@@ -1221,6 +1227,7 @@ class _MobileBottomNav extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onNext;
   final bool nextEnabled;
+  final VoidCallback? onSkip;
 
   @override
   Widget build(BuildContext context) {
@@ -1266,6 +1273,29 @@ class _MobileBottomNav extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
+            // Skip button
+            if (onSkip != null)
+              OutlinedButton.icon(
+                onPressed: onSkip,
+                icon: const Icon(Icons.skip_next,
+                    size: 18, color: Color(0xFF6B7280)),
+                label: const Text(
+                  'Skip',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF6B7280),
+                  side: const BorderSide(color: Color(0xFFD1D5DB)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            if (onSkip != null) const SizedBox(width: 12),
             // Next button (wider)
             Expanded(
               flex: 2,

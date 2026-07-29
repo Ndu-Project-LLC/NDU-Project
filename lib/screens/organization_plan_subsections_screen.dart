@@ -1080,6 +1080,11 @@ class _OrganizationRaciMatrixScreenState
                             context,
                             'organization_raci_matrix',
                           ),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                            context,
+                            'organization_raci_matrix',
+                          ),
+                          pageTitle: 'Organization RACI Matrix',
                         ),
                         const SizedBox(height: 40),
                       ],
@@ -1994,6 +1999,9 @@ class _OrganizationStaffingPlanScreenState
                               context, 'organization_staffing_plan'),
                           onNext: () => PlanningPhaseNavigation.goToNext(
                               context, 'organization_staffing_plan'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                              context, 'organization_staffing_plan'),
+                          pageTitle: 'Organization Staffing Plan',
                         ),
                         const SizedBox(height: 40),
                       ],
@@ -2636,6 +2644,9 @@ class _OrganizationBasePlanScreenState
                               context, 'organization_base_plan'),
                           onNext: () => PlanningPhaseNavigation.goToNext(
                               context, 'organization_base_plan'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                              context, 'organization_base_plan'),
+                          pageTitle: 'Organization Base Plan',
                         ),
                         const SizedBox(height: 40),
                       ],
@@ -3243,6 +3254,9 @@ class _PlanningSubsectionScreen extends StatelessWidget {
                                       context, config.checkpoint),
                               onNext: () => PlanningPhaseNavigation.goToNext(
                                   context, config.checkpoint),
+                              onSkip: () => PlanningPhaseNavigation.goToSkip(
+                                  context, config.checkpoint),
+                              pageTitle: config.title,
                             ),
                             const SizedBox(height: 40),
                           ],

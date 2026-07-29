@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
+import 'package:ndu_project/widgets/skip_confirmation_dialog.dart';
 
-/// Shared navigation footer used across the Launch Phase pages.
+/// Shared navigation footer used across the Launch/Execution Phase pages.
+///
+/// Supports Back, Next, and Skip (Not Applicable) buttons with confirmation dialogs.
 class LaunchPhaseNavigation extends StatelessWidget {
   const LaunchPhaseNavigation({
     required this.backLabel,
@@ -9,6 +12,9 @@ class LaunchPhaseNavigation extends StatelessWidget {
     required this.onBack,
     required this.onNext,
     this.nextEnabled = true,
+    this.onSkip,
+    this.skipLabel = 'Skip',
+    this.pageTitle,
     super.key,
   });
 
@@ -17,6 +23,15 @@ class LaunchPhaseNavigation extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onNext;
   final bool nextEnabled;
+
+  /// Optional callback when user wants to skip this page as "Not Applicable"
+  final VoidCallback? onSkip;
+
+  /// Label for the skip button
+  final String skipLabel;
+
+  /// Page title shown in the skip confirmation dialog
+  final String? pageTitle;
 
   static const _kAccentColor = Color(0xFFFFC812);
 
@@ -40,8 +55,22 @@ class LaunchPhaseNavigation extends StatelessWidget {
     });
   }
 
+  void _handleSkipTap(BuildContext context) {
+    final title = pageTitle ?? nextLabel.replaceFirst('Next: ', '');
+    SkipConfirmationDialog.show(
+      context,
+      pageTitle: title,
+    ).then((confirmed) {
+      if (confirmed == true && onSkip != null) {
+        onSkip!();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasSkip = onSkip != null;
+
     final backButton = OutlinedButton.icon(
       onPressed: onBack,
       icon: const Icon(Icons.arrow_back, size: 18, color: _kAccentColor),
@@ -54,6 +83,21 @@ class LaunchPhaseNavigation extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         side: const BorderSide(color: _kAccentColor),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+
+    final skipButton = OutlinedButton.icon(
+      onPressed: () => _handleSkipTap(context),
+      icon: const Icon(Icons.skip_next, size: 18, color: Color(0xFF6B7280)),
+      label: Text(
+        skipLabel,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF6B7280)),
+      ),
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: Color(0xFFD1D5DB)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
@@ -82,11 +126,23 @@ class LaunchPhaseNavigation extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 760;
+        
+        // Build the right-side buttons (Skip + Next)
+        final rightButtons = <Widget>[];
+        if (hasSkip) {
+          rightButtons.add(skipButton);
+        }
+        rightButtons.add(nextButton);
+
         if (compact) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               backButton,
+              if (hasSkip) ...[
+                const SizedBox(height: 8),
+                skipButton,
+              ],
               const SizedBox(height: 12),
               Align(alignment: Alignment.centerRight, child: nextButton),
             ],
@@ -101,7 +157,16 @@ class LaunchPhaseNavigation extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               backButton,
-              nextButton,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (hasSkip) ...[
+                    skipButton,
+                    const SizedBox(width: 12),
+                  ],
+                  nextButton,
+                ],
+              ),
             ],
           ),
         );

@@ -583,6 +583,11 @@ Future<void> _removeAttachment(_AttachmentMeta attachment) async {
  context,
  widget.config.checkpoint,
  ),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context,
+ widget.config.checkpoint,
+ ),
+ pageTitle: widget.config.title,
  ),
  const SizedBox(height: 40),
  ],

@@ -354,6 +354,9 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                               context, 'agile_kanban_config'),
                           onNext: () => PlanningPhaseNavigation.goToNext(
                               context, 'agile_kanban_config'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                              context, 'agile_kanban_config'),
+                          pageTitle: 'Agile Kanban Config',
                         ),
                         const SizedBox(height: 40),
                       ],

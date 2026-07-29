@@ -794,6 +794,10 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  context,
  'quality_management',
  ),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context,
+ 'quality_management',
+ ),
  ),
  const SizedBox(height: 48),
  ],
@@ -856,6 +860,10 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  'quality_management',
  ),
  onNext: () => PlanningPhaseNavigation.goToNext(
+ context,
+ 'quality_management',
+ ),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
  context,
  'quality_management',
  ),
@@ -933,10 +941,11 @@ class _PageHeader extends StatelessWidget {
 }
 
 class _NavigationRow extends StatelessWidget {
- const _NavigationRow({required this.onBack, required this.onNext});
+ const _NavigationRow({required this.onBack, required this.onNext, this.onSkip});
 
  final VoidCallback onBack;
  final VoidCallback onNext;
+ final VoidCallback? onSkip;
 
  @override
  Widget build(BuildContext context) {
@@ -966,6 +975,27 @@ class _NavigationRow extends StatelessWidget {
  ),
  ),
  ),
+ if (onSkip != null) ...[
+ const SizedBox(width: 8),
+ OutlinedButton.icon(
+ onPressed: onSkip,
+ icon: const Icon(Icons.skip_next, size: 16, color: Color(0xFF6B7280)),
+ label: const Text(
+ 'Skip',
+ style: TextStyle(color: Color(0xFF6B7280)),
+ ),
+ style: OutlinedButton.styleFrom(
+ foregroundColor: const Color(0xFF6B7280),
+ side: const BorderSide(color: Color(0xFFD1D5DB)),
+ padding: EdgeInsets.symmetric(
+ horizontal: isMobile ? 8 : 16,
+ vertical: 12,
+ ),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(8)),
+ ),
+ ),
+ ],
  const SizedBox(width: 12),
  Expanded(
  flex: 2,

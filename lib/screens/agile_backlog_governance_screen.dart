@@ -550,6 +550,9 @@ class _AgileBacklogGovernanceScreenState
                           onNext: () =>
                               PlanningPhaseNavigation.goToNext(
                                   context, 'agile_backlog_governance'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                                  context, 'agile_backlog_governance'),
+                          pageTitle: 'Agile Backlog Governance',
                         ),
                         const SizedBox(height: 40),
                       ],

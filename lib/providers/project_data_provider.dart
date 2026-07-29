@@ -735,6 +735,35 @@ class ProjectDataProvider extends ChangeNotifier {
     _markDirty();
   }
 
+  // ── Skip / Not Applicable tracking ──────────────────────────────────────
+  
+  final Set<String> _skippedPages = {};
+  
+  /// Returns true if the given page ID has been marked as skipped (N/A).
+  bool isPageSkipped(String pageId) => _skippedPages.contains(pageId);
+  
+  /// Returns an unmodifiable view of all skipped page IDs.
+  Set<String> get skippedPages => UnmodifiableSetView(_skippedPages);
+  
+  /// Marks a page as "Not Applicable" (skipped).
+  /// This persists so the user can review which pages were skipped.
+  void markPageSkipped(String pageId) {
+    if (_skippedPages.add(pageId)) {
+      notifyListeners();
+      _markDirty();
+      debugPrint('📋 Page marked as Not Applicable: $pageId');
+    }
+  }
+  
+  /// Removes the "Not Applicable" mark from a page (user returned to complete it).
+  void unmarkPageSkipped(String pageId) {
+    if (_skippedPages.remove(pageId)) {
+      notifyListeners();
+      _markDirty();
+      debugPrint('📋 Page "Not Applicable" mark removed: $pageId');
+    }
+  }
+
   /// Add a field value to history for undo functionality
   void addFieldToHistory(String fieldName, String value,
       {bool isAiGenerated = false}) {

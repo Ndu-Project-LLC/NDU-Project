@@ -273,6 +273,9 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                                 context, 'agile_stories_backlog'),
                             onNext: () => PlanningPhaseNavigation.goToNext(
                                 context, 'agile_stories_backlog'),
+                            onSkip: () => PlanningPhaseNavigation.goToSkip(
+                                context, 'agile_stories_backlog'),
+                            pageTitle: 'Agile Stories Backlog',
                           ),
                         ],
                         const SizedBox(height: 40),

@@ -712,6 +712,9 @@ onBack: () =>
  context, 'project_baseline'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'project_baseline'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, 'project_baseline'),
+ pageTitle: 'Project Baseline',
  ),
  const SizedBox(height: 48),
  ],

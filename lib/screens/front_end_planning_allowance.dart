@@ -6,6 +6,7 @@ import 'package:ndu_project/screens/project_charter_screen.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -1345,6 +1346,10 @@ class _FrontEndPlanningAllowanceScreenState
  onNext: () {
  _saveAndNavigateToNextStep();
  },
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context,
+ 'fep_allowance',
+ ),
  ),
  MobileSidebarHamburger(
  sidebar: const InitiationLikeSidebar(
@@ -1450,8 +1455,9 @@ class _CostMetaItem extends StatelessWidget {
 class _BottomOverlay extends StatefulWidget {
  final VoidCallback onBack;
  final VoidCallback onNext;
+ final VoidCallback? onSkip;
 
- const _BottomOverlay({required this.onBack, required this.onNext});
+ const _BottomOverlay({required this.onBack, required this.onNext, this.onSkip});
 
  @override
  State<_BottomOverlay> createState() => _BottomOverlayState();
@@ -1539,6 +1545,25 @@ class _BottomOverlayState extends State<_BottomOverlay> {
  fontSize: 15, fontWeight: FontWeight.w700),
  ),
  ),
+ if (widget.onSkip != null) ...[
+ const SizedBox(width: 8),
+ OutlinedButton.icon(
+ onPressed: widget.onSkip,
+ icon: const Icon(Icons.skip_next, size: 16, color: Color(0xFF6B7280)),
+ label: const Text(
+ 'Skip',
+ style: TextStyle(color: Color(0xFF6B7280), fontWeight: FontWeight.w700),
+ ),
+ style: OutlinedButton.styleFrom(
+ foregroundColor: const Color(0xFF6B7280),
+ side: const BorderSide(color: Color(0xFFD1D5DB)),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 16, vertical: 16),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(22)),
+ ),
+ ),
+ ],
  const SizedBox(width: 12),
  ElevatedButton(
  onPressed: widget.onNext,

@@ -507,6 +507,9 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
  context, 'interface_management'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'interface_management'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, 'interface_management'),
+ pageTitle: 'Interface Management',
  ),
  const SizedBox(height: 40),
  ],

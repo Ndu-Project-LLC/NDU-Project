@@ -284,6 +284,9 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
  context, 'cost_estimate'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'cost_estimate'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, 'cost_estimate'),
+ pageTitle: 'Cost Estimate',
  ),
  const SizedBox(height: 80),
  ],
@@ -2597,6 +2600,24 @@ class _TopUtilityBar extends StatelessWidget {
  child: Row(
  children: [
  _circleButton(icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
+ const SizedBox(width: 12),
+ // Skip (Not Applicable) button
+ GestureDetector(
+ onTap: () => PlanningPhaseNavigation.goToSkip(context, 'cost_estimate'),
+ child: Tooltip(
+ message: 'Skip (Not Applicable)',
+ child: Container(
+ width: 42,
+ height: 42,
+ decoration: BoxDecoration(
+ color: Colors.grey[100],
+ shape: BoxShape.circle,
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Icon(Icons.skip_next, size: 18, color: Colors.grey[500]),
+ ),
+ ),
+ ),
  const SizedBox(width: 12),
  _circleButton(
  icon: Icons.arrow_forward_ios_rounded, onTap: onForward),

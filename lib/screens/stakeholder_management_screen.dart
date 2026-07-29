@@ -172,6 +172,9 @@ class _StakeholderManagementScreenState
  context, 'stakeholder_management'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'stakeholder_management'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, 'stakeholder_management'),
+ pageTitle: 'Stakeholder Management',
  ),
  const SizedBox(height: 60),
  ],

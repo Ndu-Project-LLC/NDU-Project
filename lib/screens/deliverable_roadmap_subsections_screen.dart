@@ -272,6 +272,10 @@ class _DeliverableRoadmapAgileMapOutScreenState
  'agile_map_out'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'agile_map_out'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context,
+ 'agile_map_out'),
+ pageTitle: 'Agile Map Out',
  ),
  const SizedBox(height: 40),
  ],

@@ -828,6 +828,9 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
                               context, 'agile_team_structure'),
                           onNext: () => PlanningPhaseNavigation.goToNext(
                               context, 'agile_team_structure'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                              context, 'agile_team_structure'),
+                          pageTitle: 'Agile Team Structure',
                         ),
                         const SizedBox(height: 40),
                       ],

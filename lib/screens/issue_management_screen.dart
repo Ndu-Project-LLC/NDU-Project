@@ -287,6 +287,9 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  context, 'issue_management'),
  onNext: () => PlanningPhaseNavigation.goToNext(
  context, 'issue_management'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, 'issue_management'),
+ pageTitle: 'Issue Management',
  ),
  const SizedBox(height: 80),
  ],

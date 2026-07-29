@@ -1176,6 +1176,11 @@ onBack: () =>
  context,
  'technology',
  ),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context,
+ 'technology',
+ ),
+ pageTitle: 'Technology',
  ),
  ],
  ),

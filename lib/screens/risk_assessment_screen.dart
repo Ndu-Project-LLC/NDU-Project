@@ -523,11 +523,29 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  ),
  ),
  const SizedBox(width: 12),
- // Back/Forward chevrons + title
+ // Back/Forward chevrons + Skip + title
  _circleIcon(
  icon: Icons.chevron_left_rounded,
  onTap: () => PlanningPhaseNavigation.goToPrevious(
  context, 'risk_assessment'),
+ ),
+ const SizedBox(width: 8),
+ // Skip (Not Applicable) button
+ GestureDetector(
+ onTap: () => PlanningPhaseNavigation.goToSkip(context, 'risk_assessment'),
+ child: Tooltip(
+ message: 'Skip (Not Applicable)',
+ child: Container(
+ width: 36,
+ height: 36,
+ decoration: BoxDecoration(
+ color: Colors.grey[100],
+ shape: BoxShape.circle,
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Icon(Icons.skip_next, size: 18, color: Colors.grey[500]),
+ ),
+ ),
  ),
  const SizedBox(width: 8),
  _circleIcon(

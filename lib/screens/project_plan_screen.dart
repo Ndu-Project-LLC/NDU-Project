@@ -310,6 +310,9 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                               context, 'project_plan'),
                           onNext: () => PlanningPhaseNavigation.goToNext(
                               context, 'project_plan'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                              context, 'project_plan'),
+                          pageTitle: 'Project Plan',
                         ),
                         const SizedBox(height: 80),
                       ],

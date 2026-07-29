@@ -372,6 +372,9 @@ class _TeamTrainingAndBuildingScreenState
  context, 'team_training'),
  onNext: () =>
  PlanningPhaseNavigation.goToNext(context, 'team_training'),
+ onSkip: () => PlanningPhaseNavigation.goToSkip(
+ context, 'team_training'),
+ pageTitle: 'Team Training',
  ),
  const SizedBox(height: 40),
  ],

@@ -448,6 +448,9 @@ class _AgileMetricsPlanningScreenState
                           onNext: () =>
                               PlanningPhaseNavigation.goToNext(
                                   context, 'agile_metrics_planning'),
+                          onSkip: () => PlanningPhaseNavigation.goToSkip(
+                                  context, 'agile_metrics_planning'),
+                          pageTitle: 'Agile Metrics Planning',
                         ),
                         const SizedBox(height: 40),
                       ],

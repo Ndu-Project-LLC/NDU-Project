@@ -107,6 +107,21 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  },
  );
 
+ // Sync to central activities log
+ try {
+ final action = isEdit ? 'updated' : 'added';
+ final preview = result.lesson.length > 50 ? '${result.lesson.substring(0, 50)}...' : result.lesson;
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Lessons Learned',
+ title: 'Lesson $action: $preview',
+ description: 'Category: ${result.category}, Type: ${result.type}, Phase: ${result.phase}, Impact: ${result.impact}',
+ phase: result.phase.isEmpty ? 'Execution' : result.phase,
+ status: result.status.toLowerCase(),
+ assignedTo: result.submittedBy,
+ ));
+ } catch (_) {}
+
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
  content: Text(isEdit
@@ -142,6 +157,16 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  current.lessonsLearned.where((l) => l.id != id).toList(),
  ),
  );
+ // Sync to central activities log
+ try {
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Lessons Learned',
+ title: 'Lesson deleted: $itemName',
+ description: 'A lesson was removed from Lessons Learned.',
+ phase: 'Execution',
+ ));
+ } catch (_) {}
  if (!mounted) return;
  ScaffoldMessenger.of(context)
  .showSnackBar(const SnackBar(content: Text('Lesson deleted.')));

@@ -968,6 +968,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // Sync to Progress Tracking budget (only if value changed)
  // Note: Budget sync is handled in ContractsTableWidget._updateContract
  // This is a fallback for direct updates
+ // Sync to central activities log
+ try {
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Contracts Tracking',
+ title: 'Contract updated: ${contract.name}',
+ description: 'Type: ${contract.contractType}, Status: ${contract.status}, Value: \$${contract.estimatedValue?.toStringAsFixed(2) ?? "0"}',
+ phase: 'Execution',
+ status: contract.status.toLowerCase(),
+ ));
+ } catch (_) {}
  } catch (e) {
  debugPrint('Error updating contract: $e');
  }
@@ -990,6 +1001,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
       );
       // Sync to Progress Tracking budget (remove value)
       await _syncContractValueToBudget(contract, isDelete: true);
+      // Sync to central activities log
+      try {
+        unawaited(ProjectDataHelper.logActivityToCentral(
+          context: context,
+          sourceSection: 'Contracts Tracking',
+          title: 'Contract deleted: ${contract.name}',
+          description: 'Contract was removed. Type: ${contract.contractType}',
+          phase: 'Execution',
+        ));
+      } catch (_) {}
       if (mounted) {
         showDeletionSuccessSnackBar(context, itemName: contract.name, itemType: 'contract');
       }

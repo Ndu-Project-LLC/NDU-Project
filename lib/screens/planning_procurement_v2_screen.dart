@@ -745,6 +745,19 @@ List<Widget> _buildDialogContextChips() {
  try {
  final normalized = result.copyWith(projectId: _projectId);
  await ProcurementService.createItem(normalized);
+ // Sync to central activities log
+ try {
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Procurement',
+ title: 'Procurement item added: ${normalized.name}',
+ description: 'Category: ${normalized.category}, Budget: \$${normalized.budget.toStringAsFixed(2)}, Priority: ${normalized.priority.name}',
+ phase: 'Planning',
+ status: normalized.status.name,
+ assignedTo: normalized.responsible,
+ dueDate: normalized.requiredByDate?.toIso8601String() ?? '',
+ ));
+ } catch (_) {}
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(content: Text('Added item "${normalized.name}".')),
@@ -803,6 +816,19 @@ List<Widget> _buildDialogContextChips() {
  'responsibleMember': result.responsibleMember,
  'comments': result.comments,
  });
+ // Sync to central activities log
+ try {
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Procurement',
+ title: 'Procurement item updated: ${result.name}',
+ description: 'Category: ${result.category}, Status: ${result.status.name}, Progress: ${(result.progress * 100).toStringAsFixed(0)}%',
+ phase: 'Planning',
+ status: result.status.name,
+ assignedTo: result.responsible,
+ dueDate: result.requiredByDate?.toIso8601String() ?? '',
+ ));
+ } catch (_) {}
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(content: Text('Updated item "${result.name}".')),
@@ -844,6 +870,16 @@ List<Widget> _buildDialogContextChips() {
 
  try {
  await ProcurementService.deleteItem(_projectId, item.id);
+ // Sync to central activities log
+ try {
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Procurement',
+ title: 'Procurement item deleted: ${item.name}',
+ description: 'Category: ${item.category}, Budget was: \$${item.budget.toStringAsFixed(2)}',
+ phase: 'Planning',
+ ));
+ } catch (_) {}
  if (!mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(content: Text('Deleted item "${item.name}".')),

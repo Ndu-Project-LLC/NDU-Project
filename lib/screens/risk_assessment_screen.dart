@@ -155,6 +155,34 @@ class _RiskAssessmentScreenState extends State<RiskAssessmentScreen> {
  .collection('risk_assessment_entries')
  .doc(entry.docId);
  await docRef.set(entry.toFirestore(isNew: isNew), SetOptions(merge: true));
+ 
+ // ── Sync to central risk register ──
+ try {
+   await ProjectDataHelper.addOrUpdateRiskToRegister(
+     context: context,
+     sourceSection: 'Risk Assessment',
+     riskName: entry.id,
+     description: entry.description,
+     category: entry.category,
+     impactLevel: entry.impact,
+     likelihood: entry.probability,
+     owner: entry.owner,
+     status: entry.status,
+   );
+   
+   // Log activity
+   await ProjectDataHelper.logActivityToCentral(
+     context: context,
+     sourceSection: 'Risk Assessment',
+     title: 'Risk ${isNew ? "added" : "updated"}: ${entry.id}',
+     description: entry.description,
+     phase: 'Planning',
+   );
+   debugPrint('✅ Risk Assessment entry synced to central register: ${entry.id}');
+ } catch (syncError) {
+   debugPrint('⚠️ Failed to sync risk assessment entry: $syncError');
+   // Don't fail the persist - sync is best-effort
+ }
  }
 
  void _handleNotesChanged(String value) {

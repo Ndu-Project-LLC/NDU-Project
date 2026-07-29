@@ -1781,6 +1781,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         data.workPackages.add(result);
       });
       _saveWorkPackages(data.workPackages);
+      // Sync to central activities log
+      try {
+        unawaited(ProjectDataHelper.logActivityToCentral(
+          context: context,
+          sourceSection: 'Schedule',
+          title: 'Work Package created: ${result.name}',
+          description: 'Owner: ${result.owner}, Phase: ${result.phase}',
+          phase: 'Planning',
+          assignedTo: result.owner,
+        ));
+      } catch (_) {}
       _showInfo('Work package created.');
     }
   }
@@ -1809,6 +1820,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           data.workPackages[index] = result;
         });
         _saveWorkPackages(data.workPackages);
+        // Sync to central activities log
+        try {
+          unawaited(ProjectDataHelper.logActivityToCentral(
+            context: context,
+            sourceSection: 'Schedule',
+            title: 'Work Package updated: ${result.name}',
+            description: 'Owner: ${result.owner}, Phase: ${result.phase}',
+            phase: 'Planning',
+            assignedTo: result.owner,
+          ));
+        } catch (_) {}
         _showInfo('Work package updated.');
       }
     }
@@ -1829,6 +1851,16 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         data.workPackages.removeWhere((wp) => wp.id == wpId);
       });
       _saveWorkPackages(data.workPackages);
+      // Sync to central activities log
+      try {
+        unawaited(ProjectDataHelper.logActivityToCentral(
+          context: context,
+          sourceSection: 'Schedule',
+          title: 'Work Package deleted: $itemName',
+          description: 'Work package was removed from schedule.',
+          phase: 'Planning',
+        ));
+      } catch (_) {}
       if (mounted) {
         showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'work package');
       }

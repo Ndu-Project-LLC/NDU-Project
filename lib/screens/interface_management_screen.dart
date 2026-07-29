@@ -92,6 +92,8 @@ class InterfaceManagementScreen extends StatefulWidget {
 class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
   _ImTab _selectedTab = _ImTab.register;
   bool _dialogShown = false;
+  bool _additionalInterfacesPopupShown = false;
+  String _additionalInterfacesText = '';
 
   @override
   void initState() {
@@ -100,9 +102,95 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
       if (!_dialogShown) {
         _dialogShown = true;
         await showInterfaceIdentificationDialog(context);
-        if (mounted) await _autoPopulateFromProjectData(context);
+        if (mounted) {
+          await _showAdditionalInterfacesPopup();
+          await _autoPopulateFromProjectData(context);
+        }
       }
     });
+  }
+
+  /// Shows a popup to capture additional interfaces not already in scope.
+  /// Only shows once per session.
+  Future<void> _showAdditionalInterfacesPopup() async {
+    if (_additionalInterfacesPopupShown) return;
+    
+    final controller = TextEditingController(text: 'not applicable');
+    
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.hub_outlined, color: const Color(0xFF4154F1)),
+            const SizedBox(width: 12),
+            Expanded(child: Text('Additional Interfaces', style: TextStyle(fontWeight: FontWeight.bold))),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Identify any additional internal or external interfaces not already captured within the project scope.',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Enter additional interface details...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, null),
+            child: const Text('Skip'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4154F1)),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    
+    _additionalInterfacesPopupShown = true;
+    
+    if (result != null && mounted) {
+      _additionalInterfacesText = result;
+      // Save the additional interfaces text to project data
+      final data = ProjectDataHelper.getData(context);
+      await ProjectDataHelper.updateAndSave(
+        context: context,
+        checkpoint: 'interface_management',
+        showSnackbar: false,
+        dataUpdater: (d) => d.copyWith(
+          planningNotes: {
+            ...d.planningNotes,
+            'additional_interfaces': result,
+          },
+        ),
+      );
+      // Trigger AI plan generation with this context if not 'not applicable'
+      if (result.toLowerCase() != 'not applicable') {
+        _generateAiPlanWithAdditionalContext(result);
+      }
+    }
+  }
+
+  /// Generates AI plan with additional interfaces context
+  Future<void> _generateAiPlanWithAdditionalContext(String additionalContext) async {
+    // This will be picked up by InterfacePlanCard's AI generation
+    // The context is already saved to planningNotes, so we just trigger a refresh
+    debugPrint('Additional interfaces context saved: $additionalContext');
   }
 
   Future<void> _autoPopulateFromProjectData(BuildContext context) async {
@@ -555,16 +643,7 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
  children: [
  Row(
  children: [
- Expanded(
- child: Text(
- _selectedTab.label,
- style: const TextStyle(
- fontSize: 22,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827),
- ),
- ),
- ),
+ const Spacer(),
  if (_selectedTab == _ImTab.register)
  CsvEnabledSectionHeader(
  tableTitle: 'Interface Register',
@@ -693,20 +772,61 @@ class _InterfacePlanCardState extends State<InterfacePlanCard> {
          data.planningNotes['stakeholder_management_plan'] ??
          data.planningNotes['stakeholder_engagement_plan'] ??
          '';
+     
+     // Build interface count summary for stewardship context
+     final interfaceCount = data.interfaceEntries.length;
+     final criticalInterfaces = data.interfaceEntries
+         .where((e) => e.criticality.toLowerCase() == 'critical')
+         .length;
+     final activeOwners = data.interfaceEntries
+         .map((e) => e.owner.trim())
+         .where((o) => o.isNotEmpty)
+         .toSet()
+         .length;
+     
      final projectContext = ProjectDataHelper.buildFepContext(
          data, sectionLabel: 'Interface Management');
      if (projectContext.trim().isEmpty) {
        setState(() => _isAiGenerating = false);
        return;
      }
+     
+     // Enhance context with conciseness instructions and stewardship summary
+     final enhancedContext = '''$projectContext
+
+INTERFACE STEWARDSHIP SUMMARY:
+- Total Interfaces Registered: $interfaceCount
+- Critical Interfaces Requiring Attention: $criticalInterfaces
+- Designated Interface Owners: $activeOwners
+- Additional Interfaces Identified: ${additionalInterfaces.toLowerCase() != 'not applicable' ? additionalInterfaces : 'None beyond scope'}
+
+OUTPUT REQUIREMENTS:
+- Generate a CONCISE Interface Management Plan (aim for 300-500 words)
+- Focus on actionable governance and coordination mechanisms
+- Include: interface identification approach, stakeholder roles, risk mitigation, communication cadence
+- Reference specific project details from stakeholder management where relevant
+- Summarize register usage protocols and meeting schedules
+- Use bullet points and clear sections for readability''';
+     
      final plan = await OpenAiServiceSecure().generateInterfaceManagementPlan(
-       context: projectContext,
+       context: enhancedContext,
        additionalInterfaces: additionalInterfaces,
        stakeholderPlanSummary: stakeholderPlan,
      );
      if (!mounted) return;
-     if (plan.trim().isNotEmpty) {
-       setState(() => _initialText = plan.trim());
+     
+     // Post-process to ensure conciseness - trim if excessively long
+     String processedPlan = plan.trim();
+     if (processedPlan.length > 2000) {
+       // If AI returns a very long response, keep the first meaningful portion
+       final sentences = processedPlan.split(RegExp(r'(?<=[.!?])\s+'));
+       if (sentences.length > 15) {
+         processedPlan = '${sentences.take(15).join('\n')}\n\n[Plan truncated for conciseness - key points above]';
+       }
+     }
+     
+     if (processedPlan.isNotEmpty) {
+       setState(() => _initialText = processedPlan);
        await ProjectDataHelper.updateAndSave(
          context: context,
          checkpoint: 'interface_management',
@@ -714,7 +834,7 @@ class _InterfacePlanCardState extends State<InterfacePlanCard> {
          dataUpdater: (d) => d.copyWith(
            planningNotes: {
              ...d.planningNotes,
-             _noteKey: plan.trim(),
+             _noteKey: processedPlan,
              'interface_plan_ai_generated': 'true',
            },
          ),
@@ -1224,97 +1344,82 @@ class _ImportFromTechButton extends StatelessWidget {
 }
 
 class _InterfaceRegisterRow extends StatelessWidget {
- const _InterfaceRegisterRow({
- required this.index,
- required this.entry,
- });
+  const _InterfaceRegisterRow({
+    required this.index,
+    required this.entry,
+  });
 
- final int index;
- final InterfaceEntry entry;
+  final int index;
+  final InterfaceEntry entry;
 
- @override
- Widget build(BuildContext context) {
- final name = entry.boundary.trim().isNotEmpty
- ? entry.boundary.trim()
- : 'Unnamed';
+  @override
+  Widget build(BuildContext context) {
+    final name = entry.boundary.trim().isNotEmpty
+        ? entry.boundary.trim()
+        : 'Unnamed';
 
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
- decoration: const BoxDecoration(
- border: Border(
- left: BorderSide(color: Color(0xFFE5E7EB)),
- right: BorderSide(color: Color(0xFFE5E7EB)),
- bottom: BorderSide(color: Color(0xFFE5E7EB)),
- ),
- ),
-  child: Row(
-    children: [
-      SizedBox(
-        width: 36,
-        child: Text('$index',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 200,
-        child: Row(
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        expandedAlignment: Alignment.centerLeft,
+        shape: const Border(
+          left: BorderSide(color: Color(0xFFE5E7EB)),
+          right: BorderSide(color: Color(0xFFE5E7EB)),
+          bottom: BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+        collapsedShape: const Border(
+          left: BorderSide(color: Color(0xFFE5E7EB)),
+          right: BorderSide(color: Color(0xFFE5E7EB)),
+          bottom: BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+        title: Row(
           children: [
+            SizedBox(
+              width: 28,
+              child: Text('$index',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+            ),
+            const SizedBox(width: 8),
             _HealthDot(entry: entry),
             const SizedBox(width: 6),
             Expanded(
+              flex: 2,
               child: Text(name,
-                  maxLines: null,
-                  softWrap: true,
-                  overflow: TextOverflow.visible,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                       fontSize: 12, fontWeight: FontWeight.w600)),
             ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _TypeBadge(type: entry.interfaceType),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(entry.partyA.trim(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(entry.partyB.trim(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
+            ),
+            const SizedBox(width: 8),
+            _CriticalityBadge(criticality: entry.criticality),
+            const SizedBox(width: 8),
+            _PriorityBadge(priority: entry.priority),
+            const SizedBox(width: 8),
+            _StatusBadge(label: entry.status),
           ],
         ),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 110,
-        child: _TypeBadge(type: entry.interfaceType),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 140,
-        child: Text(entry.partyA.trim(),
-            maxLines: null,
-            softWrap: true,
-            overflow: TextOverflow.visible,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)))},
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 140,
-        child: Text(entry.partyB.trim(),
-            maxLines: null,
-            softWrap: true,
-            overflow: TextOverflow.visible,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)))},
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 100,
-        child: _CriticalityBadge(criticality: entry.criticality),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 90,
-        child: _PriorityBadge(priority: entry.priority),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 100,
-        child: _StatusBadge(label: entry.status),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 80,
-        child: Row(
+        trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
@@ -1329,15 +1434,72 @@ class _InterfaceRegisterRow extends StatelessWidget {
               icon: const Icon(Icons.delete_outline,
                   size: 16, color: Color(0xFFEF4444)),
             ),
+            const SizedBox(width: 4),
           ],
         ),
+        children: [
+          // Expanded details section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDetailRow('Data Flow', entry.dataFlow.isEmpty ? '—' : entry.dataFlow),
+                _buildDetailRow('Protocol', entry.protocol.isEmpty ? '—' : entry.protocol),
+                _buildDetailRow('Cadence', entry.cadence.isEmpty ? '—' : entry.cadence),
+                _buildDetailRow('Owner', entry.owner.isEmpty ? '—' : entry.owner),
+                if (entry.notes.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text('Notes',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+                  const SizedBox(height: 4),
+                  Text(entry.notes.trim(),
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
+                ],
+                if (entry.risk.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text('Risk',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFDC2626))),
+                  const SizedBox(height: 4),
+                  Text(entry.risk.trim(),
+                      style: const TextStyle(fontSize: 12, color: Color(0xFFDC2626))),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
-    ],
-  ),
- );
- }
+    );
+  }
 
- Future<void> _deleteEntry(BuildContext context, String id) async {
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text('$label:',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+          ),
+          Expanded(
+            child: Text(value,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _deleteEntry(BuildContext context, String id) async {
   // Get entry name for display in confirmation
   final data = ProjectDataHelper.getData(context);
   final entryToDelete = data.interfaceEntries.firstWhere((e) => e.id == id);

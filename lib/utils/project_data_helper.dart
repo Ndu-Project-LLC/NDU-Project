@@ -1215,6 +1215,150 @@ class ProjectDataHelper {
         .toList();
   }
 
+  /// Adds or updates a risk in the central risk register.
+  /// Matches by riskName + sourceSection (requirementType) and updates if found,
+  /// otherwise adds as new entry.
+  static Future<void> addOrUpdateRiskToRegister({
+    required BuildContext context,
+    required String sourceSection,
+    required String riskName,
+    String description = '',
+    String category = '',
+    String impactLevel = '',
+    String likelihood = '',
+    String mitigationStrategy = '',
+    String owner = '',
+    String status = 'Identified',
+    String checkpoint = 'risk_register_sync',
+  }) async {
+    await updateAndSave(
+      context: context,
+      checkpoint: checkpoint,
+      showSnackbar: false,
+      dataUpdater: (d) {
+        final items = List<RiskRegisterItem>.from(
+            d.frontEndPlanning.riskRegisterItems);
+        
+        // Find existing risk with same name and source section
+        final existingIndex = items.indexWhere((r) =>
+            r.riskName.trim().toLowerCase() == riskName.trim().toLowerCase() &&
+            r.requirementType.trim().toLowerCase() ==
+                sourceSection.trim().toLowerCase());
+        
+        final updatedRisk = RiskRegisterItem(
+          riskName: riskName,
+          description: description,
+          category: category,
+          requirement: '',
+          requirementType: sourceSection,
+          impactLevel: impactLevel,
+          likelihood: likelihood,
+          mitigationStrategy: mitigationStrategy,
+          discipline: '',
+          projectRole: '',
+          owner: owner,
+          status: status,
+        );
+        
+        if (existingIndex >= 0) {
+          // Update existing - preserve quantitative fields
+          final existing = items[existingIndex];
+          items[existingIndex] = RiskRegisterItem(
+            riskName: updatedRisk.riskName,
+            description: updatedRisk.description.isNotEmpty 
+                ? updatedRisk.description : existing.description,
+            category: updatedRisk.category.isNotEmpty 
+                ? updatedRisk.category : existing.category,
+            requirement: existing.requirement,
+            requirementType: updatedRisk.requirementType,
+            impactLevel: updatedRisk.impactLevel.isNotEmpty 
+                ? updatedRisk.impactLevel : existing.impactLevel,
+            likelihood: updatedRisk.likelihood.isNotEmpty 
+                ? updatedRisk.likelihood : existing.likelihood,
+            mitigationStrategy: updatedRisk.mitigationStrategy.isNotEmpty 
+                ? updatedRisk.mitigationStrategy : existing.mitigationStrategy,
+            discipline: existing.discipline,
+            projectRole: existing.projectRole,
+            owner: updatedRisk.owner.isNotEmpty 
+                ? updatedRisk.owner : existing.owner,
+            status: updatedRisk.status.isNotEmpty 
+                ? updatedRisk.status : existing.status,
+            probabilityNumeric: existing.probabilityNumeric,
+            costImpactMin: existing.costImpactMin,
+            costImpactMostLikely: existing.costImpactMostLikely,
+            costImpactMax: existing.costImpactMax,
+            scheduleImpactMin: existing.scheduleImpactMin,
+            scheduleImpactMostLikely: existing.scheduleImpactMostLikely,
+            scheduleImpactMax: existing.scheduleImpactMax,
+            controlAccountId: existing.controlAccountId,
+            cbsId: existing.cbsId,
+            riskType: existing.riskType,
+            responseStrategy: existing.responseStrategy,
+            residualProbability: existing.residualProbability,
+            residualCostImpact: existing.residualCostImpact,
+          );
+        } else {
+          // Add new
+          items.add(updatedRisk);
+        }
+        
+        return d.copyWith(
+          frontEndPlanning:
+              d.frontEndPlanning.copyWith(riskRegisterItems: items),
+        );
+      },
+    );
+  }
+  
+  /// Batch sync multiple risks to the central register.
+  /// Useful when syncing all risks from a section at once.
+  /// [risksData] is a list of maps with keys: riskName, description, category,
+  /// impactLevel, likelihood, owner, status.
+  static Future<void> syncRisksBatchToRegister({
+    required BuildContext context,
+    required String sourceSection,
+    required List<Map<String, String>> risksData,
+    String checkpoint = 'risk_register_sync',
+  }) async {
+    await updateAndSave(
+      context: context,
+      checkpoint: checkpoint,
+      showSnackbar: false,
+      dataUpdater: (d) {
+        final items = List<RiskRegisterItem>.from(
+            d.frontEndPlanning.riskRegisterItems);
+        
+        // Remove existing risks from this source section
+        items.removeWhere((r) =>
+            r.requirementType.trim().toLowerCase() ==
+                sourceSection.trim().toLowerCase());
+        
+        // Add all current risks
+        for (final risk in risksData) {
+          items.add(RiskRegisterItem(
+            riskName: risk['riskName'] ?? '',
+            description: risk['description'] ?? '',
+            category: risk['category'] ?? '',
+            requirement: '',
+            requirementType: sourceSection,
+            impactLevel: risk['impactLevel'] ?? '',
+            likelihood: risk['likelihood'] ?? '',
+            mitigationStrategy: '',
+            discipline: '',
+            projectRole: '',
+            owner: risk['owner'] ?? '',
+            status: risk['status'] ?? 'Identified',
+          ));
+        }
+        
+        return d.copyWith(
+          frontEndPlanning:
+              d.frontEndPlanning.copyWith(riskRegisterItems: items),
+        );
+      },
+    );
+  }
+
   /// One-time migration: backfills `requirementType` on existing risks that
   /// have no source-section tag. Uses category heuristics to infer the
   /// originating section. Called on project load.

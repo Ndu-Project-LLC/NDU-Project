@@ -782,6 +782,18 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  dueDate: deliverable['dueDate'],
  priority: deliverable['priority'],
  );
+ // Sync to central activities log
+ try {
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Deliverables',
+ title: 'Deliverable added: ${deliverable["title"]}',
+ description: 'Category: ${deliverable["category"]}, Assignee: ${deliverable["assignee"]}',
+ phase: 'Planning',
+ assignedTo: deliverable['assignee'],
+ dueDate: deliverable['dueDate'] ?? '',
+ ));
+ } catch (_) {}
  _loadData();
  if (mounted) Navigator.of(context).pop();
  } catch (e) {
@@ -807,6 +819,19 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  deliverable: updated,
  context: context,
  );
+ // Sync to central activities log
+ try {
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Deliverables',
+ title: 'Deliverable updated: ${updated.title}',
+ description: 'Status: ${updated.status.name}, Category: ${updated.category}, Progress: ${updated.completionPercent}%',
+ phase: updated.phase.name,
+ status: updated.status.name.toLowerCase(),
+ assignedTo: updated.assignee,
+ dueDate: updated.dueDate?.toIso8601String() ?? '',
+ ));
+ } catch (_) {}
  _loadData();
  if (mounted) Navigator.of(context).pop();
  } catch (e) {
@@ -825,6 +850,16 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
     );
     if (!confirmed || !mounted) return;
     // TODO: Implement delete
+    // Sync to central activities log
+    try {
+      unawaited(ProjectDataHelper.logActivityToCentral(
+        context: context,
+        sourceSection: 'Deliverables',
+        title: 'Deliverable deleted: ${deliverable.title}',
+        description: 'Status was: ${deliverable.status.name}, Category: ${deliverable.category}',
+        phase: deliverable.phase.name,
+      ));
+    } catch (_) {}
     if (mounted) {
       showDeletionSuccessSnackBar(context, itemName: deliverable.title);
     }

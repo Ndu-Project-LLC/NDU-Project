@@ -389,6 +389,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _isAutoGenerating = false;
  });
  await _saveToFirestore();
+ // Sync to central activities log - AI auto-populated punchlist items
+ try {
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Punchlist',
+ title: 'Punchlist items auto-populated',
+ description: 'AI-generated priority, technical, remediation, field execution, tech debt, and closure items were created.',
+ phase: 'Execution',
+ ));
+ } catch (_) {}
  }
 
  List<_PunchlistInsight> _mapInsights(List<LaunchEntry>? entries) {
@@ -1779,6 +1789,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
  });
  _saveToFirestore();
+ // Sync to central activities log
+ try {
+ final action = isEdit ? 'updated' : 'added';
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Punchlist',
+ title: 'Distribution category $action: ${categoryCtrl.text}',
+ description: 'Owner: ${ownerCtrl.text.trim()}, Status: $status',
+ phase: 'Execution',
+ status: status.toLowerCase(),
+ assignedTo: ownerCtrl.text.trim(),
+ ));
+ } catch (_) {}
  Navigator.pop(ctx);
  _showActionSnack(isEdit ? 'Category updated successfully.' : 'Category added successfully.');
  },
@@ -1876,6 +1899,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
  });
  _saveToFirestore();
+ // Sync to central activities log
+ try {
+ final action = isEdit ? 'updated' : 'added';
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Punchlist',
+ title: 'Workstream $action: ${workstreamCtrl.text}',
+ description: 'Owner: ${ownerCtrl.text.trim()}, Status: $status',
+ phase: 'Execution',
+ status: status.toLowerCase(),
+ assignedTo: ownerCtrl.text.trim(),
+ ));
+ } catch (_) {}
  Navigator.pop(ctx);
  _showActionSnack(isEdit ? 'Workstream updated successfully.' : 'Workstream added successfully.');
  },
@@ -2054,6 +2090,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
  });
  _saveToFirestore();
+ // Sync to central activities log
+ try {
+ final action = isEdit ? 'updated' : 'added';
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Punchlist',
+ title: 'Capacity team $action: ${teamCtrl.text}',
+ description: 'Owner: ${ownerCtrl.text.trim()}, Status: $status, Risk Level: ${riskLevel.isEmpty ? "Medium" : riskLevel}',
+ phase: 'Execution',
+ status: status.toLowerCase(),
+ assignedTo: ownerCtrl.text.trim(),
+ ));
+ } catch (_) {}
  Navigator.pop(ctx);
  _showActionSnack(isEdit ? 'Team updated successfully.' : 'Team added successfully.');
  },
@@ -2213,6 +2262,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
  });
  _saveToFirestore();
+ // Sync to central activities log
+ try {
+ final action = isEdit ? 'updated' : 'added';
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Punchlist',
+ title: 'Shift coverage $action: ${shiftCtrl.text}',
+ description: 'Supervisor: ${supervisorCtrl.text.trim()}, Status: $status, Compliance: $complianceStatus',
+ phase: 'Execution',
+ status: status.toLowerCase(),
+ assignedTo: supervisorCtrl.text.trim(),
+ ));
+ } catch (_) {}
  Navigator.pop(ctx);
  _showActionSnack(isEdit ? 'Shift updated successfully.' : 'Shift added successfully.');
  },

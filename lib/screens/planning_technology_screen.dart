@@ -1301,16 +1301,7 @@ onBack: () =>
  children: [
  Row(
  children: [
- Expanded(
- child: Text(
- _selectedTab.label,
- style: const TextStyle(
- fontSize: 22,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827),
- ),
- ),
- ),
+ // Tab name shown in yellow tab bar above - no duplicate heading
  OutlinedButton.icon(
  onPressed: _syncTechnologyCostsToEstimate,
  icon: const Icon(Icons.sync_outlined, size: 16),

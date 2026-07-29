@@ -54,6 +54,19 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  issueLogItems: [...data.issueLogItems, entry],
  ),
  );
+ // Sync to central activities log
+ try {
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Issue Management',
+ title: 'Issue created: ${entry.title}',
+ description: 'Type: ${entry.type}, Severity: ${entry.severity}, Assignee: ${entry.assignee}',
+ phase: 'Execution',
+ status: entry.status.toLowerCase(),
+ assignedTo: entry.assignee,
+ dueDate: entry.dueDate,
+ ));
+ } catch (_) {}
  }
 
  Future<void> _handleEditIssue(IssueLogItem existing) async {
@@ -72,6 +85,23 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  .toList(),
  ),
  );
+ // Sync to central activities log
+ try {
+ final statusChanged = existing.status != updated.status;
+ final action = statusChanged && updated.status == 'Resolved' ? 'resolved'
+ : statusChanged && updated.status == 'Closed' ? 'closed'
+ : 'updated';
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Issue Management',
+ title: 'Issue $action: ${updated.title}',
+ description: 'Status changed from ${existing.status} to ${updated.status}. Type: ${updated.type}, Severity: ${updated.severity}',
+ phase: 'Execution',
+ status: updated.status.toLowerCase(),
+ assignedTo: updated.assignee,
+ dueDate: updated.dueDate,
+ ));
+ } catch (_) {}
  }
 
  List<IssueLogItem> _filterIssues(List<IssueLogItem> items) {
@@ -743,6 +773,16 @@ class _ProjectIssuesLogCard extends StatelessWidget {
  if (context.mounted) {
  showDeletionSuccessSnackBar(context, itemName: entry.title ?? 'Issue');
  }
+ // Sync to central activities log
+ try {
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Issue Management',
+ title: 'Issue deleted: ${entry.title ?? "Unknown"}',
+ description: 'Issue was removed. Type: ${entry.type}, Severity: ${entry.severity}',
+ phase: 'Execution',
+ ));
+ } catch (_) {}
  }
  },
  )),

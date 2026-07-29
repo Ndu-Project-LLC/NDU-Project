@@ -393,6 +393,48 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
 
         if (success) {
           debugPrint('✅ Risks auto-saved successfully');
+          
+          // ── Sync to central risk register ──
+          try {
+            // Collect all non-empty risks for sync
+            final risksData = <Map<String, String>>[];
+            for (final sr in solutionRisks) {
+              for (final risk in sr.risks) {
+                if (risk.isNotEmpty) {
+                  risksData.add({
+                    'riskName': '${sr.solutionTitle}: ${risk.length > 50 ? '${risk.substring(0, 50)}...' : risk}',
+                    'description': risk,
+                    'category': 'Solution Risk',
+                    'impactLevel': '',
+                    'likelihood': '',
+                    'owner': '',
+                    'status': 'Identified',
+                  });
+                }
+              }
+            }
+            
+            if (risksData.isNotEmpty) {
+              await ProjectDataHelper.syncRisksBatchToRegister(
+                context: context,
+                sourceSection: 'Risk Identification',
+                risksData: risksData,
+              );
+              
+              // Log activity
+              await ProjectDataHelper.logActivityToCentral(
+                context: context,
+                sourceSection: 'Risk Identification',
+                title: 'Risks updated (${risksData.length} risk(s) for ${solutionRisks.length} solution(s))',
+                description: 'Auto-saved risk identification data for ${solutionRisks.length} potential solution(s)',
+                phase: 'Initiation',
+              );
+              debugPrint('✅ Synced ${risksData.length} risk(s) to central register');
+            }
+          } catch (syncError) {
+            debugPrint('⚠️ Failed to sync to central register: $syncError');
+            // Don't fail the save - sync is best-effort
+          }
         } else {
           debugPrint('⚠️ Auto-save failed: ${provider.lastError}');
         }

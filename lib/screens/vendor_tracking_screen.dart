@@ -1527,6 +1527,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  : notesController.text,
  );
  }
+ // Sync to central activities log
+ try {
+ final vendorName = nameController.text;
+ final action = isEdit ? 'updated' : 'added';
+ unawaited(ProjectDataHelper.logActivityToCentral(
+ context: context,
+ sourceSection: 'Vendor Tracking',
+ title: 'Vendor $action: $vendorName',
+ description: 'Category: $selectedCategory, Status: ${statusController.text}, Rating: ${ratingController.text}',
+ phase: 'Execution',
+ status: statusController.text.toLowerCase(),
+ ));
+ } catch (_) {}
 
  if (context.mounted) {
  Navigator.pop(context);

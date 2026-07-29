@@ -1980,6 +1980,31 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  });
  Navigator.of(context).pop();
+ 
+ // ── Sync to central register (best-effort) ──
+ try {
+   await ProjectDataHelper.addOrUpdateRiskToRegister(
+     context: context,
+     sourceSection: 'Risk Tracking',
+     riskName: idController.text.trim(),
+     description: titleController.text.trim(),
+     category: 'Execution Risk',
+     impactLevel: selectedImpact,
+     likelihood: probabilityController.text.trim().isEmpty ? '0.5' : probabilityController.text.trim(),
+     owner: ownerController.text.trim().isEmpty ? 'TBD' : ownerController.text.trim(),
+     status: selectedStatus,
+   );
+   await ProjectDataHelper.logActivityToCentral(
+     context: context,
+     sourceSection: 'Risk Tracking',
+     title: 'Risk added: ${idController.text.trim()}',
+     description: titleController.text.trim(),
+     phase: 'Execution',
+   );
+   debugPrint('✅ Risk Tracking risk synced: ${idController.text.trim()}');
+ } catch (e) {
+   debugPrint('⚠️ Failed to sync risk tracking entry: $e');
+ }
  }
  },
  child: const Text('Add risk'),
@@ -2083,6 +2108,31 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
  });
  Navigator.of(context).pop();
+ 
+ // ── Sync updated risk to central register (best-effort) ──
+ try {
+   await ProjectDataHelper.addOrUpdateRiskToRegister(
+     context: context,
+     sourceSection: 'Risk Tracking',
+     riskName: risk.id,
+     description: titleController.text.trim(),
+     category: 'Execution Risk',
+     impactLevel: selectedImpact,
+     likelihood: probabilityController.text.trim(),
+     owner: ownerController.text.trim(),
+     status: selectedStatus,
+   );
+   await ProjectDataHelper.logActivityToCentral(
+     context: context,
+     sourceSection: 'Risk Tracking',
+     title: 'Risk updated: ${risk.id}',
+     description: titleController.text.trim(),
+     phase: 'Execution',
+   );
+   debugPrint('✅ Risk Tracking risk updated: ${risk.id}');
+ } catch (e) {
+   debugPrint('⚠️ Failed to sync risk tracking update: $e');
+ }
  }
  },
  child: const Text('Save'),
@@ -2110,6 +2160,25 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
   setState(() => _risks.removeWhere((r) => r.id == risk.id));
   if (mounted) {
     showDeletionSuccessSnackBar(context, itemName: risk.title);
+    
+    // ── Remove from central register and log activity (best-effort) ──
+    try {
+      await ProjectDataHelper.removeRiskFromRegister(
+        context: context,
+        sourceSection: 'Risk Tracking',
+        riskName: risk.id,
+      );
+      await ProjectDataHelper.logActivityToCentral(
+        context: context,
+        sourceSection: 'Risk Tracking',
+        title: 'Risk deleted: ${risk.id}',
+        description: risk.title,
+        phase: 'Execution',
+      );
+      debugPrint('✅ Risk Tracking risk removed from register: ${risk.id}');
+    } catch (e) {
+      debugPrint('⚠️ Failed to sync risk deletion: $e');
+    }
   }
   }
 

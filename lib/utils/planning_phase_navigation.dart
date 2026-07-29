@@ -48,14 +48,11 @@ import 'package:ndu_project/screens/deliverables_roadmap_detailed_screen.dart';
 import 'package:ndu_project/screens/document_review_matrix_screen.dart';
 import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
-import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
 import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
 import 'package:ndu_project/screens/agile_scrum_config_screen.dart';
 import 'package:ndu_project/screens/agile_capacity_planning_screen.dart';
-import 'package:ndu_project/screens/agile_team_structure_screen.dart';
 import 'package:ndu_project/screens/agile_epics_features_screen.dart';
 import 'package:ndu_project/screens/agile_stories_backlog_screen.dart';
-import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
 import 'package:ndu_project/screens/agile_release_plan_screen.dart';
 import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
 import 'package:ndu_project/screens/project_plan_screen.dart';
@@ -194,11 +191,6 @@ class PlanningPhaseNavigation {
       id: 'agile_release_plan',
       title: 'Release Plan',
       builder: (_) => const AgileReleasePlanScreen(),
-    ),
-    PlanningPage(
-      id: 'agile_metrics_planning',
-      title: 'Agile Metrics Planning',
-      builder: (_) => const AgileMetricsPlanningScreen(),
     ),
     // Execution Plan — full flow matching sidebar order
     PlanningPage(
@@ -647,7 +639,7 @@ class PlanningPhaseNavigation {
   static bool hasNextPage(String currentId) {
     if (_usesSidebarOrder(currentId)) {
       final isBasicPlan =
-          ProjectDataInherited.instance?.projectData.isBasicPlanProject ?? false;
+          false;
       return SidebarNavigationService.instance
           .getNextAccessibleItem(currentId, isBasicPlan) !=
           null;

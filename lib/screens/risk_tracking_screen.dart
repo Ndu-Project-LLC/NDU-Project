@@ -1957,33 +1957,33 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onPressed: () => Navigator.of(context).pop(),
  child: const Text('Cancel'),
  ),
- ElevatedButton(
- onPressed: () {
- if (formKey.currentState?.validate() ?? false) {
- setState(() {
- _risks.add(
- _RiskItem(
- idController.text.trim(),
- titleController.text.trim(),
- ownerController.text.trim().isEmpty
- ? 'TBD'
- : ownerController.text.trim(),
- probabilityController.text.trim().isEmpty
- ? '0.5'
- : probabilityController.text.trim(),
- selectedImpact,
- selectedStatus,
- nextReviewController.text.trim().isEmpty
- ? 'TBD'
- : nextReviewController.text.trim(),
- ),
- );
- });
- Navigator.of(context).pop();
- 
- // ── Sync to central register (best-effort) ──
- try {
-   await ProjectDataHelper.addOrUpdateRiskToRegister(
+  ElevatedButton(
+  onPressed: () async {
+  if (formKey.currentState?.validate() ?? false) {
+  setState(() {
+  _risks.add(
+  _RiskItem(
+  idController.text.trim(),
+  titleController.text.trim(),
+  ownerController.text.trim().isEmpty
+  ? 'TBD'
+  : ownerController.text.trim(),
+  probabilityController.text.trim().isEmpty
+  ? '0.5'
+  : probabilityController.text.trim(),
+  selectedImpact,
+  selectedStatus,
+  nextReviewController.text.trim().isEmpty
+  ? 'TBD'
+  : nextReviewController.text.trim(),
+  ),
+  );
+  });
+  Navigator.of(context).pop();
+  
+  // ── Sync to central register (best-effort) ──
+  try {
+    await ProjectDataHelper.addOrUpdateRiskToRegister(
      context: context,
      sourceSection: 'Risk Tracking',
      riskName: idController.text.trim(),
@@ -2090,28 +2090,28 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  actions: [
  TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
- ElevatedButton(
- onPressed: () {
- if (formKey.currentState?.validate() ?? false) {
- setState(() {
- final idx = _risks.indexWhere((r) => r.id == risk.id);
- if (idx != -1) {
- _risks[idx] = _RiskItem(
- risk.id,
- titleController.text.trim(),
- ownerController.text.trim(),
- probabilityController.text.trim(),
- selectedImpact,
- selectedStatus,
- nextReviewController.text.trim(),
- );
- }
- });
- Navigator.of(context).pop();
- 
- // ── Sync updated risk to central register (best-effort) ──
- try {
-   await ProjectDataHelper.addOrUpdateRiskToRegister(
+  ElevatedButton(
+  onPressed: () async {
+  if (formKey.currentState?.validate() ?? false) {
+  setState(() {
+  final idx = _risks.indexWhere((r) => r.id == risk.id);
+  if (idx != -1) {
+  _risks[idx] = _RiskItem(
+  risk.id,
+  titleController.text.trim(),
+  ownerController.text.trim(),
+  probabilityController.text.trim(),
+  selectedImpact,
+  selectedStatus,
+  nextReviewController.text.trim(),
+  );
+  }
+  });
+  Navigator.of(context).pop();
+  
+  // ── Sync updated risk to central register (best-effort) ──
+  try {
+    await ProjectDataHelper.addOrUpdateRiskToRegister(
      context: context,
      sourceSection: 'Risk Tracking',
      riskName: risk.id,

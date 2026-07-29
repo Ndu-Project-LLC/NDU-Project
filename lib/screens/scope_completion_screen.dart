@@ -3061,7 +3061,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _deleteWorkPackage(String id) async {
   final item = _workPackages.where((e) => e.id == id).firstOrNull;
-  final itemName = item?.name ?? 'work package';
+  final itemName = item?.title ?? 'work package';
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
     itemName: itemName,
@@ -3090,7 +3090,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _deleteCheckpoint(String id) async {
   final item = _acceptanceCheckpoints.where((e) => e.id == id).firstOrNull;
-  final itemName = item?.name ?? 'checkpoint';
+  final itemName = item?.title ?? 'checkpoint';
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
     itemName: itemName,
@@ -3119,7 +3119,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _deleteAcceptanceTag(String id) async {
   final item = _acceptanceTags.where((e) => e.id == id).firstOrNull;
-  final itemName = item?.name ?? 'acceptance tag';
+  final itemName = item?.label ?? 'acceptance tag';
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
     itemName: itemName,
@@ -3147,7 +3147,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _deleteScopeChange(String id) async {
   final item = _scopeChanges.where((e) => e.id == id).firstOrNull;
-  final itemName = item?.title ?? 'scope change';
+  final itemName = item?.detail ?? 'scope change';
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
     itemName: itemName,

@@ -54,7 +54,7 @@ class QualityInsightsPanel extends StatelessWidget {
           _buildSection(
             context,
             title: '🎯 Quality Risks',
-            icon: Icons.risk_check_outlined,
+            icon: Icons.warning_amber_rounded,
             color: const Color(0xFFEF4444),
             items: report.qualityRisks.take(maxItemsPerCategory).toList(),
           ),
@@ -187,6 +187,7 @@ class QualityInsightsPanel extends StatelessWidget {
     required IconData icon,
     required Color color,
     required List<QualityRecommendation> items,
+    void Function(QualityRecommendation)? onTap,
   }) {
     if (items.isEmpty) return const SizedBox.shrink();
 
@@ -218,7 +219,7 @@ class QualityInsightsPanel extends StatelessWidget {
         const SizedBox(height: 8),
         ...items.map((item) => _RecommendationCard(
           recommendation: item,
-          onTap: onRecommendationTap,
+          onTap: onTap != null ? () => onTap(item) : null,
           compact: compact,
         )),
       ],
@@ -232,7 +233,7 @@ class QualityInsightsPanel extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 10,
       crossAxisSpacing: 10,
-      childHeight: 90,
+      childAspectRatio: 1.6,
       children: [
         _SummaryCard(
           title: 'Activities to Add',
@@ -324,7 +325,7 @@ class _RecommendationCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap != null ? () => onTap!(recommendation) : null,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: EdgeInsets.all(compact ? 10 : 12),
@@ -478,8 +479,8 @@ class _SummaryCard extends StatelessWidget {
 }
 
 /// Full-screen dialog for viewing detailed quality intelligence
-class QualityIntelligenceDialog extends StatelessWidget {
-  const QualityIntelligenceDialog({super.key, required this.report});
+class QualityIntelligenceDialog {
+  const QualityIntelligenceDialog({required this.report});
 
   final QualityIntelligenceReport report;
 

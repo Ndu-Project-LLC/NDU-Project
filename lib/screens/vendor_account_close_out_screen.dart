@@ -330,11 +330,13 @@ showNavigationButtons: false,
  ),
  ],
  );
- },
- );
- }
-
- Widget _buildAccessPanel() {
+  },
+  ),
+  ],
+  );
+  }
+  
+  Widget _buildAccessPanel() {
  return LaunchDataTable(
  title: 'Access Revocation',
  subtitle:

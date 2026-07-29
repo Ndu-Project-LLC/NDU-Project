@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -136,8 +137,8 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
 
  Future<void> _confirmDelete(String id) async {
   // Find the lesson title for display in confirmation
-  final lesson = _filteredLessons.firstWhere((l) => l.id == id, orElse: () => throw Exception('Lesson not found'));
-  final itemName = lesson.title ?? 'this lesson';
+  final lesson = _filteredEntries.firstWhere((l) => l.id == id, orElse: () => throw Exception('Lesson not found'));
+  final itemName = lesson.lesson ?? 'this lesson';
   
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,

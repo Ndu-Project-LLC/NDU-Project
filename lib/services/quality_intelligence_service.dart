@@ -192,8 +192,8 @@ class QualityIntelligenceService {
     QualityManagementData qualityData,
   ) {
     final missing = <QualityRecommendation>[];
-    final existingTargets = qualityData.targets.map((t) => t.category.toLowerCase()).toSet();
-    final existingObjectives = qualityData.objectives.map((o) => o.area.toLowerCase()).toSet();
+    final existingTargets = qualityData.targets.map((t) => t.name.toLowerCase()).toSet();
+    final existingObjectives = qualityData.objectives.map((o) => o.title.toLowerCase()).toSet();
 
     // Check for essential quality target categories
     final requiredCategories = _getRequiredCategories(projectData);
@@ -296,8 +296,11 @@ class QualityIntelligenceService {
     final methodology = _resolveMethodology(projectData);
     final currentActivities = <String>{};
     
-    for (final technique in [...qualityData.qaTechniques, ...qualityData.qcTechniques]) {
-      currentActivities.add(technique.name.toLowerCase());
+    for (final name in [
+      ...qualityData.qaTechniques.map((t) => t.name),
+      ...qualityData.qcTechniques.map((t) => t.name),
+    ]) {
+      currentActivities.add(name.toLowerCase());
     }
 
     final recommendedActivities = _activitiesByProjectType[methodology] ?? 
@@ -553,7 +556,7 @@ class QualityIntelligenceService {
     for (final risk in qualityRelatedRisks) {
       if (risk.impactLevel == 'High' || risk.impactLevel == 'Critical') {
         risks.add(QualityRecommendation(
-          id: 'risk_${risk.id}',
+          id: 'risk_${risk.riskName}',
           type: RecommendationType.qualityRisk,
           title: 'High-Impact Quality Risk: ${risk.riskName}',
           description: risk.description.isNotEmpty ? risk.description : 
@@ -566,7 +569,7 @@ class QualityIntelligenceService {
               'Consider: contingency buffers, additional reviews, enhanced testing, or '
               'alternative approaches.',
           supportingData: {
-            'riskId': risk.id,
+            'riskId': risk.riskName,
             'impactLevel': risk.impactLevel,
             'likelihood': risk.likelihood,
             'mitigation': risk.mitigationStrategy ?? 'Not defined',
@@ -661,8 +664,8 @@ class QualityIntelligenceService {
     // Analyze quality change log for volatility
     if (qualityData.qualityChangeLog.length > 5) {
       final recentChanges = qualityData.qualityChangeLog.where((c) {
-        if (c.changeDate.isEmpty) return false;
-        final date = DateTime.tryParse(c.changeDate);
+        if (c.date.isEmpty) return false;
+        final date = DateTime.tryParse(c.date);
         if (date == null) return false;
         return date.isAfter(DateTime.now().subtract(const Duration(days: 30)));
       }).length;
@@ -883,7 +886,7 @@ class QualityIntelligenceService {
 
   static String _resolveMethodology(ProjectDataModel data) {
     // Check various fields for methodology indication
-    final methodology = data.methodology?.toLowerCase() ?? '';
+    final methodology = data.overallFramework?.toLowerCase() ?? '';
     if (methodology.contains('agile') || methodology.contains('scrum') || methodology.contains('kanban')) {
       return 'agile';
     }
@@ -1157,15 +1160,15 @@ class QualityIntelligenceReport {
   final String industry;
   final String methodology;
 
-  final List<QualityRecommendation> missingRequirements;
-  final List<QualityRecommendation> recommendedActivities;
-  final List<QualityRecommendation> recommendedStandards;
-  final List<QualityRecommendation> acceptanceCriteriaGaps;
-  final List<QualityRecommendation> qualityRisks;
-  final List<QualityRecommendation> recommendedKpis;
-  final List<QualityRecommendation> reworkSources;
+  List<QualityRecommendation> missingRequirements;
+  List<QualityRecommendation> recommendedActivities;
+  List<QualityRecommendation> recommendedStandards;
+  List<QualityRecommendation> acceptanceCriteriaGaps;
+  List<QualityRecommendation> qualityRisks;
+  List<QualityRecommendation> recommendedKpis;
+  List<QualityRecommendation> reworkSources;
 
-  const QualityIntelligenceReport({
+  QualityIntelligenceReport({
     required this.generatedAt,
     required this.projectName,
     required this.projectType,

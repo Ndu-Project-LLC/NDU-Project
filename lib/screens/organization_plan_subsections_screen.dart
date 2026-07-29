@@ -579,7 +579,7 @@ class _OrganizationRolesResponsibilitiesScreenState
       context: rootContext,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => PremiumEditDialog(
-          title: 'Add Role',
+          title: 'Create Role',
           icon: Icons.badge_outlined,
           onSave: () async {
             final titleValue = selectedTitle == _customRoleOption
@@ -3616,7 +3616,7 @@ class _TopHeader extends StatelessWidget {
         ],
         if (onAdd != null)
           _yellowButton(
-            label: 'Add Role',
+            label: 'Create Role',
             icon: Icons.add,
             onPressed: onAdd!,
           ),

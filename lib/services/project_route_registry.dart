@@ -37,7 +37,6 @@ import 'package:ndu_project/screens/agile_release_plan_screen.dart';
 import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
 import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
-import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
 import 'package:ndu_project/screens/agile_scrum_config_screen.dart';
 import 'package:ndu_project/screens/agile_capacity_planning_screen.dart';
 import 'package:ndu_project/screens/project_plan_screen.dart';
@@ -91,7 +90,6 @@ class ProjectRouteRegistry {
     'startup_planning': () => const StartUpPlanningScreen(),
     'deliverable_roadmap': () => const DeliverablesRoadmapScreen(),
     'deliverables_roadmap': () => const DeliverablesRoadmapScreen(),
-    'agile_metrics_planning': () => const AgileMetricsPlanningScreen(),
     'project_plan': () => const ProjectPlanScreen(),
     'project_baseline': () => const ProjectBaselineScreen(),
   };

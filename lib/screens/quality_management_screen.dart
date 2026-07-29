@@ -17,6 +17,8 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
+import 'package:ndu_project/services/quality_intelligence_service.dart';
+import 'package:ndu_project/widgets/quality_insights_panel.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -1684,7 +1686,7 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
 
   Future<void> _removeStandard(int index) async {
   final confirmed = await ConfirmDeleteDialog.show(
-  context,
+  context: context,
   itemType: 'standard',
   );
   if (!confirmed || !mounted) return;
@@ -1747,7 +1749,7 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
 
   Future<void> _removeChangeLog(int index) async {
   final confirmed = await ConfirmDeleteDialog.show(
-  context,
+  context: context,
   itemType: 'change log entry',
   );
   if (!confirmed || !mounted) return;
@@ -1982,7 +1984,7 @@ class _ObjectivesViewState extends State<_ObjectivesView> {
 
   Future<void> _removeObjective(int index) async {
   final confirmed = await ConfirmDeleteDialog.show(
-  context,
+  context: context,
   itemType: 'objective',
   );
   if (!confirmed || !mounted) return;
@@ -2090,7 +2092,7 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
 
   Future<void> _removeWorkflowControl(QualityWorkflowControl control) async {
   final confirmed = await ConfirmDeleteDialog.show(
-  context,
+  context: context,
   itemType: 'QA control',
   itemName: control.name,
   );
@@ -2154,7 +2156,7 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
 
   Future<void> _removeTask(QualityTaskEntry task) async {
   final confirmed = await ConfirmDeleteDialog.show(
-  context,
+  context: context,
   itemType: 'QA task',
   itemName: task.task,
   );
@@ -2298,7 +2300,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
 
   Future<void> _removeWorkflowControl(QualityWorkflowControl control) async {
   final confirmed = await ConfirmDeleteDialog.show(
-  context,
+  context: context,
   itemType: 'QC control',
   itemName: control.name,
   );
@@ -2362,7 +2364,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
 
   Future<void> _removeTask(QualityTaskEntry task) async {
   final confirmed = await ConfirmDeleteDialog.show(
-  context,
+  context: context,
   itemType: 'QC task',
   itemName: task.task,
   );
@@ -2425,7 +2427,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
 
   Future<void> _removeAudit(QualityAuditEntry audit) async {
   final confirmed = await ConfirmDeleteDialog.show(
-  context,
+  context: context,
   itemType: 'audit entry',
   itemName: audit.title,
   );
@@ -2496,7 +2498,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
 
   Future<void> _removeCorrectiveAction(CorrectiveActionEntry entry) async {
   final confirmed = await ConfirmDeleteDialog.show(
-  context,
+  context: context,
   itemType: 'corrective action',
   itemName: entry.title,
   );
@@ -2837,7 +2839,7 @@ class _MetricsViewState extends State<_MetricsView> {
 
  Future<void> _removeCustomKpi(int index) async {
   final confirmed = await ConfirmDeleteDialog.show(
-    context,
+    context: context,
     itemType: 'KPI',
   );
   if (!confirmed || !mounted) return;
@@ -6663,7 +6665,10 @@ class _CoqViewState extends State<_CoqView> {
   }
 
   Future<void> _removeEntry(String category, CoQEntry entry) async {
-    final confirmed = await ConfirmDeleteDialog.show(context, itemType: 'CoQ entry');
+    final confirmed = await ConfirmDeleteDialog.show(
+  context: context,
+  itemType: 'CoQ entry',
+);
     if (!confirmed || !mounted) return;
     await _updateCostOfQuality(context, category: category, remove: entry.id);
   }

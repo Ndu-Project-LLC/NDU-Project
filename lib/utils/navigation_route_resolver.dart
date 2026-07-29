@@ -91,7 +91,6 @@ import 'package:ndu_project/screens/agile_release_plan_screen.dart';
 import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
 import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
-import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
 import 'package:ndu_project/screens/agile_scrum_config_screen.dart';
 import 'package:ndu_project/screens/agile_capacity_planning_screen.dart';
 import 'package:ndu_project/screens/scope_tracking_implementation_screen.dart';
@@ -378,8 +377,6 @@ class NavigationRouteResolver {
         return const AgileCapacityPlanningScreen();
       case 'agile_backlog_governance':
         return const AgileBacklogGovernanceScreen();
-      case 'agile_metrics_planning':
-        return const AgileMetricsPlanningScreen();
       case 'deliverables_roadmap_overview':
         return const DeliverablesRoadmapOverviewScreen();
       case 'deliverables_roadmap_detailed':

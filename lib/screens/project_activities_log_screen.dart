@@ -379,8 +379,8 @@ class _ProjectActivitiesLogScreenState
      role: row['role']?.trim().isNotEmpty == true ? row['role']!.trim() : 'Project Lead',
      assignedTo: row['assignedTo']?.trim().isNotEmpty == true ? row['assignedTo']!.trim() : null,
      dueDate: row['dueDate']?.trim() ?? '',
-     status: _parseProjectActivityStatus(row['status']),
-     approvalStatus: _parseProjectApprovalStatus(row['approvalStatus']),
+      status: parseProjectActivityStatus(row['status']),
+      approvalStatus: parseProjectApprovalStatus(row['approvalStatus']),
      createdAt: now,
      updatedAt: now,
    );
@@ -414,11 +414,11 @@ class _ProjectActivitiesLogScreenState
  }) async {
  final confirmed = await ConfirmDeleteDialog.show(
  context: context,
- itemName: activity.name ?? 'Activity',
+ itemName: activity.title ?? 'Activity',
  itemType: isCustom ? 'custom activity' : 'activity',
  customMessage: isCustom
- ? 'This will permanently delete the custom activity "${activity.name}". This action cannot be undone.'
- : 'This will hide the generated activity "${activity.name}" from the log.',
+ ? 'This will permanently delete the custom activity "${activity.title}". This action cannot be undone.'
+ : 'This will hide the generated activity "${activity.title}" from the log.',
  );
 
  if (confirmed != true || !mounted) return;
@@ -449,7 +449,7 @@ class _ProjectActivitiesLogScreenState
  if (!mounted) return;
  showDeletionSuccessSnackBar(
  context,
- itemName: activity.name ?? 'Activity',
+ itemName: activity.title ?? 'Activity',
  itemType: isCustom ? 'custom activity' : 'activity',
  );
  }

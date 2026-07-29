@@ -1786,7 +1786,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         unawaited(ProjectDataHelper.logActivityToCentral(
           context: context,
           sourceSection: 'Schedule',
-          title: 'Work Package created: ${result.name}',
+          title: 'Work Package created: ${result.title}',
           description: 'Owner: ${result.owner}, Phase: ${result.phase}',
           phase: 'Planning',
           assignedTo: result.owner,
@@ -1825,7 +1825,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           unawaited(ProjectDataHelper.logActivityToCentral(
             context: context,
             sourceSection: 'Schedule',
-            title: 'Work Package updated: ${result.name}',
+            title: 'Work Package updated: ${result.title}',
             description: 'Owner: ${result.owner}, Phase: ${result.phase}',
             phase: 'Planning',
             assignedTo: result.owner,
@@ -1839,7 +1839,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   Future<void> _deleteWorkPackage(String wpId) async {
     final data = ProjectDataHelper.getData(context);
     final wp = data.workPackages.where((w) => w.id == wpId).firstOrNull;
-    final itemName = wp?.name ?? 'Work Package';
+    final itemName = wp?.title ?? 'Work Package';
     final confirm = await ConfirmDeleteDialog.show(
       context: context,
       itemName: itemName,

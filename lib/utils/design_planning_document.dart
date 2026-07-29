@@ -892,6 +892,8 @@ class DesignRequirementMapping {
   }) : localId = localId ?? _nextUniqueId();
 
   final String localId;
+  String get id => localId;
+  String get title => requirementText;
   String requirementId;
   String requirementText;
   String designResponse;
@@ -1028,13 +1030,13 @@ class DesignSpecificationPlanRow {
     this.uploadedFileName = '',
     this.uploadedStoragePath = '',
     // New fields with defaults
-    this.specCode = '',                // Will be auto-generated if empty
+    String? specCode,                  // Will be auto-generated if empty
     this.subscopePackageId = '',
     this.subscopePackageTitle = '',
     this.requirementMappingCount = 0,
     this.coveragePercent = 0.0,
   })  : id = id ?? _nextSpecRowId(),
-        specCode = (specCode.isNotEmpty) ? specCode : _generateSpecCode(),
+        specCode = (specCode != null && specCode.isNotEmpty) ? specCode! : _generateSpecCode(),
         attachedRequirementIds = attachedRequirementIds ?? [];
 
   final String id;

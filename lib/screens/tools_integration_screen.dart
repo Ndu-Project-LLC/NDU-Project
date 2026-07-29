@@ -23,10 +23,10 @@ import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 class ToolsIntegrationScreen extends StatefulWidget {
  const ToolsIntegrationScreen({super.key});
 
- static void open(BuildContext context) => Navigator.push(
- context: context,
- MaterialPageRoute(builder: (_) => const ToolsIntegrationScreen()),
- );
+  static void open(BuildContext context) => Navigator.push(
+  context,
+  MaterialPageRoute(builder: (_) => const ToolsIntegrationScreen()),
+  );
 
  @override
  State<ToolsIntegrationScreen> createState() => _ToolsIntegrationScreenState();
@@ -404,8 +404,8 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  Future<void> _deleteIntegration(String id) async {
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
-    title: 'Delete Integration',
-    message: 'Delete this tool integration? This action cannot be undone.',
+    itemName: 'Delete Integration',
+    customMessage: 'Delete this tool integration? This action cannot be undone.',
   );
   if (!confirmed) return;
   setState(() => _integrations.removeWhere((e) => e.id == id));
@@ -413,11 +413,11 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
   _logActivity('Deleted tool integration row', details: {'itemId': id});
   }
 
- Future<void> _deleteRiskSignal(String id) async {
+  Future<void> _deleteRiskSignal(String id) async {
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
-    title: 'Delete Risk Signal',
-    message: 'Delete this risk signal? This action cannot be undone.',
+    itemName: 'Delete Risk Signal',
+    customMessage: 'Delete this risk signal? This action cannot be undone.',
   );
   if (!confirmed) return;
   setState(() => _riskSignals.removeWhere((e) => e.id == id));
@@ -425,11 +425,11 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
   _logActivity('Deleted risk signal row', details: {'itemId': id});
   }
 
- Future<void> _deleteActionRow(String id) async {
+  Future<void> _deleteActionRow(String id) async {
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
-    title: 'Delete Action Item',
-    message: 'Delete this action item? This action cannot be undone.',
+    itemName: 'Delete Action Item',
+    customMessage: 'Delete this action item? This action cannot be undone.',
   );
   if (!confirmed) return;
   setState(() => _actionRows.removeWhere((e) => e.id == id));
@@ -437,11 +437,11 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
   _logActivity('Deleted action item row', details: {'itemId': id});
   }
 
- Future<void> _removeCustomKpi(String id) async {
+  Future<void> _removeCustomKpi(String id) async {
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
-    title: 'Delete Custom KPI',
-    message: 'Delete this custom KPI metric? This action cannot be undone.',
+    itemName: 'Delete Custom KPI',
+    customMessage: 'Delete this custom KPI metric? This action cannot be undone.',
   );
   if (!confirmed) return;
   setState(() => _customKpiRows.removeWhere((r) => r.id == id));
@@ -449,11 +449,11 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
   _logActivity('Deleted custom KPI metric', details: {'itemId': id});
   }
 
- Future<void> _deleteApprovalGate(String id) async {
+  Future<void> _deleteApprovalGate(String id) async {
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
-    title: 'Delete Approval Gate',
-    message: 'Delete this approval gate? This action cannot be undone.',
+    itemName: 'Delete Approval Gate',
+    customMessage: 'Delete this approval gate? This action cannot be undone.',
   );
   if (!confirmed) return;
   setState(() => _approvalGates.removeWhere((e) => e.id == id));
@@ -461,11 +461,11 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
   _logActivity('Deleted approval gate row', details: {'itemId': id});
   }
 
- Future<void> _deleteDataFlow(String id) async {
+  Future<void> _deleteDataFlow(String id) async {
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
-    title: 'Delete Data Flow',
-    message: 'Delete this data flow? This action cannot be undone.',
+    itemName: 'Delete Data Flow',
+    customMessage: 'Delete this data flow? This action cannot be undone.',
   );
   if (!confirmed) return;
   setState(() => _dataFlows.removeWhere((e) => e.id == id));
@@ -1779,7 +1779,7 @@ showNavigationButtons: false,
  Color iconColor = existing?.iconColor ?? const Color(0xFF64748B);
 
  showDialog(
- context: context: context,
+ context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
  title: Row(
@@ -1896,7 +1896,7 @@ showNavigationButtons: false,
 
  void _confirmDeleteIntegration(_IntegrationRow item) {
  showDialog(
- context: context: context,
+ context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Integration'),
  content: Text('Are you sure you want to remove "${item.name}" from the integration register? This action cannot be undone.'),
@@ -1928,7 +1928,7 @@ showNavigationButtons: false,
  final trendCtl = TextEditingController(text: existing?.trend ?? '');
 
  showDialog(
- context: context: context,
+ context: context,
  builder: (ctx) => AlertDialog(
  title: Row(
  children: [
@@ -2007,7 +2007,7 @@ showNavigationButtons: false,
  String status = existing?.status ?? 'Open';
 
  showDialog(
- context: context: context,
+ context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
  title: Row(
@@ -2111,7 +2111,7 @@ showNavigationButtons: false,
  String status = existing?.status ?? 'Not Started';
 
  showDialog(
- context: context: context,
+ context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
  title: Row(
@@ -2462,7 +2462,7 @@ showNavigationButtons: false,
  String status = existing?.status ?? 'Not Started';
 
  showDialog(
- context: context: context,
+ context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
  title: Row(
@@ -2558,7 +2558,7 @@ showNavigationButtons: false,
 
  void _confirmDeleteApprovalGate(_ApprovalGateData item) {
  showDialog(
- context: context: context,
+ context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Approval Gate'),
  content: Text('Are you sure you want to remove "${item.gate}" from the approval gates? This action cannot be undone.'),
@@ -2592,7 +2592,7 @@ showNavigationButtons: false,
  String status = existing?.status ?? 'Active';
 
  showDialog(
- context: context: context,
+ context: context,
  builder: (ctx) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
  title: Row(
@@ -2690,7 +2690,7 @@ showNavigationButtons: false,
 
  void _confirmDeleteDataFlow(_DataFlowRow item) {
  showDialog(
- context: context: context,
+ context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete Data Flow'),
  content: Text('Are you sure you want to remove the "${item.source} → ${item.target}" data flow? This action cannot be undone.'),

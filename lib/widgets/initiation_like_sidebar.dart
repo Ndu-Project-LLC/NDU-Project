@@ -61,7 +61,6 @@ import 'package:ndu_project/screens/agile_project_baseline_screen.dart';
 import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
 import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
 import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
-import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
 import 'package:ndu_project/screens/stakeholder_management_screen.dart';
 import 'package:ndu_project/screens/lessons_learned_screen.dart';
 import 'package:ndu_project/screens/team_training_building_screen.dart';
@@ -256,14 +255,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   static const Set<String> _agileWireframeLabels = {
     'Agile Delivery Model - Delivery Model',
     'Agile Delivery Model - Backlog Governance',
-    'Agile Delivery Model - Team Structure',
     'Agile Delivery Model - Kanban Configuration',
     'Agile Delivery Model - Epics & Features',
     'Agile Delivery Model - Acceptance Criteria Planning',
-    'Agile Delivery Model - Sprint Calendar',
     'Agile Delivery Model - Agile Map Out',
     'Agile Delivery Model - Release Plan',
-    'Agile Delivery Model - Metrics Planning',
   };
 
   static const Set<String> _projectPlanLabels = {
@@ -1215,11 +1211,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openAgileAcceptanceCriteria() {
     _navigateWithCheckpoint(
         'agile_acceptance_criteria', const AgileAcceptanceCriteriaScreen());
-  }
-
-  void _openAgileMetricsPlanning() {
-    _navigateWithCheckpoint(
-        'agile_metrics_planning', const AgileMetricsPlanningScreen());
   }
 
   void _openStartUpPlanning() {
@@ -2398,8 +2389,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         if (_organizationPlanExpanded) ...[
           _buildSubSubMenuItem('Base Organisation Plan',
               onTap: _openOrganizationBasePlan,
-              isActive: widget.activeItemLabel ==
-                  'Organization Plan - Base Plan'),
+              isActive:
+                  widget.activeItemLabel == 'Organization Plan - Base Plan'),
           _buildSubSubMenuItem('Roles & Responsibilities',
               onTap: _openOrganizationRolesResponsibilities,
               isActive: widget.activeItemLabel ==
@@ -2449,8 +2440,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             onTap: _openDesign,
             isActive: widget.activeItemLabel == 'Design Planning'),
         _buildSubSubMenuItem('Project Overview',
-            onTap: () => _openDesignSection('overview'),
-            isActive: false),
+            onTap: () => _openDesignSection('overview'), isActive: false),
         _buildSubSubMenuItem('Design Overview',
             onTap: () => _openDesignSection('design_overview'),
             isActive: false),
@@ -2458,41 +2448,29 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             onTap: () => _openDesignSection('design_specifications_workspace'),
             isActive: false),
         _buildSubSubMenuItem('Deviations',
-            onTap: () => _openDesignSection('deviations'),
-            isActive: false),
+            onTap: () => _openDesignSection('deviations'), isActive: false),
         _buildSubSubMenuItem('Requirements Mapping',
-            onTap: () => _openDesignSection('requirements'),
-            isActive: false),
+            onTap: () => _openDesignSection('requirements'), isActive: false),
         _buildSubSubMenuItem('Architecture Basis',
-            onTap: () => _openDesignSection('architecture'),
-            isActive: false),
+            onTap: () => _openDesignSection('architecture'), isActive: false),
         _buildSubSubMenuItem('UI/UX Basis',
-            onTap: () => _openDesignSection('uiux'),
-            isActive: false),
+            onTap: () => _openDesignSection('uiux'), isActive: false),
         _buildSubSubMenuItem('Technical Basis',
-            onTap: () => _openDesignSection('technical'),
-            isActive: false),
+            onTap: () => _openDesignSection('technical'), isActive: false),
         _buildSubSubMenuItem('Constraints & Assumptions',
-            onTap: () => _openDesignSection('constraints'),
-            isActive: false),
+            onTap: () => _openDesignSection('constraints'), isActive: false),
         _buildSubSubMenuItem('Risks & Mitigation',
-            onTap: () => _openDesignSection('risks'),
-            isActive: false),
+            onTap: () => _openDesignSection('risks'), isActive: false),
         _buildSubSubMenuItem('Dependencies',
-            onTap: () => _openDesignSection('dependencies'),
-            isActive: false),
+            onTap: () => _openDesignSection('dependencies'), isActive: false),
         _buildSubSubMenuItem('Decision Log',
-            onTap: () => _openDesignSection('decisions'),
-            isActive: false),
+            onTap: () => _openDesignSection('decisions'), isActive: false),
         _buildSubSubMenuItem('Validation',
-            onTap: () => _openDesignSection('validation'),
-            isActive: false),
+            onTap: () => _openDesignSection('validation'), isActive: false),
         _buildSubSubMenuItem('Approvals',
-            onTap: () => _openDesignSection('approvals'),
-            isActive: false),
+            onTap: () => _openDesignSection('approvals'), isActive: false),
         _buildSubSubMenuItem('Work Packages',
-            onTap: () => _openDesignSection('work_packages'),
-            isActive: false),
+            onTap: () => _openDesignSection('work_packages'), isActive: false),
         _buildSubMenuItem(
           'Interface Management',
           onTap: lockInterfaceManagement ? null : _openInterfaceManagement,
@@ -2509,7 +2487,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           isActive: _activeIn(_agileWireframeLabels),
         ),
         if (_agileWireframeExpanded) ...[
-          _buildSubSubMenuItem('Agile Delivery',
+          _buildSubSubMenuItem('Agile Delivery Model',
               onTap: _openAgileDeliveryModel,
               isActive: widget.activeItemLabel ==
                   'Agile Delivery Model - Delivery Model'),
@@ -2517,10 +2495,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openAgileBacklogGovernance,
               isActive: widget.activeItemLabel ==
                   'Agile Delivery Model - Backlog Governance'),
-          _buildSubSubMenuItem('Agile Team Structure',
-              onTap: _openAgileTeamStructure,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Team Structure'),
           _buildSubSubMenuItem('Kanban Configuration',
               onTap: _openAgileKanbanConfig,
               isActive: widget.activeItemLabel ==
@@ -2533,10 +2507,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openAgileAcceptanceCriteria,
               isActive: widget.activeItemLabel ==
                   'Agile Delivery Model - Acceptance Criteria Planning'),
-          _buildSubSubMenuItem('Sprint Cadence & Calendar',
-              onTap: _openAgileSprintCalendar,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Sprint Calendar'),
           _buildSubSubMenuItem('Agile Map Out',
               onTap: _openAgileMapOut,
               isActive: widget.activeItemLabel ==
@@ -2545,10 +2515,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openAgileReleasePlan,
               isActive: widget.activeItemLabel ==
                   'Agile Delivery Model - Release Plan'),
-          _buildSubSubMenuItem('Agile Metrics Planning',
-              onTap: _openAgileMetricsPlanning,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Metrics Planning'),
         ],
         _buildSubExpandableHeader(
           'Execution Plan',
@@ -3516,11 +3482,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         'cycle time'.contains(query) ||
         'lead time'.contains(query) ||
         'burndown'.contains(query)) {
-      results.add(_buildMenuItem(
-          Icons.analytics_outlined, 'Agile Metrics Planning',
-          onTap: _openAgileMetricsPlanning,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Metrics Planning'));
     }
     if ('project baseline'.contains(query) || 'baseline'.contains(query)) {
       results.add(
@@ -3584,12 +3545,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         ),
       );
     }
-    if ('agile team structure'.contains(query) || 'squad'.contains(query)) {
-      results.add(_buildMenuItem(Icons.groups_outlined, 'Agile Team Structure',
-          onTap: _openAgileTeamStructure,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Team Structure'));
-    }
     if ('kanban'.contains(query) ||
         'workflow'.contains(query) ||
         'wip'.contains(query) ||
@@ -3619,16 +3574,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: _openAgileAcceptanceCriteria,
           isActive: widget.activeItemLabel ==
               'Agile Delivery Model - Acceptance Criteria Planning'));
-    }
-    if ('sprint calendar'.contains(query) ||
-        'sprint cadence'.contains(query) ||
-        'sprint'.contains(query) ||
-        'iteration'.contains(query)) {
-      results.add(_buildMenuItem(
-          Icons.calendar_month_outlined, 'Sprint Cadence & Calendar',
-          onTap: _openAgileSprintCalendar,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Sprint Calendar'));
     }
     if ('release plan'.contains(query) ||
         'release'.contains(query) ||
@@ -3692,11 +3637,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     if ('base organisation plan'.contains(query) ||
         'organisation plan'.contains(query) ||
         'org plan'.contains(query)) {
-      results.add(_buildMenuItem(Icons.account_tree_outlined,
-          'Base Organisation Plan',
+      results.add(_buildMenuItem(
+          Icons.account_tree_outlined, 'Base Organisation Plan',
           onTap: _openOrganizationBasePlan,
-          isActive:
-              widget.activeItemLabel == 'Organization Plan - Base Plan'));
+          isActive: widget.activeItemLabel == 'Organization Plan - Base Plan'));
     }
     if ('roles and responsibilities'.contains(query) ||
         'roles & responsibilities'.contains(query) ||

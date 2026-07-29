@@ -23,7 +23,9 @@ const Color _kHeadline = Color(0xFF111827);
 const Color _kAccent = Color(0xFFD97706);
 
 const List<String> _frameworkOptions = ['Scrum', 'Kanban', 'ScrumBan'];
-const List<String> _sprintLengthOptions = ['1 Week', '2 Weeks', '3 Weeks', '4 Weeks'];
+const List<String> _sprintLengthOptions = [
+  '1 Week', '2 Weeks', '3 Weeks', '4 Weeks',
+];
 const List<String> _estimationOptions = [
   'Story Points (Fibonacci)',
   'Story Points (Modified Fibonacci)',
@@ -32,20 +34,17 @@ const List<String> _estimationOptions = [
   'Ideal Hours',
   'Custom Scale',
 ];
-
 const List<String> _governanceOptions = [
   'Centralized',
   'Decentralized',
   'Federated',
 ];
-
 const List<String> _approvalOptions = [
   'Sprint Planning',
   'Sprint Review',
   'Release',
   'Retro Actions',
 ];
-
 const List<String> _complianceOptions = [
   'Regulatory',
   'Security',
@@ -61,20 +60,162 @@ class AgileDeliveryModelScreen extends StatefulWidget {
       _AgileDeliveryModelScreenState();
 }
 
-class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
+class _ReleaseField {
+  final String key;
+  final String label;
+  final String hint;
+  const _ReleaseField({
+    required this.key,
+    required this.label,
+    required this.hint,
+  });
+}
+
+class _MetricGroup {
+  final String category;
+  final List<_MetricItem> metrics;
+  const _MetricGroup({required this.category, required this.metrics});
+}
+
+class _MetricItem {
+  final String key;
+  final String label;
+  final String description;
+  bool selected;
+
+  _MetricItem({
+    required this.key,
+    required this.label,
+    required this.description,
+    this.selected = false,
+  });
+}
+
+final List<_MetricGroup> _allMetricGroups = [
+  _MetricGroup(
+    category: 'Delivery',
+    metrics: [
+      _MetricItem(
+        key: 'velocity',
+        label: 'Velocity',
+        description: 'Story points completed per sprint.',
+      ),
+      _MetricItem(
+        key: 'throughput',
+        label: 'Throughput',
+        description: 'Number of items completed per sprint.',
+      ),
+      _MetricItem(
+        key: 'predictability',
+        label: 'Predictability',
+        description: 'Forecast accuracy (planned vs delivered).',
+      ),
+      _MetricItem(
+        key: 'commitment_reliability',
+        label: 'Commitment Reliability',
+        description: '% of sprint commitments met.',
+      ),
+      _MetricItem(
+        key: 'scope_change',
+        label: 'Scope Change',
+        description: 'Frequency and volume of scope changes per sprint.',
+      ),
+    ],
+  ),
+  _MetricGroup(
+    category: 'Quality',
+    metrics: [
+      _MetricItem(
+        key: 'defect_escape',
+        label: 'Defect Escape Rate',
+        description: 'Defects found after release vs during development.',
+      ),
+      _MetricItem(
+        key: 'test_coverage',
+        label: 'Test Coverage',
+        description: '% of code covered by automated tests.',
+      ),
+      _MetricItem(
+        key: 'rework',
+        label: 'Rework %',
+        description: 'Effort spent reworking incomplete or incorrect work.',
+      ),
+      _MetricItem(
+        key: 'dod_compliance',
+        label: 'Definition of Done Compliance',
+        description: '% of stories meeting all DoD criteria.',
+      ),
+    ],
+  ),
+  _MetricGroup(
+    category: 'Flow',
+    metrics: [
+      _MetricItem(
+        key: 'cycle_time',
+        label: 'Cycle Time',
+        description: 'Time from work start to completion.',
+      ),
+      _MetricItem(
+        key: 'lead_time',
+        label: 'Lead Time',
+        description: 'Time from request to delivery.',
+      ),
+      _MetricItem(
+        key: 'wip',
+        label: 'WIP Count',
+        description: 'Average number of active work items.',
+      ),
+      _MetricItem(
+        key: 'flow_efficiency',
+        label: 'Flow Efficiency',
+        description: '% of time items are actively worked vs waiting.',
+      ),
+    ],
+  ),
+  _MetricGroup(
+    category: 'Business Value',
+    metrics: [
+      _MetricItem(
+        key: 'business_value_delivered',
+        label: 'Business Value Delivered',
+        description: 'Value points delivered per release.',
+      ),
+      _MetricItem(
+        key: 'customer_satisfaction',
+        label: 'Customer Satisfaction',
+        description: 'Stakeholder satisfaction score.',
+      ),
+      _MetricItem(
+        key: 'time_to_market',
+        label: 'Time to Market',
+        description: 'Average time from idea to production.',
+      ),
+    ],
+  ),
+];
+
+class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen>
+    with TickerProviderStateMixin {
   final Map<String, TextEditingController> _controllers = {};
   final Map<String, List<String>> _fieldHistories = {};
   final Map<String, int> _fieldHistoryIndices = {};
   final Map<String, bool> _fieldIsAiGenerated = {};
   final Map<String, bool> _fieldIsRegenerating = {};
+  late TabController _tabController;
 
-  // Structured fields
+  // Delivery Model structured fields
   String _selectedFramework = _frameworkOptions[0];
   String _selectedSprintLength = _sprintLengthOptions[1];
   String _selectedEstimationMethod = _estimationOptions[0];
   String _governanceModel = _governanceOptions[0];
-  final Set<String> _approvalRequirements = {_approvalOptions[0], _approvalOptions[1]};
+  final Set<String> _approvalRequirements = {
+    _approvalOptions[0], _approvalOptions[1],
+  };
   final Set<String> _complianceSettings = {_complianceOptions[0]};
+
+  // Metrics & Reporting state
+  late List<_MetricGroup> _metricGroups;
+  final TextEditingController _metricsNotesCtrl = TextEditingController();
 
   bool _isLoading = true;
   bool _isSaving = false;
@@ -84,18 +225,55 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
 
   static const int _savingIndicatorDuration = 1;
 
-  static const List<_FieldConfig> _fields = [
-    _FieldConfig(
-      key: 'release',
-      label: 'Release Strategy',
-      hint: 'Define how product increments will be planned, validated, and released to deliver value throughout the project lifecycle. Include: Release Goals (business objectives and value), Release Cadence (frequency — every sprint, every few sprints, or on demand), Release Scope (features/epics targeted per release), Release Criteria (Definition of Done, quality gates, testing, and approval requirements), Deployment Strategy (phased, feature flags, blue-green, canary, or full deployment), Dependencies & Risks (key dependencies, assumptions, and release risks), Rollback & Recovery (approach for handling failed releases), Communication & Training (stakeholder notifications, user readiness, and support plans), Post-Release Support (monitoring, feedback collection, issue resolution, and continuous improvement).',
-      fullWidth: true,
+  static const List<_ReleaseField> _releaseFields = [
+    _ReleaseField(
+      key: 'release_goals',
+      label: 'Release Goals',
+      hint: 'Business objectives and value to be delivered.',
     ),
-    _FieldConfig(
-      key: 'metrics',
-      label: 'Metrics & Reporting',
-      hint: 'Velocity, throughput, predictability, and quality measures.',
-      fullWidth: true,
+    _ReleaseField(
+      key: 'release_cadence',
+      label: 'Release Cadence',
+      hint:
+          'Planned release frequency (e.g., every sprint, every few sprints, or on demand).',
+    ),
+    _ReleaseField(
+      key: 'release_scope',
+      label: 'Release Scope',
+      hint: 'Features or epics targeted for each release.',
+    ),
+    _ReleaseField(
+      key: 'release_criteria',
+      label: 'Release Criteria',
+      hint:
+          'Definition of Done, quality gates, testing, and approval requirements.',
+    ),
+    _ReleaseField(
+      key: 'deployment_strategy',
+      label: 'Deployment Strategy',
+      hint:
+          'How releases will be deployed (e.g., phased, feature flags, blue-green, canary, or full deployment, where applicable).',
+    ),
+    _ReleaseField(
+      key: 'dependencies_risks',
+      label: 'Dependencies & Risks',
+      hint: 'Key dependencies, assumptions, and release risks.',
+    ),
+    _ReleaseField(
+      key: 'rollback_recovery',
+      label: 'Rollback & Recovery',
+      hint: 'Approach for handling failed releases.',
+    ),
+    _ReleaseField(
+      key: 'communication_training',
+      label: 'Communication & Training',
+      hint: 'Stakeholder notifications, user readiness, and support plans.',
+    ),
+    _ReleaseField(
+      key: 'post_release_support',
+      label: 'Post-Release Support',
+      hint:
+          'Monitoring, feedback collection, issue resolution, and continuous improvement.',
     ),
   ];
 
@@ -107,21 +285,41 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     }
   }
 
+  List<_MetricItem> get _allMetrics =>
+      _metricGroups.expand((g) => g.metrics).toList();
+
+  int get _selectedCount => _allMetrics.where((m) => m.selected).length;
+
   @override
   void initState() {
     super.initState();
-    for (final f in _fields) {
+    _tabController = TabController(length: 3, vsync: this);
+    for (final f in _releaseFields) {
       _controllers[f.key] = TextEditingController();
     }
+    _metricGroups = _allMetricGroups
+        .map((g) => _MetricGroup(
+              category: g.category,
+              metrics: g.metrics
+                  .map((m) => _MetricItem(
+                        key: m.key,
+                        label: m.label,
+                        description: m.description,
+                      ))
+                  .toList(),
+            ))
+        .toList();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
   @override
   void dispose() {
     _autoSaveDebounce?.cancel();
+    _tabController.dispose();
     for (final c in _controllers.values) {
       c.dispose();
     }
+    _metricsNotesCtrl.dispose();
     super.dispose();
   }
 
@@ -130,29 +328,35 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     if (pid == null) return;
     setState(() => _isLoading = true);
 
-    // Check if this is a Waterfall project — if so, Agile screens are
-    // view-only (greyed out, no AI generation)
     try {
       final projectData = ProjectDataHelper.getData(context);
-      final methodology = ProjectDataHelper.resolvedProjectMethodology(projectData);
+      final methodology =
+          ProjectDataHelper.resolvedProjectMethodology(projectData);
       _isWaterfall = methodology == ProjectMethodology.waterfall;
     } catch (_) {}
 
     try {
       final data = await AgileWireframeService.loadDeliveryModel(pid);
       if (!mounted) return;
-      for (final f in _fields) {
-        final value = data[f.key] as String? ?? '';
+
+      // Load release strategy fields from deliveryModel.releaseStrategy
+      final releaseStrategy =
+          data['releaseStrategy'] as Map<String, dynamic>? ?? {};
+      for (final f in _releaseFields) {
+        final value = releaseStrategy[f.key] as String? ?? '';
         _controllers[f.key]?.text = value;
         if (value.isNotEmpty) _recordFieldHistory(f.key, value);
       }
+
       setState(() {
-        _selectedFramework = data['framework'] as String? ?? _frameworkOptions[0];
+        _selectedFramework =
+            data['framework'] as String? ?? _frameworkOptions[0];
         _selectedSprintLength =
             data['sprintLength'] as String? ?? _sprintLengthOptions[1];
         _selectedEstimationMethod =
             data['estimationMethod'] as String? ?? _estimationOptions[0];
-        _governanceModel = data['governanceModel'] as String? ?? _governanceOptions[0];
+        _governanceModel =
+            data['governanceModel'] as String? ?? _governanceOptions[0];
         final savedApprovals = data['approvalRequirements'] as List? ?? [];
         final savedCompliance = data['complianceSettings'] as List? ?? [];
         _approvalRequirements
@@ -163,10 +367,24 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           ..addAll(savedCompliance.map((e) => e.toString()));
       });
 
-      // Auto-generate AI content for Agile projects if fields are empty
+      // Load metrics config (Tab 3)
+      final metricsData =
+          await AgileWireframeService.loadMetricsConfig(pid);
+      if (mounted) {
+        final selected = (metricsData['selectedMetrics'] as List?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [];
+        for (final m in _allMetrics) {
+          m.selected = selected.contains(m.key);
+        }
+        _metricsNotesCtrl.text = metricsData['notes'] as String? ?? '';
+      }
+
+      // Auto-generate AI content for Agile projects
       if (!_isWaterfall && mounted) {
-        final allEmpty = _fields.every((f) =>
-            (_controllers[f.key]?.text ?? '').trim().isEmpty);
+        final allEmpty = _releaseFields.every(
+            (f) => (_controllers[f.key]?.text ?? '').trim().isEmpty);
         if (allEmpty && !_isGenerating) {
           _generateWithAI();
         }
@@ -189,22 +407,40 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     try {
       final pid = _projectId;
       if (pid == null) return;
-      final data = <String, dynamic>{};
-      for (final f in _fields) {
-        data[f.key] = _controllers[f.key]?.text ?? '';
+
+      // Tab 1 + Tab 2 → saveDeliveryModel
+      final releaseStrategy = <String, dynamic>{};
+      for (final f in _releaseFields) {
+        releaseStrategy[f.key] = _controllers[f.key]?.text ?? '';
       }
+      final data = <String, dynamic>{};
       data['framework'] = _selectedFramework;
       data['sprintLength'] = _selectedSprintLength;
       data['estimationMethod'] = _selectedEstimationMethod;
       data['governanceModel'] = _governanceModel;
       data['approvalRequirements'] = _approvalRequirements.toList();
       data['complianceSettings'] = _complianceSettings.toList();
-      await AgileWireframeService.saveDeliveryModel(projectId: pid, data: data);
+      data['releaseStrategy'] = releaseStrategy;
+      await AgileWireframeService.saveDeliveryModel(
+          projectId: pid, data: data);
 
-      // Save methodology flag to planningNotes so downstream screens
-      // (Execution Work Packages, Schedule) can read it.
-      final isAgile = _selectedFramework == 'Scrum' || _selectedFramework == 'ScrumBan';
-      final methodology = isAgile ? 'Agile' : (_selectedFramework == 'Kanban' ? 'Agile' : 'Waterfall');
+      // Tab 3 → saveMetricsConfig
+      final selected =
+          _allMetrics.where((m) => m.selected).map((m) => m.key).toList();
+      await AgileWireframeService.saveMetricsConfig(
+        projectId: pid,
+        data: {
+          'selectedMetrics': selected,
+          'notes': _metricsNotesCtrl.text,
+        },
+      );
+
+      // Save methodology flag to planningNotes
+      final isAgile = _selectedFramework == 'Scrum' ||
+          _selectedFramework == 'ScrumBan';
+      final methodology = isAgile
+          ? 'Agile'
+          : (_selectedFramework == 'Kanban' ? 'Agile' : 'Waterfall');
       await ProjectDataHelper.updateAndSave(
         context: context,
         checkpoint: 'agile_delivery_model',
@@ -237,8 +473,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     setState(() => _isGenerating = true);
     try {
       final data = ProjectDataHelper.getData(context);
-      final contextText =
-          ProjectDataHelper.buildProjectContextScan(data, sectionLabel: 'Agile Delivery Model');
+      final contextText = ProjectDataHelper.buildProjectContextScan(
+          data, sectionLabel: 'Agile Delivery Model');
       if (contextText.trim().isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -260,9 +496,16 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
         '- "governanceModel": "Centralized", "Decentralized", or "Federated"\n'
         '- "approvalRequirements": comma-separated list from: Sprint Planning, Sprint Review, Release, Retro Actions\n'
         '- "complianceSettings": comma-separated list from: Regulatory, Security, Audit, Industry Standard\n'
-        '- "release": Release Strategy (4-6 sentences covering release goals, cadence, scope, criteria, deployment strategy, dependencies & risks, rollback & recovery, communication & training, and post-release support)\n'
-        '- "metrics": Metrics & reporting (2-3 sentences)',
-        maxTokens: 1200,
+        '- "release_goals": Release Goals (1-2 sentences)\n'
+        '- "release_cadence": Release Cadence (1-2 sentences)\n'
+        '- "release_scope": Release Scope (1-2 sentences)\n'
+        '- "release_criteria": Release Criteria (1-2 sentences)\n'
+        '- "deployment_strategy": Deployment Strategy (1-2 sentences)\n'
+        '- "dependencies_risks": Dependencies & Risks (1-2 sentences)\n'
+        '- "rollback_recovery": Rollback & Recovery (1-2 sentences)\n'
+        '- "communication_training": Communication & Training (1-2 sentences)\n'
+        '- "post_release_support": Post-Release Support (1-2 sentences)',
+        maxTokens: 2000,
         temperature: 0.5,
       );
       final parsed = _parseAIResult(result);
@@ -292,7 +535,10 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       }
       if (parsed.containsKey('approvalRequirements')) {
         final raw = parsed['approvalRequirements']!;
-        final items = raw.split(',').map((e) => e.trim()).where((e) => _approvalOptions.contains(e));
+        final items = raw
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => _approvalOptions.contains(e));
         setState(() {
           _approvalRequirements
             ..clear()
@@ -301,7 +547,10 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       }
       if (parsed.containsKey('complianceSettings')) {
         final raw = parsed['complianceSettings']!;
-        final items = raw.split(',').map((e) => e.trim()).where((e) => _complianceOptions.contains(e));
+        final items = raw
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => _complianceOptions.contains(e));
         setState(() {
           _complianceSettings
             ..clear()
@@ -383,7 +632,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     _scheduleAutoSave();
   }
 
-  Future<void> _regenerateField(String key, String label, String hint) async {
+  Future<void> _regenerateField(
+      String key, String label, String hint) async {
     setState(() => _fieldIsRegenerating[key] = true);
     try {
       final data = ProjectDataHelper.getData(context);
@@ -431,7 +681,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
             DraggableSidebar(
               openWidth: AppBreakpoints.sidebarWidth(context),
               child: const InitiationLikeSidebar(
-                  activeItemLabel: 'Agile Delivery Model - Delivery Model'),
+                  activeItemLabel:
+                      'Agile Delivery Model - Delivery Model'),
             ),
             Expanded(
               child: Stack(
@@ -442,8 +693,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                             'Agile Delivery Model - Delivery Model'),
                   ),
                   SingleChildScrollView(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: hp, vertical: 32),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: hp, vertical: 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -462,16 +713,20 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
-                            margin: const EdgeInsets.only(bottom: 16),
+                            margin:
+                                const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
                               color: const Color(0xFFFEF3C7),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFFDE68A)),
+                              borderRadius:
+                                  BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: const Color(0xFFFDE68A)),
                             ),
                             child: Row(
                               children: [
                                 const Icon(Icons.info_outline,
-                                    color: Color(0xFF92400E), size: 20),
+                                    color: Color(0xFF92400E),
+                                    size: 20),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
@@ -486,17 +741,10 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                             ),
                           ),
                         ],
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Define the agile delivery approach for this project.',
-                                style: TextStyle(
-                                    fontSize: 15, color: _kMuted),
-                              ),
-                            ),
-                            if (!_isLoading && !_isWaterfall) ...[
-                              const SizedBox(width: 12),
+                        if (!_isLoading && !_isWaterfall) ...[
+                          Row(
+                            children: [
+                              const Spacer(),
                               OutlinedButton.icon(
                                 onPressed: _isGenerating
                                     ? null
@@ -508,68 +756,64 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                                         child:
                                             CircularProgressIndicator(
                                                 strokeWidth: 2))
-                                    : const Icon(Icons.auto_awesome,
+                                    : const Icon(
+                                        Icons.auto_awesome,
                                         size: 18),
                                 label: Text(_isGenerating
                                     ? 'Generating...'
                                     : 'AI Generate'),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: _kAccent,
-                                  side: const BorderSide(color: _kAccent),
+                                  side: const BorderSide(
+                                      color: _kAccent),
                                 ),
                               ),
                             ],
-                          ],
-                        ),
-                        const SizedBox(height: 24),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         if (_isLoading)
-                          const Center(child: CircularProgressIndicator())
+                          const Center(
+                              child: CircularProgressIndicator())
                         else ...[
                           if (_isSaving)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
+                              padding:
+                                  const EdgeInsets.only(bottom: 8),
                               child: Row(
                                 children: [
                                   const SizedBox(
                                       width: 12,
                                       height: 12,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2)),
+                                      child:
+                                          CircularProgressIndicator(
+                                              strokeWidth: 2)),
                                   const SizedBox(width: 8),
                                   Text('Saving...',
                                       style: TextStyle(
-                                          fontSize: 12, color: _kMuted)),
+                                          fontSize: 12,
+                                          color: _kMuted)),
                                 ],
                               ),
                             ),
-                          _buildFrameworkSelector(),
-                          const SizedBox(height: 20),
-                          if (_selectedFramework != 'Kanban')
-                            _buildSprintLengthSelector(),
-                          if (_selectedFramework != 'Kanban')
-                            const SizedBox(height: 20),
-                          _buildEstimationSelector(),
-                          const SizedBox(height: 20),
-                          _buildGovernanceSelector(),
-                          const SizedBox(height: 20),
-                          _buildApprovalSelector(),
-                          const SizedBox(height: 20),
-                          _buildComplianceSelector(),
-                          const SizedBox(height: 24),
-                          ..._fields.map((f) => _buildField(f)),
+                          _buildTabs(),
                         ],
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(
-                          backLabel: PlanningPhaseNavigation.backLabel(
-                              'agile_delivery_model'),
-                          nextLabel: PlanningPhaseNavigation.nextLabel(
-                              'agile_delivery_model'),
+                          backLabel: PlanningPhaseNavigation
+                              .backLabel(
+                                  'agile_delivery_model'),
+                          nextLabel: PlanningPhaseNavigation
+                              .nextLabel(
+                                  'agile_delivery_model'),
                           onBack: () =>
-                              PlanningPhaseNavigation.goToPrevious(
-                                  context, 'agile_delivery_model'),
+                              PlanningPhaseNavigation
+                                  .goToPrevious(context,
+                                      'agile_delivery_model'),
                           onNext: () =>
                               PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_delivery_model'),
+                                  context,
+                                  'agile_delivery_model'),
                           onSkip: () => PlanningPhaseNavigation.goToSkip(
                                   context, 'agile_delivery_model'),
                           pageTitle: 'Agile Delivery Model',
@@ -588,6 +832,283 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTabs() {
+    final tabContent = [
+      _buildDeliveryModelTab(),
+      _buildReleaseStrategyTab(),
+      _buildMetricsTab(),
+    ];
+    return Column(
+      children: [
+        TabBar(
+          controller: _tabController,
+          onTap: (index) => setState(() {}),
+          labelColor: _kHeadline,
+          unselectedLabelColor: _kMuted,
+          indicatorColor: _kAccent,
+          labelStyle: const TextStyle(
+              fontSize: 14, fontWeight: FontWeight.w600),
+          tabs: const [
+            Tab(text: 'Delivery Model'),
+            Tab(text: 'Release Strategy'),
+            Tab(text: 'Metrics & Reporting'),
+          ],
+        ),
+        const SizedBox(height: 16),
+        tabContent[_tabController.index],
+      ],
+    );
+  }
+
+  Widget _buildDeliveryModelTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFrameworkSelector(),
+        const SizedBox(height: 20),
+        if (_selectedFramework != 'Kanban')
+          _buildSprintLengthSelector(),
+        if (_selectedFramework != 'Kanban')
+          const SizedBox(height: 20),
+        _buildEstimationSelector(),
+        const SizedBox(height: 20),
+        _buildGovernanceSelector(),
+        const SizedBox(height: 20),
+        _buildApprovalSelector(),
+        const SizedBox(height: 20),
+        _buildComplianceSelector(),
+      ],
+    );
+  }
+
+  Widget _buildReleaseStrategyTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+            'Define how product increments will be planned, validated, and released.',
+            style: TextStyle(fontSize: 14, color: _kMuted)),
+        const SizedBox(height: 20),
+        ..._releaseFields.map((f) => _buildReleaseField(f)),
+      ],
+    );
+  }
+
+  Widget _buildMetricsTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+            'Select the metrics your team will track during execution.',
+            style: TextStyle(fontSize: 14, color: _kMuted)),
+        const SizedBox(height: 16),
+        Text('$_selectedCount metrics selected',
+            style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _kHeadline)),
+        const SizedBox(height: 16),
+        ..._metricGroups.map((group) => _buildMetricGroup(group)),
+        const SizedBox(height: 20),
+        const Text('Additional Notes',
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _kHeadline)),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFD1D5DB)),
+          ),
+          child: VoiceTextField(
+            controller: _metricsNotesCtrl,
+            minLines: 3,
+            maxLines: 6,
+            style: const TextStyle(
+                fontSize: 14, color: Color(0xFF1F2937)),
+            decoration: const InputDecoration(
+              hintText:
+                  'Add any additional notes about metrics and reporting...',
+              hintStyle:
+                  TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.all(14),
+            ),
+            onChanged: (_) => _scheduleAutoSave(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricGroup(_MetricGroup group) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(group.category,
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: _kHeadline)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: group.metrics.map((m) {
+              return FilterChip(
+                label:
+                    Text(m.label, style: const TextStyle(fontSize: 12)),
+                selected: m.selected,
+                selectedColor: _kAccent.withOpacity(0.15),
+                checkmarkColor: _kAccent,
+                onSelected: (v) {
+                  setState(() => m.selected = v);
+                  _scheduleAutoSave();
+                },
+                tooltip: m.description,
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReleaseField(_ReleaseField f) {
+    final controller = _controllers[f.key];
+    final isRegenerating = _fieldIsRegenerating[f.key] ?? false;
+    final isAiGenerated = _fieldIsAiGenerated[f.key] ?? false;
+    final hasContent = (controller?.text ?? '').isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(f.label,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: _kHeadline)),
+              if (isAiGenerated)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7E6),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.auto_awesome,
+                          size: 10, color: Color(0xFFD97706)),
+                      SizedBox(width: 3),
+                      Text('AI',
+                          style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFFD97706))),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          HoverableFieldControls(
+            isAiGenerated: isAiGenerated,
+            isLoading: isRegenerating,
+            canUndo: _canUndoField(f.key),
+            canRedo: _canRedoField(f.key),
+            onUndo: () => _undoField(f.key),
+            onRedo: () => _redoField(f.key),
+            onRegenerate: () =>
+                _regenerateField(f.key, f.label, f.hint),
+            child: Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(minHeight: 80),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border:
+                    Border.all(color: const Color(0xFFD1D5DB)),
+              ),
+              child: VoiceTextField(
+                controller: controller,
+                style: const TextStyle(
+                    fontSize: 14, color: Color(0xFF1F2937)),
+                decoration: InputDecoration(
+                  hintText: f.hint,
+                  hintStyle: const TextStyle(
+                      color: Color(0xFF9CA3AF), fontSize: 13),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.all(14),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'KAZ AI',
+                        icon: isRegenerating
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2))
+                            : const Icon(Icons.auto_awesome,
+                                color: Color(0xFFF59E0B),
+                                size: 18),
+                        onPressed: isRegenerating
+                            ? null
+                            : () => _regenerateField(
+                                f.key, f.label, f.hint),
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(
+                            minWidth: 32, minHeight: 32),
+                      ),
+                      if (hasContent)
+                        IconButton(
+                          tooltip: 'Clear all content',
+                          icon: const Icon(Icons.delete_sweep,
+                              color: Color(0xFFEF4444),
+                              size: 18),
+                          onPressed: () {
+                            controller?.clear();
+                            _recordFieldHistory(f.key, '');
+                            _scheduleAutoSave();
+                            setState(() {});
+                          },
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(
+                              minWidth: 32, minHeight: 32),
+                        ),
+                    ],
+                  ),
+                ),
+                minLines: 3,
+                maxLines: 6,
+                onChanged: (value) {
+                  _recordFieldHistory(f.key, value);
+                  _scheduleAutoSave();
+                  setState(() {});
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -613,8 +1134,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           },
           style: ButtonStyle(
             visualDensity: VisualDensity.compact,
-            textStyle: WidgetStateProperty.all(
-                const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            textStyle: WidgetStateProperty.all(const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w600)),
           ),
         ),
         const SizedBox(height: 6),
@@ -660,8 +1181,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           },
           style: ButtonStyle(
             visualDensity: VisualDensity.compact,
-            textStyle: WidgetStateProperty.all(
-                const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            textStyle: WidgetStateProperty.all(const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w600)),
           ),
         ),
       ],
@@ -723,8 +1244,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           },
           style: ButtonStyle(
             visualDensity: VisualDensity.compact,
-            textStyle: WidgetStateProperty.all(
-                const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            textStyle: WidgetStateProperty.all(const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w600)),
           ),
         ),
         const SizedBox(height: 4),
@@ -756,7 +1277,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           children: _approvalOptions.map((opt) {
             final selected = _approvalRequirements.contains(opt);
             return FilterChip(
-              label: Text(opt, style: const TextStyle(fontSize: 12)),
+              label:
+                  Text(opt, style: const TextStyle(fontSize: 12)),
               selected: selected,
               selectedColor: _kAccent.withOpacity(0.15),
               checkmarkColor: _kAccent,
@@ -793,7 +1315,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           children: _complianceOptions.map((opt) {
             final selected = _complianceSettings.contains(opt);
             return FilterChip(
-              label: Text(opt, style: const TextStyle(fontSize: 12)),
+              label:
+                  Text(opt, style: const TextStyle(fontSize: 12)),
               selected: selected,
               selectedColor: _kAccent.withOpacity(0.15),
               checkmarkColor: _kAccent,
@@ -814,134 +1337,6 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     );
   }
 
-  Widget _buildField(_FieldConfig f) {
-    final controller = _controllers[f.key];
-    final isRegenerating = _fieldIsRegenerating[f.key] ?? false;
-    final isAiGenerated = _fieldIsAiGenerated[f.key] ?? false;
-    final hasContent = (controller?.text ?? '').isNotEmpty;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(f.label,
-                  style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: _kHeadline)),
-              if (isAiGenerated)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF7E6),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.auto_awesome,
-                          size: 10, color: Color(0xFFD97706)),
-                      SizedBox(width: 3),
-                      Text('AI',
-                          style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFD97706))),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const SizedBox(height: 6),
-          HoverableFieldControls(
-            isAiGenerated: isAiGenerated,
-            isLoading: isRegenerating,
-            canUndo: _canUndoField(f.key),
-            canRedo: _canRedoField(f.key),
-            onUndo: () => _undoField(f.key),
-            onRedo: () => _redoField(f.key),
-            onRegenerate: () => _regenerateField(f.key, f.label, f.hint),
-            child: Container(
-              width: double.infinity,
-              constraints: BoxConstraints(
-                minHeight: f.fullWidth ? 100 : 80,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFD1D5DB)),
-              ),
-              child: VoiceTextField(
-                controller: controller,
-                style: const TextStyle(
-                    fontSize: 14, color: Color(0xFF1F2937)),
-                decoration: InputDecoration(
-                  hintText: f.hint,
-                  hintStyle: const TextStyle(
-                      color: Color(0xFF9CA3AF), fontSize: 13),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: const EdgeInsets.all(14),
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        tooltip: 'KAZ AI',
-                        icon: isRegenerating
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2))
-                            : const Icon(Icons.auto_awesome,
-                                color: Color(0xFFF59E0B), size: 18),
-                        onPressed: isRegenerating
-                            ? null
-                            : () => _regenerateField(
-                                f.key, f.label, f.hint),
-                        padding: const EdgeInsets.all(4),
-                        constraints: const BoxConstraints(
-                            minWidth: 32, minHeight: 32),
-                      ),
-                      if (hasContent)
-                        IconButton(
-                          tooltip: 'Clear all content',
-                          icon: const Icon(Icons.delete_sweep,
-                              color: Color(0xFFEF4444), size: 18),
-                          onPressed: () {
-                            controller?.clear();
-                            _recordFieldHistory(f.key, '');
-                            _scheduleAutoSave();
-                            setState(() {});
-                          },
-                          padding: const EdgeInsets.all(4),
-                          constraints: const BoxConstraints(
-                              minWidth: 32, minHeight: 32),
-                        ),
-                    ],
-                  ),
-                ),
-                minLines: f.fullWidth ? 4 : 3,
-                maxLines: f.fullWidth ? 8 : 6,
-                onChanged: (value) {
-                  _recordFieldHistory(f.key, value);
-                  _scheduleAutoSave();
-                  setState(() {});
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _exportPdf() async {
     final projectData = ProjectDataHelper.getData(context);
     await PdfExportHelper.exportScreenPdf(
@@ -952,24 +1347,12 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           {'Project Name': projectData.projectName ?? 'N/A'},
           {'Solution Title': projectData.solutionTitle ?? 'N/A'},
         ]),
-        PdfSection.text('Notes',
+        PdfSection.text(
+            'Notes',
             projectData.planningNotes[
                     'planning_agile_delivery_model_notes'] ??
                 'No data recorded.'),
       ],
     );
   }
-}
-
-class _FieldConfig {
-  final String key;
-  final String label;
-  final String hint;
-  final bool fullWidth;
-  const _FieldConfig({
-    required this.key,
-    required this.label,
-    required this.hint,
-    this.fullWidth = false,
-  });
 }

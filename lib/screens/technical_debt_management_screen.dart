@@ -961,7 +961,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Map<String, List<LaunchEntry>> generated = {};
  try {
  generated = await ExecutionPhaseAiSeed.generateEntries(
- context: context: context,
+ context: context,
  section: 'Technical Debt Management',
  sections: const {
  'debt_items': 'Technical debt items with owner, severity, status',
@@ -1086,7 +1086,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final resolved = _debtItems.where((item) => item.status == 'Done').length;
 
  showDialog<void>(
- context: context: context,
+ context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Technical Debt Snapshot'),
  content: Column(
@@ -1140,7 +1140,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  showDialog<void>(
- context: context: context,
+ context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
  title: Text(isEdit ? 'Edit debt item' : 'Add debt item'),
@@ -1298,7 +1298,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  (seed?.color ?? const Color(0xFF0EA5E9)).toARGB32();
 
  showDialog<void>(
- context: context: context,
+ context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
  title: Text(displayIndex == null
@@ -1459,7 +1459,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  (seed?.color ?? const Color(0xFFF97316)).toARGB32();
 
  showDialog<void>(
- context: context: context,
+ context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
  title: Text(displayIndex == null
@@ -1618,7 +1618,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  (seed?.color ?? const Color(0xFF0EA5E9)).toARGB32();
 
  showDialog<void>(
- context: context: context,
+ context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
  title: Text(
@@ -1853,7 +1853,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _upsertDebtItems(List<DebtItem> items) async {
  await ProjectDataHelper.updateAndSave(
- context: context: context,
+ context: context,
  checkpoint: 'technical_debt_management',
  showSnackbar: false,
  dataUpdater: (current) {
@@ -1868,7 +1868,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _upsertRemediationTracks(List<RemediationTrack> tracks) async {
  await ProjectDataHelper.updateAndSave(
- context: context: context,
+ context: context,
  checkpoint: 'technical_debt_management',
  showSnackbar: false,
  dataUpdater: (current) {
@@ -1883,7 +1883,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _upsertRootCauses(List<DebtInsight> rootCauses) async {
  await ProjectDataHelper.updateAndSave(
- context: context: context,
+ context: context,
  checkpoint: 'technical_debt_management',
  showSnackbar: false,
  dataUpdater: (current) {
@@ -1898,7 +1898,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _upsertOwners(List<OwnerItem> owners) async {
  await ProjectDataHelper.updateAndSave(
- context: context: context,
+ context: context,
  checkpoint: 'technical_debt_management',
  showSnackbar: false,
  dataUpdater: (current) {
@@ -1918,7 +1918,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  required List<OwnerItem> owners,
  }) async {
  await ProjectDataHelper.updateAndSave(
- context: context: context,
+ context: context,
  checkpoint: 'technical_debt_management',
  showSnackbar: false,
  dataUpdater: (current) {
@@ -2095,7 +2095,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Future<void> _exportPdf() async {
  final projectData = ProjectDataHelper.getData(context);
  await PdfExportHelper.exportScreenPdf(
- context: context: context,
+ context: context,
  screenTitle: 'Technical Debt Management',
  sections: [
  PdfSection.keyValue('Project Info', [

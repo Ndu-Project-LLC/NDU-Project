@@ -12,7 +12,7 @@ enum ProjectApprovalStatus {
   locked,
 }
 
-ProjectActivityStatus _parseProjectActivityStatus(dynamic raw) {
+ProjectActivityStatus parseProjectActivityStatus(dynamic raw) {
   final token = (raw ?? '').toString().trim().toLowerCase();
   switch (token) {
     case 'acknowledged':
@@ -28,7 +28,7 @@ ProjectActivityStatus _parseProjectActivityStatus(dynamic raw) {
   }
 }
 
-ProjectApprovalStatus _parseProjectApprovalStatus(dynamic raw) {
+ProjectApprovalStatus parseProjectApprovalStatus(dynamic raw) {
   final token = (raw ?? '').toString().trim().toLowerCase();
   switch (token) {
     case 'approved':
@@ -144,8 +144,8 @@ class ProjectActivity {
           (json['applicableSections'] as List?)?.map((e) => '$e').toList() ??
               const [],
       dueDate: json['dueDate']?.toString() ?? '',
-      status: _parseProjectActivityStatus(json['status']),
-      approvalStatus: _parseProjectApprovalStatus(json['approvalStatus']),
+      status: parseProjectActivityStatus(json['status']),
+      approvalStatus: parseProjectApprovalStatus(json['approvalStatus']),
       createdAt: _parseDate(json['createdAt'], now),
       updatedAt: _parseDate(json['updatedAt'], now),
     );

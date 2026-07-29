@@ -754,7 +754,7 @@ List<Widget> _buildDialogContextChips() {
  description: 'Category: ${normalized.category}, Budget: \$${normalized.budget.toStringAsFixed(2)}, Priority: ${normalized.priority.name}',
  phase: 'Planning',
  status: normalized.status.name,
- assignedTo: normalized.responsible,
+  assignedTo: normalized.responsibleMember,
  dueDate: normalized.requiredByDate?.toIso8601String() ?? '',
  ));
  } catch (_) {}
@@ -825,7 +825,7 @@ List<Widget> _buildDialogContextChips() {
  description: 'Category: ${result.category}, Status: ${result.status.name}, Progress: ${(result.progress * 100).toStringAsFixed(0)}%',
  phase: 'Planning',
  status: result.status.name,
- assignedTo: result.responsible,
+  assignedTo: result.responsibleMember,
  dueDate: result.requiredByDate?.toIso8601String() ?? '',
  ));
  } catch (_) {}

@@ -296,7 +296,7 @@ showNavigationButtons: false,
  contractName: row['contractName'] ?? '',
  vendor: row['vendor'] ?? '',
  contractRef: row['contractNumber'] ?? '',
- value: row['finalValue'].isNotEmpty ? row['finalValue']! : (row['contractValue'] ?? ''),
+  value: (row['finalValue'] ?? '').isNotEmpty ? row['finalValue']! : (row['contractValue'] ?? ''),
  closeOutStatus: _mapCloseOutStatus(row['status'], row['closeOutPhase']),
  notes: 'Lead: ${row['closeOutLead'] ?? ''}${row['changeOrders'] != null && row['changeOrders']!.isNotEmpty ? ' | Change Orders: ${row['changeOrders']}' : ''}',
  ));
@@ -1403,7 +1403,7 @@ class _AddContractDialogState extends State<_AddContractDialog> {
                 controller: _valueController,
                 decoration: const InputDecoration(
                   labelText: 'Contract Value',
-                  hintText: 'e.g., $100,000',
+                  hintText: 'e.g., \$100,000',
                   border: OutlineInputBorder(),
                 ),
               ),

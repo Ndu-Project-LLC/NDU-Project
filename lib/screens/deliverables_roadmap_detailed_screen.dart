@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/aggregated_deliverable.dart';
 import 'package:ndu_project/models/roadmap_deliverable.dart';
@@ -828,7 +830,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  description: 'Status: ${updated.status.name}, Category: ${updated.category}, Progress: ${updated.completionPercent}%',
  phase: updated.phase.name,
  status: updated.status.name.toLowerCase(),
- assignedTo: updated.assignee,
+  assignedTo: updated.assigneeName ?? '',
  dueDate: updated.dueDate?.toIso8601String() ?? '',
  ));
  } catch (_) {}

@@ -129,7 +129,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
 
   Future<void> _deleteRecognition(int index) async {
     final recognition = _recognitions[index];
-    final itemName = recognition.recipientName.isNotEmpty ? recognition.recipientName : 'Recognition';
+    final itemName = recognition.recipient.isNotEmpty ? recognition.recipient : 'Recognition';
     final confirmed = await ConfirmDeleteDialog.show(
       context: context,
       itemName: itemName,

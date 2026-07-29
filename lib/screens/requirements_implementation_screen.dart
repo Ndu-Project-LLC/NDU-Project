@@ -1096,7 +1096,7 @@ class _RequirementsImplementationScreenState
  IconButton(
  onPressed: () async {
   final doc = _documents[index];
-  final itemName = doc.fileName ?? doc.title ?? 'document';
+  final itemName = doc.fileName ?? doc.name ?? 'document';
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
     itemName: itemName,

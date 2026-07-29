@@ -1514,11 +1514,9 @@ Future<void> _deleteEntry(BuildContext context, String id) async {
     itemType: 'Interface Entry',
     customMessage: 'This will delete the interface entry and remove it from AI context. This action cannot be undone.',
   );
- if (!confirm) return;
+  if (!confirm) return;
 
- final data = ProjectDataHelper.getData(context);
- final entryToDelete = data.interfaceEntries.firstWhere((e) => e.id == id);
- final entries =
+  final entries =
  data.interfaceEntries.where((e) => e.id != id).toList();
  final logEntries = List<InterfaceChangeLogEntry>.from(data.interfaceChangeLog);
  logEntries.add(InterfaceChangeLogEntry(
@@ -1547,7 +1545,6 @@ Future<void> _deleteEntry(BuildContext context, String id) async {
       'interfaceName': entryToDelete.boundary,
     },
   ));
-  }
 }
 
 // ─── Risk Sync Helpers ───────────────────────────────────────────────────────

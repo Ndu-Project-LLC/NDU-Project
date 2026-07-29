@@ -1744,21 +1744,25 @@ Future<void> _runAiSuggestMappings() async {
  final row = _document.specifications[index];
  final fallback = 'Specification ${index + 1}';
  final title = row.title.trim().isEmpty ? fallback : row.title.trim();
- options.add(
- _SpecificationOption(
- id: row.id,
- title: title,
- details: row.details.trim(),
- specificationType: row.specificationType.trim(),
- discipline: row.discipline.trim(),
- area: row.area.trim(),
- sourceType: row.sourceType.trim(),
- owner: row.owner.trim(),
- status: row.status.trim(),
- referenceLink: row.referenceLink.trim(),
- wbsWorkPackageId: row.wbsWorkPackageId.trim(),
- wbsWorkPackageTitle: row.wbsWorkPackageTitle.trim(),
- ),
+  options.add(
+  _SpecificationOption(
+  id: row.id,
+  title: title,
+  details: row.details.trim(),
+  specificationType: row.specificationType.trim(),
+  discipline: row.discipline.trim(),
+  area: row.area.trim(),
+  sourceType: row.sourceType.trim(),
+  owner: row.owner.trim(),
+  status: row.status.trim(),
+  referenceLink: row.referenceLink.trim(),
+  wbsWorkPackageId: row.wbsWorkPackageId.trim(),
+  wbsWorkPackageTitle: row.wbsWorkPackageTitle.trim(),
+  specCode: row.specCode.trim(),
+  subscopePackageId: row.subscopePackageId.trim(),
+  subscopePackageTitle: row.subscopePackageTitle.trim(),
+  coveragePercent: row.coveragePercent,
+  ),
  );
  }
  return options;
@@ -2728,13 +2732,14 @@ Future<void> _runAiSuggestMappings() async {
  IconButton(
  icon: Icon(Icons.auto_awesome, color: Color(0xFF4154F1)),
  tooltip: 'AI Suggest Mappings',
- onPressed: _runAiSuggestMappings,
- ),
- ),
- const SizedBox(height: 8),
- _ActionButton(
- label: 'View table',
- icon: Icons.table_chart_outlined,
+  onPressed: _runAiSuggestMappings,
+  ),
+  ],
+  ),
+  const SizedBox(height: 8),
+  _ActionButton(
+  label: 'View table',
+  icon: Icons.table_chart_outlined,
  onPressed: _showSpecificationsTableDialog,
  ),
  const SizedBox(height: 12),
@@ -5349,23 +5354,31 @@ class _SpecificationOption {
  this.sourceType = '',
  this.owner = '',
  this.status = '',
- this.referenceLink = '',
- this.wbsWorkPackageId = '',
- this.wbsWorkPackageTitle = '',
- });
+  this.referenceLink = '',
+  this.wbsWorkPackageId = '',
+  this.wbsWorkPackageTitle = '',
+  this.specCode = '',
+  this.subscopePackageId = '',
+  this.subscopePackageTitle = '',
+  this.coveragePercent = 0.0,
+  });
 
- final String id;
- final String title;
- final String details;
- final String specificationType;
- final String discipline;
- final String area;
- final String sourceType;
- final String owner;
- final String status;
- final String referenceLink;
- final String wbsWorkPackageId;
- final String wbsWorkPackageTitle;
+  final String id;
+  final String title;
+  final String details;
+  final String specificationType;
+  final String discipline;
+  final String area;
+  final String sourceType;
+  final String owner;
+  final String status;
+  final String referenceLink;
+  final String wbsWorkPackageId;
+  final String wbsWorkPackageTitle;
+  final String specCode;
+  final String subscopePackageId;
+  final String subscopePackageTitle;
+  final double coveragePercent;
 }
 
 class _WbsWorkPackageOption {

@@ -645,20 +645,20 @@ showNavigationButtons: false,
   if (!confirmed || !mounted) return;
   setState(() => _scopeItems.removeAt(idx));
   _scheduleSave();
-  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.deliverable);
- }
+if (mounted) showDeletionSuccessSnackBar(context, itemName: item.deliverable);
+}
 
- Future<void> _confirmDeleteMilestone(int idx) async {
+Future<void> _confirmDeleteMilestone(int idx) async {
   final item = _milestones[idx];
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
-    itemName: item.milestone,
+    itemName: item.title,
     itemType: 'milestone',
   );
   if (!confirmed || !mounted) return;
   setState(() => _milestones.removeAt(idx));
   _scheduleSave();
-  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.milestone);
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.title);
  }
 
  Future<void> _confirmDeleteFollowUp(
@@ -666,13 +666,13 @@ showNavigationButtons: false,
   final item = list[idx];
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
-    itemName: item.actionItem ?? 'follow-up item',
+    itemName: item.title ?? 'follow-up item',
     itemType: 'follow-up item',
   );
   if (!confirmed || !mounted) return;
   setState(() => list.removeAt(idx));
   _scheduleSave();
-  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.actionItem ?? 'follow-up item');
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.title ?? 'follow-up item');
  }
 
  void _scheduleSave() {

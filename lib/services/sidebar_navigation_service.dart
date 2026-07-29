@@ -164,8 +164,6 @@ class SidebarNavigationService {
         label: 'Acceptance Criteria Planning'),
     SidebarItem(checkpoint: 'agile_map_out', label: 'Agile Map Out'),
     SidebarItem(checkpoint: 'agile_release_plan', label: 'Release Plan'),
-    SidebarItem(
-        checkpoint: 'agile_metrics_planning', label: 'Agile Metrics Planning'),
     // Execution Plan sub-items (full flow matching sidebar order)
     SidebarItem(checkpoint: 'execution_plan', label: 'Execution Plan Overview'),
     SidebarItem(

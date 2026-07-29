@@ -2967,8 +2967,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
       phase: 'Execution',
     ));
   }
-  }
-  showDeletionSuccessSnackBar(context, itemName: riskName, itemType: 'Risk');
+    showDeletionSuccessSnackBar(context, itemName: riskName, itemType: 'Risk');
   }
 
   Future<void> _deleteSignal(String id) async {

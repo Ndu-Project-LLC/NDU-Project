@@ -1575,7 +1575,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _deleteDataFlow(String id) async {
   final dataFlow = _dataFlows.where((d) => d.id == id).firstOrNull;
-  final itemName = dataFlow?.name ?? 'Data Flow';
+  final itemName = dataFlow?.source ?? 'Data Flow';
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
     itemName: itemName,
@@ -1602,7 +1602,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _deleteDesignDocument(String id) async {
   final doc = _designDocuments.where((d) => d.id == id).firstOrNull;
-  final itemName = doc?.name ?? 'Design Document';
+  final itemName = doc?.title ?? 'Design Document';
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
     itemName: itemName,
@@ -2467,7 +2467,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _deleteField(String id) async {
   final field = _fields.where((f) => f.id == id).firstOrNull;
-  final itemName = field?.name ?? 'Field';
+  final itemName = field?.field ?? 'Field';
   final confirmed = await ConfirmDeleteDialog.show(
     context: context,
     itemName: itemName,

@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 class ScopeCompletionScreen extends StatefulWidget {
  const ScopeCompletionScreen({super.key});
@@ -3058,9 +3059,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteWorkPackage(String id) {
- setState(() => _workPackages.removeWhere((entry) => entry.id == id));
- _scheduleSave();
+ Future<void> _deleteWorkPackage(String id) async {
+  final item = _workPackages.where((e) => e.id == id).firstOrNull;
+  final itemName = item?.name ?? 'work package';
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'work package',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _workPackages.removeWhere((entry) => entry.id == id));
+  _scheduleSave();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: itemName);
  }
 
  void _addCheckpoint() {
@@ -3078,10 +3088,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteCheckpoint(String id) {
- setState(
+ Future<void> _deleteCheckpoint(String id) async {
+  final item = _acceptanceCheckpoints.where((e) => e.id == id).firstOrNull;
+  final itemName = item?.name ?? 'checkpoint';
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'checkpoint',
+  );
+  if (!confirmed || !mounted) return;
+  setState(
  () => _acceptanceCheckpoints.removeWhere((entry) => entry.id == id));
- _scheduleSave();
+  _scheduleSave();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: itemName);
  }
 
  void _addAcceptanceTag() {
@@ -3098,9 +3117,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteAcceptanceTag(String id) {
- setState(() => _acceptanceTags.removeWhere((entry) => entry.id == id));
- _scheduleSave();
+ Future<void> _deleteAcceptanceTag(String id) async {
+  final item = _acceptanceTags.where((e) => e.id == id).firstOrNull;
+  final itemName = item?.name ?? 'acceptance tag';
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'acceptance tag',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _acceptanceTags.removeWhere((entry) => entry.id == id));
+  _scheduleSave();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: itemName);
  }
 
  void _addScopeChange() {
@@ -3117,9 +3145,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _scheduleSave();
  }
 
- void _deleteScopeChange(String id) {
- setState(() => _scopeChanges.removeWhere((entry) => entry.id == id));
- _scheduleSave();
+ Future<void> _deleteScopeChange(String id) async {
+  final item = _scopeChanges.where((e) => e.id == id).firstOrNull;
+  final itemName = item?.title ?? 'scope change';
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'scope change',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _scopeChanges.removeWhere((entry) => entry.id == id));
+  _scheduleSave();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: itemName);
  }
 
  String _newId() => DateTime.now().microsecondsSinceEpoch.toString();

@@ -20,7 +20,7 @@ import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 class BackendDesignScreen extends StatefulWidget {
@@ -1522,16 +1522,21 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _deleteComponent(String id) async {
-  final confirmed = await showDeleteConfirmationDialog(
-    context,
-    title: 'Delete Component',
-    message: 'Delete this architecture component? This action cannot be undone.',
+  final component = _components.where((c) => c.id == id).firstOrNull;
+  final itemName = component?.name ?? 'Component';
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'architecture component',
   );
   if (!confirmed) return;
   setState(() => _components.removeWhere((entry) => entry.id == id));
   _scheduleSave();
   _logActivity('Deleted architecture component row', details: {'itemId': id});
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'component');
   }
+ }
 
  void _addQuickArchitectureComponent() {
  final name = _quickComponentNameController.text.trim();
@@ -1569,16 +1574,21 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _deleteDataFlow(String id) async {
-  final confirmed = await showDeleteConfirmationDialog(
-    context,
-    title: 'Delete Data Flow',
-    message: 'Delete this data flow entry? This action cannot be undone.',
+  final dataFlow = _dataFlows.where((d) => d.id == id).firstOrNull;
+  final itemName = dataFlow?.name ?? 'Data Flow';
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'data flow',
   );
   if (!confirmed) return;
   setState(() => _dataFlows.removeWhere((entry) => entry.id == id));
   _scheduleSave();
   _logActivity('Deleted data flow row', details: {'itemId': id});
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'data flow');
   }
+ }
 
  Future<void> _addDesignDocument() => _openDesignDocumentDialog();
 
@@ -1591,16 +1601,21 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _deleteDesignDocument(String id) async {
-  final confirmed = await showDeleteConfirmationDialog(
-    context,
-    title: 'Delete Design Document',
-    message: 'Delete this design document? This action cannot be undone.',
+  final doc = _designDocuments.where((d) => d.id == id).firstOrNull;
+  final itemName = doc?.name ?? 'Design Document';
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'design document',
   );
   if (!confirmed) return;
   setState(() => _designDocuments.removeWhere((entry) => entry.id == id));
   _scheduleSave();
   _logActivity('Deleted design document row', details: {'itemId': id});
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'document');
   }
+ }
 
  Future<void> _addEntity() => _openEntityDialog();
 
@@ -1612,16 +1627,21 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _deleteEntity(String id) async {
-  final confirmed = await showDeleteConfirmationDialog(
-    context,
-    title: 'Delete Entity',
-    message: 'Delete this data entity? This action cannot be undone.',
+  final entity = _entities.where((e) => e.id == id).firstOrNull;
+  final itemName = entity?.name ?? 'Entity';
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'data entity',
   );
   if (!confirmed) return;
   setState(() => _entities.removeWhere((entry) => entry.id == id));
   _scheduleSave();
   _logActivity('Deleted data entity row', details: {'itemId': id});
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'entity');
   }
+ }
 
  void _addQuickDataEntity() {
  final name = _quickEntityNameController.text.trim();
@@ -2446,16 +2466,21 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _deleteField(String id) async {
-  final confirmed = await showDeleteConfirmationDialog(
-    context,
-    title: 'Delete Field',
-    message: 'Delete this database field? This action cannot be undone.',
+  final field = _fields.where((f) => f.id == id).firstOrNull;
+  final itemName = field?.name ?? 'Field';
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'database field',
   );
   if (!confirmed) return;
   setState(() => _fields.removeWhere((entry) => entry.id == id));
   _scheduleSave();
   _logActivity('Deleted field row', details: {'itemId': id});
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'field');
   }
+ }
 
  // ─── Table Builders ────────────────────────────────────────────────────────
 

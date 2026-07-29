@@ -22,6 +22,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -221,11 +222,15 @@ showNavigationButtons: false, showExportPdf: false, showAiAssist: false),
  return LaunchDataRow(
  onEdit: () => _save(),
  onDelete: () async {
- final confirmed =
- await launchConfirmDelete(context, itemName: 'team member');
- if (!confirmed) return;
- setState(() => _teamRoster.removeAt(i));
- _save();
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: m.name,
+    itemType: 'team member',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _teamRoster.removeAt(i));
+  _save();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: m.name);
  },
  onKazAi: () => _regenerateTeamRosterRow(i),
  cells: [
@@ -322,11 +327,15 @@ showNavigationButtons: false, showExportPdf: false, showAiAssist: false),
  return LaunchDataRow(
  onEdit: () => _save(),
  onDelete: () async {
- final confirmed = await launchConfirmDelete(context,
- itemName: 'knowledge transfer');
- if (!confirmed) return;
- setState(() => _knowledgeTransfers.removeAt(i));
- _save();
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: k.topic,
+    itemType: 'knowledge transfer',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _knowledgeTransfers.removeAt(i));
+  _save();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: k.topic);
  },
  onKazAi: () => _regenerateKnowledgeTransferRow(i),
  cells: [
@@ -429,11 +438,15 @@ showNavigationButtons: false, showExportPdf: false, showAiAssist: false),
  return LaunchDataRow(
  onEdit: () => _save(),
  onDelete: () async {
- final confirmed = await launchConfirmDelete(context,
- itemName: 'vendor offboarding task');
- if (!confirmed) return;
- setState(() => _vendorOffboarding.removeAt(i));
- _save();
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: v.title,
+    itemType: 'vendor offboarding task',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _vendorOffboarding.removeAt(i));
+  _save();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: v.title);
  },
  onKazAi: () => _regenerateVendorOffboardingRow(i),
  cells: [
@@ -532,11 +545,15 @@ showNavigationButtons: false, showExportPdf: false, showAiAssist: false),
  return LaunchDataRow(
  onEdit: () => _save(),
  onDelete: () async {
- final confirmed =
- await launchConfirmDelete(context, itemName: 'communication');
- if (!confirmed) return;
- setState(() => _communications.removeAt(i));
- _save();
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: c.audience,
+    itemType: 'communication',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _communications.removeAt(i));
+  _save();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: c.audience);
  },
  onKazAi: () => _regenerateCommunicationRow(i),
  cells: [

@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 class TeamRolesResponsibilitiesScreen extends StatefulWidget {
  const TeamRolesResponsibilitiesScreen({super.key});
 
@@ -583,7 +584,13 @@ class _TeamRolesResponsibilitiesScreenState
  setState(() => _staffingMetrics[index] = updated);
  _scheduleSave();
  },
- onDelete: () {
+ onDelete: () async {
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: metric.label,
+    itemType: 'Staffing Metric',
+  );
+  if (!confirmed) return;
  setState(() => _staffingMetrics
  .removeWhere((item) => item.id == metric.id));
  _scheduleSave();
@@ -709,7 +716,13 @@ class _TeamRolesResponsibilitiesScreenState
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, color: Color(0xFFD64545)),
- onPressed: () {
+ onPressed: () async {
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: row.area,
+    itemType: 'Coverage Entry',
+  );
+  if (!confirmed) return;
  setState(
  () => _coverageRows.removeWhere((item) => item.id == row.id));
  _scheduleSave();
@@ -828,7 +841,13 @@ class _TeamRolesResponsibilitiesScreenState
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, color: Color(0xFFD64545)),
- onPressed: () {
+ onPressed: () async {
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: row.role,
+    itemType: 'Hiring Entry',
+  );
+  if (!confirmed) return;
  setState(
  () => _hiringRows.removeWhere((item) => item.id == row.id));
  _scheduleSave();
@@ -928,7 +947,13 @@ class _TeamRolesResponsibilitiesScreenState
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, color: Color(0xFFD64545)),
- onPressed: () {
+ onPressed: () async {
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: row.decision,
+    itemType: 'Decision Entry',
+  );
+  if (!confirmed) return;
  setState(
  () => _decisionRows.removeWhere((item) => item.id == row.id));
  _scheduleSave();

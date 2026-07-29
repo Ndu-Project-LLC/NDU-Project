@@ -15,6 +15,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 class PunchlistActionsScreen extends StatefulWidget {
  const PunchlistActionsScreen({super.key});
 
@@ -1886,52 +1887,36 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _deleteDistributionRow(int index) {
- showDialog(
- context: context,
- builder: (ctx) => AlertDialog(
- title: const Text('Delete Category'),
- content: Text('Are you sure you want to delete "${_distributionRows[index].category}"? This action cannot be undone.'),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
- actions: [
- TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
- FilledButton(
- style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
- onPressed: () {
- setState(() => _distributionRows.removeAt(index));
- _saveToFirestore();
- Navigator.pop(ctx);
- _showActionSnack('Category deleted.');
- },
- child: const Text('Delete'),
- ),
- ],
- ),
- );
+  Future<void> _deleteDistributionRow(int index) async {
+  final itemName = _distributionRows[index].category;
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'category',
+  );
+  if (!confirmed || !mounted) return;
+  
+  setState(() => _distributionRows.removeAt(index));
+  await _saveToFirestore();
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: itemName);
+  }
  }
 
- void _deleteVelocityRow(int index) {
- showDialog(
- context: context,
- builder: (ctx) => AlertDialog(
- title: const Text('Delete Workstream'),
- content: Text('Are you sure you want to delete "${_velocityRows[index].workstream}"? This action cannot be undone.'),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
- actions: [
- TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
- FilledButton(
- style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
- onPressed: () {
- setState(() => _velocityRows.removeAt(index));
- _saveToFirestore();
- Navigator.pop(ctx);
- _showActionSnack('Workstream deleted.');
- },
- child: const Text('Delete'),
- ),
- ],
- ),
- );
+  Future<void> _deleteVelocityRow(int index) async {
+  final itemName = _velocityRows[index].workstream;
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'workstream',
+  );
+  if (!confirmed || !mounted) return;
+  
+  setState(() => _velocityRows.removeAt(index));
+  await _saveToFirestore();
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: itemName);
+  }
  }
 
  // ── Capacity Health CRUD ──────────────────────────────────────────────
@@ -2080,28 +2065,20 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _deleteCapacityHealthRow(int index) {
- showDialog(
- context: context,
- builder: (ctx) => AlertDialog(
- title: const Text('Delete Team'),
- content: Text('Are you sure you want to delete "${_capacityHealthRows[index].team}"? This action cannot be undone.'),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
- actions: [
- TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
- FilledButton(
- style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
- onPressed: () {
- setState(() => _capacityHealthRows.removeAt(index));
- _saveToFirestore();
- Navigator.pop(ctx);
- _showActionSnack('Team deleted.');
- },
- child: const Text('Delete'),
- ),
- ],
- ),
- );
+  Future<void> _deleteCapacityHealthRow(int index) async {
+  final itemName = _capacityHealthRows[index].team;
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'team',
+  );
+  if (!confirmed || !mounted) return;
+  
+  setState(() => _capacityHealthRows.removeAt(index));
+  await _saveToFirestore();
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: itemName);
+  }
  }
 
  // ── Shift Coverage CRUD ───────────────────────────────────────────────
@@ -2247,28 +2224,20 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _deleteShiftCoverageRow(int index) {
- showDialog(
- context: context,
- builder: (ctx) => AlertDialog(
- title: const Text('Delete Shift'),
- content: Text('Are you sure you want to delete "${_shiftCoverageRows[index].shift}"? This action cannot be undone.'),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
- actions: [
- TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
- FilledButton(
- style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
- onPressed: () {
- setState(() => _shiftCoverageRows.removeAt(index));
- _saveToFirestore();
- Navigator.pop(ctx);
- _showActionSnack('Shift deleted.');
- },
- child: const Text('Delete'),
- ),
- ],
- ),
- );
+  Future<void> _deleteShiftCoverageRow(int index) async {
+  final itemName = _shiftCoverageRows[index].shift;
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'shift',
+  );
+  if (!confirmed || !mounted) return;
+  
+  setState(() => _shiftCoverageRows.removeAt(index));
+  await _saveToFirestore();
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: itemName);
+  }
  }
 
  Widget _buildInsightListCard({

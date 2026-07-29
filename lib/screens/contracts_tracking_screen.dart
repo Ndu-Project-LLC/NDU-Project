@@ -23,7 +23,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 class ContractsTrackingScreen extends StatefulWidget {
@@ -974,10 +974,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
   Future<void> _deleteContract(ContractModel contract) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Contract',
-      itemLabel: contract.name,
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: contract.name,
+      itemType: 'contract',
     );
     if (!confirmed) return;
     final projectId = _projectId;
@@ -990,6 +990,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
       );
       // Sync to Progress Tracking budget (remove value)
       await _syncContractValueToBudget(contract, isDelete: true);
+      if (mounted) {
+        showDeletionSuccessSnackBar(context, itemName: contract.name, itemType: 'contract');
+      }
     } catch (e) {
       debugPrint('Error deleting contract: $e');
     }
@@ -1442,33 +1445,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _confirmDeleteRenewalEntry(_RenewalLaneData entry) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await ConfirmDeleteDialog.show(
  context: context,
- builder: (dialogContext) => AlertDialog(
- title: const Text('Remove from pipeline?'),
- content: Text(
- 'Remove "${entry.contractName}" from the renewal pipeline.',
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(false),
- child: const Text('Cancel'),
- ),
- FilledButton(
- style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFFDC2626),
- foregroundColor: Colors.white,
- ),
- onPressed: () => Navigator.of(dialogContext).pop(true),
- child: const Text('Remove'),
- ),
- ],
- ),
+ itemName: entry.contractName,
+ itemType: 'renewal entry',
+ customMessage: 'Remove "${entry.contractName}" from the renewal pipeline? This action cannot be undone.',
  );
 
  if (confirmed == true) {
  setState(() => _renewalLanes.removeWhere((item) => item.id == entry.id));
  _scheduleSave();
+ if (mounted) {
+ showDeletionSuccessSnackBar(context, itemName: entry.contractName, itemType: 'renewal entry');
+ }
  }
  }
 
@@ -1607,32 +1596,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _confirmDeleteRiskSignal(_RiskSignalData signal) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await ConfirmDeleteDialog.show(
  context: context,
- builder: (dialogContext) => AlertDialog(
- title: const Text('Delete risk signal?'),
- content: Text(
- 'This will remove "${signal.title}" from the contract risk signals.',
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(false),
- child: const Text('Cancel'),
- ),
- FilledButton(
- style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFFDC2626),
- foregroundColor: Colors.white,
- ),
- onPressed: () => Navigator.of(dialogContext).pop(true),
- child: const Text('Delete'),
- ),
- ],
- ),
+ itemName: signal.title,
+ itemType: 'risk signal',
+ customMessage: 'Remove "${signal.title}" from the contract risk signals? This action cannot be undone.',
  );
 
  if (confirmed == true) {
  _deleteRiskSignal(signal.id);
+ if (mounted) {
+ showDeletionSuccessSnackBar(context, itemName: signal.title, itemType: 'risk signal');
+ }
  }
  }
 
@@ -1873,33 +1848,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _confirmDeleteApprovalCheckpoint(
  _ApprovalCheckpointData checkpoint) async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await ConfirmDeleteDialog.show(
  context: context,
- builder: (dialogContext) => AlertDialog(
- title: const Text('Delete approval gate?'),
- content: Text(
- 'This will remove "${checkpoint.gate}" from the approval readiness tracker.',
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(false),
- child: const Text('Cancel'),
- ),
- FilledButton(
- style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFFDC2626),
- foregroundColor: Colors.white,
- ),
- onPressed: () => Navigator.of(dialogContext).pop(true),
- child: const Text('Delete'),
- ),
- ],
- ),
+ itemName: checkpoint.gate,
+ itemType: 'approval gate',
+ customMessage: 'Remove "${checkpoint.gate}" from the approval readiness tracker? This action cannot be undone.',
  );
 
  if (confirmed == true) {
  setState(() => _approvalCheckpoints.removeWhere((item) => item.id == checkpoint.id));
  _scheduleSave();
+ if (mounted) {
+ showDeletionSuccessSnackBar(context, itemName: checkpoint.gate, itemType: 'approval gate');
+ }
  }
  }
 

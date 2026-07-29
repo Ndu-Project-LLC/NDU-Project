@@ -22,7 +22,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -222,10 +222,11 @@ class _AgileEpicsFeaturesScreenState
  }
 
   Future<void> _deleteEpic(int index) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Epic',
-      itemLabel: _epics[index].title.isNotEmpty ? _epics[index].title : null,
+    final epicName = _epics[index].title.isNotEmpty ? _epics[index].title : 'Epic';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: epicName,
+      itemType: 'Epic',
     );
     if (!confirmed) return;
     final pid = _projectId;
@@ -241,6 +242,7 @@ class _AgileEpicsFeaturesScreenState
  }
  });
  if (_selectedEpicId != null) _loadFeatures();
+ showDeletionSuccessSnackBar(context, itemName: epicName, itemType: 'Epic');
  }
 
  void _addFeature() {
@@ -262,10 +264,11 @@ class _AgileEpicsFeaturesScreenState
  }
 
   Future<void> _deleteFeature(int index) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Feature',
-      itemLabel: _features[index].title.isNotEmpty ? _features[index].title : null,
+    final featureName = _features[index].title.isNotEmpty ? _features[index].title : 'Feature';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: featureName,
+      itemType: 'Feature',
     );
     if (!confirmed) return;
     final pid = _projectId;
@@ -275,6 +278,7 @@ class _AgileEpicsFeaturesScreenState
  projectId: pid, epicId: _selectedEpicId!, featureId: feature.id);
  _featureControllers.remove(feature.id);
  setState(() => _features.removeAt(index));
+ showDeletionSuccessSnackBar(context, itemName: featureName, itemType: 'Feature');
  }
 
  Future<void> _generateEpics() async {

@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 class LessonsLearnedScreen extends StatefulWidget {
  const LessonsLearnedScreen({super.key});
 
@@ -119,33 +120,17 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  }
 
  Future<void> _confirmDelete(String id) async {
- final confirmed = await showDialog<bool>(
- context: context,
- builder: (ctx) => AlertDialog(
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
- title: const Text('Delete Lesson'),
- content: const Text(
- 'Are you sure you want to delete this lesson? This action cannot be undone.'),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(ctx).pop(false),
- child: const Text('Cancel'),
- ),
- ElevatedButton(
- onPressed: () => Navigator.of(ctx).pop(true),
- style: ElevatedButton.styleFrom(
- backgroundColor: Colors.redAccent,
- foregroundColor: Colors.white,
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(8)),
- ),
- child: const Text('Delete'),
- ),
- ],
- ),
- );
+  // Find the lesson title for display in confirmation
+  final lesson = _filteredLessons.firstWhere((l) => l.id == id, orElse: () => throw Exception('Lesson not found'));
+  final itemName = lesson.title ?? 'this lesson';
+  
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'Lesson',
+  );
 
- if (confirmed != true || !mounted) return;
+  if (!confirmed || !mounted) return;
 
  try {
  await ProjectDataHelper.updateAndSave(

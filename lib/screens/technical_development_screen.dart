@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 
 class TechnicalDevelopmentScreen extends StatefulWidget {
@@ -1929,45 +1930,20 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _deleteWorkstreamWithConfirm(_WorkstreamItem item) {
- showDialog(
+ Future<void> _deleteWorkstreamWithConfirm(_WorkstreamItem item) async {
+ final confirmed = await ConfirmDeleteDialog.show(
  context: context,
- builder: (ctx) => AlertDialog(
- title: const Text('Delete workstream?'),
- content: Text(
- 'Are you sure you want to delete "${item.title}"? This action can be undone.'),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(ctx).pop(),
- child: const Text('Cancel')),
- FilledButton(
- onPressed: () {
+ itemName: item.title,
+ itemType: 'workstream',
+ );
+ if (!confirmed || !mounted) return;
  final removed = item;
  setState(() => _workstreams.removeWhere((w) => w.id == item.id));
  _scheduleSave();
- _logActivity('Deleted workstream row',
- details: {'itemId': item.id});
- Navigator.of(ctx).pop();
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Workstream "${removed.title}" deleted'),
- action: SnackBarAction(
- label: 'Undo',
- onPressed: () {
- setState(() => _workstreams.add(removed));
- _scheduleSave();
- },
- ),
- ),
- );
- },
- style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFFEF4444)),
- child: const Text('Delete'),
- ),
- ],
- ),
- );
+ _logActivity('Deleted workstream row', details: {'itemId': item.id});
+ if (mounted) {
+ showDeletionSuccessSnackBar(context, itemName: item.title, itemType: 'workstream');
+ }
  }
 
  // ─── CRUD Dialogs: Build Components ───────────────────────────────────
@@ -2106,44 +2082,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _deleteBuildComponentWithConfirm(_BuildComponentRow item) {
- showDialog(
+ Future<void> _deleteBuildComponentWithConfirm(_BuildComponentRow item) async {
+ final confirmed = await ConfirmDeleteDialog.show(
  context: context,
- builder: (ctx) => AlertDialog(
- title: const Text('Delete component?'),
- content: Text(
- 'Are you sure you want to delete "${item.name}"? This action can be undone.'),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(ctx).pop(),
- child: const Text('Cancel')),
- FilledButton(
- onPressed: () {
+ itemName: item.name,
+ itemType: 'component',
+ );
+ if (!confirmed || !mounted) return;
  final removed = item;
- setState(
- () => _buildComponents.removeWhere((c) => c.id == item.id));
+ setState(() => _buildComponents.removeWhere((c) => c.id == item.id));
  _scheduleSave();
- Navigator.of(ctx).pop();
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Component "${removed.name}" deleted'),
- action: SnackBarAction(
- label: 'Undo',
- onPressed: () {
- setState(() => _buildComponents.add(removed));
- _scheduleSave();
- },
- ),
- ),
- );
- },
- style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFFEF4444)),
- child: const Text('Delete'),
- ),
- ],
- ),
- );
+ if (mounted) {
+ showDeletionSuccessSnackBar(context, itemName: item.name, itemType: 'component');
+ }
  }
 
  // ─── CRUD Dialogs: Integrations ───────────────────────────────────────
@@ -2256,44 +2207,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _deleteIntegrationWithConfirm(_IntegrationRow item) {
- showDialog(
+ Future<void> _deleteIntegrationWithConfirm(_IntegrationRow item) async {
+ final confirmed = await ConfirmDeleteDialog.show(
  context: context,
- builder: (ctx) => AlertDialog(
- title: const Text('Delete integration?'),
- content: Text(
- 'Are you sure you want to delete "${item.label}"? This action can be undone.'),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(ctx).pop(),
- child: const Text('Cancel')),
- FilledButton(
- onPressed: () {
+ itemName: item.label,
+ itemType: 'integration',
+ );
+ if (!confirmed || !mounted) return;
  final removed = item;
- setState(
- () => _integrations.removeWhere((i) => i.id == item.id));
+ setState(() => _integrations.removeWhere((i) => i.id == item.id));
  _scheduleSave();
- Navigator.of(ctx).pop();
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Integration "${removed.label}" deleted'),
- action: SnackBarAction(
- label: 'Undo',
- onPressed: () {
- setState(() => _integrations.add(removed));
- _scheduleSave();
- },
- ),
- ),
- );
- },
- style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFFEF4444)),
- child: const Text('Delete'),
- ),
- ],
- ),
- );
+ if (mounted) {
+ showDeletionSuccessSnackBar(context, itemName: item.label, itemType: 'integration');
+ }
  }
 
  // ─── CRUD Dialogs: Issues ─────────────────────────────────────────────
@@ -2405,43 +2331,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _deleteIssueWithConfirm(_IssueRow item) {
- showDialog(
+ Future<void> _deleteIssueWithConfirm(_IssueRow item) async {
+ final confirmed = await ConfirmDeleteDialog.show(
  context: context,
- builder: (ctx) => AlertDialog(
- title: const Text('Delete issue?'),
- content: Text(
- 'Are you sure you want to delete "${item.title}"? This action can be undone.'),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(ctx).pop(),
- child: const Text('Cancel')),
- FilledButton(
- onPressed: () {
+ itemName: item.title,
+ itemType: 'issue',
+ );
+ if (!confirmed || !mounted) return;
  final removed = item;
  setState(() => _issues.removeWhere((i) => i.id == item.id));
  _scheduleSave();
- Navigator.of(ctx).pop();
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Issue "${removed.title}" deleted'),
- action: SnackBarAction(
- label: 'Undo',
- onPressed: () {
- setState(() => _issues.add(removed));
- _scheduleSave();
- },
- ),
- ),
- );
- },
- style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFFEF4444)),
- child: const Text('Delete'),
- ),
- ],
- ),
- );
+ if (mounted) {
+ showDeletionSuccessSnackBar(context, itemName: item.title, itemType: 'issue');
+ }
  }
 
  // ─── CRUD Dialogs: Risk Signals ───────────────────────────────────────
@@ -2583,21 +2485,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _deleteRiskSignalWithConfirm(_RiskSignalRow item) {
+ Future<void> _deleteRiskSignalWithConfirm(_RiskSignalRow item) async {
+ final confirmed = await ConfirmDeleteDialog.show(
+ context: context,
+ itemName: item.signal,
+ itemType: 'risk signal',
+ );
+ if (!confirmed || !mounted) return;
+ final removed = item;
  setState(() => _riskSignals.removeWhere((r) => r.id == item.id));
  _scheduleSave();
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Signal "${item.signal}" deleted'),
- action: SnackBarAction(
- label: 'Undo',
- onPressed: () {
- setState(() => _riskSignals.add(item));
- _scheduleSave();
- },
- ),
- ),
- );
+ if (mounted) {
+ showDeletionSuccessSnackBar(context, itemName: item.signal, itemType: 'risk signal');
+ }
  }
 
  // ─── CRUD Dialogs: Readiness Items ────────────────────────────────────
@@ -2722,45 +2622,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- void _deleteReadinessWithConfirm(_ReadinessItem item) {
- showDialog(
+ Future<void> _deleteReadinessWithConfirm(_ReadinessItem item) async {
+ final confirmed = await ConfirmDeleteDialog.show(
  context: context,
- builder: (ctx) => AlertDialog(
- title: const Text('Delete checklist item?'),
- content: Text(
- 'Are you sure you want to delete this item? This action can be undone.'),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(ctx).pop(),
- child: const Text('Cancel')),
- FilledButton(
- onPressed: () {
+ itemName: item.title,
+ itemType: 'checklist item',
+ );
+ if (!confirmed || !mounted) return;
  final removed = item;
- setState(() =>
- _readinessItems.removeWhere((r) => r.id == item.id));
+ setState(() => _readinessItems.removeWhere((r) => r.id == item.id));
  _scheduleSave();
- Navigator.of(ctx).pop();
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content:
- Text('Checklist item deleted'),
- action: SnackBarAction(
- label: 'Undo',
- onPressed: () {
- setState(() => _readinessItems.add(removed));
- _scheduleSave();
- },
- ),
- ),
- );
- },
- style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFFEF4444)),
- child: const Text('Delete'),
- ),
- ],
- ),
- );
+ if (mounted) {
+ showDeletionSuccessSnackBar(context, itemName: item.title, itemType: 'checklist item');
+ }
  }
 
  // ─── CRUD: Standards Chips ────────────────────────────────────────────
@@ -2769,10 +2643,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _openStandardsChipDialog();
  }
 
- void _deleteStandardChipWithConfirm(_ChipItem chip) {
+ Future<void> _deleteStandardChipWithConfirm(_ChipItem chip) async {
+ final confirmed = await ConfirmDeleteDialog.show(
+ context: context,
+ itemName: chip.label,
+ itemType: 'standard chip',
+ );
+ if (!confirmed || !mounted) return;
  setState(() => _standardsChips.removeWhere((item) => item.id == chip.id));
  _scheduleSave();
  _logActivity('Deleted standards chip', details: {'itemId': chip.id});
+ if (mounted) {
+ showDeletionSuccessSnackBar(context, itemName: chip.label, itemType: 'standard chip');
+ }
  }
 
  Future<void> _openStandardsChipDialog({_ChipItem? existing}) async {

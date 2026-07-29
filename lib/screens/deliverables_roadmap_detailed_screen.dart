@@ -13,7 +13,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 const Color _kBackground = Color(0xFFF7F8FC);
@@ -818,13 +818,16 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  }
 
   Future<void> _deleteDeliverable(AggregatedDeliverable deliverable) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Deliverable',
-      itemLabel: deliverable.title,
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: deliverable.title,
+      itemType: 'deliverable',
     );
     if (!confirmed || !mounted) return;
     // TODO: Implement delete
+    if (mounted) {
+      showDeletionSuccessSnackBar(context, itemName: deliverable.title);
+    }
   }
 
  static const TextStyle _headerStyle = TextStyle(

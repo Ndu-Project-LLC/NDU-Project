@@ -20,7 +20,7 @@ import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
@@ -73,7 +73,7 @@ class _PlanningRequirementsScreenState
       if (!mounted) return;
 
       PageHintDialog.showIfNeeded(
-        context: context,
+        context: context: context,
         pageId: 'planning_requirements',
         title: 'Review AI-Generated Content',
         message:
@@ -864,8 +864,8 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
   Future<void> _deleteRow(int index) async {
     if (index < 0 || index >= _rows.length) return;
     final label = _rows[index].descriptionController.text.trim();
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
       title: 'Delete Requirement',
       itemLabel: label.isNotEmpty ? label : null,
     );
@@ -910,7 +910,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
 
  void _handleSubmit() async {
  final continueAnyway = await showProceedWithoutReviewDialog(
- context,
+ context: context,
  title: 'Confirm before submitting requirements',
  message:
  'You are about to continue to the next step. You can proceed now and return later to refine details, or cancel and review first.',
@@ -944,7 +944,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
 
  if (missingAssignmentRows.isNotEmpty) {
  await showDialog<void>(
- context: context,
+ context: context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Assignment Required'),
  content: Text(
@@ -963,7 +963,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
 
  if (missingPhaseRows.isNotEmpty) {
  await showDialog<void>(
- context: context,
+ context: context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Phase Required'),
  content: Text(
@@ -984,7 +984,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
  if (!_isRoleAuthorizedForRequirementSubmit(resolvedRole)) {
  if (!mounted) return;
  await showDialog<void>(
- context: context,
+ context: context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Authorization Required'),
  content: Text(
@@ -1003,7 +1003,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
 
  if (!mounted) return;
  final confirmed = await showDialog<bool>(
- context: context,
+ context: context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Confirm Requirement Coverage'),
  content: const Text(
@@ -1032,7 +1032,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
  final requirementsPlan = _requirementsPlanController.text.trim();
 
  await ProjectDataHelper.saveAndNavigate(
- context: context,
+ context: context: context,
  checkpoint: 'requirements',
  saveInBackground: true,
  nextScreenBuilder: () =>
@@ -1135,7 +1135,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
  }
 
  final shouldRegenerate = await showDialog<bool>(
- context: context,
+ context: context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Regenerate requirements?'),
  content: const Text(
@@ -1814,7 +1814,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
     }
 
     showDialog(
-      context: context,
+      context: context: context,
       barrierDismissible: true,
       builder: (dialogContext) {
         return Dialog(
@@ -2133,7 +2133,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
           child: OutlinedButton.icon(
             onPressed: () async {
               final rows = await showCsvImportDialog(
-                context,
+                context: context,
                 tableTitle: 'Project Requirements',
                 columns: _csvColumns,
               );
@@ -2198,7 +2198,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
     bool confirmChecked = false;
 
     final result = await showDialog<bool>(
-      context: context,
+      context: context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -2389,7 +2389,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
   child: OutlinedButton.icon(
   onPressed: () async {
   final rows = await showCsvImportDialog(
-  context,
+  context: context,
   tableTitle: 'Project Requirements',
   columns: _csvColumns,
   );
@@ -2510,7 +2510,7 @@ IMPORTANT: The Requirements Plan must cover ALL of the following areas:
  Future<void> _exportPdf() async {
  final projectData = ProjectDataHelper.getData(context);
  await PdfExportHelper.exportScreenPdf(
- context: context,
+ context: context: context,
  screenTitle: 'Planning Requirements',
  sections: [
  PdfSection.keyValue('Project Info', [
@@ -2871,7 +2871,7 @@ class _PersonDropdownField extends StatelessWidget {
  ? null
  : () async {
  final selected = await showDialog<_AssignableMember>(
- context: context,
+ context: context: context,
  builder: (dialogContext) => _MemberPickerDialog(
  options: options,
  initialQuery: value,

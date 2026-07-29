@@ -12,7 +12,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -281,18 +281,20 @@ class _AgileCapacityPlanningScreenState
   }
 
   Future<void> _removeLeave(int index) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Leave Entry',
-      itemLabel: _leavePersonCtrls[_leaveEntries[index].id]?.text.isNotEmpty == true
-          ? _leavePersonCtrls[_leaveEntries[index].id]!.text
-          : null,
+    final leaveName = _leavePersonCtrls[_leaveEntries[index].id]?.text.isNotEmpty == true
+        ? _leavePersonCtrls[_leaveEntries[index].id]!.text
+        : 'Leave Entry';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: leaveName,
+      itemType: 'Leave Entry',
     );
     if (!confirmed) return;
     final l = _leaveEntries[index];
     _leavePersonCtrls.remove(l.id)?.dispose();
     setState(() => _leaveEntries.removeAt(index));
     _scheduleAutoSave();
+    showDeletionSuccessSnackBar(context, itemName: leaveName, itemType: 'Leave Entry');
   }
 
   void _addHoliday() {
@@ -304,18 +306,20 @@ class _AgileCapacityPlanningScreenState
   }
 
   Future<void> _removeHoliday(int index) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Holiday',
-      itemLabel: _holidayNameCtrls[_holidays[index].id]?.text.isNotEmpty == true
-          ? _holidayNameCtrls[_holidays[index].id]!.text
-          : null,
+    final holidayName = _holidayNameCtrls[_holidays[index].id]?.text.isNotEmpty == true
+        ? _holidayNameCtrls[_holidays[index].id]!.text
+        : 'Holiday';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: holidayName,
+      itemType: 'Holiday',
     );
     if (!confirmed) return;
     final h = _holidays[index];
     _holidayNameCtrls.remove(h.id)?.dispose();
     setState(() => _holidays.removeAt(index));
     _scheduleAutoSave();
+    showDeletionSuccessSnackBar(context, itemName: holidayName, itemType: 'Holiday');
   }
 
   @override

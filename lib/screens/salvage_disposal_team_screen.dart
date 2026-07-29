@@ -17,7 +17,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/theme.dart';
 class SalvageDisposalTeamScreen extends StatefulWidget {
  const SalvageDisposalTeamScreen({super.key});
@@ -4178,19 +4178,18 @@ Execution snapshot:
  }
 
   Future<void> _deleteComplianceRow(int index) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Regulation',
-      itemLabel: _complianceRows[index].regulation,
+    final itemName = _complianceRows[index].regulation;
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: itemName,
+      itemType: 'regulation',
     );
     if (!confirmed || !mounted) return;
     setState(() => _complianceRows.removeAt(index));
     _saveComplianceToFirestore();
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Regulation deleted.'),
-      backgroundColor: Color(0xFFEF4444),
-      behavior: SnackBarBehavior.floating,
-    ));
+    if (mounted) {
+      showDeletionSuccessSnackBar(context, itemName: itemName);
+    }
   }
 
  Widget _buildTimelinePanel() {

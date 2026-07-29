@@ -24,7 +24,7 @@ import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 enum _QualityTab { plan, objectives, inspection, audit, metrics, coq }
@@ -1593,11 +1593,11 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  }
 
   Future<void> _removeStandard(int index) async {
-  final confirmed = await showDeleteConfirmationDialog(
+  final confirmed = await ConfirmDeleteDialog.show(
   context,
-  title: 'Remove Standard',
+  itemType: 'standard',
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   await _updateQualityData(
   context,
   checkpoint: 'quality_management',
@@ -1656,11 +1656,11 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  }
 
   Future<void> _removeChangeLog(int index) async {
-  final confirmed = await showDeleteConfirmationDialog(
+  final confirmed = await ConfirmDeleteDialog.show(
   context,
-  title: 'Remove Change Log Entry',
+  itemType: 'change log entry',
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   await _updateQualityData(
   context,
   checkpoint: 'quality_management',
@@ -1891,11 +1891,11 @@ class _ObjectivesViewState extends State<_ObjectivesView> {
  }
 
   Future<void> _removeObjective(int index) async {
-  final confirmed = await showDeleteConfirmationDialog(
+  final confirmed = await ConfirmDeleteDialog.show(
   context,
-  title: 'Remove Objective',
+  itemType: 'objective',
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   await _updateQualityData(
   context,
   checkpoint: 'quality_management',
@@ -1999,12 +1999,12 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
  }
 
   Future<void> _removeWorkflowControl(QualityWorkflowControl control) async {
-  final confirmed = await showDeleteConfirmationDialog(
+  final confirmed = await ConfirmDeleteDialog.show(
   context,
-  title: 'Remove QA Control',
-  itemLabel: control.name,
+  itemType: 'QA control',
+  itemName: control.name,
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   await _updateQualityData(
   context,
   checkpoint: 'quality_management',
@@ -2063,12 +2063,12 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
  }
 
   Future<void> _removeTask(QualityTaskEntry task) async {
-  final confirmed = await showDeleteConfirmationDialog(
+  final confirmed = await ConfirmDeleteDialog.show(
   context,
-  title: 'Remove QA Task',
-  itemLabel: task.task,
+  itemType: 'QA task',
+  itemName: task.task,
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   await _updateQualityData(
   context,
   checkpoint: 'quality_management',
@@ -2207,12 +2207,12 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  }
 
   Future<void> _removeWorkflowControl(QualityWorkflowControl control) async {
-  final confirmed = await showDeleteConfirmationDialog(
+  final confirmed = await ConfirmDeleteDialog.show(
   context,
-  title: 'Remove QC Control',
-  itemLabel: control.name,
+  itemType: 'QC control',
+  itemName: control.name,
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   await _updateQualityData(
   context,
   checkpoint: 'quality_management',
@@ -2271,12 +2271,12 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  }
 
   Future<void> _removeTask(QualityTaskEntry task) async {
-  final confirmed = await showDeleteConfirmationDialog(
+  final confirmed = await ConfirmDeleteDialog.show(
   context,
-  title: 'Remove QC Task',
-  itemLabel: task.task,
+  itemType: 'QC task',
+  itemName: task.task,
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   await _updateQualityData(
   context,
   checkpoint: 'quality_management',
@@ -2334,12 +2334,12 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  }
 
   Future<void> _removeAudit(QualityAuditEntry audit) async {
-  final confirmed = await showDeleteConfirmationDialog(
+  final confirmed = await ConfirmDeleteDialog.show(
   context,
-  title: 'Remove Audit Entry',
-  itemLabel: audit.title,
+  itemType: 'audit entry',
+  itemName: audit.title,
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   await _updateQualityData(
   context,
   checkpoint: 'quality_management',
@@ -2405,12 +2405,12 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  }
 
   Future<void> _removeCorrectiveAction(CorrectiveActionEntry entry) async {
-  final confirmed = await showDeleteConfirmationDialog(
+  final confirmed = await ConfirmDeleteDialog.show(
   context,
-  title: 'Remove Corrective Action',
-  itemLabel: entry.title,
+  itemType: 'corrective action',
+  itemName: entry.title,
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   await _updateQualityData(
   context,
   checkpoint: 'quality_management',
@@ -2746,11 +2746,11 @@ class _MetricsViewState extends State<_MetricsView> {
  }
 
  Future<void> _removeCustomKpi(int index) async {
-  final confirmed = await showDeleteConfirmationDialog(
+  final confirmed = await ConfirmDeleteDialog.show(
     context,
-    title: 'Remove KPI',
+    itemType: 'KPI',
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   await _updateQualityData(
     context,
     checkpoint: 'quality_management',
@@ -6573,8 +6573,8 @@ class _CoqViewState extends State<_CoqView> {
   }
 
   Future<void> _removeEntry(String category, CoQEntry entry) async {
-    final confirmed = await showDeleteConfirmationDialog(context, title: 'Remove CoQ Entry');
-    if (!confirmed) return;
+    final confirmed = await ConfirmDeleteDialog.show(context, itemType: 'CoQ entry');
+    if (!confirmed || !mounted) return;
     await _updateCostOfQuality(context, category: category, remove: entry.id);
   }
 

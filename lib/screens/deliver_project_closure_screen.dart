@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
 class DeliverProjectClosureScreen extends StatefulWidget {
@@ -635,27 +636,43 @@ showNavigationButtons: false,
  }
 
  Future<void> _confirmDeleteScope(int idx) async {
- final confirmed =
- await launchConfirmDelete(context, itemName: 'scope item');
- if (!confirmed || !mounted) return;
- setState(() => _scopeItems.removeAt(idx));
- _scheduleSave();
+  final item = _scopeItems[idx];
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: item.deliverable,
+    itemType: 'scope item',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _scopeItems.removeAt(idx));
+  _scheduleSave();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.deliverable);
  }
 
  Future<void> _confirmDeleteMilestone(int idx) async {
- final confirmed = await launchConfirmDelete(context, itemName: 'milestone');
- if (!confirmed || !mounted) return;
- setState(() => _milestones.removeAt(idx));
- _scheduleSave();
+  final item = _milestones[idx];
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: item.milestone,
+    itemType: 'milestone',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _milestones.removeAt(idx));
+  _scheduleSave();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.milestone);
  }
 
  Future<void> _confirmDeleteFollowUp(
  int idx, List<LaunchFollowUpItem> list) async {
- final confirmed =
- await launchConfirmDelete(context, itemName: 'follow-up item');
- if (!confirmed || !mounted) return;
- setState(() => list.removeAt(idx));
- _scheduleSave();
+  final item = list[idx];
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: item.actionItem ?? 'follow-up item',
+    itemType: 'follow-up item',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => list.removeAt(idx));
+  _scheduleSave();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.actionItem ?? 'follow-up item');
  }
 
  void _scheduleSave() {

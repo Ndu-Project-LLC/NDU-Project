@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 class IssueManagementScreen extends StatefulWidget {
  const IssueManagementScreen({super.key});
 
@@ -725,23 +726,11 @@ class _ProjectIssuesLogCard extends StatelessWidget {
  columnFlex: _columnFlex,
  onEdit: () => onEdit(entry),
  onDelete: () async {
- final confirmed = await showDialog<bool>(
+ final confirmed = await ConfirmDeleteDialog.show(
  context: context,
- builder: (_) => AlertDialog(
- title: const Text('Delete issue?'),
- content: const Text(
- 'This will permanently remove the issue.'),
- actions: [
- TextButton(
- onPressed: () =>
- Navigator.of(context).pop(false),
- child: const Text('Cancel')),
- ElevatedButton(
- onPressed: () =>
- Navigator.of(context).pop(true),
- child: const Text('Delete')),
- ],
- ));
+ itemName: entry.title ?? 'Issue #${entry.id.substring(0, 8)}',
+ itemType: 'issue',
+ );
  if (!context.mounted) return;
  if (confirmed == true) {
  await ProjectDataHelper.updateAndSave(
@@ -751,6 +740,9 @@ class _ProjectIssuesLogCard extends StatelessWidget {
  issueLogItems: data.issueLogItems
  .where((i) => i.id != entry.id)
  .toList()));
+ if (context.mounted) {
+ showDeletionSuccessSnackBar(context, itemName: entry.title ?? 'Issue');
+ }
  }
  },
  )),

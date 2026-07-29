@@ -7,6 +7,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// RECOGNITION & AWARDS
@@ -126,28 +127,18 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     _showRecognitionDialog(editIndex: index, existing: _recognitions[index]);
   }
 
-  void _deleteRecognition(int index) {
-    showDialog(
+  Future<void> _deleteRecognition(int index) async {
+    final recognition = _recognitions[index];
+    final itemName = recognition.recipientName.isNotEmpty ? recognition.recipientName : 'Recognition';
+    final confirmed = await ConfirmDeleteDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Recognition'),
-        content: const Text('Are you sure you want to delete this recognition?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () {
-              setState(() => _recognitions.removeAt(index));
-              _saveData();
-              Navigator.of(ctx).pop();
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      itemName: itemName,
+      itemType: 'Recognition',
     );
+    if (!confirmed || !mounted) return;
+    setState(() => _recognitions.removeAt(index));
+    _saveData();
+    showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'Recognition');
   }
 
   void _showRecognitionDialog({int? editIndex, _Recognition? existing}) {

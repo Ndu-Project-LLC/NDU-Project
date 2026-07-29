@@ -40,7 +40,7 @@ import 'package:ndu_project/services/sidebar_navigation_service.dart';
 
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
@@ -3789,11 +3789,11 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   Future<void> _removeBenefitLineItem(_BenefitLineItemEntry entry) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete benefit item',
-      itemLabel: entry.title,
-      message: 'Delete this benefit item? This action cannot be undone.',
+    final itemName = entry.title.isNotEmpty ? entry.title : 'benefit item';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: itemName,
+      itemType: 'Benefit Item',
     );
 
     if (!confirmed) return;
@@ -3805,6 +3805,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       _savingsError = null;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => entry.dispose());
+    showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'Benefit Item');
     _markDirty();
   }
 
@@ -6322,12 +6323,13 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
 
     bool proceed = true;
     if (hasMeaningfulData()) {
-      proceed = await showDeleteConfirmationDialog(
-        context,
-        title: 'Delete cost row',
-        itemLabel: row.itemController.text.trim(),
-        message:
-            'Delete this initial cost estimate row? This action cannot be undone.',
+      final itemName = row.itemController.text.trim().isNotEmpty 
+          ? row.itemController.text.trim() 
+          : 'cost row';
+      proceed = await ConfirmDeleteDialog.show(
+        context: context,
+        itemName: itemName,
+        itemType: 'Cost Row',
       );
     }
     if (!proceed) return;

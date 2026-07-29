@@ -14,7 +14,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 class RiskTrackingWorkspaceScreen extends StatefulWidget {
@@ -2944,10 +2944,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
   Future<void> _deleteRisk(String id) async {
   final removed = _risks.where((r) => r.id == id).firstOrNull;
-  final confirmed = await showDeleteConfirmationDialog(
-  context,
-  title: 'Delete Risk',
-  itemLabel: removed?.title,
+  final riskName = removed?.title ?? 'Risk';
+  final confirmed = await ConfirmDeleteDialog.show(
+  context: context,
+  itemName: riskName,
+  itemType: 'Risk',
   );
   if (!confirmed) return;
   setState(() => _risks.removeWhere((r) => r.id == id));
@@ -2967,25 +2968,29 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
     ));
   }
   }
+  showDeletionSuccessSnackBar(context, itemName: riskName, itemType: 'Risk');
+  }
 
   Future<void> _deleteSignal(String id) async {
-  final confirmed = await showDeleteConfirmationDialog(
-  context,
-  title: 'Delete Risk Signal',
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemType: 'Risk Signal',
   );
   if (!confirmed) return;
   setState(() => _signals.removeWhere((s) => s.id == id));
   _saveToFirestore();
+  showDeletionSuccessSnackBar(context, itemType: 'Risk Signal');
   }
 
   Future<void> _deleteMitigation(String id) async {
-  final confirmed = await showDeleteConfirmationDialog(
-  context,
-  title: 'Delete Mitigation Plan',
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemType: 'Mitigation Plan',
   );
   if (!confirmed) return;
   setState(() => _mitigations.removeWhere((m) => m.id == id));
   _saveToFirestore();
+  showDeletionSuccessSnackBar(context, itemType: 'Mitigation Plan');
   }
 
  Future<void> _exportPdf() async {

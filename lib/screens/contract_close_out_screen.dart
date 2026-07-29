@@ -25,6 +25,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 class ContractCloseOutScreen extends StatefulWidget {
  const ContractCloseOutScreen({super.key});
@@ -194,11 +195,16 @@ showNavigationButtons: false,
  return LaunchDataRow(
  onEdit: () => _scheduleSave(),
  onDelete: () async {
- final ok = await launchConfirmDelete(context,
- itemName: 'financial metric');
- if (!ok || !mounted) return;
- setState(() => _financialSummary.removeAt(idx));
- _scheduleSave();
+  final item = _financialSummary[idx];
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: item.label,
+    itemType: 'financial metric',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _financialSummary.removeAt(idx));
+  _scheduleSave();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.label);
  },
  onKazAi: () => _regenerateFinancialRow(idx),
  cells: [
@@ -352,10 +358,16 @@ showNavigationButtons: false,
  return LaunchDataRow(
  onEdit: () => _scheduleSave(),
  onDelete: () async {
- final ok = await launchConfirmDelete(context, itemName: 'contract');
- if (!ok || !mounted) return;
- setState(() => _contracts.removeAt(idx));
- _scheduleSave();
+  final item = _contracts[idx];
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: item.contractName,
+    itemType: 'contract',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _contracts.removeAt(idx));
+  _scheduleSave();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.contractName);
  },
  onKazAi: () => _regenerateContractRow(idx),
  cells: [
@@ -457,11 +469,16 @@ showNavigationButtons: false,
  return LaunchDataRow(
  onEdit: () => _scheduleSave(),
  onDelete: () async {
- final ok =
- await launchConfirmDelete(context, itemName: 'close-out step');
- if (!ok || !mounted) return;
- setState(() => _closeOutSteps.removeAt(idx));
- _scheduleSave();
+  final item = _closeOutSteps[idx];
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: item.step,
+    itemType: 'close-out step',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _closeOutSteps.removeAt(idx));
+  _scheduleSave();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.step);
  },
  onKazAi: () => _regenerateCloseOutStepRow(idx),
  cells: [
@@ -554,10 +571,16 @@ showNavigationButtons: false,
  return LaunchDataRow(
  onEdit: () => _scheduleSave(),
  onDelete: () async {
- final ok = await launchConfirmDelete(context, itemName: 'sign-off');
- if (!ok || !mounted) return;
- setState(() => _signOffs.removeAt(idx));
- _scheduleSave();
+  final item = _signOffs[idx];
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: item.stakeholder,
+    itemType: 'sign-off',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _signOffs.removeAt(idx));
+  _scheduleSave();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.stakeholder);
  },
  onKazAi: () => _regenerateSignOffRow(idx),
  cells: [

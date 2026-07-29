@@ -24,6 +24,7 @@ import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 class TransitionToProdTeamScreen extends StatefulWidget {
  const TransitionToProdTeamScreen({super.key});
@@ -569,40 +570,60 @@ showNavigationButtons: false,
  final name = _teamRoster[idx].name.isNotEmpty
  ? _teamRoster[idx].name
  : 'team member';
- final confirmed = await launchConfirmDelete(context, itemName: name);
- if (!confirmed) return;
+ final confirmed = await ConfirmDeleteDialog.show(
+   context: context,
+   itemName: name,
+   itemType: 'team member',
+ );
+ if (!confirmed || !mounted) return;
  setState(() => _teamRoster.removeAt(idx));
  _scheduleSave();
+ if (mounted) showDeletionSuccessSnackBar(context, itemName: name);
  }
 
  Future<void> _deleteHandoverItem(int idx) async {
  final label = _handoverChecklist[idx].item.isNotEmpty
  ? _handoverChecklist[idx].item
  : 'handover item';
- final confirmed = await launchConfirmDelete(context, itemName: label);
- if (!confirmed) return;
+ final confirmed = await ConfirmDeleteDialog.show(
+   context: context,
+   itemName: label,
+   itemType: 'handover item',
+ );
+ if (!confirmed || !mounted) return;
  setState(() => _handoverChecklist.removeAt(idx));
  _scheduleSave();
+ if (mounted) showDeletionSuccessSnackBar(context, itemName: label);
  }
 
  Future<void> _deleteKnowledgeTransfer(int idx) async {
  final topic = _knowledgeTransfers[idx].topic.isNotEmpty
  ? _knowledgeTransfers[idx].topic
  : 'knowledge transfer';
- final confirmed = await launchConfirmDelete(context, itemName: topic);
- if (!confirmed) return;
+ final confirmed = await ConfirmDeleteDialog.show(
+   context: context,
+   itemName: topic,
+   itemType: 'knowledge transfer',
+ );
+ if (!confirmed || !mounted) return;
  setState(() => _knowledgeTransfers.removeAt(idx));
  _scheduleSave();
+ if (mounted) showDeletionSuccessSnackBar(context, itemName: topic);
  }
 
  Future<void> _deleteApproval(int idx) async {
  final who = _signOffs[idx].stakeholder.isNotEmpty
  ? _signOffs[idx].stakeholder
  : 'sign-off';
- final confirmed = await launchConfirmDelete(context, itemName: who);
- if (!confirmed) return;
+ final confirmed = await ConfirmDeleteDialog.show(
+   context: context,
+   itemName: who,
+   itemType: 'sign-off',
+ );
+ if (!confirmed || !mounted) return;
  setState(() => _signOffs.removeAt(idx));
  _scheduleSave();
+ if (mounted) showDeletionSuccessSnackBar(context, itemName: who);
  }
 
  void _scheduleSave() {

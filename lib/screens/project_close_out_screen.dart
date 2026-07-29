@@ -19,6 +19,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -250,11 +251,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return LaunchDataRow(
  onEdit: () => _save(),
  onDelete: () async {
- final confirmed =
- await launchConfirmDelete(context, itemName: 'checklist item');
- if (!confirmed) return;
- setState(() => _closeOutChecklist.removeAt(i));
- _save();
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: c.item,
+    itemType: 'checklist item',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _closeOutChecklist.removeAt(i));
+  _save();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: c.item);
  },
  cells: [
  LaunchStatusDropdown(
@@ -350,11 +355,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return LaunchDataRow(
  onEdit: () => _save(),
  onDelete: () async {
- final confirmed =
- await launchConfirmDelete(context, itemName: 'approval entry');
- if (!confirmed) return;
- setState(() => _approvals.removeAt(i));
- _save();
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: a.stakeholder,
+    itemType: 'approval entry',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _approvals.removeAt(i));
+  _save();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: a.stakeholder);
  },
  cells: [
  LaunchEditableCell(
@@ -463,11 +472,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return LaunchDataRow(
  onEdit: () => _save(),
  onDelete: () async {
- final confirmed =
- await launchConfirmDelete(context, itemName: 'archive item');
- if (!confirmed) return;
- setState(() => _archive.removeAt(i));
- _save();
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: a.repository,
+    itemType: 'archive item',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _archive.removeAt(i));
+  _save();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: a.repository);
  },
  cells: [
  LaunchEditableCell(

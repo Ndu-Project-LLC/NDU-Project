@@ -17,6 +17,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 class ProjectActivitiesLogScreen extends StatefulWidget {
  const ProjectActivitiesLogScreen({super.key});
 
@@ -411,33 +412,13 @@ class _ProjectActivitiesLogScreenState
  ProjectActivity activity, {
  required bool isCustom,
  }) async {
- final actionLabel =
- isCustom ? 'delete this custom activity' : 'hide this activity';
- final confirmed = await showDialog<bool>(
+ final confirmed = await ConfirmDeleteDialog.show(
  context: context,
- builder: (dialogContext) => AlertDialog(
- title: Text(isCustom ? 'Delete Activity' : 'Hide Activity'),
- content: Text(
- isCustom
- ? 'This will permanently delete the custom activity.'
- : 'This will hide the generated activity from the log.',
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(false),
- child: const Text('Cancel'),
- ),
- ElevatedButton(
- onPressed: () => Navigator.of(dialogContext).pop(true),
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFF4B400),
- foregroundColor: Colors.black,
- elevation: 0,
- ),
- child: Text(isCustom ? 'Delete' : 'Hide'),
- ),
- ],
- ),
+ itemName: activity.name ?? 'Activity',
+ itemType: isCustom ? 'custom activity' : 'activity',
+ customMessage: isCustom
+ ? 'This will permanently delete the custom activity "${activity.name}". This action cannot be undone.'
+ : 'This will hide the generated activity "${activity.name}" from the log.',
  );
 
  if (confirmed != true || !mounted) return;
@@ -466,9 +447,10 @@ class _ProjectActivitiesLogScreenState
 
  await _persistActivityLog();
  if (!mounted) return;
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Successfully updated activity log: $actionLabel.')),
+ showDeletionSuccessSnackBar(
+ context,
+ itemName: activity.name ?? 'Activity',
+ itemType: isCustom ? 'custom activity' : 'activity',
  );
  }
 

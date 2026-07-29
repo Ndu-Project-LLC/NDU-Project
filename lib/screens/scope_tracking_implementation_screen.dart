@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 class ScopeTrackingImplementationScreen extends StatefulWidget {
@@ -678,11 +679,16 @@ class _ScopeTrackingImplementationScreenState
               });
             },
             onDeleted: (item) async {
-              final ok = await launchConfirmDelete(context, itemName: 'scope tracking item');
-              if (!ok) return;
+              final confirmed = await ConfirmDeleteDialog.show(
+                context: context,
+                itemName: item.scopeItem ?? 'scope tracking item',
+                itemType: 'scope tracking item',
+              );
+              if (!confirmed || !mounted) return;
               setState(() {
                 _items.removeWhere((i) => i.id == item.id);
               });
+              if (mounted) showDeletionSuccessSnackBar(context, itemName: item.scopeItem ?? 'scope tracking item');
             },
           ),
         ],

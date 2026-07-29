@@ -24,6 +24,7 @@ import 'package:ndu_project/services/activity_log_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 // ─── Tab definitions ────────────────────────────────────────────────────────
 
 enum _ImTab {
@@ -1337,25 +1338,18 @@ class _InterfaceRegisterRow extends StatelessWidget {
  }
 
  Future<void> _deleteEntry(BuildContext context, String id) async {
- final confirm = await showDialog<bool>(
- context: context,
- builder: (ctx) => AlertDialog(
- title: const Text('Remove interface entry'),
- content: const Text(
- 'This will delete the interface entry and remove it from AI context.'),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(ctx).pop(false),
- child: const Text('Cancel'),
- ),
- TextButton(
- onPressed: () => Navigator.of(ctx).pop(true),
- child: const Text('Delete'),
- ),
- ],
- ),
- );
- if (confirm != true) return;
+  // Get entry name for display in confirmation
+  final data = ProjectDataHelper.getData(context);
+  final entryToDelete = data.interfaceEntries.firstWhere((e) => e.id == id);
+  final itemName = entryToDelete.boundary.trim().isNotEmpty ? entryToDelete.boundary.trim() : 'Unnamed';
+  
+  final confirm = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'Interface Entry',
+    customMessage: 'This will delete the interface entry and remove it from AI context. This action cannot be undone.',
+  );
+ if (!confirm) return;
 
  final data = ProjectDataHelper.getData(context);
  final entryToDelete = data.interfaceEntries.firstWhere((e) => e.id == id);

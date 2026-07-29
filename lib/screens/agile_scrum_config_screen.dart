@@ -11,7 +11,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -274,12 +274,13 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
   }
 
   Future<void> _removeAgreement(int index) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Working Agreement',
-      itemLabel: _agreementCtrls[_agreements[index].id]?.text.isNotEmpty == true
-          ? _agreementCtrls[_agreements[index].id]!.text
-          : null,
+    final agreementText = _agreementCtrls[_agreements[index].id]?.text.isNotEmpty == true
+        ? _agreementCtrls[_agreements[index].id]!.text
+        : 'Working Agreement';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: agreementText,
+      itemType: 'Working Agreement',
     );
     if (!confirmed) return;
     final a = _agreements[index];
@@ -287,6 +288,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
     _agreementCatCtrls.remove(a.id)?.dispose();
     setState(() => _agreements.removeAt(index));
     _scheduleAutoSave();
+    showDeletionSuccessSnackBar(context, itemName: agreementText, itemType: 'Working Agreement');
   }
 
   @override

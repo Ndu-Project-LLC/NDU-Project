@@ -15,7 +15,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -187,10 +187,11 @@ class _AgileAcceptanceCriteriaScreenState
   }
 
   Future<void> _deleteTemplate() async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Template',
-      itemLabel: _selectedTemplate?.name,
+    final templateName = _selectedTemplate?.name ?? 'Template';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: templateName,
+      itemType: 'Template',
     );
     if (!confirmed) return;
     final t = _selectedTemplate;
@@ -206,6 +207,7 @@ class _AgileAcceptanceCriteriaScreenState
       }
     });
     _scheduleAutoSave();
+    showDeletionSuccessSnackBar(context, itemName: templateName, itemType: 'Template');
   }
 
   void _addCriterion() {
@@ -223,10 +225,11 @@ class _AgileAcceptanceCriteriaScreenState
     final t = _selectedTemplate;
     if (t == null || index >= t.criteria.length) return;
     final c = t.criteria[index];
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Criterion',
-      itemLabel: c.description.isNotEmpty ? c.description : null,
+    final criterionName = c.description.isNotEmpty ? c.description : 'Criterion';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: criterionName,
+      itemType: 'Criterion',
     );
     if (!confirmed) return;
     _criterionCtrls.remove(c.id);
@@ -234,6 +237,7 @@ class _AgileAcceptanceCriteriaScreenState
       t.criteria.removeAt(index);
     });
     _scheduleAutoSave();
+    showDeletionSuccessSnackBar(context, itemName: criterionName, itemType: 'Criterion');
   }
 
   TextEditingController _ctrlForCriterion(AcceptanceCriterion c) {

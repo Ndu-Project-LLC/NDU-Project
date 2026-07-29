@@ -19,7 +19,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
@@ -244,10 +244,11 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
   }
 
   Future<void> _deleteSprint(int index) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Sprint',
-      itemLabel: _sprints[index].name.isNotEmpty ? _sprints[index].name : null,
+    final sprintName = _sprints[index].name.isNotEmpty ? _sprints[index].name : 'Sprint';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: sprintName,
+      itemType: 'Sprint',
     );
     if (!confirmed || !mounted) return;
     final pid = _projectId;
@@ -256,6 +257,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
     updatedList.removeAt(index);
     await RoadmapService.saveSprints(projectId: pid, sprints: updatedList);
     setState(() => _sprints = updatedList);
+    showDeletionSuccessSnackBar(context, itemName: sprintName, itemType: 'Sprint');
   }
 
   @override

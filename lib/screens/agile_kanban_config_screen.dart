@@ -11,7 +11,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -268,10 +268,11 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
   }
 
   Future<void> _removeColumn(int index) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Column',
-      itemLabel: _columns[index].name.isNotEmpty ? _columns[index].name : null,
+    final colName = _columns[index].name.isNotEmpty ? _columns[index].name : 'Column';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: colName,
+      itemType: 'Kanban Column',
     );
     if (!confirmed) return;
     if (_columns.length <= 2) return;
@@ -281,6 +282,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
     _exitCtrls.remove(col.id)?.dispose();
     setState(() => _columns.removeAt(index));
     _scheduleAutoSave();
+    showDeletionSuccessSnackBar(context, itemName: colName, itemType: 'Kanban Column');
   }
 
   void _moveColumn(int oldIndex, int newIndex) {

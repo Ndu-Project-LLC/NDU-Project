@@ -18,7 +18,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
@@ -111,10 +111,11 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
   }
 
   Future<void> _deletePlan(int index) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Release Plan',
-      itemLabel: _plans[index].releaseLabel.isNotEmpty ? _plans[index].releaseLabel : null,
+    final planName = _plans[index].releaseLabel.isNotEmpty ? _plans[index].releaseLabel : 'Release Plan';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: planName,
+      itemType: 'Release Plan',
     );
     if (!confirmed) return;
     final pid = _projectId;
@@ -122,6 +123,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
     if (pid == null) return;
     AgileWireframeService.deleteReleasePlan(projectId: pid, planId: plan.id);
     setState(() => _plans.removeAt(index));
+    showDeletionSuccessSnackBar(context, itemName: planName, itemType: 'Release Plan');
   }
 
   @override

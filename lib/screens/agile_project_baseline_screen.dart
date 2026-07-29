@@ -30,7 +30,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -581,10 +581,11 @@ class _AgileProjectBaselineScreenState
  }
 
   Future<void> _removeAssumption(_AssumptionRowState row) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Assumption',
-      itemLabel: row.textController.text.isNotEmpty ? row.textController.text : null,
+    final assumptionText = row.textController.text.isNotEmpty ? row.textController.text : 'Assumption';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: assumptionText,
+      itemType: 'Assumption',
     );
     if (!confirmed) return;
     if (_assumptionRows.length == 1) {
@@ -597,6 +598,7 @@ class _AgileProjectBaselineScreenState
       _assumptionRows.remove(row);
     });
     _scheduleSave();
+    showDeletionSuccessSnackBar(context, itemName: assumptionText, itemType: 'Assumption');
   }
 
  String _describeSprintCadence() {

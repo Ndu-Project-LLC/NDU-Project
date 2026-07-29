@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 class VendorAccountCloseOutScreen extends StatefulWidget {
  const VendorAccountCloseOutScreen({super.key});
@@ -267,11 +268,15 @@ showNavigationButtons: false,
  return LaunchDataRow(
  onEdit: () => _save(),
  onDelete: () async {
- final confirmed = await launchConfirmDelete(context,
- itemName: 'vendor ${v.vendorName}');
- if (!confirmed || !mounted) return;
- setState(() => _vendors.removeAt(i));
- _save();
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: v.vendorName,
+    itemType: 'vendor',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _vendors.removeAt(i));
+  _save();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: v.vendorName);
  },
  onKazAi: () => _regenerateVendorRow(i),
  cells: [
@@ -376,11 +381,15 @@ showNavigationButtons: false,
  return LaunchDataRow(
  onEdit: () => _save(),
  onDelete: () async {
- final confirmed = await launchConfirmDelete(context,
- itemName: 'access item ${a.system}');
- if (!confirmed || !mounted) return;
- setState(() => _accessItems.removeAt(i));
- _save();
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: a.system,
+    itemType: 'access item',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _accessItems.removeAt(i));
+  _save();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: a.system);
  },
  onKazAi: () => _regenerateAccessRow(i),
  cells: [
@@ -481,11 +490,15 @@ showNavigationButtons: false,
  return LaunchDataRow(
  onEdit: () => _save(),
  onDelete: () async {
- final confirmed = await launchConfirmDelete(context,
- itemName: 'obligation ${o.title}');
- if (!confirmed || !mounted) return;
- setState(() => _obligations.removeAt(i));
- _save();
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: o.title,
+    itemType: 'obligation',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _obligations.removeAt(i));
+  _save();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: o.title);
  },
  onKazAi: () => _regenerateObligationRow(i),
  cells: [
@@ -577,11 +590,15 @@ showNavigationButtons: false,
  return LaunchDataRow(
  onEdit: () => _save(),
  onDelete: () async {
- final confirmed = await launchConfirmDelete(context,
- itemName: 'checklist task ${c.title}');
- if (!confirmed || !mounted) return;
- setState(() => _closureChecklist.removeAt(i));
- _save();
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: c.title,
+    itemType: 'checklist task',
+  );
+  if (!confirmed || !mounted) return;
+  setState(() => _closureChecklist.removeAt(i));
+  _save();
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: c.title);
  },
  onKazAi: () => _regenerateClosureChecklistRow(i),
  cells: [

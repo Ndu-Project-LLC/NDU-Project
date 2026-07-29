@@ -10,7 +10,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 class RiskTrackingScreen extends StatefulWidget {
@@ -1785,13 +1785,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
   Future<void> _deleteEscalation(_EscalationReadiness esc) async {
-  final confirmed = await showDeleteConfirmationDialog(
-  context,
-  title: 'Delete Escalation',
-  itemLabel: esc.event,
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: esc.event,
+    itemType: 'escalation',
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   setState(() => _escalations.removeWhere((e) => e.id == esc.id));
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: esc.event);
+  }
   }
 
  // ─── Generic Chip Helpers ─────────────────────────────────────────────────
@@ -2098,13 +2101,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
   Future<void> _deleteRisk(_RiskItem risk) async {
-  final confirmed = await showDeleteConfirmationDialog(
-  context,
-  title: 'Delete Risk',
-  itemLabel: risk.title,
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: risk.title,
+    itemType: 'risk',
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   setState(() => _risks.removeWhere((r) => r.id == risk.id));
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: risk.title);
+  }
   }
 
  // ─── CRUD: Mitigation Plans ───────────────────────────────────────────────
@@ -2406,13 +2412,17 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
   Future<void> _deleteMitigationPlan(_MitigationPlan plan) async {
-  final confirmed = await showDeleteConfirmationDialog(
-  context,
-  title: 'Delete Mitigation Plan',
-  itemLabel: plan.strategy.length > 60 ? '${plan.strategy.substring(0, 60)}...' : plan.strategy,
+  final displayName = plan.strategy.length > 60 ? '${plan.strategy.substring(0, 60)}...' : plan.strategy;
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: displayName,
+    itemType: 'mitigation plan',
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   setState(() => _plans.removeWhere((p) => p.id == plan.id));
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: displayName);
+  }
   }
 
  // ─── CRUD: Risk Signals ──────────────────────────────────────────────────
@@ -2667,13 +2677,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
   Future<void> _deleteSignal(_RiskSignal signal) async {
-  final confirmed = await showDeleteConfirmationDialog(
-  context,
-  title: 'Delete Risk Signal',
-  itemLabel: signal.title,
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: signal.title,
+    itemType: 'risk signal',
   );
-  if (!confirmed) return;
+  if (!confirmed || !mounted) return;
   setState(() => _signals.removeWhere((s) => s.id == signal.id));
+  if (mounted) {
+    showDeletionSuccessSnackBar(context, itemName: signal.title);
+  }
   }
 
  Future<void> _exportPdf() async {

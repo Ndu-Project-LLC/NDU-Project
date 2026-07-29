@@ -20,7 +20,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -165,14 +165,16 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
   }
 
   Future<void> _deleteStory(AgileTask story) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Story',
-      itemLabel: story.userStory.isNotEmpty ? story.userStory : null,
+    final storyName = story.userStory.isNotEmpty ? story.userStory : 'Story';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: storyName,
+      itemType: 'Story',
     );
     if (!confirmed) return;
     setState(() => _stories.removeWhere((s) => s.id == story.id));
     _scheduleSave();
+    showDeletionSuccessSnackBar(context, itemName: storyName, itemType: 'Story');
   }
 
   void _updateStory(AgileTask story) {

@@ -14,7 +14,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 const Color _kBackground = Colors.white;
@@ -612,14 +612,16 @@ class _AgileBacklogGovernanceScreenState
                     _scheduleAutoSave();
                   },
                   () async {
-                    final confirmed = await showDeleteConfirmationDialog(
-                      context,
-                      title: 'Delete Definition of Ready Item',
-                      itemLabel: e.value.label.isNotEmpty ? e.value.label : null,
+                    final itemName = e.value.label.isNotEmpty ? e.value.label : 'Definition of Ready Item';
+                    final confirmed = await ConfirmDeleteDialog.show(
+                      context: context,
+                      itemName: itemName,
+                      itemType: 'Definition of Ready Item',
                     );
                     if (!confirmed) return;
                     setState(() => _doRItems.removeAt(e.key));
                     _scheduleAutoSave();
+                    showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'DoR Item');
                   },
                 )),
             TextButton.icon(
@@ -682,14 +684,16 @@ class _AgileBacklogGovernanceScreenState
                     _scheduleAutoSave();
                   },
                   () async {
-                    final confirmed = await showDeleteConfirmationDialog(
-                      context,
-                      title: 'Delete Definition of Done Item',
-                      itemLabel: e.value.label.isNotEmpty ? e.value.label : null,
+                    final itemName = e.value.label.isNotEmpty ? e.value.label : 'Definition of Done Item';
+                    final confirmed = await ConfirmDeleteDialog.show(
+                      context: context,
+                      itemName: itemName,
+                      itemType: 'Definition of Done Item',
                     );
                     if (!confirmed) return;
                     setState(() => _doDItems.removeAt(e.key));
                     _scheduleAutoSave();
+                    showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'DoD Item');
                   },
                 )),
             TextButton.icon(
@@ -822,14 +826,16 @@ class _AgileBacklogGovernanceScreenState
                   _scheduleAutoSave();
                 },
                 () async {
-                  final confirmed = await showDeleteConfirmationDialog(
-                    context,
-                    title: 'Delete Working Agreement',
-                    itemLabel: e.value.label.isNotEmpty ? e.value.label : null,
+                  final itemName = e.value.label.isNotEmpty ? e.value.label : 'Working Agreement';
+                  final confirmed = await ConfirmDeleteDialog.show(
+                    context: context,
+                    itemName: itemName,
+                    itemType: 'Working Agreement',
                   );
                   if (!confirmed) return;
                   setState(() => _waItems.removeAt(e.key));
                   _scheduleAutoSave();
+                  showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'Working Agreement');
                 },
               )),
           TextButton.icon(

@@ -17,6 +17,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/utils/wbs_to_work_item_converter.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 class ExecutionWorkPackagesScreen extends StatefulWidget {
   const ExecutionWorkPackagesScreen({super.key});
@@ -449,35 +450,24 @@ class _ExecutionWorkPackagesScreenState
   }
 
   Future<void> _deleteWorkPackage(WorkPackage wp) async {
-    final confirm = await showDialog<bool>(
+    final confirmed = await ConfirmDeleteDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Work Package'),
-        content: const Text('Are you sure you want to delete this work package?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      itemName: wp.title ?? 'Work Package',
+      itemType: 'work package',
     );
-
-    if (confirm == true && mounted) {
-      final data = _getData();
-      final updated = data.workPackages.where((p) => p.id != wp.id).toList();
-      await ProjectDataHelper.updateAndSave(
-        context: context,
-        checkpoint: 'execution_work_packages',
-        dataUpdater: (d) => d.copyWith(workPackages: updated),
-        showSnackbar: false,
-      );
-      setState(() {});
-      _showInfo('Work package deleted.');
+    if (!confirmed || !mounted) return;
+    
+    final data = _getData();
+    final updated = data.workPackages.where((p) => p.id != wp.id).toList();
+    await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'execution_work_packages',
+      dataUpdater: (d) => d.copyWith(workPackages: updated),
+      showSnackbar: false,
+    );
+    setState(() {});
+    if (mounted) {
+      showDeletionSuccessSnackBar(context, itemName: wp.title ?? 'Work Package');
     }
   }
 

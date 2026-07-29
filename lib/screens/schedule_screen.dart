@@ -26,7 +26,7 @@ import 'package:ndu_project/widgets/schedule_gantt_enhanced.dart';
 import 'package:ndu_project/widgets/work_package_dialog.dart';
 import 'package:ndu_project/widgets/work_package_detail.dart';
 
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -1292,10 +1292,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   Future<void> _deleteTask(String id) async {
     final row = _activityRows.where((r) => r.id == id).firstOrNull;
     final label = row?.titleController.text.trim();
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Delete Task',
-      itemLabel: (label != null && label.isNotEmpty) ? label : null,
+    final itemName = (label != null && label.isNotEmpty) ? label : 'Task';
+    final confirmed = await ConfirmDeleteDialog.show(
+      context: context,
+      itemName: itemName,
+      itemType: 'task',
     );
     if (!confirmed) return;
     setState(() {
@@ -1306,6 +1307,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       }
     });
     _handleActivityChanged();
+    if (mounted) {
+      showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'task');
+    }
   }
 
   Future<void> _validateSchedule() async {
@@ -1811,32 +1815,23 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   Future<void> _deleteWorkPackage(String wpId) async {
-    final confirm = await showDialog<bool>(
+    final data = ProjectDataHelper.getData(context);
+    final wp = data.workPackages.where((w) => w.id == wpId).firstOrNull;
+    final itemName = wp?.name ?? 'Work Package';
+    final confirm = await ConfirmDeleteDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Work Package'),
-        content:
-            const Text('Are you sure you want to delete this work package?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      itemName: itemName,
+      itemType: 'work package',
     );
 
     if (confirm == true && mounted) {
-      final data = ProjectDataHelper.getData(context);
       setState(() {
         data.workPackages.removeWhere((wp) => wp.id == wpId);
       });
       _saveWorkPackages(data.workPackages);
-      _showInfo('Work package deleted.');
+      if (mounted) {
+        showDeletionSuccessSnackBar(context, itemName: itemName, itemType: 'work package');
+      }
     }
   }
 

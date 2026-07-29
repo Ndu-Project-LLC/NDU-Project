@@ -35,7 +35,7 @@ import 'package:ndu_project/widgets/page_hint_dialog.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -2302,12 +2302,13 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  if (index < 0 || index >= _solutions.length) return;
 
  final solutionTitle = _solutions[index].titleController.text.trim();
- final confirmed = await showDeleteConfirmationDialog(
- context,
- title: 'Delete Solution?',
- itemLabel: solutionTitle.isEmpty
- ? 'Potential Solution ${index + 1}'
- : solutionTitle,
+ final itemName = solutionTitle.isEmpty
+     ? 'Potential Solution ${index + 1}'
+     : solutionTitle;
+ final confirmed = await ConfirmDeleteDialog.show(
+   context: context,
+   itemName: itemName,
+   itemType: 'Potential Solution',
  );
 
  if (confirmed == true && mounted) {

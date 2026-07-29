@@ -28,6 +28,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 
 class RequirementsImplementationScreen extends StatefulWidget {
  const RequirementsImplementationScreen({super.key});
@@ -1093,7 +1094,15 @@ class _RequirementsImplementationScreenState
  ),
  const SizedBox(width: 8),
  IconButton(
- onPressed: () {
+ onPressed: () async {
+  final doc = _documents[index];
+  final itemName = doc.fileName ?? doc.title ?? 'document';
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: itemName,
+    itemType: 'Document',
+  );
+  if (!confirmed) return;
  setState(() => _documents.removeAt(index));
  _scheduleSave();
  },

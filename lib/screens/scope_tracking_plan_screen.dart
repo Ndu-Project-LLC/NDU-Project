@@ -25,6 +25,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
@@ -244,11 +245,16 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  }
 
   void _deleteItem(ScopeTrackingItem item) async {
-  final ok = await launchConfirmDelete(context, itemName: 'scope item');
-  if (!ok) return;
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: item.scopeItem ?? 'scope item',
+    itemType: 'scope item',
+  );
+  if (!confirmed || !mounted) return;
   setState(() => _items.removeWhere((i) => i.id == item.id));
   _scheduleSave();
-  }
+  if (mounted) showDeletionSuccessSnackBar(context, itemName: item.scopeItem ?? 'scope item');
+ }
 
  void _setBaseline() async {
  final projectId = _projectId;

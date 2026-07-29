@@ -10,7 +10,7 @@ import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
+import 'package:ndu_project/widgets/confirm_delete_dialog.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -961,7 +961,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Map<String, List<LaunchEntry>> generated = {};
  try {
  generated = await ExecutionPhaseAiSeed.generateEntries(
- context: context,
+ context: context: context,
  section: 'Technical Debt Management',
  sections: const {
  'debt_items': 'Technical debt items with owner, severity, status',
@@ -1086,7 +1086,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final resolved = _debtItems.where((item) => item.status == 'Done').length;
 
  showDialog<void>(
- context: context,
+ context: context: context,
  builder: (dialogContext) => AlertDialog(
  title: const Text('Technical Debt Snapshot'),
  content: Column(
@@ -1140,7 +1140,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  showDialog<void>(
- context: context,
+ context: context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
  title: Text(isEdit ? 'Edit debt item' : 'Add debt item'),
@@ -1257,10 +1257,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _deleteDebtItem(DebtItem item) async {
-  final confirmed = await showDeleteConfirmationDialog(
-    context,
-    title: 'Delete Debt Item',
-    itemLabel: item.title,
+  final confirmed = await ConfirmDeleteDialog.show(
+    context: context,
+    itemName: item.title.isNotEmpty ? item.title : 'Debt Item',
+    itemType: 'Debt Item',
   );
   if (!confirmed) return;
   final updated = [..._debtItems]
@@ -1268,9 +1268,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
   await _upsertDebtItems(updated);
   if (!mounted) return;
   setState(() => _debtItems = updated);
-  ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text('Removed debt item ${item.id}.')),
-  );
+  showDeletionSuccessSnackBar(context, itemName: item.title, itemType: 'Debt Item');
   }
 
  void _showAddRemediationTrackDialog() => _showRemediationTrackDialog();
@@ -1300,7 +1298,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  (seed?.color ?? const Color(0xFF0EA5E9)).toARGB32();
 
  showDialog<void>(
- context: context,
+ context: context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
  title: Text(displayIndex == null
@@ -1461,7 +1459,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  (seed?.color ?? const Color(0xFFF97316)).toARGB32();
 
  showDialog<void>(
- context: context,
+ context: context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
  title: Text(displayIndex == null
@@ -1620,7 +1618,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  (seed?.color ?? const Color(0xFF0EA5E9)).toARGB32();
 
  showDialog<void>(
- context: context,
+ context: context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (dialogContext, setDialogState) => AlertDialog(
  title: Text(
@@ -1771,10 +1769,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _deleteRemediationTrack(int displayIndex, String label) async {
- final confirmed = await showDeleteConfirmationDialog(
- context,
- title: 'Delete remediation lane',
- itemLabel: label,
+ final confirmed = await ConfirmDeleteDialog.show(
+ context: context,
+ itemName: label.isNotEmpty ? label : 'Remediation Lane',
+ itemType: 'Remediation Lane',
  );
  if (!confirmed) return;
  final updated = _effectiveTracks();
@@ -1787,10 +1785,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _deleteRootCause(int displayIndex, String label) async {
- final confirmed = await showDeleteConfirmationDialog(
- context,
- title: 'Delete root cause signal',
- itemLabel: label,
+ final confirmed = await ConfirmDeleteDialog.show(
+ context: context,
+ itemName: label.isNotEmpty ? label : 'Root Cause',
+ itemType: 'Remediation Lane',
  );
  if (!confirmed) return;
  final updated = _effectiveRootCauses();
@@ -1803,10 +1801,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Future<void> _deleteOwner(int displayIndex, String label) async {
- final confirmed = await showDeleteConfirmationDialog(
- context,
- title: 'Delete owner coverage',
- itemLabel: label,
+ final confirmed = await ConfirmDeleteDialog.show(
+ context: context,
+ itemName: label.isNotEmpty ? label : 'Owner Coverage',
+ itemType: 'Remediation Lane',
  );
  if (!confirmed) return;
  final updated = _effectiveOwners();
@@ -1855,7 +1853,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _upsertDebtItems(List<DebtItem> items) async {
  await ProjectDataHelper.updateAndSave(
- context: context,
+ context: context: context,
  checkpoint: 'technical_debt_management',
  showSnackbar: false,
  dataUpdater: (current) {
@@ -1870,7 +1868,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _upsertRemediationTracks(List<RemediationTrack> tracks) async {
  await ProjectDataHelper.updateAndSave(
- context: context,
+ context: context: context,
  checkpoint: 'technical_debt_management',
  showSnackbar: false,
  dataUpdater: (current) {
@@ -1885,7 +1883,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _upsertRootCauses(List<DebtInsight> rootCauses) async {
  await ProjectDataHelper.updateAndSave(
- context: context,
+ context: context: context,
  checkpoint: 'technical_debt_management',
  showSnackbar: false,
  dataUpdater: (current) {
@@ -1900,7 +1898,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Future<void> _upsertOwners(List<OwnerItem> owners) async {
  await ProjectDataHelper.updateAndSave(
- context: context,
+ context: context: context,
  checkpoint: 'technical_debt_management',
  showSnackbar: false,
  dataUpdater: (current) {
@@ -1920,7 +1918,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  required List<OwnerItem> owners,
  }) async {
  await ProjectDataHelper.updateAndSave(
- context: context,
+ context: context: context,
  checkpoint: 'technical_debt_management',
  showSnackbar: false,
  dataUpdater: (current) {
@@ -2097,7 +2095,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Future<void> _exportPdf() async {
  final projectData = ProjectDataHelper.getData(context);
  await PdfExportHelper.exportScreenPdf(
- context: context,
+ context: context: context,
  screenTitle: 'Technical Debt Management',
  sections: [
  PdfSection.keyValue('Project Info', [

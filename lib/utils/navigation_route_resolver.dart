@@ -119,6 +119,10 @@ import 'package:ndu_project/screens/technical_development_screen.dart';
 import 'package:ndu_project/screens/lessons_learned_screen.dart';
 import 'package:ndu_project/screens/team_training_building_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_overview_screen.dart';
+import 'package:ndu_project/screens/execution_work_packages_screen.dart';
+import 'package:ndu_project/screens/fat_mechanical_completion_screen.dart';
+import 'package:ndu_project/screens/financial_closeout_screen.dart';
+import 'package:ndu_project/screens/benefits_realization_screen.dart';
 import 'package:ndu_project/screens/commerce_viability_screen.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -326,6 +330,8 @@ class NavigationRouteResolver {
         return const ProjectPlanCondensedSummaryScreen();
       case 'execution_plan':
         return const ExecutionPlanScreen();
+      case 'execution_work_packages':
+        return const ExecutionWorkPackagesScreen();
       case 'execution_plan_strategy':
         return const ExecutionPlanSolutionsScreen();
       case 'execution_plan_details':
@@ -516,6 +522,12 @@ class NavigationRouteResolver {
       // Launch Phase
       case 'deliver_project_closure':
         return const DeliverProjectClosureScreen();
+      case 'fat_mechanical_completion':
+        return const FatMechanicalCompletionScreen();
+      case 'financial_closeout':
+        return const FinancialCloseoutScreen();
+      case 'benefits_realization':
+        return const BenefitsRealizationScreen();
       case 'transition_to_prod_team':
         return const TransitionToProdTeamScreen();
       case 'contract_close_out':

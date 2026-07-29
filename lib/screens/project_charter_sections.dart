@@ -1800,15 +1800,19 @@ class _TimelineItem extends StatelessWidget {
  Widget build(BuildContext context) {
  return IntrinsicHeight(
  child: Row(
- crossAxisAlignment: CrossAxisAlignment.start,
+ // Use stretch so the timeline column gets the Row's full height
+ crossAxisAlignment: CrossAxisAlignment.stretch,
  children: [
  // Timeline line + dot
  SizedBox(
  width: 32,
  child: Column(
+ mainAxisSize: MainAxisSize.max,
  children: [
- // Dot
- Container(
+ // Dot — padded from top to align with the first line of text
+ Padding(
+ padding: const EdgeInsets.only(top: 4),
+ child: Container(
  width: 16,
  height: 16,
  decoration: BoxDecoration(
@@ -1825,7 +1829,8 @@ class _TimelineItem extends StatelessWidget {
  ? const Icon(Icons.check, size: 10, color: Colors.white)
  : null,
  ),
- // Line
+ ),
+ // Vertical connecting line — fills remaining space
  if (!isLast)
  Expanded(
  child: Container(
@@ -1833,6 +1838,9 @@ class _TimelineItem extends StatelessWidget {
  color: BrandColors.outlineVariant,
  ),
  ),
+ // When it's the last item, an invisible spacer preserves layout balance
+ if (isLast)
+ const SizedBox(height: 8),
  ],
  ),
  ),
@@ -1840,9 +1848,10 @@ class _TimelineItem extends StatelessWidget {
  // Content
  Expanded(
  child: Padding(
- padding: const EdgeInsets.only(bottom: 20),
+ padding: const EdgeInsets.only(bottom: 24),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
+ mainAxisSize: MainAxisSize.min,
  children: [
  Text(
  name,

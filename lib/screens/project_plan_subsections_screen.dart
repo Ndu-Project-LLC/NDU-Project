@@ -1,14 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
-import 'package:ndu_project/services/firebase_auth_service.dart';
-import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
@@ -18,6 +15,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/top_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 class ProjectPlanLevel1ScheduleScreen extends StatefulWidget {
@@ -316,14 +314,13 @@ class _Level1ScheduleScreenState
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  PlanningPhaseHeader(title: 'Project Schedule', onExportPdf: _exportPdf),
- const SizedBox(height: 16),
- _TopHeader(
- title: 'Level 1 - Project Schedule',
- onBack: () => PlanningPhaseNavigation.goToPrevious(
- context, 'project_plan_level1_schedule'),
- onForward: () => PlanningPhaseNavigation.goToNext(
- context, 'project_plan_level1_schedule'),
- ),
+ const SizedBox(height: 16),TopHeader(
+  title: 'Level 1 - Project Schedule',
+  onBack: () => PlanningPhaseNavigation.goToPrevious(
+  context, 'project_plan_level1_schedule'),
+  onNext: () => PlanningPhaseNavigation.goToNext(
+  context, 'project_plan_level1_schedule'),
+  ),
  const SizedBox(height: 12),
  Text(
  'Map major phases, milestone timing, and governance checkpoints.',
@@ -4621,15 +4618,14 @@ class _ProjectPlanSectionScreen extends StatelessWidget {
  config.sections.isNotEmpty;
  return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _TopHeader(
- title: config.title,
- onBack: () =>
- PlanningPhaseNavigation.goToPrevious(
- context, config.checkpoint),
- onForward: () => PlanningPhaseNavigation.goToNext(
- context, config.checkpoint),
- ),
+ children: [TopHeader(
+  title: config.title,
+  onBack: () =>
+  PlanningPhaseNavigation.goToPrevious(
+  context, config.checkpoint),
+  onNext: () => PlanningPhaseNavigation.goToNext(
+  context, config.checkpoint),
+  ),
  const SizedBox(height: 12),
  Text(
  config.subtitle,
@@ -4717,133 +4713,7 @@ class _ProjectPlanSectionConfig {
  final List<_SectionData> sections;
 }
 
-class _TopHeader extends StatelessWidget {
- const _TopHeader({
- required this.title,
- required this.onBack,
- required this.onForward,
- });
 
- final String title;
- final VoidCallback onBack;
- final VoidCallback onForward;
-
- @override
- Widget build(BuildContext context) {
- return Row(
- children: [
- _CircleIconButton(
- icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
- const SizedBox(width: 12),
- _CircleIconButton(
- icon: Icons.arrow_forward_ios_rounded, onTap: onForward),
- const SizedBox(width: 16),
- Text(
- title,
- style: const TextStyle(
- fontSize: 22,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827)),
- ),
- const Spacer(),
- const SizedBox(width: 8),
- const _UserChip(),
- ],
- );
- }
-}
-
-class _CircleIconButton extends StatelessWidget {
- const _CircleIconButton({required this.icon, this.onTap});
-
- final IconData icon;
- final VoidCallback? onTap;
-
- @override
- Widget build(BuildContext context) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(18),
- child: Container(
- width: 36,
- height: 36,
- decoration: BoxDecoration(
- color: Colors.white,
- shape: BoxShape.circle,
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
- ),
- );
- }
-}
-
-class _UserChip extends StatelessWidget {
- const _UserChip();
-
- @override
- Widget build(BuildContext context) {
- final user = FirebaseAuth.instance.currentUser;
- final displayName =
- FirebaseAuthService.displayNameOrEmail(fallback: 'User');
- final email = user?.email ?? '';
-
- return StreamBuilder<bool>(
- stream: UserService.watchAdminStatus(),
- builder: (context, snapshot) {
- final isAdmin = snapshot.data ?? UserService.isAdminEmail(email);
- final role = isAdmin ? 'Admin' : 'Member';
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- CircleAvatar(
- radius: 16,
- backgroundColor: const Color(0xFFE5E7EB),
- backgroundImage: user?.photoURL != null
- ? NetworkImage(user!.photoURL!)
- : null,
- child: user?.photoURL == null
- ? Text(
- displayName.isNotEmpty
- ? displayName[0].toUpperCase()
- : 'U',
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: Color(0xFF374151)),
- )
- : null,
- ),
- const SizedBox(width: 8),
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- mainAxisSize: MainAxisSize.min,
- children: [
- Text(displayName,
- style: const TextStyle(
- fontSize: 12, fontWeight: FontWeight.w600)),
- Text(role,
- style: const TextStyle(
- fontSize: 10, color: Color(0xFF6B7280))),
- ],
- ),
- const SizedBox(width: 6),
- const Icon(Icons.keyboard_arrow_down,
- size: 18, color: Color(0xFF9CA3AF)),
- ],
- ),
- );
- },
- );
- }
-}
 
 class _MetricsRow extends StatelessWidget {
  const _MetricsRow({required this.metrics});

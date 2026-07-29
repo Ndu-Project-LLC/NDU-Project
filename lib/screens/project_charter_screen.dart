@@ -489,7 +489,14 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  const SizedBox(height: 32),
 
  // ─── 10. Launch Phase Navigation ───
- LaunchPhaseNavigation(
+ // Extra vertical spacing ensures the navigation never crowds
+ // the preceding section. The bottom padding on the scroll view
+ // (120 px) already guarantees separation from the floating
+ // approval bar.
+ const SizedBox(height: 16),
+ Padding(
+ padding: const EdgeInsets.symmetric(vertical: 8),
+ child: LaunchPhaseNavigation(
  backLabel: 'Back',
  nextLabel: 'Next',
  nextEnabled:
@@ -536,6 +543,7 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  }
  ProjectFrameworkScreen.open(context);
  },
+ ),
  ),
  ],
  ),

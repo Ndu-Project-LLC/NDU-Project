@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
-import 'package:ndu_project/screens/team_training_building_screen.dart';
-import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/widgets/premium_edit_dialog.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/top_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
 Future<void> _exportPlanningSubsectionPdf(BuildContext context) async {
@@ -844,11 +842,7 @@ class _OrganizationRaciMatrixScreenState
       if (provider.projectData.raciMatrixRows.isEmpty) {
         await _seedDefaultMatrix();
       }
-      if (mounted) {
-        setState(() {
-          _didSeed = true;
-        });
-      }
+      if (mounted) setState(() { _didSeed = true; });
     });
   }
 
@@ -915,47 +909,6 @@ class _OrganizationRaciMatrixScreenState
     if (mounted) setState(() {});
   }
 
-  Future<void> _exportPdf() async {
-    final projectData = ProjectDataHelper.getData(context);
-    final rows = projectData.raciMatrixRows;
-    await PdfExportHelper.exportScreenPdf(
-      context: context,
-      screenTitle: 'RACI Matrix',
-      sections: [
-        PdfSection.keyValue('Project Info', [
-          {
-            'Project Name': projectData.projectName.isEmpty
-                ? 'N/A'
-                : projectData.projectName
-          },
-          {
-            'Solution Title': projectData.solutionTitle.isEmpty
-                ? 'N/A'
-                : projectData.solutionTitle
-          },
-        ]),
-        PdfSection.text(
-          'Notes',
-          projectData.planningNotes['planning_organization_raci_matrix'] ??
-              'No data recorded.',
-        ),
-        PdfSection.table(
-          'RACI Matrix',
-          headers: ['Role', 'Framework', 'Discipline', ..._raciColumns],
-          rows: rows
-              .map((row) => [
-                    row.role,
-                    row.framework,
-                    row.discipline,
-                    ..._raciColumns
-                        .map((column) => row.assignments[column]?.trim() ?? ''),
-                  ])
-              .toList(),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final projectData = ProjectDataHelper.getData(context);
@@ -1000,7 +953,7 @@ class _OrganizationRaciMatrixScreenState
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 16),
-                        _TopHeader(
+                        TopHeader(
                           title: 'RACI Matrix',
                           onBack: () => PlanningPhaseNavigation.goToPrevious(
                             context,
@@ -1010,13 +963,13 @@ class _OrganizationRaciMatrixScreenState
                             context,
                             'organization_raci_matrix',
                           ),
-                          onAdd: () => _addRow(context),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'AI-seeded role coverage for governance, planning, delivery, financial, risk, and close-out responsibilities.',
-                          style:
-                              TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                          actions: [
+                            TopHeaderAction(
+                              label: 'Add Role',
+                              icon: Icons.add,
+                              onPressed: () => _addRow(context),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 20),
                         PlanningAiNotesCard(
@@ -1163,6 +1116,47 @@ class _OrganizationRaciMatrixScreenState
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _exportPdf() async {
+    final projectData = ProjectDataHelper.getData(context);
+    final rows = projectData.raciMatrixRows;
+    await PdfExportHelper.exportScreenPdf(
+      context: context,
+      screenTitle: 'RACI Matrix',
+      sections: [
+        PdfSection.keyValue('Project Info', [
+          {
+            'Project Name': projectData.projectName.isEmpty
+                ? 'N/A'
+                : projectData.projectName
+          },
+          {
+            'Solution Title': projectData.solutionTitle.isEmpty
+                ? 'N/A'
+                : projectData.solutionTitle
+          },
+        ]),
+        PdfSection.text(
+          'Notes',
+          projectData.planningNotes['planning_organization_raci_matrix'] ??
+              'No data recorded.',
+        ),
+        PdfSection.table(
+          'RACI Matrix',
+          headers: ['Role', 'Framework', 'Discipline', ..._raciColumns],
+          rows: rows
+              .map((row) => [
+                    row.role,
+                    row.framework,
+                    row.discipline,
+                    ..._raciColumns
+                        .map((column) => row.assignments[column]?.trim() ?? ''),
+                  ])
+              .toList(),
+        ),
+      ],
     );
   }
 
@@ -1929,57 +1923,32 @@ class _OrganizationStaffingPlanScreenState
                         PlanningPhaseHeader(
                             title: 'Staffing Plan', onExportPdf: _exportPdf),
                         const SizedBox(height: 16),
-                        // Header row
-                        Row(
-                          children: [
-                            _CircleIconButton(
-                              icon: Icons.arrow_back_ios_new_rounded,
-                              onTap: () => PlanningPhaseNavigation.goToPrevious(
-                                context,
-                                'organization_staffing_plan',
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            _CircleIconButton(
-                              icon: Icons.arrow_forward_ios_rounded,
-                              onTap: () async {
-                                final nextScreen =
-                                    PlanningPhaseNavigation.resolveNextScreen(
-                                          context,
-                                          'organization_staffing_plan',
-                                        ) ??
-                                        const TeamTrainingAndBuildingScreen();
-                                await ProjectDataHelper.saveAndNavigate(
-                                  context: context,
-                                  checkpoint: 'organization_staffing_plan',
-                                  saveInBackground: true,
-                                  nextScreenBuilder: () => nextScreen,
-                                  dataUpdater: (d) => d,
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 16),
-                            const Text(
-                              'Staffing Plan',
-                              style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF111827)),
-                            ),
-                            const Spacer(),
-                            const _UserChip(),
-                          ],
+                        TopHeader(
+                          title: 'Staffing Plan',
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                            context,
+                            'organization_staffing_plan',
+                          ),
+                          onNext: () => PlanningPhaseNavigation.goToNext(
+                            context,
+                            'organization_staffing_plan',
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Plan resource needs, staffing timeline, and onboarding cadence.',
-                          style:
-                              TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                        const SizedBox(height: 20),
+                        PlanningAiNotesCard(
+                          title: 'Notes',
+                          sectionLabel: 'Staffing Plan',
+                          noteKey: 'organization_staffing_plan',
+                          checkpoint: 'organization_staffing_plan',
+                          description:
+                              'Track staffing needs, onboarding timelines, and resource allocation.',
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
 
                         // Metrics row
-                        Row(
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 16,
                           children: [
                             _MetricCard(
                                 label: 'Total Staff',
@@ -1987,14 +1956,13 @@ class _OrganizationStaffingPlanScreenState
                                     .fold<int>(0, (sum, r) => sum + r.headcount)
                                     .toString(),
                                 accent: const Color(0xFFF59E0B)),
-                            const SizedBox(width: 16),
                             _MetricCard(
                                 label: 'Positions',
                                 value: requirements.length.toString(),
                                 accent: const Color(0xFF8B5CF6)),
                           ],
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
 
                         // Staffing Table
                         if (requirements.isEmpty)
@@ -2694,15 +2662,27 @@ class _PlanningSubsectionScreen extends StatelessWidget {
                                 onExportPdf: () =>
                                     _exportPlanningSubsectionPdf(context)),
                             const SizedBox(height: 16),
-                            _TopHeader(
+                            TopHeader(
                               title: config.title,
                               onBack: () =>
                                   PlanningPhaseNavigation.goToPrevious(
                                       context, config.checkpoint),
                               onNext: () => PlanningPhaseNavigation.goToNext(
                                   context, config.checkpoint),
-                              onAdd: onAdd,
-                              onAddPredefined: onAddPredefined,
+                              actions: [
+                                if (onAddPredefined != null)
+                                  TopHeaderAction(
+                                    label: 'Standard Roles',
+                                    icon: Icons.assignment_outlined,
+                                    onPressed: onAddPredefined!,
+                                  ),
+                                if (onAdd != null)
+                                  TopHeaderAction(
+                                    label: 'Add Role',
+                                    icon: Icons.add,
+                                    onPressed: onAdd!,
+                                  ),
+                              ],
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -2719,7 +2699,7 @@ class _PlanningSubsectionScreen extends StatelessWidget {
                               description:
                                   'Capture ownership, staffing needs, and role coverage.',
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 20),
                             if (hasContent) ...[
                               _MetricsRow(metrics: config.metrics),
                               const SizedBox(height: 24),
@@ -3064,170 +3044,7 @@ class _StaffingColumnDef {
   final double width;
 }
 
-class _TopHeader extends StatelessWidget {
-  const _TopHeader(
-      {required this.title,
-      required this.onBack,
-      this.onNext,
-      this.onAdd,
-      this.onAddPredefined});
 
-  final String title;
-  final VoidCallback onBack;
-  final VoidCallback? onNext;
-  final VoidCallback? onAdd;
-  final VoidCallback? onAddPredefined;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _CircleIconButton(
-            icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
-        const SizedBox(width: 12),
-        _CircleIconButton(icon: Icons.arrow_forward_ios_rounded, onTap: onNext),
-        const SizedBox(width: 16),
-        Text(
-          title,
-          style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF111827)),
-        ),
-        const SizedBox(width: 24),
-        if (onAddPredefined != null) ...[
-          _yellowButton(
-            label: onAddPredefined!.toString().contains('SyncRoles')
-                ? 'Sync from Roles'
-                : 'Standard Roles',
-            icon: onAddPredefined!.toString().contains('SyncRoles')
-                ? Icons.sync
-                : Icons.assignment_outlined,
-            onPressed: onAddPredefined!,
-          ),
-          const SizedBox(width: 12),
-        ],
-        if (onAdd != null)
-          _yellowButton(
-            label: 'Add Role',
-            icon: Icons.add,
-            onPressed: onAdd!,
-          ),
-        const Spacer(),
-        const SizedBox(width: 12),
-        const _UserChip(),
-      ],
-    );
-  }
-
-  Widget _yellowButton(
-      {required String label,
-      required IconData icon,
-      required VoidCallback onPressed}) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 16),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFFFC107),
-        foregroundColor: const Color(0xFF1F2933),
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-      ),
-    );
-  }
-}
-
-class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon, this.onTap});
-
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
-      ),
-    );
-  }
-}
-
-class _UserChip extends StatelessWidget {
-  const _UserChip();
-
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.displayName ?? user?.email ?? 'User';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: const Color(0xFFE5E7EB),
-            backgroundImage:
-                user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
-            child: user?.photoURL == null
-                ? Text(
-                    displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
-                    style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF374151)),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 8),
-          StreamBuilder<bool>(
-            stream: UserService.watchAdminStatus(),
-            builder: (context, snapshot) {
-              final email = user?.email ?? '';
-              final isAdmin = snapshot.data ?? UserService.isAdminEmail(email);
-              final role = isAdmin ? 'Admin' : 'Member';
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(displayName,
-                      style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w600)),
-                  Text(role,
-                      style: const TextStyle(
-                          fontSize: 10, color: Color(0xFF6B7280))),
-                ],
-              );
-            },
-          ),
-          const SizedBox(width: 6),
-          const Icon(Icons.keyboard_arrow_down,
-              size: 18, color: Color(0xFF9CA3AF)),
-        ],
-      ),
-    );
-  }
-}
 
 class _MetricsRow extends StatelessWidget {
   const _MetricsRow({required this.metrics});

@@ -311,6 +311,42 @@ class ExecutionObjective {
 
   int get daysRemaining => 
       plannedDate.difference(DateTime.now()).inDays;
+
+  ExecutionObjective copyWith({
+    String? id,
+    String? sourcePlanningId,
+    String? title,
+    String? description,
+    String? acceptanceCriteria,
+    ExecutionQualityStatus? status,
+    String? evidenceNotes,
+    List<String>? evidenceUrls,
+    String? assignedTo,
+    DateTime? plannedDate,
+    DateTime? actualDate,
+    double? progressPercent,
+    String? varianceReason,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return ExecutionObjective(
+      id: id ?? this.id,
+      sourcePlanningId: sourcePlanningId ?? this.sourcePlanningId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
+      status: status ?? this.status,
+      evidenceNotes: evidenceNotes ?? this.evidenceNotes,
+      evidenceUrls: evidenceUrls ?? this.evidenceUrls,
+      assignedTo: assignedTo ?? this.assignedTo,
+      plannedDate: plannedDate ?? this.plannedDate,
+      actualDate: actualDate ?? this.actualDate,
+      progressPercent: progressPercent ?? this.progressPercent,
+      varianceReason: varianceReason ?? this.varianceReason,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }
 
 // ============================================================================
@@ -420,6 +456,55 @@ class ExecutionInspection {
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
   };
+
+  bool get isOverdue =>
+      status != ExecutionQualityStatus.complete &&
+      status != ExecutionQualityStatus.verified &&
+      scheduledDate.isBefore(DateTime.now());
+
+  ExecutionInspection copyWith({
+    String? id,
+    String? sourcePlanningId,
+    String? title,
+    String? type,
+    String? description,
+    String? scope,
+    ExecutionQualityStatus? status,
+    String? inspector,
+    DateTime? scheduledDate,
+    DateTime? completedDate,
+    String? result,
+    String? findings,
+    String? nonConformances,
+    bool? isHoldPoint,
+    String? linkedWorkPackage,
+    List<String>? evidenceUrls,
+    bool? addedToCalendar,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return ExecutionInspection(
+      id: id ?? this.id,
+      sourcePlanningId: sourcePlanningId ?? this.sourcePlanningId,
+      title: title ?? this.title,
+      type: type ?? this.type,
+      description: description ?? this.description,
+      scope: scope ?? this.scope,
+      status: status ?? this.status,
+      inspector: inspector ?? this.inspector,
+      scheduledDate: scheduledDate ?? this.scheduledDate,
+      completedDate: completedDate ?? this.completedDate,
+      result: result ?? this.result,
+      findings: findings ?? this.findings,
+      nonConformances: nonConformances ?? this.nonConformances,
+      isHoldPoint: isHoldPoint ?? this.isHoldPoint,
+      linkedWorkPackage: linkedWorkPackage ?? this.linkedWorkPackage,
+      evidenceUrls: evidenceUrls ?? this.evidenceUrls,
+      addedToCalendar: addedToCalendar ?? this.addedToCalendar,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }
 
 // ============================================================================
@@ -554,6 +639,56 @@ class ExecutionAudit {
       status != ExecutionQualityStatus.complete && 
       status != ExecutionQualityStatus.verified &&
       plannedDate.isBefore(DateTime.now());
+
+  ExecutionAudit copyWith({
+    String? id,
+    String? sourcePlanningId,
+    String? title,
+    String? auditType,
+    String? scope,
+    String? auditor,
+    String? auditee,
+    DateTime? plannedDate,
+    DateTime? actualDate,
+    ExecutionQualityStatus? status,
+    AuditResultStatus? resultStatus,
+    String? summary,
+    List<AuditFinding>? findings,
+    String? recommendations,
+    bool? requiresFollowUp,
+    DateTime? followUpDate,
+    List<String>? evidenceUrls,
+    bool? addedToCalendar,
+    bool? reminderSet,
+    int? reminderDaysBefore,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return ExecutionAudit(
+      id: id ?? this.id,
+      sourcePlanningId: sourcePlanningId ?? this.sourcePlanningId,
+      title: title ?? this.title,
+      auditType: auditType ?? this.auditType,
+      scope: scope ?? this.scope,
+      auditor: auditor ?? this.auditor,
+      auditee: auditee ?? this.auditee,
+      plannedDate: plannedDate ?? this.plannedDate,
+      actualDate: actualDate ?? this.actualDate,
+      status: status ?? this.status,
+      resultStatus: resultStatus ?? this.resultStatus,
+      summary: summary ?? this.summary,
+      findings: findings ?? this.findings,
+      recommendations: recommendations ?? this.recommendations,
+      requiresFollowUp: requiresFollowUp ?? this.requiresFollowUp,
+      followUpDate: followUpDate ?? this.followUpDate,
+      evidenceUrls: evidenceUrls ?? this.evidenceUrls,
+      addedToCalendar: addedToCalendar ?? this.addedToCalendar,
+      reminderSet: reminderSet ?? this.reminderSet,
+      reminderDaysBefore: reminderDaysBefore ?? this.reminderDaysBefore,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }
 
 class AuditFinding {
@@ -840,6 +975,52 @@ class ExecutionCorrectiveAction {
       dueDate.isBefore(DateTime.now());
 
   int get daysUntilDue => dueDate.difference(DateTime.now()).inDays;
+
+  ExecutionCorrectiveAction copyWith({
+    String? id,
+    String? linkedAuditId,
+    String? linkedInspectionId,
+    String? title,
+    String? description,
+    String? rootCause,
+    CaPriority? priority,
+    ExecutionQualityStatus? status,
+    String? assignedTo,
+    DateTime? dueDate,
+    DateTime? completedDate,
+    String? resolution,
+    String? verificationNotes,
+    bool? verified,
+    DateTime? verifiedDate,
+    String? verifiedBy,
+    List<String>? evidenceUrls,
+    bool? addedToCalendar,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return ExecutionCorrectiveAction(
+      id: id ?? this.id,
+      linkedAuditId: linkedAuditId ?? this.linkedAuditId,
+      linkedInspectionId: linkedInspectionId ?? this.linkedInspectionId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      rootCause: rootCause ?? this.rootCause,
+      priority: priority ?? this.priority,
+      status: status ?? this.status,
+      assignedTo: assignedTo ?? this.assignedTo,
+      dueDate: dueDate ?? this.dueDate,
+      completedDate: completedDate ?? this.completedDate,
+      resolution: resolution ?? this.resolution,
+      verificationNotes: verificationNotes ?? this.verificationNotes,
+      verified: verified ?? this.verified,
+      verifiedDate: verifiedDate ?? this.verifiedDate,
+      verifiedBy: verifiedBy ?? this.verifiedBy,
+      evidenceUrls: evidenceUrls ?? this.evidenceUrls,
+      addedToCalendar: addedToCalendar ?? this.addedToCalendar,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }
 
 // ============================================================================
@@ -1193,7 +1374,7 @@ class ExecutionDashboardSnapshot {
       components++;
     }
     if (openCa > 0) {
-      score += ((openCa - caOverdue) / openCa.clamp(min: 1)) * 20; // CA closure worth 20%
+      score += ((openCa - caOverdue) / openCa.clamp(1, openCa)) * 20; // CA closure worth 20%
       components++;
     } else if (components > 0) {
       score += 20; // No open CAs = full marks

@@ -22,7 +22,7 @@ import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:ndu_project/models/rate_card.dart';
 import 'package:ndu_project/widgets/rate_card_management_dialog.dart';
 import 'package:ndu_project/utils/role_descriptions.dart';
-import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/services/openai_service_secure.dart' as openai_service;
 import 'package:ndu_project/providers/user_role_provider.dart';
 import 'package:ndu_project/models/user_role.dart';
 import 'package:ndu_project/utils/staffing_reminder_helper.dart';
@@ -2648,7 +2648,7 @@ Current Roles: ${projectData.staffingRequirements.map((r) => r.title).join(', ')
     
     try {
       // Call OpenAI service for role suggestions
-      final suggestions = await OpenAIServiceSecure.generateStaffingRoleSuggestions(
+      final suggestions = await openai_service.OpenAiServiceSecure().generateStaffingRoleSuggestions(
         context: contextStr,
         maxSuggestions: 10,
       );
@@ -2968,8 +2968,7 @@ Current Roles: ${projectData.staffingRequirements.map((r) => r.title).join(', ')
     bool isAuthorized = true; // Default to authorized for now
     
     try {
-      final userRole = UserRoleProvider.of(context)?.siteRole ?? SiteRole.user;
-      isAuthorized = userRole.level >= SiteRole.editor.level;
+      isAuthorized = context.siteRole.level >= SiteRole.editor.level;
     } catch (e) {
       // If provider not found, default to restricted view
       isAuthorized = false;

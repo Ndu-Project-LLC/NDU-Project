@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/models/wbs_templates.dart';
+import 'package:ndu_project/wbs/services/wbs_firestore_service.dart';
 
 const String _legacyStorageKey = 'ndu_wbs_v2';
 const String _storageKeyPrefix = 'ndu_wbs_v2_project_';
@@ -68,6 +69,18 @@ class WBSProvider extends ChangeNotifier {
   }
 
   Future<void> _loadProjectScopedStorage(String projectId) async {
+    if (projectId.isEmpty || projectId == 'default') return;
+
+    final firestoreWbs = await WbsFirestoreService.loadWBS(projectId);
+    if (firestoreWbs != null) {
+      _wbs = firestoreWbs;
+      _setupComplete = true;
+      _activeProjectId = projectId;
+      notifyListeners();
+      _saveToStorage();
+      return;
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final key = _storageKeyForProject(projectId);
@@ -113,6 +126,14 @@ class WBSProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error saving WBS: $e');
     }
+    _saveToFirestore();
+  }
+
+  Future<void> _saveToFirestore() async {
+    final pid = _wbs?.projectId ?? _activeProjectId;
+    if (pid.isEmpty || pid == 'default') return;
+    if (_wbs == null) return;
+    await WbsFirestoreService.saveWBS(pid, _wbs!);
   }
 
   WBS _wbsFromJson(Map<String, dynamic> json) {

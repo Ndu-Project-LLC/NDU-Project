@@ -5,7 +5,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/models/execution_quality_tracking_model.dart';
-import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/project_data_model.dart' hide AuditResultStatus;
 
 class ExecutionQualityTrackingService {
   static final ExecutionQualityTrackingService _instance = 
@@ -42,18 +42,14 @@ class ExecutionQualityTrackingService {
     final objectives = planningData.objectives.map((obj) {
       // Parse planned date from objective or use default (30 days from now)
       DateTime plannedDate = now.add(const Duration(days: 30));
-      if (obj.targetDate.isNotEmpty) {
-        final parsed = DateTime.tryParse(obj.targetDate);
-        if (parsed != null) plannedDate = parsed;
-      }
       
       return ExecutionObjective(
         sourcePlanningId: obj.id,
         title: obj.title,
-        description: obj.description ?? '',
-        acceptanceCriteria: obj.acceptanceCriteria ?? '',
+        description: obj.acceptanceCriteria,
+        acceptanceCriteria: obj.acceptanceCriteria,
         status: ExecutionQualityStatus.planned,
-        assignedTo: obj.owner ?? '',
+        assignedTo: obj.owner,
         plannedDate: plannedDate,
         progressPercent: 0,
       );
@@ -64,18 +60,14 @@ class ExecutionQualityTrackingService {
     
     for (final qa in planningData.qaTechniques) {
       DateTime scheduledDate = now.add(const Duration(days: 14));
-      if (qa.scheduledDate.isNotEmpty) {
-        final parsed = DateTime.tryParse(qa.scheduledDate);
-        if (parsed != null) scheduledDate = parsed;
-      }
       
       inspections.add(ExecutionInspection(
         sourcePlanningId: qa.id,
         title: qa.name,
         type: 'QA',
-        description: qa.description ?? '',
-        scope: qa.scope ?? '',
-        inspector: qa.responsible ?? '',
+        description: qa.description,
+        scope: qa.frequency,
+        inspector: '',
         scheduledDate: scheduledDate,
         isHoldPoint: false,
       ));
@@ -83,20 +75,16 @@ class ExecutionQualityTrackingService {
 
     for (final qc in planningData.qcTechniques) {
       DateTime scheduledDate = now.add(const Duration(days: 14));
-      if (qc.scheduledDate.isNotEmpty) {
-        final parsed = DateTime.tryParse(qc.scheduledDate);
-        if (parsed != null) scheduledDate = parsed;
-      }
       
       inspections.add(ExecutionInspection(
         sourcePlanningId: qc.id,
         title: qc.name,
         type: 'QC',
-        description: qc.description ?? '',
-        scope: qc.scope ?? '',
-        inspector: qc.responsible ?? '',
+        description: qc.description,
+        scope: qc.frequency,
+        inspector: '',
         scheduledDate: scheduledDate,
-        isHoldPoint: qc.isHoldPoint ?? false,
+        isHoldPoint: false,
       ));
     }
 
@@ -122,13 +110,12 @@ class ExecutionQualityTrackingService {
 
     // Convert KPIs to execution KPI entries
     final kpiEntries = planningData.customKpis.map((kpi) {
+      final target = double.tryParse(kpi.targetValue) ?? 0;
       return ExecutionKpiEntry(
         kpiName: kpi.name,
-        kpiUnit: kpi.unit ?? '%',
-        targetValue: kpi.targetValue ?? 100,
-        thresholdMin: kpi.thresholdMin ?? 0,
-        thresholdMax: kpi.thresholdMax ?? 100,
-        trend: 'stable',
+        kpiUnit: kpi.unit,
+        targetValue: target,
+        trend: kpi.trendDirection,
       );
     }).toList();
 
@@ -142,11 +129,11 @@ class ExecutionQualityTrackingService {
       
       return ExecutionCorrectiveAction(
         title: ca.title,
-        description: ca.description ?? '',
-        rootCause: ca.rootCause ?? '',
-        priority: _mapPriority(ca.priority),
+        description: ca.action,
+        rootCause: ca.rootCause,
+        priority: _mapPriority(ca.status.name),
         status: ExecutionQualityStatus.inProgress,
-        assignedTo: ca.owner ?? '',
+        assignedTo: ca.owner,
         dueDate: dueDate,
       );
     }).toList();
@@ -212,7 +199,7 @@ class ExecutionQualityTrackingService {
     final lower = title.toLowerCase();
     if (lower.contains('external') || lower.contains('third party') || lower.contains('customer')) {
       return 'External';
-    } else if (lower.contains('regulatory') || lower.contains('compliance') || lower.includes('iso')) {
+    } else if (lower.contains('regulatory') || lower.contains('compliance') || lower.contains('iso')) {
       return 'Regulatory';
     }
     return 'Internal';
@@ -299,7 +286,7 @@ class ExecutionQualityTrackingService {
             'title': event.title,
             'description': event.description,
             'postedBy': postedBy,
-            'date': DateFormat('yyyy-MM-dd').format(event.eventDate),
+            'date': '${event.eventDate.year}-${event.eventDate.month.toString().padLeft(2, '0')}-${event.eventDate.day.toString().padLeft(2, '0')}',
             'category': _mapToTeamActivityCategory(event.sourceType),
             'createdAt': FieldValue.serverTimestamp(),
             'sourceType': event.sourceType,
@@ -504,7 +491,7 @@ class ExecutionQualityTrackingService {
       
       // Reminder time has passed or is coming up soon
       final reminderTime = event.eventDate.subtract(
-        minutes: event.reminderMinutesBefore,
+        Duration(minutes: event.reminderMinutesBefore),
       );
       
       return !reminderTime.isAfter(cutoff);
@@ -575,8 +562,8 @@ class OverdueReport {
 }
 
 // Date formatting helper
-class DateFormat {
-  static String format(DateTime date, [String pattern = 'yyyy-MM-dd']) {
+class _DateFormatHelper {
+  static String formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 }

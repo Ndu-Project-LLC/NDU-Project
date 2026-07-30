@@ -296,6 +296,8 @@ class ProjectDataModel {
   String projectCategory = '';
   String projectIndustry = '';
 
+  String get projectType => projectCategory;
+
   ProjectDataModel({
     this.projectName = '',
     this.solutionTitle = '',

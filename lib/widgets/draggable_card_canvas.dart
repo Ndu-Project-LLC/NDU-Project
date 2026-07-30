@@ -316,7 +316,7 @@ class FreeformCardCanvas extends StatefulWidget {
 
 class _FreeformCardCanvasState extends State<FreeformCardCanvas> {
   bool _isFreeform = false;
-  int _frontCardIndex = 0;
+  String? _frontCardId;
   final GlobalKey _canvasKey = GlobalKey();
   final Map<String, Offset> _cardPositions = {};
 
@@ -343,8 +343,8 @@ class _FreeformCardCanvasState extends State<FreeformCardCanvas> {
     if (mounted) setState(() {});
   }
 
-  void _bringToFront(int index) {
-    setState(() => _frontCardIndex = index);
+  void _bringToFront(String id) {
+    setState(() => _frontCardId = id);
   }
 
   @override
@@ -445,35 +445,32 @@ class _FreeformCardCanvasState extends State<FreeformCardCanvas> {
             ),
           ),
           // Draggable cards (in z-order; front card last)
-          ...widget.cards.asMap().entries.map((entry) {
-            final i = entry.key;
-            final c = entry.value;
-            // Z-index: cards listed in order, but frontCardIndex is on top
-            final zIndex = (i == _frontCardIndex)
-                ? widget.cards.length + 1
-                : i;
-            return IndexedStack(
-              index: widget.cards.length - zIndex - 1,
-              sizing: StackFit.passthrough,
-              children: [
-                DraggableCard(
-                  id: c.id,
-                  canvasKey: _canvasKey,
-                  isFreeform: true,
-                  cardWidth: widget.cardWidth,
-                  projectId: widget.projectId,
-                  section: widget.section,
-                  initialPosition: _cardPositions[c.id] ??
-                      _defaultPosition(i),
-                  onBringToFront: () => _bringToFront(i),
-                  onPositionChanged: (pos) =>
-                      _cardPositions[c.id] = pos,
-                  child: c.widget,
-                ),
-              ],
-            );
-          }),
-            ],
+          ...() {
+            final sorted = widget.cards.toList()
+              ..sort((a, b) {
+                if (a.id == _frontCardId) return 1;
+                if (b.id == _frontCardId) return -1;
+                return 0;
+              });
+            return sorted.map((c) {
+              final i = widget.cards.indexWhere((x) => x.id == c.id);
+              return DraggableCard(
+                id: c.id,
+                canvasKey: _canvasKey,
+                isFreeform: true,
+                cardWidth: widget.cardWidth,
+                projectId: widget.projectId,
+                section: widget.section,
+                initialPosition:
+                    _cardPositions[c.id] ?? _defaultPosition(i),
+                onBringToFront: () => _bringToFront(c.id),
+                onPositionChanged: (pos) =>
+                    _cardPositions[c.id] = pos,
+                child: c.widget,
+              );
+            });
+          }(),
+          ],
           ),
         ),
       ),

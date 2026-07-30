@@ -65,6 +65,11 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  String _inventorySearch = '';
  String _inventoryCategory = 'All Categories';
 
+// Auto-population from Initiation phase tracking
+bool _autoPopulatedFromInitiation = false;
+List<String> _autoPopulatedSources = [];
+int _autoPopulatedItemCount = 0;
+
  @override
  void initState() {
  super.initState();
@@ -99,6 +104,10 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  ..clear()
  ..addAll(data.aiRecommendations.map((e) => Map<String, dynamic>.from(e)));
 
+  // Auto-populate from Initiation phase if inventory is empty
+  if (_inventory.isEmpty && _aiIntegrations.isEmpty) {
+    _populateFromInitiationPhase(data);
+  }
  if (mounted) setState(() => _loading = false);
  }
 
@@ -115,6 +124,140 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  ),
  );
  await provider.saveToFirebase(checkpoint: checkpoint);
+
+
+/// Auto-populate technology data from Initiation phase sources.
+void _populateFromInitiationPhase(dynamic data) {
+  final addedItems = <Map<String, dynamic>>[];
+  final sources = <String>{};
+  int itemCount = 0;
+  final now = DateTime.now().toIso8601String().split('T').first;
+
+  // Pull from IT Considerations
+  final itData = data.itConsiderationsData;
+  if (itData != null) {
+    if (itData.hardwareRequirements.isNotEmpty) {
+      for (final item in _parseTechItems(itData.hardwareRequirements)) {
+        if (item.isNotEmpty && !_itemExists(item)) {
+          addedItems.add({'name': item, 'category': 'Hardware', 'cost': '', 'status': 'Proposed/Pending', 'vendor': '', 'added': now, 'notes': 'Auto-fed from IT Considerations', 'source': 'IT Considerations'});
+          itemCount++;
+        }
+      }
+      sources.add('IT Considerations (Hardware)');
+    }
+    if (itData.softwareRequirements.isNotEmpty) {
+      for (final item in _parseTechItems(itData.softwareRequirements)) {
+        if (item.isNotEmpty && !_itemExists(item)) {
+          addedItems.add({'name': item, 'category': 'Software', 'cost': '', 'status': 'Proposed/Pending', 'vendor': '', 'added': now, 'notes': 'Auto-fed from IT Considerations', 'source': 'IT Considerations'});
+          itemCount++;
+        }
+      }
+      sources.add('IT Considerations (Software)');
+    }
+    if (itData.networkRequirements.isNotEmpty) {
+      for (final item in _parseTechItems(itData.networkRequirements)) {
+        if (item.isNotEmpty && !_itemExists(item)) {
+          addedItems.add({'name': item, 'category': 'Network', 'cost': '', 'status': 'Proposed/Pending', 'vendor': '', 'added': now, 'notes': 'Auto-fed from IT Considerations', 'source': 'IT Considerations'});
+          itemCount++;
+        }
+      }
+      sources.add('IT Considerations (Network)');
+    }
+    if (itData.solutionITData.isNotEmpty) {
+      for (final solIt in itData.solutionITData) {
+        if (solIt.coreTechnology.isNotEmpty) {
+          final label = solIt.solutionTitle.isNotEmpty ? solIt.solutionTitle : 'Preferred Solution';
+          for (final item in _parseTechItems(solIt.coreTechnology)) {
+            if (item.isNotEmpty && !_itemExists(item)) {
+              addedItems.add({'name': item, 'category': 'Core Technology', 'cost': '', 'status': 'Proposed/Pending', 'vendor': '', 'added': now, 'notes': 'Auto-fed from $label', 'source': 'Solution: $label'});
+              itemCount++;
+            }
+          }
+        }
+      }
+      sources.add('Solution Technology Assessments');
+    }
+  }
+
+  // Pull from Infrastructure Considerations
+  final infraData = data.infrastructureConsiderationsData;
+  if (infraData != null) {
+    if (infraData.physicalSpaceRequirements.isNotEmpty) {
+      for (final item in _parseTechItems(infraData.physicalSpaceRequirements)) {
+        if (item.isNotEmpty && !_itemExists(item)) {
+          addedItems.add({'name': item, 'category': 'Infrastructure', 'cost': '', 'status': 'Proposed/Pending', 'vendor': '', 'added': now, 'notes': 'Auto-fed from Infrastructure', 'source': 'Infrastructure'});
+          itemCount++;
+        }
+      }
+      sources.add('Infrastructure (Physical Space)');
+    }
+    if (infraData.powerCoolingRequirements.isNotEmpty) {
+      for (final item in _parseTechItems(infraData.powerCoolingRequirements)) {
+        if (item.isNotEmpty && !_itemExists(item)) {
+          addedItems.add({'name': item, 'category': 'Infrastructure', 'cost': '', 'status': 'Proposed/Pending', 'vendor': '', 'added': now, 'notes': 'Auto-fed from Infrastructure', 'source': 'Infrastructure'});
+          itemCount++;
+        }
+      }
+      sources.add('Infrastructure (Power/Cooling)');
+    }
+    if (infraData.connectivityRequirements.isNotEmpty) {
+      for (final item in _parseTechItems(infraData.connectivityRequirements)) {
+        if (item.isNotEmpty && !_itemExists(item)) {
+          addedItems.add({'name': item, 'category': 'Network', 'cost': '', 'status': 'Proposed/Pending', 'vendor': '', 'added': now, 'notes': 'Auto-fed from Infrastructure', 'source': 'Infrastructure'});
+          itemCount++;
+        }
+      }
+      sources.add('Infrastructure (Connectivity)');
+    }
+  }
+
+  // Pull from Preferred Solution
+  final prefSol = data.preferredSolutionAnalysis;
+  if (prefSol != null && prefSol.selectedSolutionTitle != null) {
+    _definitions.add({'term': 'Preferred Solution', 'definition': prefSol.selectedSolutionTitle!, 'source': 'Preferred Solution Analysis'});
+    sources.add('Preferred Solution Analysis');
+  }
+
+  // Pull from FEP Technology Notes
+  final fepPlanning = data.frontEndPlanning;
+  if (fepPlanning != null && fepPlanning.technology.isNotEmpty) {
+    for (final item in _parseTechItems(fepPlanning.technology)) {
+      if (item.isNotEmpty && !_itemExists(item) && item.length > 2) {
+        addedItems.add({'name': item, 'category': 'FEP Technology', 'cost': '', 'status': 'Proposed/Pending', 'vendor': '', 'added': now, 'notes': 'Auto-fed from FEP', 'source': 'FEP Technology'});
+        itemCount++;
+      }
+    }
+    sources.add('FEP Technology Notes');
+  }
+
+  if (addedItems.isNotEmpty) {
+    _inventory.addAll(addedItems);
+    setState(() { _autoPopulatedFromInitiation = true; _autoPopulatedSources = sources.toList(); _autoPopulatedItemCount = itemCount; });
+    _save();
+  }
+}
+
+List<String> _parseTechItems(String text) {
+  if (text.isEmpty) return [];
+  final cleaned = text.replaceAllMapped(RegExp(r'^[-•*]\s*', multiLine: true), '').replaceAllMapped(RegExp(r'^\d+[.)]\s*', multiLine: true), '');
+  var parts = cleaned.split(RegExp(r'[,;\n]+')).map((s) => s.trim()).where((s) => s.length > 1).toList();
+  return parts;
+}
+
+bool _itemExists(String name) => _inventory.any((item) => item['name']?.toString().trim().toLowerCase() == name.toLowerCase());
+
+Future<void> _syncFromInitiationPhase() async {
+  final provider = ProjectDataInherited.maybeOf(context);
+  if (provider == null) return;
+  final prevCount = _inventory.length;
+  _populateFromInitiationPhase(provider.projectData);
+  final newCount = _inventory.length - prevCount;
+  if (mounted && newCount > 0) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$newCount items synced from Initiation'), backgroundColor: Color(0xFF059669)));
+  } else if (mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No new items found'), backgroundColor: Color(0xFF6B7280)));
+  }
+}
  }
 
  Future<void> _regenerateCurrentTab() async {
@@ -1160,6 +1303,8 @@ onBack: () =>
  setState(() => _selectedTab = tab);
  },
  ),
+            if (_autoPopulatedFromInitiation)
+              _buildAutoPopulatedBanner(),
  _buildCurrentTabContent(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
@@ -1200,7 +1345,127 @@ onBack: () =>
  );
  }
 
- Widget _buildTopMetrics() {
+ /// Build banner showing auto-population status from Initiation phase.
+Widget _buildAutoPopulatedBanner() {
+  return Container(
+    width: double.infinity,
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [
+          const Color(0xFFEEF2FF).withOpacity(0.9),
+          const Color(0xFFE0E7FF).withOpacity(0.9),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(
+        color: const Color(0xFF6366F1).withOpacity(0.3),
+        width: 1,
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.download_done_rounded,
+                size: 20,
+                color: Color(0xFF4F46E5),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Auto-populated from Initiation Phase',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF3730A3),
+                    ),
+                  ),
+                  Text(
+                    '$_autoPopulatedItemCount technology item(s) pulled from earlier phases',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: const Color(0xFF4B5563),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Dismiss button
+            InkWell(
+              onTap: () {
+                setState(() => _autoPopulatedFromInitiation = false);
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                child: const Icon(
+                  Icons.close_rounded,
+                  size: 16,
+                  color: Color(0xFF6B7280),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (_autoPopulatedSources.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: _autoPopulatedSources.map((source) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: const Color(0xFFC7D2FE).withOpacity(0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 12,
+                      color: const Color(0xFF059669),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      source,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF4B5563),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+Widget _buildTopMetrics() {
  final budget = _computeBudget();
  return Row(
  children: [
@@ -1311,6 +1576,14 @@ onBack: () =>
  onPressed: _syncTechnologyCostsToEstimate,
  icon: const Icon(Icons.sync_outlined, size: 16),
  label: const Text('Sync Costs'),
+ label: const Text('Sync Costs'),
+            OutlinedButton.icon(
+              onPressed: _syncFromInitiationPhase,
+              icon: const Icon(Icons.download_outlined, size: 16),
+              label: const Text('Sync from Initiation'),
+              tooltip: 'Pull tech data from IT Considerations & Infrastructure',
+            ),
+            const SizedBox(width: 8),
  ),
  const SizedBox(width: 8),
  OutlinedButton.icon(

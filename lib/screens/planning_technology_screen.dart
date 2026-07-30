@@ -951,24 +951,8 @@ onBack: () =>
  const SizedBox(height: 14),
  _buildTabsBar(),
  const SizedBox(height: 12),
- InnerPageNavigationHint(
- pageId: 'planning_technology',
- pageTitle: 'Technology Planning',
- sections: _TechnologyTab.values.map((tab) => InnerPageSection(
- id: tab.name,
- label: tab.label,
- status: tab == _selectedTab
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- stepNumber: _TechnologyTab.values.indexOf(tab) + 1,
- )).toList(),
- currentSectionId: _selectedTab.name,
- onSectionTap: (sectionId) {
- final tab = _TechnologyTab.values.firstWhere(
- (t) => t.name == sectionId);
- setState(() => _selectedTab = tab);
- },
- ),
+ if (_autoPopulatedFromInitiation)
+ _buildAutoPopulatedBanner(),
  _buildCurrentTabContent(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(

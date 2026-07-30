@@ -7252,6 +7252,7 @@ class StaffingRequirement {
   String employmentType; // FT or PT
   String location;
   String employeeType; // e.g., Employee, Contractor
+  bool nduAccess;
   String notes;
   String email;
   String phone;
@@ -7269,6 +7270,7 @@ class StaffingRequirement {
     this.employmentType = 'FT',
     this.location = '',
     this.employeeType = 'Employee',
+    this.nduAccess = false,
     this.notes = '',
     this.email = '',
     this.phone = '',
@@ -7289,6 +7291,7 @@ class StaffingRequirement {
     'employmentType': employmentType,
     'location': location,
     'employeeType': employeeType,
+    'nduAccess': nduAccess,
     'notes': notes,
     'email': email,
     'phone': phone,
@@ -7312,6 +7315,7 @@ class StaffingRequirement {
       employmentType: json['employmentType']?.toString() ?? 'FT',
       location: json['location']?.toString() ?? '',
       employeeType: json['employeeType']?.toString() ?? 'Employee',
+      nduAccess: json['nduAccess'] as bool? ?? false,
       notes: json['notes']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
       phone: json['phone']?.toString() ?? '',
@@ -7330,6 +7334,7 @@ class StaffingRequirement {
     String? employmentType,
     String? location,
     String? employeeType,
+    bool? nduAccess,
     String? notes,
     String? email,
     String? phone,
@@ -7347,6 +7352,7 @@ class StaffingRequirement {
       employmentType: employmentType ?? this.employmentType,
       location: location ?? this.location,
       employeeType: employeeType ?? this.employeeType,
+      nduAccess: nduAccess ?? this.nduAccess,
       notes: notes ?? this.notes,
       email: email ?? this.email,
       phone: phone ?? this.phone,

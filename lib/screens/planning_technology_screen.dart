@@ -123,8 +123,8 @@ int _autoPopulatedItemCount = 0;
  aiRecommendations: _recommendations,
  ),
  );
- await provider.saveToFirebase(checkpoint: checkpoint);
-
+  await provider.saveToFirebase(checkpoint: checkpoint);
+}
 
 /// Auto-populate technology data from Initiation phase sources.
 void _populateFromInitiationPhase(dynamic data) {
@@ -239,7 +239,7 @@ void _populateFromInitiationPhase(dynamic data) {
 
 List<String> _parseTechItems(String text) {
   if (text.isEmpty) return [];
-  final cleaned = text.replaceAllMapped(RegExp(r'^[-•*]\s*', multiLine: true), '').replaceAllMapped(RegExp(r'^\d+[.)]\s*', multiLine: true), '');
+  final cleaned = text.replaceAll(RegExp(r'^[-•*]\s*', multiLine: true), '').replaceAll(RegExp(r'^\d+[.)]\s*', multiLine: true), '');
   var parts = cleaned.split(RegExp(r'[,;\n]+')).map((s) => s.trim()).where((s) => s.length > 1).toList();
   return parts;
 }
@@ -258,7 +258,6 @@ Future<void> _syncFromInitiationPhase() async {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No new items found'), backgroundColor: Color(0xFF6B7280)));
   }
 }
- }
 
  Future<void> _regenerateCurrentTab() async {
  if (_regenerating) return;
@@ -1554,19 +1553,17 @@ Widget _buildTopMetrics() {
  Row(
  children: [
  // Tab name shown in yellow tab bar above - no duplicate heading
- OutlinedButton.icon(
- onPressed: _syncTechnologyCostsToEstimate,
- icon: const Icon(Icons.sync_outlined, size: 16),
- label: const Text('Sync Costs'),
- label: const Text('Sync Costs'),
-            OutlinedButton.icon(
-              onPressed: _syncFromInitiationPhase,
-              icon: const Icon(Icons.download_outlined, size: 16),
-              label: const Text('Sync from Initiation'),
-              tooltip: 'Pull tech data from IT Considerations & Infrastructure',
-            ),
-            const SizedBox(width: 8),
- ),
+  OutlinedButton.icon(
+  onPressed: _syncTechnologyCostsToEstimate,
+  icon: const Icon(Icons.sync_outlined, size: 16),
+  label: const Text('Sync Costs'),
+  ),
+  const SizedBox(width: 8),
+  OutlinedButton.icon(
+  onPressed: _syncFromInitiationPhase,
+  icon: const Icon(Icons.download_outlined, size: 16),
+  label: const Text('Sync from Initiation'),
+  ),
  const SizedBox(width: 8),
  OutlinedButton.icon(
  onPressed: _regenerating ? null : _regenerateCurrentTab,

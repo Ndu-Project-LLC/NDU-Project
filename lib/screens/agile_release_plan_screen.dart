@@ -39,6 +39,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
   List<AgileTask> _stories = [];
   bool _isLoading = true;
   final DateFormat _df = DateFormat('MMM dd, yyyy');
+  final Set<int> _expandedCards = {};
 
   String? get _projectId {
     try {
@@ -360,8 +361,141 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                 ],
               ),
             ],
+            if (plan.cadenceType.isNotEmpty ||
+                plan.deploymentStrategy.isNotEmpty ||
+                plan.definitionOfDone.isNotEmpty ||
+                plan.rollbackPlan.isNotEmpty ||
+                plan.monitoringPlan.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  if (plan.cadenceType.isNotEmpty) _buildTag(plan.cadenceType),
+                  if (plan.deploymentStrategy.isNotEmpty)
+                    _buildTag(plan.deploymentStrategy),
+                  if (plan.definitionOfDone.isNotEmpty) _buildTag('DoD defined'),
+                  if (plan.rollbackPlan.isNotEmpty) _buildTag('Rollback defined'),
+                  if (plan.monitoringPlan.isNotEmpty)
+                    _buildTag('Monitoring defined'),
+                ],
+              ),
+            ],
+            const SizedBox(height: 6),
+            InkWell(
+              onTap: () {
+                setState(() {
+                  if (_expandedCards.contains(index)) {
+                    _expandedCards.remove(index);
+                  } else {
+                    _expandedCards.add(index);
+                  }
+                });
+              },
+              child: Row(
+                children: [
+                  Text(
+                    _expandedCards.contains(index)
+                        ? 'Hide Details'
+                        : 'Show Details',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFFD97706),
+                        fontWeight: FontWeight.w500),
+                  ),
+                  Icon(
+                    _expandedCards.contains(index)
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                    size: 16,
+                    color: const Color(0xFFD97706),
+                  ),
+                ],
+              ),
+            ),
+            if (_expandedCards.contains(index)) ...[
+              const SizedBox(height: 8),
+              _buildReleaseDetails(plan),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildReleaseDetails(AgileReleasePlan plan) {
+    final entries = <String, String>{
+      if (plan.releaseFrequency.isNotEmpty)
+        'Release Frequency': plan.releaseFrequency,
+      if (plan.sprintLengthDays != null)
+        'Sprint Length': '${plan.sprintLengthDays} days',
+      if (plan.numberOfSprintsInRelease != null)
+        'Sprints in Release': plan.numberOfSprintsInRelease.toString(),
+      if (plan.definitionOfDone.isNotEmpty)
+        'Definition of Done': plan.definitionOfDone,
+      if (plan.qualityGates.isNotEmpty) 'Quality Gates': plan.qualityGates,
+      if (plan.testingRequirements.isNotEmpty)
+        'Testing Requirements': plan.testingRequirements,
+      if (plan.approvalRequirements.isNotEmpty)
+        'Approval Requirements': plan.approvalRequirements,
+      if (plan.deploymentEnvironments.isNotEmpty)
+        'Deployment Environments': plan.deploymentEnvironments,
+      if (plan.featureFlagPlan.isNotEmpty)
+        'Feature Flag Plan': plan.featureFlagPlan,
+      if (plan.keyDependencies.isNotEmpty)
+        'Key Dependencies': plan.keyDependencies,
+      if (plan.assumptions.isNotEmpty) 'Assumptions': plan.assumptions,
+      if (plan.releaseRisks.isNotEmpty) 'Release Risks': plan.releaseRisks,
+      if (plan.rollbackPlan.isNotEmpty) 'Rollback Plan': plan.rollbackPlan,
+      if (plan.recoveryProcedures.isNotEmpty)
+        'Recovery Procedures': plan.recoveryProcedures,
+      if (plan.communicationPlan.isNotEmpty)
+        'Communication Plan': plan.communicationPlan,
+      if (plan.trainingPlan.isNotEmpty) 'Training Plan': plan.trainingPlan,
+      if (plan.monitoringPlan.isNotEmpty)
+        'Monitoring Plan': plan.monitoringPlan,
+      if (plan.feedbackCollection.isNotEmpty)
+        'Feedback Collection': plan.feedbackCollection,
+      if (plan.continuousImprovement.isNotEmpty)
+        'Continuous Improvement': plan.continuousImprovement,
+    };
+
+    if (entries.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: entries.entries
+            .map(
+              (e) => Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 150,
+                      child: Text('${e.key}:',
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF6B7280))),
+                    ),
+                    Expanded(
+                      child: Text(e.value,
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF374151))),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -462,6 +596,27 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
   Set<String> _selectedEpicIds = {};
   Set<String> _selectedFeatureIds = {};
   Set<String> _selectedStoryIds = {};
+  String _cadenceType = '';
+  late TextEditingController _sprintLengthCtrl;
+  late TextEditingController _numSprintsCtrl;
+  late TextEditingController _releaseFreqCtrl;
+  late TextEditingController _dodCtrl;
+  late TextEditingController _qualityGatesCtrl;
+  late TextEditingController _testingReqCtrl;
+  late TextEditingController _approvalReqCtrl;
+  String _deploymentStrategy = '';
+  late TextEditingController _depEnvironmentsCtrl;
+  late TextEditingController _featureFlagCtrl;
+  late TextEditingController _dependenciesCtrl;
+  late TextEditingController _assumptionsCtrl;
+  late TextEditingController _risksCtrl;
+  late TextEditingController _rollbackCtrl;
+  late TextEditingController _recoveryCtrl;
+  late TextEditingController _communicationCtrl;
+  late TextEditingController _trainingCtrl;
+  late TextEditingController _monitoringCtrl;
+  late TextEditingController _feedbackCtrl;
+  late TextEditingController _improvementCtrl;
 
   @override
   void initState() {
@@ -478,6 +633,27 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
     _selectedEpicIds = Set.from(p.epicIds);
     _selectedFeatureIds = Set.from(p.featureIds);
     _selectedStoryIds = Set.from(p.storyIds);
+    _cadenceType = p.cadenceType;
+    _sprintLengthCtrl = TextEditingController(text: p.sprintLengthDays?.toString() ?? '');
+    _numSprintsCtrl = TextEditingController(text: p.numberOfSprintsInRelease?.toString() ?? '');
+    _releaseFreqCtrl = TextEditingController(text: p.releaseFrequency);
+    _dodCtrl = TextEditingController(text: p.definitionOfDone);
+    _qualityGatesCtrl = TextEditingController(text: p.qualityGates);
+    _testingReqCtrl = TextEditingController(text: p.testingRequirements);
+    _approvalReqCtrl = TextEditingController(text: p.approvalRequirements);
+    _deploymentStrategy = p.deploymentStrategy;
+    _depEnvironmentsCtrl = TextEditingController(text: p.deploymentEnvironments);
+    _featureFlagCtrl = TextEditingController(text: p.featureFlagPlan);
+    _dependenciesCtrl = TextEditingController(text: p.keyDependencies);
+    _assumptionsCtrl = TextEditingController(text: p.assumptions);
+    _risksCtrl = TextEditingController(text: p.releaseRisks);
+    _rollbackCtrl = TextEditingController(text: p.rollbackPlan);
+    _recoveryCtrl = TextEditingController(text: p.recoveryProcedures);
+    _communicationCtrl = TextEditingController(text: p.communicationPlan);
+    _trainingCtrl = TextEditingController(text: p.trainingPlan);
+    _monitoringCtrl = TextEditingController(text: p.monitoringPlan);
+    _feedbackCtrl = TextEditingController(text: p.feedbackCollection);
+    _improvementCtrl = TextEditingController(text: p.continuousImprovement);
     _loadEpics();
   }
 
@@ -512,7 +688,70 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
     _versionCtrl.dispose();
     _piCtrl.dispose();
     _trainCtrl.dispose();
+    _sprintLengthCtrl.dispose();
+    _numSprintsCtrl.dispose();
+    _releaseFreqCtrl.dispose();
+    _dodCtrl.dispose();
+    _qualityGatesCtrl.dispose();
+    _testingReqCtrl.dispose();
+    _approvalReqCtrl.dispose();
+    _depEnvironmentsCtrl.dispose();
+    _featureFlagCtrl.dispose();
+    _dependenciesCtrl.dispose();
+    _assumptionsCtrl.dispose();
+    _risksCtrl.dispose();
+    _rollbackCtrl.dispose();
+    _recoveryCtrl.dispose();
+    _communicationCtrl.dispose();
+    _trainingCtrl.dispose();
+    _monitoringCtrl.dispose();
+    _feedbackCtrl.dispose();
+    _improvementCtrl.dispose();
     super.dispose();
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Column(
+      children: [
+        const Divider(height: 1),
+        const SizedBox(height: 12),
+        Text(title,
+            style: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF111827))),
+      ],
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController controller,
+      {int maxLines = 1, String hint = ''}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: VoiceTextField(
+        controller: controller,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint.isEmpty ? null : hint,
+          border: const OutlineInputBorder(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown(
+      String label, String value, List<String> items, ValueChanged<String?> onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: DropdownButtonFormField<String>(
+        value: value.isEmpty ? null : value,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        items: items.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+        onChanged: onChanged,
+      ),
+    );
   }
 
   @override
@@ -727,6 +966,87 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
                 ],
               ),
             ),
+            _buildSectionHeader('Release Cadence'),
+            _buildDropdown(
+              'Cadence Type',
+              _cadenceType,
+              ['Sprint-based', 'Time-based', 'On-demand'],
+              (v) {
+                if (v != null) setState(() => _cadenceType = v);
+              },
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: VoiceTextField(
+                    controller: _sprintLengthCtrl,
+                    decoration: const InputDecoration(
+                        labelText: 'Sprint Length (Days)',
+                        border: OutlineInputBorder()),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: VoiceTextField(
+                    controller: _numSprintsCtrl,
+                    decoration: const InputDecoration(
+                        labelText: 'Sprints in Release',
+                        border: OutlineInputBorder()),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+            _buildField('Release Frequency', _releaseFreqCtrl,
+                hint: 'e.g. Every sprint, Every 2 sprints, Quarterly'),
+            _buildSectionHeader('Release Criteria'),
+            _buildField('Definition of Done', _dodCtrl, maxLines: 3,
+                hint: 'Completion criteria for release acceptance'),
+            _buildField('Quality Gates', _qualityGatesCtrl, maxLines: 3,
+                hint: 'QA checkpoints, code review requirements, performance thresholds'),
+            _buildField('Testing Requirements', _testingReqCtrl, maxLines: 3,
+                hint: 'Test coverage, regression testing, UAT sign-off'),
+            _buildField('Approval Requirements', _approvalReqCtrl, maxLines: 2,
+                hint: 'Go/no-go decision makers and process'),
+            _buildSectionHeader('Deployment Strategy'),
+            _buildDropdown(
+              'Deployment Strategy',
+              _deploymentStrategy,
+              ['Full Deployment', 'Phased Rollout', 'Blue-Green', 'Canary', 'Feature Flags'],
+              (v) {
+                if (v != null) setState(() => _deploymentStrategy = v);
+              },
+            ),
+            _buildField('Deployment Environments', _depEnvironmentsCtrl, maxLines: 3,
+                hint: 'Dev \u2192 Test \u2192 Staging \u2192 Production promotion plan'),
+            _buildField('Feature Flag Plan', _featureFlagCtrl, maxLines: 3,
+                hint: 'Flag naming, rollout percentages, kill switches'),
+            _buildSectionHeader('Dependencies & Risks'),
+            _buildField('Key Dependencies', _dependenciesCtrl, maxLines: 3,
+                hint: 'External systems, third-party releases, infrastructure prerequisites'),
+            _buildField('Assumptions', _assumptionsCtrl, maxLines: 3,
+                hint: 'Assumptions made for this release to succeed'),
+            _buildField('Release Risks', _risksCtrl, maxLines: 3,
+                hint: 'Identified risks with mitigation strategies'),
+            _buildSectionHeader('Rollback & Recovery'),
+            _buildField('Rollback Plan', _rollbackCtrl, maxLines: 3,
+                hint: 'Steps to roll back if release fails'),
+            _buildField('Recovery Procedures', _recoveryCtrl, maxLines: 3,
+                hint: 'Data restoration, environment recovery, fallback activation'),
+            _buildSectionHeader('Communication & Training'),
+            _buildField('Communication Plan', _communicationCtrl, maxLines: 3,
+                hint: 'Stakeholder notifications, release announcements, status updates'),
+            _buildField('Training Plan', _trainingCtrl, maxLines: 3,
+                hint: 'User readiness, support team training, documentation updates'),
+            _buildSectionHeader('Post-Release Support'),
+            _buildField('Monitoring Plan', _monitoringCtrl, maxLines: 3,
+                hint: 'Key metrics, dashboards, alerting thresholds'),
+            _buildField('Feedback Collection', _feedbackCtrl, maxLines: 3,
+                hint: 'User feedback channels, NPS surveys, issue tracking'),
+            _buildField('Continuous Improvement', _improvementCtrl, maxLines: 3,
+                hint: 'Retrospective follow-up, action items, process improvements'),
           ],
         ),
       ),
@@ -750,6 +1070,27 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
               epicIds: _selectedEpicIds.toList(),
               featureIds: _selectedFeatureIds.toList(),
               storyIds: _selectedStoryIds.toList(),
+              cadenceType: _cadenceType,
+              sprintLengthDays: int.tryParse(_sprintLengthCtrl.text),
+              numberOfSprintsInRelease: int.tryParse(_numSprintsCtrl.text),
+              releaseFrequency: _releaseFreqCtrl.text,
+              definitionOfDone: _dodCtrl.text,
+              qualityGates: _qualityGatesCtrl.text,
+              testingRequirements: _testingReqCtrl.text,
+              approvalRequirements: _approvalReqCtrl.text,
+              deploymentStrategy: _deploymentStrategy,
+              deploymentEnvironments: _depEnvironmentsCtrl.text,
+              featureFlagPlan: _featureFlagCtrl.text,
+              keyDependencies: _dependenciesCtrl.text,
+              assumptions: _assumptionsCtrl.text,
+              releaseRisks: _risksCtrl.text,
+              rollbackPlan: _rollbackCtrl.text,
+              recoveryProcedures: _recoveryCtrl.text,
+              communicationPlan: _communicationCtrl.text,
+              trainingPlan: _trainingCtrl.text,
+              monitoringPlan: _monitoringCtrl.text,
+              feedbackCollection: _feedbackCtrl.text,
+              continuousImprovement: _improvementCtrl.text,
             );
             widget.onSave(updated);
             Navigator.pop(context);

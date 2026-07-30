@@ -5,7 +5,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/execution_quality_tracking_model.dart';
-import 'package:ndu_project/models/project_data_model.dart' hide AuditResultStatus;
+import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/execution_quality_tracking_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
@@ -92,8 +92,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
       }
       
       // Refresh dashboard snapshot
-      await _service.refreshDashboard(projectId: projectId);
-      trackingData = await _service.loadTrackingData(projectId: projectId);
+      trackingData = await _service.refreshDashboard(projectId: projectId);
       
       if (mounted) {
         setState(() => _trackingData = trackingData);
@@ -394,7 +393,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
         controller: _tabController,
         isScrollable: true,
         labelColor: const Color(0xFF111827),
-
+        unselectedColor: Colors.white,
         indicator: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -951,13 +950,12 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
                   const SizedBox(width: 8),
                   OutlinedButton.icon(
                     onPressed: () => _addAuditToCalendar(audit),
-                    icon: const Icon(Icons.calendar_today, size: 14),
+                    icon: const Icon(Icons.calendar_add, size: 14),
                     label: const Text('Add to Calendar'),
                   ),
                 ] else ...[
                   const SizedBox(width: 8),
-                              Chip(avatar: const Icon(Icons.check, size: 12),
-                  label: const Text('In Calendar', style: TextStyle(fontSize: 11))),
+                  Chip(icon: const Icon(Icons.check, size: 12), label: const Text('In Calendar', style: TextStyle(fontSize: 11))),
                 ],
                 const Spacer(),
                 OutlinedButton.icon(
@@ -993,7 +991,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
     );
 
     try {
-      final provider = ProjectDataInherited.maybeOf(context);
+      final provider = ProjectDataInherent.maybeOf(context);
       final projectId = provider?.projectData.projectId;
       if (projectId == null || projectId.isEmpty) throw Exception('No project ID');
 
@@ -1035,7 +1033,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
                   trailing: audit.status == status ? const Icon(Icons.check_circle, color: Color(0xFF10B981)) : null,
                   onTap: () {
                     Navigator.pop(ctx);
-                    _applyAuditStatusUpdate(audit: audit, status: status);
+                    _applyAuditStatusUpdate(audit, status: status);
                   },
                 ),
               ),
@@ -1048,7 +1046,7 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
                   trailing: audit.resultStatus == result ? const Icon(Icons.check_circle, color: Color(0xFF10B981)) : null,
                   onTap: () {
                     Navigator.pop(ctx);
-                    _applyAuditStatusUpdate(audit: audit, resultStatus: result);
+                    _applyAuditStatusUpdate(audit, resultStatus: result);
                   },
                 ),
               ),

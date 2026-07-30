@@ -8,9 +8,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/screens/team_training_building_screen.dart';
 import 'package:ndu_project/services/user_service.dart';
-import 'package:ndu_project/services/raci_assignment_service.dart';
-import 'package:ndu_project/services/raci_matrix_seeder.dart';
-import 'package:ndu_project/services/sidebar_navigation_service.dart';
+import 'package:ndu_project/models/user_model.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -23,7 +21,7 @@ import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:ndu_project/models/rate_card.dart';
 import 'package:ndu_project/widgets/rate_card_management_dialog.dart';
 import 'package:ndu_project/utils/role_descriptions.dart';
-import 'package:ndu_project/services/openai_service_secure.dart' as openai_service;
+import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/providers/user_role_provider.dart';
 import 'package:ndu_project/models/user_role.dart';
 import 'package:ndu_project/utils/staffing_reminder_helper.dart';
@@ -1863,7 +1861,7 @@ Current Roles: ${projectData.staffingRequirements.map((r) => r.title).join(', ')
     
     try {
       // Call OpenAI service for role suggestions
-      final suggestions = await openai_service.OpenAiServiceSecure().generateStaffingRoleSuggestions(
+      final suggestions = await OpenAIServiceSecure.generateStaffingRoleSuggestions(
         context: contextStr,
         maxSuggestions: 10,
       );
@@ -2183,7 +2181,8 @@ Current Roles: ${projectData.staffingRequirements.map((r) => r.title).join(', ')
     bool isAuthorized = true; // Default to authorized for now
     
     try {
-      isAuthorized = context.siteRole.level >= SiteRole.editor.level;
+      final userRole = UserRoleProvider.of(context)?.siteRole ?? SiteRole.user;
+      isAuthorized = userRole.level >= SiteRole.editor.level;
     } catch (e) {
       // If provider not found, default to restricted view
       isAuthorized = false;
@@ -3708,16 +3707,17 @@ class _StaffingPlanTable extends StatelessWidget {
   Widget build(BuildContext context) {
     const rowPadding = EdgeInsets.symmetric(horizontal: 16, vertical: 14);
     const columns = <_StaffingColumnDef>[
-      _StaffingColumnDef('#', 72),
-      _StaffingColumnDef('Position', 220),
-      _StaffingColumnDef('Person', 180),
-      _StaffingColumnDef('Location', 170),
-      _StaffingColumnDef('Type', 170),
-      _StaffingColumnDef('Load', 140),
-      _StaffingColumnDef('Est. Cost', 150),
-      _StaffingColumnDef('Status', 150),
-      _StaffingColumnDef('Timeline', 180),
-      _StaffingColumnDef('Actions', 110),
+      _StaffingColumnDef('#', 50),
+      _StaffingColumnDef('Position', 180),
+      _StaffingColumnDef('Name', 140),
+      _StaffingColumnDef('Location', 130),
+      _StaffingColumnDef('Employment', 110),
+      _StaffingColumnDef('Category', 100),
+      _StaffingColumnDef('Start', 120),
+      _StaffingColumnDef('End', 120),
+      _StaffingColumnDef('NDU Access', 90),
+      _StaffingColumnDef('Status', 110),
+      _StaffingColumnDef('Actions', 80),
     ];
 
     final contentWidth =
@@ -3811,8 +3811,8 @@ class _StaffingTableRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.simpleCurrency(decimalDigits: 0);
     final cells = <Widget>[
+      // # - Index number
       Center(
         child: Text(
           '${index + 1}',
@@ -3824,40 +3824,84 @@ class _StaffingTableRow extends StatelessWidget {
           ),
         ),
       ),
+      // Position - Title (bold)
       _StaffingTextCell(
         requirement.title.trim().isEmpty
             ? 'Untitled Position'
             : requirement.title,
         fontWeight: FontWeight.w700,
       ),
+      // Name - Person name
       _StaffingTextCell(
         requirement.personName.trim().isEmpty ? 'TBD' : requirement.personName,
       ),
+      // Location
       _StaffingTextCell(
         requirement.location.trim().isEmpty ? 'TBD' : requirement.location,
       ),
+      // Employment - FT/PT
       _StaffingTextCell(
-        '${requirement.employmentType} / ${requirement.employeeType}',
+        requirement.employmentType.trim().isEmpty ? 'FT' : requirement.employmentType,
+        textAlign: TextAlign.center,
       ),
+      // Category - Employee/Contractor
       _StaffingTextCell(
-        '${requirement.headcount} x ${requirement.plannedMonths.toStringAsFixed(1)} mo',
+        requirement.employeeType.trim().isEmpty ? 'Employee' : requirement.employeeType,
+        textAlign: TextAlign.center,
       ),
+      // Start date
       _StaffingTextCell(
-        requirement.monthlyCost > 0 && requirement.plannedMonths > 0
-            ? currency.format(requirement.estimatedTotal)
-            : '—',
-        fontWeight: FontWeight.w700,
+        requirement.startDate.trim().isEmpty ? 'TBD' : requirement.startDate,
+        textAlign: TextAlign.center,
       ),
+      // End date
+      _StaffingTextCell(
+        requirement.endDate.trim().isEmpty ? 'TBD' : requirement.endDate,
+        textAlign: TextAlign.center,
+      ),
+      // NDU Access indicator
+      Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: requirement.nduAccess
+                ? const Color(0xFFD1FAE5) // Green background
+                : const Color(0xFFF3F4F6), // Gray background
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                requirement.nduAccess ? Icons.check_circle : Icons.remove_circle_outline,
+                size: 14,
+                color: requirement.nduAccess
+                    ? const Color(0xFF059669) // Green
+                    : const Color(0xFF9CA3AF), // Gray
+              ),
+              const SizedBox(width: 4),
+              Text(
+                requirement.nduAccess ? 'Yes' : 'No',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: requirement.nduAccess
+                      ? const Color(0xFF059669)
+                      : const Color(0xFF6B7280),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      // Status pill
       Center(
         child: _StaffingStatusPill(
           label:
               requirement.status.trim().isEmpty ? 'Open' : requirement.status,
         ),
       ),
-      _StaffingTextCell(
-        '${requirement.startDate.trim().isEmpty ? 'TBD' : requirement.startDate} -> ${requirement.endDate.trim().isEmpty ? 'TBD' : requirement.endDate}',
-        textAlign: TextAlign.center,
-      ),
+      // Actions - Edit/Delete icons
       Align(
         alignment: Alignment.topCenter,
         child: Row(
@@ -3866,20 +3910,24 @@ class _StaffingTableRow extends StatelessWidget {
             IconButton(
               icon: const Icon(
                 Icons.edit_outlined,
-                size: 18,
+                size: 16,
                 color: Color(0xFF6B7280),
               ),
               tooltip: 'Edit position',
               onPressed: onEdit,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+              padding: EdgeInsets.zero,
             ),
             IconButton(
               icon: const Icon(
                 Icons.delete_outline,
-                size: 18,
+                size: 16,
                 color: Color(0xFFEF4444),
               ),
               tooltip: 'Delete position',
               onPressed: onDelete,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+              padding: EdgeInsets.zero,
             ),
           ],
         ),
@@ -4458,84 +4506,206 @@ class _SectionEmptyState extends StatelessWidget {
   }
 }
 
-/// Entry in the role bank — maps a role title to a description and workstream.
-class _RoleBankEntry {
-  final String description;
-  final String workstream;
-
-  const _RoleBankEntry({
-    required this.description,
-    required this.workstream,
-  });
-}
-
-/// A single row in the Standard Roles picker dialog.
-/// Shows a checkbox + role name on the left, and a headcount stepper on the right
-/// that is enabled only when the checkbox is ticked.
-class _PredefinedRoleRow extends StatelessWidget {
-  const _PredefinedRoleRow({
-    required this.title,
-    required this.workstream,
-    required this.isSelected,
-    required this.enabled,
-    required this.headcount,
-    required this.onToggle,
-    required this.onHeadcountChanged,
+/// Custom autocomplete text field for user name selection
+class _NameAutocompleteField extends StatelessWidget {
+  const _NameAutocompleteField({
+    required this.controller,
+    required this.focusNode,
+    required this.suggestions,
+    required this.isSearching,
+    required this.onTextChanged,
+    required this.onSuggestionSelected,
+    required this.onClearSuggestions,
   });
 
-  final String title;
-  final String workstream;
-  final bool isSelected;
-  final bool enabled;
-  final int headcount;
-  final ValueChanged<bool?>? onToggle;
-  final ValueChanged<int>? onHeadcountChanged;
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final List<UserModel> suggestions;
+  final bool isSearching;
+  final ValueChanged<String> onTextChanged;
+  final ValueChanged<UserModel> onSuggestionSelected;
+  final VoidCallback onClearSuggestions;
 
   @override
   Widget build(BuildContext context) {
-    final alreadyAdded = !enabled && isSelected;
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? const Color(0xFFFFFBEB)
-            : const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isSelected
-              ? const Color(0xFFFCD34D)
-              : const Color(0xFFE5E7EB),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: controller,
+          focusNode: focusNode,
+          onChanged: onTextChanged,
+          onTap: () {
+            // Show suggestions again if there's text and we have cached results
+            if (controller.text.isNotEmpty && suggestions.isEmpty) {
+              onTextChanged(controller.text);
+            }
+          },
+          decoration: InputDecoration(
+            hintText: 'Type name or select...',
+            hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+            filled: true,
+            fillColor: Colors.grey[50],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF059669), width: 1.5),
+            ),
+            suffixIcon: isSearching
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : const Icon(Icons.person_search, size: 18, color: Color(0xFF6B7280)),
+          ),
         ),
+        if (suggestions.isNotEmpty && focusNode.hasFocus)
+          Container(
+            constraints: const BoxConstraints(maxHeight: 200),
+            margin: const EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              itemCount: suggestions.length,
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                color: Colors.grey[200],
+                indent: 52,
+              ),
+              itemBuilder: (context, index) {
+                final user = suggestions[index];
+                return InkWell(
+                  onTap: () => onSuggestionSelected(user),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor: const Color(0xFFE5E7EB),
+                          child: Text(
+                            user.displayName.isNotEmpty 
+                                ? user.displayName[0].toUpperCase() 
+                                : '?',
+                            style: const TextStyle(
+                              color: Color(0xFF6B7280),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                user.displayName,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF111827),
+                                ),
+                              ),
+                              Text(
+                                user.email,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF6B7280),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Widget for displaying a single staffing reminder card
+class _ReminderCard extends StatelessWidget {
+  const _ReminderCard({required this.reminder});
+
+  final StaffingReminder reminder;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: reminder.backgroundColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: reminder.borderColor, width: 1),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Checkbox(
-            value: isSelected,
-            onChanged: onToggle,
-            activeColor: const Color(0xFFF59E0B),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: reminder.priority == Priority.critical
+                  ? const Color(0xFFFEE2E2)
+                  : reminder.priority == Priority.high
+                      ? const Color(0xFFFEF3C7)
+                      : const Color(0xFFE0E7FF),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              reminder.typeIcon,
+              size: 18,
+              color: reminder.priorityColor,
+            ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  title,
+                  reminder.message,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: alreadyAdded
-                        ? const Color(0xFF9CA3AF)
-                        : const Color(0xFF111827),
+                    fontWeight: FontWeight.w500,
+                    color: reminder.priorityColor,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
-                  alreadyAdded ? 'Already added' : workstream,
+                  _getTypeLabel(reminder.type),
                   style: const TextStyle(
                     fontSize: 11,
                     color: Color(0xFF6B7280),
@@ -4544,245 +4714,63 @@ class _PredefinedRoleRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          _CompactHeadcountStepper(
-            headcount: headcount,
-            enabled: isSelected && enabled,
-            onChanged: onHeadcountChanged,
-          ),
+          if (reminder.daysUntil > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: reminder.priority == Priority.critical
+                    ? const Color(0xFFFEE2E2)
+                    : reminder.priority == Priority.high
+                        ? const Color(0xFFFEF3C7)
+                        : const Color(0xFFECFDF5),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                '${reminder.daysUntil}d',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: reminder.priority == Priority.critical
+                      ? const Color(0xFFDC2626)
+                      : reminder.priority == Priority.high
+                          ? const Color(0xFFD97706)
+                          : const Color(0xFF059669),
+                ),
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEE2E2),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                '${reminder.daysUntil.abs()}d overdue',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFDC2626),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
-}
 
-/// Compact headcount stepper used inside the Standard Roles dialog rows.
-class _CompactHeadcountStepper extends StatelessWidget {
-  const _CompactHeadcountStepper({
-    required this.headcount,
-    required this.enabled,
-    required this.onChanged,
-  });
-
-  final int headcount;
-  final bool enabled;
-  final ValueChanged<int>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _stepButton(
-          icon: Icons.remove,
-          onTap: enabled
-              ? () {
-                  final next = headcount > 1 ? headcount - 1 : 1;
-                  onChanged?.call(next);
-                }
-              : null,
-        ),
-        const SizedBox(width: 4),
-        Container(
-          width: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          decoration: BoxDecoration(
-            color: enabled ? Colors.white : const Color(0xFFF3F4F6),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: enabled
-                  ? const Color(0xFFE5E7EB)
-                  : const Color(0xFFE5E7EB),
-            ),
-          ),
-          child: Text(
-            '$headcount',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: enabled
-                  ? const Color(0xFF111827)
-                  : const Color(0xFF9CA3AF),
-            ),
-          ),
-        ),
-        const SizedBox(width: 4),
-        _stepButton(
-          icon: Icons.add,
-          onTap: enabled
-              ? () {
-                  final next = headcount + 1;
-                  onChanged?.call(next);
-                }
-              : null,
-        ),
-      ],
-    );
-  }
-
-  Widget _stepButton({required IconData icon, required VoidCallback? onTap}) {
-    final active = onTap != null;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          color: active
-              ? const Color(0xFFFEF3C7)
-              : const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: active
-                ? const Color(0xFFFCD34D)
-                : const Color(0xFFE5E7EB),
-          ),
-        ),
-        child: Icon(
-          icon,
-          size: 14,
-          color: active
-              ? const Color(0xFF92400E)
-              : const Color(0xFF9CA3AF),
-        ),
-      ),
-    );
-  }
-}
-
-/// Headcount stepper used inside the Add/Edit Role dialogs (larger variant).
-class _DialogHeadcountStepper extends StatefulWidget {
-  const _DialogHeadcountStepper({
-    required this.headcount,
-    required this.onChanged,
-  });
-
-  final int headcount;
-  final ValueChanged<int> onChanged;
-
-  @override
-  State<_DialogHeadcountStepper> createState() =>
-      _DialogHeadcountStepperState();
-}
-
-class _DialogHeadcountStepperState extends State<_DialogHeadcountStepper> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: '${widget.headcount}');
-  }
-
-  @override
-  void didUpdateWidget(covariant _DialogHeadcountStepper oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final current = int.tryParse(_controller.text.trim()) ?? 1;
-    if (current != widget.headcount) {
-      _controller.text = '${widget.headcount}';
+  String _getTypeLabel(ReminderType type) {
+    switch (type) {
+      case ReminderType.upcomingMobilization:
+        return 'Upcoming Mobilization';
+      case ReminderType.overdueMobilization:
+        return 'Overdue Mobilization';
+      case ReminderType.upcomingRelease:
+        return 'Upcoming Release';
+      case ReminderType.overdueRelease:
+        return 'Overdue Release';
+      case ReminderType.unfilledPosition:
+        return 'Unfilled Position';
     }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFCD34D)),
-      ),
-      child: Row(
-        children: [
-          InkWell(
-            onTap: () {
-              final current =
-                  int.tryParse(_controller.text.trim()) ?? 1;
-              final next = current > 1 ? current - 1 : 1;
-              _controller.text = '$next';
-              widget.onChanged(next);
-            },
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFCD34D),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.remove,
-                size: 18,
-                color: Color(0xFF1F2933),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextFormField(
-              controller: _controller,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF111827),
-              ),
-              decoration: const InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 8),
-              ),
-              onChanged: (value) {
-                final parsed = int.tryParse(value.trim());
-                if (parsed == null || parsed < 1) return;
-                widget.onChanged(parsed);
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            widget.headcount == 1 ? 'person' : 'people',
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF6B7280),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: 12),
-          InkWell(
-            onTap: () {
-              final current =
-                  int.tryParse(_controller.text.trim()) ?? 1;
-              final next = current + 1;
-              _controller.text = '$next';
-              widget.onChanged(next);
-            },
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFCD34D),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.add,
-                size: 18,
-                color: Color(0xFF1F2933),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

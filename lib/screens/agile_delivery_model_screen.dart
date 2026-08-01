@@ -22,7 +22,12 @@ const Color _kHeadline = Color(0xFF111827);
 const Color _kAccent = Color(0xFFD97706);
 
 const List<String> _frameworkOptions = ['Scrum', 'Kanban', 'ScrumBan'];
-const List<String> _sprintLengthOptions = ['1 Week', '2 Weeks', '3 Weeks', '4 Weeks'];
+const List<String> _sprintLengthOptions = [
+  '1 Week',
+  '2 Weeks',
+  '3 Weeks',
+  '4 Weeks'
+];
 const List<String> _estimationOptions = [
   'Story Points (Fibonacci)',
   'Story Points (Modified Fibonacci)',
@@ -133,7 +138,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
         if (value.isNotEmpty) _recordFieldHistory(f.key, value);
       }
       setState(() {
-        _selectedFramework = data['framework'] as String? ?? _frameworkOptions[0];
+        _selectedFramework =
+            data['framework'] as String? ?? _frameworkOptions[0];
         _selectedSprintLength =
             data['sprintLength'] as String? ?? _sprintLengthOptions[1];
         _selectedEstimationMethod =
@@ -185,8 +191,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     setState(() => _isGenerating = true);
     try {
       final data = ProjectDataHelper.getData(context);
-      final contextText =
-          ProjectDataHelper.buildProjectContextScan(data, sectionLabel: 'Agile Delivery Model');
+      final contextText = ProjectDataHelper.buildProjectContextScan(data,
+          sectionLabel: 'Agile Delivery Model');
       if (contextText.trim().isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -367,19 +373,16 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                             'Agile Delivery Model - Delivery Model'),
                   ),
                   SingleChildScrollView(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: hp, vertical: 32),
+                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         PlanningPhaseHeader(
                           title: 'Agile Delivery Model',
-                          onBack: () =>
-                              PlanningPhaseNavigation.goToPrevious(
-                                  context, 'agile_delivery_model'),
-                          onForward: () =>
-                              PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_delivery_model'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'agile_delivery_model'),
+                          onForward: () => PlanningPhaseNavigation.goToNext(
+                              context, 'agile_delivery_model'),
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 32),
@@ -388,25 +391,22 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                             Expanded(
                               child: Text(
                                 'Define the agile delivery approach for this project.',
-                                style: TextStyle(
+                                style: const TextStyle(
                                     fontSize: 15, color: _kMuted),
                               ),
                             ),
                             if (!_isLoading) ...[
                               const SizedBox(width: 12),
                               OutlinedButton.icon(
-                                onPressed: _isGenerating
-                                    ? null
-                                    : _generateWithAI,
+                                onPressed:
+                                    _isGenerating ? null : _generateWithAI,
                                 icon: _isGenerating
                                     ? const SizedBox(
                                         width: 16,
                                         height: 16,
-                                        child:
-                                            CircularProgressIndicator(
-                                                strokeWidth: 2))
-                                    : const Icon(Icons.auto_awesome,
-                                        size: 18),
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2))
+                                    : const Icon(Icons.auto_awesome, size: 18),
                                 label: Text(_isGenerating
                                     ? 'Generating...'
                                     : 'AI Generate'),
@@ -434,7 +434,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                                           strokeWidth: 2)),
                                   const SizedBox(width: 8),
                                   Text('Saving...',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           fontSize: 12, color: _kMuted)),
                                 ],
                               ),
@@ -455,12 +455,10 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                               'agile_delivery_model'),
                           nextLabel: PlanningPhaseNavigation.nextLabel(
                               'agile_delivery_model'),
-                          onBack: () =>
-                              PlanningPhaseNavigation.goToPrevious(
-                                  context, 'agile_delivery_model'),
-                          onNext: () =>
-                              PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_delivery_model'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'agile_delivery_model'),
+                          onNext: () => PlanningPhaseNavigation.goToNext(
+                              context, 'agile_delivery_model'),
                         ),
                         const SizedBox(height: 40),
                       ],
@@ -486,9 +484,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       children: [
         const Text('Delivery Framework',
             style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: _kHeadline)),
+                fontSize: 14, fontWeight: FontWeight.w600, color: _kHeadline)),
         const SizedBox(height: 8),
         SegmentedButton<String>(
           segments: _frameworkOptions
@@ -533,9 +529,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       children: [
         const Text('Sprint Length',
             style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: _kHeadline)),
+                fontSize: 14, fontWeight: FontWeight.w600, color: _kHeadline)),
         const SizedBox(height: 8),
         SegmentedButton<String>(
           segments: _sprintLengthOptions
@@ -562,9 +556,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       children: [
         const Text('Estimation Method',
             style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: _kHeadline)),
+                fontSize: 14, fontWeight: FontWeight.w600, color: _kHeadline)),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: _estimationOptions.contains(_selectedEstimationMethod)
@@ -573,8 +565,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             isDense: true,
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
           items: _estimationOptions
               .map((e) => DropdownMenuItem(value: e, child: Text(e)))
@@ -613,8 +604,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE0F2FE),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE0F2FE),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
@@ -648,19 +639,18 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
               constraints: BoxConstraints(
                 minHeight: f.fullWidth ? 100 : 80,
               ),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFD1D5DB)),
+                border: Border.all(color: Color(0xFFD1D5DB)),
               ),
               child: VoiceTextField(
                 controller: controller,
-                style: const TextStyle(
-                    fontSize: 14, color: Color(0xFF1F2937)),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
                 decoration: InputDecoration(
                   hintText: f.hint,
-                  hintStyle: const TextStyle(
-                      color: Color(0xFF9CA3AF), fontSize: 13),
+                  hintStyle:
+                      const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: const EdgeInsets.all(14),
@@ -673,17 +663,16 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2))
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2))
                             : const Icon(Icons.auto_awesome,
                                 color: Color(0xFFF59E0B), size: 18),
                         onPressed: isRegenerating
                             ? null
-                            : () => _regenerateField(
-                                f.key, f.label, f.hint),
+                            : () => _regenerateField(f.key, f.label, f.hint),
                         padding: const EdgeInsets.all(4),
-                        constraints: const BoxConstraints(
-                            minWidth: 32, minHeight: 32),
+                        constraints:
+                            const BoxConstraints(minWidth: 32, minHeight: 32),
                       ),
                       if (hasContent)
                         IconButton(
@@ -697,8 +686,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                             setState(() {});
                           },
                           padding: const EdgeInsets.all(4),
-                          constraints: const BoxConstraints(
-                              minWidth: 32, minHeight: 32),
+                          constraints:
+                              const BoxConstraints(minWidth: 32, minHeight: 32),
                         ),
                     ],
                   ),
@@ -728,9 +717,9 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           {'Project Name': projectData.projectName ?? 'N/A'},
           {'Solution Title': projectData.solutionTitle ?? 'N/A'},
         ]),
-        PdfSection.text('Notes',
-            projectData.planningNotes[
-                    'planning_agile_delivery_model_notes'] ??
+        PdfSection.text(
+            'Notes',
+            projectData.planningNotes['planning_agile_delivery_model_notes'] ??
                 'No data recorded.'),
       ],
     );

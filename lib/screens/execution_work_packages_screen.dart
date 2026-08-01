@@ -3,9 +3,11 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/models/project_data_model.dart';
-import 'package:ndu_project/models/procurement/procurement_models.dart' hide ContractModel;
+import 'package:ndu_project/models/procurement/procurement_models.dart'
+    hide ContractModel;
 import 'package:ndu_project/services/integrated_work_package_service.dart';
-import 'package:ndu_project/services/contract_service.dart' show ContractModel, ContractService;
+import 'package:ndu_project/services/contract_service.dart'
+    show ContractModel, ContractService;
 import 'package:ndu_project/services/procurement_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/design_planning_document.dart';
@@ -42,7 +44,9 @@ class _ExecutionWorkPackagesScreenState
     super.initState();
     final data = ProjectDataHelper.getData(context, listen: false);
     final methodology = data.planningNotes['planning_schedule_methodology'];
-    if (methodology != null && methodology is String && methodology.isNotEmpty) {
+    if (methodology != null &&
+        methodology is String &&
+        methodology.isNotEmpty) {
       _selectedMethodology = methodology;
     }
     _loadLinkedData();
@@ -82,11 +86,18 @@ class _ExecutionWorkPackagesScreenState
     if (_activeTab == 'all') return packages;
     return packages.where((p) {
       return switch (_activeTab) {
-        'ewp' => p.packageClassification == IntegratedWorkPackageService.engineeringEwp,
-        'procurement' => p.packageClassification == IntegratedWorkPackageService.procurementPackage,
-        'cwp' => p.packageClassification == IntegratedWorkPackageService.constructionCwp || p.packageClassification == IntegratedWorkPackageService.implementationWorkPackage,
-        'precomm' => p.packageClassification == IntegratedWorkPackageService.preCommissioningPackage,
-        'comm' => p.packageClassification == IntegratedWorkPackageService.commissioningPackage,
+        'ewp' => p.packageClassification ==
+            IntegratedWorkPackageService.engineeringEwp,
+        'procurement' => p.packageClassification ==
+            IntegratedWorkPackageService.procurementPackage,
+        'cwp' => p.packageClassification ==
+                IntegratedWorkPackageService.constructionCwp ||
+            p.packageClassification ==
+                IntegratedWorkPackageService.implementationWorkPackage,
+        'precomm' => p.packageClassification ==
+            IntegratedWorkPackageService.preCommissioningPackage,
+        'comm' => p.packageClassification ==
+            IntegratedWorkPackageService.commissioningPackage,
         _ => true,
       };
     }).toList();
@@ -162,10 +173,14 @@ class _ExecutionWorkPackagesScreenState
     return switch (cls) {
       IntegratedWorkPackageService.engineeringEwp => 'Engineering Work Package',
       IntegratedWorkPackageService.procurementPackage => 'Procurement Package',
-      IntegratedWorkPackageService.constructionCwp => 'Construction Work Package',
-      IntegratedWorkPackageService.implementationWorkPackage => 'Implementation Work Package',
-      IntegratedWorkPackageService.preCommissioningPackage => 'Pre-Commissioning Package',
-      IntegratedWorkPackageService.commissioningPackage => 'Commissioning Package',
+      IntegratedWorkPackageService.constructionCwp =>
+        'Construction Work Package',
+      IntegratedWorkPackageService.implementationWorkPackage =>
+        'Implementation Work Package',
+      IntegratedWorkPackageService.preCommissioningPackage =>
+        'Pre-Commissioning Package',
+      IntegratedWorkPackageService.commissioningPackage =>
+        'Commissioning Package',
       IntegratedWorkPackageService.deliveryPackage => 'Delivery Work Package',
       _ => cls,
     };
@@ -211,9 +226,11 @@ class _ExecutionWorkPackagesScreenState
       designSpecifications: designSpecs,
     );
 
-    generated = IntegratedWorkPackageService
-        .deriveProcurementScopeFromEwpDeliverables(generated);
-    generated = IntegratedWorkPackageService.rollUpChildCostsAndDates(generated);
+    generated =
+        IntegratedWorkPackageService.deriveProcurementScopeFromEwpDeliverables(
+            generated);
+    generated =
+        IntegratedWorkPackageService.rollUpChildCostsAndDates(generated);
     generated = IntegratedWorkPackageService.enforceEstimateBasis(
       generated,
       methodology: _selectedMethodology,
@@ -363,7 +380,9 @@ class _ExecutionWorkPackagesScreenState
               ? 'All Packages Ready'
               : '$totalWarnings Warning(s) Found',
           style: TextStyle(
-            color: totalWarnings == 0 ? const Color(0xFF059669) : const Color(0xFFD97706),
+            color: totalWarnings == 0
+                ? const Color(0xFF059669)
+                : const Color(0xFFD97706),
           ),
         ),
         content: SizedBox(
@@ -374,7 +393,10 @@ class _ExecutionWorkPackagesScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
-                    children: details.map((d) => Text(d, style: const TextStyle(fontSize: 12))).toList(),
+                    children: details
+                        .map((d) =>
+                            Text(d, style: const TextStyle(fontSize: 12)))
+                        .toList(),
                   ),
                 ),
         ),
@@ -453,7 +475,8 @@ class _ExecutionWorkPackagesScreenState
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Work Package'),
-        content: const Text('Are you sure you want to delete this work package?'),
+        content:
+            const Text('Are you sure you want to delete this work package?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -500,7 +523,8 @@ class _ExecutionWorkPackagesScreenState
         },
         onReleaseForExecution: () async {
           try {
-            final released = IntegratedWorkPackageService.releaseEwpForExecution(wp);
+            final released =
+                IntegratedWorkPackageService.releaseEwpForExecution(wp);
             Navigator.of(ctx).pop();
             final updated = _getData()
                 .workPackages
@@ -552,7 +576,8 @@ class _ExecutionWorkPackagesScreenState
               children: [
                 TextField(
                   controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Contract Name *'),
+                  decoration:
+                      const InputDecoration(labelText: 'Contract Name *'),
                   autofocus: true,
                 ),
                 const SizedBox(height: 8),
@@ -564,7 +589,8 @@ class _ExecutionWorkPackagesScreenState
                 const SizedBox(height: 8),
                 TextField(
                   controller: contractorCtrl,
-                  decoration: const InputDecoration(labelText: 'Contractor Name'),
+                  decoration:
+                      const InputDecoration(labelText: 'Contractor Name'),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -574,7 +600,8 @@ class _ExecutionWorkPackagesScreenState
                 const SizedBox(height: 8),
                 TextField(
                   controller: valueCtrl,
-                  decoration: const InputDecoration(labelText: 'Estimated Value'),
+                  decoration:
+                      const InputDecoration(labelText: 'Estimated Value'),
                   keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 8),
@@ -582,10 +609,15 @@ class _ExecutionWorkPackagesScreenState
                   value: contractType,
                   decoration: const InputDecoration(labelText: 'Contract Type'),
                   items: const [
-                    DropdownMenuItem(value: 'Fixed Price', child: Text('Fixed Price')),
-                    DropdownMenuItem(value: 'Cost Plus', child: Text('Cost Plus')),
-                    DropdownMenuItem(value: 'Time & Material', child: Text('Time & Material')),
-                    DropdownMenuItem(value: 'Unit Price', child: Text('Unit Price')),
+                    DropdownMenuItem(
+                        value: 'Fixed Price', child: Text('Fixed Price')),
+                    DropdownMenuItem(
+                        value: 'Cost Plus', child: Text('Cost Plus')),
+                    DropdownMenuItem(
+                        value: 'Time & Material',
+                        child: Text('Time & Material')),
+                    DropdownMenuItem(
+                        value: 'Unit Price', child: Text('Unit Price')),
                   ],
                   onChanged: (v) => contractType = v ?? 'Fixed Price',
                 ),
@@ -594,9 +626,12 @@ class _ExecutionWorkPackagesScreenState
                   value: paymentType,
                   decoration: const InputDecoration(labelText: 'Payment Type'),
                   items: const [
-                    DropdownMenuItem(value: 'Lump Sum', child: Text('Lump Sum')),
-                    DropdownMenuItem(value: 'Milestone', child: Text('Milestone')),
-                    DropdownMenuItem(value: 'Progress', child: Text('Progress')),
+                    DropdownMenuItem(
+                        value: 'Lump Sum', child: Text('Lump Sum')),
+                    DropdownMenuItem(
+                        value: 'Milestone', child: Text('Milestone')),
+                    DropdownMenuItem(
+                        value: 'Progress', child: Text('Progress')),
                   ],
                   onChanged: (v) => paymentType = v ?? 'Lump Sum',
                 ),
@@ -614,7 +649,8 @@ class _ExecutionWorkPackagesScreenState
               final name = nameCtrl.text.trim();
               if (name.isEmpty) return;
               final data = _getData();
-              final projectId = data.projectName.isNotEmpty ? data.projectName : 'default';
+              final projectId =
+                  data.projectName.isNotEmpty ? data.projectName : 'default';
               try {
                 final contractId = await ContractService.createContract(
                   name: name,
@@ -655,7 +691,8 @@ class _ExecutionWorkPackagesScreenState
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error creating contract: $e'),
+                    SnackBar(
+                        content: Text('Error creating contract: $e'),
                         backgroundColor: Colors.red),
                   );
                 }
@@ -689,14 +726,15 @@ class _ExecutionWorkPackagesScreenState
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFBEB),
+        decoration: const BoxDecoration(
+          color: Color(0xFFFFFBEB),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFFDE68A)),
+          border: Border.all(color: Color(0xFFFDE68A)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, size: 18, color: Color(0xFFD97706)),
+            const Icon(Icons.warning_amber_rounded,
+                size: 18, color: Color(0xFFD97706)),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -726,9 +764,7 @@ class _ExecutionWorkPackagesScreenState
             : const Color(0xFFEF4444);
 
     return Tooltip(
-      message: warnings.isEmpty
-          ? 'Ready'
-          : warnings.take(4).join('\n'),
+      message: warnings.isEmpty ? 'Ready' : warnings.take(4).join('\n'),
       child: Row(
         children: [
           Expanded(
@@ -763,7 +799,7 @@ class _ExecutionWorkPackagesScreenState
       child: Container(
         constraints: const BoxConstraints(maxWidth: 480),
         padding: const EdgeInsets.all(48),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppSemanticColors.border),
@@ -793,7 +829,8 @@ class _ExecutionWorkPackagesScreenState
               icon: const Icon(Icons.account_tree_outlined, size: 18),
               label: const Text('Generate Package Chains'),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               ),
             ),
             const SizedBox(height: 12),
@@ -802,7 +839,8 @@ class _ExecutionWorkPackagesScreenState
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Add Work Package Manually'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               ),
             ),
           ],
@@ -853,13 +891,19 @@ class _ExecutionWorkPackagesScreenState
                   // Resource conflict banner
                   _buildResourceConflictBanner(workPackages),
                   // Package list
-                  ...filtered.map((wp) {
-                    final activities = activitiesByWp[wp.id] ?? [];
-                    final contracts = _contractsForPackage(wp);
-                    final procItems = _procurementItemsForPackage(wp);
-                    return _buildPackageCard(
-                      wp, activities, contracts, procItems);
-                  }),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, i) {
+                      final wp = filtered[i];
+                      final activities = activitiesByWp[wp.id] ?? [];
+                      final contracts = _contractsForPackage(wp);
+                      final procItems = _procurementItemsForPackage(wp);
+                      return _buildPackageCard(
+                          wp, activities, contracts, procItems);
+                    },
+                  ),
                 ],
               ),
       ),
@@ -902,7 +946,7 @@ class _ExecutionWorkPackagesScreenState
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppSemanticColors.border),
@@ -912,7 +956,8 @@ class _ExecutionWorkPackagesScreenState
         children: [
           Row(
             children: [
-              const Icon(Icons.work_outline, size: 20, color: Color(0xFF374151)),
+              const Icon(Icons.work_outline,
+                  size: 20, color: Color(0xFF374151)),
               const SizedBox(width: 8),
               Text(
                 '${packages.length} Work Packages',
@@ -931,10 +976,12 @@ class _ExecutionWorkPackagesScreenState
             children: classifications.map((cls) {
               final count = _classificationCount(packages, cls);
               if (count == '0') return const SizedBox.shrink();
-              final color = _classificationColorMap[cls] ?? const Color(0xFF6B7280);
+              final color =
+                  _classificationColorMap[cls] ?? const Color(0xFF6B7280);
               final label = _classificationDisplayLabel(cls);
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -971,12 +1018,19 @@ class _ExecutionWorkPackagesScreenState
   }
 
   Widget _buildCategoryTabs() {
-    final tabs = ['All', 'Engineering / Design', 'Procurement', 'Construction', 'Pre-Commissioning', 'Commissioning'];
+    final tabs = [
+      'All',
+      'Engineering / Design',
+      'Procurement',
+      'Construction',
+      'Pre-Commissioning',
+      'Commissioning'
+    ];
     final values = ['all', 'ewp', 'procurement', 'cwp', 'precomm', 'comm'];
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -991,10 +1045,12 @@ class _ExecutionWorkPackagesScreenState
                   color: isActive ? Colors.white : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: isActive
-                      ? [BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1))]
+                      ? [
+                          BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.06),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1))
+                        ]
                       : null,
                 ),
                 child: Text(
@@ -1003,7 +1059,9 @@ class _ExecutionWorkPackagesScreenState
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                    color: isActive ? const Color(0xFF111827) : const Color(0xFF6B7280),
+                    color: isActive
+                        ? const Color(0xFF111827)
+                        : const Color(0xFF6B7280),
                   ),
                 ),
               ),
@@ -1017,7 +1075,7 @@ class _ExecutionWorkPackagesScreenState
   Widget _buildActionBar() {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppSemanticColors.border),
@@ -1036,8 +1094,8 @@ class _ExecutionWorkPackagesScreenState
                 hintText: 'Search packages...',
                 hintStyle:
                     const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
-                prefixIcon:
-                    const Icon(Icons.search, size: 16, color: Color(0xFF6B7280)),
+                prefixIcon: const Icon(Icons.search,
+                    size: 16, color: Color(0xFF6B7280)),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, size: 16),
@@ -1048,26 +1106,25 @@ class _ExecutionWorkPackagesScreenState
                 fillColor: const Color(0xFFF9FAFB),
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                border: OutlineInputBorder(
+                border: const OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: AppSemanticColors.border),
                 ),
-                enabledBorder: OutlineInputBorder(
+                enabledBorder: const OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: AppSemanticColors.border),
                 ),
-                focusedBorder: OutlineInputBorder(
+                focusedBorder: const OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide:
-                      const BorderSide(color: Color(0xFFF59E0B), width: 1.5),
+                  borderSide: BorderSide(color: Color(0xFFF59E0B), width: 1.5),
                 ),
               ),
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: AppSemanticColors.border),
             ),
@@ -1089,7 +1146,8 @@ class _ExecutionWorkPackagesScreenState
                     ),
                     items: const [
                       DropdownMenuItem(value: 'title', child: Text('Title')),
-                      DropdownMenuItem(value: 'classification', child: Text('Type')),
+                      DropdownMenuItem(
+                          value: 'classification', child: Text('Type')),
                       DropdownMenuItem(value: 'status', child: Text('Status')),
                       DropdownMenuItem(value: 'owner', child: Text('Owner')),
                       DropdownMenuItem(value: 'budget', child: Text('Budget')),
@@ -1103,15 +1161,18 @@ class _ExecutionWorkPackagesScreenState
                   ),
                   onPressed: () =>
                       setState(() => _sortAscending = !_sortAscending),
-                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  constraints:
+                      const BoxConstraints(minWidth: 24, minHeight: 24),
                   padding: EdgeInsets.zero,
                 ),
               ],
             ),
           ),
           const Spacer(),
-          _actionChip(Icons.account_tree_outlined, 'Generate', _generatePackageChains),
-          _actionChip(Icons.timeline_outlined, 'Schedule Network', _createScheduleNetwork),
+          _actionChip(
+              Icons.account_tree_outlined, 'Generate', _generatePackageChains),
+          _actionChip(Icons.timeline_outlined, 'Schedule Network',
+              _createScheduleNetwork),
           _actionChip(Icons.checklist_outlined, 'Validate All', _validateAll),
           _actionChip(Icons.add, 'Add Package', _addWorkPackage),
         ],
@@ -1125,8 +1186,8 @@ class _ExecutionWorkPackagesScreenState
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
+        decoration: const BoxDecoration(
+          color: Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppSemanticColors.border),
         ),
@@ -1168,7 +1229,7 @@ class _ExecutionWorkPackagesScreenState
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppSemanticColors.border),
@@ -1233,10 +1294,10 @@ class _ExecutionWorkPackagesScreenState
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 5, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF7ED),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFF7ED),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: const Color(0xFFF97316)),
+                        border: Border.all(color: Color(0xFFF97316)),
                       ),
                       child: Text(
                         '${warnings.length}',
@@ -1252,7 +1313,8 @@ class _ExecutionWorkPackagesScreenState
                 IconButton(
                   icon: const Icon(Icons.edit_outlined, size: 16),
                   onPressed: () => _editWorkPackage(wp),
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
                   padding: EdgeInsets.zero,
                   tooltip: 'Edit',
                 ),
@@ -1260,7 +1322,8 @@ class _ExecutionWorkPackagesScreenState
                   icon: const Icon(Icons.delete_outline,
                       size: 16, color: Color(0xFFEF4444)),
                   onPressed: () => _deleteWorkPackage(wp),
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
                   padding: EdgeInsets.zero,
                   tooltip: 'Delete',
                 ),
@@ -1279,7 +1342,8 @@ class _ExecutionWorkPackagesScreenState
             // Info row: type, owner, phase, classification
             Row(
               children: [
-                _infoChip(Icons.person_outline, wp.owner.isNotEmpty ? wp.owner : 'Unassigned'),
+                _infoChip(Icons.person_outline,
+                    wp.owner.isNotEmpty ? wp.owner : 'Unassigned'),
                 const SizedBox(width: 12),
                 _infoChip(Icons.category_outlined, wp.type.toUpperCase()),
                 const SizedBox(width: 12),
@@ -1302,18 +1366,21 @@ class _ExecutionWorkPackagesScreenState
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.description_outlined, size: 12, color: Color(0xFF6B7280)),
+                  const Icon(Icons.description_outlined,
+                      size: 12, color: Color(0xFF6B7280)),
                   const SizedBox(width: 4),
                   Text(
                     'Contracts: ${contracts.map((c) => c.name).join(", ")}',
-                    style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
+                    style:
+                        const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(width: 4),
                   GestureDetector(
                     onTap: () => _addContractForPackage(wp),
-                    child: const Icon(Icons.add_circle_outline, size: 12, color: Color(0xFF3B82F6)),
+                    child: const Icon(Icons.add_circle_outline,
+                        size: 12, color: Color(0xFF3B82F6)),
                   ),
                 ],
               ),
@@ -1323,12 +1390,14 @@ class _ExecutionWorkPackagesScreenState
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.shopping_cart_outlined, size: 12, color: Color(0xFF6B7280)),
+                  const Icon(Icons.shopping_cart_outlined,
+                      size: 12, color: Color(0xFF6B7280)),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       'Procurement: ${procItems.map((p) => p.name).join(", ")}',
-                      style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
+                      style: const TextStyle(
+                          fontSize: 10, color: Color(0xFF6B7280)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

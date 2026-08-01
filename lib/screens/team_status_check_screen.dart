@@ -110,14 +110,39 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
   }
 
   List<_CapacityRow> _defaultCapacityRows() => [
-        _CapacityRow(team: 'Engineering', plannedFte: 5, allocatedFte: 4, utilization: 80, riskLevel: 'Low'),
-        _CapacityRow(team: 'Design', plannedFte: 3, allocatedFte: 3, utilization: 95, riskLevel: 'Medium'),
-        _CapacityRow(team: 'QA', plannedFte: 2, allocatedFte: 1, utilization: 60, riskLevel: 'Low'),
+        _CapacityRow(
+            team: 'Engineering',
+            plannedFte: 5,
+            allocatedFte: 4,
+            utilization: 80,
+            riskLevel: 'Low'),
+        _CapacityRow(
+            team: 'Design',
+            plannedFte: 3,
+            allocatedFte: 3,
+            utilization: 95,
+            riskLevel: 'Medium'),
+        _CapacityRow(
+            team: 'QA',
+            plannedFte: 2,
+            allocatedFte: 1,
+            utilization: 60,
+            riskLevel: 'Low'),
       ];
 
   List<_OperationsRow> _defaultOperationsRows() => [
-        _OperationsRow(shift: 'Day Shift', requiredHeadcount: 8, actualHeadcount: 7, coveragePercent: 87, riskFlag: 'Low'),
-        _OperationsRow(shift: 'Evening Shift', requiredHeadcount: 5, actualHeadcount: 5, coveragePercent: 100, riskFlag: 'None'),
+        _OperationsRow(
+            shift: 'Day Shift',
+            requiredHeadcount: 8,
+            actualHeadcount: 7,
+            coveragePercent: 87,
+            riskFlag: 'Low'),
+        _OperationsRow(
+            shift: 'Evening Shift',
+            requiredHeadcount: 5,
+            actualHeadcount: 5,
+            coveragePercent: 100,
+            riskFlag: 'None'),
       ];
 
   @override
@@ -134,7 +159,8 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
             DraggableSidebar(
               openWidth: AppBreakpoints.sidebarWidth(context),
               child: const InitiationLikeSidebar(
-                  activeItemLabel: 'Project Team Activities - Team Status Check'),
+                  activeItemLabel:
+                      'Project Team Activities - Team Status Check'),
             ),
             Expanded(
               child: Stack(
@@ -158,8 +184,11 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
                         const SizedBox(height: 24),
                         _buildTabBar(),
                         const SizedBox(height: 24),
-                        [_buildStatusCheckTab(), _buildCapacityTab(), _buildOperationsTab()][
-                            _tabController.index],
+                        [
+                          _buildStatusCheckTab(),
+                          _buildCapacityTab(),
+                          _buildOperationsTab()
+                        ][_tabController.index],
                         const SizedBox(height: 48),
                       ],
                     ),
@@ -184,12 +213,12 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF6EE7B7)),
+        border: Border.all(color: Color(0xFF6EE7B7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,7 +253,8 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
             'Team members periodically report progress, identify blockers, communicate workload '
             'concerns, and surface issues early. AI analyzes responses to identify trends, risks, '
             'and recommended actions for project managers.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF065F46), height: 1.6),
+            style:
+                TextStyle(fontSize: 13, color: Color(0xFF065F46), height: 1.6),
           ),
         ],
       ),
@@ -233,10 +263,10 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
 
   Widget _buildTabBar() {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: TabBar(
         controller: _tabController,
@@ -269,7 +299,18 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
           _buildEmptyState('No status updates yet',
               'Team members can submit weekly status updates here')
         else
-          ..._statusEntries.map((e) => _buildStatusCard(e)),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _statusEntries.length,
+            itemBuilder: (context, index) {
+              final entry = _statusEntries[index];
+              return RepaintBoundary(
+                key: ValueKey('status_card_$index'),
+                child: _buildStatusCard(entry),
+              );
+            },
+          ),
       ],
     );
   }
@@ -278,10 +319,10 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,27 +331,38 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
             children: [
               Text(entry.teamMember,
                   style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF111827))),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827))),
               const Spacer(),
               Text(entry.reportingPeriod,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
             ],
           ),
           if (entry.accomplishments.isNotEmpty) ...[
             const SizedBox(height: 12),
             const Text('Accomplishments',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF374151))),
             const SizedBox(height: 4),
             Text(entry.accomplishments,
-                style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563), height: 1.5)),
+                style: const TextStyle(
+                    fontSize: 13, color: Color(0xFF4B5563), height: 1.5)),
           ],
           if (entry.blockers.isNotEmpty) ...[
             const SizedBox(height: 12),
             const Text('Blockers',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFEF4444))),
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFEF4444))),
             const SizedBox(height: 4),
             Text(entry.blockers,
-                style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563), height: 1.5)),
+                style: const TextStyle(
+                    fontSize: 13, color: Color(0xFF4B5563), height: 1.5)),
           ],
         ],
       ),
@@ -323,23 +375,26 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle('Team Capacity',
+        _sectionTitle(
+            'Team Capacity',
             'Monitor resource capacity, allocation, utilization, productivity, workload balance, '
-            'staffing adequacy, skill readiness, and delivery risks across project teams.'),
+                'staffing adequacy, skill readiness, and delivery risks across project teams.'),
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            border: Border.all(color: Color(0xFFE5E7EB)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Capacity Overview',
                   style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF111827))),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827))),
               const SizedBox(height: 16),
               ..._capacityRows.map((row) => _buildCapacityRow(row)),
             ],
@@ -349,7 +404,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
         _buildAiInsightCard(
           'AI Capacity Insights',
           'AI continuously identifies trends, predicts capacity constraints, flags over-allocation, '
-          'and recommends staffing or workload adjustments to maintain project performance.',
+              'and recommends staffing or workload adjustments to maintain project performance.',
           const Color(0xFF10B981),
         ),
       ],
@@ -366,10 +421,10 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -380,10 +435,13 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
               children: [
                 Text(row.team,
                     style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF111827))),
                 const SizedBox(height: 2),
                 Text('${row.allocatedFte}/${row.plannedFte} FTE allocated',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF6B7280))),
               ],
             ),
           ),
@@ -394,10 +452,12 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
               children: [
                 Text('${row.utilization}%',
                     style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w700, color: utilizationColor)),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: utilizationColor)),
                 const SizedBox(height: 4),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: const BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: row.utilization / 100,
                     minHeight: 6,
@@ -439,25 +499,28 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle('Team Operations',
+        _sectionTitle(
+            'Team Operations',
             'Evaluate team execution during a configurable reporting period by tracking attendance, '
-            'staffing coverage, availability, workload, productivity, compliance, overtime, and '
-            'operational risks. AI continuously identifies trends, predicts capacity constraints, '
-            'flags coverage gaps, and recommends staffing or workload adjustments.'),
+                'staffing coverage, availability, workload, productivity, compliance, overtime, and '
+                'operational risks. AI continuously identifies trends, predicts capacity constraints, '
+                'flags coverage gaps, and recommends staffing or workload adjustments.'),
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            border: Border.all(color: Color(0xFFE5E7EB)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Operations Overview',
                   style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF111827))),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827))),
               const SizedBox(height: 16),
               ..._operationsRows.map((row) => _buildOperationsRow(row)),
             ],
@@ -467,7 +530,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
         _buildAiInsightCard(
           'AI Operations Insights',
           'AI continuously identifies trends, predicts capacity constraints, flags coverage gaps, '
-          'and recommends staffing or workload adjustments to maintain project performance.',
+              'and recommends staffing or workload adjustments to maintain project performance.',
           const Color(0xFF0891B2),
         ),
       ],
@@ -484,10 +547,10 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -498,10 +561,13 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
               children: [
                 Text(row.shift,
                     style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF111827))),
                 const SizedBox(height: 2),
                 Text('${row.actualHeadcount}/${row.requiredHeadcount} staff',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF6B7280))),
               ],
             ),
           ),
@@ -512,10 +578,12 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
               children: [
                 Text('${row.coveragePercent}%',
                     style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w700, color: coverageColor)),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: coverageColor)),
                 const SizedBox(height: 4),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: const BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: row.coveragePercent / 100,
                     minHeight: 6,
@@ -559,10 +627,13 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       children: [
         Text(title,
             style: const TextStyle(
-                fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF111827))),
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF111827))),
         const SizedBox(height: 4),
         Text(subtitle,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5)),
+            style: const TextStyle(
+                fontSize: 13, color: Color(0xFF6B7280), height: 1.5)),
       ],
     );
   }
@@ -571,10 +642,10 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(48),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         children: [
@@ -582,7 +653,9 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
           const SizedBox(height: 16),
           Text(title,
               style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF6B7280))),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6B7280))),
           const SizedBox(height: 8),
           Text(subtitle,
               style: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF))),
@@ -597,7 +670,10 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withValues(alpha: 0.08), color.withValues(alpha: 0.04)],
+          colors: [
+            color.withValues(alpha: 0.08),
+            color.withValues(alpha: 0.04)
+          ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.2)),
@@ -620,11 +696,15 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
               children: [
                 Text(title,
                     style: TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w700, color: color)),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: color)),
                 const SizedBox(height: 8),
                 Text(message,
                     style: TextStyle(
-                        fontSize: 13, color: color.withValues(alpha: 0.8), height: 1.6)),
+                        fontSize: 13,
+                        color: color.withValues(alpha: 0.8),
+                        height: 1.6)),
               ],
             ),
           ),
@@ -723,7 +803,8 @@ class _StatusCheckEntry {
         'blockers': blockers,
       };
 
-  factory _StatusCheckEntry.fromMap(Map<String, dynamic> m) => _StatusCheckEntry(
+  factory _StatusCheckEntry.fromMap(Map<String, dynamic> m) =>
+      _StatusCheckEntry(
         teamMember: m['teamMember']?.toString() ?? '',
         reportingPeriod: m['reportingPeriod']?.toString() ?? '',
         accomplishments: m['accomplishments']?.toString() ?? '',

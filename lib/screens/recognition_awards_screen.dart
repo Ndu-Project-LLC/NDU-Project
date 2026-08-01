@@ -24,7 +24,8 @@ class RecognitionAwardsScreen extends StatefulWidget {
   }
 
   @override
-  State<RecognitionAwardsScreen> createState() => _RecognitionAwardsScreenState();
+  State<RecognitionAwardsScreen> createState() =>
+      _RecognitionAwardsScreenState();
 }
 
 class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
@@ -131,7 +132,8 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Recognition'),
-        content: const Text('Are you sure you want to delete this recognition?'),
+        content:
+            const Text('Are you sure you want to delete this recognition?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
@@ -150,10 +152,12 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     );
   }
 
-  void _showRecognitionDialog({int? editIndex, _Recognition? existing}) {
-    final categoryCtrl =
-        TextEditingController(text: existing?.category ?? _awardCategories.first);
-    final recipientCtrl = TextEditingController(text: existing?.recipient ?? '');
+  Future<void> _showRecognitionDialog(
+      {int? editIndex, _Recognition? existing}) async {
+    final categoryCtrl = TextEditingController(
+        text: existing?.category ?? _awardCategories.first);
+    final recipientCtrl =
+        TextEditingController(text: existing?.recipient ?? '');
     final teamCtrl = TextEditingController(text: existing?.team ?? '');
     final nominatedByCtrl =
         TextEditingController(text: existing?.nominatedBy ?? '');
@@ -165,79 +169,95 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     String status = existing?.status ?? 'Nominated';
     String type = existing?.type ?? _recognitionTypes.first;
 
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(editIndex != null ? 'Edit Recognition' : 'New Recognition'),
-          content: SizedBox(
-            width: 500,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _dialogDropdown('Award Category', categoryCtrl, _awardCategories),
-                  const SizedBox(height: 12),
-                  _dialogDropdown('Recognition Type', null, _recognitionTypes,
-                      value: type, onChanged: (v) => setDialogState(() => type = v!)),
-                  const SizedBox(height: 12),
-                  _dialogField('Recipient Name', recipientCtrl),
-                  const SizedBox(height: 12),
-                  _dialogField('Team', teamCtrl),
-                  const SizedBox(height: 12),
-                  _dialogField('Nominated By', nominatedByCtrl),
-                  const SizedBox(height: 12),
-                  _dialogField('Date', dateCtrl),
-                  const SizedBox(height: 12),
-                  _dialogField('Linked Milestone/Deliverable', linkedMilestoneCtrl),
-                  const SizedBox(height: 12),
-                  _dialogDropdown('Status', null, _statuses,
-                      value: status, onChanged: (v) => setDialogState(() => status = v!)),
-                  const SizedBox(height: 12),
-                  _dialogField('Evidence', evidenceCtrl, maxLines: 2),
-                  const SizedBox(height: 12),
-                  _dialogField('Comments', commentsCtrl, maxLines: 3),
-                ],
+    try {
+      await showDialog(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setDialogState) => AlertDialog(
+            title: Text(
+                editIndex != null ? 'Edit Recognition' : 'New Recognition'),
+            content: SizedBox(
+              width: 500,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _dialogDropdown(
+                        'Award Category', categoryCtrl, _awardCategories),
+                    const SizedBox(height: 12),
+                    _dialogDropdown('Recognition Type', null, _recognitionTypes,
+                        value: type,
+                        onChanged: (v) => setDialogState(() => type = v!)),
+                    const SizedBox(height: 12),
+                    _dialogField('Recipient Name', recipientCtrl),
+                    const SizedBox(height: 12),
+                    _dialogField('Team', teamCtrl),
+                    const SizedBox(height: 12),
+                    _dialogField('Nominated By', nominatedByCtrl),
+                    const SizedBox(height: 12),
+                    _dialogField('Date', dateCtrl),
+                    const SizedBox(height: 12),
+                    _dialogField(
+                        'Linked Milestone/Deliverable', linkedMilestoneCtrl),
+                    const SizedBox(height: 12),
+                    _dialogDropdown('Status', null, _statuses,
+                        value: status,
+                        onChanged: (v) => setDialogState(() => status = v!)),
+                    const SizedBox(height: 12),
+                    _dialogField('Evidence', evidenceCtrl, maxLines: 2),
+                    const SizedBox(height: 12),
+                    _dialogField('Comments', commentsCtrl, maxLines: 3),
+                  ],
+                ),
               ),
             ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () {
+                  final recognition = _Recognition(
+                    category: categoryCtrl.text,
+                    type: type,
+                    recipient: recipientCtrl.text,
+                    team: teamCtrl.text,
+                    nominatedBy: nominatedByCtrl.text,
+                    date: dateCtrl.text,
+                    evidence: evidenceCtrl.text,
+                    comments: commentsCtrl.text,
+                    linkedMilestone: linkedMilestoneCtrl.text,
+                    status: status,
+                  );
+                  setState(() {
+                    if (editIndex != null) {
+                      _recognitions[editIndex] = recognition;
+                    } else {
+                      _recognitions.add(recognition);
+                    }
+                  });
+                  _saveData();
+                  Navigator.of(ctx).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF59E0B)),
+                child:
+                    const Text('Save', style: TextStyle(color: Colors.white)),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () {
-                final recognition = _Recognition(
-                  category: categoryCtrl.text,
-                  type: type,
-                  recipient: recipientCtrl.text,
-                  team: teamCtrl.text,
-                  nominatedBy: nominatedByCtrl.text,
-                  date: dateCtrl.text,
-                  evidence: evidenceCtrl.text,
-                  comments: commentsCtrl.text,
-                  linkedMilestone: linkedMilestoneCtrl.text,
-                  status: status,
-                );
-                setState(() {
-                  if (editIndex != null) {
-                    _recognitions[editIndex] = recognition;
-                  } else {
-                    _recognitions.add(recognition);
-                  }
-                });
-                _saveData();
-                Navigator.of(ctx).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF59E0B)),
-              child: const Text('Save',
-                  style: TextStyle(color: Colors.white)),
-            ),
-          ],
         ),
-      ),
-    );
+      );
+    } finally {
+      categoryCtrl.dispose();
+      recipientCtrl.dispose();
+      teamCtrl.dispose();
+      nominatedByCtrl.dispose();
+      dateCtrl.dispose();
+      evidenceCtrl.dispose();
+      commentsCtrl.dispose();
+      linkedMilestoneCtrl.dispose();
+    }
   }
 
   Widget _dialogField(String label, TextEditingController controller,
@@ -247,17 +267,19 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
       children: [
         Text(label,
             style: const TextStyle(
-                fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151))),
         const SizedBox(height: 4),
         TextField(
           controller: controller,
           maxLines: maxLines,
-          decoration: InputDecoration(
-            border: const OutlineInputBorder(
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
               borderSide: BorderSide(color: Color(0xFFD1D5DB)),
             ),
-            contentPadding: const EdgeInsets.all(10),
+            contentPadding: EdgeInsets.all(10),
           ),
           style: const TextStyle(fontSize: 13),
         ),
@@ -265,15 +287,17 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     );
   }
 
-  Widget _dialogDropdown(String label, TextEditingController? controller,
-      List<String> items,
+  Widget _dialogDropdown(
+      String label, TextEditingController? controller, List<String> items,
       {String? value, ValueChanged<String?>? onChanged}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
             style: const TextStyle(
-                fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151))),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
           value: value ?? (controller != null ? controller.text : null),
@@ -311,7 +335,8 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
             DraggableSidebar(
               openWidth: AppBreakpoints.sidebarWidth(context),
               child: const InitiationLikeSidebar(
-                  activeItemLabel: 'Project Team Activities - Recognition & Awards'),
+                  activeItemLabel:
+                      'Project Team Activities - Recognition & Awards'),
             ),
             Expanded(
               child: Stack(
@@ -369,12 +394,12 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFCD34D)),
+        border: Border.all(color: Color(0xFFFCD34D)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,7 +433,8 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
             'Recognize individuals and teams for outstanding contributions throughout the project lifecycle. '
             'Reinforces positive behaviors, improves engagement, and fosters a culture of accountability, '
             'collaboration, and continuous improvement.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF78350F), height: 1.6),
+            style:
+                TextStyle(fontSize: 13, color: Color(0xFF78350F), height: 1.6),
           ),
         ],
       ),
@@ -417,7 +443,8 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
 
   Widget _buildStatsRow() {
     final awarded = _recognitions.where((r) => r.status == 'Awarded').length;
-    final nominated = _recognitions.where((r) => r.status == 'Nominated').length;
+    final nominated =
+        _recognitions.where((r) => r.status == 'Nominated').length;
     final approved = _recognitions.where((r) => r.status == 'Approved').length;
 
     return LayoutBuilder(builder: (context, constraints) {
@@ -425,12 +452,12 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
       final stats = [
         _StatCard('Total Recognitions', '${_recognitions.length}',
             Icons.emoji_events, const Color(0xFFF59E0B)),
-        _StatCard('Awarded', '$awarded', Icons.verified,
-            const Color(0xFF10B981)),
+        _StatCard(
+            'Awarded', '$awarded', Icons.verified, const Color(0xFF10B981)),
         _StatCard('Approved', '$approved', Icons.check_circle,
             const Color(0xFF3B82F6)),
-        _StatCard('Nominated', '$nominated', Icons.star,
-            const Color(0xFF8B5CF6)),
+        _StatCard(
+            'Nominated', '$nominated', Icons.star, const Color(0xFF8B5CF6)),
       ];
       if (isWide) {
         return Row(
@@ -459,10 +486,10 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -480,8 +507,8 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
               return Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
                     colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -512,10 +539,10 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(48),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: Color(0xFFE5E7EB)),
         ),
         child: Column(
           children: [
@@ -544,14 +571,21 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF111827))),
         const SizedBox(height: 16),
-        ..._recognitions.asMap().entries.map((entry) {
-          final index = entry.key;
-          final r = entry.value;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildRecognitionCard(index, r),
-          );
-        }),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _recognitions.length,
+          itemBuilder: (context, index) {
+            final r = _recognitions[index];
+            return RepaintBoundary(
+              key: ValueKey('recognition_card_$index'),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _buildRecognitionCard(index, r),
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -588,8 +622,8 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
                     colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                   ),
                   borderRadius: BorderRadius.circular(12),
@@ -608,7 +642,8 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF111827))),
                     const SizedBox(height: 2),
-                    Text('${r.recipient}${r.team.isNotEmpty ? ' • ${r.team}' : ''}',
+                    Text(
+                        '${r.recipient}${r.team.isNotEmpty ? ' • ${r.team}' : ''}',
                         style: const TextStyle(
                             fontSize: 13, color: Color(0xFF6B7280))),
                   ],
@@ -633,8 +668,8 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFB),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF9FAFB),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(r.comments,
@@ -686,10 +721,10 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
@@ -714,8 +749,7 @@ class _StatCard extends StatelessWidget {
                         color: Color(0xFF111827))),
                 Text(label,
                     style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF6B7280))),
+                        fontSize: 11, color: Color(0xFF6B7280))),
               ],
             ),
           ),

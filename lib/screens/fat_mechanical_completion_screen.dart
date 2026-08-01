@@ -107,8 +107,7 @@ class _FatMechanicalCompletionScreenState
       debugPrint('FAT Mechanical Completion load error: $e');
       if (mounted) {
         setState(() {
-          _mechanicalCompletionItems
-              .addAll(_defaultMechanicalCompletion());
+          _mechanicalCompletionItems.addAll(_defaultMechanicalCompletion());
           _fatSatCommissioningItems.addAll(_defaultFatSat());
           _finalTurnoverItems.addAll(_defaultFinalTurnover());
           _isLoading = false;
@@ -144,18 +143,23 @@ class _FatMechanicalCompletionScreenState
   // ── Default seed rows ────────────────────────────────────────────
 
   List<_CompletionItem> _defaultMechanicalCompletion() => const [
-        _CompletionItem(label: 'Mechanical Completion Packages', status: 'Pending'),
+        _CompletionItem(
+            label: 'Mechanical Completion Packages', status: 'Pending'),
         _CompletionItem(label: 'Turnover Packages', status: 'Pending'),
         _CompletionItem(label: 'Equipment Status', status: 'Pending'),
         _CompletionItem(label: 'System Completion', status: 'Pending'),
         _CompletionItem(label: 'Construction Walkdowns', status: 'Pending'),
-        _CompletionItem(label: 'Construction Work Package References', status: 'Pending'),
-        _CompletionItem(label: 'Execution Work Package References', status: 'Pending'),
+        _CompletionItem(
+            label: 'Construction Work Package References', status: 'Pending'),
+        _CompletionItem(
+            label: 'Execution Work Package References', status: 'Pending'),
       ];
 
   List<_CompletionItem> _defaultFatSat() => const [
-        _CompletionItem(label: 'Factory Acceptance Tests (FAT)', status: 'Pending'),
-        _CompletionItem(label: 'Site Acceptance Tests (SAT)', status: 'Pending'),
+        _CompletionItem(
+            label: 'Factory Acceptance Tests (FAT)', status: 'Pending'),
+        _CompletionItem(
+            label: 'Site Acceptance Tests (SAT)', status: 'Pending'),
         _CompletionItem(label: 'Commissioning Activities', status: 'Pending'),
         _CompletionItem(label: 'Functional Testing', status: 'Pending'),
         _CompletionItem(label: 'Integrated System Testing', status: 'Pending'),
@@ -212,7 +216,8 @@ class _FatMechanicalCompletionScreenState
               onStatusChanged: (index, status) {
                 setState(() {
                   _mechanicalCompletionItems[index] =
-                      _mechanicalCompletionItems[index].copyWith(status: status);
+                      _mechanicalCompletionItems[index]
+                          .copyWith(status: status);
                 });
                 _scheduleSave();
               },
@@ -384,10 +389,10 @@ class _FatMechanicalCompletionScreenState
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
+      decoration: const BoxDecoration(
+        color: Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFCD34D)),
+        border: Border.all(color: Color(0xFFFCD34D)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,7 +415,8 @@ class _FatMechanicalCompletionScreenState
           Text(
             'This section supports the complete turnover from construction to operational ownership. '
             'It tracks mechanical completion, FAT/SAT commissioning, and final turnover to formally hand over the asset to operations.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF78350F), height: 1.5),
+            style:
+                TextStyle(fontSize: 13, color: Color(0xFF78350F), height: 1.5),
           ),
         ],
       ),
@@ -428,11 +434,11 @@ class _FatMechanicalCompletionScreenState
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: const BorderRadius.circular(16),
+        border: const Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -452,7 +458,8 @@ class _FatMechanicalCompletionScreenState
           const SizedBox(height: 6),
           Text(
             description,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+            style: const TextStyle(
+                fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
           ),
           const SizedBox(height: 14),
           ...items.asMap().entries.map((entry) {
@@ -466,7 +473,8 @@ class _FatMechanicalCompletionScreenState
                     flex: 3,
                     child: Text(
                       item.label,
-                      style: const TextStyle(fontSize: 13, color: Color(0xFF1F2937)),
+                      style: const TextStyle(
+                          fontSize: 13, color: Color(0xFF1F2937)),
                     ),
                   ),
                   Expanded(
@@ -504,16 +512,17 @@ class _StatusDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isExpanded: true,
-          icon: const Icon(Icons.expand_more, size: 18, color: Color(0xFF6B7280)),
+          icon:
+              const Icon(Icons.expand_more, size: 18, color: Color(0xFF6B7280)),
           style: const TextStyle(fontSize: 12, color: Color(0xFF1F2937)),
           items: _statuses
               .map((s) => DropdownMenuItem(value: s, child: Text(s)))

@@ -78,7 +78,8 @@ class EvmSnapshot {
     }
 
     return EvmSnapshot(
-      id: json['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id']?.toString() ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       snapshotDate: parseDate(json['snapshotDate']) ?? DateTime.now(),
       projectId: json['projectId']?.toString() ?? '',
       budgetAtCompletion: toDouble(json['budgetAtCompletion']),
@@ -98,4 +99,11 @@ class EvmSnapshot {
       source: json['source']?.toString() ?? 'manual',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is EvmSnapshot && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

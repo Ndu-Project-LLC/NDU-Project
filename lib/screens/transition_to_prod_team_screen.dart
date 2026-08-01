@@ -60,6 +60,12 @@ class _TransitionToProdTeamScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
 
   @override
@@ -902,8 +908,8 @@ class _TransitionToProdTeamScreenState
           margin: const pw.EdgeInsets.all(32),
           build: (_) => [
             pw.Text('Transition to Production Team',
-                style:
-                    pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                style: const pw.TextStyle(
+                    fontSize: 20, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 4),
             pw.Text(
                 '$projectName — Generated ${now.toLocal().toIso8601String()}',
@@ -922,8 +928,8 @@ class _TransitionToProdTeamScreenState
                 data: _teamRoster
                     .map((m) => [m.name, m.role, m.contact, m.releaseStatus])
                     .toList(),
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
@@ -942,8 +948,8 @@ class _TransitionToProdTeamScreenState
                 data: _handoverChecklist
                     .map((h) => [h.category, h.item, h.owner, h.status])
                     .toList(),
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
@@ -963,8 +969,8 @@ class _TransitionToProdTeamScreenState
                     .map((k) =>
                         [k.topic, k.fromPerson, k.toPerson, k.method, k.status])
                     .toList(),
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
@@ -983,8 +989,8 @@ class _TransitionToProdTeamScreenState
                 data: _signOffs
                     .map((s) => [s.stakeholder, s.role, s.status])
                     .toList(),
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 cellStyle: const pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
@@ -1009,14 +1015,16 @@ class _TransitionToProdTeamScreenState
 
   pw.Widget _pdfSectionTitle(String title) {
     return pw.Text(title,
-        style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold));
+        style:
+            const pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold));
   }
 
   pw.Widget _pdfHeaderCell(String text) {
     return pw.Padding(
         padding: const pw.EdgeInsets.all(6),
         child: pw.Text(text,
-            style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)));
+            style: const pw.TextStyle(
+                fontSize: 9, fontWeight: pw.FontWeight.bold)));
   }
 
   pw.Widget _pdfCell(String text) {

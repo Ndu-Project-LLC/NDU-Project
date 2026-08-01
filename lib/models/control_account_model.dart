@@ -19,6 +19,7 @@ class ControlAccount {
 
   /// P1.5: Per-period earned value breakdown for S-curve generation.
   Map<String, double> earnedValueByPeriod;
+
   /// P1.5: Per-period actual cost breakdown for S-curve generation.
   Map<String, double> actualCostByPeriod;
 
@@ -29,14 +30,19 @@ class ControlAccount {
   double eac;
   double etc;
   double vac;
+
   /// Cost Variance (CV = EV - AC).
   double cv;
+
   /// Schedule Variance (SV = EV - PV).
   double sv;
+
   /// TCPI based on BAC (to-complete performance index).
   double tcpii;
+
   /// TCPI based on EAC.
   double tcpis;
+
   /// Risk adjustment factor (0-1) for risk-adjusted EAC.
   double riskAdjustment;
 
@@ -123,14 +129,15 @@ class ControlAccount {
       responsiblePerson: responsiblePerson ?? this.responsiblePerson,
       status: status ?? this.status,
       cbsId: cbsId ?? this.cbsId,
-      affectedChangeRequestIds: affectedChangeRequestIds ?? List<String>.from(this.affectedChangeRequestIds),
+      affectedChangeRequestIds: affectedChangeRequestIds ??
+          List<String>.from(this.affectedChangeRequestIds),
       budgetAtCompletion: budgetAtCompletion ?? this.budgetAtCompletion,
-      plannedValueByPeriod:
-          plannedValueByPeriod ?? Map<String, double>.from(this.plannedValueByPeriod),
-      earnedValueByPeriod:
-          earnedValueByPeriod ?? Map<String, double>.from(this.earnedValueByPeriod),
-      actualCostByPeriod:
-          actualCostByPeriod ?? Map<String, double>.from(this.actualCostByPeriod),
+      plannedValueByPeriod: plannedValueByPeriod ??
+          Map<String, double>.from(this.plannedValueByPeriod),
+      earnedValueByPeriod: earnedValueByPeriod ??
+          Map<String, double>.from(this.earnedValueByPeriod),
+      actualCostByPeriod: actualCostByPeriod ??
+          Map<String, double>.from(this.actualCostByPeriod),
       earnedValue: earnedValue ?? this.earnedValue,
       actualCost: actualCost ?? this.actualCost,
       cpi: cpi ?? this.cpi,
@@ -161,12 +168,11 @@ class ControlAccount {
         'cbsId': cbsId,
         'affectedChangeRequestIds': affectedChangeRequestIds,
         'budgetAtCompletion': budgetAtCompletion,
-        'plannedValueByPeriod': plannedValueByPeriod
-            .map((k, v) => MapEntry(k, v)),
-        'earnedValueByPeriod': earnedValueByPeriod
-            .map((k, v) => MapEntry(k, v)),
-        'actualCostByPeriod': actualCostByPeriod
-            .map((k, v) => MapEntry(k, v)),
+        'plannedValueByPeriod':
+            plannedValueByPeriod.map((k, v) => MapEntry(k, v)),
+        'earnedValueByPeriod':
+            earnedValueByPeriod.map((k, v) => MapEntry(k, v)),
+        'actualCostByPeriod': actualCostByPeriod.map((k, v) => MapEntry(k, v)),
         'earnedValue': earnedValue,
         'actualCost': actualCost,
         'cpi': cpi,
@@ -210,7 +216,8 @@ class ControlAccount {
         (v is num) ? v.toDouble() : double.tryParse(v?.toString() ?? '') ?? 0;
 
     return ControlAccount(
-      id: json['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id']?.toString() ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       wbsId: json['wbsId']?.toString() ?? '',
       obsId: json['obsId']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
@@ -244,4 +251,11 @@ class ControlAccount {
       baselineVersionId: json['baselineVersionId']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ControlAccount && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

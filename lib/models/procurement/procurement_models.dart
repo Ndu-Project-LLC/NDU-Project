@@ -222,9 +222,8 @@ class ProcurementItemModel {
         'currencyCode': currencyCode,
         'linkedWbsId': linkedWbsId,
         'linkedMilestoneId': linkedMilestoneId,
-        'requiredByDate': requiredByDate != null
-            ? Timestamp.fromDate(requiredByDate!)
-            : null,
+        'requiredByDate':
+            requiredByDate != null ? Timestamp.fromDate(requiredByDate!) : null,
         'vendorWeighting': vendorWeighting?.toMap(),
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -283,6 +282,14 @@ class ProcurementItemModel {
       updatedAt: guaranteedDate(data['updatedAt']),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProcurementItemModel && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Vendor weighting configuration for per-item comparison
@@ -342,8 +349,8 @@ class VendorWeighting {
   }
 
   bool get isValid =>
-      (priceWeight + qualityWeight + deliveryWeight + serviceWeight)
-          .abs() <= 1.01;
+      (priceWeight + qualityWeight + deliveryWeight + serviceWeight).abs() <=
+      1.01;
 }
 
 /// Status of a contract
@@ -450,6 +457,13 @@ class ContractModel {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ContractModel && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Procurement Strategy Model
@@ -503,6 +517,14 @@ class ProcurementStrategyModel {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProcurementStrategyModel && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Request for Quote (RFQ) Model
@@ -570,6 +592,13 @@ class RfqModel {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is RfqModel && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Purchase Order (PO) Model
@@ -593,7 +622,8 @@ class PurchaseOrderModel {
   final String? approverId;
   final String? approverName;
   final DateTime? approvalDate;
-  final String approvalStatus; // 'draft', 'pending', 'approved', 'rejected', 'escalated'
+  final String
+      approvalStatus; // 'draft', 'pending', 'approved', 'rejected', 'escalated'
   final String? rejectionReason;
   final String? approverComments;
   final int escalationDays; // Configurable per PO
@@ -689,9 +719,8 @@ class PurchaseOrderModel {
         'currencyCode': currencyCode,
         'approverId': approverId,
         'approverName': approverName,
-        'approvalDate': approvalDate != null
-            ? Timestamp.fromDate(approvalDate!)
-            : null,
+        'approvalDate':
+            approvalDate != null ? Timestamp.fromDate(approvalDate!) : null,
         'approvalStatus': approvalStatus,
         'rejectionReason': rejectionReason,
         'approverComments': approverComments,
@@ -807,6 +836,13 @@ class PurchaseOrderModel {
       escalationTargetId: parseString(data['escalationTargetId']),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is PurchaseOrderModel && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Extensions for PurchaseOrderModel approval workflow
@@ -815,8 +851,7 @@ extension PurchaseOrderApprovalExtension on PurchaseOrderModel {
   bool get isPendingApproval =>
       approvalStatus == 'pending' &&
       approvalDate != null &&
-      DateTime.now().isAfter(
-          approvalDate!.add(Duration(days: escalationDays)));
+      DateTime.now().isAfter(approvalDate!.add(Duration(days: escalationDays)));
 
   /// Check if PO has been escalated
   bool get isEscalated => approvalStatus == 'escalated';
@@ -898,7 +933,8 @@ extension ProcurementItemBudgetExtension on ProcurementItemModel {
   bool get isApproachingDeadline {
     if (requiredByDate == null) return false;
     final daysUntil = requiredByDate!.difference(DateTime.now()).inDays;
-    return daysUntil >= 0 && daysUntil <= 7 &&
+    return daysUntil >= 0 &&
+        daysUntil <= 7 &&
         status != ProcurementItemStatus.delivered;
   }
 

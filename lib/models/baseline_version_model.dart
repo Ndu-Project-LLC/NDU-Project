@@ -19,34 +19,47 @@ class BaselineVersion {
   // ── P2.1: Full EVM snapshot data for baseline comparison ──
   /// Planned Value at snapshot time.
   final double plannedValue;
+
   /// Earned Value at snapshot time.
   final double earnedValue;
+
   /// Actual Cost at snapshot time.
   final double actualCost;
+
   /// CPI at snapshot time.
   final double cpi;
+
   /// SPI at snapshot time.
   final double spi;
+
   /// EAC at snapshot time.
   final double eac;
+
   /// ETC at snapshot time.
   final double etc;
+
   /// VAC at snapshot time.
   final double vac;
+
   /// CV at snapshot time.
   final double cv;
+
   /// SV at snapshot time.
   final double sv;
+
   /// TCPI at snapshot time.
   final double tcpii;
 
   // ── P2.1: Scope tracking at snapshot time ──
   /// Total scope items at snapshot.
   final int totalScopeItems;
+
   /// Scope items marked as baseline at snapshot.
   final int baselineScopeItems;
+
   /// Scope creep items (added after baseline) at snapshot.
   final int scopeCreepItems;
+
   /// Scope growth percentage at snapshot.
   final double scopeGrowthPercent;
 
@@ -170,8 +183,7 @@ class BaselineVersion {
       author: author,
       approvedBy: approvedBy ?? this.approvedBy,
       createdAt: createdAt,
-      scheduleVarianceDays:
-          scheduleVarianceDays ?? this.scheduleVarianceDays,
+      scheduleVarianceDays: scheduleVarianceDays ?? this.scheduleVarianceDays,
       costVariance: costVariance ?? this.costVariance,
       budgetAtCompletion: budgetAtCompletion ?? this.budgetAtCompletion,
       totalActivities: totalActivities ?? this.totalActivities,
@@ -200,8 +212,7 @@ class BaselineVersion {
       obsSnapshots: obsSnapshots ?? this.obsSnapshots,
       scheduleActivitySnapshots:
           scheduleActivitySnapshots ?? this.scheduleActivitySnapshots,
-      workPackageSnapshots:
-          workPackageSnapshots ?? this.workPackageSnapshots,
+      workPackageSnapshots: workPackageSnapshots ?? this.workPackageSnapshots,
       isCurrent: isCurrent ?? this.isCurrent,
     );
   }
@@ -310,4 +321,11 @@ class BaselineVersion {
       isCurrent: json['isCurrent'] == true,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is BaselineVersion && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

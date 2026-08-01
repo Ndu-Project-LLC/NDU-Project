@@ -128,8 +128,6 @@ class LaunchDataTable extends StatefulWidget {
   /// Callback when CSV rows are imported. Supports synchronous and async saves.
   final FutureOr<void> Function(List<Map<String, String>>)? onCsvImport;
 
-
-
   @override
   State<LaunchDataTable> createState() => _LaunchDataTableState();
 }
@@ -175,7 +173,9 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
         ],
       ),
     );
-  }  Widget _buildCardHeader(BuildContext context) {
+  }
+
+  Widget _buildCardHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
       child: Column(
@@ -222,7 +222,8 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                   children: [
                     const Padding(
                       padding: EdgeInsets.only(left: 12),
-                      child: Icon(Icons.search, size: 20, color: Color(0xFF9CA3AF)),
+                      child: Icon(Icons.search,
+                          size: 20, color: Color(0xFF9CA3AF)),
                     ),
                     Expanded(
                       child: TextField(
@@ -247,7 +248,8 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                     ),
                     const Padding(
                       padding: EdgeInsets.only(right: 12),
-                      child: Icon(Icons.mic, size: 20, color: Color(0xFFF59E0B)),
+                      child:
+                          Icon(Icons.mic, size: 20, color: Color(0xFFF59E0B)),
                     ),
                   ],
                 ),
@@ -258,7 +260,8 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
             OutlinedButton(
               onPressed: widget.onFilter,
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -279,7 +282,8 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
             ElevatedButton(
               onPressed: () => _showAddDialog(context),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 backgroundColor: const Color(0xFFF59E0B),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -374,8 +378,7 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
   void _downloadTemplate(BuildContext context) {
     if (widget.csvColumns == null || widget.csvColumns!.isEmpty) return;
 
-    final template =
-        CsvImportHelper.generateTemplate(widget.csvColumns!);
+    final template = CsvImportHelper.generateTemplate(widget.csvColumns!);
     final filename = CsvImportHelper.templateFilename(widget.title);
     final bytes = utf8.encode(template);
     dl.downloadFile(bytes, filename, mimeType: 'text/csv');
@@ -432,12 +435,18 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
   Widget _buildRows(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final rows = List.generate(widget.rowCount, (i) => widget.cellBuilder(context, i));
+        // Build rows once for column measurement. Each row is then wrapped in
+        // a RepaintBoundary so that typing/editing in one cell only repaints
+        // that single row instead of the whole table.
+        final rows = List.generate(
+            widget.rowCount, (i) => widget.cellBuilder(context, i));
         final effectiveColumns = _resolveColumns(rows);
         final hasRowActions = rows.any(
           (row) =>
               row is LaunchDataRow &&
-              (row.onDelete != null || row.onEdit != null || row.onKazAi != null),
+              (row.onDelete != null ||
+                  row.onEdit != null ||
+                  row.onKazAi != null),
         );
         final minTableWidth = _minTableWidth(effectiveColumns, hasRowActions);
         final tableWidth = constraints.maxWidth > minTableWidth
@@ -455,12 +464,27 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
               children: [
                 _buildColumnHeaders(
                     tableWidth, effectiveColumns, hasRowActions),
-                for (int i = 0; i < rows.length; i++) ...[
-                  rows[i],
-                  if (i < rows.length - 1)
-                    const Divider(
-                        height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
-                ],
+                // Use a lazily-built list body so large tables don't lay out
+                // every row up front; only visible rows are mounted.
+                if (rows.isEmpty)
+                  _buildEmpty()
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: rows.length * 2 - 1,
+                    itemBuilder: (context, idx) {
+                      if (idx.isOdd) {
+                        return const Divider(
+                            height: 1, thickness: 1, color: Color(0xFFF1F5F9));
+                      }
+                      final rowIdx = idx ~/ 2;
+                      return RepaintBoundary(
+                        key: ValueKey('launch_row_$rowIdx'),
+                        child: rows[rowIdx],
+                      );
+                    },
+                  ),
               ],
             ),
           ),
@@ -612,7 +636,9 @@ class _LaunchDataRowState extends State<LaunchDataRow> {
   Widget build(BuildContext context) {
     final tableLayout = _TableLayoutInherited.of(context);
     final columns = tableLayout?.columns;
-    final hasActions = widget.onDelete != null || widget.onEdit != null || widget.onKazAi != null;
+    final hasActions = widget.onDelete != null ||
+        widget.onEdit != null ||
+        widget.onKazAi != null;
     return MouseRegion(
       onEnter: (_) => Future.microtask(() {
         if (mounted) setState(() => _hovering = true);
@@ -673,7 +699,8 @@ class _LaunchDataRowState extends State<LaunchDataRow> {
                               ),
                             ),
                           if (widget.onKazAi != null &&
-                              (widget.onEdit != null || widget.onDelete != null))
+                              (widget.onEdit != null ||
+                                  widget.onDelete != null))
                             const SizedBox(width: 2),
                           if (widget.onEdit != null)
                             Tooltip(
@@ -807,7 +834,7 @@ class _LaunchEditableCellState extends State<LaunchEditableCell> {
     if (!isEditing) {
       return Align(
         alignment: Alignment.center,
-        child:        Text(
+        child: Text(
           widget.value.isEmpty ? '—' : widget.value,
           softWrap: true,
           style: TextStyle(
@@ -1320,7 +1347,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
         child: LaunchModalShell(
           icon: Icons.add_rounded,
           title: 'Add to ${widget.title}',
-          subtitle: 'Fill in the fields below to add a new entry to this table.',
+          subtitle:
+              'Fill in the fields below to add a new entry to this table.',
           body: AnimatedBuilder(
             animation: _fadeIn,
             builder: (context, child) {
@@ -1364,7 +1392,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
         AnimatedBuilder(
           animation: _fadeIn,
           builder: (context, child) {
-            final progress = (_fadeIn.value * 1000 - delay).clamp(0.0, 1.0) / 1.0;
+            final progress =
+                (_fadeIn.value * 1000 - delay).clamp(0.0, 1.0) / 1.0;
             final slide = Curves.easeOut.transform(progress.clamp(0.0, 1.0));
             return Opacity(
               opacity: progress.clamp(0.0, 1.0),
@@ -1401,7 +1430,9 @@ class _AddItemDialogState extends State<_AddItemDialog>
               const SizedBox(width: 4),
               const Text('*',
                   style: TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFEF4444))),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFEF4444))),
             ],
           ],
         ),
@@ -1453,8 +1484,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
                       ? null
                       : () => _generateFieldWithAi(col.label),
                   padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(
-                      minWidth: 28, minHeight: 28),
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
                 ),
                 // Clear-all button — deletes all content
                 if ((_controllers[col.label]?.text ?? '').isNotEmpty)
@@ -1467,8 +1498,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
                       setState(() {});
                     },
                     padding: const EdgeInsets.all(4),
-                    constraints: const BoxConstraints(
-                        minWidth: 28, minHeight: 28),
+                    constraints:
+                        const BoxConstraints(minWidth: 28, minHeight: 28),
                   ),
               ],
             ),
@@ -1613,9 +1644,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
             : const Icon(Icons.check_rounded, size: 16),
         label: Text(_showSuccess ? 'Added!' : 'Add Item'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: _showSuccess
-              ? const Color(0xFF10B981)
-              : const Color(0xFFFFC107),
+          backgroundColor:
+              _showSuccess ? const Color(0xFF10B981) : const Color(0xFFFFC107),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

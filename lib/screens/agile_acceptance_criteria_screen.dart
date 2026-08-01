@@ -60,7 +60,9 @@ class _AgileAcceptanceCriteriaScreenState
 
   List<AcceptanceCriteriaTemplate> get _templates => _config.templates;
   List<AcceptanceCriteriaTemplate> get _filteredTemplates {
-    return _templates.where((t) => t.workItemType == _selectedWorkItemType).toList();
+    return _templates
+        .where((t) => t.workItemType == _selectedWorkItemType)
+        .toList();
   }
 
   AcceptanceCriteriaTemplate? get _selectedTemplate {
@@ -136,7 +138,8 @@ class _AgileAcceptanceCriteriaScreenState
 
   void _scheduleAutoSave() {
     _autoSaveDebounce?.cancel();
-    _autoSaveDebounce = Timer(const Duration(milliseconds: 500), () => _performSave());
+    _autoSaveDebounce =
+        Timer(const Duration(milliseconds: 500), () => _performSave());
   }
 
   Future<void> _performSave() async {
@@ -192,7 +195,8 @@ class _AgileAcceptanceCriteriaScreenState
     setState(() {
       _config.templates.removeAt(idx);
       if (_templates.isNotEmpty) {
-        final next = idx < _templates.length ? _templates[idx] : _templates.last;
+        final next =
+            idx < _templates.length ? _templates[idx] : _templates.last;
         _selectedTemplate = next;
       } else {
         _selectedTemplate = null;
@@ -379,26 +383,22 @@ class _AgileAcceptanceCriteriaScreenState
                     ),
                   ),
                   SingleChildScrollView(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: hp, vertical: 32),
+                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         PlanningPhaseHeader(
                           title: 'Acceptance Criteria Planning',
-                          onBack: () =>
-                              PlanningPhaseNavigation.goToPrevious(
-                                  context, 'agile_acceptance_criteria'),
-                          onForward: () =>
-                              PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_acceptance_criteria'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'agile_acceptance_criteria'),
+                          onForward: () => PlanningPhaseNavigation.goToNext(
+                              context, 'agile_acceptance_criteria'),
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 32),
                         Text(
                           'Define acceptance criteria templates, configure criteria per work item type, and score readiness for execution.',
-                          style:
-                              TextStyle(fontSize: 15, color: _kMuted),
+                          style: const TextStyle(fontSize: 15, color: _kMuted),
                         ),
                         const SizedBox(height: 24),
                         if (_isLoading)
@@ -416,7 +416,7 @@ class _AgileAcceptanceCriteriaScreenState
                                           strokeWidth: 2)),
                                   const SizedBox(width: 8),
                                   Text('Saving...',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           fontSize: 12, color: _kMuted)),
                                 ],
                               ),
@@ -441,12 +441,10 @@ class _AgileAcceptanceCriteriaScreenState
                               'agile_acceptance_criteria'),
                           nextLabel: PlanningPhaseNavigation.nextLabel(
                               'agile_acceptance_criteria'),
-                          onBack: () =>
-                              PlanningPhaseNavigation.goToPrevious(
-                                  context, 'agile_acceptance_criteria'),
-                          onNext: () =>
-                              PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_acceptance_criteria'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'agile_acceptance_criteria'),
+                          onNext: () => PlanningPhaseNavigation.goToNext(
+                              context, 'agile_acceptance_criteria'),
                         ),
                         const SizedBox(height: 40),
                       ],
@@ -472,9 +470,7 @@ class _AgileAcceptanceCriteriaScreenState
       children: [
         const Text('Work Item Type',
             style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: _kHeadline)),
+                fontSize: 13, fontWeight: FontWeight.w600, color: _kHeadline)),
         const SizedBox(height: 8),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -506,7 +502,7 @@ class _AgileAcceptanceCriteriaScreenState
   Widget _buildTemplateList() {
     final filtered = _filteredTemplates;
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -529,16 +525,15 @@ class _AgileAcceptanceCriteriaScreenState
                       ? const SizedBox(
                           width: 14,
                           height: 14,
-                          child:
-                              CircularProgressIndicator(strokeWidth: 2))
+                          child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.auto_awesome, size: 14),
                   label: Text(_isGenerating ? '...' : 'AI',
                       style: const TextStyle(fontSize: 11)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: _kAccent,
                     side: const BorderSide(color: _kAccent),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -547,8 +542,8 @@ class _AgileAcceptanceCriteriaScreenState
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('Add', style: TextStyle(fontSize: 12)),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -565,7 +560,12 @@ class _AgileAcceptanceCriteriaScreenState
               ),
             )
           else
-            ...filtered.map((t) => _buildTemplateTile(t)),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: filtered.length,
+              itemBuilder: (context, i) => _buildTemplateTile(filtered[i]),
+            ),
         ],
       ),
     );
@@ -580,9 +580,8 @@ class _AgileAcceptanceCriteriaScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: selected
-              ? _kAccent.withOpacity(0.06)
-              : Colors.transparent,
+          color:
+              selected ? _kAccent.withValues(alpha: 0.06) : Colors.transparent,
           border: Border(
             top: BorderSide(color: _kBorder, width: 0.5),
             left: BorderSide(
@@ -608,8 +607,7 @@ class _AgileAcceptanceCriteriaScreenState
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(t.description,
-                          style: const TextStyle(
-                              fontSize: 11, color: _kMuted),
+                          style: const TextStyle(fontSize: 11, color: _kMuted),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                     ),
@@ -620,8 +618,7 @@ class _AgileAcceptanceCriteriaScreenState
             AcConfidenceScore(template: t, compact: true),
             const SizedBox(width: 8),
             Text('${t.criteria.length}',
-                style: const TextStyle(
-                    fontSize: 11, color: _kMuted)),
+                style: const TextStyle(fontSize: 11, color: _kMuted)),
           ],
         ),
       ),
@@ -633,7 +630,7 @@ class _AgileAcceptanceCriteriaScreenState
     if (t == null) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -653,8 +650,7 @@ class _AgileAcceptanceCriteriaScreenState
                     size: 18, color: Colors.red),
                 onPressed: _deleteTemplate,
                 tooltip: 'Delete template',
-                constraints: const BoxConstraints(
-                    minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 padding: EdgeInsets.zero,
               ),
             ],
@@ -686,19 +682,15 @@ class _AgileAcceptanceCriteriaScreenState
           Row(
             children: [
               OutlinedButton.icon(
-                onPressed: _isGenerating
-                    ? null
-                    : _generateAcFromContext,
+                onPressed: _isGenerating ? null : _generateAcFromContext,
                 icon: _isGenerating
                     ? const SizedBox(
                         width: 14,
                         height: 14,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2))
+                        child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.auto_awesome, size: 16),
-                label: Text(_isGenerating
-                    ? 'Generating...'
-                    : 'AI Generate Criteria'),
+                label: Text(
+                    _isGenerating ? 'Generating...' : 'AI Generate Criteria'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _kAccent,
                   side: const BorderSide(color: _kAccent),
@@ -722,9 +714,7 @@ class _AgileAcceptanceCriteriaScreenState
       children: [
         const Text('Format: ',
             style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: _kHeadline)),
+                fontSize: 13, fontWeight: FontWeight.w600, color: _kHeadline)),
         const SizedBox(width: 8),
         ...AcFormat.values.map((fmt) {
           final selected = fmt == _selectedFormat;
@@ -753,7 +743,7 @@ class _AgileAcceptanceCriteriaScreenState
     if (t == null) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -769,8 +759,7 @@ class _AgileAcceptanceCriteriaScreenState
                       color: _kHeadline)),
               const SizedBox(width: 8),
               Text('${t.criteria.length} items',
-                  style: const TextStyle(
-                      fontSize: 12, color: _kMuted)),
+                  style: const TextStyle(fontSize: 12, color: _kMuted)),
             ],
           ),
           const SizedBox(height: 12),
@@ -783,8 +772,12 @@ class _AgileAcceptanceCriteriaScreenState
               ),
             )
           else
-            ...t.criteria.asMap().entries.map(
-                (e) => _buildCriterionRow(e.key, e.value)),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: t.criteria.length,
+              itemBuilder: (context, i) => _buildCriterionRow(i, t.criteria[i]),
+            ),
         ],
       ),
     );
@@ -795,8 +788,8 @@ class _AgileAcceptanceCriteriaScreenState
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
+        decoration: const BoxDecoration(
+          color: Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: _kBorder),
         ),
@@ -813,8 +806,8 @@ class _AgileAcceptanceCriteriaScreenState
                       hintText: 'Category',
                       border: OutlineInputBorder(),
                       isDense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     ),
                     items: CriterionCategory.values
                         .map((cat) => DropdownMenuItem(
@@ -842,11 +835,9 @@ class _AgileAcceptanceCriteriaScreenState
                           setState(() => c.isRequired = v ?? true);
                           _scheduleAutoSave();
                         },
-                        materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      const Text('Req',
-                          style: TextStyle(fontSize: 11)),
+                      const Text('Req', style: TextStyle(fontSize: 11)),
                     ],
                   ),
                 ),
@@ -855,8 +846,8 @@ class _AgileAcceptanceCriteriaScreenState
                   icon: const Icon(Icons.delete_outline,
                       size: 16, color: Colors.red),
                   onPressed: () => _deleteCriterion(index),
-                  constraints: const BoxConstraints(
-                      minWidth: 28, minHeight: 28),
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
                   padding: EdgeInsets.zero,
                 ),
               ],
@@ -868,8 +859,8 @@ class _AgileAcceptanceCriteriaScreenState
                 hintText: 'Describe the acceptance criterion...',
                 border: const OutlineInputBorder(),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 suffixIcon: c.description.isNotEmpty
                     ? IconButton(
                         tooltip: 'Clear',
@@ -881,8 +872,8 @@ class _AgileAcceptanceCriteriaScreenState
                           setState(() {});
                         },
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                            minWidth: 28, minHeight: 28),
+                        constraints:
+                            const BoxConstraints(minWidth: 28, minHeight: 28),
                       )
                     : null,
               ),
@@ -912,7 +903,8 @@ class _AgileAcceptanceCriteriaScreenState
           {'Project Name': projectData.projectName ?? 'N/A'},
           {'Solution Title': projectData.solutionTitle ?? 'N/A'},
         ]),
-        PdfSection.text('Notes',
+        PdfSection.text(
+            'Notes',
             projectData.planningNotes[
                     'planning_agile_acceptance_criteria_notes'] ??
                 'No data recorded.'),

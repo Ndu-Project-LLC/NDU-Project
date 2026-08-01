@@ -288,9 +288,21 @@ class FullImpactAssessment {
   });
 
   List<ImpactDimension> get all => [
-        scope, schedule, cost, resources, procurement, contracts,
-        risks, quality, safety, stakeholders, funding, benefits,
-        dependencies, interfaces, technical,
+        scope,
+        schedule,
+        cost,
+        resources,
+        procurement,
+        contracts,
+        risks,
+        quality,
+        safety,
+        stakeholders,
+        funding,
+        benefits,
+        dependencies,
+        interfaces,
+        technical,
       ];
 
   double get totalScheduleImpact =>
@@ -301,8 +313,7 @@ class FullImpactAssessment {
 
   int get impactedCount => all.where((d) => d.hasImpact).length;
 
-  bool get requiresRebaseline =>
-      totalCostImpact > 0 || totalScheduleImpact > 0;
+  bool get requiresRebaseline => totalCostImpact > 0 || totalScheduleImpact > 0;
 
   /// Weighted-average composite impact score across all 15 dimensions.
   /// Scope / Schedule / Cost carry weight 2.0 (primary constraints);
@@ -311,9 +322,7 @@ class FullImpactAssessment {
     double weightedSum = 0;
     double weightSum = 0;
     for (final d in all) {
-      final w = (d.name == 'Scope' ||
-              d.name == 'Schedule' ||
-              d.name == 'Cost')
+      final w = (d.name == 'Scope' || d.name == 'Schedule' || d.name == 'Cost')
           ? 2.0
           : 1.0;
       weightedSum += d.impactLevel * w;
@@ -490,6 +499,13 @@ class CMApprovalStep {
       delegatedFrom: delegatedFrom ?? this.delegatedFrom,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is CMApprovalStep && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // ─── Implementation Status ────────────────────────────────────────────────
@@ -557,6 +573,13 @@ class ImplementationTask {
       notes: notes ?? this.notes,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ImplementationTask && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // ─── Full Change Request ─────────────────────────────────────────────────
@@ -691,13 +714,15 @@ class CMChangeRequest {
       submittedBy: submittedBy ?? this.submittedBy,
       dateSubmitted: dateSubmitted ?? this.dateSubmitted,
       requestedCompletion: requestedCompletion ?? this.requestedCompletion,
-      businessJustification: businessJustification ?? this.businessJustification,
+      businessJustification:
+          businessJustification ?? this.businessJustification,
       rootCause: rootCause ?? this.rootCause,
       impact: impact ?? this.impact,
       approvalSteps: approvalSteps ?? this.approvalSteps,
       currentStepIndex: currentStepIndex ?? this.currentStepIndex,
       isEmergency: isEmergency ?? this.isEmergency,
-      isAgileRoutineRefinement: isAgileRoutineRefinement ?? this.isAgileRoutineRefinement,
+      isAgileRoutineRefinement:
+          isAgileRoutineRefinement ?? this.isAgileRoutineRefinement,
       affectedRegisters: affectedRegisters ?? this.affectedRegisters,
       affectedBaselines: affectedBaselines ?? this.affectedBaselines,
       contingencyUsed: contingencyUsed ?? this.contingencyUsed,
@@ -708,18 +733,28 @@ class CMChangeRequest {
       closedAt: closedAt ?? this.closedAt,
       implementationNotes: implementationNotes ?? this.implementationNotes,
       closureNotes: closureNotes ?? this.closureNotes,
-      alternativesConsidered: alternativesConsidered ?? this.alternativesConsidered,
+      alternativesConsidered:
+          alternativesConsidered ?? this.alternativesConsidered,
       affectedWorkPackages: affectedWorkPackages ?? this.affectedWorkPackages,
       deliverablesAdded: deliverablesAdded ?? this.deliverablesAdded,
       deliverablesModified: deliverablesModified ?? this.deliverablesModified,
       deliverablesRemoved: deliverablesRemoved ?? this.deliverablesRemoved,
       initialCostEstimate: initialCostEstimate ?? this.initialCostEstimate,
       scheduleDaysImpact: scheduleDaysImpact ?? this.scheduleDaysImpact,
-      contingencyDrawdownRequested: contingencyDrawdownRequested ?? this.contingencyDrawdownRequested,
-      reserveDrawdownRequested: reserveDrawdownRequested ?? this.reserveDrawdownRequested,
+      contingencyDrawdownRequested:
+          contingencyDrawdownRequested ?? this.contingencyDrawdownRequested,
+      reserveDrawdownRequested:
+          reserveDrawdownRequested ?? this.reserveDrawdownRequested,
       implementationTasks: implementationTasks ?? this.implementationTasks,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is CMChangeRequest && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // ─── Audit Entry ──────────────────────────────────────────────────────────
@@ -742,6 +777,13 @@ class CMAuditEntry {
     this.linkedCRId,
     this.baselineVersion,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is CMAuditEntry && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // ─── Baseline Revision Record ─────────────────────────────────────────────

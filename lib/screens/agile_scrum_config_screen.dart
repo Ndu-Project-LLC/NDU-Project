@@ -334,7 +334,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
                                           strokeWidth: 2)),
                                   const SizedBox(width: 8),
                                   Text('Saving...',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           fontSize: 12, color: _kMuted)),
                                 ],
                               ),
@@ -379,7 +379,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
   Widget _buildRolesSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -413,7 +413,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
   Widget _buildEventDurations() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -520,7 +520,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
   Widget _buildDefinitionOfAgreement() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -558,7 +558,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
   Widget _buildWorkingAgreements() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),

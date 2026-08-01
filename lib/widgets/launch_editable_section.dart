@@ -3,6 +3,7 @@ import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class LaunchEntry {
   const LaunchEntry({
     required this.title,
@@ -100,13 +101,20 @@ class LaunchEditableSection extends StatelessWidget {
 
   /// Shows the world-class import dialog for this section.
   void _showImportForSection(BuildContext context) async {
-    final headers = showStatusChip
-        ? ['Item', 'Details', 'Status']
-        : ['Item', 'Details'];
+    final headers =
+        showStatusChip ? ['Item', 'Details', 'Status'] : ['Item', 'Details'];
     final sampleRows = showStatusChip
         ? [
-            ['Complete HR onboarding', 'Submit contracts and setup payroll', 'Planned'],
-            ['Provision laptops', 'Order and configure 2 laptops', 'In Progress'],
+            [
+              'Complete HR onboarding',
+              'Submit contracts and setup payroll',
+              'Planned'
+            ],
+            [
+              'Provision laptops',
+              'Order and configure 2 laptops',
+              'In Progress'
+            ],
             ['Team kickoff meeting', 'Schedule for week 1', 'Completed'],
           ]
         : [
@@ -132,13 +140,20 @@ class LaunchEditableSection extends StatelessWidget {
 
   /// Downloads a CSV template for this section.
   void _downloadTemplateForSection() {
-    final headers = showStatusChip
-        ? ['Item', 'Details', 'Status']
-        : ['Item', 'Details'];
+    final headers =
+        showStatusChip ? ['Item', 'Details', 'Status'] : ['Item', 'Details'];
     final sampleRows = showStatusChip
         ? [
-            ['Complete HR onboarding', 'Submit contracts and setup payroll', 'Planned'],
-            ['Provision laptops', 'Order and configure 2 laptops', 'In Progress'],
+            [
+              'Complete HR onboarding',
+              'Submit contracts and setup payroll',
+              'Planned'
+            ],
+            [
+              'Provision laptops',
+              'Order and configure 2 laptops',
+              'In Progress'
+            ],
             ['Team kickoff meeting', 'Schedule for week 1', 'Completed'],
           ]
         : [
@@ -147,8 +162,7 @@ class LaunchEditableSection extends StatelessWidget {
             ['Team kickoff meeting', 'Schedule for week 1'],
           ];
 
-    final filename =
-        '${title.toLowerCase().replaceAll(' ', '_')}_template.csv';
+    final filename = '${title.toLowerCase().replaceAll(' ', '_')}_template.csv';
     TableImportHelper.downloadTemplate(
       filename: filename,
       headers: headers,
@@ -187,8 +201,7 @@ class LaunchEditableSection extends StatelessWidget {
             entry: entries[i],
             showStatusChip: showStatusChip,
             onEdit: onEdit != null ? () => onEdit!(i, entries[i]) : null,
-            onDuplicate:
-                onDuplicate != null ? () => onDuplicate!(i) : null,
+            onDuplicate: onDuplicate != null ? () => onDuplicate!(i) : null,
             onRemove: () => onRemove(i),
           ),
           if (i != entries.length - 1) const SizedBox(height: 12),
@@ -387,7 +400,7 @@ class _LaunchEntryCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 8),
           ),

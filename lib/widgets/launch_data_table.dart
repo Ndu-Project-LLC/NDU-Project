@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/utils/download_helper_stub.dart'
+    if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
+    as dl;
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -302,6 +306,21 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
           ],
           if (widget.csvColumns != null && widget.onCsvImport != null) ...[
             OutlinedButton.icon(
+              onPressed: () => _downloadTemplate(context),
+              icon: const Icon(Icons.download_outlined, size: 16),
+              label: const Text('Download Template'),
+              style: OutlinedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                foregroundColor: const Color(0xFF059669),
+                side: const BorderSide(color: Color(0xFF6EE7B7)),
+                backgroundColor: const Color(0xFFECFDF5),
+              ),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
               onPressed: () => _showCsvImportDialog(context),
               icon: const Icon(Icons.upload_file_outlined, size: 16),
               label: const Text('Import CSV'),
@@ -345,6 +364,31 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
     );
     if (result != null && result.isNotEmpty) {
       await widget.onCsvImport!(result);
+    }
+  }
+
+  /// Generates and downloads a CSV template file matching this table's
+  /// `csvColumns`. The template includes a comment row with hints, the
+  /// header row, and 1-2 sample rows so users know exactly what format
+  /// the Import CSV dialog expects.
+  void _downloadTemplate(BuildContext context) {
+    if (widget.csvColumns == null || widget.csvColumns!.isEmpty) return;
+
+    final template =
+        CsvImportHelper.generateTemplate(widget.csvColumns!);
+    final filename = CsvImportHelper.templateFilename(widget.title);
+    final bytes = utf8.encode(template);
+    dl.downloadFile(bytes, filename, mimeType: 'text/csv');
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Template downloaded: $filename'),
+          backgroundColor: const Color(0xFF059669),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 

@@ -82,7 +82,7 @@ class ProgressTrackingDashboard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ClipRRect(
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: const BorderRadius.circular(999),
                 child: LinearProgressIndicator(
                   value: _completionPercentage / 100,
                   minHeight: 10,

@@ -214,8 +214,8 @@ class _StakeholderAlignmentScreenState
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFC812),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(4),
           ),
           child: const Text(
@@ -321,8 +321,8 @@ class _StakeholderAlignmentScreenState
             backgroundColor: const Color(0xFF0EA5E9),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
           ),
         ),
       ],
@@ -369,10 +369,10 @@ class _StakeholderAlignmentScreenState
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -417,161 +417,169 @@ class _StakeholderAlignmentScreenState
     String selectedStatus = 'Neutral';
     String? selectedKeyInterest;
 
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            title: const Text('Add Stakeholder'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: selectedStakeholder,
-                    decoration: const InputDecoration(
-                      labelText: 'Stakeholder Name/Role',
-                      hintText: 'Select from Core Stakeholders or enter new',
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          return StatefulBuilder(
+            builder: (context, setDialogState) => AlertDialog(
+              title: const Text('Add Stakeholder'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: selectedStakeholder,
+                      decoration: const InputDecoration(
+                        labelText: 'Stakeholder Name/Role',
+                        hintText: 'Select from Core Stakeholders or enter new',
+                      ),
+                      items: [
+                        ..._coreStakeholders.map((stakeholder) {
+                          final displayName =
+                              '${stakeholder['name']} - ${stakeholder['role']}';
+                          return DropdownMenuItem<String>(
+                            value: displayName,
+                            child: Text(displayName),
+                          );
+                        }),
+                        const DropdownMenuItem<String>(
+                          value: '__NEW__',
+                          child: Text('+ Add New Stakeholder'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value == '__NEW__') {
+                          selectedStakeholder = null;
+                          nameController.clear();
+                          roleController.clear();
+                        } else if (value != null) {
+                          selectedStakeholder = value;
+                          final parts = value.split(' - ');
+                          nameController.text = parts[0];
+                          roleController.text =
+                              parts.length > 1 ? parts[1] : '';
+                        }
+                        setDialogState(() {});
+                      },
                     ),
-                    items: [
-                      ..._coreStakeholders.map((stakeholder) {
-                        final displayName =
-                            '${stakeholder['name']} - ${stakeholder['role']}';
-                        return DropdownMenuItem<String>(
-                          value: displayName,
-                          child: Text(displayName),
-                        );
-                      }),
-                      const DropdownMenuItem<String>(
-                        value: '__NEW__',
-                        child: Text('+ Add New Stakeholder'),
+                    if (selectedStakeholder == null ||
+                        selectedStakeholder == '__NEW__') ...[
+                      VoiceTextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Stakeholder Name',
+                        ),
+                      ),
+                      VoiceTextField(
+                        controller: roleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Stakeholder Role',
+                        ),
                       ),
                     ],
-                    onChanged: (value) {
-                      if (value == '__NEW__') {
-                        selectedStakeholder = null;
-                        nameController.clear();
-                        roleController.clear();
-                      } else if (value != null) {
-                        selectedStakeholder = value;
-                        final parts = value.split(' - ');
-                        nameController.text = parts[0];
-                        roleController.text = parts.length > 1 ? parts[1] : '';
-                      }
-                      setDialogState(() {});
-                    },
-                  ),
-                  if (selectedStakeholder == null ||
-                      selectedStakeholder == '__NEW__') ...[
-                    VoiceTextField(
-                      controller: nameController,
+                    DropdownButtonFormField<String>(
+                      value: selectedStatus,
+                      decoration:
+                          const InputDecoration(labelText: 'Alignment Status'),
+                      items: ['Aligned', 'Neutral', 'Concerned', 'Resistent']
+                          .map((status) => DropdownMenuItem(
+                                value: status,
+                                child: Text(status),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() => selectedStatus = value);
+                        }
+                      },
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: selectedKeyInterest,
                       decoration: const InputDecoration(
-                        labelText: 'Stakeholder Name',
-                      ),
+                          labelText: 'Key Interest/Value'),
+                      items: [
+                        'ROI',
+                        'Security',
+                        'Ease of Use',
+                        'Cost Savings',
+                        'Revenue',
+                        'Compliance',
+                        'Performance',
+                        'Innovation',
+                        'Risk Mitigation',
+                        'User Experience',
+                      ]
+                          .map((interest) => DropdownMenuItem(
+                                value: interest,
+                                child: Text(interest),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setDialogState(() => selectedKeyInterest = value);
+                      },
                     ),
                     VoiceTextField(
-                      controller: roleController,
+                      controller: feedbackController,
                       decoration: const InputDecoration(
-                        labelText: 'Stakeholder Role',
+                        labelText: 'Feedback Summary (prose, no bullets)',
+                        hintText: 'Enter feedback...',
                       ),
+                      maxLines: 3,
                     ),
                   ],
-                  DropdownButtonFormField<String>(
-                    value: selectedStatus,
-                    decoration:
-                        const InputDecoration(labelText: 'Alignment Status'),
-                    items: ['Aligned', 'Neutral', 'Concerned', 'Resistent']
-                        .map((status) => DropdownMenuItem(
-                              value: status,
-                              child: Text(status),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setDialogState(() => selectedStatus = value);
-                      }
-                    },
-                  ),
-                  DropdownButtonFormField<String>(
-                    value: selectedKeyInterest,
-                    decoration:
-                        const InputDecoration(labelText: 'Key Interest/Value'),
-                    items: [
-                      'ROI',
-                      'Security',
-                      'Ease of Use',
-                      'Cost Savings',
-                      'Revenue',
-                      'Compliance',
-                      'Performance',
-                      'Innovation',
-                      'Risk Mitigation',
-                      'User Experience',
-                    ]
-                        .map((interest) => DropdownMenuItem(
-                              value: interest,
-                              child: Text(interest),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setDialogState(() => selectedKeyInterest = value);
-                    },
-                  ),
-                  VoiceTextField(
-                    controller: feedbackController,
-                    decoration: const InputDecoration(
-                      labelText: 'Feedback Summary (prose, no bullets)',
-                      hintText: 'Enter feedback...',
-                    ),
-                    maxLines: 3,
-                  ),
-                ],
+                ),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  if (name.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Stakeholder Name is required.')),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    final name = nameController.text.trim();
+                    if (name.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Stakeholder Name is required.')),
+                      );
+                      return;
+                    }
+                    final newItem = StakeholderAlignmentItem(
+                      stakeholderName: name,
+                      stakeholderRole: roleController.text.trim(),
+                      alignmentStatus: selectedStatus,
+                      keyInterest: selectedKeyInterest ?? '',
+                      feedbackSummary: feedbackController.text.trim(),
+                      engagementStrategy:
+                          engagementStrategyController.text.trim(),
                     );
-                    return;
-                  }
-                  final newItem = StakeholderAlignmentItem(
-                    stakeholderName: name,
-                    stakeholderRole: roleController.text.trim(),
-                    alignmentStatus: selectedStatus,
-                    keyInterest: selectedKeyInterest ?? '',
-                    feedbackSummary: feedbackController.text.trim(),
-                    engagementStrategy:
-                        engagementStrategyController.text.trim(),
-                  );
-                  setState(() {
-                    _items.add(newItem);
-                  });
-                  Navigator.of(dialogContext).pop();
-                  await _saveItems();
+                    setState(() {
+                      _items.add(newItem);
+                    });
+                    Navigator.of(dialogContext).pop();
+                    await _saveItems();
 
-                  // Auto-generate engagement strategy if key fields are filled
-                  if (name.isNotEmpty &&
-                      (selectedKeyInterest != null ||
-                          roleController.text.trim().isNotEmpty)) {
-                    _autoGenerateEngagementStrategy(newItem);
-                  }
-                },
-                child: const Text('Add'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+                    // Auto-generate engagement strategy if key fields are filled
+                    if (name.isNotEmpty &&
+                        (selectedKeyInterest != null ||
+                            roleController.text.trim().isNotEmpty)) {
+                      _autoGenerateEngagementStrategy(newItem);
+                    }
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    } finally {
+      nameController.dispose();
+      roleController.dispose();
+      feedbackController.dispose();
+      engagementStrategyController.dispose();
+    }
   }
 
   Future<void> _autoPopulateStakeholders(

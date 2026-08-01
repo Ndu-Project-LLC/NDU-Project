@@ -56,9 +56,8 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
     final today = DateTime.now();
     return List.generate(10, (i) {
       final d = today.subtract(const Duration(days: 4)).add(Duration(days: i));
-      final isToday = d.day == today.day &&
-          d.month == today.month &&
-          d.year == today.year;
+      final isToday =
+          d.day == today.day && d.month == today.month && d.year == today.year;
       return _CalendarDay(
         date: d,
         isToday: isToday,
@@ -117,7 +116,8 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
 
   void _seedProjectData(dynamic projectData) {
     final people = AgileProjectContextHelper.people(projectData, limit: 6);
-    final workItems = AgileProjectContextHelper.workItems(projectData, limit: 10);
+    final workItems =
+        AgileProjectContextHelper.workItems(projectData, limit: 10);
     final risks = AgileProjectContextHelper.risks(projectData, limit: 4);
     final issues = AgileProjectContextHelper.issues(projectData, limit: 4);
 
@@ -246,8 +246,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                     ),
                   ),
                   SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: hp, vertical: 24),
+                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -294,20 +293,20 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
   Widget _buildTopBar() {
     return Row(
       children: [
-        Image.asset('assets/images/Logo.png', height: 36),
+        Image.asset('assets/images/Logo.png',
+            height: 36,
+            cacheWidth: (MediaQuery.devicePixelRatioOf(context) * 150).round()),
         const SizedBox(width: 12),
         const Text('Ndu Project',
             style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: _kHeadline)),
+                fontSize: 18, fontWeight: FontWeight.w800, color: _kHeadline)),
         const Spacer(),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: _kAccentBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _kAccent.withOpacity(0.3)),
+            border: Border.all(color: _kAccent.withValues(alpha: 0.3)),
           ),
           child: const Text('DAILY 9:30 AM',
               style: TextStyle(
@@ -321,12 +320,11 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
   }
 
   Widget _buildSummaryRow() {
-    final blockers =
-        _entries.where((e) => e.blockers.isNotEmpty).length;
+    final blockers = _entries.where((e) => e.blockers.isNotEmpty).length;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -336,32 +334,24 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
       child: Row(
         children: [
           Expanded(
-            child: _summaryCell('Attendance', '${_entries.length}/8',
-                Icons.groups),
+            child: _summaryCell(
+                'Attendance', '${_entries.length}/8', Icons.groups),
           ),
           Container(
-              width: 1,
-              height: 36,
-              color: Colors.white.withOpacity(0.3)),
+              width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
-            child:
-                _summaryCell('Blockers', '$blockers', Icons.warning_amber),
+            child: _summaryCell('Blockers', '$blockers', Icons.warning_amber),
           ),
           Container(
-              width: 1,
-              height: 36,
-              color: Colors.white.withOpacity(0.3)),
+              width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
             child: _summaryCell('Action Items', '${_actionItems.length}',
                 Icons.assignment_outlined),
           ),
           Container(
-              width: 1,
-              height: 36,
-              color: Colors.white.withOpacity(0.3)),
+              width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
-            child: _summaryCell(
-                'Duration', '14 min', Icons.timer_outlined),
+            child: _summaryCell('Duration', '14 min', Icons.timer_outlined),
           ),
         ],
       ),
@@ -382,7 +372,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
         Text(label,
             style: TextStyle(
                 fontSize: 11,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 fontWeight: FontWeight.w500)),
       ],
     );
@@ -391,7 +381,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
   Widget _buildCalendar() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -433,8 +423,8 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                   onTap: () => setState(() => _selectedDay = d.date),
                   child: Container(
                     width: 64,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 10),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
                     decoration: BoxDecoration(
                       color: selected
                           ? _kAccent
@@ -446,7 +436,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                         color: selected
                             ? _kAccent
                             : d.isToday
-                                ? _kAccent.withOpacity(0.3)
+                                ? _kAccent.withValues(alpha: 0.3)
                                 : _kBorder,
                       ),
                     ),
@@ -454,12 +444,20 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][d.date.weekday - 1],
+                          [
+                            'Mon',
+                            'Tue',
+                            'Wed',
+                            'Thu',
+                            'Fri',
+                            'Sat',
+                            'Sun'
+                          ][d.date.weekday - 1],
                           style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: selected
-                                  ? Colors.white.withOpacity(0.85)
+                                  ? Colors.white.withValues(alpha: 0.85)
                                   : _kMuted),
                         ),
                         const SizedBox(height: 4),
@@ -467,9 +465,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                             style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
-                                color: selected
-                                    ? Colors.white
-                                    : _kHeadline)),
+                                color: selected ? Colors.white : _kHeadline)),
                         const SizedBox(height: 6),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -490,9 +486,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                               d.attendance > 0 ? '${d.attendance}' : '-',
                               style: TextStyle(
                                   fontSize: 9,
-                                  color: selected
-                                      ? Colors.white
-                                      : _kMuted,
+                                  color: selected ? Colors.white : _kMuted,
                                   fontWeight: FontWeight.w600),
                             ),
                           ],
@@ -524,18 +518,15 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                     color: _kHeadline)),
             const Spacer(),
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: const BoxDecoration(
                 color: _kAccentBg,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 '${_selectedDay.day}/${_selectedDay.month}/${_selectedDay.year}',
                 style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: _kAccent),
+                    fontSize: 11, fontWeight: FontWeight.w700, color: _kAccent),
               ),
             ),
           ],
@@ -561,7 +552,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
   Widget _buildStandupCard(_StandupEntry e) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -573,7 +564,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: e.color.withOpacity(0.15),
+                backgroundColor: e.color.withValues(alpha: 0.15),
                 child: Text(e.avatar,
                     style: TextStyle(
                         fontSize: 12,
@@ -597,16 +588,15 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                       ],
                     ),
                     Text(e.role,
-                        style: const TextStyle(
-                            fontSize: 11, color: _kMuted)),
+                        style: const TextStyle(fontSize: 11, color: _kMuted)),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          _standupSection('Yesterday', e.yesterday, Icons.history,
-              const Color(0xFF3B82F6)),
+          _standupSection(
+              'Yesterday', e.yesterday, Icons.history, const Color(0xFF3B82F6)),
           const SizedBox(height: 8),
           _standupSection('Today', e.today, Icons.today, _kAccent),
           const SizedBox(height: 8),
@@ -632,7 +622,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(
-        color: entry.$1.withOpacity(0.12),
+        color: entry.$1.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -642,9 +632,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
           const SizedBox(width: 2),
           Text(entry.$3,
               style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  color: entry.$1)),
+                  fontSize: 9, fontWeight: FontWeight.w700, color: entry.$1)),
         ],
       ),
     );
@@ -656,7 +644,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
         border: Border(
           left: BorderSide(color: color, width: 3),
@@ -691,7 +679,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
   Widget _buildActionItemsTable() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -701,8 +689,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.assignment_outlined,
-                  size: 20, color: _kAccent),
+              const Icon(Icons.assignment_outlined, size: 20, color: _kAccent),
               const SizedBox(width: 8),
               const Text('Action Items',
                   style: TextStyle(
@@ -714,8 +701,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                   ? const SizedBox()
                   : Text(
                       '${_actionItems.where((a) => a.status == 'Done').length}/${_actionItems.length} done',
-                      style: const TextStyle(
-                          fontSize: 12, color: _kMuted)),
+                      style: const TextStyle(fontSize: 12, color: _kMuted)),
             ],
           ),
           const SizedBox(height: 12),
@@ -800,24 +786,21 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                           decoration:
                               done ? TextDecoration.lineThrough : null)),
                   Text(a.id,
-                      style: const TextStyle(
-                          fontSize: 10, color: _kMuted)),
+                      style: const TextStyle(fontSize: 10, color: _kMuted)),
                 ],
               ),
             ),
             Expanded(
               flex: 2,
               child: Text(a.owner,
-                  style: const TextStyle(
-                      fontSize: 12, color: _kHeadline)),
+                  style: const TextStyle(fontSize: 12, color: _kHeadline)),
             ),
             Expanded(
               flex: 1,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(a.due,
@@ -846,14 +829,12 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(status,
           style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: color)),
+              fontSize: 11, fontWeight: FontWeight.w700, color: color)),
     );
   }
 
@@ -873,7 +854,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -886,7 +867,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -997,7 +978,7 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),

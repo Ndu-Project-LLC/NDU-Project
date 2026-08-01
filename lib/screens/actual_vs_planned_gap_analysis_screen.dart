@@ -1316,7 +1316,8 @@ class _ActualVsPlannedGapAnalysisScreenState
           build: (_) => [
             pw.Text(
               'Actual vs Planned Gap Analysis',
-              style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                  fontSize: 20, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 4),
             pw.Text(
@@ -1332,8 +1333,8 @@ class _ActualVsPlannedGapAnalysisScreenState
                       const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
                 cellStyle: const pw.TextStyle(fontSize: 8.5),
@@ -1360,8 +1361,8 @@ class _ActualVsPlannedGapAnalysisScreenState
                       const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
                 cellStyle: const pw.TextStyle(fontSize: 8.5),
@@ -1395,8 +1396,8 @@ class _ActualVsPlannedGapAnalysisScreenState
                       const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
                 cellStyle: const pw.TextStyle(fontSize: 8.5),
@@ -1430,8 +1431,8 @@ class _ActualVsPlannedGapAnalysisScreenState
                       const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
                 cellStyle: const pw.TextStyle(fontSize: 8.5),
@@ -1465,8 +1466,8 @@ class _ActualVsPlannedGapAnalysisScreenState
                       const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
                 cellStyle: const pw.TextStyle(fontSize: 8.5),
@@ -1521,7 +1522,7 @@ class _ActualVsPlannedGapAnalysisScreenState
         borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
       ),
       child: pw.Text(title,
-          style: pw.TextStyle(
+          style: const pw.TextStyle(
               fontSize: 11,
               fontWeight: pw.FontWeight.bold,
               color: PdfColors.white)),

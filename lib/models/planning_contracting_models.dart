@@ -86,6 +86,13 @@ class PaymentMilestone {
       status: (map['status'] ?? 'Planned').toString(),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is PaymentMilestone && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class EvaluationCriteria {
@@ -141,6 +148,13 @@ class EvaluationCriteria {
       weight: parseDouble(map['weight']),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is EvaluationCriteria && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class EvaluationScore {
@@ -290,6 +304,13 @@ class NegotiationItem {
       status: (map['status'] ?? 'Open').toString(),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is NegotiationItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PlanningRfq {
@@ -417,6 +438,13 @@ class PlanningRfq {
           parseTs(data['updatedAt']) ?? DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is PlanningRfq && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class ContractBudgetBreakdown {

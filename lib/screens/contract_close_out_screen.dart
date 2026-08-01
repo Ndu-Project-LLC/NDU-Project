@@ -59,6 +59,12 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
 
   @override
@@ -1068,7 +1074,8 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
           build: (_) => [
             pw.Text(
               'Contract Close Out',
-              style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                  fontSize: 20, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 4),
             pw.Text(
@@ -1084,8 +1091,8 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
                       const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
                 cellStyle: const pw.TextStyle(fontSize: 8.5),
@@ -1111,8 +1118,8 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
                       const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
                 cellStyle: const pw.TextStyle(fontSize: 8.5),
@@ -1140,8 +1147,8 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
                       const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
                 cellStyle: const pw.TextStyle(fontSize: 8.5),
@@ -1168,8 +1175,8 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
                       const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle:
-                    pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+                headerStyle: const pw.TextStyle(
+                    fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
                 cellStyle: const pw.TextStyle(fontSize: 8.5),
@@ -1225,7 +1232,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
         borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
       ),
       child: pw.Text(title,
-          style: pw.TextStyle(
+          style: const pw.TextStyle(
               fontSize: 11,
               fontWeight: pw.FontWeight.bold,
               color: PdfColors.white)),

@@ -14,14 +14,19 @@ class BudgetRow {
   // ── P3.4: CBS linkage for cost account traceability ──
   /// CBS element ID — links this budget row to its cost breakdown element.
   String cbsId;
+
   /// OBS element ID — links this budget row to the responsible org unit.
   String obsId;
+
   /// Control Account ID — links to WBS+OBS intersection for EVM rollup.
   String controlAccountId;
+
   /// WBS element ID — links this budget row to the work element.
   String wbsId;
+
   /// Cost type classification: 'direct' | 'indirect' | 'contingency' | 'management_reserve'
   String costType;
+
   /// Commitment status: 'uncommitted' | 'committed' | 'spent' | 'closed'
   String commitmentStatus;
 
@@ -131,4 +136,11 @@ class BudgetRow {
       commitmentStatus: json['commitmentStatus']?.toString() ?? 'uncommitted',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is BudgetRow && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

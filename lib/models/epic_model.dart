@@ -14,12 +14,16 @@ class Epic {
   // ── P3.3: WBS traceability for agile↔predictive bridge ──
   /// WBS element ID this epic maps to for hybrid project traceability.
   String wbsId;
+
   /// OBS element ID (responsible org unit).
   String obsId;
+
   /// CBS element ID (cost account).
   String cbsId;
+
   /// Control Account ID (WBS+OBS intersection for EVM rollup).
   String controlAccountId;
+
   /// List of feature IDs belonging to this epic.
   List<String> featureIds;
 
@@ -40,8 +44,8 @@ class Epic {
     this.cbsId = '',
     this.controlAccountId = '',
     List<String>? featureIds,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
-       featureIds = featureIds ?? [];
+  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+        featureIds = featureIds ?? [];
 
   Epic copyWith({
     String? title,
@@ -114,7 +118,8 @@ class Epic {
     }
 
     return Epic(
-      id: json['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id']?.toString() ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       theme: json['theme']?.toString() ?? '',
@@ -129,10 +134,16 @@ class Epic {
       obsId: json['obsId']?.toString() ?? '',
       cbsId: json['cbsId']?.toString() ?? '',
       controlAccountId: json['controlAccountId']?.toString() ?? '',
-      featureIds: (json['featureIds'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      featureIds:
+          (json['featureIds'] as List?)?.map((e) => e.toString()).toList() ??
+              [],
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is Epic && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

@@ -36,7 +36,8 @@ class BenefitsRealizationScreen extends StatefulWidget {
 class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _dashboardController = TextEditingController();
-  final TextEditingController _quantificationController = TextEditingController();
+  final TextEditingController _quantificationController =
+      TextEditingController();
   final TextEditingController _continuousTrackingController =
       TextEditingController();
 
@@ -253,14 +254,12 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
       ]);
     }
 
-    final totalPlanned =
-        categories.fold<double>(0, (s, c) => s + c.planned);
-    final totalActual =
-        categories.fold<double>(0, (s, c) => s + c.actual);
-    final realizationPct = totalPlanned > 0
-        ? (totalActual / totalPlanned * 100).round()
-        : 0;
-    final onTrack = categories.where((c) => c.actual >= c.planned * 0.85).length;
+    final totalPlanned = categories.fold<double>(0, (s, c) => s + c.planned);
+    final totalActual = categories.fold<double>(0, (s, c) => s + c.actual);
+    final realizationPct =
+        totalPlanned > 0 ? (totalActual / totalPlanned * 100).round() : 0;
+    final onTrack =
+        categories.where((c) => c.actual >= c.planned * 0.85).length;
     final offTrack = categories.length - onTrack;
     final avgRealization = categories.isEmpty
         ? 0.0
@@ -381,10 +380,10 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
+      decoration: const BoxDecoration(
+        color: Color(0xFFECFDF5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF10B981)),
+        border: Border.all(color: Color(0xFF10B981)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,7 +407,8 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
             'Measure whether the project achieved its intended business outcomes. '
             'This section tracks planned versus actual benefits across financial, operational, customer, strategic, '
             'sustainability, and innovation dimensions, and supports continuous tracking for benefits that extend beyond project completion.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF065F46), height: 1.5),
+            style:
+                TextStyle(fontSize: 13, color: Color(0xFF065F46), height: 1.5),
           ),
         ],
       ),
@@ -430,7 +430,7 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -450,7 +450,8 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
           const SizedBox(height: 6),
           Text(
             description,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+            style: const TextStyle(
+                fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -458,15 +459,17 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
             runSpacing: 6,
             children: hintItems
                 .map((h) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF5),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFECFDF5),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFA7F3D0)),
+                        border: Border.all(color: Color(0xFFA7F3D0)),
                       ),
                       child: Text(
                         h,
-                        style: const TextStyle(fontSize: 11, color: Color(0xFF065F46)),
+                        style: const TextStyle(
+                            fontSize: 11, color: Color(0xFF065F46)),
                       ),
                     ))
                 .toList(),

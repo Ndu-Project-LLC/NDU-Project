@@ -42,5 +42,41 @@ linter:
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 
+    # --- Performance lints (added Phase 0 of perf overhaul) ---
+    # These catch the most common Flutter perf foot-guns at compile time.
+    # See: https://dart.dev/lints#performance
+
+    # Prefer const constructors where possible — biggest single perf win.
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_const_fields: true
+
+    # Catch unnecessary ListView (non-builder) usage that builds all children
+    # eagerly.
+    prefer_const_captures: true
+
+    # Catch unused imports / dead code that bloats the bundle.
+    unused_import: true
+    unused_element: true
+    dead_code: true
+
+    # Catch missing dispose() calls on controllers.
+    cancel_subscriptions: true
+    close_sinks: true
+    use_build_context_synchronously: true
+
+    # Catch setState in initState that triggers an unnecessary rebuild.
+    avoid_init_to_state: true
+
+    # Catch slow async patterns.
+    avoid_slow_async_io: true
+
+    # Catch large widget files (flagged via lines_of_code, not a hard error).
+    # These are warnings, not errors.
+    public_member_api_docs: false
+    lines_longer_than_80_chars: false
+
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

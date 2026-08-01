@@ -4,7 +4,8 @@ class ContractClaim {
   final String claimNumber;
   final String title;
   final String description;
-  final String status; // 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'settled'
+  final String
+      status; // 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'settled'
   final double claimAmount;
   final String justification;
   final String disputeResolution;
@@ -64,7 +65,8 @@ class ContractClaim {
         (v is num) ? v.toDouble() : double.tryParse(v?.toString() ?? '') ?? 0;
 
     return ContractClaim(
-      id: json['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id']?.toString() ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       contractId: json['contractId']?.toString() ?? '',
       claimNumber: json['claimNumber']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
@@ -81,4 +83,11 @@ class ContractClaim {
       createdAt: parseDate(json['createdAt']) ?? DateTime.now(),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ContractClaim && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

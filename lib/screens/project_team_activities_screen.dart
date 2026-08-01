@@ -37,7 +37,8 @@ class ProjectTeamActivitiesScreen extends StatefulWidget {
       _ProjectTeamActivitiesScreenState();
 }
 
-class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScreen>
+class _ProjectTeamActivitiesScreenState
+    extends State<ProjectTeamActivitiesScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
@@ -145,10 +146,21 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
         'Identify backup resources',
       ],
       dataFields: [
-        'Name', 'Role/Title', 'Department', 'Email & Phone',
-        'Manager/Supervisor', 'Project Role', 'Responsibility Area',
-        'Skill Set', 'Certifications', 'Start/End Date',
-        'Availability %', 'Time Zone', 'Location', 'Employment Type', 'Status',
+        'Name',
+        'Role/Title',
+        'Department',
+        'Email & Phone',
+        'Manager/Supervisor',
+        'Project Role',
+        'Responsibility Area',
+        'Skill Set',
+        'Certifications',
+        'Start/End Date',
+        'Availability %',
+        'Time Zone',
+        'Location',
+        'Employment Type',
+        'Status',
       ],
     ),
     _HubSection(
@@ -171,10 +183,22 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
         'Action item tracking',
       ],
       dataFields: [
-        'Meeting Name', 'Type', 'Date & Time', 'Frequency',
-        'Organizer', 'Participants', 'Agenda', 'Objectives',
-        'Discussion Notes', 'Decisions', 'Risks', 'Issues',
-        'Action Items', 'Owner', 'Due Dates', 'Attachments',
+        'Meeting Name',
+        'Type',
+        'Date & Time',
+        'Frequency',
+        'Organizer',
+        'Participants',
+        'Agenda',
+        'Objectives',
+        'Discussion Notes',
+        'Decisions',
+        'Risks',
+        'Issues',
+        'Action Items',
+        'Owner',
+        'Due Dates',
+        'Attachments',
       ],
     ),
     _HubSection(
@@ -197,8 +221,14 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
         'Completion tracking',
       ],
       dataFields: [
-        'Activity Name', 'Category', 'Date', 'Duration',
-        'Participants', 'Facilitator', 'Status', 'Notes',
+        'Activity Name',
+        'Category',
+        'Date',
+        'Duration',
+        'Participants',
+        'Facilitator',
+        'Status',
+        'Notes',
       ],
     ),
     _HubSection(
@@ -221,9 +251,16 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
         'Recognition reports',
       ],
       dataFields: [
-        'Award Category', 'Recipient', 'Team', 'Nominated By',
-        'Approved By', 'Date', 'Evidence', 'Comments',
-        'Linked Milestone', 'Status',
+        'Award Category',
+        'Recipient',
+        'Team',
+        'Nominated By',
+        'Approved By',
+        'Date',
+        'Evidence',
+        'Comments',
+        'Linked Milestone',
+        'Status',
       ],
     ),
     _HubSection(
@@ -247,10 +284,18 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
         'Team Operations dashboard',
       ],
       dataFields: [
-        'Team Member', 'Reporting Period', 'Progress Status',
-        '% Complete', 'Workload Rating', 'Confidence Level',
-        'Risks', 'Blockers', 'Support Needed', 'Accomplishments',
-        'Team Health Rating', 'Manager Comments',
+        'Team Member',
+        'Reporting Period',
+        'Progress Status',
+        '% Complete',
+        'Workload Rating',
+        'Confidence Level',
+        'Risks',
+        'Blockers',
+        'Support Needed',
+        'Accomplishments',
+        'Team Health Rating',
+        'Manager Comments',
       ],
     ),
     _HubSection(
@@ -273,9 +318,14 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
         'Methodology-neutral',
       ],
       dataFields: [
-        'Team Member', 'Receiving Member', 'Project Manager',
-        'Work packages transferred', 'Documentation updated',
-        'KT session completed', 'Stakeholders notified', 'Sign-off date',
+        'Team Member',
+        'Receiving Member',
+        'Project Manager',
+        'Work packages transferred',
+        'Documentation updated',
+        'KT session completed',
+        'Stakeholders notified',
+        'Sign-off date',
       ],
     ),
     _HubSection(
@@ -298,9 +348,18 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
         'AI recommendations & trend analysis',
       ],
       dataFields: [
-        'Lesson Title', 'Date Identified', 'Category', 'Description',
-        'Root Cause', 'Recommendation', 'Action Required', 'Owner',
-        'Due Date', 'Status', 'Business Impact', 'Related Risk/Issue',
+        'Lesson Title',
+        'Date Identified',
+        'Category',
+        'Description',
+        'Root Cause',
+        'Recommendation',
+        'Action Required',
+        'Owner',
+        'Due Date',
+        'Status',
+        'Business Impact',
+        'Related Risk/Issue',
       ],
     ),
   ];
@@ -308,8 +367,8 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
   void _navigateToSection(int index) {
     switch (index) {
       case 0:
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const StaffTeamScreen()));
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => const StaffTeamScreen()));
         break;
       case 1:
         Navigator.of(context).push(
@@ -320,12 +379,12 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
             builder: (_) => const TeamTrainingAndBuildingScreen()));
         break;
       case 3:
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const RecognitionAwardsScreen()));
+        Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const RecognitionAwardsScreen()));
         break;
       case 4:
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const TeamStatusCheckScreen()));
+        Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const TeamStatusCheckScreen()));
         break;
       case 5:
         Navigator.of(context).push(
@@ -591,8 +650,8 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -658,7 +717,8 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: Icon(section.icon, color: Colors.white, size: 28),
+                        child:
+                            Icon(section.icon, color: Colors.white, size: 28),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -737,7 +797,8 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: section.gradientStart.withValues(alpha: 0.08),
+                              color:
+                                  section.gradientStart.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -778,11 +839,10 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
                           return Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF3F4F6),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF3F4F6),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                  color: const Color(0xFFE5E7EB)),
+                              border: Border.all(color: Color(0xFFE5E7EB)),
                             ),
                             child: Text(
                               f,
@@ -849,12 +909,12 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF93C5FD)),
+        border: Border.all(color: Color(0xFF93C5FD)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

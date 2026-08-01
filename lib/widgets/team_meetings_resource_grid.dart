@@ -9,6 +9,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'dart:async';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 /// Specialized Resource Grid widget for Team Meetings page
 /// Features: Summary cards, meeting planner table with role integration, AI agenda generation
 class TeamMeetingsResourceGrid extends StatefulWidget {
@@ -81,11 +82,39 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
     final rows = await TableImportHelper.showImportDialog(
       context,
       tableTitle: 'Meeting Cadence',
-      headers: ['Meeting Type', 'Frequency', 'Key Participants', 'Duration (hrs)', 'Meeting Objective', 'Status'],
+      headers: [
+        'Meeting Type',
+        'Frequency',
+        'Key Participants',
+        'Duration (hrs)',
+        'Meeting Objective',
+        'Status'
+      ],
       sampleRows: [
-        ['Weekly Sync', 'Weekly', 'PM; Tech Lead', '1', 'Align on weekly priorities and blockers', 'Scheduled'],
-        ['Stakeholder Update', 'Bi-Weekly', 'PM; Sponsor', '1', 'Provide sponsors with progress and risk updates', 'Scheduled'],
-        ['Sprint Retrospective', 'Monthly', 'Dev Team', '2', 'Review what went well and what to improve', 'Completed'],
+        [
+          'Weekly Sync',
+          'Weekly',
+          'PM; Tech Lead',
+          '1',
+          'Align on weekly priorities and blockers',
+          'Scheduled'
+        ],
+        [
+          'Stakeholder Update',
+          'Bi-Weekly',
+          'PM; Sponsor',
+          '1',
+          'Provide sponsors with progress and risk updates',
+          'Scheduled'
+        ],
+        [
+          'Sprint Retrospective',
+          'Monthly',
+          'Dev Team',
+          '2',
+          'Review what went well and what to improve',
+          'Completed'
+        ],
       ],
     );
 
@@ -122,11 +151,39 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
   void _downloadTemplate() {
     TableImportHelper.downloadTemplate(
       filename: 'meeting_cadence_template.csv',
-      headers: ['Meeting Type', 'Frequency', 'Key Participants', 'Duration (hrs)', 'Meeting Objective', 'Status'],
+      headers: [
+        'Meeting Type',
+        'Frequency',
+        'Key Participants',
+        'Duration (hrs)',
+        'Meeting Objective',
+        'Status'
+      ],
       sampleRows: [
-        ['Weekly Sync', 'Weekly', 'PM; Tech Lead', '1', 'Align on weekly priorities and blockers', 'Scheduled'],
-        ['Stakeholder Update', 'Bi-Weekly', 'PM; Sponsor', '1', 'Provide sponsors with progress and risk updates', 'Scheduled'],
-        ['Sprint Retrospective', 'Monthly', 'Dev Team', '2', 'Review what went well and what to improve', 'Completed'],
+        [
+          'Weekly Sync',
+          'Weekly',
+          'PM; Tech Lead',
+          '1',
+          'Align on weekly priorities and blockers',
+          'Scheduled'
+        ],
+        [
+          'Stakeholder Update',
+          'Bi-Weekly',
+          'PM; Sponsor',
+          '1',
+          'Provide sponsors with progress and risk updates',
+          'Scheduled'
+        ],
+        [
+          'Sprint Retrospective',
+          'Monthly',
+          'Dev Team',
+          '2',
+          'Review what went well and what to improve',
+          'Completed'
+        ],
       ],
     );
   }
@@ -233,11 +290,11 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: const BorderRadius.circular(16),
+        border: const Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -266,12 +323,14 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
                   onPressed: _showImportDialog,
                   icon: const Icon(Icons.upload_file_outlined, size: 14),
                   label: const Text('Import',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      style:
+                          TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF4338CA),
                     side: const BorderSide(color: Color(0xFFE5E7EB)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
@@ -281,12 +340,14 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
                   onPressed: _downloadTemplate,
                   icon: const Icon(Icons.download_outlined, size: 14),
                   label: const Text('Template',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      style:
+                          TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF6B7280),
                     side: const BorderSide(color: Color(0xFFE5E7EB)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
@@ -298,7 +359,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 10),
-                    shape: RoundedRectangleBorder(
+                    shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     foregroundColor: const Color(0xFF2563EB),
                   ),
@@ -358,18 +419,26 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
           ),
         ),
         // Table Rows
-        ...List.generate(_meetings.length, (index) {
-          final meeting = _meetings[index];
-          final isLast = index == _meetings.length - 1;
-          return _MeetingRowWidget(
-            meeting: meeting,
-            availableRoles: _staffRoles,
-            onChanged: (updated) => _updateMeeting(index, updated),
-            onDelete: () => _removeMeeting(index),
-            onRegenerate: () => _regenerateMeetingObjective(index),
-            showDivider: !isLast,
-          );
-        }),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _meetings.length,
+          itemBuilder: (context, index) {
+            final meeting = _meetings[index];
+            final isLast = index == _meetings.length - 1;
+            return RepaintBoundary(
+              key: ValueKey('meeting_row_$index'),
+              child: _MeetingRowWidget(
+                meeting: meeting,
+                availableRoles: _staffRoles,
+                onChanged: (updated) => _updateMeeting(index, updated),
+                onDelete: () => _removeMeeting(index),
+                onRegenerate: () => _regenerateMeetingObjective(index),
+                showDivider: !isLast,
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -392,11 +461,11 @@ class _SummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: const BorderRadius.circular(12),
+        border: const Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -533,236 +602,246 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
     var selectedFrequency = _meeting.frequency;
     var selectedStatus = _meeting.status;
 
-    await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Edit Meeting', style: TextStyle(fontSize: 18)),
-          content: SizedBox(
-            width: 500,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Meeting Type
-                  DropdownButtonFormField<String>(
-                    value: selectedMeetingType.isEmpty
-                        ? null
-                        : selectedMeetingType,
-                    decoration: const InputDecoration(
-                      labelText: 'Meeting Type *',
-                      isDense: true,
-                    ),
-                    items: const [
-                      'Weekly Sync',
-                      'Stakeholder Update',
-                      'Technical Deep-Dive',
-                      'Sprint Planning',
-                      'Retrospective',
-                      'Status Review',
-                      'Risk Review',
-                      'Other',
-                    ]
-                        .map((item) => DropdownMenuItem(
-                              value: item,
-                              child: Text(item,
-                                  style: const TextStyle(fontSize: 13)),
-                            ))
-                        .toList(),
-                    onChanged: (v) {
-                      setDialogState(() {
-                        selectedMeetingType = v ?? '';
-                        meetingTypeController.text = v ?? '';
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  // Frequency
-                  DropdownButtonFormField<String>(
-                    value:
-                        selectedFrequency.isEmpty ? null : selectedFrequency,
-                    decoration: const InputDecoration(
-                      labelText: 'Frequency *',
-                      isDense: true,
-                    ),
-                    items: const ['Daily', 'Weekly', 'Bi-Weekly', 'Monthly']
-                        .map((item) => DropdownMenuItem(
-                              value: item,
-                              child: Text(item,
-                                  style: const TextStyle(fontSize: 13)),
-                            ))
-                        .toList(),
-                    onChanged: (v) {
-                      setDialogState(() {
-                        selectedFrequency = v ?? '';
-                        frequencyController.text = v ?? '';
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  // Key Participants
-                  InkWell(
-                    onTap: () async {
-                      final updated = await _showParticipantDialog(
-                          context, selectedParticipants);
-                      if (updated != null) {
-                        setDialogState(() => selectedParticipants = updated);
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 16),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
-                        borderRadius: BorderRadius.circular(8),
+    try {
+      await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: const Text('Edit Meeting', style: TextStyle(fontSize: 18)),
+            content: SizedBox(
+              width: 500,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Meeting Type
+                    DropdownButtonFormField<String>(
+                      value: selectedMeetingType.isEmpty
+                          ? null
+                          : selectedMeetingType,
+                      decoration: const InputDecoration(
+                        labelText: 'Meeting Type *',
+                        isDense: true,
                       ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Key Participants *',
-                                  style: TextStyle(
-                                      fontSize: 12, color: Color(0xFF6B7280)),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  selectedParticipants.isEmpty
-                                      ? 'Tap to select roles'
-                                      : selectedParticipants.length == 1
-                                          ? selectedParticipants.first
-                                          : '${selectedParticipants.length} roles selected',
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ],
+                      items: const [
+                        'Weekly Sync',
+                        'Stakeholder Update',
+                        'Technical Deep-Dive',
+                        'Sprint Planning',
+                        'Retrospective',
+                        'Status Review',
+                        'Risk Review',
+                        'Other',
+                      ]
+                          .map((item) => DropdownMenuItem(
+                                value: item,
+                                child: Text(item,
+                                    style: const TextStyle(fontSize: 13)),
+                              ))
+                          .toList(),
+                      onChanged: (v) {
+                        setDialogState(() {
+                          selectedMeetingType = v ?? '';
+                          meetingTypeController.text = v ?? '';
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    // Frequency
+                    DropdownButtonFormField<String>(
+                      value:
+                          selectedFrequency.isEmpty ? null : selectedFrequency,
+                      decoration: const InputDecoration(
+                        labelText: 'Frequency *',
+                        isDense: true,
+                      ),
+                      items: const ['Daily', 'Weekly', 'Bi-Weekly', 'Monthly']
+                          .map((item) => DropdownMenuItem(
+                                value: item,
+                                child: Text(item,
+                                    style: const TextStyle(fontSize: 13)),
+                              ))
+                          .toList(),
+                      onChanged: (v) {
+                        setDialogState(() {
+                          selectedFrequency = v ?? '';
+                          frequencyController.text = v ?? '';
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    // Key Participants
+                    InkWell(
+                      onTap: () async {
+                        final updated = await _showParticipantDialog(
+                            context, selectedParticipants);
+                        if (updated != null) {
+                          setDialogState(() => selectedParticipants = updated);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 16),
+                        decoration: const BoxDecoration(
+                          border: Border.all(color: Color(0xFFE5E7EB)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Key Participants *',
+                                    style: TextStyle(
+                                        fontSize: 12, color: Color(0xFF6B7280)),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    selectedParticipants.isEmpty
+                                        ? 'Tap to select roles'
+                                        : selectedParticipants.length == 1
+                                            ? selectedParticipants.first
+                                            : '${selectedParticipants.length} roles selected',
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const Icon(Icons.arrow_forward_ios,
-                              size: 16, color: Color(0xFF9CA3AF)),
-                        ],
+                            const Icon(Icons.arrow_forward_ios,
+                                size: 16, color: Color(0xFF9CA3AF)),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Duration
-                  VoiceTextField(
-                    controller: durationController,
-                    decoration: const InputDecoration(
-                      labelText: 'Duration (Hours) *',
-                      isDense: true,
+                    const SizedBox(height: 12),
+                    // Duration
+                    VoiceTextField(
+                      controller: durationController,
+                      decoration: const InputDecoration(
+                        labelText: 'Duration (Hours) *',
+                        isDense: true,
+                      ),
+                      keyboardType: TextInputType.number,
                     ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  // Next Scheduled Date
-                  VoiceTextField(
-                    controller: nextDateController,
-                    decoration: const InputDecoration(
-                      labelText: 'Next Scheduled Date (YYYY-MM-DD)',
-                      hintText: '2024-01-15',
-                      isDense: true,
+                    const SizedBox(height: 12),
+                    // Next Scheduled Date
+                    VoiceTextField(
+                      controller: nextDateController,
+                      decoration: const InputDecoration(
+                        labelText: 'Next Scheduled Date (YYYY-MM-DD)',
+                        hintText: '2024-01-15',
+                        isDense: true,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Meeting Objective
-                  const SizedBox(height: 6),
-                  VoiceTextField(
-                    controller: objectiveController,
-                    decoration: const InputDecoration(
-                      labelText: 'Meeting Objective *',
-                      hintText: 'Prose description (no bullets)',
-                      isDense: true,
+                    const SizedBox(height: 12),
+                    // Meeting Objective
+                    const SizedBox(height: 6),
+                    VoiceTextField(
+                      controller: objectiveController,
+                      decoration: const InputDecoration(
+                        labelText: 'Meeting Objective *',
+                        hintText: 'Prose description (no bullets)',
+                        isDense: true,
+                      ),
+                      maxLines: 3,
                     ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 12),
-                  // Action Items
-                  const SizedBox(height: 6),
-                  VoiceTextField(
-                    controller: actionItemsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Action Items',
-                      hintText:
-                          'Use "." bullet format (e.g., ". Item 1\n. Item 2")',
-                      isDense: true,
+                    const SizedBox(height: 12),
+                    // Action Items
+                    const SizedBox(height: 6),
+                    VoiceTextField(
+                      controller: actionItemsController,
+                      decoration: const InputDecoration(
+                        labelText: 'Action Items',
+                        hintText:
+                            'Use "." bullet format (e.g., ". Item 1\n. Item 2")',
+                        isDense: true,
+                      ),
+                      maxLines: 4,
                     ),
-                    maxLines: 4,
-                  ),
-                  const SizedBox(height: 12),
-                  // Notes
-                  const SizedBox(height: 6),
-                  VoiceTextField(
-                    controller: notesController,
-                    decoration: const InputDecoration(
-                      labelText: 'Notes',
-                      hintText: 'Manual notes only',
-                      isDense: true,
+                    const SizedBox(height: 12),
+                    // Notes
+                    const SizedBox(height: 6),
+                    VoiceTextField(
+                      controller: notesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Notes',
+                        hintText: 'Manual notes only',
+                        isDense: true,
+                      ),
+                      maxLines: 3,
                     ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 12),
-                  // Status
-                  DropdownButtonFormField<String>(
-                    value:
-                        selectedStatus.isEmpty ? null : selectedStatus,
-                    decoration: const InputDecoration(
-                      labelText: 'Status',
-                      isDense: true,
+                    const SizedBox(height: 12),
+                    // Status
+                    DropdownButtonFormField<String>(
+                      value: selectedStatus.isEmpty ? null : selectedStatus,
+                      decoration: const InputDecoration(
+                        labelText: 'Status',
+                        isDense: true,
+                      ),
+                      items: const [
+                        'Scheduled',
+                        'In Progress',
+                        'Completed',
+                        'Cancelled'
+                      ]
+                          .map((item) => DropdownMenuItem(
+                                value: item,
+                                child: Text(item,
+                                    style: const TextStyle(fontSize: 13)),
+                              ))
+                          .toList(),
+                      onChanged: (v) {
+                        setDialogState(() {
+                          selectedStatus = v ?? 'Scheduled';
+                          statusController.text = v ?? 'Scheduled';
+                        });
+                      },
                     ),
-                    items: const [
-                      'Scheduled',
-                      'In Progress',
-                      'Completed',
-                      'Cancelled'
-                    ]
-                        .map((item) => DropdownMenuItem(
-                              value: item,
-                              child: Text(item,
-                                  style: const TextStyle(fontSize: 13)),
-                            ))
-                        .toList(),
-                    onChanged: (v) {
-                      setDialogState(() {
-                        selectedStatus = v ?? 'Scheduled';
-                        statusController.text = v ?? 'Scheduled';
-                      });
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  _updateMeeting(_meeting.copyWith(
+                    meetingType: selectedMeetingType,
+                    frequency: selectedFrequency,
+                    keyParticipants: selectedParticipants,
+                    durationHours: durationController.text.trim(),
+                    meetingObjective: objectiveController.text.trim(),
+                    actionItems: actionItemsController.text.trim(),
+                    notes: notesController.text.trim(),
+                    nextScheduledDate: nextDateController.text.trim().isEmpty
+                        ? null
+                        : nextDateController.text.trim(),
+                    status: selectedStatus,
+                  ));
+                  Navigator.of(dialogContext).pop(true);
+                },
+                child: const Text('Save'),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                _updateMeeting(_meeting.copyWith(
-                  meetingType: selectedMeetingType,
-                  frequency: selectedFrequency,
-                  keyParticipants: selectedParticipants,
-                  durationHours: durationController.text.trim(),
-                  meetingObjective: objectiveController.text.trim(),
-                  actionItems: actionItemsController.text.trim(),
-                  notes: notesController.text.trim(),
-                  nextScheduledDate: nextDateController.text.trim().isEmpty
-                      ? null
-                      : nextDateController.text.trim(),
-                  status: selectedStatus,
-                ));
-                Navigator.of(dialogContext).pop(true);
-              },
-              child: const Text('Save'),
-            ),
-          ],
         ),
-      ),
-    );
+      );
+    } finally {
+      meetingTypeController.dispose();
+      frequencyController.dispose();
+      durationController.dispose();
+      objectiveController.dispose();
+      actionItemsController.dispose();
+      notesController.dispose();
+      nextDateController.dispose();
+      statusController.dispose();
+    }
   }
 
   Future<List<String>?> _showParticipantDialog(
@@ -987,8 +1066,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.edit_outlined,
-                                          size: 16,
-                                          color: Color(0xFF6B7280)),
+                                          size: 16, color: Color(0xFF6B7280)),
                                       onPressed: () {
                                         setState(() => _isEditing = true);
                                       },
@@ -999,8 +1077,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete_outline,
-                                          size: 16,
-                                          color: Color(0xFFEF4444)),
+                                          size: 16, color: Color(0xFFEF4444)),
                                       onPressed: widget.onDelete,
                                       tooltip: 'Delete',
                                       padding: EdgeInsets.zero,
@@ -1134,11 +1211,11 @@ class _MultiSelectCell extends StatelessWidget {
 
     return InkWell(
       onTap: () => _showMultiSelectDialog(context),
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: const BorderRadius.circular(6),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+        decoration: const BoxDecoration(
+          border: Border.all(color: Color(0xFFE5E7EB)),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
@@ -1253,7 +1330,6 @@ class _ObjectiveCell extends StatelessWidget {
   }
 }
 
-
 /// Read-only text widget for table cells when not in editing mode.
 /// Displays plain text (no input fields, no borders, no icons).
 class _ReadOnlyText extends StatelessWidget {
@@ -1280,9 +1356,8 @@ class _ReadOnlyText extends StatelessWidget {
         softWrap: false,
         style: TextStyle(
           fontSize: 13,
-          color: value.isEmpty
-              ? const Color(0xFF9CA3AF)
-              : const Color(0xFF111827),
+          color:
+              value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF111827),
           fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
         ),
       ),

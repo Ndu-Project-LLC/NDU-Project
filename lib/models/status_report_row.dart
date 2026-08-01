@@ -94,4 +94,13 @@ class StatusReportRow {
       status: json['status']?.toString() ?? 'Draft',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is StatusReportRow && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

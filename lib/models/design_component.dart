@@ -114,8 +114,9 @@ class DesignComponent {
           DateTime.now().microsecondsSinceEpoch.toString(),
       specId: json['specId']?.toString() ?? '',
       componentName: json['componentName']?.toString() ?? '',
-      specificationType:
-          json['specificationType']?.toString() ?? json['category']?.toString() ?? 'Component',
+      specificationType: json['specificationType']?.toString() ??
+          json['category']?.toString() ??
+          'Component',
       category: json['category']?.toString() ?? 'Backend',
       specificationDetails: json['specificationDetails']?.toString() ?? '',
       integrationPoint: json['integrationPoint']?.toString() ?? '',
@@ -195,4 +196,13 @@ class DesignComponent {
     'QA',
     'DevOps',
   ];
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is DesignComponent && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

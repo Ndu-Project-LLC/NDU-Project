@@ -30,10 +30,10 @@ class DeliverableTimelineChart extends StatelessWidget {
     return Container(
       height: height,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: CustomPaint(
         painter: _TimelinePainter(deliverables: deliverables),
@@ -159,7 +159,10 @@ class DonutChart extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                data.fold<double>(0, (sum, d) => sum + (d['value'] as num).toDouble()).toStringAsFixed(0),
+                data
+                    .fold<double>(
+                        0, (sum, d) => sum + (d['value'] as num).toDouble())
+                    .toStringAsFixed(0),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -249,10 +252,10 @@ class BarChart extends StatelessWidget {
     return Container(
       height: height,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: CustomPaint(
         painter: _BarChartPainter(data: data),

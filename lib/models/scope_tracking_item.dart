@@ -22,18 +22,25 @@ class ScopeTrackingItem {
   // ── P1.4: Cross-references for full project controls traceability ──
   /// CBS element ID — links this scope item to its cost account.
   String cbsId;
+
   /// OBS element ID — links this scope item to the responsible org unit.
   String obsId;
+
   /// Control Account ID — links to the WBS+OBS intersection for EVM rollup.
   String controlAccountId;
+
   /// Baseline version ID — which baseline this scope item belongs to.
   String baselineVersionId;
+
   /// Epic ID — links this scope item to an agile epic for hybrid traceability.
   String epicId;
+
   /// Feature ID — links this scope item to an agile feature for hybrid traceability.
   String featureId;
+
   /// Relative weight (0-1) for weighted scope completion rollup.
   double weight;
+
   /// Physical percent complete (0-1) for this scope item.
   double percentComplete;
 
@@ -199,4 +206,11 @@ class ScopeTrackingItem {
           : 0,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ScopeTrackingItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

@@ -99,4 +99,11 @@ class MeetingRow {
       status: json['status']?.toString() ?? 'Scheduled',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is MeetingRow && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

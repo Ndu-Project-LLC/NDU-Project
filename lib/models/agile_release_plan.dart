@@ -98,4 +98,11 @@ class AgileReleasePlan {
           (json['storyIds'] as List?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is AgileReleasePlan && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

@@ -24,7 +24,8 @@ extension DeliveryModelLabel on DeliveryModel {
         DeliveryModel.waterfall => 'Formal MoC required for all scope changes',
         DeliveryModel.agile =>
           'Routine backlog refinement (no formal MoC) + Controlled baseline changes (formal workflow)',
-        DeliveryModel.hybrid => 'MoC for waterfall phases, info note for agile phases',
+        DeliveryModel.hybrid =>
+          'MoC for waterfall phases, info note for agile phases',
       };
 }
 
@@ -113,14 +114,7 @@ extension ChangeCategoryLabel on ChangeCategory {
       };
 }
 
-enum BaselineType {
-  scope,
-  schedule,
-  cost,
-  resource,
-  procurement,
-  contract
-}
+enum BaselineType { scope, schedule, cost, resource, procurement, contract }
 
 extension BaselineTypeLabel on BaselineType {
   String get label => switch (this) {
@@ -428,7 +422,8 @@ class WorkPackageControl {
       deliverables: deliverables ?? this.deliverables,
       acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
       responsibleOrg: responsibleOrg ?? this.responsibleOrg,
-      responsibleIndividual: responsibleIndividual ?? this.responsibleIndividual,
+      responsibleIndividual:
+          responsibleIndividual ?? this.responsibleIndividual,
       discipline: discipline ?? this.discipline,
       location: location ?? this.location,
       phase: phase ?? this.phase,
@@ -456,6 +451,13 @@ class WorkPackageControl {
       progressMethod: progressMethod ?? this.progressMethod,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is WorkPackageControl && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // ─── Impact Analysis (14 dimensions per guidance) ─────────────────────────
@@ -528,6 +530,13 @@ class ApprovalStep {
     this.approvedAt,
     this.comments,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ApprovalStep && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class ApprovalWorkflow {
@@ -617,6 +626,13 @@ class ChangeRequest {
       affectedBaselines: affectedBaselines ?? this.affectedBaselines,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ChangeRequest && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // ─── Baseline ─────────────────────────────────────────────────────────────
@@ -786,6 +802,13 @@ class RiskItem {
       isIssue: isIssue ?? this.isIssue,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is RiskItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // ─── Resource Allocation ──────────────────────────────────────────────────
@@ -827,8 +850,7 @@ class ResourceAllocation {
       resourceName: resourceName ?? this.resourceName,
       discipline: discipline ?? this.discipline,
       weeklyHours: weeklyHours ?? this.weeklyHours,
-      capacityHoursPerWeek:
-          capacityHoursPerWeek ?? this.capacityHoursPerWeek,
+      capacityHoursPerWeek: capacityHoursPerWeek ?? this.capacityHoursPerWeek,
     );
   }
 }
@@ -853,6 +875,13 @@ class ReportRecord {
     required this.generatedBy,
     required this.summaryText,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ReportRecord && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // ─── Audit Entry ──────────────────────────────────────────────────────────
@@ -877,6 +906,13 @@ class AuditEntry {
     this.reason,
     this.changeRequestId,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is AuditEntry && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // ─── Project Controls State ───────────────────────────────────────────────
@@ -954,24 +990,29 @@ class ProjectControlsState {
       totalActualCost > 0 ? totalEarnedValue / totalActualCost : 1.0;
   double get portfolioSPI =>
       totalPlannedValue > 0 ? totalEarnedValue / totalPlannedValue : 1.0;
-  double get portfolioEAC =>
-      portfolioCPI > 0
-          ? totalActualCost + (totalOriginalBudget - totalEarnedValue) / portfolioCPI
-          : totalOriginalBudget;
+  double get portfolioEAC => portfolioCPI > 0
+      ? totalActualCost +
+          (totalOriginalBudget - totalEarnedValue) / portfolioCPI
+      : totalOriginalBudget;
   double get portfolioVAC => totalOriginalBudget - portfolioEAC;
 
   double get avgPercentComplete {
     if (workPackages.isEmpty) return 0;
-    return workPackages.fold(0.0, (sum, wp) => sum + (wp.percentComplete ?? 0)) /
+    return workPackages.fold(
+            0.0, (sum, wp) => sum + (wp.percentComplete ?? 0)) /
         workPackages.length;
   }
 
-  int get openChangeRequests =>
-      changeRequests.where((cr) => cr.status == ChangeStatus.submitted ||
-          cr.status == ChangeStatus.underReview).length;
-  int get approvedChanges =>
-      changeRequests.where((cr) => cr.status == ChangeStatus.approved ||
-          cr.status == ChangeStatus.implemented).length;
+  int get openChangeRequests => changeRequests
+      .where((cr) =>
+          cr.status == ChangeStatus.submitted ||
+          cr.status == ChangeStatus.underReview)
+      .length;
+  int get approvedChanges => changeRequests
+      .where((cr) =>
+          cr.status == ChangeStatus.approved ||
+          cr.status == ChangeStatus.implemented)
+      .length;
 
   // Health score (0-100)
   int get healthScore {
@@ -992,10 +1033,12 @@ class ProjectControlsState {
       scheduleVariances.where((v) => v.varianceDays > 0).length;
 
   // ─── Risk & issues computed helpers ──────────────────────────────────
-  List<RiskItem> get openRisks =>
-      risksAndIssues.where((r) => !r.isIssue && r.status != RiskStatus.closed).toList();
-  List<RiskItem> get openIssues =>
-      risksAndIssues.where((r) => r.isIssue && r.status != RiskStatus.closed).toList();
+  List<RiskItem> get openRisks => risksAndIssues
+      .where((r) => !r.isIssue && r.status != RiskStatus.closed)
+      .toList();
+  List<RiskItem> get openIssues => risksAndIssues
+      .where((r) => r.isIssue && r.status != RiskStatus.closed)
+      .toList();
   int get criticalRisksCount =>
       risksAndIssues.where((r) => !r.isIssue && r.severity >= 16).length;
 

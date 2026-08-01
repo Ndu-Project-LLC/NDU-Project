@@ -10,32 +10,42 @@ class CbsElement {
   // ── P1.2: Financial fields for cost rollup (per Integrated Project Controls guide) ──
   /// Budgeted amount for this CBS element.
   double budgetAmount;
+
   /// Committed amount (under contract or purchase order).
   double committedAmount;
+
   /// Actually spent/incurred amount.
   double spentAmount;
+
   /// Contingency reserve allocated to this element.
   double contingencyAmount;
+
   /// Whether this element is flagged as management reserve.
   bool isManagementReserve;
+
   /// Currency code (e.g. 'USD', 'EUR', 'GBP').
   String currency;
 
   // ── P1.4: Cross-references for WBS↔CBS↔OBS integration matrix ──
   /// WBS element ID cross-reference — links this cost account to its WBS node.
   String wbsId;
+
   /// OBS element ID cross-reference — links this cost account to the responsible org unit.
   String obsId;
+
   /// Control Account ID — links to the intersection of WBS + OBS for EVM rollup.
   String controlAccountId;
 
   // ── Hierarchy helpers ──
   /// Depth level in the CBS hierarchy (0 = root).
   int level;
+
   /// Full path from root (e.g. "1.2.3") for breadcrumb navigation.
   String path;
+
   /// Whether this element is active (soft delete support).
   bool isActive;
+
   /// Whether this element has been baselined.
   bool isBaselined;
 
@@ -78,7 +88,8 @@ class CbsElement {
 
   /// Computed: cost performance index = spentAmount > 0 ? (budgetAmount * %complete) / spentAmount : 1.0.
   /// Note: For true CPI, EV must be supplied externally from linked Control Account.
-  double get costPerformanceIndex => spentAmount > 0 ? budgetAmount / spentAmount : 1.0;
+  double get costPerformanceIndex =>
+      spentAmount > 0 ? budgetAmount / spentAmount : 1.0;
 
   CbsElement copyWith({
     String? code,
@@ -176,4 +187,11 @@ class CbsElement {
       isBaselined: json['isBaselined'] == true,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is CbsElement && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

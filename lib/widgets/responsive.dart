@@ -6,12 +6,15 @@ class AppBreakpoints {
   static const double tablet = 768; // < 768 = mobile
   static const double desktop = 1200; // >= 1200 = desktop
 
-  static bool isMobile(BuildContext context) => MediaQuery.sizeOf(context).width < tablet;
+  static bool isMobile(BuildContext context) =>
+      MediaQuery.sizeOf(context).width < tablet;
   static bool isTablet(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
     return w >= tablet && w < desktop;
   }
-  static bool isDesktop(BuildContext context) => MediaQuery.sizeOf(context).width >= desktop;
+
+  static bool isDesktop(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= desktop;
 
   static double pagePadding(BuildContext context) {
     if (isMobile(context)) return 16;

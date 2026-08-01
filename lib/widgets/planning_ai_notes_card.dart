@@ -10,6 +10,7 @@ import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class PlanningAiNotesCard extends StatefulWidget {
   const PlanningAiNotesCard({
     super.key,
@@ -288,7 +289,8 @@ class _PlanningAiNotesCardState extends State<PlanningAiNotesCard> {
               ),
               filled: true,
               fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             ),
             style: const TextStyle(fontSize: 14),
           ),

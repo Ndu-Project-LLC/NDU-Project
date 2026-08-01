@@ -7,8 +7,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class NewChangeRequestDialog extends StatefulWidget {
-  const NewChangeRequestDialog({super.key, this.changeRequest, this.onSaved, this.projectId});
+  const NewChangeRequestDialog(
+      {super.key, this.changeRequest, this.onSaved, this.projectId});
 
   final ChangeRequest? changeRequest;
   final VoidCallback? onSaved;
@@ -28,10 +30,19 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
   final TextEditingController _descriptionCtrl = TextEditingController();
   final TextEditingController _justificationCtrl = TextEditingController();
   final TextEditingController _dateCtrl = TextEditingController();
-  final TextEditingController _requesterCtrl = TextEditingController(text: FirebaseAuthService.displayNameOrEmail(fallback: ''));
+  final TextEditingController _requesterCtrl = TextEditingController(
+      text: FirebaseAuthService.displayNameOrEmail(fallback: ''));
 
   // Dropdown states
-  final List<String> _types = const ['Requirement', 'Scope', 'Design', 'Schedule', 'Cost', 'Quality', 'Other'];
+  final List<String> _types = const [
+    'Requirement',
+    'Scope',
+    'Design',
+    'Schedule',
+    'Cost',
+    'Quality',
+    'Other'
+  ];
   String? _selectedType;
 
   final List<String> _impacts = const ['High', 'Medium', 'Low'];
@@ -102,7 +113,16 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
     try {
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'],
+        allowedExtensions: [
+          'pdf',
+          'doc',
+          'docx',
+          'xls',
+          'xlsx',
+          'png',
+          'jpg',
+          'jpeg'
+        ],
         withData: true,
       );
       if (result == null || result.files.isEmpty) return;
@@ -120,9 +140,10 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
       setState(() => _uploading = true);
 
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final storagePath = 'change_requests/${widget.projectId ?? 'general'}/${timestamp}_${file.name}';
+      final storagePath =
+          'change_requests/${widget.projectId ?? 'general'}/${timestamp}_${file.name}';
       final ref = FirebaseStorage.instance.ref(storagePath);
-      
+
       await ref.putData(file.bytes!);
       final downloadUrl = await ref.getDownloadURL();
 
@@ -167,11 +188,13 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
       _attachmentName = null;
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape:
+          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 820),
         child: Padding(
@@ -186,19 +209,30 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      borderRadius: const BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.change_circle_outlined, color: Colors.black87),
+                    child: const Icon(Icons.change_circle_outlined,
+                        color: Colors.black87),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_isEditing ? 'Update Change Request' : 'New Change request', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                        Text(
+                            _isEditing
+                                ? 'Update Change Request'
+                                : 'New Change request',
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 2),
-                        Text(_isEditing ? 'Modify the details of this change request.' : 'Submit details to start the change management process.', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                        Text(
+                            _isEditing
+                                ? 'Modify the details of this change request.'
+                                : 'Submit details to start the change management process.',
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.black54)),
                       ],
                     ),
                   ),
@@ -210,25 +244,46 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                 ],
               ),
               const SizedBox(height: 16),
-
               Form(
                 key: _formKey,
                 child: Column(
                   children: [
                     _grid(
                       children: [
-                        _textField('Title', controller: _titleCtrl, hint: 'e.g. Update payment gateway'),
-                        _dropdownField('Type', value: _selectedType, items: _types, onChanged: (v) => setState(() => _selectedType = v)),
-                        _dropdownField('Impact', value: _selectedImpact, items: _impacts, onChanged: (v) => setState(() => _selectedImpact = v)),
-                        _dropdownField('Status', value: _selectedStatus, items: _statuses, onChanged: (v) => setState(() => _selectedStatus = v ?? 'Pending')),
-                        _dateField('Request date', controller: _dateCtrl, onTap: _pickDate),
-                        _textField('Requester', controller: _requesterCtrl, hint: 'Your name'),
+                        _textField('Title',
+                            controller: _titleCtrl,
+                            hint: 'e.g. Update payment gateway'),
+                        _dropdownField('Type',
+                            value: _selectedType,
+                            items: _types,
+                            onChanged: (v) =>
+                                setState(() => _selectedType = v)),
+                        _dropdownField('Impact',
+                            value: _selectedImpact,
+                            items: _impacts,
+                            onChanged: (v) =>
+                                setState(() => _selectedImpact = v)),
+                        _dropdownField('Status',
+                            value: _selectedStatus,
+                            items: _statuses,
+                            onChanged: (v) => setState(
+                                () => _selectedStatus = v ?? 'Pending')),
+                        _dateField('Request date',
+                            controller: _dateCtrl, onTap: _pickDate),
+                        _textField('Requester',
+                            controller: _requesterCtrl, hint: 'Your name'),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _textField('Description', controller: _descriptionCtrl, maxLines: 4, hint: 'Describe the change and affected scope'),
+                    _textField('Description',
+                        controller: _descriptionCtrl,
+                        maxLines: 4,
+                        hint: 'Describe the change and affected scope'),
                     const SizedBox(height: 12),
-                    _textField('Justification / Reason', controller: _justificationCtrl, maxLines: 3, hint: 'Why is this change needed?'),
+                    _textField('Justification / Reason',
+                        controller: _justificationCtrl,
+                        maxLines: 3,
+                        hint: 'Why is this change needed?'),
                     const SizedBox(height: 12),
 
                     // Attachments area
@@ -236,53 +291,67 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.withOpacity(0.25)),
+                        color: Colors.grey.withValues(alpha: 0.06),
+                        borderRadius: const BorderRadius.circular(12),
+                        border: Border.all(
+                            color: Colors.grey.withValues(alpha: 0.25)),
                       ),
                       child: _attachmentUrl != null
                           ? Row(
                               children: [
-                                const Icon(Icons.insert_drive_file, size: 18, color: Colors.blue),
+                                const Icon(Icons.insert_drive_file,
+                                    size: 18, color: Colors.blue),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     _attachmentName ?? 'Attachment',
-                                    style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                    style: const TextStyle(
+                                        fontSize: 13, color: Colors.black87),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                                 IconButton(
                                   tooltip: 'Download',
-                                  icon: const Icon(Icons.download, size: 18, color: Colors.blue),
+                                  icon: const Icon(Icons.download,
+                                      size: 18, color: Colors.blue),
                                   onPressed: _downloadAttachment,
                                 ),
                                 IconButton(
                                   tooltip: 'Remove',
-                                  icon: const Icon(Icons.close, size: 18, color: Colors.red),
+                                  icon: const Icon(Icons.close,
+                                      size: 18, color: Colors.red),
                                   onPressed: _removeAttachment,
                                 ),
                               ],
                             )
                           : Row(
                               children: [
-                                const Icon(Icons.attach_file, size: 18, color: Colors.black54),
+                                const Icon(Icons.attach_file,
+                                    size: 18, color: Colors.black54),
                                 const SizedBox(width: 8),
                                 const Expanded(
-                                  child: Text('Attachments (optional)', style: TextStyle(fontSize: 13, color: Colors.black87)),
+                                  child: Text('Attachments (optional)',
+                                      style: TextStyle(
+                                          fontSize: 13, color: Colors.black87)),
                                 ),
                                 _uploading
                                     ? const SizedBox(
                                         width: 24,
                                         height: 24,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
                                       )
                                     : OutlinedButton(
                                         onPressed: _pickAndUploadFile,
                                         style: OutlinedButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                          side: BorderSide(color: Colors.grey.withOpacity(0.4)),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 10),
+                                          side: BorderSide(
+                                              color: Colors.grey
+                                                  .withValues(alpha: 0.4)),
+                                          shape: const RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
                                           foregroundColor: Colors.black,
                                         ),
                                         child: const Text('Add file'),
@@ -293,9 +362,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 16),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -309,13 +376,20 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFD700),
                       foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 12),
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                     child: _submitting
-                        ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : Text(_isEditing ? 'Update request' : 'Create request', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text(_isEditing ? 'Update request' : 'Create request',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ],
               )
@@ -325,6 +399,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
       ),
     );
   }
+
   Future<void> _submit() async {
     if (_submitting) return;
     if (!_formKey.currentState!.validate()) return;
@@ -340,8 +415,12 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
           impact: _selectedImpact!,
           status: _selectedStatus,
           requester: _requesterCtrl.text.trim(),
-          description: _descriptionCtrl.text.trim().isEmpty ? null : _descriptionCtrl.text.trim(),
-          justification: _justificationCtrl.text.trim().isEmpty ? null : _justificationCtrl.text.trim(),
+          description: _descriptionCtrl.text.trim().isEmpty
+              ? null
+              : _descriptionCtrl.text.trim(),
+          justification: _justificationCtrl.text.trim().isEmpty
+              ? null
+              : _justificationCtrl.text.trim(),
           requestDate: _selectedDate!,
           createdAt: widget.changeRequest!.createdAt,
           projectId: widget.changeRequest!.projectId,
@@ -358,8 +437,12 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
           requester: _requesterCtrl.text.trim(),
           requestDate: _selectedDate!,
           projectId: widget.projectId,
-          description: _descriptionCtrl.text.trim().isEmpty ? null : _descriptionCtrl.text.trim(),
-          justification: _justificationCtrl.text.trim().isEmpty ? null : _justificationCtrl.text.trim(),
+          description: _descriptionCtrl.text.trim().isEmpty
+              ? null
+              : _descriptionCtrl.text.trim(),
+          justification: _justificationCtrl.text.trim().isEmpty
+              ? null
+              : _justificationCtrl.text.trim(),
           attachmentUrl: _attachmentUrl,
           attachmentName: _attachmentName,
         );
@@ -370,7 +453,10 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
 //...
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.changeRequest != null ? 'Failed to update request: $e' : 'Failed to create request: $e')),
+          SnackBar(
+              content: Text(widget.changeRequest != null
+                  ? 'Failed to update request: $e'
+                  : 'Failed to create request: $e')),
         );
       }
     } finally {
@@ -387,36 +473,63 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: Column(children: [children[0], const SizedBox(height: 12), children[2], const SizedBox(height: 12), children[4]])),
+              Expanded(
+                  child: Column(children: [
+                children[0],
+                const SizedBox(height: 12),
+                children[2],
+                const SizedBox(height: 12),
+                children[4]
+              ])),
               const SizedBox(width: 12),
-              Expanded(child: Column(children: [children[1], const SizedBox(height: 12), children[3], const SizedBox(height: 12), children[5]])),
+              Expanded(
+                  child: Column(children: [
+                children[1],
+                const SizedBox(height: 12),
+                children[3],
+                const SizedBox(height: 12),
+                children[5]
+              ])),
             ],
           );
         }
         return Column(
           children: [
-            for (int i = 0; i < children.length; i++) ...[if (i > 0) const SizedBox(height: 12), children[i]]
+            for (int i = 0; i < children.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12),
+              children[i]
+            ]
           ],
         );
       },
     );
   }
 
-  InputDecoration _decoration(String label, {String? hint, Widget? suffixIcon}) {
+  InputDecoration _decoration(String label,
+      {String? hint, Widget? suffixIcon}) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.withOpacity(0.35))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.withOpacity(0.35))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.6)),
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
+      focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.6)),
       suffixIcon: suffixIcon,
     );
   }
 
-  Widget _textField(String label, {required TextEditingController controller, String? hint, int maxLines = 1}) {
+  Widget _textField(String label,
+      {required TextEditingController controller,
+      String? hint,
+      int maxLines = 1}) {
     final isMultiline = maxLines != 1;
     if (isMultiline) {
       return ExpandingTextFormField(
@@ -424,7 +537,8 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
         minLines: maxLines,
         decoration: _decoration(label, hint: hint),
         validator: (v) {
-          if (label == 'Description' || label == 'Justification / Reason') return null; // optional
+          if (label == 'Description' || label == 'Justification / Reason')
+            return null; // optional
           if (v == null || v.trim().isEmpty) return 'Required';
           return null;
         },
@@ -433,7 +547,8 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
     return VoiceTextFormField(
       controller: controller,
       validator: (v) {
-        if (label == 'Description' || label == 'Justification / Reason') return null; // optional
+        if (label == 'Description' || label == 'Justification / Reason')
+          return null; // optional
         if (v == null || v.trim().isEmpty) return 'Required';
         return null;
       },
@@ -441,21 +556,29 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
     );
   }
 
-  Widget _dateField(String label, {required TextEditingController controller, required VoidCallback onTap}) {
+  Widget _dateField(String label,
+      {required TextEditingController controller,
+      required VoidCallback onTap}) {
     return VoiceTextFormField(
       controller: controller,
       readOnly: true,
       validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
       onTap: onTap,
-      decoration: _decoration(label, hint: 'YYYY-MM-DD', suffixIcon: const Icon(Icons.calendar_today_outlined)),
+      decoration: _decoration(label,
+          hint: 'YYYY-MM-DD',
+          suffixIcon: const Icon(Icons.calendar_today_outlined)),
     );
   }
 
-  Widget _dropdownField(String label, {required String? value, required List<String> items, required ValueChanged<String?> onChanged}) {
+  Widget _dropdownField(String label,
+      {required String? value,
+      required List<String> items,
+      required ValueChanged<String?> onChanged}) {
     return DropdownButtonFormField<String>(
       isExpanded: true,
       initialValue: value,
-      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      items:
+          items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
       onChanged: onChanged,
       validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
       decoration: _decoration(label),

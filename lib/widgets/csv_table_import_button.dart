@@ -75,7 +75,8 @@ class CsvTableImportButton extends StatelessWidget {
       label: const Text('Import CSV/XLSX'),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10)),
         foregroundColor: const Color(0xFF2563EB),
         side: const BorderSide(color: Color(0xFF93C5FD)),
       ),

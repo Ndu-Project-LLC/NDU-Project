@@ -82,6 +82,7 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
       width: widget.width,
       fit: BoxFit.contain,
       semanticLabel: widget.semanticLabel,
+      cacheHeight: (MediaQuery.devicePixelRatioOf(context) * h).round(),
     );
 
     if (!widget.enableTapToDashboard) {
@@ -109,14 +110,14 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
                 height: h,
                 width: widget.width,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.circular(8),
                   boxShadow: _isHovering
                       ? [
                           BoxShadow(
                             color: Theme.of(context)
                                 .colorScheme
                                 .primary
-                                .withOpacity(0.2),
+                                .withValues(alpha: 0.2),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -132,7 +133,7 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
             ),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: const BorderRadius.circular(8),
             child: image,
           ),
         ),

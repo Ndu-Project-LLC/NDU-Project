@@ -83,7 +83,8 @@ class ResponsiveScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = AppBreakpoints.isMobile(context);
-    final bgColor = backgroundColor ?? Theme.of(context).scaffoldBackgroundColor;
+    final bgColor =
+        backgroundColor ?? Theme.of(context).scaffoldBackgroundColor;
 
     final wrappedBody = _wrapBody(context);
 
@@ -311,7 +312,8 @@ class ResponsiveRowOrColumn extends StatelessWidget {
     );
   }
 
-  List<Widget> _insertSpacing(List<Widget> widgets, double spacing, {required bool isRow}) {
+  List<Widget> _insertSpacing(List<Widget> widgets, double spacing,
+      {required bool isRow}) {
     if (widgets.isEmpty) return widgets;
 
     final result = <Widget>[];

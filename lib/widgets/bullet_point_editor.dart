@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class BulletPointEditor extends StatefulWidget {
   final String title;
   final String? subtitle;
@@ -29,9 +30,8 @@ class _BulletPointEditorState extends State<BulletPointEditor> {
   @override
   void initState() {
     super.initState();
-    _controllers = widget.items
-        .map((e) => TextEditingController(text: e))
-        .toList();
+    _controllers =
+        widget.items.map((e) => TextEditingController(text: e)).toList();
     if (_controllers.isEmpty) {
       _controllers.add(TextEditingController());
     }
@@ -130,17 +130,17 @@ class _BulletPointEditorState extends State<BulletPointEditor> {
                       isDense: true,
                       filled: true,
                       fillColor: Colors.white,
-                      border: OutlineInputBorder(
+                      border: const OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderSide: BorderSide(color: Color(0xFFE2E8F0)),
                       ),
-                      enabledBorder: OutlineInputBorder(
+                      enabledBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderSide: BorderSide(color: Color(0xFFE2E8F0)),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+                        borderSide: BorderSide(color: Color(0xFF3B82F6)),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 12),

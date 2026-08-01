@@ -167,11 +167,14 @@ class _ResponsiveDataTableWrapperState
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFC812).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFFFC812).withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color:
+                              const Color(0xFFFFC812).withValues(alpha: 0.3)),
                     ),
                     child: const Text(
                       'Scroll to see more ->',

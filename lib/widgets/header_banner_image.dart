@@ -47,8 +47,12 @@ class _HeaderBannerImageState extends State<HeaderBannerImage> {
         fit: widget.fit,
         height: widget.height,
         width: double.infinity,
+        cacheWidth: (MediaQuery.devicePixelRatioOf(context) *
+                MediaQuery.sizeOf(context).width)
+            .round(),
         errorBuilder: (context, error, stackTrace) {
-          debugPrint('HeaderBannerImage: fallback "${widget.fallbackAsset}" failed: $error');
+          debugPrint(
+              'HeaderBannerImage: fallback "${widget.fallbackAsset}" failed: $error');
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && !_fallbackFailed) {
               setState(() => _fallbackFailed = true);
@@ -65,8 +69,12 @@ class _HeaderBannerImageState extends State<HeaderBannerImage> {
       fit: widget.fit,
       height: widget.height,
       width: double.infinity,
+      cacheWidth: (MediaQuery.devicePixelRatioOf(context) *
+              MediaQuery.sizeOf(context).width)
+          .round(),
       errorBuilder: (context, error, stackTrace) {
-        debugPrint('HeaderBannerImage: primary "${widget.asset}" failed: $error');
+        debugPrint(
+            'HeaderBannerImage: primary "${widget.asset}" failed: $error');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && !_primaryFailed) {
             setState(() => _primaryFailed = true);
@@ -78,8 +86,12 @@ class _HeaderBannerImageState extends State<HeaderBannerImage> {
           fit: widget.fit,
           height: widget.height,
           width: double.infinity,
+          cacheWidth: (MediaQuery.devicePixelRatioOf(context) *
+                  MediaQuery.sizeOf(context).width)
+              .round(),
           errorBuilder: (context2, error2, stackTrace2) {
-            debugPrint('HeaderBannerImage: fallback "${widget.fallbackAsset}" also failed: $error2');
+            debugPrint(
+                'HeaderBannerImage: fallback "${widget.fallbackAsset}" also failed: $error2');
             return _buildGradientPlaceholder();
           },
         );
@@ -102,7 +114,7 @@ class _HeaderBannerImageState extends State<HeaderBannerImage> {
         child: Icon(
           Icons.image_outlined,
           size: 32,
-          color: Colors.amber.withOpacity(0.5),
+          color: Colors.amber.withValues(alpha: 0.5),
         ),
       ),
     );

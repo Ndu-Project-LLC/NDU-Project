@@ -104,8 +104,7 @@ class _PortfolioGanttCardState extends State<PortfolioGanttCard> {
       child: const Center(
         child: Column(
           children: [
-            Icon(Icons.timeline_outlined,
-                color: Color(0xFF94A3B8), size: 32),
+            Icon(Icons.timeline_outlined, color: Color(0xFF94A3B8), size: 32),
             SizedBox(height: 8),
             Text('No project timelines to display yet',
                 style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),
@@ -310,8 +309,7 @@ class _PortfolioProjectLogCardState extends State<PortfolioProjectLogCard> {
       final allEntries = <Map<String, dynamic>>[];
 
       for (final pDoc in projectsSnap.docs) {
-        final projectName =
-            pDoc.data()['projectName'] as String? ?? 'Untitled';
+        final projectName = pDoc.data()['projectName'] as String? ?? 'Untitled';
         try {
           final logSnap = await FirebaseFirestore.instance
               .collection('projects')
@@ -392,8 +390,7 @@ class _PortfolioProjectLogCardState extends State<PortfolioProjectLogCard> {
               TextButton.icon(
                 onPressed: () => ProjectActivitiesLogScreen.open(context),
                 icon: const Icon(Icons.arrow_forward, size: 14),
-                label: const Text('View all',
-                    style: TextStyle(fontSize: 12.5)),
+                label: const Text('View all', style: TextStyle(fontSize: 12.5)),
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFFB45309),
                   padding:
@@ -423,8 +420,7 @@ class _PortfolioProjectLogCardState extends State<PortfolioProjectLogCard> {
       child: const Center(
         child: Column(
           children: [
-            Icon(Icons.history_outlined,
-                color: Color(0xFF94A3B8), size: 32),
+            Icon(Icons.history_outlined, color: Color(0xFF94A3B8), size: 32),
             SizedBox(height: 8),
             Text('No project activity yet',
                 style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),

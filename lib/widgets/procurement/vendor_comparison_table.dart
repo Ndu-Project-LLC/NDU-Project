@@ -39,7 +39,8 @@ class VendorComparisonTable extends StatelessWidget {
             'Weighted against ${criteria.length} criteria.',
             style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
           ),
-          if (recommendedVendor != null && recommendedVendor!.trim().isNotEmpty) ...[
+          if (recommendedVendor != null &&
+              recommendedVendor!.trim().isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               'Recommended vendor: ${recommendedVendor!.trim()}',

@@ -123,8 +123,8 @@ class DesignGovernanceDashboard extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
@@ -134,7 +134,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: Color(0x180F172A),
             blurRadius: 28,
@@ -152,10 +152,10 @@ class DesignGovernanceDashboard extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                   border:
-                      Border.all(color: Colors.white.withOpacity(0.14)),
+                      Border.all(color: Colors.white.withValues(alpha: 0.14)),
                 ),
                 child: const Icon(
                   Icons.admin_panel_settings_outlined,
@@ -178,7 +178,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                     Text(
                       '${_fallbackText(projectData.projectName, 'Current design package')} is orchestrating review gates from prior scope, risks, milestones, team inputs, and AI-assisted working notes.',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.82),
+                        color: Colors.white.withValues(alpha: 0.82),
                         height: 1.45,
                       ),
                     ),
@@ -252,8 +252,8 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       right: 18,
                       child: Container(
                         height: 6,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE2E8F0),
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
@@ -266,8 +266,8 @@ class DesignGovernanceDashboard extends StatelessWidget {
                                 (snapshot.readinessPercent / 100.0))
                             .clamp(0.0, usableWidth),
                         height: 6,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
                             colors: [
                               Color(0xFF0F172A),
                               Color(0xFFF59E0B),
@@ -364,10 +364,10 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       horizontal: 12,
                       vertical: 8,
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: Color(0xFFE2E8F0)),
                     ),
                     child: Text(
                       attendee,
@@ -441,7 +441,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: const BorderRadius.circular(999),
                       child: LinearProgressIndicator(
                         minHeight: 10,
                         value: entry.utilization / 100,
@@ -684,10 +684,10 @@ class DesignGovernanceDashboard extends StatelessWidget {
               (entry) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -789,7 +789,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       height: 38,
                       decoration: BoxDecoration(
                         color: entry.locked
-                            ? Colors.white.withOpacity(0.08)
+                            ? Colors.white.withValues(alpha: 0.08)
                             : const Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -828,7 +828,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: entry.locked
-                                      ? Colors.white.withOpacity(0.78)
+                                      ? Colors.white.withValues(alpha: 0.78)
                                       : const Color(0xFF64748B),
                                 ),
                               ),
@@ -840,7 +840,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               color: entry.locked
-                                  ? Colors.white.withOpacity(0.82)
+                                  ? Colors.white.withValues(alpha: 0.82)
                                   : const Color(0xFF64748B),
                               height: 1.4,
                             ),
@@ -869,10 +869,10 @@ class DesignGovernanceDashboard extends StatelessWidget {
               (entry) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -949,10 +949,10 @@ class DesignGovernanceDashboard extends StatelessWidget {
               (entry) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -960,8 +960,8 @@ class DesignGovernanceDashboard extends StatelessWidget {
                     Container(
                       width: 34,
                       height: 34,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -1024,11 +1024,11 @@ class _GovernanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
+        border: Border.all(color: Color(0xFFE2E8F0)),
+        boxShadow: [
           BoxShadow(
             color: Color(0x120F172A),
             blurRadius: 24,
@@ -1045,8 +1045,8 @@ class _GovernanceCard extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
                     colors: [
                       Color(0xFF0F172A),
                       Color(0xFF1E293B),
@@ -1325,9 +1325,9 @@ class _HeaderBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withOpacity(0.14)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1362,9 +1362,9 @@ class _MetricPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1381,7 +1381,7 @@ class _MetricPill extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.82),
+              color: Colors.white.withValues(alpha: 0.82),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -1406,7 +1406,7 @@ class _CompactInfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
@@ -1484,10 +1484,10 @@ class _TableHeaderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: List.generate(labels.length, (index) {
@@ -1527,10 +1527,10 @@ class _TableDataRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Color(0xFFE2E8F0)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

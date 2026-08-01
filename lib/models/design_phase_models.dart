@@ -204,6 +204,15 @@ class RequirementRow {
 
   static String _generateId() =>
       DateTime.now().microsecondsSinceEpoch.toString();
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RequirementRow && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class RequirementChecklistItem {
@@ -674,6 +683,15 @@ class DesignSpecification {
       status: json['status']?.toString() ?? 'Defined',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is DesignSpecification && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class DesignDocument {
@@ -719,6 +737,15 @@ class DesignDocument {
       uploadedStoragePath: json['uploadedStoragePath']?.toString(),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is DesignDocument && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class DesignToolLink {
@@ -760,6 +787,15 @@ class DesignToolLink {
       uploadedStoragePath: json['uploadedStoragePath']?.toString(),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is DesignToolLink && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // Legacy DTO for backward compatibility if needed,

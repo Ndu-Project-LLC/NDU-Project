@@ -9,34 +9,45 @@ class ObsElement {
   // ── P1.3: Organizational accountability fields (per Integrated Project Controls guide) ──
   /// Department or division name.
   String department;
+
   /// Role of this org unit within the project (e.g. 'Project Controls', 'Engineering Lead').
   String role;
+
   /// Responsibility statement — what this org unit is accountable for.
   String responsibility;
+
   /// Cost center code for financial tracking.
   String costCenter;
+
   /// Budget authority — maximum budget this unit can approve without escalation.
   double budgetAuthority;
+
   /// Capacity in FTE (full-time equivalent) available for this project.
   double capacityFte;
+
   /// Currently allocated FTE to this project.
   double allocatedFte;
+
   /// Availability percentage (0-1) = (capacityFte - allocatedFte) / capacityFte.
   /// Computed property below.
 
   // ── P1.4: Cross-references for WBS↔CBS↔OBS integration matrix ──
   /// WBS element ID cross-reference — links this org unit to its WBS node.
   String wbsId;
+
   /// CBS element ID cross-reference — links this org unit to its cost account.
   String cbsId;
+
   /// Control Account ID — links to the intersection of WBS + CBS for EVM rollup.
   String controlAccountId;
 
   // ── Hierarchy helpers ──
   /// Depth level in the OBS hierarchy (0 = root).
   int level;
+
   /// Full path from root (e.g. "1.2") for breadcrumb navigation.
   String path;
+
   /// Whether this element is active (soft delete support).
   bool isActive;
 
@@ -67,8 +78,7 @@ class ObsElement {
       capacityFte > 0 ? (capacityFte - allocatedFte) / capacityFte : 0;
 
   /// Computed: utilization = allocatedFte / capacityFte (0-1+).
-  double get utilization =>
-      capacityFte > 0 ? allocatedFte / capacityFte : 0;
+  double get utilization => capacityFte > 0 ? allocatedFte / capacityFte : 0;
 
   /// Computed: is over-allocated.
   bool get isOverAllocated => allocatedFte > capacityFte;
@@ -165,4 +175,11 @@ class ObsElement {
       isActive: json['isActive'] != false,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ObsElement && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

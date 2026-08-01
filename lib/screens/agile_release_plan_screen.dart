@@ -156,7 +156,8 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                         const SizedBox(height: 32),
                         Text(
                             'Plan releases, PI increments, and versioned deployments.',
-                            style: TextStyle(fontSize: 15, color: _kMuted)),
+                            style:
+                                const TextStyle(fontSize: 15, color: _kMuted)),
                         const SizedBox(height: 24),
                         if (_isLoading)
                           const Center(child: CircularProgressIndicator())
@@ -165,10 +166,13 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                             _buildEmptyState(
                                 'No release plans yet. Create your first release.')
                           else
-                            ..._plans
-                                .asMap()
-                                .entries
-                                .map((e) => _buildPlanCard(e.key, e.value)),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _plans.length,
+                              itemBuilder: (context, i) =>
+                                  _buildPlanCard(i, _plans[i]),
+                            ),
                           const SizedBox(height: 16),
                           OutlinedButton.icon(
                             onPressed: _addPlan,
@@ -177,7 +181,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: _kAccent,
                               side: const BorderSide(color: _kAccent),
-                              shape: RoundedRectangleBorder(
+                              shape: const RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8)),
                             ),
                           ),
@@ -234,9 +238,9 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
         plan.releaseDate != null ? _df.format(plan.releaseDate!) : 'Date TBD';
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: const BorderSide(color: _kBorder),
+        side: BorderSide(color: _kBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -249,7 +253,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: _kAccent.withOpacity(0.1),
+                    color: _kAccent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.rocket_launch_outlined,
@@ -267,7 +271,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                           style: const TextStyle(
                               fontWeight: FontWeight.w600, fontSize: 15)),
                       Text(dateStr,
-                          style: TextStyle(fontSize: 12, color: _kMuted)),
+                          style: const TextStyle(fontSize: 12, color: _kMuted)),
                     ],
                   ),
                 ),
@@ -303,7 +307,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
             if (plan.releaseGoal.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(plan.releaseGoal,
-                  style: TextStyle(fontSize: 13, color: _kMuted)),
+                  style: const TextStyle(fontSize: 13, color: _kMuted)),
             ],
             const SizedBox(height: 8),
             Wrap(
@@ -321,10 +325,10 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF7ED),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFF7ED),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFF59E0B)),
+                  border: Border.all(color: Color(0xFFF59E0B)),
                 ),
                 child: Text(
                   '${_releaseUnassignedSprintCount(plan)} story(ies) in this release do not yet have a target sprint. Assign sprint targets before schedule import for better forecast quality.',
@@ -358,7 +362,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.08),
+        color: Colors.blue.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(4),
       ),
       child:
@@ -369,11 +373,11 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
   Color _statusBgColor(String status) {
     switch (status) {
       case 'Approved':
-        return Colors.green.withOpacity(0.1);
+        return Colors.green.withValues(alpha: 0.1);
       case 'Ready':
-        return Colors.blue.withOpacity(0.1);
+        return Colors.blue.withValues(alpha: 0.1);
       default:
-        return Colors.grey.withOpacity(0.1);
+        return Colors.grey.withValues(alpha: 0.1);
     }
   }
 
@@ -391,12 +395,13 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
   Widget _buildEmptyState(String message) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Center(
-        child: Text(message, style: TextStyle(color: _kMuted, fontSize: 15)),
+        child:
+            Text(message, style: const TextStyle(color: _kMuted, fontSize: 15)),
       ),
     );
   }
@@ -585,8 +590,8 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
             ),
             const SizedBox(height: 10),
             Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFE5E7EB)),
+              decoration: const BoxDecoration(
+                border: Border.all(color: Color(0xFFE5E7EB)),
                 borderRadius: BorderRadius.circular(4),
               ),
               padding: const EdgeInsets.all(12),
@@ -605,7 +610,13 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
                               fontSize: 13, color: Color(0xFF9CA3AF))),
                     )
                   else
-                    ..._epics.map((epic) => Column(
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _epics.length,
+                      itemBuilder: (context, epicIdx) {
+                        final epic = _epics[epicIdx];
+                        return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             CheckboxListTile(
@@ -711,7 +722,9 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
                               ),
                             ),
                           ],
-                        )),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),

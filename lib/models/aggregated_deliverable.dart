@@ -139,9 +139,8 @@ class AggregatedDeliverable {
       ),
       assigneeId: json['assigneeId'],
       assigneeName: json['assigneeName'],
-      dueDate: json['dueDate'] != null
-          ? DateTime.tryParse(json['dueDate'])
-          : null,
+      dueDate:
+          json['dueDate'] != null ? DateTime.tryParse(json['dueDate']) : null,
       dependencies: json['dependencies'] != null
           ? List<String>.from(json['dependencies'])
           : [],
@@ -179,11 +178,12 @@ class AggregatedDeliverable {
       assigneeName: deliverable.assignee,
       dueDate: deliverable.dueDate,
       dependencies: deliverable.dependencies,
-      completionPercent: deliverable.status == RoadmapDeliverableStatus.completed
-          ? 100.0
-          : deliverable.status == RoadmapDeliverableStatus.inProgress
-              ? 50.0
-              : 0.0,
+      completionPercent:
+          deliverable.status == RoadmapDeliverableStatus.completed
+              ? 100.0
+              : deliverable.status == RoadmapDeliverableStatus.inProgress
+                  ? 50.0
+                  : 0.0,
       order: deliverable.order,
       notes: deliverable.notes.isNotEmpty ? deliverable.notes : null,
       createdDate: DateTime.now(),
@@ -217,7 +217,8 @@ class AggregatedDeliverable {
       assigneeId: assigneeId,
       assigneeName: assigneeName,
       dueDate: dueDate,
-      completionPercent: status == RoadmapDeliverableStatus.completed ? 100.0 : 0.0,
+      completionPercent:
+          status == RoadmapDeliverableStatus.completed ? 100.0 : 0.0,
       createdDate: DateTime.now(),
       lastUpdated: DateTime.now(),
     );
@@ -386,6 +387,14 @@ class AggregatedDeliverable {
   bool get isInProgress => status == RoadmapDeliverableStatus.inProgress;
   bool get isAtRisk => status == RoadmapDeliverableStatus.atRisk;
   bool get isBlocked => status == RoadmapDeliverableStatus.blocked;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AggregatedDeliverable && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Phase where the deliverable originates
@@ -489,11 +498,13 @@ class DeliverableFilter {
       return false;
     }
     if (dueBefore != null &&
-        (deliverable.dueDate == null || deliverable.dueDate!.isAfter(dueBefore!))) {
+        (deliverable.dueDate == null ||
+            deliverable.dueDate!.isAfter(dueBefore!))) {
       return false;
     }
     if (dueAfter != null &&
-        (deliverable.dueDate == null || deliverable.dueDate!.isBefore(dueAfter!))) {
+        (deliverable.dueDate == null ||
+            deliverable.dueDate!.isBefore(dueAfter!))) {
       return false;
     }
     if (includeOverdue == true && !deliverable.isOverdue) {
@@ -540,7 +551,8 @@ class DeliverableStatistics {
   });
 
   /// Calculate statistics from a list of deliverables
-  static DeliverableStatistics calculate(List<AggregatedDeliverable> deliverables) {
+  static DeliverableStatistics calculate(
+      List<AggregatedDeliverable> deliverables) {
     final total = deliverables.length;
     final completed = deliverables.where((d) => d.isCompleted).length;
     final inProgress = deliverables.where((d) => d.isInProgress).length;

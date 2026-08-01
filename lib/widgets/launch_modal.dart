@@ -193,7 +193,8 @@ class LaunchModalHeader extends StatelessWidget {
         ),
         Tooltip(
           message: 'Close',
-          child: _CloseButton(onPressed: onClose ?? () => Navigator.of(context).maybePop()),
+          child: _CloseButton(
+              onPressed: onClose ?? () => Navigator.of(context).maybePop()),
         ),
       ],
     );
@@ -228,9 +229,7 @@ class _CloseButtonState extends State<_CloseButton> {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: _hover
-                ? const Color(0xFFF3F4F6)
-                : Colors.transparent,
+            color: _hover ? const Color(0xFFF3F4F6) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Icon(
@@ -320,7 +319,8 @@ class LaunchModalTextField extends StatelessWidget {
           style: style,
           enableVoice: enableVoice,
           enableDocxImport: false,
-          decoration: _inputDecoration(hint: hint, suffixText: suffixText, suffixIcon: suffixIcon),
+          decoration: _inputDecoration(
+              hint: hint, suffixText: suffixText, suffixIcon: suffixIcon),
         ),
       ],
     );
@@ -372,8 +372,19 @@ class _LaunchModalDateFieldState extends State<LaunchModalDateField> {
 
   static String _formatDateShort(DateTime dt) {
     const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${dt.day} ${months[dt.month]} ${dt.year}';
   }
@@ -409,7 +420,8 @@ class _LaunchModalDateFieldState extends State<LaunchModalDateField> {
           enableDocxImport: false,
           decoration: _inputDecoration(
             hint: widget.hint,
-            suffixIcon: const Icon(Icons.calendar_today_outlined, size: 16, color: _kModalTextSecondary),
+            suffixIcon: const Icon(Icons.calendar_today_outlined,
+                size: 16, color: _kModalTextSecondary),
           ),
         ),
       ],
@@ -585,8 +597,7 @@ InputDecoration _inputDecoration({
     isDense: true,
     filled: true,
     fillColor: Colors.white,
-    contentPadding:
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
     suffixText: suffixText,
     suffixIcon: suffixIcon,
     border: OutlineInputBorder(

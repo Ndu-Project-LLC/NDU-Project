@@ -1105,12 +1105,11 @@ class _OrganizationRaciMatrixScreenState
                           )
                         else
                           Container(
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(14),
-                              border:
-                                  Border.all(color: const Color(0xFFE5E7EB)),
-                              boxShadow: const [
+                              border: Border.all(color: Color(0xFFE5E7EB)),
+                              boxShadow: [
                                 BoxShadow(
                                   color: Color(0x0A000000),
                                   blurRadius: 10,
@@ -1119,7 +1118,7 @@ class _OrganizationRaciMatrixScreenState
                               ],
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: const BorderRadius.circular(14),
                               child: _RaciMatrixTable(
                                 rows: rows,
                                 columns: _raciColumns,
@@ -2006,12 +2005,11 @@ class _OrganizationStaffingPlanScreenState
                           )
                         else
                           Container(
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(14),
-                              border:
-                                  Border.all(color: const Color(0xFFE5E7EB)),
-                              boxShadow: const [
+                              border: Border.all(color: Color(0xFFE5E7EB)),
+                              boxShadow: [
                                 BoxShadow(
                                     color: Color(0x0A000000),
                                     blurRadius: 10,
@@ -2019,7 +2017,7 @@ class _OrganizationStaffingPlanScreenState
                               ],
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: const BorderRadius.circular(14),
                               child: _StaffingPlanTable(
                                 requirements: requirements,
                                 onEdit: (index, req) =>
@@ -2174,7 +2172,7 @@ class _OrganizationStaffingPlanScreenState
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.grey[50],
-                          border: OutlineInputBorder(
+                          border: const OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none),
                         ),
@@ -2199,7 +2197,7 @@ class _OrganizationStaffingPlanScreenState
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.grey[50],
-                          border: OutlineInputBorder(
+                          border: const OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none),
                         ),
@@ -2316,10 +2314,10 @@ class _RaciLegendChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -2328,8 +2326,8 @@ class _RaciLegendChip extends StatelessWidget {
             width: 22,
             height: 22,
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF7CC),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFF7CC),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -2423,8 +2421,11 @@ class _RaciMatrixTable extends StatelessWidget {
                         .toList(),
                   ),
                 ),
-                for (int i = 0; i < rows.length; i++)
-                  Container(
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: rows.length,
+                  itemBuilder: (context, i) => Container(
                     width: tableWidth,
                     padding: rowPadding,
                     decoration: BoxDecoration(
@@ -2446,6 +2447,7 @@ class _RaciMatrixTable extends StatelessWidget {
                       onDelete: () => onDelete(i),
                     ),
                   ),
+                ),
               ],
             ),
           ),
@@ -2584,7 +2586,7 @@ class _RaciFrameworkCell extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: const BorderRadius.circular(999),
         ),
         child: Text(
           framework.isEmpty ? 'Both' : framework,
@@ -2622,7 +2624,7 @@ class _RaciValuePill extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: style.bg,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: const BorderRadius.circular(999),
       ),
       child: Text(
         normalized.isEmpty ? '—' : normalized,
@@ -2858,8 +2860,11 @@ class _StaffingPlanTable extends StatelessWidget {
                         .toList(),
                   ),
                 ),
-                for (int i = 0; i < requirements.length; i++)
-                  Container(
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: requirements.length,
+                  itemBuilder: (context, i) => Container(
                     width: tableWidth,
                     padding: rowPadding,
                     decoration: BoxDecoration(
@@ -2879,6 +2884,7 @@ class _StaffingPlanTable extends StatelessWidget {
                       onDelete: () => onDelete(i),
                     ),
                   ),
+                ),
               ],
             ),
           ),
@@ -3041,7 +3047,7 @@ class _StaffingStatusPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: const BorderRadius.circular(999),
       ),
       child: Text(
         label,
@@ -3133,7 +3139,8 @@ class _TopHeader extends StatelessWidget {
         foregroundColor: const Color(0xFF1F2933),
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12)),
         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
       ),
     );
@@ -3150,14 +3157,14 @@ class _CircleIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: const BorderRadius.circular(18),
       child: Container(
         width: 36,
         height: 36,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: Color(0xFFE5E7EB)),
         ),
         child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
       ),
@@ -3175,10 +3182,10 @@ class _UserChip extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -3199,26 +3206,29 @@ class _UserChip extends StatelessWidget {
                 : null,
           ),
           const SizedBox(width: 8),
-          StreamBuilder<bool>(
-            stream: UserService.watchAdminStatus(),
-            builder: (context, snapshot) {
-              final email = user?.email ?? '';
-              final isAdmin = snapshot.data ?? UserService.isAdminEmail(email);
-              final role = isAdmin ? 'Admin' : 'Member';
+          RepaintBoundary(
+            child: StreamBuilder<bool>(
+              stream: UserService.watchAdminStatus(),
+              builder: (context, snapshot) {
+                final email = user?.email ?? '';
+                final isAdmin =
+                    snapshot.data ?? UserService.isAdminEmail(email);
+                final role = isAdmin ? 'Admin' : 'Member';
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(displayName,
-                      style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w600)),
-                  Text(role,
-                      style: const TextStyle(
-                          fontSize: 10, color: Color(0xFF6B7280))),
-                ],
-              );
-            },
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(displayName,
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w600)),
+                    Text(role,
+                        style: const TextStyle(
+                            fontSize: 10, color: Color(0xFF6B7280))),
+                  ],
+                );
+              },
+            ),
           ),
           const SizedBox(width: 6),
           const Icon(Icons.keyboard_arrow_down,
@@ -3268,10 +3278,10 @@ class _MetricCard extends StatelessWidget {
     return Container(
       width: 190,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3336,11 +3346,11 @@ class _SectionCard extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: const [
+        border: Border.all(color: Color(0xFFE5E7EB)),
+        boxShadow: [
           BoxShadow(
               color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6)),
         ],
@@ -3452,8 +3462,8 @@ class _StatusRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: data.color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(999),
+              color: data.color.withValues(alpha: 0.12),
+              borderRadius: const BorderRadius.circular(999),
             ),
             child: Text(
               data.value,
@@ -3480,18 +3490,18 @@ class _SectionEmptyState extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF7ED),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFF7ED),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: const Color(0xFFF59E0B)),

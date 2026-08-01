@@ -86,16 +86,15 @@ class _CompactActionButtonState extends State<CompactActionButton>
             return AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               curve: Curves.easeOut,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: _isHovered
-                    ? widget.accent.withOpacity(0.08)
+                    ? widget.accent.withValues(alpha: 0.08)
                     : Colors.white,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: _isHovered
-                      ? widget.accent.withOpacity(0.4)
+                      ? widget.accent.withValues(alpha: 0.4)
                       : Color.lerp(
                           const Color(0xFFE2E8F0),
                           widget.accent,
@@ -106,8 +105,9 @@ class _CompactActionButtonState extends State<CompactActionButton>
                 boxShadow: [
                   BoxShadow(
                     color: _isHovered
-                        ? widget.accent.withOpacity(0.12)
-                        : widget.accent.withOpacity(_pulseGlow.value * 0.15),
+                        ? widget.accent.withValues(alpha: 0.12)
+                        : widget.accent
+                            .withValues(alpha: _pulseGlow.value * 0.15),
                     blurRadius: _isHovered ? 16 : 8 + (_pulseGlow.value * 8),
                     spreadRadius: _isHovered ? 0 : _pulseGlow.value * 2,
                     offset: const Offset(0, 4),
@@ -133,12 +133,12 @@ class _CompactActionButtonState extends State<CompactActionButton>
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: widget.accent.withOpacity(0.12),
+                    color: widget.accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
                         color: widget.accent
-                            .withOpacity(_pulseGlow.value * 0.4),
+                            .withValues(alpha: _pulseGlow.value * 0.4),
                         blurRadius: 8 + _pulseGlow.value * 8,
                         spreadRadius: _pulseGlow.value * 1.5,
                       ),
@@ -190,9 +190,8 @@ class _CompactActionButtonState extends State<CompactActionButton>
                 },
                 child: Icon(Icons.arrow_forward_ios_rounded,
                     size: 14,
-                    color: _isHovered
-                        ? widget.accent
-                        : const Color(0xFF94A3B8)),
+                    color:
+                        _isHovered ? widget.accent : const Color(0xFF94A3B8)),
               ),
             ],
           ),

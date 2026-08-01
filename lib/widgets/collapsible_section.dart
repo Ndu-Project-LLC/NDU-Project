@@ -74,7 +74,7 @@ class _CollapsibleSectionState extends State<CollapsibleSection>
         // ── Header (tappable) ──────────────────────────────────────────
         InkWell(
           onTap: _toggle,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: const BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             child: Row(
@@ -91,10 +91,10 @@ class _CollapsibleSectionState extends State<CollapsibleSection>
                 if (widget.itemCount != null) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(

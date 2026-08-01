@@ -18,11 +18,11 @@ class DesignSpecificationsCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -69,10 +69,13 @@ class DesignSpecificationsCard extends StatelessWidget {
               separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final spec = specifications[index];
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(spec.description),
-                  trailing: _buildStatusChip(context, spec, provider),
+                return RepaintBoundary(
+                  key: ValueKey('design_spec_$index'),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(spec.description),
+                    trailing: _buildStatusChip(context, spec, provider),
+                  ),
                 );
               },
             ),
@@ -100,9 +103,9 @@ class DesignSpecificationsCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.5)),
+          color: color.withValues(alpha: 0.1),
+          borderRadius: const BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.5)),
         ),
         child: Text(
           spec.status,
@@ -154,7 +157,7 @@ class DesignSpecificationsCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 
   void _showStatusDialog(BuildContext context, DesignSpecification spec,
@@ -196,11 +199,11 @@ class DesignDocumentsCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF0FDF4),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFBBF7D0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -214,8 +217,8 @@ class DesignDocumentsCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFDCFCE7),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.description,
@@ -239,8 +242,9 @@ class DesignDocumentsCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF16A34A).withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(12),
+                          color:
+                              const Color(0xFF16A34A).withValues(alpha: 0.12),
+                          borderRadius: const BorderRadius.circular(12),
                         ),
                         child: Text(
                           '${documents.length}',
@@ -266,12 +270,12 @@ class DesignDocumentsCard extends StatelessWidget {
                   children: [
                     Icon(Icons.folder_open,
                         size: 48,
-                        color: const Color(0xFF16A34A).withOpacity(0.3)),
+                        color: const Color(0xFF16A34A).withValues(alpha: 0.3)),
                     const SizedBox(height: 12),
                     Text(
                       'No documents linked',
                       style: TextStyle(
-                          color: const Color(0xFF16A34A).withOpacity(0.6),
+                          color: const Color(0xFF16A34A).withValues(alpha: 0.6),
                           fontSize: 14,
                           fontWeight: FontWeight.w500),
                     ),
@@ -298,18 +302,18 @@ class DesignDocumentsCard extends StatelessWidget {
                 ...documents.map((doc) => Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFBBF7D0)),
+                        border: Border.all(color: Color(0xFFBBF7D0)),
                       ),
                       child: Row(
                         children: [
                           Container(
                             width: 32,
                             height: 32,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFDCFCE7),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFDCFCE7),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -337,8 +341,9 @@ class DesignDocumentsCard extends StatelessWidget {
                                           horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF16A34A)
-                                            .withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(6),
+                                            .withValues(alpha: 0.1),
+                                        borderRadius:
+                                            const BorderRadius.circular(6),
                                       ),
                                       child: Text(doc.type,
                                           style: const TextStyle(
@@ -377,9 +382,9 @@ class DesignDocumentsCard extends StatelessWidget {
                             icon: const Icon(Icons.delete_outline,
                                 size: 16, color: Color(0xFFEF4444)),
                             onPressed: () {
-                              final currentData = provider
-                                      .projectData.designManagementData ??
-                                  DesignManagementData();
+                              final currentData =
+                                  provider.projectData.designManagementData ??
+                                      DesignManagementData();
                               currentData.documents
                                   .removeWhere((d) => d.id == doc.id);
                               provider.updateProjectData(
@@ -429,8 +434,8 @@ class DesignDocumentsCard extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0FDF4),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF0FDF4),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.insert_drive_file_outlined,
@@ -448,7 +453,8 @@ class DesignDocumentsCard extends StatelessWidget {
               children: [
                 VoiceTextField(
                   controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Document Title'),
+                  decoration:
+                      const InputDecoration(labelText: 'Document Title'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
@@ -466,7 +472,7 @@ class DesignDocumentsCard extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.circular(12),
                     border: Border.all(
                       color: uploadedFileName != null
                           ? const Color(0xFF16A34A)
@@ -527,8 +533,7 @@ class DesignDocumentsCard extends StatelessWidget {
                                   final projectId =
                                       ProjectDataHelper.getData(context)
                                           .projectId;
-                                  if (projectId == null ||
-                                      projectId.isEmpty) {
+                                  if (projectId == null || projectId.isEmpty) {
                                     setDialogState(() => isUploading = false);
                                     return;
                                   }
@@ -554,8 +559,8 @@ class DesignDocumentsCard extends StatelessWidget {
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2))
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2))
                               : const Icon(Icons.attach_file, size: 18),
                           label: Text(
                               isUploading ? 'Uploading...' : 'Choose File'),
@@ -591,9 +596,8 @@ class DesignDocumentsCard extends StatelessWidget {
                   uploadedFileName: uploadedFileName,
                   uploadedStoragePath: uploadedStoragePath,
                 );
-                final currentData =
-                    provider.projectData.designManagementData ??
-                        DesignManagementData();
+                final currentData = provider.projectData.designManagementData ??
+                    DesignManagementData();
                 currentData.documents.add(newDoc);
 
                 provider.updateProjectData(
@@ -611,7 +615,7 @@ class DesignDocumentsCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ).whenComplete(titleController.dispose);
   }
 }
 
@@ -626,11 +630,11 @@ class DesignToolsCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFFFFBEB),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFFDE68A)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -644,8 +648,8 @@ class DesignToolsCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.construction,
@@ -669,8 +673,9 @@ class DesignToolsCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD97706).withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(12),
+                          color:
+                              const Color(0xFFD97706).withValues(alpha: 0.12),
+                          borderRadius: const BorderRadius.circular(12),
                         ),
                         child: Text(
                           '${tools.length}',
@@ -696,12 +701,12 @@ class DesignToolsCard extends StatelessWidget {
                   children: [
                     Icon(Icons.handyman,
                         size: 48,
-                        color: const Color(0xFFD97706).withOpacity(0.3)),
+                        color: const Color(0xFFD97706).withValues(alpha: 0.3)),
                     const SizedBox(height: 12),
                     Text(
                       'No tools configured',
                       style: TextStyle(
-                          color: const Color(0xFFD97706).withOpacity(0.6),
+                          color: const Color(0xFFD97706).withValues(alpha: 0.6),
                           fontSize: 14,
                           fontWeight: FontWeight.w500),
                     ),
@@ -727,24 +732,26 @@ class DesignToolsCard extends StatelessWidget {
                 ...tools.map((tool) => Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFFDE68A)),
+                        border: Border.all(color: Color(0xFFFDE68A)),
                       ),
                       child: Row(
                         children: [
                           Container(
                             width: 32,
                             height: 32,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFEF3C7),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFEF3C7),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
                               tool.hasUploadedFile
                                   ? Icons.attach_file
-                                  : (tool.isInternal ? Icons.dns : Icons.public),
+                                  : (tool.isInternal
+                                      ? Icons.dns
+                                      : Icons.public),
                               size: 16,
                               color: const Color(0xFFD97706),
                             ),
@@ -766,11 +773,14 @@ class DesignToolsCard extends StatelessWidget {
                                           horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFD97706)
-                                            .withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(6),
+                                            .withValues(alpha: 0.1),
+                                        borderRadius:
+                                            const BorderRadius.circular(6),
                                       ),
                                       child: Text(
-                                        tool.isInternal ? 'Internal' : 'External',
+                                        tool.isInternal
+                                            ? 'Internal'
+                                            : 'External',
                                         style: const TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w600,
@@ -809,9 +819,9 @@ class DesignToolsCard extends StatelessWidget {
                             icon: const Icon(Icons.close,
                                 size: 14, color: Color(0xFFEF4444)),
                             onPressed: () {
-                              final currentData = provider
-                                      .projectData.designManagementData ??
-                                  DesignManagementData();
+                              final currentData =
+                                  provider.projectData.designManagementData ??
+                                      DesignManagementData();
                               currentData.tools.remove(tool);
                               provider.updateProjectData(
                                 provider.projectData.copyWith(
@@ -860,8 +870,8 @@ class DesignToolsCard extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFBEB),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFFBEB),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.build_outlined,
@@ -884,14 +894,14 @@ class DesignToolsCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 VoiceTextField(
                   controller: urlController,
-                  decoration: const InputDecoration(labelText: 'URL (Optional)'),
+                  decoration:
+                      const InputDecoration(labelText: 'URL (Optional)'),
                 ),
                 const SizedBox(height: 8),
                 CheckboxListTile(
                   title: const Text('Internal Tool'),
                   value: isInternal,
-                  onChanged: (val) =>
-                      setDialogState(() => isInternal = val!),
+                  onChanged: (val) => setDialogState(() => isInternal = val!),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -902,7 +912,7 @@ class DesignToolsCard extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFFBEB),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.circular(12),
                     border: Border.all(
                       color: uploadedFileName != null
                           ? const Color(0xFFD97706)
@@ -962,8 +972,7 @@ class DesignToolsCard extends StatelessWidget {
                                   final projectId =
                                       ProjectDataHelper.getData(context)
                                           .projectId;
-                                  if (projectId == null ||
-                                      projectId.isEmpty) {
+                                  if (projectId == null || projectId.isEmpty) {
                                     setDialogState(() => isUploading = false);
                                     return;
                                   }
@@ -989,8 +998,8 @@ class DesignToolsCard extends StatelessWidget {
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2))
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2))
                               : const Icon(Icons.attach_file, size: 18),
                           label: Text(
                               isUploading ? 'Uploading...' : 'Choose File'),
@@ -1028,9 +1037,8 @@ class DesignToolsCard extends StatelessWidget {
                   uploadedFileName: uploadedFileName,
                   uploadedStoragePath: uploadedStoragePath,
                 );
-                final currentData =
-                    provider.projectData.designManagementData ??
-                        DesignManagementData();
+                final currentData = provider.projectData.designManagementData ??
+                    DesignManagementData();
                 currentData.tools.add(newTool);
 
                 provider.updateProjectData(
@@ -1048,6 +1056,9 @@ class DesignToolsCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ).whenComplete(() {
+      nameController.dispose();
+      urlController.dispose();
+    });
   }
 }

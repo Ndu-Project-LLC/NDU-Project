@@ -18,10 +18,10 @@ class BudgetTrackingTable extends StatelessWidget {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: Color(0xFFE5E7EB)),
         ),
         child: const Text(
           'No procurement items yet for budget tracking.',
@@ -35,10 +35,10 @@ class BudgetTrackingTable extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +47,8 @@ class BudgetTrackingTable extends StatelessWidget {
             spacing: 12,
             runSpacing: 12,
             children: [
-              _MetricTile(label: 'Budget', value: _formatCurrency(totals.budget)),
+              _MetricTile(
+                  label: 'Budget', value: _formatCurrency(totals.budget)),
               _MetricTile(label: 'Spent', value: _formatCurrency(totals.spent)),
               _MetricTile(
                 label: 'Committed',
@@ -72,35 +73,33 @@ class BudgetTrackingTable extends StatelessWidget {
                 DataColumn(label: Text('Variance')),
                 DataColumn(label: Text('Status')),
               ],
-              rows: items
-                  .map(
-                    (item) {
-                      final committed = item.committedAmount(purchaseOrders);
-                      final remaining = item.remainingBudget(purchaseOrders);
-                      final variance = item.variancePercent(purchaseOrders);
-                      final status = item.budgetStatus(purchaseOrders);
-                      return DataRow(
-                        cells: [
-                          DataCell(
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 220),
-                              child: Text(
-                                item.name,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
+              rows: items.map(
+                (item) {
+                  final committed = item.committedAmount(purchaseOrders);
+                  final remaining = item.remainingBudget(purchaseOrders);
+                  final variance = item.variancePercent(purchaseOrders);
+                  final status = item.budgetStatus(purchaseOrders);
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 220),
+                          child: Text(
+                            item.name,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          DataCell(Text(_formatCurrency(item.budget))),
-                          DataCell(Text(_formatCurrency(item.spent))),
-                          DataCell(Text(_formatCurrency(committed))),
-                          DataCell(Text(_formatCurrency(remaining))),
-                          DataCell(Text('${variance.toStringAsFixed(1)}%')),
-                          DataCell(_BudgetStatusBadge(status: status)),
-                        ],
-                      );
-                    },
-                  )
-                  .toList(growable: false),
+                        ),
+                      ),
+                      DataCell(Text(_formatCurrency(item.budget))),
+                      DataCell(Text(_formatCurrency(item.spent))),
+                      DataCell(Text(_formatCurrency(committed))),
+                      DataCell(Text(_formatCurrency(remaining))),
+                      DataCell(Text('${variance.toStringAsFixed(1)}%')),
+                      DataCell(_BudgetStatusBadge(status: status)),
+                    ],
+                  );
+                },
+              ).toList(growable: false),
             ),
           ),
         ],
@@ -159,10 +158,10 @@ class _MetricTile extends StatelessWidget {
     return Container(
       width: 180,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

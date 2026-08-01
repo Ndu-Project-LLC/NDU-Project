@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/theme.dart';
 
+/// Note: [CustomPaint] below wraps a [_WhiteboardPainter]. The painter's
+/// [shouldRepaint] now compares stroke + last-stroke point counts (not just
+/// list identity) so that in-place mutations performed by [_WhiteboardCanvasState._extendStroke]
+/// trigger a repaint. A [RepaintBoundary] isolates the canvas from the toolbar.
+
 class WhiteboardCanvas extends StatefulWidget {
   const WhiteboardCanvas({super.key});
 
@@ -94,8 +99,10 @@ class _WhiteboardCanvasState extends State<WhiteboardCanvas> {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) _endStroke();
                 }),
-                child: CustomPaint(
-                  painter: _WhiteboardPainter(strokes: _strokes),
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    painter: _WhiteboardPainter(strokes: _strokes),
+                  ),
                 ),
               ),
             ),
@@ -162,7 +169,7 @@ class _WhiteboardHeader extends StatelessWidget {
         border: Border.all(color: AppSemanticColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -171,11 +178,14 @@ class _WhiteboardHeader extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Whiteboard', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.grey[800])),
+          Text('Whiteboard',
+              style: TextStyle(
+                  fontWeight: FontWeight.w700, color: Colors.grey[800])),
           const SizedBox(width: 12),
           Row(
             children: swatches.map((swatch) {
-              final isSelected = swatch.toARGB32() == color.toARGB32() && !eraser;
+              final isSelected =
+                  swatch.toARGB32() == color.toARGB32() && !eraser;
               return GestureDetector(
                 onTap: () => onSelectColor(swatch),
                 child: Container(
@@ -198,7 +208,8 @@ class _WhiteboardHeader extends StatelessWidget {
           IconButton(
             tooltip: 'Eraser',
             onPressed: onToggleEraser,
-            icon: Icon(Icons.auto_fix_high, color: eraser ? Colors.black : Colors.grey[600]),
+            icon: Icon(Icons.auto_fix_high,
+                color: eraser ? Colors.black : Colors.grey[600]),
           ),
           SizedBox(
             width: 120,
@@ -251,9 +262,11 @@ class _WhiteboardPainter extends CustomPainter {
         ..style = PaintingStyle.stroke;
 
       if (stroke.points.length == 1) {
-        canvas.drawCircle(stroke.points.first, stroke.width / 2, paint..style = PaintingStyle.fill);
+        canvas.drawCircle(stroke.points.first, stroke.width / 2,
+            paint..style = PaintingStyle.fill);
       } else {
-        final path = Path()..moveTo(stroke.points.first.dx, stroke.points.first.dy);
+        final path = Path()
+          ..moveTo(stroke.points.first.dx, stroke.points.first.dy);
         for (var i = 1; i < stroke.points.length; i++) {
           final p = stroke.points[i];
           path.lineTo(p.dx, p.dy);
@@ -264,8 +277,17 @@ class _WhiteboardPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _WhiteboardPainter oldDelegate) =>
-      oldDelegate.strokes != strokes;
+  bool shouldRepaint(covariant _WhiteboardPainter oldDelegate) {
+    // [strokes] is mutated in place by [_WhiteboardCanvasState._extendStroke]
+    // (it calls `_activeStroke!.points.add(point)` without replacing the list
+    // reference), so a naive `oldDelegate.strokes != strokes` identity check
+    // would miss ongoing draw updates. Compare stroke + point counts instead.
+    if (oldDelegate.strokes.length != strokes.length) return true;
+    if (strokes.isEmpty) return false;
+    final oldLast = oldDelegate.strokes.last;
+    final newLast = strokes.last;
+    return oldLast.points.length != newLast.points.length;
+  }
 }
 
 class _SketchStroke {

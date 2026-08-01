@@ -71,8 +71,7 @@ class _AdminEditToggleState extends State<AdminEditToggle> {
               // Update local state during drag (no provider rebuild)
               setState(() => _dragPosition = Offset(newX, newY));
             }),
-            onPanEnd: (_) =>
-                WidgetsBinding.instance.addPostFrameCallback((_) {
+            onPanEnd: (_) => WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
               // Save final position to provider
               if (_dragPosition != null) {

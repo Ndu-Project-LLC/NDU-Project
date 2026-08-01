@@ -43,8 +43,7 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
     if (oldWidget.openWidth != widget.openWidth ||
         oldWidget.collapsedWidth != widget.collapsedWidth) {
       final double baseWidth = (_sharedWidth ?? _currentWidth);
-      _currentWidth = baseWidth
-          .clamp(widget.collapsedWidth, widget.openWidth);
+      _currentWidth = baseWidth.clamp(widget.collapsedWidth, widget.openWidth);
       _sharedWidth = _currentWidth;
     }
   }
@@ -76,8 +75,9 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
 
   void _handleDragEnd() {
     setState(() {
-      _currentWidth =
-          _currentWidth > _snapThreshold ? widget.openWidth : widget.collapsedWidth;
+      _currentWidth = _currentWidth > _snapThreshold
+          ? widget.openWidth
+          : widget.collapsedWidth;
       _dragging = false;
       _sharedWidth = _currentWidth;
     });
@@ -131,14 +131,16 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
         GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: _toggleSidebar,
-          onHorizontalDragStart: (_) => WidgetsBinding.instance.addPostFrameCallback((_) {
+          onHorizontalDragStart: (_) =>
+              WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) setState(() => _dragging = true);
           }),
           onHorizontalDragUpdate: (details) =>
               WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) _handleDragUpdate(details.primaryDelta ?? 0);
           }),
-          onHorizontalDragEnd: (_) => WidgetsBinding.instance.addPostFrameCallback((_) {
+          onHorizontalDragEnd: (_) =>
+              WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) _handleDragEnd();
           }),
           child: MouseRegion(
@@ -157,7 +159,7 @@ class _DraggableSidebarState extends State<DraggableSidebar> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -220,7 +222,7 @@ class MobileSidebarHamburger extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -229,15 +231,14 @@ class MobileSidebarHamburger extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.circular(12),
             onTap: () {
               showModalBottomSheet<void>(
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.white,
                 shape: const RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
                 builder: (context) {
                   final height = MediaQuery.sizeOf(context).height * 0.92;

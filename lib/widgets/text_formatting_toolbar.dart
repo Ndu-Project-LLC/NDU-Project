@@ -223,7 +223,7 @@ class _TextFormattingToolbarState extends State<TextFormattingToolbar> {
         child: Tooltip(
           message: 'Show formatting tools',
           child: InkWell(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: const BorderRadius.circular(10),
             onTap: () {
               setState(() {
                 _manuallyExpanded = true;
@@ -234,7 +234,7 @@ class _TextFormattingToolbarState extends State<TextFormattingToolbar> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: const BorderRadius.circular(10),
                 border: Border.all(color: Colors.grey[300]!),
               ),
               child: const Row(
@@ -263,7 +263,7 @@ class _TextFormattingToolbarState extends State<TextFormattingToolbar> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: const BorderRadius.circular(8),
           border: Border.all(color: Colors.grey[300]!),
         ),
         child: SingleChildScrollView(

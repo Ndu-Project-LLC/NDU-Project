@@ -248,8 +248,8 @@ class _AgileMetricsPlanningScreenState
     setState(() => _isGenerating = true);
     try {
       final projectData = ProjectDataHelper.getData(context);
-      final contextText = ProjectDataHelper.buildProjectContextScan(
-          projectData, sectionLabel: 'Agile Metrics');
+      final contextText = ProjectDataHelper.buildProjectContextScan(projectData,
+          sectionLabel: 'Agile Metrics');
       final openai = OpenAiServiceSecure();
       final result = await openai.generateCompletion(
         'Based on this project context, recommend which agile metrics to track.\n\n'
@@ -311,8 +311,7 @@ class _AgileMetricsPlanningScreenState
             DraggableSidebar(
               openWidth: AppBreakpoints.sidebarWidth(context),
               child: const InitiationLikeSidebar(
-                  activeItemLabel:
-                      'Agile Delivery Model - Metrics Planning'),
+                  activeItemLabel: 'Agile Delivery Model - Metrics Planning'),
             ),
             Expanded(
               child: Stack(
@@ -323,19 +322,16 @@ class _AgileMetricsPlanningScreenState
                             'Agile Delivery Model - Metrics Planning'),
                   ),
                   SingleChildScrollView(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: hp, vertical: 32),
+                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         PlanningPhaseHeader(
                           title: 'Agile Metrics Planning',
-                          onBack: () =>
-                              PlanningPhaseNavigation.goToPrevious(
-                                  context, 'agile_metrics_planning'),
-                          onForward: () =>
-                              PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_metrics_planning'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'agile_metrics_planning'),
+                          onForward: () => PlanningPhaseNavigation.goToNext(
+                              context, 'agile_metrics_planning'),
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 24),
@@ -348,31 +344,27 @@ class _AgileMetricsPlanningScreenState
                                 child: Text(
                                   'Select the metrics your team will track during execution. '
                                   'Selections auto-configure the execution dashboard.',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 15, color: _kMuted),
                                 ),
                               ),
                               const SizedBox(width: 12),
                               OutlinedButton.icon(
-                                onPressed: _isGenerating
-                                    ? null
-                                    : _generateWithAI,
+                                onPressed:
+                                    _isGenerating ? null : _generateWithAI,
                                 icon: _isGenerating
                                     ? const SizedBox(
                                         width: 16,
                                         height: 16,
-                                        child:
-                                            CircularProgressIndicator(
-                                                strokeWidth: 2))
-                                    : const Icon(Icons.auto_awesome,
-                                        size: 18),
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2))
+                                    : const Icon(Icons.auto_awesome, size: 18),
                                 label: Text(_isGenerating
                                     ? 'Generating...'
                                     : 'AI Recommend'),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: _kAccent,
-                                  side:
-                                      const BorderSide(color: _kAccent),
+                                  side: const BorderSide(color: _kAccent),
                                 ),
                               ),
                             ],
@@ -390,14 +382,15 @@ class _AgileMetricsPlanningScreenState
                                           strokeWidth: 2)),
                                   const SizedBox(width: 8),
                                   Text('Saving...',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           fontSize: 12, color: _kMuted)),
                                 ],
                               ),
                             ),
                           Row(
                             children: [
-                              Text('$_selectedCount / ${_allMetrics.length} selected',
+                              Text(
+                                  '$_selectedCount / ${_allMetrics.length} selected',
                                   style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
@@ -442,12 +435,10 @@ class _AgileMetricsPlanningScreenState
                               'agile_metrics_planning'),
                           nextLabel: PlanningPhaseNavigation.nextLabel(
                               'agile_metrics_planning'),
-                          onBack: () =>
-                              PlanningPhaseNavigation.goToPrevious(
-                                  context, 'agile_metrics_planning'),
-                          onNext: () =>
-                              PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_metrics_planning'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'agile_metrics_planning'),
+                          onNext: () => PlanningPhaseNavigation.goToNext(
+                              context, 'agile_metrics_planning'),
                         ),
                         const SizedBox(height: 40),
                       ],
@@ -471,7 +462,7 @@ class _AgileMetricsPlanningScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -522,7 +513,7 @@ class _AgileMetricsPlanningScreenState
                 children: [
                   Text(
                     metric.label,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: _kHeadline,
@@ -551,9 +542,10 @@ class _AgileMetricsPlanningScreenState
           {'Project Name': projectData.projectName ?? 'N/A'},
           {'Solution Title': projectData.solutionTitle ?? 'N/A'},
         ]),
-        PdfSection.text('Notes',
-            projectData.planningNotes[
-                    'planning_agile_metrics_planning_notes'] ??
+        PdfSection.text(
+            'Notes',
+            projectData
+                    .planningNotes['planning_agile_metrics_planning_notes'] ??
                 'No data recorded.'),
       ],
     );

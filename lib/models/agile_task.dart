@@ -138,13 +138,19 @@ class AgileTask {
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      milestoneIds: (json['milestoneIds'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      milestoneIds:
+          (json['milestoneIds'] as List?)?.map((e) => e.toString()).toList() ??
+              [],
       backlogOrder: json['backlogOrder'] is num
           ? (json['backlogOrder'] as num).toInt()
           : int.tryParse(json['backlogOrder']?.toString() ?? '') ?? 0,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is AgileTask && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

@@ -1,0 +1,120 @@
+name: Deploy Production
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Trigger: PR merged into the 'production' branch, OR manual dispatch.
+# SILENT_ACTORS gate: if the merger/dispatcher is in SILENT_ACTORS, the entire
+# workflow skips (no build, no deploy, no repository_dispatch to NDU-Production).
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  pull_request:
+    types: [closed]
+    branches: [production]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  # ── SILENT_ACTORS GATE ────────────────────────────────────────────────────
+  gate:
+    name: Silent-actor gate
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+      actor: ${{ steps.check.outputs.actor }}
+      sha: ${{ steps.check.outputs.sha }}
+    steps:
+      - id: check
+        run: |
+          set -eu
+          ACTOR="${{ github.actor }}"
+          SHA="${{ github.sha }}"
+          SILENT="${{ vars.SILENT_ACTORS }}"
+          if [ -z "$SILENT" ]; then
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "No SILENT_ACTORS variable set — running normally."
+            exit 0
+          fi
+          if echo ",$SILENT," | grep -iq ",$ACTOR,"; then
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping entire workflow — @$ACTOR is in SILENT_ACTORS."
+          else
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "@$ACTOR not in SILENT_ACTORS — running normally."
+          fi
+
+  # ── BUILD & DEPLOY TO PRODUCTION ──────────────────────────────────────────
+  build-and-deploy:
+    name: Build Flutter web → push to gh-pages (production)
+    needs: gate
+    if: needs.gate.outputs.should_skip != 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Build web (release)
+        run: flutter build web --release --base-href "/"
+
+      - name: Preserve production CNAME + .nojekyll
+        run: |
+          cd build/web
+          echo "nduproject.com" > CNAME
+          touch .nojekyll
+
+      - name: Deploy to gh-pages (production)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/web
+          publish_branch: gh-pages
+          keep_files: false
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'deploy: production build ${{ github.sha }}'
+
+      - name: Trigger NDU-Production repo (repository_dispatch)
+        if: env.PRODUCTION_DISPATCH_TOKEN != ''
+        env:
+          PRODUCTION_DISPATCH_TOKEN: ${{ secrets.PRODUCTION_DISPATCH_TOKEN }}
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $PRODUCTION_DISPATCH_TOKEN" \
+            https://api.github.com/repos/NduProject/NDU-Production/dispatches \
+            -d "{\"event_type\":\"production_deployed\",\"client_payload\":{\"sha\":\"${{ github.sha }}\",\"actor\":\"${{ needs.gate.outputs.actor }}\"}}"
+
+      - name: Summary
+        run: |
+          echo "### Production deploy complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ needs.gate.outputs.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed by:** @${{ needs.gate.outputs.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://nduproject.com/" >> $GITHUB_STEP_SUMMARY

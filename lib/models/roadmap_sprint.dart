@@ -120,4 +120,11 @@ class RoadmapSprint {
       squadName: json['squadName']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is RoadmapSprint && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

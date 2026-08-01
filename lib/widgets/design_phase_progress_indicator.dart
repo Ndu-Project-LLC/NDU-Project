@@ -14,21 +14,23 @@ class DesignPhaseProgressIndicator extends StatelessWidget {
       return _buildFallbackIndicator();
     }
 
-    return StreamBuilder<Map<String, dynamic>>(
-      stream: DesignPhaseService.instance.calculateOverallProgress(projectId),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          debugPrint('Progress error: ${snapshot.error}');
-          return _buildFallbackIndicator();
-        }
+    return RepaintBoundary(
+      child: StreamBuilder<Map<String, dynamic>>(
+        stream: DesignPhaseService.instance.calculateOverallProgress(projectId),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            debugPrint('Progress error: ${snapshot.error}');
+            return _buildFallbackIndicator();
+          }
 
-        final data = snapshot.data ?? {};
-        final progress = (data['progress'] as num?)?.toDouble() ?? 0.0;
-        final completed = (data['completed'] as int?) ?? 0;
-        final total = (data['total'] as int?) ?? 14;
+          final data = snapshot.data ?? {};
+          final progress = (data['progress'] as num?)?.toDouble() ?? 0.0;
+          final completed = (data['completed'] as int?) ?? 0;
+          final total = (data['total'] as int?) ?? 14;
 
-        return _buildIndicator(progress, completed, total);
-      },
+          return _buildIndicator(progress, completed, total);
+        },
+      ),
     );
   }
 
@@ -41,11 +43,11 @@ class DesignPhaseProgressIndicator extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -59,8 +61,8 @@ class DesignPhaseProgressIndicator extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                  borderRadius: const BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.analytics,
                     color: Color(0xFF6366F1), size: 20),
@@ -135,7 +137,7 @@ class DesignPhaseProgressIndicator extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: const BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,

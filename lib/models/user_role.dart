@@ -221,10 +221,14 @@ class UserRoleAssignment {
 
   final String userId;
   final SiteRole siteRole;
-  final Map<String, ResourceAccessLevel> projectAccess; // projectId -> access level
-  final Map<String, ResourceAccessLevel> programAccess; // programId -> access level
-  final Map<String, ResourceAccessLevel> portfolioAccess; // portfolioId -> access level
-  final List<Permission> customPermissions; // Additional permissions beyond role
+  final Map<String, ResourceAccessLevel>
+      projectAccess; // projectId -> access level
+  final Map<String, ResourceAccessLevel>
+      programAccess; // programId -> access level
+  final Map<String, ResourceAccessLevel>
+      portfolioAccess; // portfolioId -> access level
+  final List<Permission>
+      customPermissions; // Additional permissions beyond role
   final String? assignedBy;
   final DateTime? assignedAt;
   final DateTime? expiresAt;
@@ -236,7 +240,8 @@ class UserRoleAssignment {
     if (expiresAt != null && DateTime.now().isAfter(expiresAt!)) return false;
 
     final rolePermissions = Permission.getPermissionsForRole(siteRole);
-    return rolePermissions.contains(permission) || customPermissions.contains(permission);
+    return rolePermissions.contains(permission) ||
+        customPermissions.contains(permission);
   }
 
   /// Get access level for a specific project
@@ -291,38 +296,35 @@ class UserRoleAssignment {
     return UserRoleAssignment(
       userId: map['userId'] as String,
       siteRole: SiteRole.fromString(map['siteRole'] as String? ?? 'user'),
-      projectAccess: (map['projectAccess'] as Map<String, dynamic>?)
-              ?.map(
-                (key, value) => MapEntry(
-                  key,
-                  ResourceAccessLevel.values.firstWhere(
-                    (e) => e.name == value,
-                    orElse: () => ResourceAccessLevel.none,
-                  ),
-                ),
-              ) ??
+      projectAccess: (map['projectAccess'] as Map<String, dynamic>?)?.map(
+            (key, value) => MapEntry(
+              key,
+              ResourceAccessLevel.values.firstWhere(
+                (e) => e.name == value,
+                orElse: () => ResourceAccessLevel.none,
+              ),
+            ),
+          ) ??
           {},
-      programAccess: (map['programAccess'] as Map<String, dynamic>?)
-              ?.map(
-                (key, value) => MapEntry(
-                  key,
-                  ResourceAccessLevel.values.firstWhere(
-                    (e) => e.name == value,
-                    orElse: () => ResourceAccessLevel.none,
-                  ),
-                ),
-              ) ??
+      programAccess: (map['programAccess'] as Map<String, dynamic>?)?.map(
+            (key, value) => MapEntry(
+              key,
+              ResourceAccessLevel.values.firstWhere(
+                (e) => e.name == value,
+                orElse: () => ResourceAccessLevel.none,
+              ),
+            ),
+          ) ??
           {},
-      portfolioAccess: (map['portfolioAccess'] as Map<String, dynamic>?)
-              ?.map(
-                (key, value) => MapEntry(
-                  key,
-                  ResourceAccessLevel.values.firstWhere(
-                    (e) => e.name == value,
-                    orElse: () => ResourceAccessLevel.none,
-                  ),
-                ),
-              ) ??
+      portfolioAccess: (map['portfolioAccess'] as Map<String, dynamic>?)?.map(
+            (key, value) => MapEntry(
+              key,
+              ResourceAccessLevel.values.firstWhere(
+                (e) => e.name == value,
+                orElse: () => ResourceAccessLevel.none,
+              ),
+            ),
+          ) ??
           {},
       customPermissions: (map['customPermissions'] as List<dynamic>?)
               ?.map(

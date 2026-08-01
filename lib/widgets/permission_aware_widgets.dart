@@ -331,8 +331,8 @@ class RoleBadge extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: role.color.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(16),
+            color: role.color.withValues(alpha: 0.15),
+            borderRadius: const BorderRadius.circular(16),
             border: Border.all(
               color: role.color,
               width: 1,
@@ -401,7 +401,7 @@ class RoleDropdown extends StatelessWidget {
       decoration: InputDecoration(
         labelText: 'Role',
         prefixIcon: const Icon(Icons.badge),
-        border: OutlineInputBorder(
+        border: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         filled: true,
@@ -423,8 +423,8 @@ class RoleDropdown extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: role.color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  color: role.color.withValues(alpha: 0.15),
+                  borderRadius: const BorderRadius.circular(8),
                 ),
                 child: Text(
                   'Level ${role.level}',
@@ -477,7 +477,7 @@ class RestrictedContent extends StatelessWidget {
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
@@ -486,8 +486,8 @@ class RestrictedContent extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEE2E2),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFEE2E2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(

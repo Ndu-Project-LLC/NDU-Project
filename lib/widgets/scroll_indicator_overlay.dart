@@ -83,8 +83,8 @@ class _ScrollIndicatorOverlayState extends State<ScrollIndicatorOverlay>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withOpacity(0),
-                          Colors.white.withOpacity(0.92),
+                          Colors.white.withValues(alpha: 0),
+                          Colors.white.withValues(alpha: 0.92),
                         ],
                       ),
                     ),

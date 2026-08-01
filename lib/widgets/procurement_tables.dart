@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/theme.dart';
+
 class ContractsTable extends StatefulWidget {
   const ContractsTable({
     super.key,
@@ -558,10 +559,10 @@ class _ResponsiblePickerCell extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 190),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: Color(0xFFE2E8F0)),
         ),
         child: Row(
           children: [
@@ -740,8 +741,8 @@ class _PriceCell extends StatelessWidget {
     return Text(
       NumberFormat.currency(symbol: '\$', decimalDigits: 2).format(amount),
       textAlign: TextAlign.center,
-      style:
-          const TextStyle(fontFamily: appFontFamily, fontWeight: FontWeight.w600),
+      style: const TextStyle(
+          fontFamily: appFontFamily, fontWeight: FontWeight.w600),
     );
   }
 }
@@ -827,7 +828,7 @@ class _ContractStatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: color.withOpacity(0.2))),
+          border: Border.all(color: color.withValues(alpha: 0.2))),
       child: Text(label,
           style: TextStyle(
               fontSize: 10, fontWeight: FontWeight.bold, color: color)),
@@ -853,9 +854,9 @@ class _StatusCell extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
         status.toUpperCase(),

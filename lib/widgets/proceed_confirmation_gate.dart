@@ -32,15 +32,14 @@ Future<bool> showProceedWithoutReviewDialog(
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
             titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
             contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
             actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             title: Row(
               children: [
-                const Icon(Icons.fact_check_rounded,
-                    color: Color(0xFF1D4ED8)),
+                const Icon(Icons.fact_check_rounded, color: Color(0xFF1D4ED8)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -113,7 +112,7 @@ Future<bool> showProceedWithoutReviewDialog(
                   elevation: 0,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: RoundedRectangleBorder(
+                  shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
                 child: const Text('Confirm & Continue'),

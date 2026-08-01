@@ -77,19 +77,21 @@ class BatchDeleteBar extends StatelessWidget {
         opacity: _hasSelection ? 1.0 : 0.0,
         child: _hasSelection
             ? Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: backgroundColor ?? const Color(0xFFFEF2F2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFFECACA)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDC2626),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFDC2626),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -120,8 +122,9 @@ class BatchDeleteBar extends StatelessWidget {
                       ),
                       style: TextButton.styleFrom(
                         foregroundColor: const Color(0xFFDC2626),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
@@ -156,7 +159,8 @@ Future<bool> showBatchDeleteConfirmationDialog(
   return showDeleteConfirmationDialog(
     context,
     title: title ?? 'Delete selected $itemLabel?',
-    message: 'Are you sure you want to delete $count $itemLabel? This action cannot be undone.',
+    message:
+        'Are you sure you want to delete $count $itemLabel? This action cannot be undone.',
     confirmLabel: count == 1 ? 'Delete' : 'Delete All ($count)',
   );
 }

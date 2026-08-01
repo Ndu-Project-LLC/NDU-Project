@@ -1202,8 +1202,7 @@ class ProjectDataModel {
       city: json['city']?.toString() ?? '',
       projectCategory: json['projectCategory']?.toString() ?? '',
       projectIndustry: json['projectIndustry']?.toString() ?? '',
-      stakeholderEntries:
-          (json['stakeholderEntries'] as List?)
+      stakeholderEntries: (json['stakeholderEntries'] as List?)
               ?.map((e) => StakeholderEntry.fromJson(e))
               .toList() ??
           [],
@@ -1477,6 +1476,15 @@ class PlanningGoal {
           [PlanningMilestone()],
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PlanningGoal && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PlanningMilestone {
@@ -1567,6 +1575,15 @@ class LaunchChecklistItem {
 
   static String _generateId() =>
       DateTime.now().microsecondsSinceEpoch.toString();
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is LaunchChecklistItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class Milestone {
@@ -1585,8 +1602,8 @@ class Milestone {
     this.references = '',
     this.comments = '',
   }) : id = (id == null || id.trim().isEmpty)
-          ? DateTime.now().microsecondsSinceEpoch.toString()
-          : id;
+            ? DateTime.now().microsecondsSinceEpoch.toString()
+            : id;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -1608,6 +1625,15 @@ class Milestone {
       comments: json['comments'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Milestone && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Returns default milestones for fallback when AI generation fails
@@ -1741,6 +1767,15 @@ class WorkItem {
       obsId: json['obsId']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is WorkItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 enum ProgressMeasurementMethod {
@@ -1985,6 +2020,15 @@ class ScheduleActivity {
           : 0,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ScheduleActivity && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class IssueLogItem {
@@ -2035,6 +2079,15 @@ class IssueLogItem {
       milestone: json['milestone'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is IssueLogItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class RequirementItem {
@@ -2096,6 +2149,15 @@ class RequirementItem {
       comments: json['comments']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RequirementItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PlanningRequirementItem {
@@ -2157,6 +2219,15 @@ class PlanningRequirementItem {
       lastSourceHash: json['lastSourceHash']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PlanningRequirementItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class FrontEndPlanningData {
@@ -2179,16 +2250,20 @@ class FrontEndPlanningData {
   // Milestone date fields
   String milestoneStartDate;
   String milestoneEndDate;
+
   /// 2-step SME review verification for milestones.
   bool milestoneSmeReviewStep1;
   bool milestoneSmeReviewStep2;
+
   /// Charter lifecycle flags. Once the charter is approved, the FEP
   /// sections are locked (view-only) and the Planning phase unlocks.
   bool charterApproved;
   DateTime? charterApprovedAt;
+
   /// Once true, all Business Case sections are locked (view-only, no AI
   /// generate). Triggered when the preferred solution is locked.
   bool businessCaseLocked;
+
   /// When true, the user opted to skip the Business Case workflow
   /// because the solution was already known. The project description
   /// carries the basis for FEP documentation instead.
@@ -2338,8 +2413,10 @@ class FrontEndPlanningData {
       contracts: contracts ?? this.contracts,
       milestoneStartDate: milestoneStartDate ?? this.milestoneStartDate,
       milestoneEndDate: milestoneEndDate ?? this.milestoneEndDate,
-      milestoneSmeReviewStep1: milestoneSmeReviewStep1 ?? this.milestoneSmeReviewStep1,
-      milestoneSmeReviewStep2: milestoneSmeReviewStep2 ?? this.milestoneSmeReviewStep2,
+      milestoneSmeReviewStep1:
+          milestoneSmeReviewStep1 ?? this.milestoneSmeReviewStep1,
+      milestoneSmeReviewStep2:
+          milestoneSmeReviewStep2 ?? this.milestoneSmeReviewStep2,
       charterApproved: charterApproved ?? this.charterApproved,
       charterApprovedAt: charterApprovedAt ?? this.charterApprovedAt,
       businessCaseLocked: businessCaseLocked ?? this.businessCaseLocked,
@@ -2617,6 +2694,15 @@ class InfrastructurePlanningItem {
       status: json['status']?.toString() ?? 'Planned',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is InfrastructurePlanningItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class TechnologyPersonnelItem {
@@ -2680,6 +2766,15 @@ class TechnologyPersonnelItem {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is TechnologyPersonnelItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class AllowanceItem {
@@ -2694,20 +2789,27 @@ class AllowanceItem {
   String releaseStatus;
   double releasedAmount;
   double actualAmount;
+
   /// Allowance description (what the allowance covers).
   String description;
+
   /// Estimated cost OR quantity (e.g., "$50,000", "10% of base", "200 hrs").
   String estimatedCostOrQuantity;
+
   /// Schedule impact (if applicable) — short text describing schedule
   /// exposure (e.g., "Adds 2 weeks to commissioning").
   String scheduleImpact;
+
   /// Schedule impact duration in weeks (numeric allowance for schedule
   /// contingency tracking). Nullable/zero when not applicable.
   double scheduleImpactWeeks;
+
   /// Responsible discipline (e.g., "Civil", "Electrical", "Procurement").
   String responsibleDiscipline;
+
   /// Assumptions underpinning this allowance.
   String assumptions;
+
   /// Geographic / contextual trigger that suggested this allowance (e.g.,
   /// "Hurricane exposure — Gulf Coast US", "Power instability — West Africa").
   /// Populated by the auto-generation logic based on project location.
@@ -2782,12 +2884,20 @@ class AllowanceItem {
           ? (json['scheduleImpactWeeks'] as num).toDouble()
           : double.tryParse(json['scheduleImpactWeeks']?.toString() ?? '') ??
               0.0,
-      responsibleDiscipline:
-          json['responsibleDiscipline']?.toString() ?? '',
+      responsibleDiscipline: json['responsibleDiscipline']?.toString() ?? '',
       assumptions: json['assumptions']?.toString() ?? '',
       triggerContext: json['triggerContext']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AllowanceItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class OpportunityItem {
@@ -2900,6 +3010,15 @@ class OpportunityItem {
       isAccepted: json['isAccepted'] == true,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is OpportunityItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class RiskRegisterItem {
@@ -3161,6 +3280,15 @@ class ExecutionRiskItem {
       controlAccountId: json['controlAccountId']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ExecutionRiskItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class ExecutionRiskSignal {
@@ -3207,6 +3335,15 @@ class ExecutionRiskSignal {
       associatedRiskId: json['associatedRiskId']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ExecutionRiskSignal && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class ExecutionRiskMitigation {
@@ -3269,6 +3406,15 @@ class ExecutionRiskMitigation {
       createdAt: json['createdAt']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ExecutionRiskMitigation && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class RoleItem {
@@ -3288,6 +3434,15 @@ class RoleItem {
         name: json['name'] ?? '',
         description: json['description'] ?? '');
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RoleItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PermissionItem {
@@ -3307,6 +3462,15 @@ class PermissionItem {
         resource: json['resource'] ?? '',
         scope: json['scope'] ?? '');
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PermissionItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class SecuritySetting {
@@ -3343,6 +3507,15 @@ class AccessLogItem {
       timestamp: json['timestamp'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AccessLogItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class SSHERData {
@@ -3448,6 +3621,15 @@ class SsherEntry {
       mitigation: json['mitigation'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is SsherEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class SafetyItem {
@@ -3556,6 +3738,15 @@ class PotentialSolution {
       fieldHistories: fieldHistories ?? this.fieldHistories,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PotentialSolution && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LessonRecord {
@@ -3620,6 +3811,15 @@ class LessonRecord {
       dateSubmitted: parsed,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is LessonRecord && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class SolutionRisk {
@@ -3686,6 +3886,15 @@ class TeamMember {
 
   static String _generateId() =>
       DateTime.now().microsecondsSinceEpoch.toString();
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is TeamMember && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PreferredSolutionAnalysis {
@@ -4018,6 +4227,15 @@ class CostEstimateItem {
 
   static String _generateId() =>
       DateTime.now().microsecondsSinceEpoch.toString();
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CostEstimateItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class WorkPackage {
@@ -4293,10 +4511,9 @@ class WorkPackage {
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      milestoneIds: (json['milestoneIds'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      milestoneIds:
+          (json['milestoneIds'] as List?)?.map((e) => e.toString()).toList() ??
+              [],
       areaOrSystem: json['areaOrSystem']?.toString() ?? '',
       contractorOrCrew: json['contractorOrCrew']?.toString() ?? '',
       releaseStatus: json['releaseStatus']?.toString() ?? 'draft',
@@ -4439,6 +4656,15 @@ class WorkPackage {
       percentComplete: percentComplete ?? this.percentComplete,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is WorkPackage && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PackageDeliverable {
@@ -4513,6 +4739,15 @@ class PackageDeliverable {
       requiredForProcurement: json['requiredForProcurement'] == true,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PackageDeliverable && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PackageReadinessChecklist {
@@ -5188,6 +5423,15 @@ class BenefitLineItem {
       notes: json['notes'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is BenefitLineItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class ITConsiderationsData {
@@ -5408,6 +5652,15 @@ class DebtItem {
         status: json['status'] ?? '',
         target: json['target'] ?? '',
       );
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is DebtItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class DebtInsight {
@@ -5712,6 +5965,15 @@ class ScenarioRecord {
             ? (json['likelihood'] as num).toInt()
             : 2,
       );
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ScenarioRecord && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class DesignDeliverablesData {
@@ -6047,6 +6309,15 @@ class RoleDefinition {
       isPredefined: json['isPredefined'] == true,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RoleDefinition && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class RaciMatrixRow {
@@ -6100,6 +6371,15 @@ class RaciMatrixRow {
           <String, String>{},
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RaciMatrixRow && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class StaffingRequirement {
@@ -6203,6 +6483,15 @@ class StaffingRequirement {
       notes: notes ?? this.notes,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is StaffingRequirement && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class TrainingActivity {
@@ -6299,6 +6588,15 @@ class TrainingActivity {
       isCompleted: isCompleted ?? this.isCompleted,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is TrainingActivity && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class StakeholderEntry {
@@ -6407,6 +6705,15 @@ class StakeholderEntry {
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is StakeholderEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class EngagementPlanEntry {
@@ -6508,6 +6815,15 @@ class EngagementPlanEntry {
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is EngagementPlanEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 enum QualityTargetStatus { onTrack, monitoring, offTrack }
@@ -6584,6 +6900,15 @@ class QualityTarget {
       status: status ?? this.status,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityTarget && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QaTechnique {
@@ -6643,6 +6968,15 @@ class QaTechnique {
       standards: standards ?? this.standards,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QaTechnique && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QcTechnique {
@@ -6695,6 +7029,15 @@ class QcTechnique {
       frequency: frequency ?? this.frequency,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QcTechnique && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 enum QualityWorkflowType { qa, qc }
@@ -6864,6 +7207,15 @@ class QualityStandard {
       applicability: applicability ?? this.applicability,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityStandard && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityObjective {
@@ -6956,6 +7308,15 @@ class QualityObjective {
       status: status ?? this.status,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityObjective && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityWorkflowControl {
@@ -7042,6 +7403,15 @@ class QualityWorkflowControl {
       standardsReference: standardsReference ?? this.standardsReference,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityWorkflowControl && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityAuditEntry {
@@ -7127,6 +7497,15 @@ class QualityAuditEntry {
       notes: notes ?? this.notes,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityAuditEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityTaskEntry {
@@ -7239,6 +7618,15 @@ class QualityTaskEntry {
       resolvedDate: resolvedDate ?? this.resolvedDate,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityTaskEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class CorrectiveActionEntry {
@@ -7341,6 +7729,15 @@ class CorrectiveActionEntry {
       verificationNotes: verificationNotes ?? this.verificationNotes,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CorrectiveActionEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityChangeEntry {
@@ -7412,6 +7809,15 @@ class QualityChangeEntry {
       status: status ?? this.status,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityChangeEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityDashboardConfig {
@@ -8055,6 +8461,15 @@ class Contractor {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Contractor && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class Vendor {
@@ -8100,6 +8515,15 @@ class Vendor {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Vendor && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PlanningDashboardItem {
@@ -8146,6 +8570,15 @@ class PlanningDashboardItem {
       isAiGenerated: json['isAiGenerated'] ?? false,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PlanningDashboardItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class MonitoringControlsData {
@@ -8310,6 +8743,15 @@ class InterfaceEntry {
       protocol: json['protocol']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is InterfaceEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class InterfaceChangeLogEntry {
@@ -8384,4 +8826,13 @@ class InterfaceChangeLogEntry {
       changedAt: json['changedAt']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is InterfaceChangeLogEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

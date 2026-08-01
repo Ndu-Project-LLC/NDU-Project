@@ -16,7 +16,8 @@ Future<bool> showDeleteConfirmationDialog(
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape:
+          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
       contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
       actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -25,8 +26,8 @@ Future<bool> showDeleteConfirmationDialog(
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEE2E2),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFEE2E2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -67,7 +68,7 @@ Future<bool> showDeleteConfirmationDialog(
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFFDC2626),
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),

@@ -46,7 +46,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
             border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -385,7 +385,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error regenerating specification: $e'),
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -417,7 +417,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error deleting component: $e'),
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -562,7 +562,9 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
             onChanged: (v) =>
                 _updateComponent(_createUpdatedComponent(componentName: v)),
             style: const TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF111827)),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF111827)),
             textAlign: TextAlign.center,
           ),
         );
@@ -572,12 +574,12 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
-              color: typeColor.withOpacity(0.08),
+              color: typeColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(6),
             ),
             child: DropdownButton<String>(
-              value: DesignComponent.specificationTypes.contains(
-                      _component.specificationType)
+              value: DesignComponent.specificationTypes
+                      .contains(_component.specificationType)
                   ? _component.specificationType
                   : 'Component',
               isDense: true,
@@ -596,8 +598,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
                   .toList(),
               onChanged: (v) {
                 if (v != null) {
-                  _updateComponent(
-                      _createUpdatedComponent(specificationType: v, category: v));
+                  _updateComponent(_createUpdatedComponent(
+                      specificationType: v, category: v));
                 }
               },
             ),
@@ -621,7 +623,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
-              color: priorityColor.withOpacity(0.08),
+              color: priorityColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(6),
             ),
             child: DropdownButton<String>(
@@ -668,8 +670,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
                 .toList(),
             onChanged: (v) {
               if (v != null) {
-                _updateComponent(
-                    _createUpdatedComponent(methodologyPhase: v));
+                _updateComponent(_createUpdatedComponent(methodologyPhase: v));
               }
             },
           ),
@@ -677,7 +678,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
       case 'owner':
         return Center(
           child: DropdownButton<String>(
-            value: _component.owner.isNotEmpty ? _component.owner : 'Engineering',
+            value:
+                _component.owner.isNotEmpty ? _component.owner : 'Engineering',
             isDense: true,
             underline: const SizedBox(),
             iconSize: 14,
@@ -714,7 +716,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
-              color: _getStatusColor(_component.status).withOpacity(0.1),
+              color: _getStatusColor(_component.status).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButton<String>(

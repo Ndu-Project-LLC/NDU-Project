@@ -9,7 +9,7 @@ class ActivityLogPanel {
       context: context,
       barrierLabel: 'Activity Log',
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.28),
+      barrierColor: Colors.black.withValues(alpha: 0.28),
       transitionDuration: const Duration(milliseconds: 220),
       pageBuilder: (context, animation, secondaryAnimation) {
         return const _ActivityLogPanelDialog();
@@ -52,10 +52,10 @@ class _ActivityLogPanelDialog extends StatelessWidget {
           child: Container(
             width: MediaQuery.sizeOf(context).width.clamp(320.0, 560.0),
             margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
                   color: Color(0x24000000),
                   blurRadius: 28,
@@ -79,54 +79,61 @@ class _ActivityLogPanelDialog extends StatelessWidget {
                           message:
                               'Select or open a project first to view its audit trail.',
                         )
-                      : StreamBuilder<List<ActivityLogEntry>>(
-                          stream: ActivityLogService.instance
-                              .watchActivityLog(projectId),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasError) {
-                              return _ActivityLogErrorState(
-                                onRetry: () => Navigator.of(context).pop(),
-                              );
-                            }
-                            if (snapshot.connectionState ==
-                                    ConnectionState.waiting &&
-                                !snapshot.hasData) {
-                              return const Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    CircularProgressIndicator(),
-                                    SizedBox(height: 12),
-                                    Text(
-                                      'Loading activity log...',
-                                      style: TextStyle(
-                                        color: Color(0xFF6B7280),
+                      : RepaintBoundary(
+                          child: StreamBuilder<List<ActivityLogEntry>>(
+                            stream: ActivityLogService.instance
+                                .watchActivityLog(projectId),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasError) {
+                                return _ActivityLogErrorState(
+                                  onRetry: () => Navigator.of(context).pop(),
+                                );
+                              }
+                              if (snapshot.connectionState ==
+                                      ConnectionState.waiting &&
+                                  !snapshot.hasData) {
+                                return const Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      CircularProgressIndicator(),
+                                      SizedBox(height: 12),
+                                      Text(
+                                        'Loading activity log...',
+                                        style: TextStyle(
+                                          color: Color(0xFF6B7280),
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
+                                    ],
+                                  ),
+                                );
+                              }
 
-                            final entries = snapshot.data ?? const [];
-                            if (entries.isEmpty) {
-                              return const _ActivityLogState(
-                                title: 'No logged activity yet',
-                                message:
-                                    'Edits, AI runs, row changes, and page saves will appear here.',
-                              );
-                            }
+                              final entries = snapshot.data ?? const [];
+                              if (entries.isEmpty) {
+                                return const _ActivityLogState(
+                                  title: 'No logged activity yet',
+                                  message:
+                                      'Edits, AI runs, row changes, and page saves will appear here.',
+                                );
+                              }
 
-                            return ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                              itemCount: entries.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 12),
-                              itemBuilder: (context, index) {
-                                return _ActivityLogTile(entry: entries[index]);
-                              },
-                            );
-                          },
+                              return ListView.separated(
+                                padding:
+                                    const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                                itemCount: entries.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 12),
+                                itemBuilder: (context, index) {
+                                  return RepaintBoundary(
+                                    key: ValueKey('activity_log_$index'),
+                                    child:
+                                        _ActivityLogTile(entry: entries[index]),
+                                  );
+                                },
+                              );
+                            },
+                          ),
                         ),
                 ),
               ],
@@ -212,10 +219,10 @@ class _ActivityLogTile extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,10 +282,10 @@ class _MetaChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Text(
         label,

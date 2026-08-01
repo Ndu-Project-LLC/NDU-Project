@@ -3,6 +3,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/theme.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class ScheduleMasterView extends StatefulWidget {
   const ScheduleMasterView({
     super.key,
@@ -160,17 +161,15 @@ class _ScheduleMasterViewState extends State<ScheduleMasterView> {
                         : null,
                     filled: true,
                     fillColor: const Color(0xFFF9FAFB),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 0),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide:
-                          BorderSide(color: AppSemanticColors.border),
+                      borderSide: BorderSide(color: AppSemanticColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide:
-                          BorderSide(color: AppSemanticColors.border),
+                      borderSide: BorderSide(color: AppSemanticColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -206,8 +205,7 @@ class _ScheduleMasterViewState extends State<ScheduleMasterView> {
             const _EmptyMasterView()
           else ...[
             ...filteredByWbsLevel2.entries.map((entry) {
-              final title =
-                  wbsLevel2Titles[entry.key] ?? 'Untitled Phase';
+              final title = wbsLevel2Titles[entry.key] ?? 'Untitled Phase';
               return _WbsLevel2Section(
                 wbsLevel2Id: entry.key,
                 title: title,
@@ -275,8 +273,7 @@ class _WbsLevel2SectionState extends State<_WbsLevel2Section> {
           GestureDetector(
             onTap: () => setState(() => _isExpanded = !_isExpanded),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
                 color: Color(0xFFE5E7EB),
                 borderRadius: BorderRadius.only(
@@ -293,8 +290,7 @@ class _WbsLevel2SectionState extends State<_WbsLevel2Section> {
                         size: 20, color: Color(0xFF4B5563)),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.folder,
-                      size: 18, color: Color(0xFF4B5563)),
+                  const Icon(Icons.folder, size: 18, color: Color(0xFF4B5563)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -307,8 +303,8 @@ class _WbsLevel2SectionState extends State<_WbsLevel2Section> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(999),
@@ -420,9 +416,7 @@ class _WorkPackageTileState extends State<_WorkPackageTile> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    wp.title.isNotEmpty
-                        ? wp.title
-                        : 'Untitled Work Package',
+                    wp.title.isNotEmpty ? wp.title : 'Untitled Work Package',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -431,8 +425,8 @@ class _WorkPackageTileState extends State<_WorkPackageTile> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEFF6FF),
                     borderRadius: BorderRadius.circular(999),
@@ -469,9 +463,7 @@ class _WorkPackageTileState extends State<_WorkPackageTile> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  wp.phase.isNotEmpty
-                      ? wp.phase.toUpperCase()
-                      : 'N/A',
+                  wp.phase.isNotEmpty ? wp.phase.toUpperCase() : 'N/A',
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -516,13 +508,12 @@ class _WorkPackageTileState extends State<_WorkPackageTile> {
                   onTap: () => widget.onActivityTap?.call(activity),
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 4),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
-                      border:
-                          Border.all(color: AppSemanticColors.border),
+                      border: Border.all(color: AppSemanticColors.border),
                     ),
                     child: Row(
                       children: [
@@ -581,8 +572,8 @@ class _WorkPackageTileState extends State<_WorkPackageTile> {
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(6),

@@ -726,7 +726,8 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
 
       final bytes = byteData.buffer.asUint8List();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final fileName = 'diagram_${widget.sectionLabel.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}_$timestamp.png';
+      final fileName =
+          'diagram_${widget.sectionLabel.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}_$timestamp.png';
 
       download_helper.downloadFile(bytes, fileName, mimeType: 'image/png');
 
@@ -780,8 +781,8 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE1EEFF),
+              decoration: const BoxDecoration(
+                color: Color(0xFFE1EEFF),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Row(children: const [
@@ -815,7 +816,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
                 elevation: 0,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: RoundedRectangleBorder(
+                shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
             ),
@@ -884,10 +885,10 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
               width: double.infinity,
               height: 280,
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
+                border: Border.all(color: Color(0xFFE5E7EB)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -896,7 +897,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
                   Container(
                     height: 24,
                     width: 200,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -924,10 +925,10 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
           Container(
             width: double.infinity,
             constraints: const BoxConstraints(minHeight: 320, maxHeight: 600),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
+              border: Border.all(color: Color(0xFFE5E7EB)),
             ),
             child: Stack(
               children: [
@@ -1061,41 +1062,43 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
           Container(
             width: double.infinity,
             height: 240,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: const Color(0xFFD1D5DB),
+                color: Color(0xFFD1D5DB),
                 width: 1.5,
                 strokeAlign: BorderSide.strokeAlignInside,
               ),
             ),
-            child: CustomPaint(
-              painter: _DashedBorderPainter(
-                color: const Color(0xFFD1D5DB),
-                strokeWidth: 1.5,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.hub_outlined,
-                      size: 48, color: const Color(0xFFD1D5DB)),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Generate a strategic reasoning diagram',
-                    style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF6B7280)),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Tap "${_diagram != null ? 'Regenerate' : widget.title}" above to create a\nvisual map of your ${widget.sectionLabel}',
-                    textAlign: TextAlign.center,
-                    style:
-                        const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
-                  ),
-                ],
+            child: RepaintBoundary(
+              child: CustomPaint(
+                painter: _DashedBorderPainter(
+                  color: const Color(0xFFD1D5DB),
+                  strokeWidth: 1.5,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.hub_outlined,
+                        size: 48, color: const Color(0xFFD1D5DB)),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Generate a strategic reasoning diagram',
+                      style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF6B7280)),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Tap "${_diagram != null ? 'Regenerate' : widget.title}" above to create a\nvisual map of your ${widget.sectionLabel}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF9CA3AF)),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1159,7 +1162,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
           child: Container(
             width: 100,
             height: 40,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
@@ -1279,9 +1282,9 @@ class _ToolbarButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: const Color(0xFFF3F4F6),
+              color: Color(0xFFF3F4F6),
             ),
             child: Icon(icon, size: 18, color: const Color(0xFF6B7280)),
           ),
@@ -1425,11 +1428,13 @@ class _DiagramFullscreenViewState extends State<_DiagramFullscreenView> {
                   child: Center(
                     child: Builder(builder: (_) {
                       final painter = _DiagramPainter(widget.diagram);
-                      return CustomPaint(
-                        painter: painter,
-                        isComplex: true,
-                        willChange: false,
-                        size: painter.intrinsicSize,
+                      return RepaintBoundary(
+                        child: CustomPaint(
+                          painter: painter,
+                          isComplex: true,
+                          willChange: false,
+                          size: painter.intrinsicSize,
+                        ),
                       );
                     }),
                   ),
@@ -1464,7 +1469,8 @@ class _DiagramFullscreenViewState extends State<_DiagramFullscreenView> {
 
 // ── Shared offscreen diagram renderer ────────────────────────────────────────
 
-Future<ui.Image?> renderDiagramToImage(DiagramModel diagram, double pixelRatio) async {
+Future<ui.Image?> renderDiagramToImage(
+    DiagramModel diagram, double pixelRatio) async {
   final painter = _DiagramPainter(diagram);
   final size = painter.intrinsicSize;
   if (size.width <= 0 || size.height <= 0) return null;

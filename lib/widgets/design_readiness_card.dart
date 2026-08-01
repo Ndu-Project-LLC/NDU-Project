@@ -26,7 +26,7 @@ class DesignReadinessCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -206,7 +206,7 @@ class DesignReadinessCard extends StatelessWidget {
           backgroundColor: Colors.grey.shade100,
           valueColor: AlwaysStoppedAnimation<Color>(barColor),
           minHeight: 4,
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: const BorderRadius.circular(2),
         ),
       ],
     );

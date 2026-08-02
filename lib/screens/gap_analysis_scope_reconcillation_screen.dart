@@ -1105,7 +1105,7 @@ class _GapRegisterCard extends StatelessWidget {
                   child: SizedBox(
                     width: tableWidth,
                     child: Container(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(16)),
                         border: Border.all(color: Color(0xFFE5E7EB)),
                       ),
@@ -1547,7 +1547,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                   child: SizedBox(
                     width: tableWidth,
                     child: Container(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(16)),
                         border: Border.all(color: Color(0xFFE5E7EB)),
                       ),
@@ -1663,7 +1663,7 @@ class _GapAnalysisRootCauseCard extends StatelessWidget {
                   child: SizedBox(
                     width: tableWidth,
                     child: Container(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(16)),
                         border: Border.all(color: Color(0xFFE5E7EB)),
                       ),
@@ -2118,7 +2118,7 @@ class _GapEntryRowState extends State<_GapEntryRow> {
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(4),
                             ),
@@ -2707,7 +2707,7 @@ class _ReconciliationPlanningCard extends StatelessWidget {
                   child: SizedBox(
                     width: tableWidth,
                     child: Container(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(16)),
                         border: Border.all(color: Color(0xFFE5E7EB)),
                       ),
@@ -3141,7 +3141,7 @@ class _ImpactAssessmentCard extends StatelessWidget {
                   child: SizedBox(
                     width: tableWidth,
                     child: Container(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(16)),
                         border: Border.all(color: Color(0xFFE5E7EB)),
                       ),
@@ -4274,7 +4274,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFF8FAFC),
             borderRadius: BorderRadius.all(Radius.circular(999)),
             border: Border.all(color: Color(0xFFE2E8F0)),
@@ -4569,7 +4569,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
     final topThree = sorted.take(3).toList();
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.all(Radius.circular(16)),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -4609,7 +4609,7 @@ class _ScenarioMatrixDialogState extends State<_ScenarioMatrixDialog> {
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.all(Radius.circular(12)),
                   border: Border.all(color: Color(0xFFE2E8F0)),
@@ -4998,7 +4998,7 @@ class _AxisHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -5052,7 +5052,7 @@ class _Tag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(999),
       ),
@@ -5673,7 +5673,7 @@ class _EmptyPanel extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: Color(0xFFE5E7EB)),

@@ -26,7 +26,7 @@ class SCurveChart extends StatelessWidget {
       return Container(
         height: height,
         width: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Color(0xFFE5E7EB)),
@@ -44,7 +44,7 @@ class SCurveChart extends StatelessWidget {
       height: height,
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),

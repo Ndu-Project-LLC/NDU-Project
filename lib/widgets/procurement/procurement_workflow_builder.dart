@@ -51,7 +51,7 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -147,7 +147,7 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Color(0xFFD1D5DB)),
@@ -165,7 +165,7 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Color(0xFFE5E7EB)),
@@ -268,7 +268,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -280,7 +280,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
             width: 26,
             height: 26,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFEFF6FF),
               borderRadius: BorderRadius.circular(999),
             ),

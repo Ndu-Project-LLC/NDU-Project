@@ -477,8 +477,8 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: _kSurface,
-        borderRadius: const BorderRadius.circular(14),
-        border: const Border.all(color: _kBorder),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _kBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -553,7 +553,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
     final pct = (_sprintCompletion * 100).clamp(0, 100);
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -574,7 +574,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: _kAccentBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -588,7 +588,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
           ),
           const SizedBox(height: 16),
           ClipRRect(
-            borderRadius: const BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: _sprintCompletion,
               minHeight: 14,
@@ -635,7 +635,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
   Widget _buildBurnDownCard() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -704,7 +704,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
   Widget _buildHealthCard() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -747,7 +747,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
                     ),
                     const SizedBox(height: 6),
                     ClipRRect(
-                      borderRadius: const BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(6),
                       child: LinearProgressIndicator(
                         value: h.value,
                         minHeight: 8,
@@ -767,7 +767,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
   Widget _buildActivityFeed() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -856,7 +856,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -869,7 +869,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -927,7 +927,7 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE5E7EB)),

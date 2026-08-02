@@ -760,6 +760,7 @@ class _CommunicationPlanTable extends StatelessWidget {
  ),
  );
  },
+ ),
  );
  }
 }

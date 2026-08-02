@@ -108,7 +108,7 @@ class AcConfidenceScore extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ClipRRect(
-            borderRadius: const BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: score / 100,
               backgroundColor: color.withValues(alpha: 0.12),

@@ -431,7 +431,7 @@ class _UpdateOpsMaintenancePlansScreenState
       children: [
         Container(
           padding: const EdgeInsets.all(10),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFEEF2FF),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -471,7 +471,7 @@ class _UpdateOpsMaintenancePlansScreenState
   Widget _buildBottomActionBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -515,7 +515,7 @@ class _UpdateOpsMaintenancePlansScreenState
   Widget _buildStatCard(_StatCardData data) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -533,7 +533,7 @@ class _UpdateOpsMaintenancePlansScreenState
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: data.color.withValues(alpha: 0.1),
-              borderRadius: const BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(Icons.analytics_outlined, size: 22, color: data.color),
           ),
@@ -569,7 +569,7 @@ class _UpdateOpsMaintenancePlansScreenState
 
   Widget _buildPlanRegister(String? projectId) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -590,7 +590,7 @@ class _UpdateOpsMaintenancePlansScreenState
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Color(0xFFECFDF5),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -638,7 +638,7 @@ class _UpdateOpsMaintenancePlansScreenState
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
-                        shape: const RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
                         textStyle: const TextStyle(fontWeight: FontWeight.w700),
                       ),
@@ -782,7 +782,7 @@ class _UpdateOpsMaintenancePlansScreenState
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
             decoration: BoxDecoration(
               color: selected ? const Color(0xFF0F172A) : Colors.white,
-              borderRadius: const BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
                   color: selected
                       ? const Color(0xFF0F172A)
@@ -838,7 +838,7 @@ class _UpdateOpsMaintenancePlansScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -870,7 +870,7 @@ class _UpdateOpsMaintenancePlansScreenState
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
                   color: item.color.withValues(alpha: 0.12),
-                  borderRadius: const BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: item.color.withValues(alpha: 0.25)),
                 ),
                 child: Text(
@@ -890,7 +890,7 @@ class _UpdateOpsMaintenancePlansScreenState
           ),
           const SizedBox(height: 14),
           ClipRRect(
-            borderRadius: const BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: item.progress,
               minHeight: 10,
@@ -940,7 +940,7 @@ class _UpdateOpsMaintenancePlansScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -957,7 +957,7 @@ class _UpdateOpsMaintenancePlansScreenState
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFFEF3C7),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -1048,7 +1048,7 @@ class _UpdateOpsMaintenancePlansScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -1057,7 +1057,7 @@ class _UpdateOpsMaintenancePlansScreenState
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFE0F2FE),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -1092,7 +1092,7 @@ class _UpdateOpsMaintenancePlansScreenState
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.15),
-              borderRadius: const BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(color: statusColor.withValues(alpha: 0.3)),
             ),
             child: Text(
@@ -1150,7 +1150,7 @@ class _UpdateOpsMaintenancePlansScreenState
                   foregroundColor: Colors.white,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: const RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                   textStyle: const TextStyle(fontWeight: FontWeight.w700),
                 ),
@@ -1171,7 +1171,7 @@ class _UpdateOpsMaintenancePlansScreenState
         backgroundColor: const Color(0xFF0F172A),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14)),
         textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
       ),
@@ -1183,10 +1183,10 @@ class _UpdateOpsMaintenancePlansScreenState
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: const BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFEEF2FF),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: Color(0xFFC7D2FE)),
@@ -1203,10 +1203,10 @@ class _UpdateOpsMaintenancePlansScreenState
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: const BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFFEE2E2),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: Color(0xFFFECACA)),
@@ -1597,7 +1597,7 @@ class _PremiumPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -1620,7 +1620,7 @@ class _PremiumPanel extends StatelessWidget {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: iconBg,
-                    borderRadius: const BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, size: 20, color: iconColor),
                 ),
@@ -1758,7 +1758,7 @@ class _PlanRow extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
                   color: bg,
-                  borderRadius: const BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: color.withValues(alpha: 0.2)),
                 ),
                 child: Text(

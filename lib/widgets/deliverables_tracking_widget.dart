@@ -187,8 +187,8 @@ class _DeliverablesTrackingWidgetState
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -596,7 +596,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
                         decoration: BoxDecoration(
                           color: _getStatusColor(_deliverable.status)
                               .withValues(alpha: 0.1),
-                          borderRadius: const BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           _deliverable.status,

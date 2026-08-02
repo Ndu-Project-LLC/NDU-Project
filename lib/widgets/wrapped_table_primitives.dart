@@ -471,7 +471,7 @@ DataCell _wrapCell(DataCell cell) {
         locale: child.locale,
         maxLines: child.maxLines,
         strutStyle: child.strutStyle,
-        overflow: child.overflow,
+        overflow: child.overflow ?? TextOverflow.visible,
       ),
       placeholder: cell.placeholder,
       showEditIcon: cell.showEditIcon,

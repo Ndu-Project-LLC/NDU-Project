@@ -332,7 +332,7 @@ class RoleBadge extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: role.color.withValues(alpha: 0.15),
-            borderRadius: const BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: role.color,
               width: 1,
@@ -401,7 +401,7 @@ class RoleDropdown extends StatelessWidget {
       decoration: InputDecoration(
         labelText: 'Role',
         prefixIcon: const Icon(Icons.badge),
-        border: const OutlineInputBorder(
+        border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         filled: true,
@@ -424,7 +424,7 @@ class RoleDropdown extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: role.color.withValues(alpha: 0.15),
-                  borderRadius: const BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   'Level ${role.level}',

@@ -47,7 +47,7 @@ class _ChartBuilderWorkspaceState extends State<ChartBuilderWorkspace> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppSemanticColors.border),
       ),
       child: Row(
@@ -65,7 +65,7 @@ class _ChartBuilderWorkspaceState extends State<ChartBuilderWorkspace> {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: const BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppSemanticColors.border),
                       ),
                       child: Padding(
@@ -196,14 +196,14 @@ class _ChartTypeChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: const BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isActive
               ? LightModeColors.accent.withValues(alpha: 0.18)
               : Colors.white,
-          borderRadius: const BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
               color:
                   isActive ? LightModeColors.accent : AppSemanticColors.border),
@@ -250,7 +250,7 @@ class _DataRow extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppSemanticColors.border),
       ),
       child: Column(

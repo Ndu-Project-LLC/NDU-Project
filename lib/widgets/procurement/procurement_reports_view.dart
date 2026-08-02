@@ -232,7 +232,7 @@ class ProcurementReportsView extends StatelessWidget {
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
@@ -244,7 +244,7 @@ class ProcurementReportsView extends StatelessWidget {
                 side: const BorderSide(color: Color(0xFFCBD5E1)),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text('Share'),
@@ -258,7 +258,7 @@ class ProcurementReportsView extends StatelessWidget {
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
@@ -286,7 +286,7 @@ class _ReportKpiCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(18),
@@ -344,7 +344,7 @@ class _SpendBreakdownCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
@@ -385,7 +385,7 @@ class _SpendBreakdownCard extends StatelessWidget {
                   children: [
                     Container(
                       height: 8,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(999),
                       ),
@@ -395,7 +395,7 @@ class _SpendBreakdownCard extends StatelessWidget {
                       width: constraints.maxWidth * breakdown[i].percent,
                       decoration: BoxDecoration(
                         color: breakdown[i].color,
-                        borderRadius: const BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(999),
                       ),
                     ),
                   ],
@@ -429,7 +429,7 @@ class _LeadTimePerformanceCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
@@ -465,7 +465,7 @@ class _LeadTimePerformanceCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             ClipRRect(
-              borderRadius: const BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
                 value: metrics[i].onTimeRate,
                 minHeight: 8,
@@ -501,7 +501,7 @@ class _SavingsOpportunitiesCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
@@ -576,7 +576,7 @@ class _ComplianceSnapshotCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
@@ -612,7 +612,7 @@ class _ComplianceSnapshotCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             ClipRRect(
-              borderRadius: const BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
                 value: metrics[i].value,
                 minHeight: 8,

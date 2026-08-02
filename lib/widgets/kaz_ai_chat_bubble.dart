@@ -713,7 +713,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         title: const Text('Clear AI Chat History'),
         content: const Text(
             'This will permanently delete all conversation history with KAZ AI. This action cannot be undone.'),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20)),
         actions: [
           TextButton(
@@ -748,7 +748,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         title: const Text('Clear Support Chat History'),
         content: const Text(
             'This will permanently delete all support chat history. This action cannot be undone.'),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20)),
         actions: [
           TextButton(
@@ -1235,7 +1235,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           const SizedBox(height: 8),
           VoiceTextField(
             controller: _ticketSubjectController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Brief description of your issue',
               hintStyle: TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
               filled: true,
@@ -1270,7 +1270,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           VoiceTextField(
             controller: _ticketDescController,
             maxLines: 4,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Provide additional context about your issue...',
               hintStyle: TextStyle(fontSize: 13, color: Color(0xFFCBD5E1)),
               filled: true,
@@ -1308,7 +1308,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                       color: Color(0xFF1A1A1A))),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFFABD00),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
             ),
@@ -1540,7 +1540,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         children: [
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Color(0xFFE2E8F0)),
@@ -1715,7 +1715,7 @@ class _ChatBubble extends StatelessWidget {
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: Color(0xFFE2E8F0)),

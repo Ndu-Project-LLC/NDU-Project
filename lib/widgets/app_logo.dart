@@ -110,7 +110,7 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
                 height: h,
                 width: widget.width,
                 decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8),
                   boxShadow: _isHovering
                       ? [
                           BoxShadow(
@@ -133,7 +133,7 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
             ),
           ),
           child: ClipRRect(
-            borderRadius: const BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8),
             child: image,
           ),
         ),

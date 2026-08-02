@@ -399,7 +399,7 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.08),
-            borderRadius: const BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, size: 18, color: color),
         ),

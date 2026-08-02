@@ -483,7 +483,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF5F3FF),
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -1204,7 +1204,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
           return Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(14),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Color(0xFFE2E8F0)),
@@ -1563,7 +1563,7 @@ class _ArchitecturePatternCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -1654,7 +1654,7 @@ class _SecurityControlCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -1733,7 +1733,7 @@ class _NFRCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -1812,7 +1812,7 @@ class _ADRecordCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE2E8F0)),

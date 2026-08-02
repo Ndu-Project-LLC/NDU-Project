@@ -1535,13 +1535,13 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                 ),
@@ -2123,7 +2123,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
               child: Container(
                 height: 42,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Color(0xFFE4E7EC)),

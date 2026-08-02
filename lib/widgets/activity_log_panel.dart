@@ -52,7 +52,7 @@ class _ActivityLogPanelDialog extends StatelessWidget {
           child: Container(
             width: MediaQuery.sizeOf(context).width.clamp(320.0, 560.0),
             margin: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
@@ -219,7 +219,7 @@ class _ActivityLogTile extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -282,7 +282,7 @@ class _MetaChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: Color(0xFFE5E7EB)),

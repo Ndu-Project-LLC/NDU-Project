@@ -53,7 +53,7 @@ class _MilestonePickerDialogState extends State<MilestonePickerDialog> {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -169,7 +169,7 @@ class _MilestonePickerDialogState extends State<MilestonePickerDialog> {
                     backgroundColor: const Color(0xFFFFC107),
                     foregroundColor: const Color(0xFF1E293B),
                     elevation: 0,
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
                   child: const Text('Apply'),

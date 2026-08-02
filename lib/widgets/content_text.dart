@@ -138,11 +138,11 @@ class EditableContentText extends StatelessWidget {
     final accent = isStaticEditMode ? const Color(0xFFB45309) : Colors.blue;
     return InkWell(
       onTap: () => _showEditDialog(context, isStaticEditMode: isStaticEditMode),
-      borderRadius: const BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(4),
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
-          borderRadius: const BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(4),
           color: accent.withValues(alpha: 0.05),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),

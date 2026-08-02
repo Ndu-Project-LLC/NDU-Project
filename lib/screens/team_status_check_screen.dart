@@ -213,7 +213,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
         ),
@@ -263,7 +263,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
 
   Widget _buildTabBar() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -319,7 +319,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -382,7 +382,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Color(0xFFE5E7EB)),
@@ -421,7 +421,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -457,7 +457,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
                         color: utilizationColor)),
                 const SizedBox(height: 4),
                 ClipRRect(
-                  borderRadius: const BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: row.utilization / 100,
                     minHeight: 6,
@@ -508,7 +508,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Color(0xFFE5E7EB)),
@@ -547,7 +547,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -583,7 +583,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
                         color: coverageColor)),
                 const SizedBox(height: 4),
                 ClipRRect(
-                  borderRadius: const BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: row.coveragePercent / 100,
                     minHeight: 6,
@@ -642,7 +642,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(48),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),

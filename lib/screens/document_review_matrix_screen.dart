@@ -306,7 +306,7 @@ class _DocumentReviewMatrixScreenState
       children: [
         Expanded(
           child: VoiceTextField(
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Search documents...',
               prefixIcon: Icon(Icons.search),
               border: OutlineInputBorder(
@@ -396,7 +396,7 @@ class _DocumentReviewMatrixScreenState
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border.all(color: _kCardBorder),
             borderRadius: BorderRadius.circular(8),
           ),
@@ -1376,11 +1376,11 @@ class _NavCircleBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: const BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         width: 36,
         height: 36,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(color: Color(0xFFE5E7EB)),

@@ -874,6 +874,7 @@ class _IssuesManagementTable extends StatelessWidget {
  ),
  );
  },
+ ),
  );
  }
 }

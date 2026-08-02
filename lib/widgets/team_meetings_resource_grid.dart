@@ -290,8 +290,8 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -330,7 +330,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
                     side: const BorderSide(color: Color(0xFFE5E7EB)),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
@@ -347,7 +347,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
                     side: const BorderSide(color: Color(0xFFE5E7EB)),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
@@ -359,7 +359,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 10),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     foregroundColor: const Color(0xFF2563EB),
                   ),
@@ -461,8 +461,8 @@ class _SummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(12),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -683,7 +683,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 16),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           border: Border.all(color: Color(0xFFE5E7EB)),
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -1211,10 +1211,10 @@ class _MultiSelectCell extends StatelessWidget {
 
     return InkWell(
       onTap: () => _showMultiSelectDialog(context),
-      borderRadius: const BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(6),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border.all(color: Color(0xFFE5E7EB)),
           borderRadius: BorderRadius.circular(6),
         ),

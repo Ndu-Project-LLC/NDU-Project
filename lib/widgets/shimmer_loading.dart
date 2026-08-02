@@ -127,7 +127,7 @@ class PageShimmerSkeleton extends StatelessWidget {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: ShimmerColors.container(context),
-                          borderRadius: const BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: baseColor,
                             width: 0.5,
@@ -159,7 +159,7 @@ class PageShimmerSkeleton extends StatelessWidget {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: ShimmerColors.container(context),
-                      borderRadius: const BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: baseColor, width: 0.5),
                     ),
                     child: Column(

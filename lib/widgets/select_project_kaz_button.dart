@@ -79,7 +79,7 @@ class _SelectProjectKazButtonState extends State<SelectProjectKazButton>
         color: Colors.transparent,
         child: InkWell(
           onTap: _showSelectionDialog,
-          borderRadius: const BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16),
           child: Container(
             width: double.infinity,
             height: 56,
@@ -92,7 +92,7 @@ class _SelectProjectKazButtonState extends State<SelectProjectKazButton>
                   Color(0xFFFFB200),
                 ],
               ),
-              borderRadius: const BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFFFFC812).withValues(alpha: 0.4),
@@ -112,7 +112,7 @@ class _SelectProjectKazButtonState extends State<SelectProjectKazButton>
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(16),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -275,7 +275,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
         margin: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.15),
@@ -425,17 +425,17 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
                             ? 'e.g., ${widget.solutions[_selectedIndex!].title} Initiative'
                             : 'Enter project name',
                         errorText: _projectNameError,
-                        border: const OutlineInputBorder(
+                        border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey, width: 1),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: const BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
                               color: Colors.grey.withValues(alpha: 0.3),
                               width: 1),
                         ),
-                        focusedBorder: const OutlineInputBorder(
+                        focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide:
                               BorderSide(color: Color(0xFFFFC812), width: 2),
@@ -465,7 +465,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         side: const BorderSide(color: Colors.grey),
-                        shape: const RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
                       child: const Text(
@@ -490,7 +490,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
                             Color(0xFFFFB200),
                           ],
                         ),
-                        borderRadius: const BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
                             color:
@@ -504,7 +504,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog>
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: _confirmSelection,
-                          borderRadius: const BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12),
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             child: const Row(
@@ -554,7 +554,7 @@ class _SolutionCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        borderRadius: const BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isSelected
               ? const Color(0xFFFFC812)
@@ -576,7 +576,7 @@ class _SolutionCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: const BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(14),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(

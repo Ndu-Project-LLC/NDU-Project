@@ -2343,7 +2343,7 @@ class _ProgressCell extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         ClipRRect(
-          borderRadius: const BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8),
           child: LinearProgressIndicator(
             value: value.clamp(0.0, 1.0),
             minHeight: 8,
@@ -2371,7 +2371,7 @@ class _RiskTierCell extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(16),
         ),
@@ -2624,7 +2624,7 @@ class _PanelShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),

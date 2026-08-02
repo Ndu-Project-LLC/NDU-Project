@@ -99,7 +99,7 @@ class DashboardBottomNavBar extends StatelessWidget {
           decoration: isActive
               ? BoxDecoration(
                   color: _Tokens.primaryContainer.withValues(alpha: 0.1),
-                  borderRadius: const BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12),
                 )
               : null,
           child: Column(

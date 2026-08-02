@@ -295,7 +295,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
             icon: const Icon(Icons.close, color: Colors.white, size: 22),
             style: IconButton.styleFrom(
               backgroundColor: Colors.white.withValues(alpha: 0.15),
-              shape: const RoundedRectangleBorder(
+              shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
           ),
@@ -331,7 +331,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
   Widget _buildTemplateSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF0F9FF),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFBAE6FD)),
@@ -503,7 +503,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -564,15 +564,15 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
             ),
             filled: true,
             fillColor: const Color(0xFFF9FAFB),
-            border: const OutlineInputBorder(
+            border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Color(0xFFE5E7EB)),
             ),
-            enabledBorder: const OutlineInputBorder(
+            enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Color(0xFFE5E7EB)),
             ),
-            focusedBorder: const OutlineInputBorder(
+            focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Color(0xFF2563EB)),
             ),
@@ -745,7 +745,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
           ),
           const SizedBox(height: 16),
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Color(0xFFE5E7EB)),
             ),
@@ -784,7 +784,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 4, vertical: 2),
                             decoration: hasError
-                                ? const BoxDecoration(
+                                ? BoxDecoration(
                                     color: Color(0xFFFEE2E2),
                                     borderRadius: BorderRadius.circular(4),
                                   )
@@ -851,7 +851,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
               style: OutlinedButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 foregroundColor: const Color(0xFF2563EB),
                 side: const BorderSide(color: Color(0xFF2563EB)),
@@ -867,7 +867,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
               style: FilledButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 backgroundColor: const Color(0xFF2563EB),
                 foregroundColor: Colors.white,

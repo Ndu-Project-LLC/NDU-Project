@@ -765,6 +765,7 @@ class _EarlyWorksTable extends StatelessWidget {
  ),
  );
  },
+ ),
  );
  }
 }

@@ -451,7 +451,7 @@ class _AgileIterationManagementScreenState
     ];
     return Container(
       padding: const EdgeInsets.all(6),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _kBorder),
@@ -498,7 +498,7 @@ class _AgileIterationManagementScreenState
     final doneCount = _kickoff.where((k) => k.done).length;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -537,7 +537,7 @@ class _AgileIterationManagementScreenState
           ),
           const SizedBox(height: 14),
           ClipRRect(
-            borderRadius: const BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: doneCount / _kickoff.length,
               minHeight: 8,
@@ -606,7 +606,7 @@ class _AgileIterationManagementScreenState
   Widget _buildSprintGoalCard() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
@@ -683,7 +683,7 @@ class _AgileIterationManagementScreenState
     final burnRate = totalPlanned == 0 ? 0.0 : totalActual / totalPlanned;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
@@ -740,7 +740,7 @@ class _AgileIterationManagementScreenState
   Widget _buildDailyProgressTracker() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -818,7 +818,7 @@ class _AgileIterationManagementScreenState
     ];
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -891,7 +891,7 @@ class _AgileIterationManagementScreenState
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: _kAccentBg,
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -913,7 +913,7 @@ class _AgileIterationManagementScreenState
   Widget _buildCompletionMetrics() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
@@ -970,7 +970,7 @@ class _AgileIterationManagementScreenState
           ),
           const SizedBox(height: 16),
           ClipRRect(
-            borderRadius: const BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: _completionPct,
               minHeight: 12,
@@ -993,7 +993,7 @@ class _AgileIterationManagementScreenState
   Widget _buildCarryoverSection() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -1115,7 +1115,7 @@ class _AgileIterationManagementScreenState
             flex: 1,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: _kAccentBg,
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -1145,7 +1145,7 @@ class _AgileIterationManagementScreenState
     final doneCount = items.where((i) => i.$3).length;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -1166,7 +1166,7 @@ class _AgileIterationManagementScreenState
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: _kAccentBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1237,7 +1237,7 @@ class _AgileIterationManagementScreenState
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1250,7 +1250,7 @@ class _AgileIterationManagementScreenState
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1409,7 +1409,7 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),

@@ -42,8 +42,8 @@ class VendorsTableWidget extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: const BorderRadius.circular(16),
-            border: const Border.all(color: Color(0xFFE5E7EB), width: 1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Color(0xFFE5E7EB), width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.03),
@@ -262,7 +262,7 @@ class _VendorNameCell extends StatelessWidget {
     return Container(
       width: 32,
       height: 32,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Color(0xFFE2E8F0), width: 0.5),
@@ -406,7 +406,7 @@ class _CategoryCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: const BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.15), width: 0.5),
       ),
       child: Row(
@@ -516,7 +516,7 @@ class _CriticalityCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: const BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.2), width: 0.5),
       ),
       child: Row(
@@ -601,12 +601,12 @@ class _SlaCell extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           ClipRRect(
-            borderRadius: const BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(4),
             child: Stack(
               children: [
                 Container(
                   height: 6,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Color(0xFFE2E8F0),
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -617,7 +617,7 @@ class _SlaCell extends StatelessWidget {
                     height: 6,
                     decoration: BoxDecoration(
                       color: perfColor,
-                      borderRadius: const BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(4),
                       boxShadow: [
                         BoxShadow(
                           color: perfColor.withValues(alpha: 0.3),
@@ -666,7 +666,7 @@ class _RatingCell extends StatelessWidget {
         height: 30,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
-          borderRadius: const BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
         ),
         child: Center(
@@ -710,7 +710,7 @@ class _StatusCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: const BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.15), width: 0.5),
       ),
       child: Row(
@@ -786,7 +786,7 @@ class _LeadTimeCell extends StatelessWidget {
   Widget _leadTimeChip(String leadTime) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(6),
       ),

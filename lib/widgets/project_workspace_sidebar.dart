@@ -127,7 +127,7 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
           // Search bar
           Container(
             height: 42,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: _kSurfaceBorder),

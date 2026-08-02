@@ -302,7 +302,7 @@ class WorkPackageDetailView extends StatelessWidget {
                             (a) => Container(
                               margin: const EdgeInsets.only(bottom: 4),
                               padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: Color(0xFFF9FAFB),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
@@ -356,7 +356,7 @@ class WorkPackageDetailView extends StatelessWidget {
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFF9FAFB),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: AppSemanticColors.border),
@@ -465,7 +465,7 @@ class _QuickStatChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: const BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
@@ -498,7 +498,7 @@ class _AccordionSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppSemanticColors.border),
@@ -513,10 +513,10 @@ class _AccordionSection extends StatelessWidget {
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           childrenPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          shape: const RoundedRectangleBorder(
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          collapsedShape: const RoundedRectangleBorder(
+          collapsedShape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
           leading: Icon(icon, size: 18, color: const Color(0xFF4B5563)),
@@ -546,7 +546,7 @@ class _WarningPanel extends StatelessWidget {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xFFECFDF5),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Color(0xFF10B981)),
@@ -565,7 +565,7 @@ class _WarningPanel extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFFFF7ED),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Color(0xFFF97316)),
@@ -611,7 +611,7 @@ class _PackageSection extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppSemanticColors.border),
@@ -669,7 +669,7 @@ class _ReadinessSummary extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
             color: complete ? const Color(0xFFECFDF5) : const Color(0xFFF3F4F6),
-            borderRadius: const BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(999),
             border: Border.all(
               color:
                   complete ? const Color(0xFF10B981) : const Color(0xFFD1D5DB),
@@ -1004,7 +1004,7 @@ class _DeliverableRow extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: isReleased ? const Color(0xFFECFDF5) : const Color(0xFFF9FAFB),
-        borderRadius: const BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color:
               isReleased ? const Color(0xFF10B981) : AppSemanticColors.border,
@@ -1040,7 +1040,7 @@ class _DeliverableRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color:
                       _statusColor(deliverable.status).withValues(alpha: 0.1),
-                  borderRadius: const BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   deliverable.status,
@@ -1129,7 +1129,7 @@ class _traceChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: const BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(

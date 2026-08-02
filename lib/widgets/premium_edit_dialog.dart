@@ -24,7 +24,7 @@ class PremiumEditDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 12,
       backgroundColor: Colors.white,
       child: ConstrainedBox(
@@ -47,7 +47,7 @@ class PremiumEditDialog extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFC812).withValues(alpha: 0.1),
-                      borderRadius: const BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(icon, color: const Color(0xFFD97706), size: 24),
                   ),
@@ -115,7 +115,7 @@ class PremiumEditDialog extends StatelessWidget {
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 28, vertical: 14),
-                      shape: const RoundedRectangleBorder(
+                      shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Text(
@@ -155,7 +155,7 @@ class PremiumEditDialog extends StatelessWidget {
     TextInputType? keyboardType,
   }) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Color(0xFFD1D5DB)),

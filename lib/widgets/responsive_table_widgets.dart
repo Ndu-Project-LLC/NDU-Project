@@ -84,6 +84,13 @@ class _ResponsiveDataTableWrapperState
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Guard against unbounded constraints — if the parent gives us
+        // infinite width/height, we cannot lay out a Stack with Positioned
+        // children. Fall back to a plain scroll view in that case.
+        final hasBoundedWidth = constraints.maxWidth.isFinite;
+        final hasBoundedHeight =
+            widget.maxHeight != null || constraints.maxHeight.isFinite;
+
         final horizontalChild = SingleChildScrollView(
           controller: _horizontalController,
           scrollDirection: Axis.horizontal,
@@ -109,86 +116,109 @@ class _ResponsiveDataTableWrapperState
                 ),
               );
 
-        return Stack(
-          children: [
-            Scrollbar(
-              controller: _horizontalController,
-              thumbVisibility: true,
-              notificationPredicate: (notification) =>
-                  notification.depth == 0 &&
-                  notification.metrics.axis == Axis.horizontal,
-              child: tableContent,
-            ),
-            if (_canScrollRight)
-              Positioned(
-                top: 0,
-                right: 0,
-                bottom: widget.maxHeight == null ? 0 : 18,
-                child: IgnorePointer(
-                  child: Container(
-                    width: 28,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [Color(0x00FFFFFF), Color(0xFFF8FAFC)],
+        // If we don't have bounded constraints, skip the Stack overlay
+        // entirely — the Positioned children require a bounded parent to
+        // compute their layout, and without it Flutter throws
+        // `box.dart:2251 assert(hasSize)` and `mouse_tracker.dart:199`
+        // assertion failures.
+        if (!hasBoundedWidth || !hasBoundedHeight) {
+          return Scrollbar(
+            controller: _horizontalController,
+            thumbVisibility: true,
+            notificationPredicate: (notification) =>
+                notification.depth == 0 &&
+                notification.metrics.axis == Axis.horizontal,
+            child: tableContent,
+          );
+        }
+
+        return SizedBox(
+          // Explicitly bound the Stack so Positioned children always have
+          // a deterministic parent size.
+          width: constraints.maxWidth,
+          height: widget.maxHeight ?? constraints.maxHeight,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Scrollbar(
+                controller: _horizontalController,
+                thumbVisibility: true,
+                notificationPredicate: (notification) =>
+                    notification.depth == 0 &&
+                    notification.metrics.axis == Axis.horizontal,
+                child: tableContent,
+              ),
+              if (_canScrollRight)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  bottom: widget.maxHeight == null ? 0 : 18,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 28,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [Color(0x00FFFFFF), Color(0xFFF8FAFC)],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            if (_canScrollDown)
-              Positioned(
-                left: 0,
-                right: 18,
-                bottom: 0,
-                child: IgnorePointer(
-                  child: Container(
-                    height: 22,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0x00FFFFFF), Color(0xFFF8FAFC)],
+              if (_canScrollDown)
+                Positioned(
+                  left: 0,
+                  right: 18,
+                  bottom: 0,
+                  child: IgnorePointer(
+                    child: Container(
+                      height: 22,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0x00FFFFFF), Color(0xFFF8FAFC)],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            if (_canScrollRight)
-              Positioned(
-                right: 8,
-                bottom: 2,
-                child: GestureDetector(
-                  onTap: () {
-                    _horizontalController.animateTo(
-                      _horizontalController.offset + 300,
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeOut,
-                    );
-                  },
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFC812).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color:
-                              const Color(0xFFFFC812).withValues(alpha: 0.3)),
-                    ),
-                    child: const Text(
-                      'Scroll to see more ->',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFFD97706),
-                        fontWeight: FontWeight.w600,
+              if (_canScrollRight)
+                Positioned(
+                  right: 8,
+                  bottom: 2,
+                  child: GestureDetector(
+                    onTap: () {
+                      _horizontalController.animateTo(
+                        _horizontalController.offset + 300,
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeOut,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFC812).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color:
+                                const Color(0xFFFFC812).withValues(alpha: 0.3)),
+                      ),
+                      child: const Text(
+                        'Scroll to see more ->',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFFD97706),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -350,17 +380,42 @@ List<DataRow> _wrapRowsCells(List<DataRow> rows) {
 }
 
 DataCell _wrapSingleCell(DataCell cell) {
-  if (cell.child is Text) {
-    final t = cell.child as Text;
+  final child = cell.child;
+  if (child is Text) {
+    // If the Text was created with Text.rich() (data is null but
+    // textSpan is not), fall back to a RichText so we don't lose the
+    // spans. Otherwise use WrappedText for guaranteed wrapping.
+    if (child.data == null && child.textSpan != null) {
+      return DataCell(
+        RichText(
+          text: child.textSpan!,
+          textAlign: child.textAlign ?? TextAlign.start,
+          textDirection: child.textDirection,
+          locale: child.locale,
+          softWrap: true,
+          overflow: TextOverflow.visible,
+          maxLines: child.maxLines,
+          strutStyle: child.strutStyle,
+        ),
+        placeholder: cell.placeholder,
+        showEditIcon: cell.showEditIcon,
+        onTap: cell.onTap,
+        onLongPress: cell.onLongPress,
+        onDoubleTap: cell.onDoubleTap,
+        onTapDown: cell.onTapDown,
+        onTapCancel: cell.onTapCancel,
+      );
+    }
     return DataCell(
       WrappedText(
-        t.data ?? '',
-        style: t.style,
-        textAlign: t.textAlign,
-        textDirection: t.textDirection,
-        locale: t.locale,
-        maxLines: t.maxLines,
-        strutStyle: t.strutStyle,
+        child.data ?? '',
+        style: child.style,
+        textAlign: child.textAlign,
+        textDirection: child.textDirection,
+        locale: child.locale,
+        maxLines: child.maxLines,
+        strutStyle: child.strutStyle,
+        overflow: child.overflow,
       ),
       placeholder: cell.placeholder,
       showEditIcon: cell.showEditIcon,

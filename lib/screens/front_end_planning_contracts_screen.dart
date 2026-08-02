@@ -19,6 +19,7 @@ import 'package:ndu_project/widgets/front_end_planning_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 const String _contractingCollection = 'contracting';
 const String _contractPlanNoteKey = 'planning_contract_plan';
 const String _contractPlanMarketKey = 'planning_contract_market';
@@ -1975,6 +1976,14 @@ class _ExistingQuotesTable extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
+ return FullScreenTableWrapper(
+ title: 'Existing Quotes',
+ child: _buildTable(),
+ tableBuilder: (fsContext) => _buildTable(),
+ );
+ }
+
+ Widget _buildTable() {
  return Container(
  decoration: BoxDecoration(
  color: Colors.white,
@@ -2040,7 +2049,7 @@ class _ExistingQuotesRow extends StatelessWidget {
  children: [
  Expanded(
  flex: 24,
- child: Text(
+ child: WrappedText(
  data.contractor,
  style: const TextStyle(
  fontSize: 14,
@@ -2050,14 +2059,14 @@ class _ExistingQuotesRow extends StatelessWidget {
  ),
  Expanded(
  flex: 26,
- child: Text(
+ child: WrappedText(
  data.description,
  style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
  ),
  ),
  Expanded(
  flex: 18,
- child: Text(
+ child: WrappedText(
  data.estimatedValue,
  style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
  ),
@@ -5378,7 +5387,18 @@ class _ContractingSummaryOverviewCard extends StatelessWidget {
  style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
  ),
  const SizedBox(height: 24),
- DecoratedBox(
+ FullScreenTableWrapper(
+ title: 'Contracting Summary',
+ child: _buildSummaryTable(),
+ tableBuilder: (fsContext) => _buildSummaryTable(),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildSummaryTable() {
+ return DecoratedBox(
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(22),
  border: Border.all(color: const Color(0xFFE5E7EB)),
@@ -5418,9 +5438,6 @@ class _ContractingSummaryOverviewCard extends StatelessWidget {
  ],
  ],
  ),
- ),
- ),
- ],
  ),
  );
  }
@@ -5478,19 +5495,19 @@ class _SummaryTableRow extends StatelessWidget {
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.center,
  children: [
- Expanded(flex: 20, child: Text(data.contract, style: primaryStyle)),
+ Expanded(flex: 20, child: WrappedText(data.contract, style: primaryStyle)),
  Expanded(
  flex: 20,
- child: Text(placeholderIfNeeded(data.contractor),
+ child: WrappedText(placeholderIfNeeded(data.contractor),
  style: secondaryStyle)),
  Expanded(
  flex: 20,
- child: Text(placeholderIfNeeded(data.method),
+ child: WrappedText(placeholderIfNeeded(data.method),
  style: secondaryStyle)),
  Expanded(
  flex: 16,
- child: Text(data.estimatedValue, style: secondaryStyle)),
- Expanded(flex: 14, child: Text(data.duration, style: secondaryStyle)),
+ child: WrappedText(data.estimatedValue, style: secondaryStyle)),
+ Expanded(flex: 14, child: WrappedText(data.duration, style: secondaryStyle)),
  Expanded(
  flex: 10,
  child: data.statusLabel != null
@@ -5912,7 +5929,18 @@ class _ContractingSummaryWarrantyCard extends StatelessWidget {
  style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
  ),
  const SizedBox(height: 24),
- DecoratedBox(
+ FullScreenTableWrapper(
+ title: 'Warranty & Support Documentation',
+ child: _buildWarrantyTable(),
+ tableBuilder: (fsContext) => _buildWarrantyTable(),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildWarrantyTable() {
+ return DecoratedBox(
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(22),
  border: Border.all(color: const Color(0xFFE5E7EB)),
@@ -5952,9 +5980,6 @@ class _ContractingSummaryWarrantyCard extends StatelessWidget {
  ],
  ],
  ),
- ),
- ),
- ],
  ),
  );
  }
@@ -5999,15 +6024,15 @@ class _WarrantyTableRow extends StatelessWidget {
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.center,
  children: [
- Expanded(flex: 24, child: Text(data.contract, style: primaryStyle)),
+ Expanded(flex: 24, child: WrappedText(data.contract, style: primaryStyle)),
  Expanded(
  flex: 18,
- child: Text(data.warrantyPeriod, style: secondaryStyle)),
+ child: WrappedText(data.warrantyPeriod, style: secondaryStyle)),
  Expanded(
- flex: 18, child: Text(data.supportType, style: secondaryStyle)),
+ flex: 18, child: WrappedText(data.supportType, style: secondaryStyle)),
  Expanded(
  flex: 24,
- child: Text(data.contactInformation, style: secondaryStyle)),
+ child: WrappedText(data.contactInformation, style: secondaryStyle)),
  Expanded(
  flex: 16,
  child: data.documentLabel != null
@@ -6915,7 +6940,29 @@ class _ContractorsTable extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final Widget table = Column(
+ return FullScreenTableWrapper(
+ title: 'Contractors',
+ child: _buildInlineView(),
+ tableBuilder: (fsContext) => _buildTableContent(),
+ );
+ }
+
+ Widget _buildInlineView() {
+ final Widget table = _buildTableContent();
+ if (isMobile) {
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: const BoxConstraints(minWidth: 960),
+ child: table,
+ ),
+ );
+ }
+ return table;
+ }
+
+ Widget _buildTableContent() {
+ return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  const Padding(
@@ -6945,18 +6992,6 @@ class _ContractorsTable extends StatelessWidget {
  }),
  ],
  );
-
- if (isMobile) {
- return SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: ConstrainedBox(
- constraints: const BoxConstraints(minWidth: 960),
- child: table,
- ),
- );
- }
-
- return table;
  }
 }
 
@@ -6987,13 +7022,13 @@ class _ContractorTableRow extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text(data.name,
+ WrappedText(data.name,
  style: const TextStyle(
  fontSize: 14,
  fontWeight: FontWeight.w700,
  color: Color(0xFF111827))),
  const SizedBox(height: 4),
- Text(data.role,
+ WrappedText(data.role,
  style: const TextStyle(
  fontSize: 12, color: Color(0xFF6B7280))),
  ],
@@ -7004,12 +7039,12 @@ class _ContractorTableRow extends StatelessWidget {
  ),
  Expanded(
  flex: 18,
- child: Text(data.location,
+ child: WrappedText(data.location,
  style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563))),
  ),
  Expanded(
  flex: 16,
- child: Text(data.bidAmount,
+ child: WrappedText(data.bidAmount,
  style: const TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w600,
@@ -7022,7 +7057,7 @@ class _ContractorTableRow extends StatelessWidget {
  ),
  Expanded(
  flex: 14,
- child: Text(data.submissionDate,
+ child: WrappedText(data.submissionDate,
  style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563))),
  ),
  Expanded(
@@ -7030,7 +7065,7 @@ class _ContractorTableRow extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text('${data.score}',
+ WrappedText('${data.score}',
  style: const TextStyle(
  fontSize: 14,
  fontWeight: FontWeight.w700,

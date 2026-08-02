@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/planning_contracting_models.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 class VendorComparisonTable extends StatelessWidget {
   const VendorComparisonTable({
@@ -39,7 +40,8 @@ class VendorComparisonTable extends StatelessWidget {
             'Weighted against ${criteria.length} criteria.',
             style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
           ),
-          if (recommendedVendor != null && recommendedVendor!.trim().isNotEmpty) ...[
+          if (recommendedVendor != null &&
+              recommendedVendor!.trim().isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               'Recommended vendor: ${recommendedVendor!.trim()}',
@@ -64,44 +66,56 @@ class VendorComparisonTable extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
             )
           else
-            Table(
-              columnWidths: const {
-                0: FlexColumnWidth(2),
-                1: FlexColumnWidth(1),
-              },
+            _buildComparisonTable(ranking),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComparisonTable(List<MapEntry<String, double>> ranking) {
+    Widget buildTable() {
+      return Table(
+        columnWidths: const {
+          0: FlexColumnWidth(2),
+          1: FlexColumnWidth(1),
+        },
+        children: [
+          TableRow(
+            decoration: BoxDecoration(color: Colors.grey[100]),
+            children: const [
+              _HeaderCell('Vendor'),
+              _HeaderCell('Weighted Score'),
+            ],
+          ),
+          ...ranking.map(
+            (entry) => TableRow(
               children: [
-                TableRow(
-                  decoration: BoxDecoration(color: Colors.grey[100]),
-                  children: const [
-                    _HeaderCell('Vendor'),
-                    _HeaderCell('Weighted Score'),
-                  ],
+                _ValueCell(
+                  WrappedText(
+                    entry.key,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-                ...ranking.map(
-                  (entry) => TableRow(
-                    children: [
-                      _ValueCell(
-                        Text(
-                          entry.key,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      _ValueCell(
-                        Text(
-                          entry.value.toStringAsFixed(1),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ],
+                _ValueCell(
+                  WrappedText(
+                    entry.value.toStringAsFixed(1),
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ),
               ],
             ),
+          ),
         ],
-      ),
+      );
+    }
+
+    return FullScreenTableWrapper(
+      title: title,
+      child: buildTable(),
+      tableBuilder: (fsContext) => buildTable(),
     );
   }
 }

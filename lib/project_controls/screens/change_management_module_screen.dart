@@ -28,7 +28,11 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/project_controls/models/change_management_models.dart';
 import 'package:ndu_project/project_controls/providers/change_management_provider.dart';
 import 'package:ndu_project/utils/download_helper.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/theme.dart';
 
@@ -52,6 +56,9 @@ class _ChangeManagementModuleScreenState
   late TabController _tabController;
   // Currently-selected CR id (drives Impact Detail / Workflow / Implementation tabs).
   String? _selectedCRId;
+  bool _autoPopulated = false;
+  bool _isAutoPopulating = false;
+  String? _carriedContext;
 
   @override
   void initState() {
@@ -62,7 +69,63 @@ class _ChangeManagementModuleScreenState
       final provider = context.read<ChangeManagementProvider>();
       // Load real data from Firestore — no phantom/demo data
       provider.loadFromFirestore();
+      _autoPopulateIfNeeded();
     });
+  }
+
+  Future<void> _autoPopulateIfNeeded() async {
+    if (_autoPopulated || _isAutoPopulating) return;
+    _autoPopulated = true;
+    _isAutoPopulating = true;
+    if (mounted) setState(() {});
+
+    try {
+      final data = ProjectDataHelper.getData(context);
+
+      // Pull real carried context for the banner.
+      final carried = await buildAccumulatedContext(context, 'change_management');
+      if (mounted) setState(() => _carriedContext = carried);
+
+      final provider = context.read<ChangeManagementProvider>();
+      // If the provider already has CRs, do nothing.
+      if (provider.changeRequests.isNotEmpty) {
+        if (mounted) setState(() => _isAutoPopulating = false);
+        return;
+      }
+
+      // Deterministic seed: pull REAL change requests from risk register +
+      // execution-phase Firestore collection. Never invents CRs.
+      final seed = await seedChangeManagement(data, data.projectId);
+      if (seed.isNotEmpty && mounted) {
+        for (final row in seed.rows) {
+          final titleStr = (row['title'] ?? '').toString();
+          final descStr = (row['description'] ?? '').toString();
+          final sourceStr = (row['source'] ?? '').toString();
+          provider.createChangeRequest(
+            title: titleStr,
+            description: descStr.isEmpty ? sourceStr : descStr,
+            changeType: CMChangeType.risk,
+            priority: CMPriority.medium,
+            businessJustification:
+                'Auto-seeded from $sourceStr (no hallucination).',
+            rootCause: sourceStr,
+          );
+        }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Seeded ${seed.rows.length} change request(s) from ${seed.source}.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('ChangeManagement auto-populate error: $e');
+    } finally {
+      if (mounted) setState(() => _isAutoPopulating = false);
+    }
   }
 
   void _onTabChanged() {
@@ -114,6 +177,25 @@ class _ChangeManagementModuleScreenState
           breadcrumbTitle: 'Change Management',
           body: Column(
             children: [
+              // ── Carried context banner (real prior-phase data only) ──
+              if (_isAutoPopulating ||
+                  (_carriedContext != null && _carriedContext!.isNotEmpty))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_isAutoPopulating)
+                        const AutoPopulatingIndicator(),
+                      if (_carriedContext != null &&
+                          _carriedContext!.isNotEmpty)
+                        CarriedContextBanner(
+                          checkpoint: 'change_management',
+                          contextText: _carriedContext!,
+                        ),
+                    ],
+                  ),
+                ),
               // ── World-class Section Navigator ─────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -999,6 +1081,14 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
   }
 
   Widget _buildTableView(List<CMChangeRequest> crs) {
+    return FullScreenTableWrapper(
+      title: 'Change Management',
+      child: _buildCRTableTree(crs),
+      tableBuilder: (_) => _buildCRTableTree(crs),
+    );
+  }
+
+  Widget _buildCRTableTree(List<CMChangeRequest> crs) {
     return Container(
       decoration: BoxDecoration(
         color: _cardBg,
@@ -1091,50 +1181,19 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
               selected: isSelected,
               onSelectChanged: (_) => widget.onSelectCR(cr.id),
               cells: [
-                DataCell(Text(cr.id,
-                    style: const TextStyle(
-                        color: Color(0xFF6366F1),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600))),
+                DataCell(WrappedText(cr.id, style: const TextStyle(color: Color(0xFF6366F1), fontSize: 12, fontWeight: FontWeight.w600))),
                 DataCell(ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 200),
-                  child: Text(cr.title,
-                      style: const TextStyle(
-                          color: _textPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600),
-                      overflow: TextOverflow.ellipsis),
+                  constraints: const BoxConstraints(maxWidth: 240),
+                  child: WrappedText(cr.title, style: const TextStyle(color: _textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
                 )),
-                DataCell(Text(cr.changeType.label,
-                    style:
-                        const TextStyle(color: _textSecondary, fontSize: 12))),
+                DataCell(WrappedText(cr.changeType.label, style: const TextStyle(color: _textSecondary, fontSize: 12))),
                 DataCell(_priorityBadge(cr.priority)),
                 DataCell(_statusBadge(cr.status)),
-                DataCell(Text(cr.impact.compositeImpactScore.toStringAsFixed(2),
-                    style: TextStyle(
-                        color: _scoreColor(cr.impact.compositeImpactScore),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700))),
-                DataCell(Text(
-                    '\$${cr.impact.totalCostImpact.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                        color: Color(0xFFEF4444),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600))),
-                DataCell(Text(
-                    '${cr.impact.totalScheduleImpact > 0 ? "+" : ""}${cr.impact.totalScheduleImpact.toStringAsFixed(0)}d',
-                    style: TextStyle(
-                        color: cr.impact.totalScheduleImpact > 0
-                            ? const Color(0xFFEF4444)
-                            : const Color(0xFF10B981),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600))),
-                DataCell(Text(cr.submittedBy,
-                    style:
-                        const TextStyle(color: _textSecondary, fontSize: 12))),
-                DataCell(Text(_formatDate(cr.dateSubmitted),
-                    style:
-                        const TextStyle(color: _textSecondary, fontSize: 12))),
+                DataCell(WrappedText(cr.impact.compositeImpactScore.toStringAsFixed(2), style: TextStyle(color: _scoreColor(cr.impact.compositeImpactScore), fontSize: 12, fontWeight: FontWeight.w700))),
+                DataCell(WrappedText('\$${cr.impact.totalCostImpact.toStringAsFixed(0)}', style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.w600))),
+                DataCell(WrappedText('${cr.impact.totalScheduleImpact > 0 ? "+" : ""}${cr.impact.totalScheduleImpact.toStringAsFixed(0)}d', style: TextStyle(color: cr.impact.totalScheduleImpact > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981), fontSize: 12, fontWeight: FontWeight.w600))),
+                DataCell(WrappedText(cr.submittedBy, style: const TextStyle(color: _textSecondary, fontSize: 12))),
+                DataCell(WrappedText(_formatDate(cr.dateSubmitted), style: const TextStyle(color: _textSecondary, fontSize: 12))),
               ],
             );
           }).toList(),

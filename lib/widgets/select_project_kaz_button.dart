@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 /// A world-class "Select Project" button styled with KAZ AI chat bubble theme.
 /// Features smooth animations, gradient backgrounds, and exceptional visual design.
 class SelectProjectKazButton extends StatefulWidget {
@@ -17,14 +18,16 @@ class SelectProjectKazButton extends StatefulWidget {
     this.onSolutionSelected,
     this.onClosed,
     this.title = 'Choose a project to progress',
-    this.subtitle = 'Pick the solution you want to advance and give your project a memorable name.',
+    this.subtitle =
+        'Pick the solution you want to advance and give your project a memorable name.',
   });
 
   @override
   State<SelectProjectKazButton> createState() => _SelectProjectKazButtonState();
 }
 
-class _SelectProjectKazButtonState extends State<SelectProjectKazButton> with SingleTickerProviderStateMixin {
+class _SelectProjectKazButtonState extends State<SelectProjectKazButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
 
@@ -76,7 +79,7 @@ class _SelectProjectKazButtonState extends State<SelectProjectKazButton> with Si
         color: Colors.transparent,
         child: InkWell(
           onTap: _showSelectionDialog,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.circular(16),
           child: Container(
             width: double.infinity,
             height: 56,
@@ -89,7 +92,7 @@ class _SelectProjectKazButtonState extends State<SelectProjectKazButton> with Si
                   Color(0xFFFFB200),
                 ],
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: const BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFFFFC812).withValues(alpha: 0.4),
@@ -109,7 +112,7 @@ class _SelectProjectKazButtonState extends State<SelectProjectKazButton> with Si
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: const BorderRadius.circular(16),
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -201,7 +204,8 @@ class _SelectProjectDialog extends StatefulWidget {
   State<_SelectProjectDialog> createState() => _SelectProjectDialogState();
 }
 
-class _SelectProjectDialogState extends State<_SelectProjectDialog> with SingleTickerProviderStateMixin {
+class _SelectProjectDialogState extends State<_SelectProjectDialog>
+    with SingleTickerProviderStateMixin {
   int? _selectedIndex;
   late TabController _tabController;
   late TextEditingController _projectNameController;
@@ -211,7 +215,8 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog> with SingleT
   void initState() {
     super.initState();
     _projectNameController = TextEditingController();
-    _tabController = TabController(length: widget.solutions.length, vsync: this);
+    _tabController =
+        TabController(length: widget.solutions.length, vsync: this);
   }
 
   @override
@@ -220,7 +225,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog> with SingleT
     // Prefill project name if the project already has a name in the current data
     try {
       final data = ProjectDataHelper.getData(context);
-  final existing = data.projectName;
+      final existing = data.projectName;
       if (existing.isNotEmpty && _projectNameController.text.isEmpty) {
         _projectNameController.text = existing;
       }
@@ -270,7 +275,7 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog> with SingleT
         margin: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: const BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.15),
@@ -343,7 +348,8 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog> with SingleT
                       ),
                       IconButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close_rounded, color: Colors.white),
+                        icon: const Icon(Icons.close_rounded,
+                            color: Colors.white),
                         tooltip: 'Close',
                       ),
                     ],
@@ -419,19 +425,23 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog> with SingleT
                             ? 'e.g., ${widget.solutions[_selectedIndex!].title} Initiative'
                             : 'Enter project name',
                         errorText: _projectNameError,
-                        border: OutlineInputBorder(
+                        border: const OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.grey, width: 1),
+                          borderSide: BorderSide(color: Colors.grey, width: 1),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3), width: 1),
+                          borderRadius: const BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                              width: 1),
                         ),
-                        focusedBorder: OutlineInputBorder(
+                        focusedBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFFFC812), width: 2),
+                          borderSide:
+                              BorderSide(color: Color(0xFFFFC812), width: 2),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                       ),
                       style: const TextStyle(fontSize: 14),
                     ),
@@ -455,7 +465,8 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog> with SingleT
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         side: const BorderSide(color: Colors.grey),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                       child: const Text(
                         'Cancel',
@@ -479,10 +490,11 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog> with SingleT
                             Color(0xFFFFB200),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: const BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFFC812).withValues(alpha: 0.3),
+                            color:
+                                const Color(0xFFFFC812).withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -492,13 +504,14 @@ class _SelectProjectDialogState extends State<_SelectProjectDialog> with SingleT
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: _confirmSelection,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.circular(12),
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                                Icon(Icons.check_circle_rounded,
+                                    color: Colors.white, size: 18),
                                 SizedBox(width: 8),
                                 Text(
                                   'Select Solution',
@@ -541,9 +554,11 @@ class _SolutionCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.circular(14),
         border: Border.all(
-          color: isSelected ? const Color(0xFFFFC812) : Colors.grey.withValues(alpha: 0.2),
+          color: isSelected
+              ? const Color(0xFFFFC812)
+              : Colors.grey.withValues(alpha: 0.2),
           width: isSelected ? 2 : 1,
         ),
         color: isSelected ? const Color(0xFFFFF8DC) : Colors.white,
@@ -561,7 +576,7 @@ class _SolutionCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: const BorderRadius.circular(14),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -573,13 +588,18 @@ class _SolutionCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isSelected ? const Color(0xFFFFC812) : Colors.grey.withValues(alpha: 0.4),
+                      color: isSelected
+                          ? const Color(0xFFFFC812)
+                          : Colors.grey.withValues(alpha: 0.4),
                       width: 2,
                     ),
-                    color: isSelected ? const Color(0xFFFFC812) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFFFFC812)
+                        : Colors.transparent,
                   ),
                   child: isSelected
-                      ? const Icon(Icons.check_rounded, color: Colors.white, size: 14)
+                      ? const Icon(Icons.check_rounded,
+                          color: Colors.white, size: 14)
                       : null,
                 ),
                 const SizedBox(width: 12),
@@ -593,7 +613,9 @@ class _SolutionCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: isSelected ? const Color(0xFFFFC812) : Colors.black87,
+                          color: isSelected
+                              ? const Color(0xFFFFC812)
+                              : Colors.black87,
                         ),
                       ),
                       const SizedBox(height: 4),

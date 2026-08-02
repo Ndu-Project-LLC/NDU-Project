@@ -22,11 +22,11 @@ class ProcurementEmptyStateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: const [
+        border: Border.all(color: Color(0xFFE5E7EB)),
+        boxShadow: [
           BoxShadow(
               color: Color(0x0F0F172A), blurRadius: 12, offset: Offset(0, 8)),
         ],
@@ -71,11 +71,12 @@ class _EmptyStateBody extends StatelessWidget {
         Container(
           width: iconSize,
           height: iconSize,
-          decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
+          decoration: const BoxDecoration(
+            color: Color(0xFFEFF6FF),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, color: const Color(0xFF2563EB), size: compact ? 20 : 24),
+          child: Icon(icon,
+              color: const Color(0xFF2563EB), size: compact ? 20 : 24),
         ),
         SizedBox(height: compact ? 10 : 14),
         Text(
@@ -101,7 +102,7 @@ class _EmptyStateBody extends StatelessWidget {
               backgroundColor: const Color(0xFF2563EB),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              shape: RoundedRectangleBorder(
+              shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
               elevation: 0,
             ),
@@ -133,10 +134,10 @@ class ProcurementSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Row(
@@ -240,10 +241,10 @@ class ProcurementInfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

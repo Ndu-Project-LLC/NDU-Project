@@ -107,13 +107,15 @@ class ProcurementReportsView extends StatelessWidget {
         complianceMetrics.isNotEmpty;
 
     if (!hasData) {
-      return _buildEmptyState(context, onGenerateReports, showShareFeedback, showExportFeedback);
+      return _buildEmptyState(
+          context, onGenerateReports, showShareFeedback, showExportFeedback);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(context, onGenerateReports, showShareFeedback, showExportFeedback),
+        _buildHeader(
+            context, onGenerateReports, showShareFeedback, showExportFeedback),
         const SizedBox(height: 16),
         if (isMobile)
           Column(
@@ -188,13 +190,13 @@ class ProcurementReportsView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(context, onGenerateReports, showShareFeedback, showExportFeedback),
+        _buildHeader(
+            context, onGenerateReports, showShareFeedback, showExportFeedback),
         const SizedBox(height: 16),
         const ProcurementEmptyStateCard(
           icon: Icons.insert_chart_outlined,
           title: 'No report data yet',
-          message:
-              'Reports will populate as procurement activity is recorded.',
+          message: 'Reports will populate as procurement activity is recorded.',
         ),
       ],
     );
@@ -228,9 +230,9 @@ class ProcurementReportsView extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0EA5E9),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
-                shape: RoundedRectangleBorder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
@@ -240,9 +242,9 @@ class ProcurementReportsView extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF0F172A),
                 side: const BorderSide(color: Color(0xFFCBD5E1)),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
-                shape: RoundedRectangleBorder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text('Share'),
@@ -254,9 +256,9 @@ class ProcurementReportsView extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2563EB),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
-                shape: RoundedRectangleBorder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
@@ -284,7 +286,7 @@ class _ReportKpiCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(18),
@@ -342,7 +344,7 @@ class _SpendBreakdownCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
@@ -383,8 +385,8 @@ class _SpendBreakdownCard extends StatelessWidget {
                   children: [
                     Container(
                       height: 8,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
@@ -393,7 +395,7 @@ class _SpendBreakdownCard extends StatelessWidget {
                       width: constraints.maxWidth * breakdown[i].percent,
                       decoration: BoxDecoration(
                         color: breakdown[i].color,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: const BorderRadius.circular(999),
                       ),
                     ),
                   ],
@@ -427,7 +429,7 @@ class _LeadTimePerformanceCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
@@ -463,7 +465,7 @@ class _LeadTimePerformanceCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             ClipRRect(
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: const BorderRadius.circular(999),
               child: LinearProgressIndicator(
                 value: metrics[i].onTimeRate,
                 minHeight: 8,
@@ -499,7 +501,7 @@ class _SavingsOpportunitiesCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
@@ -574,7 +576,7 @@ class _ComplianceSnapshotCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
@@ -610,7 +612,7 @@ class _ComplianceSnapshotCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             ClipRRect(
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: const BorderRadius.circular(999),
               child: LinearProgressIndicator(
                 value: metrics[i].value,
                 minHeight: 8,

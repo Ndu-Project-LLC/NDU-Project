@@ -18,7 +18,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
-
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 class IdentifyStaffOpsTeamScreen extends StatefulWidget {
   const IdentifyStaffOpsTeamScreen({super.key});
 
@@ -128,8 +128,8 @@ class _IdentifyStaffOpsTeamScreenState
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFC812),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(6),
           ),
           child: const Text(
@@ -141,10 +141,10 @@ class _IdentifyStaffOpsTeamScreenState
         const SizedBox(height: 10),
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: const [
                   Text(
                     'Identify & Staff Ops Team',
                     style: TextStyle(
@@ -180,11 +180,11 @@ class _IdentifyStaffOpsTeamScreenState
           final rows = await showCsvImportDialog(context,
               tableTitle: 'Ops Team',
               columns: [
-                const CsvColumnSpec(
+                CsvColumnSpec(
                     key: 'name', label: 'Member Name', sampleValue: 'John Doe'),
-                const CsvColumnSpec(
+                CsvColumnSpec(
                     key: 'role', label: 'Role', sampleValue: 'Operations Lead'),
-                const CsvColumnSpec(
+                CsvColumnSpec(
                     key: 'email',
                     label: 'Email',
                     sampleValue: 'john@company.com'),
@@ -215,7 +215,8 @@ class _IdentifyStaffOpsTeamScreenState
       style: OutlinedButton.styleFrom(
         side: const BorderSide(color: Color(0xFFE2E8F0)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -236,7 +237,8 @@ class _IdentifyStaffOpsTeamScreenState
         backgroundColor: const Color(0xFF0EA5E9),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -397,10 +399,10 @@ class _IdentifyStaffOpsTeamScreenState
 
   Widget _buildRosterPanel() {
     if (_projectId == null) {
-      return const _PanelShell(
+      return _PanelShell(
         title: 'Ops roster',
         subtitle: 'Role assignments, workload, and focus areas',
-        child: Center(
+        child: const Center(
           child: Padding(
             padding: EdgeInsets.all(24.0),
             child: Text('No project selected. Please open a project first.',
@@ -414,382 +416,534 @@ class _IdentifyStaffOpsTeamScreenState
       title: 'Ops roster',
       subtitle: 'Role assignments, workload, and focus areas',
       trailing: _actionButton(Icons.filter_list, 'Filter'),
-      child: StreamBuilder<List<OpsMemberModel>>(
-        stream: OpsService.streamMembers(_projectId!),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+      child: RepaintBoundary(
+        child: StreamBuilder<List<OpsMemberModel>>(
+          stream: OpsService.streamMembers(_projectId!),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                  child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: CircularProgressIndicator()));
+            }
+
+            if (snapshot.hasError) {
+              return Center(
                 child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: CircularProgressIndicator()));
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Text('Error loading members: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.red)),
-              ),
-            );
-          }
-
-          final members = snapshot.data ?? [];
-
-          if (members.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    const Text('No ops members found.',
-                        style: TextStyle(color: Color(0xFF64748B))),
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () => _showAddMemberDialog(context),
-                      icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Add First Member'),
-                    ),
-                  ],
+                  padding: const EdgeInsets.all(24.0),
+                  child: Text('Error loading members: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.red)),
                 ),
+              );
+            }
+
+            final members = snapshot.data ?? [];
+
+            if (members.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    children: [
+                      const Text('No ops members found.',
+                          style: TextStyle(color: Color(0xFF64748B))),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: () => _showAddMemberDialog(context),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add First Member'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowHeight: 32,
+                dataRowMinHeight: 28,
+                dataRowMaxHeight: 36,
+                columnSpacing: 14,
+                horizontalMargin: 12,
+                headingRowColor:
+                    WidgetStateProperty.all(const Color(0xFF1F2937)),
+                columns: const [
+                  DataColumn(
+                      label: Text('Name',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                  DataColumn(
+                      label: Text('Role',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                  DataColumn(
+                      label: Text('Responsibility',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                  DataColumn(
+                      label: Text('Status',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                  DataColumn(
+                      label: Text('Readiness',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                  DataColumn(
+                      label: Text('Actions',
+                          style: TextStyle(fontWeight: FontWeight.w600))),
+                ],
+                rows: members.map((member) {
+                  return DataRow(cells: [
+                    DataCell(Text(member.name,
+                        style: const TextStyle(fontSize: 13))),
+                    DataCell(Text(member.role,
+                        style: const TextStyle(fontSize: 13))),
+                    DataCell(Text(member.responsibility,
+                        style: const TextStyle(
+                            fontSize: 13, color: Color(0xFF64748B)))),
+                    DataCell(_statusChip(member.status)),
+                    DataCell(_capacityChip(member.readinessScore)),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          InkWell(
+                            onTap: () => _showEditMemberDialog(context, member),
+                            borderRadius: BorderRadius.circular(4),
+                            child: const Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(Icons.edit,
+                                  size: 16, color: Color(0xFF64748B)),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          InkWell(
+                            onTap: () =>
+                                _showDeleteMemberDialog(context, member),
+                            borderRadius: BorderRadius.circular(4),
+                            child: const Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(Icons.delete,
+                                  size: 16, color: Color(0xFFEF4444)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ]);
+                }).toList(),
               ),
             );
-          }
-
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              headingRowHeight: 32,
-              dataRowMinHeight: 28,
-              dataRowMaxHeight: 36,
-              columnSpacing: 14,
-              horizontalMargin: 12,
-              headingRowColor: WidgetStateProperty.all(const Color(0xFF1F2937)),
-              columns: const [
-                DataColumn(
-                    label: Text('Name',
-                        style: TextStyle(fontWeight: FontWeight.w600))),
-                DataColumn(
-                    label: Text('Role',
-                        style: TextStyle(fontWeight: FontWeight.w600))),
-                DataColumn(
-                    label: Text('Responsibility',
-                        style: TextStyle(fontWeight: FontWeight.w600))),
-                DataColumn(
-                    label: Text('Status',
-                        style: TextStyle(fontWeight: FontWeight.w600))),
-                DataColumn(
-                    label: Text('Readiness',
-                        style: TextStyle(fontWeight: FontWeight.w600))),
-                DataColumn(
-                    label: Text('Actions',
-                        style: TextStyle(fontWeight: FontWeight.w600))),
-              ],
-              rows: members.map((member) {
-                return DataRow(cells: [
-                  DataCell(
-                      Text(member.name, style: const TextStyle(fontSize: 13))),
-                  DataCell(
-                      Text(member.role, style: const TextStyle(fontSize: 13))),
-                  DataCell(Text(member.responsibility,
-                      style: const TextStyle(
-                          fontSize: 13, color: Color(0xFF64748B)))),
-                  DataCell(_statusChip(member.status)),
-                  DataCell(_capacityChip(member.readinessScore)),
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        InkWell(
-                          onTap: () => _showEditMemberDialog(context, member),
-                          borderRadius: BorderRadius.circular(4),
-                          child: const Padding(
-                            padding: EdgeInsets.all(4),
-                            child: Icon(Icons.edit,
-                                size: 16, color: Color(0xFF64748B)),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        InkWell(
-                          onTap: () => _showDeleteMemberDialog(context, member),
-                          borderRadius: BorderRadius.circular(4),
-                          child: const Padding(
-                            padding: EdgeInsets.all(4),
-                            child: Icon(Icons.delete,
-                                size: 16, color: Color(0xFFEF4444)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ]);
-              }).toList(),
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
 
   Widget _buildCoveragePanel() {
     if (_projectId == null) {
-      return const _PanelShell(
+      return _PanelShell(
         title: 'Capability coverage',
         subtitle: 'Readiness by operational capability',
-        child: SizedBox.shrink(),
+        child: const SizedBox.shrink(),
       );
     }
 
     return _PanelShell(
       title: 'Capability coverage',
       subtitle: 'Readiness by operational capability',
-      child: StreamBuilder<List<OpsMemberModel>>(
-        stream: OpsService.streamMembers(_projectId!),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24.0),
-                child: Text('No member data available',
-                    style: TextStyle(color: Color(0xFF64748B))),
-              ),
-            );
-          }
-
-          final members = snapshot.data!;
-          final avgReadiness = members
-                  .map((m) => m.readinessScore / 100.0)
-                  .reduce((a, b) => a + b) /
-              members.length;
-          final incidentResponse = members
-                  .where((m) =>
-                      m.responsibility.toLowerCase().contains('incident') ||
-                      m.responsibility.toLowerCase().contains('response'))
-                  .isEmpty
-              ? 0.0
-              : members
-                      .where((m) =>
-                          m.responsibility.toLowerCase().contains('incident') ||
-                          m.responsibility.toLowerCase().contains('response'))
-                      .map((m) => m.readinessScore / 100.0)
-                      .reduce((a, b) => a + b) /
-                  members
-                      .where((m) =>
-                          m.responsibility.toLowerCase().contains('incident') ||
-                          m.responsibility.toLowerCase().contains('response'))
-                      .length;
-          final trainingCompletion =
-              avgReadiness * 0.75; // Estimate based on readiness
-          final serviceDesk = avgReadiness * 0.9; // Estimate
-
-          final capabilities = [
-            _CapabilityItem(
-                'Incident response coverage',
-                incidentResponse > 0 ? incidentResponse : avgReadiness * 0.78,
-                const Color(0xFF0EA5E9)),
-            _CapabilityItem('Runbook completeness', avgReadiness * 0.64,
-                const Color(0xFF6366F1)),
-            _CapabilityItem('Training completion', trainingCompletion,
-                const Color(0xFFF59E0B)),
-            _CapabilityItem(
-                'Service desk readiness', serviceDesk, const Color(0xFF10B981)),
-          ];
-
-          return Column(
-            children: capabilities.map((capability) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                            child: Text(capability.label,
-                                style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600))),
-                        Text('${(capability.progress * 100).round()}%',
-                            style: const TextStyle(
-                                fontSize: 11, color: Color(0xFF64748B))),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: capability.progress,
-                        minHeight: 8,
-                        backgroundColor: const Color(0xFFE5E7EB),
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(capability.color),
-                      ),
-                    ),
-                  ],
+      child: RepaintBoundary(
+        child: StreamBuilder<List<OpsMemberModel>>(
+          stream: OpsService.streamMembers(_projectId!),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: Text('No member data available',
+                      style: TextStyle(color: Color(0xFF64748B))),
                 ),
               );
-            }).toList(),
-          );
-        },
+            }
+
+            final members = snapshot.data!;
+            final avgReadiness = members
+                    .map((m) => m.readinessScore / 100.0)
+                    .reduce((a, b) => a + b) /
+                members.length;
+            final incidentResponse = members
+                    .where((m) =>
+                        m.responsibility.toLowerCase().contains('incident') ||
+                        m.responsibility.toLowerCase().contains('response'))
+                    .isEmpty
+                ? 0.0
+                : members
+                        .where((m) =>
+                            m.responsibility
+                                .toLowerCase()
+                                .contains('incident') ||
+                            m.responsibility.toLowerCase().contains('response'))
+                        .map((m) => m.readinessScore / 100.0)
+                        .reduce((a, b) => a + b) /
+                    members
+                        .where((m) =>
+                            m.responsibility
+                                .toLowerCase()
+                                .contains('incident') ||
+                            m.responsibility.toLowerCase().contains('response'))
+                        .length;
+            final trainingCompletion =
+                avgReadiness * 0.75; // Estimate based on readiness
+            final serviceDesk = avgReadiness * 0.9; // Estimate
+
+            final capabilities = [
+              _CapabilityItem(
+                  'Incident response coverage',
+                  incidentResponse > 0 ? incidentResponse : avgReadiness * 0.78,
+                  const Color(0xFF0EA5E9)),
+              _CapabilityItem('Runbook completeness', avgReadiness * 0.64,
+                  const Color(0xFF6366F1)),
+              _CapabilityItem('Training completion', trainingCompletion,
+                  const Color(0xFFF59E0B)),
+              _CapabilityItem('Service desk readiness', serviceDesk,
+                  const Color(0xFF10B981)),
+            ];
+
+            return Column(
+              children: capabilities.map((capability) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                              child: Text(capability.label,
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600))),
+                          Text('${(capability.progress * 100).round()}%',
+                              style: const TextStyle(
+                                  fontSize: 11, color: Color(0xFF64748B))),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: capability.progress,
+                          minHeight: 8,
+                          backgroundColor: const Color(0xFFE5E7EB),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(capability.color),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildChecklistPanel() {
-    if (_projectId == null) {
-      return const _PanelShell(
-        title: 'Readiness checklist',
-        subtitle: 'Pre-handover verification',
-        child: SizedBox.shrink(),
-      );
-    }
+ return FullScreenTableWrapper(
+ title: 'Staff & Ops Team',
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: DataTable(
+ headingRowHeight: 32,
+ dataRowMinHeight: 28,
+ dataRowMaxHeight: 36,
+ columnSpacing: 14,
+ horizontalMargin: 12,
+ headingRowColor: WidgetStateProperty.all(const Color(0xFF1F2937)),
+ columns: const [
+ DataColumn(
+ label: Text('Name',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Role',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Responsibility',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Status',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Readiness',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Actions',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ ],
+ rows: members.map((member) {
+ return DataRow(cells: [
+ DataCell(
+ Text(member.name, style: const TextStyle(fontSize: 13))),
+ DataCell(
+ Text(member.role, style: const TextStyle(fontSize: 13))),
+ DataCell(Text(member.responsibility,
+ style: const TextStyle(
+ fontSize: 13, color: Color(0xFF64748B)))),
+ DataCell(_statusChip(member.status)),
+ DataCell(_capacityChip(member.readinessScore)),
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ InkWell(
+ onTap: () =>
+ _showEditMemberDialog(context, member),
+ borderRadius: BorderRadius.circular(4),
+ child: const Padding(
+ padding: EdgeInsets.all(4),
+ child: Icon(Icons.edit,
+ size: 16, color: Color(0xFF64748B)),
+ ),
+ ),
+ const SizedBox(width: 4),
+ InkWell(
+ onTap: () =>
+ _showDeleteMemberDialog(context, member),
+ borderRadius: BorderRadius.circular(4),
+ child: const Padding(
+ padding: EdgeInsets.all(4),
+ child: Icon(Icons.delete,
+ size: 16, color: Color(0xFFEF4444)),
+ ),
+ ),
+ ],
+ ),
+ ),
+ ]);
+ }).toList(),
+ ),
+ ),
+ tableBuilder: (fsContext) => DataTable(
+ headingRowHeight: 32,
+ dataRowMinHeight: 28,
+ dataRowMaxHeight: 36,
+ columnSpacing: 14,
+ horizontalMargin: 12,
+ headingRowColor: WidgetStateProperty.all(const Color(0xFF1F2937)),
+ columns: const [
+ DataColumn(
+ label: Text('Name',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Role',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Responsibility',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Status',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Readiness',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Actions',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ ],
+ rows: members.map((member) {
+ return DataRow(cells: [
+ DataCell(
+ Text(member.name, style: const TextStyle(fontSize: 13))),
+ DataCell(
+ Text(member.role, style: const TextStyle(fontSize: 13))),
+ DataCell(Text(member.responsibility,
+ style: const TextStyle(
+ fontSize: 13, color: Color(0xFF64748B)))),
+ DataCell(_statusChip(member.status)),
+ DataCell(_capacityChip(member.readinessScore)),
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ InkWell(
+ onTap: () =>
+ _showEditMemberDialog(fsContext, member),
+ borderRadius: BorderRadius.circular(4),
+ child: const Padding(
+ padding: EdgeInsets.all(4),
+ child: Icon(Icons.edit,
+ size: 16, color: Color(0xFF64748B)),
+ ),
+ ),
+ const SizedBox(width: 4),
+ InkWell(
+ onTap: () =>
+ _showDeleteMemberDialog(fsContext, member),
+ borderRadius: BorderRadius.circular(4),
+ child: const Padding(
+ padding: EdgeInsets.all(4),
+ child: Icon(Icons.delete,
+ size: 16, color: Color(0xFFEF4444)),
+ ),
+ ),
+ ],
+ ),
+ ),
+ ]);
+ }).toList(),
+ ),
+ );
+ },
+ ),
+ );
+ }
 
-    return StreamBuilder<List<OpsChecklistItemModel>>(
-      stream: OpsService.streamChecklist(_projectId!),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const _PanelShell(
-            title: 'Readiness checklist',
-            subtitle: 'Pre-handover verification',
-            child: Center(
+    return RepaintBoundary(
+      child: StreamBuilder<List<OpsChecklistItemModel>>(
+        stream: OpsService.streamChecklist(_projectId!),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const _PanelShell(
+              title: 'Readiness checklist',
+              subtitle: 'Pre-handover verification',
+              child: Center(
+                  child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: CircularProgressIndicator())),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return _PanelShell(
+              title: 'Readiness checklist',
+              subtitle: 'Pre-handover verification',
+              child: Center(
                 child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: CircularProgressIndicator())),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return _PanelShell(
-            title: 'Readiness checklist',
-            subtitle: 'Pre-handover verification',
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Text('Error loading checklist: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.red)),
+                  padding: const EdgeInsets.all(24.0),
+                  child: Text('Error loading checklist: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.red)),
+                ),
               ),
-            ),
-          );
-        }
+            );
+          }
 
-        final items = snapshot.data ?? [];
+          final items = snapshot.data ?? [];
 
-        return LaunchDataTable(
-          title: 'Readiness Checklist',
-          subtitle:
-              'Pre-handover verification — add, edit, or remove items inline',
-          columns: const [
-            LaunchColumn(
-                label: 'Item',
-                flexible: true,
-                fieldType: LaunchFieldType.text,
-                hint: 'Checklist item'),
-            LaunchColumn(
-                label: 'Notes',
-                flexible: true,
-                fieldType: LaunchFieldType.text,
-                hint: 'Notes / evidence'),
-            LaunchColumn(
-                label: 'Status',
-                width: 130,
-                fieldType: LaunchFieldType.dropdown,
-                dropdownItems: [
-                  'Complete',
-                  'Pending',
-                  'In Progress',
-                  'Not Applicable'
-                ]),
-          ],
-          rowCount: items.length,
-          onAddValues: (values) async {
-            try {
-              await OpsService.createChecklistItem(
-                projectId: _projectId!,
-                item: values['Item'] ?? '',
-                completed: values['Status'] == 'Complete',
-                notes: values['Notes'] ?? '',
-              );
-            } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error adding item: $e')),
-                );
-              }
-            }
-          },
-          emptyMessage:
-              'No checklist items yet. Add items to track pre-handover verification.',
-          cellBuilder: (context, i) {
-            final item = items[i];
-            return LaunchDataRow(
-              onEdit: () {},
-              onDelete: () async {
-                final confirmed = await launchConfirmDelete(context,
-                    itemName: 'checklist item');
-                if (!confirmed || !mounted) return;
-                try {
-                  await OpsService.deleteChecklistItem(
-                    projectId: _projectId!,
-                    itemId: item.id,
-                  );
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error deleting item: $e')),
-                    );
-                  }
-                }
-              },
-              showDivider: i < items.length - 1,
-              cells: [
-                LaunchEditableCell(
-                  value: item.item,
-                  hint: 'Checklist item',
-                  bold: true,
-                  expand: true,
-                  onChanged: (v) {
-                    OpsService.updateChecklistItem(
-                      projectId: _projectId!,
-                      itemId: item.id,
-                      item: v,
-                    );
-                  },
-                ),
-                LaunchEditableCell(
-                  value: item.notes ?? '',
-                  hint: 'Notes / evidence',
-                  expand: true,
-                  onChanged: (v) {
-                    OpsService.updateChecklistItem(
-                      projectId: _projectId!,
-                      itemId: item.id,
-                      notes: v,
-                    );
-                  },
-                ),
-                LaunchStatusDropdown(
-                  value: item.completed ? 'Complete' : 'Pending',
-                  items: const [
+          return LaunchDataTable(
+            title: 'Readiness Checklist',
+            subtitle:
+                'Pre-handover verification — add, edit, or remove items inline',
+            columns: const [
+              LaunchColumn(
+                  label: 'Item',
+                  flexible: true,
+                  fieldType: LaunchFieldType.text,
+                  hint: 'Checklist item'),
+              LaunchColumn(
+                  label: 'Notes',
+                  flexible: true,
+                  fieldType: LaunchFieldType.text,
+                  hint: 'Notes / evidence'),
+              LaunchColumn(
+                  label: 'Status',
+                  width: 130,
+                  fieldType: LaunchFieldType.dropdown,
+                  dropdownItems: [
                     'Complete',
                     'Pending',
                     'In Progress',
                     'Not Applicable'
-                  ],
-                  width: 130,
-                  onChanged: (v) {
-                    if (v == null) return;
-                    OpsService.updateChecklistItem(
+                  ]),
+            ],
+            rowCount: items.length,
+            onAddValues: (values) async {
+              try {
+                await OpsService.createChecklistItem(
+                  projectId: _projectId!,
+                  item: values['Item'] ?? '',
+                  completed: values['Status'] == 'Complete',
+                  notes: values['Notes'] ?? '',
+                );
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error adding item: $e')),
+                  );
+                }
+              }
+            },
+            emptyMessage:
+                'No checklist items yet. Add items to track pre-handover verification.',
+            cellBuilder: (context, i) {
+              final item = items[i];
+              return LaunchDataRow(
+                onEdit: () {},
+                onDelete: () async {
+                  final confirmed = await launchConfirmDelete(context,
+                      itemName: 'checklist item');
+                  if (!confirmed || !mounted) return;
+                  try {
+                    await OpsService.deleteChecklistItem(
                       projectId: _projectId!,
                       itemId: item.id,
-                      completed: v == 'Complete',
                     );
-                  },
-                ),
-              ],
-            );
-          },
-        );
-      },
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error deleting item: $e')),
+                      );
+                    }
+                  }
+                },
+                showDivider: i < items.length - 1,
+                cells: [
+                  LaunchEditableCell(
+                    value: item.item,
+                    hint: 'Checklist item',
+                    bold: true,
+                    expand: true,
+                    onChanged: (v) {
+                      OpsService.updateChecklistItem(
+                        projectId: _projectId!,
+                        itemId: item.id,
+                        item: v,
+                      );
+                    },
+                  ),
+                  LaunchEditableCell(
+                    value: item.notes ?? '',
+                    hint: 'Notes / evidence',
+                    expand: true,
+                    onChanged: (v) {
+                      OpsService.updateChecklistItem(
+                        projectId: _projectId!,
+                        itemId: item.id,
+                        notes: v,
+                      );
+                    },
+                  ),
+                  LaunchStatusDropdown(
+                    value: item.completed ? 'Complete' : 'Pending',
+                    items: const [
+                      'Complete',
+                      'Pending',
+                      'In Progress',
+                      'Not Applicable'
+                    ],
+                    width: 130,
+                    onChanged: (v) {
+                      if (v == null) return;
+                      OpsService.updateChecklistItem(
+                        projectId: _projectId!,
+                        itemId: item.id,
+                        completed: v == 'Complete',
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -862,8 +1016,8 @@ class _IdentifyStaffOpsTeamScreenState
     _showMemberDialog(context, member, projectId);
   }
 
-  void _showMemberDialog(
-      BuildContext context, OpsMemberModel? member, String projectId) {
+  Future<void> _showMemberDialog(
+      BuildContext context, OpsMemberModel? member, String projectId) async {
     final isEdit = member != null;
     final nameController = TextEditingController(text: member?.name ?? '');
     final roleController = TextEditingController(text: member?.role ?? '');
@@ -875,144 +1029,154 @@ class _IdentifyStaffOpsTeamScreenState
         TextEditingController(text: member?.readinessScore.toString() ?? '0');
     final notesController = TextEditingController(text: member?.notes ?? '');
 
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => LaunchModalShell(
-          icon: isEdit ? Icons.edit_rounded : Icons.person_add_rounded,
-          accent: const Color(0xFF10B981),
-          title: isEdit ? 'Edit Ops Member' : 'Add Ops Member',
-          subtitle: isEdit
-              ? 'Update the operations team member profile.'
-              : 'Capture a new operations team member with role and readiness.',
-          body: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              LaunchModalTextField(
-                label: 'Name *',
-                controller: nameController,
-                hint: 'Full name of the team member',
-              ),
-              const SizedBox(height: 12),
-              LaunchModalTextField(
-                label: 'Role *',
-                controller: roleController,
-                hint: 'e.g. Operations Lead',
-              ),
-              const SizedBox(height: 12),
-              LaunchModalTextField(
-                label: 'Responsibility *',
-                controller: responsibilityController,
-                hint: 'Primary responsibility on the ops team',
-              ),
-              const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: LaunchModalDropdown<String>(
-                      label: 'Status *',
-                      value: statusController.text,
-                      items: const ['Active', 'Pending', 'Inactive'],
-                      onChanged: (v) {
-                        if (v != null) {
-                          setDialogState(() => statusController.text = v);
-                        }
-                      },
+    try {
+      await showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setDialogState) => LaunchModalShell(
+            icon: isEdit ? Icons.edit_rounded : Icons.person_add_rounded,
+            accent: const Color(0xFF10B981),
+            title: isEdit ? 'Edit Ops Member' : 'Add Ops Member',
+            subtitle: isEdit
+                ? 'Update the operations team member profile.'
+                : 'Capture a new operations team member with role and readiness.',
+            body: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LaunchModalTextField(
+                  label: 'Name *',
+                  controller: nameController,
+                  hint: 'Full name of the team member',
+                ),
+                const SizedBox(height: 12),
+                LaunchModalTextField(
+                  label: 'Role *',
+                  controller: roleController,
+                  hint: 'e.g. Operations Lead',
+                ),
+                const SizedBox(height: 12),
+                LaunchModalTextField(
+                  label: 'Responsibility *',
+                  controller: responsibilityController,
+                  hint: 'Primary responsibility on the ops team',
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: LaunchModalDropdown<String>(
+                        label: 'Status *',
+                        value: statusController.text,
+                        items: const ['Active', 'Pending', 'Inactive'],
+                        onChanged: (v) {
+                          if (v != null) {
+                            setDialogState(() => statusController.text = v);
+                          }
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: LaunchModalTextField(
-                      label: 'Readiness Score (0-100) *',
-                      controller: readinessController,
-                      hint: '0–100',
-                      keyboardType: TextInputType.number,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: LaunchModalTextField(
+                        label: 'Readiness Score (0-100) *',
+                        controller: readinessController,
+                        hint: '0–100',
+                        keyboardType: TextInputType.number,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                const SizedBox(height: 12),
+                LaunchModalTextField(
+                  label: 'Notes',
+                  controller: notesController,
+                  hint: 'Optional context about this member',
+                  maxLines: 3,
+                ),
+              ],
+            ),
+            actions: [
+              LaunchModalCancelButton(
+                label: 'Cancel',
+                onPressed: () => Navigator.pop(ctx),
               ),
-              const SizedBox(height: 12),
-              LaunchModalTextField(
-                label: 'Notes',
-                controller: notesController,
-                hint: 'Optional context about this member',
-                maxLines: 3,
+              LaunchModalPrimaryButton(
+                label: isEdit ? 'Update' : 'Add Member',
+                icon: isEdit ? Icons.check_rounded : Icons.add_rounded,
+                onPressed: () async {
+                  if (nameController.text.isEmpty ||
+                      roleController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Please fill in required fields')),
+                    );
+                    return;
+                  }
+
+                  try {
+                    final readiness =
+                        int.tryParse(readinessController.text) ?? 0;
+
+                    if (isEdit) {
+                      await OpsService.updateMember(
+                        projectId: projectId,
+                        memberId: member.id,
+                        name: nameController.text,
+                        role: roleController.text,
+                        responsibility: responsibilityController.text,
+                        status: statusController.text,
+                        readinessScore: readiness,
+                        notes: notesController.text.isEmpty
+                            ? null
+                            : notesController.text,
+                      );
+                    } else {
+                      await OpsService.createMember(
+                        projectId: projectId,
+                        name: nameController.text,
+                        role: roleController.text,
+                        responsibility: responsibilityController.text,
+                        status: statusController.text,
+                        readinessScore: readiness,
+                        notes: notesController.text.isEmpty
+                            ? null
+                            : notesController.text,
+                      );
+                    }
+
+                    if (ctx.mounted) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(isEdit
+                                ? 'Member updated successfully'
+                                : 'Member added successfully')),
+                      );
+                    }
+                  } catch (e) {
+                    if (ctx.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  }
+                },
               ),
             ],
           ),
-          actions: [
-            LaunchModalCancelButton(
-              label: 'Cancel',
-              onPressed: () => Navigator.pop(ctx),
-            ),
-            LaunchModalPrimaryButton(
-              label: isEdit ? 'Update' : 'Add Member',
-              icon: isEdit ? Icons.check_rounded : Icons.add_rounded,
-              onPressed: () async {
-                if (nameController.text.isEmpty ||
-                    roleController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Please fill in required fields')),
-                  );
-                  return;
-                }
-
-                try {
-                  final readiness = int.tryParse(readinessController.text) ?? 0;
-
-                  if (isEdit) {
-                    await OpsService.updateMember(
-                      projectId: projectId,
-                      memberId: member.id,
-                      name: nameController.text,
-                      role: roleController.text,
-                      responsibility: responsibilityController.text,
-                      status: statusController.text,
-                      readinessScore: readiness,
-                      notes: notesController.text.isEmpty
-                          ? null
-                          : notesController.text,
-                    );
-                  } else {
-                    await OpsService.createMember(
-                      projectId: projectId,
-                      name: nameController.text,
-                      role: roleController.text,
-                      responsibility: responsibilityController.text,
-                      status: statusController.text,
-                      readinessScore: readiness,
-                      notes: notesController.text.isEmpty
-                          ? null
-                          : notesController.text,
-                    );
-                  }
-
-                  if (ctx.mounted) {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(isEdit
-                              ? 'Member updated successfully'
-                              : 'Member added successfully')),
-                    );
-                  }
-                } catch (e) {
-                  if (ctx.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e')),
-                    );
-                  }
-                }
-              },
-            ),
-          ],
         ),
-      ),
-    );
+      );
+    } finally {
+      nameController.dispose();
+      roleController.dispose();
+      responsibilityController.dispose();
+      statusController.dispose();
+      readinessController.dispose();
+      notesController.dispose();
+    }
   }
 
   void _showDeleteMemberDialog(BuildContext context, OpsMemberModel member) {
@@ -1093,10 +1257,10 @@ class _PanelShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1140,10 +1304,10 @@ class _HandoffItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [

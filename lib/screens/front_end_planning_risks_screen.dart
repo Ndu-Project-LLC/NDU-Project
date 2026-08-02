@@ -17,6 +17,7 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 /// Front End Planning – Project Risks page
 /// Matches the provided screenshot with:
 /// - Top bar (back/forward, centered title, user chip)
@@ -615,7 +616,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  final result = await showDialog<_RiskItem>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withValues(alpha: 0.45),
+ barrierColor: Colors.black.withOpacity(0.45),
  builder: (ctx) {
  final viewInsets = MediaQuery.of(ctx).viewInsets;
  return Center(
@@ -634,8 +635,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  mainAxisSize: MainAxisSize.min,
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const Row(
- children: [
+ Row(
+ children: const [
  Icon(Icons.edit_note, color: Color(0xFF111827)),
  SizedBox(width: 8),
  Text('Edit Risk',
@@ -1355,11 +1356,11 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const Expanded(
+ Expanded(
  child: Column(
  crossAxisAlignment:
  CrossAxisAlignment.start,
- children: [
+ children: const [
  EditableContentText(
  contentKey:
  'fep_initial_project_risks_title',
@@ -1477,8 +1478,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  ],
  ),
- const MobileSidebarHamburger(
- sidebar: InitiationLikeSidebar(
+ MobileSidebarHamburger(
+ sidebar: const InitiationLikeSidebar(
  activeItemLabel: 'Project Risks',
  ),
  ),
@@ -1981,7 +1982,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  decoration: BoxDecoration(
  color: background,
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: foreground.withValues(alpha: 0.25)),
+ border: Border.all(color: foreground.withOpacity(0.25)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -2009,10 +2010,18 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  }
 
  Widget _buildRiskTable(BuildContext context) {
- const border = BorderSide(color: Color(0xFFE5E7EB));
- const headerStyle = TextStyle(
+ return FullScreenTableWrapper(
+ title: 'Risks',
+ child: _buildRiskTableContent(),
+ tableBuilder: (fsContext) => _buildRiskTableContent(),
+ );
+ }
+
+ Widget _buildRiskTableContent() {
+ final border = const BorderSide(color: Color(0xFFE5E7EB));
+ final headerStyle = const TextStyle(
  fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
- const cellStyle = TextStyle(fontSize: 14, color: Color(0xFF111827));
+ final cellStyle = const TextStyle(fontSize: 14, color: Color(0xFF111827));
 
  return Container(
  key: _riskTableKey,
@@ -2027,7 +2036,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  child: LayoutBuilder(
  builder: (context, constraints) {
- const minTableWidth = 1940.0;
+ final minTableWidth = 1940.0;
  final tableWidth = constraints.maxWidth < minTableWidth
  ? minTableWidth
  : constraints.maxWidth;
@@ -2087,7 +2096,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  final severity = _displayRiskSeverity(r);
  final rowCanUndo = _canUndoRiskRow(i);
  return TableRow(children: [
- _td(Text(r.id, style: cellStyle),
+ _td(WrappedText(r.id, style: cellStyle),
  onDoubleTap: () => _showEditRiskSheet(i)),
  _td(
  _ExpandableCellText(
@@ -2110,7 +2119,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  const Color(0xFF7C3AED)),
  onDoubleTap: () => _showEditRiskSheet(i)),
  _td(
- Text(
+ WrappedText(
  r.probability.trim().isEmpty
  ? '-'
  : r.probability,
@@ -2118,7 +2127,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  onDoubleTap: () => _showEditRiskSheet(i)),
  _td(
- Text(
+ WrappedText(
  r.impact.trim().isEmpty ? '-' : r.impact,
  style: cellStyle,
  ),
@@ -2535,8 +2544,8 @@ class _BottomOverlays extends StatelessWidget {
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFD7E5FF)),
  ),
- child: const Row(
- children: [
+ child: Row(
+ children: const [
  Icon(Icons.lightbulb_outline, color: Color(0xFF2563EB)),
  SizedBox(width: 8),
  Text('Hint',
@@ -2588,9 +2597,10 @@ class _LabeledField extends StatelessWidget {
  const _LabeledField({
  required this.label,
  required this.controller,
+ this.hintText,
  this.autofocus = false,
  this.enabled = true,
- }) : hintText = null;
+ });
 
  @override
  Widget build(BuildContext context) {
@@ -2614,7 +2624,7 @@ class _LabeledField extends StatelessWidget {
  controller: controller,
  autofocus: autofocus,
  enabled: enabled,
- decoration: const InputDecoration(
+ decoration: InputDecoration(
  border: InputBorder.none,
  ),
  ),

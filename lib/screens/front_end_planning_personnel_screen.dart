@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/program_workspace_scaffold.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 class FrontEndPlanningPersonnelScreen extends StatefulWidget {
  const FrontEndPlanningPersonnelScreen({super.key});
 
@@ -605,7 +606,7 @@ class _PersonnelTable extends StatelessWidget {
  children: [
  td(const SizedBox.shrink()),
  td(
- const Text(
+ const WrappedText(
  'No structured personnel roles added yet.',
  style: TextStyle(
  fontSize: 14,
@@ -630,31 +631,31 @@ class _PersonnelTable extends StatelessWidget {
  tableRows.add(
  TableRow(
  children: [
- td(Text('${index + 1}', style: cellStyle)),
- td(Text(row.role.trim(), style: cellStyle)),
+ td(WrappedText('${index + 1}', style: cellStyle)),
+ td(WrappedText(row.role.trim(), style: cellStyle)),
  td(
- Text(
+ WrappedText(
  row.roleDescription.trim().isEmpty
  ? 'No definition provided'
  : row.roleDescription.trim(),
  style: cellStyle,
  ),
  ),
- td(Text('${row.quantity}', style: cellStyle)),
- td(Text(
+ td(WrappedText('${row.quantity}', style: cellStyle)),
+ td(WrappedText(
  row.durationMonths.trim().isEmpty
  ? '-'
  : '${row.durationMonths.trim()} mo',
  style: cellStyle,
  )),
- td(Text(
+ td(WrappedText(
  row.monthlyCost.trim().isEmpty ? '-' : row.monthlyCost.trim(),
  style: cellStyle,
  )),
- td(Text(_formatCurrency(row.subtotal), style: cellStyle)),
- td(Text(row.isInternal ? 'Internal' : 'External',
+ td(WrappedText(_formatCurrency(row.subtotal), style: cellStyle)),
+ td(WrappedText(row.isInternal ? 'Internal' : 'External',
  style: cellStyle)),
- td(Text(row.status.trim(), style: cellStyle)),
+ td(WrappedText(row.status.trim(), style: cellStyle)),
  td(
  Row(
  mainAxisSize: MainAxisSize.min,
@@ -676,7 +677,9 @@ class _PersonnelTable extends StatelessWidget {
  }
  }
 
- return Container(
+ return FullScreenTableWrapper(
+ title: 'Personnel Roles',
+ child: Container(
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
@@ -720,6 +723,53 @@ class _PersonnelTable extends StatelessWidget {
  ),
  );
  },
+ ),
+ ),
+ tableBuilder: (fsContext) => Container(
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(12),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: LayoutBuilder(
+ builder: (context, constraints) {
+ final minTableWidth =
+ constraints.maxWidth > 1400 ? constraints.maxWidth : 1400.0;
+ return Scrollbar(
+ thumbVisibility: true,
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: BoxConstraints(minWidth: minTableWidth),
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(60),
+ 1: FlexColumnWidth(1.6),
+ 2: FlexColumnWidth(2.4),
+ 3: FixedColumnWidth(70),
+ 4: FixedColumnWidth(90),
+ 5: FixedColumnWidth(130),
+ 6: FixedColumnWidth(130),
+ 7: FixedColumnWidth(90),
+ 8: FixedColumnWidth(110),
+ 9: FixedColumnWidth(110),
+ },
+ border: TableBorder(
+ horizontalInside: border,
+ verticalInside: border,
+ top: border,
+ bottom: border,
+ left: border,
+ right: border,
+ ),
+ defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+ children: tableRows,
+ ),
+ ),
+ ),
+ );
+ },
+ ),
  ),
  );
  }

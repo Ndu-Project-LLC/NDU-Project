@@ -52,17 +52,17 @@ class DetailedDesignTableWidget extends StatelessWidget {
               ),
             ],
           ),
-          child: ResponsiveDataTableWrapper(
+          child: buildNduTableWithExpand(
+            context: context,
+            title: 'Design Specifications',
             minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 1200,
             maxHeight: 560,
-            child: buildNduDataTable(
-              context: context,
-              columnSpacing: 16,
-              horizontalMargin: 16,
-              headingRowHeight: 52,
-              dataRowMinHeight: 48,
-              dataRowMaxHeight: 120,
-              columns: const [
+            columnSpacing: 16,
+            horizontalMargin: 16,
+            headingRowHeight: 52,
+            dataRowMinHeight: 48,
+            dataRowMaxHeight: 120,
+            columns: const [
                 DataColumn(
                   label: Center(
                     child: Text('Spec ID',
@@ -240,7 +240,6 @@ class DetailedDesignTableWidget extends StatelessWidget {
                   ],
                 );
               }).toList(),
-            ),
           ),
         );
       },
@@ -562,7 +561,9 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
             onChanged: (v) =>
                 _updateComponent(_createUpdatedComponent(componentName: v)),
             style: const TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF111827)),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF111827)),
             textAlign: TextAlign.center,
           ),
         );
@@ -576,8 +577,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
               borderRadius: BorderRadius.circular(6),
             ),
             child: DropdownButton<String>(
-              value: DesignComponent.specificationTypes.contains(
-                      _component.specificationType)
+              value: DesignComponent.specificationTypes
+                      .contains(_component.specificationType)
                   ? _component.specificationType
                   : 'Component',
               isDense: true,
@@ -596,8 +597,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
                   .toList(),
               onChanged: (v) {
                 if (v != null) {
-                  _updateComponent(
-                      _createUpdatedComponent(specificationType: v, category: v));
+                  _updateComponent(_createUpdatedComponent(
+                      specificationType: v, category: v));
                 }
               },
             ),
@@ -668,8 +669,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
                 .toList(),
             onChanged: (v) {
               if (v != null) {
-                _updateComponent(
-                    _createUpdatedComponent(methodologyPhase: v));
+                _updateComponent(_createUpdatedComponent(methodologyPhase: v));
               }
             },
           ),
@@ -677,7 +677,8 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
       case 'owner':
         return Center(
           child: DropdownButton<String>(
-            value: _component.owner.isNotEmpty ? _component.owner : 'Engineering',
+            value:
+                _component.owner.isNotEmpty ? _component.owner : 'Engineering',
             isDense: true,
             underline: const SizedBox(),
             iconSize: 14,

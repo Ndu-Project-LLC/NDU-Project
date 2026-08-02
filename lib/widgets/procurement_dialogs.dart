@@ -8,6 +8,7 @@ import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/vendor_service.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class ProcurementAssignableMemberOption {
   const ProcurementAssignableMemberOption({
     required this.id,
@@ -71,10 +72,10 @@ class ProcurementDialogShell extends StatelessWidget {
       child: Container(
         constraints:
             BoxConstraints(maxWidth: 720, maxHeight: media.size.height * 0.88),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
                 color: Color(0x1F0F172A),
                 blurRadius: 30,
@@ -114,11 +115,11 @@ class ProcurementDialogShell extends StatelessWidget {
                       Container(
                         width: 52,
                         height: 52,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                          boxShadow: const [
+                          border: Border.all(color: Color(0xFFE2E8F0)),
+                          boxShadow: [
                             BoxShadow(
                                 color: Color(0x140F172A),
                                 blurRadius: 10,
@@ -193,7 +194,7 @@ class ProcurementDialogShell extends StatelessWidget {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(
+                      shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
@@ -364,6 +365,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
     _descCtrl.dispose();
     _budgetCtrl.dispose();
     _nameFocus.dispose();
+    _openAi.dispose();
     super.dispose();
   }
 
@@ -545,15 +547,15 @@ class _AddItemDialogState extends State<AddItemDialog> {
       labelStyle: const TextStyle(
           fontWeight: FontWeight.w600, color: Color(0xFF475569)),
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-      border: OutlineInputBorder(
+      border: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+      enabledBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+      focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -746,7 +748,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                         _responsibleMember = selected.displayLabel;
                       });
                     },
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.circular(12),
               child: InputDecorator(
                 decoration: _dialogDecoration(
                   label: 'Responsible',
@@ -1091,6 +1093,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
     _nameCtrl.dispose();
     _otherCategoryCtrl.dispose();
     _nameFocus.dispose();
+    _openAi.dispose();
     super.dispose();
   }
 
@@ -1315,15 +1318,15 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
       labelStyle: const TextStyle(
           fontWeight: FontWeight.w600, color: Color(0xFF475569)),
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-      border: OutlineInputBorder(
+      border: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+      enabledBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+      focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -1558,7 +1561,10 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                       children: [
                         Switch(
                           value: _approved,
-                          thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF2563EB) : null),
+                          thumbColor: WidgetStateProperty.resolveWith(
+                              (states) => states.contains(WidgetState.selected)
+                                  ? const Color(0xFF2563EB)
+                                  : null),
                           onChanged: (value) =>
                               setState(() => _approved = value),
                         ),
@@ -1569,7 +1575,10 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                       children: [
                         Switch(
                           value: _preferred,
-                          thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF2563EB) : null),
+                          thumbColor: WidgetStateProperty.resolveWith(
+                              (states) => states.contains(WidgetState.selected)
+                                  ? const Color(0xFF2563EB)
+                                  : null),
                           onChanged: (value) =>
                               setState(() => _preferred = value),
                         ),
@@ -1693,15 +1702,15 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
       labelStyle: const TextStyle(
           fontWeight: FontWeight.w600, color: Color(0xFF475569)),
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-      border: OutlineInputBorder(
+      border: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+      enabledBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+      focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -2105,15 +2114,15 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
       labelStyle: const TextStyle(
           fontWeight: FontWeight.w600, color: Color(0xFF475569)),
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-      border: OutlineInputBorder(
+      border: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+      enabledBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+      focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -2205,10 +2214,10 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: Color(0xFFE2E8F0)),
                   ),
                   child: const Text(
                     'No source items available.',
@@ -2501,15 +2510,15 @@ class _AddContractDialogState extends State<AddContractDialog> {
       labelStyle: const TextStyle(
           fontWeight: FontWeight.w600, color: Color(0xFF475569)),
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-      border: OutlineInputBorder(
+      border: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+      enabledBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+      focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }

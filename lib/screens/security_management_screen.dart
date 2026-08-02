@@ -11,6 +11,8 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
@@ -41,11 +43,78 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
   final List<_AccessLogEntry> _accessLogs = [];
   _SystemSettingsData _systemSettings = _SystemSettingsData.defaults();
   bool _loadingData = false;
+  bool _autoPopulated = false;
+  bool _isAutoPopulating = false;
+  String? _carriedContext;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSecurityData());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSecurityData();
+      _autoPopulateIfNeeded();
+    });
+  }
+
+  Future<void> _autoPopulateIfNeeded() async {
+    if (_autoPopulated || _isAutoPopulating) return;
+    _autoPopulated = true;
+    _isAutoPopulating = true;
+    if (mounted) setState(() {});
+
+    try {
+      final data = ProjectDataHelper.getData(context);
+
+      // Pull real carried context for display in the banner.
+      final carried = await buildAccumulatedContext(context, 'security_management');
+      if (mounted) setState(() => _carriedContext = carried);
+
+      // If roles already exist (either in memory or Firestore), do nothing.
+      if (_roles.isNotEmpty) {
+        if (mounted) setState(() => _isAutoPopulating = false);
+        return;
+      }
+
+      // Deterministic seed from real prior-phase SSHER + FEP security data.
+      final seed = seedSecurityManagement(data);
+      if (seed.isNotEmpty && mounted) {
+        final projectId = data.projectId;
+        if (projectId == null || projectId.isEmpty) {
+          if (mounted) setState(() => _isAutoPopulating = false);
+          return;
+        }
+        final projectRef =
+            FirebaseFirestore.instance.collection('projects').doc(projectId);
+        final batch = FirebaseFirestore.instance.batch();
+        final rolesCol = projectRef.collection('security_roles');
+        for (final row in seed.rows) {
+          final docRef = rolesCol.doc();
+          batch.set(docRef, <String, dynamic>{
+            'title': row['title'],
+            'category': row['category'],
+            'source': row['source'],
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+        await batch.commit();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Seeded ${seed.rows.length} security item(s) from ${seed.source}.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        // Reload to surface the new rows.
+        await _loadSecurityData();
+      }
+    } catch (e) {
+      debugPrint('SecurityManagement auto-populate error: $e');
+    } finally {
+      if (mounted) setState(() => _isAutoPopulating = false);
+    }
   }
 
   Future<void> _loadSecurityData() async {
@@ -440,6 +509,17 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
                             title: 'Security Management',
                             onExportPdf: _exportPdf),
                         const SizedBox(height: 16),
+                        if (_isAutoPopulating)
+                          const AutoPopulatingIndicator(),
+                        if (_carriedContext != null &&
+                            _carriedContext!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: CarriedContextBanner(
+                              checkpoint: 'security_management',
+                              contextText: _carriedContext!,
+                            ),
+                          ),
                         const _PageHeader(),
                         if (_loadingData) ...[
                           const SizedBox(height: 12),

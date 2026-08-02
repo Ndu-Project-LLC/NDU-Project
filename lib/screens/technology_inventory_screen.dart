@@ -203,9 +203,10 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  child: Card(
  child: Padding(
  padding: const EdgeInsets.all(12),
- child: ResponsiveDataTableWrapper(
+ child: buildNduTableWithExpand(
+ context: context,
+ title: 'Technology Inventory',
  maxHeight: 420,
- child: DataTable(
  columns: const [
  DataColumn(
  label: Center(
@@ -228,7 +229,6 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  DataCell(Center(child: Text(it['notes'] ?? ''))),
  ]);
  }).toList(),
- ),
  ),
  ),
  ),

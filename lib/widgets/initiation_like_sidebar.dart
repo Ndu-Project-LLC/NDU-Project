@@ -895,7 +895,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   }
 
   void _openPlanningRequirements() {
-    _navigateWithCheckpoint('requirements', const PlanningRequirementsScreen());
+    _navigateWithCheckpoint('requirements', PlanningRequirementsScreen());
   }
 
   void _openFrontEndRisks() {
@@ -1535,13 +1535,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
                   colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                 ),
                 borderRadius: BorderRadius.circular(8),
@@ -2029,8 +2030,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color:
-                isActive ? activeColor.withValues(alpha: 0.08) : Colors.transparent,
+            color: isActive
+                ? activeColor.withValues(alpha: 0.08)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
             border: isActive
                 ? Border.all(color: activeColor.withValues(alpha: 0.20))
@@ -2076,7 +2078,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-          right: BorderSide(color: Colors.grey.withValues(alpha: 0.25), width: 0.8),
+          right: BorderSide(
+              color: Colors.grey.withValues(alpha: 0.25), width: 0.8),
         ),
       ),
       child: Column(
@@ -2086,7 +2089,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             SizedBox(
               width: double.infinity,
               height: bannerHeight,
-              child: const Center(child: AppLogo(height: 64)),
+              child: Center(child: AppLogo(height: 64)),
             ),
             Container(
               padding: const EdgeInsets.all(24),
@@ -2120,10 +2123,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
               child: Container(
                 height: 42,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE4E7EC)),
+                  border: Border.all(color: Color(0xFFE4E7EC)),
                 ),
                 child: VoiceTextField(
                   controller: _searchController,
@@ -2143,7 +2146,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: Icon(Icons.clear_rounded,
-                                color: const Color(0xFF6B7280).withValues(alpha: 0.7),
+                                color: const Color(0xFF6B7280)
+                                    .withValues(alpha: 0.7),
                                 size: 18),
                             onPressed: () {
                               _searchController.clear();
@@ -4166,7 +4170,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.search_off_rounded,
-                  color: const Color(0xFF6B7280).withValues(alpha: 0.4), size: 40),
+                  color: const Color(0xFF6B7280).withValues(alpha: 0.4),
+                  size: 40),
               const SizedBox(height: 12),
               Text(
                 'No results found',

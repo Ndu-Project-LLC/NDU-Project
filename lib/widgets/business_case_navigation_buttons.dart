@@ -87,7 +87,8 @@ class BusinessCaseNavigationButtons extends StatelessWidget {
                 )
               else
                 const Spacer(),
-              Flexible(child: Row(
+              Flexible(
+                  child: Row(
                 children: [
                   if (hasSkip)
                     _NavigationButton(

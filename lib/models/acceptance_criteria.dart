@@ -12,16 +12,26 @@ enum WorkItemType {
 
   String get label {
     switch (this) {
-      case WorkItemType.epic: return 'Epic';
-      case WorkItemType.feature: return 'Feature';
-      case WorkItemType.userStory: return 'User Story';
-      case WorkItemType.bug: return 'Bug';
-      case WorkItemType.enhancement: return 'Enhancement';
-      case WorkItemType.technicalTask: return 'Technical Task';
-      case WorkItemType.spike: return 'Spike';
-      case WorkItemType.researchItem: return 'Research Item';
-      case WorkItemType.complianceRequirement: return 'Compliance Requirement';
-      case WorkItemType.infrastructureTask: return 'Infrastructure Task';
+      case WorkItemType.epic:
+        return 'Epic';
+      case WorkItemType.feature:
+        return 'Feature';
+      case WorkItemType.userStory:
+        return 'User Story';
+      case WorkItemType.bug:
+        return 'Bug';
+      case WorkItemType.enhancement:
+        return 'Enhancement';
+      case WorkItemType.technicalTask:
+        return 'Technical Task';
+      case WorkItemType.spike:
+        return 'Spike';
+      case WorkItemType.researchItem:
+        return 'Research Item';
+      case WorkItemType.complianceRequirement:
+        return 'Compliance Requirement';
+      case WorkItemType.infrastructureTask:
+        return 'Infrastructure Task';
     }
   }
 
@@ -49,18 +59,30 @@ enum CriterionCategory {
 
   String get label {
     switch (this) {
-      case CriterionCategory.businessObjective: return 'Business Objective';
-      case CriterionCategory.functional: return 'Functional Requirement';
-      case CriterionCategory.nonFunctional: return 'Non-Functional Requirement';
-      case CriterionCategory.security: return 'Security Requirement';
-      case CriterionCategory.performance: return 'Performance Expectation';
-      case CriterionCategory.ux: return 'User Experience Expectation';
-      case CriterionCategory.compliance: return 'Compliance Requirement';
-      case CriterionCategory.accessibility: return 'Accessibility Requirement';
-      case CriterionCategory.errorHandling: return 'Error Handling';
-      case CriterionCategory.reporting: return 'Reporting Requirement';
-      case CriterionCategory.approval: return 'Approval Requirement';
-      case CriterionCategory.documentation: return 'Documentation Requirement';
+      case CriterionCategory.businessObjective:
+        return 'Business Objective';
+      case CriterionCategory.functional:
+        return 'Functional Requirement';
+      case CriterionCategory.nonFunctional:
+        return 'Non-Functional Requirement';
+      case CriterionCategory.security:
+        return 'Security Requirement';
+      case CriterionCategory.performance:
+        return 'Performance Expectation';
+      case CriterionCategory.ux:
+        return 'User Experience Expectation';
+      case CriterionCategory.compliance:
+        return 'Compliance Requirement';
+      case CriterionCategory.accessibility:
+        return 'Accessibility Requirement';
+      case CriterionCategory.errorHandling:
+        return 'Error Handling';
+      case CriterionCategory.reporting:
+        return 'Reporting Requirement';
+      case CriterionCategory.approval:
+        return 'Approval Requirement';
+      case CriterionCategory.documentation:
+        return 'Documentation Requirement';
     }
   }
 
@@ -79,9 +101,12 @@ enum AcFormat {
 
   String get label {
     switch (this) {
-      case AcFormat.checklist: return 'Checklist';
-      case AcFormat.bdd: return 'Given / When / Then (BDD)';
-      case AcFormat.scenario: return 'Scenario-Based';
+      case AcFormat.checklist:
+        return 'Checklist';
+      case AcFormat.bdd:
+        return 'Given / When / Then (BDD)';
+      case AcFormat.scenario:
+        return 'Scenario-Based';
     }
   }
 
@@ -133,9 +158,11 @@ class AcceptanceCriterion {
 
   factory AcceptanceCriterion.fromJson(Map<String, dynamic> json) {
     return AcceptanceCriterion(
-      id: json['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id']?.toString() ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       description: json['description']?.toString() ?? '',
-      category: CriterionCategory.fromString(json['category']?.toString() ?? ''),
+      category:
+          CriterionCategory.fromString(json['category']?.toString() ?? ''),
       isRequired: json['isRequired'] == true,
       isMet: json['isMet'] == true,
     );
@@ -163,7 +190,8 @@ class AcceptanceCriteriaTemplate {
   double get confidenceScore {
     if (criteria.isEmpty) return 0;
     final required = criteria.where((c) => c.isRequired).length;
-    final filled = criteria.where((c) => c.description.trim().length >= 10).length;
+    final filled =
+        criteria.where((c) => c.description.trim().length >= 10).length;
     if (required == 0) return filled / criteria.length * 100;
     final requiredFilled = criteria
         .where((c) => c.isRequired && c.description.trim().length >= 10)
@@ -176,19 +204,24 @@ class AcceptanceCriteriaTemplate {
     final emptyRequired =
         criteria.where((c) => c.isRequired && c.description.trim().isEmpty);
     for (final c in emptyRequired) {
-      suggestions.add('Add "${c.category.label}" criterion (required but empty)');
+      suggestions
+          .add('Add "${c.category.label}" criterion (required but empty)');
     }
-    final noSecurity = criteria.any((c) => c.category == CriterionCategory.security);
+    final noSecurity =
+        criteria.any((c) => c.category == CriterionCategory.security);
     if (!noSecurity) {
       suggestions.add('Consider adding a security requirement');
     }
-    final noError = criteria.any((c) => c.category == CriterionCategory.errorHandling);
+    final noError =
+        criteria.any((c) => c.category == CriterionCategory.errorHandling);
     if (!noError) {
       suggestions.add('Consider adding error handling criteria');
     }
-    final short = criteria.where((c) => c.description.trim().isNotEmpty && c.description.trim().length < 10);
+    final short = criteria.where((c) =>
+        c.description.trim().isNotEmpty && c.description.trim().length < 10);
     for (final c in short) {
-      suggestions.add('"${c.category.label}" criterion is too short — be more specific');
+      suggestions.add(
+          '"${c.category.label}" criterion is too short — be more specific');
     }
     return suggestions;
   }
@@ -221,10 +254,12 @@ class AcceptanceCriteriaTemplate {
 
   factory AcceptanceCriteriaTemplate.fromJson(Map<String, dynamic> json) {
     return AcceptanceCriteriaTemplate(
-      id: json['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id']?.toString() ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       name: json['name']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
-      workItemType: WorkItemType.fromString(json['workItemType']?.toString() ?? ''),
+      workItemType:
+          WorkItemType.fromString(json['workItemType']?.toString() ?? ''),
       criteria: (json['criteria'] as List?)
               ?.map((e) =>
                   AcceptanceCriterion.fromJson(e as Map<String, dynamic>))
@@ -255,8 +290,8 @@ class AcceptanceCriteriaConfig {
   factory AcceptanceCriteriaConfig.fromJson(Map<String, dynamic> json) {
     return AcceptanceCriteriaConfig(
       templates: (json['templates'] as List?)
-              ?.map((e) =>
-                  AcceptanceCriteriaTemplate.fromJson(e as Map<String, dynamic>))
+              ?.map((e) => AcceptanceCriteriaTemplate.fromJson(
+                  e as Map<String, dynamic>))
               .toList() ??
           [],
       aiGenerationEnabled: json['aiGenerationEnabled'] == true,

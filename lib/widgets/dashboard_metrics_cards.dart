@@ -74,8 +74,7 @@ class AssignedActivitiesCard extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: () => ProjectActivitiesLogScreen.open(context),
                 icon: const Icon(Icons.fact_check_outlined, size: 16),
-                label: Text(
-                    'View all ${activities.length} in activity log'),
+                label: Text('View all ${activities.length} in activity log'),
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFFB45309),
                 ),
@@ -111,8 +110,8 @@ class AssignedActivitiesCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: const BoxDecoration(
-          border: Border(
-              bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1)),
+          border:
+              Border(bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1)),
         ),
         child: Row(
           children: [
@@ -122,9 +121,7 @@ class AssignedActivitiesCard extends StatelessWidget {
               height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: pastDue
-                    ? Colors.red.shade600
-                    : _statusColor(a.status),
+                color: pastDue ? Colors.red.shade600 : _statusColor(a.status),
               ),
             ),
             const SizedBox(width: 10),
@@ -155,8 +152,8 @@ class AssignedActivitiesCard extends StatelessWidget {
             // Due date / past-due badge
             pastDue
                 ? Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: Colors.red.shade50,
                       borderRadius: BorderRadius.circular(6),
@@ -375,7 +372,8 @@ class ProjectMetricsCard extends StatelessWidget {
               width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: _overallColor(rollup.overallStatus).withValues(alpha: 0.06),
+              color:
+                  _overallColor(rollup.overallStatus).withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -423,11 +421,13 @@ class ProjectMetricsCard extends StatelessWidget {
               runSpacing: 10,
               children: [
                 if (rollup.progressPercent != null)
-                  _headlineMetric('Progress',
+                  _headlineMetric(
+                      'Progress',
                       '${rollup.progressPercent!.toStringAsFixed(0)}%',
                       Icons.timeline_outlined),
                 if (rollup.budgetUsedPercent != null)
-                  _headlineMetric('Budget used',
+                  _headlineMetric(
+                      'Budget used',
                       '${rollup.budgetUsedPercent!.toStringAsFixed(0)}%',
                       Icons.savings_outlined),
                 if (rollup.openRisks != null)
@@ -455,8 +455,8 @@ class ProjectMetricsCard extends StatelessWidget {
         border: Border.all(color: c.withValues(alpha: 0.3)),
       ),
       child: Text(label,
-          style: TextStyle(
-              color: c, fontSize: 11.5, fontWeight: FontWeight.w700)),
+          style:
+              TextStyle(color: c, fontSize: 11.5, fontWeight: FontWeight.w700)),
     );
   }
 
@@ -477,8 +477,8 @@ class ProjectMetricsCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(label,
-              style: const TextStyle(
-                  fontSize: 10.5, fontWeight: FontWeight.w600),
+              style:
+                  const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center),
         ],
       ),
@@ -494,8 +494,8 @@ class ProjectMetricsCard extends StatelessWidget {
         Text('$label: ',
             style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
         Text(value,
-            style: const TextStyle(
-                fontWeight: FontWeight.w700, fontSize: 12.5)),
+            style:
+                const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5)),
       ],
     );
   }

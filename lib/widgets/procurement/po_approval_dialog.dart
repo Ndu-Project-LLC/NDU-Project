@@ -289,7 +289,7 @@ class _EscalationTargetTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: const BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(

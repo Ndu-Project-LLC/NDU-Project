@@ -323,7 +323,7 @@ class MobileDesignSystem {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: (iconColor ?? info).withValues(alpha: 0.1),
-                  borderRadius: const BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon,
                     color: iconColor ?? info, size: isMobile ? 16 : 18),
@@ -405,7 +405,7 @@ class MobileDesignSystem {
       backgroundColor: backgroundColor ?? textPrimary,
       behavior: SnackBarBehavior.floating,
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       duration: const Duration(seconds: 3),
     );
   }

@@ -72,7 +72,7 @@ class ProcurementDialogShell extends StatelessWidget {
       child: Container(
         constraints:
             BoxConstraints(maxWidth: 720, maxHeight: media.size.height * 0.88),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
@@ -115,7 +115,7 @@ class ProcurementDialogShell extends StatelessWidget {
                       Container(
                         width: 52,
                         height: 52,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: Color(0xFFE2E8F0)),
@@ -194,7 +194,7 @@ class ProcurementDialogShell extends StatelessWidget {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
-                      shape: const RoundedRectangleBorder(
+                      shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
@@ -547,13 +547,13 @@ class _AddItemDialogState extends State<AddItemDialog> {
       labelStyle: const TextStyle(
           fontWeight: FontWeight.w600, color: Color(0xFF475569)),
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-      border: const OutlineInputBorder(
+      border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: const OutlineInputBorder(
+      enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: const OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -748,7 +748,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                         _responsibleMember = selected.displayLabel;
                       });
                     },
-              borderRadius: const BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
               child: InputDecorator(
                 decoration: _dialogDecoration(
                   label: 'Responsible',
@@ -1318,13 +1318,13 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
       labelStyle: const TextStyle(
           fontWeight: FontWeight.w600, color: Color(0xFF475569)),
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-      border: const OutlineInputBorder(
+      border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: const OutlineInputBorder(
+      enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: const OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -1702,13 +1702,13 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
       labelStyle: const TextStyle(
           fontWeight: FontWeight.w600, color: Color(0xFF475569)),
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-      border: const OutlineInputBorder(
+      border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: const OutlineInputBorder(
+      enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: const OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -2114,13 +2114,13 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
       labelStyle: const TextStyle(
           fontWeight: FontWeight.w600, color: Color(0xFF475569)),
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-      border: const OutlineInputBorder(
+      border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: const OutlineInputBorder(
+      enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: const OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -2214,7 +2214,7 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Color(0xFFE2E8F0)),
@@ -2510,13 +2510,13 @@ class _AddContractDialogState extends State<AddContractDialog> {
       labelStyle: const TextStyle(
           fontWeight: FontWeight.w600, color: Color(0xFF475569)),
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-      border: const OutlineInputBorder(
+      border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: const OutlineInputBorder(
+      enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: const OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),

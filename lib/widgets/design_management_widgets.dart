@@ -18,7 +18,7 @@ class DesignSpecificationsCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
@@ -104,7 +104,7 @@ class DesignSpecificationsCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: const BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: color.withValues(alpha: 0.5)),
         ),
         child: Text(
@@ -199,7 +199,7 @@ class DesignDocumentsCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF0FDF4),
-        borderRadius: const BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFBBF7D0)),
         boxShadow: [
           BoxShadow(
@@ -217,7 +217,7 @@ class DesignDocumentsCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFDCFCE7),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -244,7 +244,7 @@ class DesignDocumentsCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color:
                               const Color(0xFF16A34A).withValues(alpha: 0.12),
-                          borderRadius: const BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           '${documents.length}',
@@ -302,7 +302,7 @@ class DesignDocumentsCard extends StatelessWidget {
                 ...documents.map((doc) => Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: Color(0xFFBBF7D0)),
@@ -312,7 +312,7 @@ class DesignDocumentsCard extends StatelessWidget {
                           Container(
                             width: 32,
                             height: 32,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: Color(0xFFDCFCE7),
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -343,7 +343,7 @@ class DesignDocumentsCard extends StatelessWidget {
                                         color: const Color(0xFF16A34A)
                                             .withValues(alpha: 0.1),
                                         borderRadius:
-                                            const BorderRadius.circular(6),
+                                            BorderRadius.circular(6),
                                       ),
                                       child: Text(doc.type,
                                           style: const TextStyle(
@@ -434,7 +434,7 @@ class DesignDocumentsCard extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF0FDF4),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -472,7 +472,7 @@ class DesignDocumentsCard extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF0FDF4),
-                    borderRadius: const BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: uploadedFileName != null
                           ? const Color(0xFF16A34A)
@@ -630,7 +630,7 @@ class DesignToolsCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFFFFBEB),
-        borderRadius: const BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFFDE68A)),
         boxShadow: [
           BoxShadow(
@@ -648,7 +648,7 @@ class DesignToolsCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -675,7 +675,7 @@ class DesignToolsCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color:
                               const Color(0xFFD97706).withValues(alpha: 0.12),
-                          borderRadius: const BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           '${tools.length}',
@@ -732,7 +732,7 @@ class DesignToolsCard extends StatelessWidget {
                 ...tools.map((tool) => Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: Color(0xFFFDE68A)),
@@ -742,7 +742,7 @@ class DesignToolsCard extends StatelessWidget {
                           Container(
                             width: 32,
                             height: 32,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: Color(0xFFFEF3C7),
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -775,7 +775,7 @@ class DesignToolsCard extends StatelessWidget {
                                         color: const Color(0xFFD97706)
                                             .withValues(alpha: 0.1),
                                         borderRadius:
-                                            const BorderRadius.circular(6),
+                                            BorderRadius.circular(6),
                                       ),
                                       child: Text(
                                         tool.isInternal
@@ -870,7 +870,7 @@ class DesignToolsCard extends StatelessWidget {
               Container(
                 width: 32,
                 height: 32,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFFFFBEB),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -912,7 +912,7 @@ class DesignToolsCard extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFFBEB),
-                    borderRadius: const BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: uploadedFileName != null
                           ? const Color(0xFFD97706)

@@ -73,7 +73,7 @@ class ExecutionActionBar extends StatelessWidget {
               horizontal: compact ? 14 : 16,
               vertical: compact ? 11 : 12,
             ),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
             textStyle: TextStyle(
@@ -104,7 +104,7 @@ class ExecutionActionBar extends StatelessWidget {
               horizontal: compact ? 14 : 16,
               vertical: compact ? 11 : 12,
             ),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
             textStyle: TextStyle(
@@ -126,7 +126,7 @@ class ExecutionActionBar extends StatelessWidget {
               horizontal: compact ? 14 : 16,
               vertical: compact ? 11 : 12,
             ),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
             textStyle: TextStyle(
@@ -148,7 +148,7 @@ class ExecutionActionBar extends StatelessWidget {
               horizontal: compact ? 14 : 16,
               vertical: compact ? 11 : 12,
             ),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
             textStyle: TextStyle(
@@ -185,8 +185,8 @@ class ExecutionPageHeader extends StatelessWidget {
       padding: EdgeInsets.all(isMobile ? 20 : 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(26),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -200,7 +200,7 @@ class ExecutionPageHeader extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFFEF3C7),
               borderRadius: BorderRadius.circular(999),
             ),
@@ -424,8 +424,8 @@ class ExecutionMetricCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -458,7 +458,7 @@ class ExecutionMetricCard extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: metric.emphasisColor.withValues(alpha: 0.12),
-                  borderRadius: const BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(metric.icon, size: 20, color: metric.emphasisColor),
               ),
@@ -588,7 +588,7 @@ class _ExecutionPanelShellState extends State<ExecutionPanelShell>
       padding: widget.padding ?? const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color:
               _isExpanded ? const Color(0xFFE5E7EB) : const Color(0xFFF3F4F6),
@@ -637,7 +637,7 @@ class _ExecutionPanelShellState extends State<ExecutionPanelShell>
                 decoration: BoxDecoration(
                   color: (widget.headerIconColor ?? const Color(0xFF6366F1))
                       .withValues(alpha: 0.1),
-                  borderRadius: const BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   widget.headerIcon,
@@ -753,7 +753,7 @@ class ExecutionEmptyState extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -762,7 +762,7 @@ class ExecutionEmptyState extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(14),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: Color(0xFFE2E8F0)),
@@ -821,7 +821,7 @@ class ExecutionStatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: palette.background,
-        borderRadius: const BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: palette.border),
       ),
       child: Text(
@@ -1000,7 +1000,7 @@ class _ExecutionEditorSurface extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(16),
                     ),

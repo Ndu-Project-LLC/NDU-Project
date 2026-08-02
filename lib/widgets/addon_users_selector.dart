@@ -60,7 +60,7 @@ class _AddonUsersSelectorState extends State<AddonUsersSelector> {
     if (widget.tier.maxUsers <= widget.tier.includedUsers) {
       return Container(
         padding: const EdgeInsets.all(14),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Color(0xFFE2E8F0)),
@@ -88,7 +88,7 @@ class _AddonUsersSelectorState extends State<AddonUsersSelector> {
 
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Color(0xFFE2E8F0)),

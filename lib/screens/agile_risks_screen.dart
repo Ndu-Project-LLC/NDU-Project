@@ -389,7 +389,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
         _blockers.where((b) => b.sla.toLowerCase().contains('overdue')).length;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
@@ -449,7 +449,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
   Widget _buildBlockerLogTableContent() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -672,7 +672,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
   Widget _buildRiskHeatmap() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -794,7 +794,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
   Widget _buildTrendSection() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -862,7 +862,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
   Widget _buildEscalationSection() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -974,7 +974,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -987,7 +987,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1213,7 +1213,7 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),

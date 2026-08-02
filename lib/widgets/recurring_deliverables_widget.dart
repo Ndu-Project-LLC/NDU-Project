@@ -128,8 +128,8 @@ class _RecurringDeliverablesWidgetState
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -542,7 +542,7 @@ class _RecurringRowWidgetState extends State<_RecurringRowWidget> {
                           color: _item.status == 'Active'
                               ? const Color(0xFF10B981).withValues(alpha: 0.1)
                               : const Color(0xFF9CA3AF).withValues(alpha: 0.1),
-                          borderRadius: const BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           _item.status,

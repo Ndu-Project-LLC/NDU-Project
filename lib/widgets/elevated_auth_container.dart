@@ -68,7 +68,7 @@ class _ElevatedAuthContainerState extends State<ElevatedAuthContainer>
         : LightModeColors.accent;
 
     final Widget card = ClipRRect(
-      borderRadius: const BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: DecoratedBox(
@@ -82,7 +82,7 @@ class _ElevatedAuthContainerState extends State<ElevatedAuthContainer>
               ],
             ),
             border: Border.all(color: border),
-            borderRadius: const BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               // very subtle ambient and key shadows
               BoxShadow(

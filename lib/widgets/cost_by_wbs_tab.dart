@@ -145,7 +145,7 @@ class CostByWBSTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8),
                     child: SizedBox(
                       height: 36,
                       child: Row(
@@ -253,7 +253,7 @@ class CostByWBSTab extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                         color: Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(8)),
                     child: Row(
@@ -318,7 +318,7 @@ class CostByWBSTab extends StatelessWidget {
                       LightModeColors.accent.withValues(alpha: 0.12),
                       LightModeColors.accent.withValues(alpha: 0.04)
                     ]),
-                    borderRadius: const BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                         color: LightModeColors.accent.withValues(alpha: 0.3)),
                   ),
@@ -361,7 +361,7 @@ class CostByWBSTab extends StatelessWidget {
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                       color: Color(0xFF1A1D1F),
                       borderRadius: BorderRadius.circular(12)),
                   child: Column(
@@ -403,7 +403,7 @@ class CostByWBSTab extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: const BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Column(
@@ -442,7 +442,7 @@ class CostByWBSTab extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: _cardBg,
-        borderRadius: const BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _border),
         boxShadow: [
           BoxShadow(
@@ -473,7 +473,7 @@ class CostByWBSTab extends StatelessWidget {
             width: 10,
             height: 10,
             decoration: BoxDecoration(
-                color: color, borderRadius: const BorderRadius.circular(2))),
+                color: color, borderRadius: BorderRadius.circular(2))),
         const SizedBox(width: 6),
         Text(label,
             style: const TextStyle(color: _textSecondary, fontSize: 11)),
@@ -510,7 +510,7 @@ class CostByWBSTab extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.1),
-                    borderRadius: const BorderRadius.circular(4)),
+                    borderRadius: BorderRadius.circular(4)),
                 child: Text(code,
                     style: TextStyle(
                         color: color,
@@ -543,7 +543,7 @@ class CostByWBSTab extends StatelessWidget {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                       color: Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(4)),
                   child: Text('$lineCount',
@@ -573,7 +573,7 @@ class CostByWBSTab extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           ClipRRect(
-            borderRadius: const BorderRadius.circular(3),
+            borderRadius: BorderRadius.circular(3),
             child: LinearProgressIndicator(
               value: barPct.clamp(0.0, 1.0),
               minHeight: isChild ? 3 : 5,

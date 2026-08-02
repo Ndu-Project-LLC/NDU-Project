@@ -43,7 +43,7 @@ class DesignPhaseProgressIndicator extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
@@ -62,7 +62,7 @@ class DesignPhaseProgressIndicator extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: const Color(0xFF6366F1).withValues(alpha: 0.1),
-                  borderRadius: const BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.analytics,
                     color: Color(0xFF6366F1), size: 20),
@@ -137,7 +137,7 @@ class DesignPhaseProgressIndicator extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ClipRRect(
-            borderRadius: const BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,

@@ -741,7 +741,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -796,7 +796,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
           // Table header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -846,7 +846,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   backgroundColor: const Color(0xFFFFF3C4),
-                  shape: const RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -860,7 +860,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                     foregroundColor: const Color(0xFF6B7280),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 10),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -895,8 +895,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
-        borderRadius: const BorderRadius.circular(8),
-        border: const Border.all(color: Color(0xFFF3F4F6)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -977,7 +977,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                 ),
                 const SizedBox(height: 3),
                 ClipRRect(
-                  borderRadius: const BorderRadius.circular(3),
+                  borderRadius: BorderRadius.circular(3),
                   child: LinearProgressIndicator(
                     value: item.percentComplete / 100,
                     backgroundColor: const Color(0xFFE5E7EB),
@@ -993,7 +993,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             flex: 2,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: statusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -1013,7 +1013,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             flex: 1,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: impactColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -1082,7 +1082,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       message: tooltip,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: const BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(6),
         child: Padding(
           padding: const EdgeInsets.all(4),
           child: Icon(icon, size: 16, color: color),
@@ -1510,7 +1510,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -1558,7 +1558,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   backgroundColor: const Color(0xFFFFF3C4),
-                  shape: const RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -1572,7 +1572,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                     foregroundColor: const Color(0xFF6B7280),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 10),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -1601,8 +1601,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
-        borderRadius: const BorderRadius.circular(8),
-        border: const Border.all(color: Color(0xFFF3F4F6)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -1676,7 +1676,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             flex: 2,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: statusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -1970,7 +1970,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -2016,7 +2016,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   backgroundColor: const Color(0xFFFFF3C4),
-                  shape: const RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -2044,8 +2044,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
-        borderRadius: const BorderRadius.circular(8),
-        border: const Border.all(color: Color(0xFFF3F4F6)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -2070,7 +2070,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             flex: 2,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: categoryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -2090,7 +2090,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             flex: 2,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: statusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -2404,7 +2404,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFF1F2937),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -2454,7 +2454,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   backgroundColor: const Color(0xFFFFF3C4),
-                  shape: const RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -2468,7 +2468,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                     foregroundColor: const Color(0xFF6B7280),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 10),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -2496,8 +2496,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFFAFBFD),
-        borderRadius: const BorderRadius.circular(8),
-        border: const Border.all(color: Color(0xFFF3F4F6)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Color(0xFFF3F4F6)),
       ),
       child: Row(
         children: [
@@ -2534,7 +2534,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             flex: 1,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: typeColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -2554,7 +2554,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             flex: 1,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: impactColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -2591,7 +2591,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             flex: 2,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: statusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -2899,15 +2899,15 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
         horizontal: 12,
         vertical: dense ? 8 : 12,
       ),
-      border: const OutlineInputBorder(
+      border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Color(0xFFE5E7EB)),
       ),
-      enabledBorder: const OutlineInputBorder(
+      enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Color(0xFFE5E7EB)),
       ),
-      focusedBorder: const OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Color(0xFF93C5FD)),
       ),
@@ -2920,7 +2920,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -2998,7 +2998,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFF9FAFB),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3263,7 +3263,7 @@ class _ContentCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3318,7 +3318,7 @@ class _ReadinessCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: _background,
-        borderRadius: const BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _accent.withValues(alpha: 0.18)),
       ),
       child: Column(
@@ -3378,7 +3378,7 @@ class _InlineEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),

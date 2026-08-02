@@ -130,15 +130,15 @@ class _BulletPointEditorState extends State<BulletPointEditor> {
                       isDense: true,
                       filled: true,
                       fillColor: Colors.white,
-                      border: const OutlineInputBorder(
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: Color(0xFFE2E8F0)),
                       ),
-                      enabledBorder: const OutlineInputBorder(
+                      enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: Color(0xFFE2E8F0)),
                       ),
-                      focusedBorder: const OutlineInputBorder(
+                      focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: Color(0xFF3B82F6)),
                       ),

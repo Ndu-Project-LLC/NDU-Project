@@ -298,7 +298,7 @@ class VendorManagementView extends StatelessWidget {
                     side: const BorderSide(color: Color(0xFFCBD5E1)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -311,7 +311,7 @@ class VendorManagementView extends StatelessWidget {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
@@ -418,7 +418,7 @@ class _VendorHealthCard extends StatelessWidget {
     }
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -458,7 +458,7 @@ class _VendorHealthCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             ClipRRect(
-              borderRadius: const BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
                 value: metrics[i].score,
                 minHeight: 8,
@@ -497,7 +497,7 @@ class _VendorOnboardingCard extends StatelessWidget {
     }
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -567,7 +567,7 @@ class _VendorRiskCard extends StatelessWidget {
     }
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -637,7 +637,7 @@ class _VendorTaskStatusPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: status.backgroundColor,
-        borderRadius: const BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: status.borderColor),
       ),
       child: Text(
@@ -660,7 +660,7 @@ class _RiskSeverityPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: severity.backgroundColor,
-        borderRadius: const BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: severity.borderColor),
       ),
       child: Text(
@@ -789,7 +789,7 @@ class _VendorsSection extends StatelessWidget {
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Color(0xFFE2E8F0)),
@@ -811,7 +811,7 @@ class _VendorsSection extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             ToggleButtons(
-              borderRadius: const BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
               constraints: const BoxConstraints(minHeight: 40, minWidth: 48),
               isSelected: [listView, !listView],
               onPressed: (index) => onViewModeChanged(index == 0),
@@ -910,7 +910,7 @@ class _ApprovedVendorsSection extends StatelessWidget {
         else
           Container(
             width: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Color(0xFFE5E7EB)),
@@ -1004,7 +1004,7 @@ class _VendorDataTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -1185,7 +1185,7 @@ class _VendorNameCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -1288,7 +1288,7 @@ class _YesNoBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: value ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
-        borderRadius: const BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         '$label: ${value ? "Yes" : "No"}',
@@ -1334,7 +1334,7 @@ class _VendorStatusPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: const BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         status,

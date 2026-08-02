@@ -775,6 +775,7 @@ class LessonsLearnedTable extends StatelessWidget {
  ),
  );
  },
+ ),
  );
  }
 }

@@ -334,7 +334,7 @@ class _ScopeTrackingImplementationScreenState
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(4),
           ),
@@ -452,7 +452,7 @@ class _ScopeTrackingImplementationScreenState
             backgroundColor: const Color(0xFFFFC812),
             foregroundColor: Colors.black,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10)),
           ),
         ),
@@ -466,7 +466,7 @@ class _ScopeTrackingImplementationScreenState
             backgroundColor: const Color(0xFF0EA5E9),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10)),
           ),
         ),
@@ -613,7 +613,7 @@ class _ScopeTrackingImplementationScreenState
   Widget _buildStatCard(_StatCardData data) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -648,7 +648,7 @@ class _ScopeTrackingImplementationScreenState
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE2E8F0)),

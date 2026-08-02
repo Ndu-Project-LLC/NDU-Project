@@ -493,7 +493,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
   Widget _buildCoachHero() {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF1E1B4B), Color(0xFF4338CA)],
           begin: Alignment.topLeft,
@@ -683,7 +683,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
   Widget _buildChatPanel() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -813,7 +813,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
               ),
               const SizedBox(width: 8),
               Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: _kAccent,
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -834,7 +834,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
         _maturity.length;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -855,7 +855,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: _kAccentBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -872,7 +872,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: _kAccentBg,
               borderRadius: BorderRadius.circular(10),
             ),
@@ -941,7 +941,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
   Widget _buildBestPractices(bool isMobile) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -983,7 +983,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
   Widget _buildTipCard(_PracticeTip t) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFFAFAFA),
         borderRadius: BorderRadius.circular(10),
         border: Border(
@@ -1017,7 +1017,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 1),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: _kAccentBg,
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -1057,7 +1057,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1070,7 +1070,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1137,7 +1137,7 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),

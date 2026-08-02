@@ -608,6 +608,7 @@ class _BestPracticesTable extends StatelessWidget {
  ),
  );
  },
+ ),
  );
  }
 }

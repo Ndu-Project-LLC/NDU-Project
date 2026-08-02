@@ -221,7 +221,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
           onTap: () => setState(() => _showAddonSelector = !_showAddonSelector),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: Color(0xFFE2E8F0)),
@@ -425,7 +425,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Payment Confirmation',
@@ -465,7 +465,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
-              shape: const RoundedRectangleBorder(
+              shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Yes, I paid'),
@@ -479,7 +479,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 480),
         padding: const EdgeInsets.all(32),
@@ -520,7 +520,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: _accent.withValues(alpha: 0.1),
-                  borderRadius: const BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: _accent.withValues(alpha: 0.3)),
                 ),
                 child: Column(
@@ -529,7 +529,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                       children: [
                         Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -626,7 +626,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                             horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           color: const Color(0xFF22C55E).withValues(alpha: 0.1),
-                          borderRadius: const BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                               color: const Color(0xFF22C55E)
                                   .withValues(alpha: 0.3)),
@@ -681,16 +681,16 @@ class _PaymentDialogState extends State<PaymentDialog> {
                               color: _secondaryText.withValues(alpha: 0.6),
                               size: 20),
                           border: OutlineInputBorder(
-                            borderRadius: const BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
                                 color: Colors.black.withValues(alpha: 0.1)),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: const BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
                                 color: Colors.black.withValues(alpha: 0.1)),
                           ),
-                          focusedBorder: const OutlineInputBorder(
+                          focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: _accent),
                           ),
@@ -711,7 +711,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
-                        shape: const RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
@@ -821,7 +821,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.red.shade50,
-                    borderRadius: const BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.red.shade200),
                   ),
                   child: Row(
@@ -852,7 +852,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: Colors.grey.shade300,
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
@@ -919,7 +919,7 @@ class _FreeTrialBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: const BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         border:
             Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.3)),
       ),
@@ -932,7 +932,7 @@ class _FreeTrialBanner extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: const Color(0xFF22C55E).withValues(alpha: 0.2),
-                  borderRadius: const BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.card_giftcard_rounded,
@@ -959,7 +959,7 @@ class _FreeTrialBanner extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: Color(0xFF22C55E),
                             borderRadius: BorderRadius.circular(999),
                           ),
@@ -997,7 +997,7 @@ class _FreeTrialBanner extends StatelessWidget {
                 backgroundColor: const Color(0xFF22C55E),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
@@ -1046,13 +1046,13 @@ class _PaymentOption extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: const BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isSelected ? _accent.withValues(alpha: 0.08) : Colors.white,
-            borderRadius: const BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color:
                   isSelected ? _accent : Colors.black.withValues(alpha: 0.08),
@@ -1067,7 +1067,7 @@ class _PaymentOption extends StatelessWidget {
                   color: isSelected
                       ? _accent.withValues(alpha: 0.15)
                       : _pageBackground,
-                  borderRadius: const BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   icon,

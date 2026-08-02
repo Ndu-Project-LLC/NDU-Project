@@ -782,6 +782,7 @@ class _InterfaceRegisterTable extends StatelessWidget {
  ),
  );
  },
+ ),
  );
  }
 }

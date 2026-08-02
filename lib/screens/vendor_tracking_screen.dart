@@ -219,7 +219,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
       style: OutlinedButton.styleFrom(
         side: const BorderSide(color: Color(0xFFE2E8F0)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -346,7 +346,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
         style: TextButton.styleFrom(
           foregroundColor: const Color(0xFF4154F1),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          shape: const RoundedRectangleBorder(
+          shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8)),
         ),
       ),
@@ -421,7 +421,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Color(0xFF1F2937),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -473,8 +473,8 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                           color: idx.isEven
                               ? Colors.white
                               : const Color(0xFFFAFBFD),
-                          borderRadius: const BorderRadius.circular(6),
-                          border: const Border.all(color: Color(0xFFF3F4F6)),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Color(0xFFF3F4F6)),
                         ),
                         child: Row(
                           children: [
@@ -492,7 +492,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                                     width: 60,
                                     child: ClipRRect(
                                       borderRadius:
-                                          const BorderRadius.circular(3),
+                                          BorderRadius.circular(3),
                                       child: LinearProgressIndicator(
                                         value: row.value.clamp(0.0, 1.0),
                                         minHeight: 5,
@@ -539,7 +539,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                                   color: gap >= 0
                                       ? const Color(0xFFECFDF5)
                                       : const Color(0xFFFEF2F2),
-                                  borderRadius: const BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(row.trend,
                                     style: TextStyle(
@@ -730,7 +730,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
               },
               style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF4154F1),
-                  shape: const RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8))),
               child: Text(isEdit ? 'Save' : 'Add'),
             ),
@@ -769,7 +769,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
         style: TextButton.styleFrom(
           foregroundColor: const Color(0xFF4154F1),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          shape: const RoundedRectangleBorder(
+          shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8)),
         ),
       ),
@@ -909,7 +909,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                           color: idx.isEven
                               ? Colors.white
                               : const Color(0xFFFAFBFD),
-                          borderRadius: const BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(6),
                           border: Border(
                             left: BorderSide(color: sevColor, width: 3),
                             top: BorderSide(color: const Color(0xFFF3F4F6)),
@@ -948,7 +948,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                                     decoration: BoxDecoration(
                                         color: sevColor.withValues(alpha: 0.1),
                                         borderRadius:
-                                            const BorderRadius.circular(4)),
+                                            BorderRadius.circular(4)),
                                     child: Text(sig.severity,
                                         style: TextStyle(
                                             fontSize: 10,
@@ -978,7 +978,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                                         color:
                                             statusColor.withValues(alpha: 0.1),
                                         borderRadius:
-                                            const BorderRadius.circular(4)),
+                                            BorderRadius.circular(4)),
                                     child: Text(sig.status,
                                         style: TextStyle(
                                             fontSize: 9,
@@ -1195,7 +1195,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                 },
                 style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF4154F1),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8))),
                 child: Text(isEdit ? 'Save' : 'Add'),
               ),
@@ -1226,7 +1226,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
         style: TextButton.styleFrom(
           foregroundColor: const Color(0xFF4154F1),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          shape: const RoundedRectangleBorder(
+          shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8)),
         ),
       ),
@@ -1307,8 +1307,8 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                           color: idx.isEven
                               ? Colors.white
                               : const Color(0xFFFAFBFD),
-                          borderRadius: const BorderRadius.circular(6),
-                          border: const Border.all(color: Color(0xFFF3F4F6)),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Color(0xFFF3F4F6)),
                         ),
                         child: Row(
                           children: [
@@ -1327,7 +1327,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                                 decoration: BoxDecoration(
                                     color: prioColor.withValues(alpha: 0.1),
                                     borderRadius:
-                                        const BorderRadius.circular(4)),
+                                        BorderRadius.circular(4)),
                                 child: Text(act.priority,
                                     style: TextStyle(
                                         fontSize: 10,
@@ -1356,7 +1356,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                                 decoration: BoxDecoration(
                                     color: statusColor.withValues(alpha: 0.1),
                                     borderRadius:
-                                        const BorderRadius.circular(4)),
+                                        BorderRadius.circular(4)),
                                 child: Text(act.status,
                                     style: TextStyle(
                                         fontSize: 10,
@@ -1539,7 +1539,7 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
                 },
                 style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF4154F1),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8))),
                 child: Text(isEdit ? 'Save' : 'Add'),
               ),
@@ -1975,7 +1975,7 @@ class _PanelShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE2E8F0)),

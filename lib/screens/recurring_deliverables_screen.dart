@@ -387,7 +387,7 @@ class _RecurringDeliverablesScreenState
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: const BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Row(
@@ -397,7 +397,7 @@ class _RecurringDeliverablesScreenState
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
-              borderRadius: const BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               frequency,

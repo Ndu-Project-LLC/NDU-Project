@@ -375,7 +375,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
   Widget _buildSummaryRow() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
@@ -433,7 +433,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
   Widget _buildVelocityChart() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -507,7 +507,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
             : Colors.red;
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -557,7 +557,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
   Widget _buildLeadCycleCard() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -585,7 +585,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: _kAccentBg,
               borderRadius: BorderRadius.circular(10),
             ),
@@ -643,7 +643,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
   Widget _buildDefectTrend() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -725,7 +725,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
   Widget _buildCapacityCard() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -796,7 +796,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
               const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -840,7 +840,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -853,7 +853,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1097,7 +1097,7 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),

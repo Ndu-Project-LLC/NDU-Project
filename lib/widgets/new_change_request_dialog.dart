@@ -194,7 +194,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 820),
         child: Padding(
@@ -210,7 +210,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                     height: 36,
                     decoration: BoxDecoration(
                       color: Colors.grey.withValues(alpha: 0.1),
-                      borderRadius: const BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.change_circle_outlined,
                         color: Colors.black87),
@@ -292,7 +292,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.grey.withValues(alpha: 0.06),
-                        borderRadius: const BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                             color: Colors.grey.withValues(alpha: 0.25)),
                       ),
@@ -349,7 +349,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                                           side: BorderSide(
                                               color: Colors.grey
                                                   .withValues(alpha: 0.4)),
-                                          shape: const RoundedRectangleBorder(
+                                          shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(10)),
                                           foregroundColor: Colors.black,
@@ -379,7 +379,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 18, vertical: 12),
                       elevation: 0,
-                      shape: const RoundedRectangleBorder(
+                      shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
                     ),
                     child: _submitting
@@ -519,7 +519,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
-      focusedBorder: const OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.6)),
       suffixIcon: suffixIcon,

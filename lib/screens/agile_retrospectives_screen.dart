@@ -559,7 +559,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
     final actionsDone = _actions.where((a) => a.status == 'Done').length;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
@@ -615,7 +615,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
   Widget _buildTemplateSelector() {
     return Container(
       padding: const EdgeInsets.all(8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _kBorder),
@@ -689,7 +689,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
     final cards = _cardsByColumn[col.id] ?? [];
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -847,7 +847,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape: const RoundedRectangleBorder(
+          shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14)),
           title: Text('Add to "${col.title}"',
               style:
@@ -898,7 +898,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
   Widget _buildTeamFeedback() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -1010,7 +1010,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
   Widget _buildActionItemsTableContent() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -1131,7 +1131,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
               flex: 2,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: _kAccentBg,
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -1187,7 +1187,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1200,7 +1200,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1339,7 +1339,7 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),

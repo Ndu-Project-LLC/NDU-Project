@@ -405,7 +405,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.all(Radius.circular(16)),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -628,7 +628,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         margin: const EdgeInsets.only(bottom: 12),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xFFFAFAFA),
           borderRadius: BorderRadius.all(Radius.circular(12)),
           border: Border.all(color: Color(0xFFE5E7EB), width: 1),
@@ -673,7 +673,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFEFEFEF),
                 borderRadius: BorderRadius.all(Radius.circular(20)),
                 border: Border.all(color: Color(0xFFE5E7EB)),
@@ -1247,7 +1247,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(0),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.all(Radius.circular(20)),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -1503,7 +1503,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
         // ── Editable text area ──
         Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFF8FAFC),
             borderRadius: BorderRadius.all(Radius.circular(14)),
             border: Border.all(color: Color(0xFFE5E7EB)),
@@ -1699,7 +1699,7 @@ class _CurrentUserProfileChip extends StatelessWidget {
 
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.all(Radius.circular(999)),
               border: Border.all(color: Color(0xFFE5E7EB)),
@@ -2063,7 +2063,7 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.all(Radius.circular(16)),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -2084,7 +2084,7 @@ class _SectionCard extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Color(0xFFF0FDF4),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -2135,7 +2135,7 @@ class _InlineEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.all(Radius.circular(12)),
         border: Border.all(color: Color(0xFFE5E7EB)),

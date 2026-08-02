@@ -716,11 +716,11 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                   filled: true,
                   fillColor: Colors.white,
-                  enabledBorder: const OutlineInputBorder(
+                  enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(color: Color(0xFFE5E7EB)),
                   ),
-                  focusedBorder: const OutlineInputBorder(
+                  focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide:
                         BorderSide(color: Color(0xFFFFD700), width: 1.6),
@@ -968,7 +968,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             margin: const EdgeInsets.only(bottom: 8),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFFEF2F2),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: Color(0xFFFCA5A5)),
@@ -1016,7 +1016,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
             children: _suggestions
                 .map((s) => ActionChip(
                       backgroundColor: const Color(0xFFE1EEFF),
-                      shape: const RoundedRectangleBorder(
+                      shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(999)),
                       label: Text(
                         s,
@@ -1058,7 +1058,7 @@ class _AiLimitBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: const BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: border),
       ),
       child: Row(

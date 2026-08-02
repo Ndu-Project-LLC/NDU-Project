@@ -361,7 +361,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             _feedback.length;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
@@ -421,7 +421,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildCompletedStoriesTableContent() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -534,7 +534,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             flex: 1,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: _kAccentBg,
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -605,7 +605,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildDemoChecklist() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -712,7 +712,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildFeedbackSection() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -819,7 +819,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildActionItemsTableContent() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -939,7 +939,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
               flex: 2,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: _kAccentBg,
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -981,7 +981,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -994,7 +994,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1145,7 +1145,7 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),

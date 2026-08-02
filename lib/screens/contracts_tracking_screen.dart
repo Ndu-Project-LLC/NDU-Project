@@ -433,8 +433,8 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -517,7 +517,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.04),
-        borderRadius: const BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.12)),
       ),
       child: Column(
@@ -529,7 +529,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
-                  borderRadius: const BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, size: 16, color: color),
               ),
@@ -653,8 +653,8 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -710,7 +710,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                     side: const BorderSide(color: Color(0xFFE2E8F0)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -904,8 +904,8 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -962,7 +962,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                     side: const BorderSide(color: Color(0xFFE2E8F0)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -1190,7 +1190,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -2555,7 +2555,7 @@ class _PanelShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -2765,7 +2765,7 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: deptColor.withValues(alpha: 0.08),
-                        borderRadius: const BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                             color: deptColor.withValues(alpha: 0.18)),
                       ),
@@ -2790,7 +2790,7 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: priorityColor.withValues(alpha: 0.08),
-                        borderRadius: const BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -2826,7 +2826,7 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
                           horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: const BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -3077,7 +3077,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: typeColor.withValues(alpha: 0.08),
-                        borderRadius: const BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                             color: typeColor.withValues(alpha: 0.18)),
                       ),
@@ -3116,7 +3116,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: urgencyColor.withValues(alpha: 0.08),
-                        borderRadius: const BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -3155,7 +3155,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: actionColor.withValues(alpha: 0.08),
-                        borderRadius: const BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         e.renewalAction,
@@ -3178,7 +3178,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
                           horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: const BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -3290,7 +3290,7 @@ class _RiskSignalPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: const BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
       child: Row(

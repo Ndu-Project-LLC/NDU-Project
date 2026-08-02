@@ -443,7 +443,7 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 10),
-                        shape: const RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
@@ -465,7 +465,7 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
                         backgroundColor: const Color(0xFFF5F3FF),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 10),
-                        shape: const RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
@@ -566,7 +566,7 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
       onSelected: (_) => setState(() => _activeView = view),
       showCheckmark: false,
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       selectedColor: const Color(0xFFE0F2FE),
       backgroundColor: Colors.white,
       side: BorderSide(

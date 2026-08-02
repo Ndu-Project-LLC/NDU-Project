@@ -396,7 +396,7 @@ class _CircleNavButton extends StatelessWidget {
       child: Container(
         width: 36,
         height: 36,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(
@@ -663,7 +663,7 @@ class _ActivityLogAction extends StatelessWidget {
             horizontal: compact ? 8 : 10,
             vertical: 8,
           ),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFFFF7E0),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Color(0xFFFFD873)),
@@ -716,7 +716,7 @@ class _HeaderActionChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFF0F4FF),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Color(0xFFC7D2FE)),
@@ -761,7 +761,7 @@ class _AiAssistChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFF4154F1),
             borderRadius: BorderRadius.circular(12),
           ),

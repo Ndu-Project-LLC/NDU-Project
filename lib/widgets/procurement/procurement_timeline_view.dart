@@ -180,13 +180,13 @@ class _TimelineListRow extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: const BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(14),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFEFF6FF) : Colors.white,
-          borderRadius: const BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: selected ? const Color(0xFF93C5FD) : const Color(0xFFE5E7EB),
           ),
@@ -344,7 +344,7 @@ class _TimelineEntry extends StatelessWidget {
         Container(
           width: 32,
           height: 32,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFEFF6FF),
             borderRadius: BorderRadius.circular(999),
           ),
@@ -402,7 +402,7 @@ class _PanelFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -432,7 +432,7 @@ class _BadgePill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: const BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: border),
       ),
       child: Text(
@@ -460,7 +460,7 @@ class _InfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: Color(0xFFE5E7EB)),

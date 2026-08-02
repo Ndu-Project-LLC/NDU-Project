@@ -680,6 +680,7 @@ class _ExecutionPlanTable extends StatelessWidget {
  ),
  );
  },
+ ),
  );
  }
 }

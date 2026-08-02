@@ -781,7 +781,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFE1EEFF),
                 borderRadius: BorderRadius.circular(999),
               ),
@@ -816,7 +816,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
                 elevation: 0,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
             ),
@@ -885,7 +885,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
               width: double.infinity,
               height: 280,
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Color(0xFFE5E7EB)),
@@ -897,7 +897,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
                   Container(
                     height: 24,
                     width: 200,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -925,7 +925,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
           Container(
             width: double.infinity,
             constraints: const BoxConstraints(minHeight: 320, maxHeight: 600),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Color(0xFFE5E7EB)),
@@ -1062,7 +1062,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
           Container(
             width: double.infinity,
             height: 240,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
@@ -1162,7 +1162,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
           child: Container(
             width: 100,
             height: 40,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
@@ -1282,7 +1282,7 @@ class _ToolbarButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.all(6),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               color: Color(0xFFF3F4F6),
             ),

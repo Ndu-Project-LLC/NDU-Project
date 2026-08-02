@@ -47,17 +47,17 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
               ),
             ],
           ),
-          child: ResponsiveDataTableWrapper(
+          child: buildNduTableWithExpand(
+            context: context,
+            title: 'Stakeholder Alignment',
             minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 900,
             maxHeight: 560,
-            child: buildNduDataTable(
-              context: context,
-              columnSpacing: 24,
-              horizontalMargin: 20,
-              headingRowHeight: 56,
-              dataRowMinHeight: 52,
-              dataRowMaxHeight: 120,
-              columns: const [
+            columnSpacing: 24,
+            horizontalMargin: 20,
+            headingRowHeight: 56,
+            dataRowMinHeight: 52,
+            dataRowMaxHeight: 120,
+            columns: const [
                 DataColumn(
                   label: Center(
                     child: Text('Stakeholder Name/Role',
@@ -168,7 +168,6 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
                   ],
                 );
               }).toList(),
-            ),
           ),
         );
       },

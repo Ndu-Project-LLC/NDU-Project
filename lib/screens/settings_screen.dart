@@ -14,6 +14,8 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/services/currency_service.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/providers/app_content_provider.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:provider/provider.dart';
@@ -4203,55 +4205,53 @@ class _InvoicesCard extends StatelessWidget {
                 final double tableWidth =
                     hasBoundedWidth ? constraints.maxWidth : mediaWidth;
 
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: tableWidth,
-                    child: DataTable(
-                      headingRowColor:
-                          WidgetStateProperty.all(const Color(0xFFF9FAFB)),
-                      headingTextStyle: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF6B7280)),
-                      dataTextStyle: const TextStyle(
-                          fontSize: 13, color: Color(0xFF374151)),
-                      horizontalMargin: 24,
-                      columnSpacing: 48,
-                      columns: const [
-                        DataColumn(label: Text('Invoice ID')),
-                        DataColumn(label: Text('Date')),
-                        DataColumn(label: Text('Amount')),
-                        DataColumn(label: Text('Status')),
-                        DataColumn(label: Text('Action')),
-                      ],
-                      rows: invoices
-                          .take(5)
-                          .map((invoice) => DataRow(
-                                cells: [
-                                  DataCell(Text(
-                                      invoice.id.length > 15
-                                          ? '${invoice.id.substring(0, 15)}...'
-                                          : invoice.id,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600))),
-                                  DataCell(Text(DateFormat('MMM d, yyyy')
-                                      .format(invoice.createdAt))),
-                                  DataCell(Text(invoice.formattedAmount,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600))),
-                                  DataCell(_InvoiceStatusBadge(
-                                      status: invoice.isPaid
-                                          ? 'Paid'
-                                          : invoice.status)),
-                                  DataCell(
-                                    IconButton(
-                                      onPressed: invoice.receiptUrl != null
-                                          ? () {
-                                              openUrlInNewWindow(
-                                                  invoice.receiptUrl!);
-                                            }
-                                          : null,
+                return FullScreenTableWrapper(
+                  title: 'Billing History',
+                  tableBuilder: (fsContext) => buildNduDataTable(
+                    context: fsContext,
+                    headingRowColor: const Color(0xFFF9FAFB),
+                    headingTextStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF6B7280)),
+                    dataTextStyle: const TextStyle(
+                        fontSize: 13, color: Color(0xFF374151)),
+                    horizontalMargin: 24,
+                    columnSpacing: 48,
+                    columns: const [
+                      DataColumn(label: Text('Invoice ID')),
+                      DataColumn(label: Text('Date')),
+                      DataColumn(label: Text('Amount')),
+                      DataColumn(label: Text('Status')),
+                      DataColumn(label: Text('Action')),
+                    ],
+                    rows: invoices
+                        .take(5)
+                        .map((invoice) => DataRow(
+                              cells: [
+                                DataCell(Text(
+                                    invoice.id.length > 15
+                                        ? '${invoice.id.substring(0, 15)}...'
+                                        : invoice.id,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600))),
+                                DataCell(Text(DateFormat('MMM d, yyyy')
+                                    .format(invoice.createdAt))),
+                                DataCell(Text(invoice.formattedAmount,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600))),
+                                DataCell(_InvoiceStatusBadge(
+                                    status: invoice.isPaid
+                                        ? 'Paid'
+                                        : invoice.status)),
+                                DataCell(
+                                  IconButton(
+                                    onPressed: invoice.receiptUrl != null
+                                        ? () {
+                                            openUrlInNewWindow(
+                                                invoice.receiptUrl!);
+                                          }
+                                        : null,
                                       icon: Icon(Icons.download_outlined,
                                           color: invoice.receiptUrl != null
                                               ? accent
@@ -4260,9 +4260,71 @@ class _InvoicesCard extends StatelessWidget {
                                       tooltip: 'Download',
                                     ),
                                   ),
-                                ],
-                              ))
-                          .toList(),
+                              ],
+                            ))
+                        .toList(),
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: tableWidth,
+                      child: buildNduDataTable(
+                        context: context,
+                        headingRowColor: const Color(0xFFF9FAFB),
+                        headingTextStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6B7280)),
+                        dataTextStyle: const TextStyle(
+                            fontSize: 13, color: Color(0xFF374151)),
+                        horizontalMargin: 24,
+                        columnSpacing: 48,
+                        columns: const [
+                          DataColumn(label: Text('Invoice ID')),
+                          DataColumn(label: Text('Date')),
+                          DataColumn(label: Text('Amount')),
+                          DataColumn(label: Text('Status')),
+                          DataColumn(label: Text('Action')),
+                        ],
+                        rows: invoices
+                            .take(5)
+                            .map((invoice) => DataRow(
+                                  cells: [
+                                    DataCell(Text(
+                                        invoice.id.length > 15
+                                            ? '${invoice.id.substring(0, 15)}...'
+                                            : invoice.id,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600))),
+                                    DataCell(Text(DateFormat('MMM d, yyyy')
+                                        .format(invoice.createdAt))),
+                                    DataCell(Text(invoice.formattedAmount,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600))),
+                                    DataCell(_InvoiceStatusBadge(
+                                        status: invoice.isPaid
+                                            ? 'Paid'
+                                            : invoice.status)),
+                                    DataCell(
+                                      IconButton(
+                                        onPressed: invoice.receiptUrl != null
+                                            ? () {
+                                                openUrlInNewWindow(
+                                                    invoice.receiptUrl!);
+                                              }
+                                            : null,
+                                        icon: Icon(Icons.download_outlined,
+                                            color: invoice.receiptUrl != null
+                                                ? accent
+                                                : Colors.grey,
+                                            size: 20),
+                                        tooltip: 'Download',
+                                      ),
+                                    ),
+                                  ],
+                                ))
+                            .toList(),
+                      ),
                     ),
                   ),
                 );
@@ -5545,75 +5607,87 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
                   style: const TextStyle(
                       fontWeight: FontWeight.w800, fontSize: 15)),
               const SizedBox(height: 10),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: minTableWidth),
-                  child: Table(
-                    border: TableBorder(
-                      horizontalInside:
-                          BorderSide(color: Colors.grey.withOpacity(0.12)),
-                    ),
-                    columnWidths: const {
-                      0: FlexColumnWidth(2.6),
-                      1: FlexColumnWidth(),
-                      2: FlexColumnWidth(),
-                      3: FlexColumnWidth(),
-                      4: FlexColumnWidth(),
-                      5: FlexColumnWidth(),
-                    },
-                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                    children: [
-                      TableRow(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        children: [
-                          const _PermissionTableHeader('Permission',
-                              alignment: Alignment.centerLeft),
-                          ...SiteRole.values.map((role) =>
-                              _PermissionTableHeader(role.displayName)),
-                        ],
-                      ),
-                      ...permissions.map((permission) {
-                        return TableRow(
-                          children: [
-                            _PermissionTableCell(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                _permissionLabel(permission),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                            ...SiteRole.values.map((role) {
-                              final allowed =
-                                  Permission.getPermissionsForRole(role)
-                                      .contains(permission);
-                              return _PermissionTableCell(
-                                child: Icon(
-                                  allowed
-                                      ? Icons.check_circle
-                                      : Icons.remove_circle_outline,
-                                  color: allowed
-                                      ? const Color(0xFF16A34A)
-                                      : Colors.black26,
-                                  size: 20,
-                                ),
-                              );
-                            }),
-                          ],
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ),
+              _buildPermissionTable(title, permissions, minTableWidth),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildPermissionTable(
+      String title, List<Permission> permissions, double minTableWidth) {
+    Widget buildTable() {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minWidth: minTableWidth),
+          child: Table(
+            border: TableBorder(
+              horizontalInside:
+                  BorderSide(color: Colors.grey.withOpacity(0.12)),
+            ),
+            columnWidths: const {
+              0: FlexColumnWidth(2.6),
+              1: FlexColumnWidth(),
+              2: FlexColumnWidth(),
+              3: FlexColumnWidth(),
+              4: FlexColumnWidth(),
+              5: FlexColumnWidth(),
+            },
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            children: [
+              TableRow(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                children: [
+                  const _PermissionTableHeader('Permission',
+                      alignment: Alignment.centerLeft),
+                  ...SiteRole.values
+                      .map((role) => _PermissionTableHeader(role.displayName)),
+                ],
+              ),
+              ...permissions.map((permission) {
+                return TableRow(
+                  children: [
+                    _PermissionTableCell(
+                      alignment: Alignment.centerLeft,
+                      child: WrappedText(
+                        _permissionLabel(permission),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    ...SiteRole.values.map((role) {
+                      final allowed =
+                          Permission.getPermissionsForRole(role)
+                              .contains(permission);
+                      return _PermissionTableCell(
+                        child: Icon(
+                          allowed
+                              ? Icons.check_circle
+                              : Icons.remove_circle_outline,
+                          color: allowed
+                              ? const Color(0xFF16A34A)
+                              : Colors.black26,
+                          size: 20,
+                        ),
+                      );
+                    }),
+                  ],
+                );
+              }),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return FullScreenTableWrapper(
+      title: title,
+      child: buildTable(),
+      tableBuilder: (fsContext) => buildTable(),
     );
   }
 

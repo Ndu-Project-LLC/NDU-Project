@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 enum _QualityTab { plan, targets, qaTracking, qcTracking, metrics }
 
 const _dateHint = 'Select date';
@@ -2714,6 +2715,7 @@ class _StandardsTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Quality Standards',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -2778,6 +2780,7 @@ class _ObjectivesTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Quality Objectives',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -2844,6 +2847,7 @@ class _WorkflowControlsTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Workflow Controls',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -2930,6 +2934,7 @@ class _TaskLogTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Task Log',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -3014,6 +3019,7 @@ class _AuditPlanTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Audit Plan',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -3097,6 +3103,7 @@ class _CorrectiveActionsTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Corrective Actions',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -3156,6 +3163,7 @@ class _QualityChangeLogTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Quality Change Log',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -3226,24 +3234,41 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _DataTableShell extends StatelessWidget {
- const _DataTableShell({required this.table});
+ const _DataTableShell({required this.table, this.title});
 
  final DataTable table;
+ final String? title;
 
  @override
  Widget build(BuildContext context) {
- return Container(
- width: double.infinity,
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: table,
- ),
- );
+  final inline = Container(
+   width: double.infinity,
+   decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(16),
+    border: Border.all(color: const Color(0xFFE5E7EB)),
+   ),
+   child: SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: table,
+   ),
+  );
+  return FullScreenTableWrapper(
+   title: title,
+   child: inline,
+   tableBuilder: (fsContext) => Container(
+    width: double.infinity,
+    decoration: BoxDecoration(
+     color: Colors.white,
+     borderRadius: BorderRadius.circular(16),
+     border: Border.all(color: const Color(0xFFE5E7EB)),
+    ),
+    child: SingleChildScrollView(
+     scrollDirection: Axis.horizontal,
+     child: table,
+    ),
+   ),
+  );
  }
 }
 

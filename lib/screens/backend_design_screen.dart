@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 class BackendDesignScreen extends StatefulWidget {
  const BackendDesignScreen({super.key});
 
@@ -2304,7 +2305,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- return _EditableTable(
+ return FullScreenTableWrapper(
+ title: 'Backend Components',
+ child: _EditableTable(
  columns: columns,
  rows: [
  for (final entry in _components)
@@ -2363,6 +2366,67 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  ),
  ],
+ ),
+ tableBuilder: (fsContext) => _EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _components)
+ _EditableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _TextCell(
+ value: entry.name,
+ fieldKey: '${entry.id}_name',
+ hintText: 'Component',
+ onChanged: (value) =>
+ _updateComponent(entry.copyWith(name: value)),
+ ),
+ _DropdownCell(
+ value: entry.type,
+ fieldKey: '${entry.id}_type',
+ options: _componentTypes,
+ onChanged: (value) =>
+ _updateComponent(entry.copyWith(type: value)),
+ ),
+ _TextCell(
+ value: entry.responsibility,
+ fieldKey: '${entry.id}_responsibility',
+ hintText: 'Responsibility',
+ maxLines: 2,
+ onChanged: (value) =>
+ _updateComponent(entry.copyWith(responsibility: value)),
+ ),
+ _DropdownCell(
+ value: entry.owner,
+ fieldKey: '${entry.id}_owner',
+ options: _ownerOptions(currentValue: entry.owner),
+ onChanged: (value) =>
+ _updateComponent(entry.copyWith(owner: value)),
+ ),
+ _DropdownCell(
+ value: entry.status,
+ fieldKey: '${entry.id}_status',
+ options: _componentStatuses,
+ onChanged: (value) =>
+ _updateComponent(entry.copyWith(status: value)),
+ ),
+ _WidgetCell(
+ child: _buildKazAiRowButton(
+ 'component_${entry.id}',
+ 'component description',
+ 'component',
+ () => _updateComponent(entry.copyWith(responsibility: 'AI-generated description')),
+ ),
+ ),
+ _EditCell(
+ onPressed: () => _openComponentDialog(existing: entry),
+ ),
+ _DeleteCell(onPressed: () => _deleteComponent(entry.id)),
+ ],
+ ),
+ ],
+ ),
  );
  }
 
@@ -2385,7 +2449,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- return _EditableTable(
+ return FullScreenTableWrapper(
+ title: 'Backend Fields',
+ child: _EditableTable(
  columns: columns,
  rows: [
  for (final entry in _fields)
@@ -2443,6 +2509,66 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  ),
  ],
+ ),
+ tableBuilder: (fsContext) => _EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _fields)
+ _EditableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _TextCell(
+ value: entry.table,
+ fieldKey: '${entry.id}_table',
+ hintText: 'Entity',
+ onChanged: (value) =>
+ _updateField(entry.copyWith(table: value)),
+ ),
+ _TextCell(
+ value: entry.field,
+ fieldKey: '${entry.id}_field',
+ hintText: 'Field',
+ onChanged: (value) =>
+ _updateField(entry.copyWith(field: value)),
+ ),
+ _TextCell(
+ value: entry.type,
+ fieldKey: '${entry.id}_type',
+ hintText: 'Type',
+ onChanged: (value) => _updateField(entry.copyWith(type: value)),
+ ),
+ _TextCell(
+ value: entry.constraints,
+ fieldKey: '${entry.id}_constraints',
+ hintText: 'Constraints',
+ onChanged: (value) =>
+ _updateField(entry.copyWith(constraints: value)),
+ ),
+ _TextCell(
+ value: entry.notes,
+ fieldKey: '${entry.id}_notes',
+ hintText: 'Notes',
+ maxLines: 2,
+ onChanged: (value) =>
+ _updateField(entry.copyWith(notes: value)),
+ ),
+ _WidgetCell(
+ child: _buildKazAiRowButton(
+ 'field_${entry.id}',
+ 'field notes',
+ 'database field',
+ () => _updateField(entry.copyWith(notes: 'AI-generated notes')),
+ ),
+ ),
+ _EditCell(
+ onPressed: () => _openFieldDialog(existing: entry),
+ ),
+ _DeleteCell(onPressed: () => _deleteField(entry.id)),
+ ],
+ ),
+ ],
+ ),
  );
  }
 }

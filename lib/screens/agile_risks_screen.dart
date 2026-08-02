@@ -7,6 +7,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE RISKS & IMPEDIMENTS — Blocker Log, Heatmap, Escalation, Trends
@@ -438,6 +439,14 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
   }
 
   Widget _buildBlockerLogTable() {
+    return FullScreenTableWrapper(
+      title: 'Blocker Log',
+      child: _buildBlockerLogTableContent(),
+      tableBuilder: (fsContext) => _buildBlockerLogTableContent(),
+    );
+  }
+
+  Widget _buildBlockerLogTableContent() {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: const BoxDecoration(
@@ -555,7 +564,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
           children: [
             SizedBox(
               width: 70,
-              child: Text(b.id,
+              child: WrappedText(b.id,
                   style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -566,15 +575,16 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(b.item,
+                  WrappedText(b.item,
                       style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: resolved ? _kMuted : _kHeadline,
                           decoration:
                               resolved ? TextDecoration.lineThrough : null)),
-                  Text('Raised ${b.raised} · P${b.probability} × I${b.impact}',
-                      style: const TextStyle(fontSize: 10, color: _kMuted)),
+                  WrappedText('Raised ${b.raised} · P${b.probability} × I${b.impact}',
+                      style: const TextStyle(
+                          fontSize: 10, color: _kMuted)),
                 ],
               ),
             ),
@@ -598,10 +608,9 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
                   ),
                   const SizedBox(width: 4),
                   Expanded(
-                    child: Text(b.owner,
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            const TextStyle(fontSize: 11, color: _kHeadline)),
+                    child: WrappedText(b.owner,
+                        style: const TextStyle(
+                            fontSize: 11, color: _kHeadline)),
                   ),
                 ],
               ),
@@ -616,7 +625,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
                       : const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(b.sla,
+                child: WrappedText(b.sla,
                     style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -625,9 +634,8 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
             ),
             Expanded(
               flex: 3,
-              child: Text(b.resolution,
+              child: WrappedText(b.resolution,
                   maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                       fontSize: 11, color: _kHeadline, height: 1.3)),
             ),
@@ -655,7 +663,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(status,
+      child: WrappedText(status,
           style: TextStyle(
               fontSize: 11, fontWeight: FontWeight.w700, color: color)),
     );

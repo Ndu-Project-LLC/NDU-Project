@@ -23,6 +23,7 @@ import 'package:ndu_project/screens/design_phase_screen.dart';
 import 'package:ndu_project/screens/staff_team_screen.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 
 /// Front End Planning – Project Opportunities page
@@ -1746,6 +1747,14 @@ class _OpportunityTableState extends State<_OpportunityTable> {
 
   @override
   Widget build(BuildContext context) {
+    return FullScreenTableWrapper(
+      title: 'Opportunities',
+      child: _buildTableContent(),
+      tableBuilder: (fsContext) => _buildTableContent(),
+    );
+  }
+
+  Widget _buildTableContent() {
     final border = const BorderSide(color: Color(0xFFE5E7EB));
     final headerStyle = const TextStyle(
         fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
@@ -1867,7 +1876,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                               ),
                             )),
                             // Number column
-                            td(Text('${i + 1}', style: cellStyle),
+                            td(WrappedText('${i + 1}', style: cellStyle),
                                 onDoubleTap: () => widget.onEdit(r)),
                             td(
                               _ExpandableCellText(

@@ -31,6 +31,8 @@ import 'portfolio_dashboard_screen.dart';
 import 'program_dashboard_screen.dart';
 import 'project_dashboard_mobile_shell.dart';
 import 'project_workspace_dashboard_screen.dart';
+import 'regular_project_dashboard_screen.dart';
+import 'project_command_center_screen.dart';
 import 'project_activities_log_screen.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -1057,7 +1059,7 @@ class _StatusStrip extends StatelessWidget {
  Navigator.push(
  context,
  MaterialPageRoute(
-     builder: (_) => const ProjectWorkspaceDashboardScreen(isBasicPlan: false)),
+     builder: (_) => const ProjectCommandCenterScreen()),
  );
  }
 
@@ -1065,7 +1067,7 @@ class _StatusStrip extends StatelessWidget {
  Navigator.push(
  context,
  MaterialPageRoute(
-     builder: (_) => const ProjectWorkspaceDashboardScreen(isBasicPlan: true)),
+     builder: (_) => const RegularProjectDashboardScreen()),
  );
  }
 

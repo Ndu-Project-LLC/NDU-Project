@@ -215,10 +215,14 @@ class GanttScreen extends StatelessWidget {
     final result = <ScheduleActivity>[];
     void walk(ScheduleActivity node) {
       result.add(node);
-      for (final c in node.children) walk(c);
+      for (final c in node.children) {
+        walk(c);
+      }
     }
 
-    for (final r in roots) walk(r);
+    for (final r in roots) {
+      walk(r);
+    }
     return result;
   }
 
@@ -340,14 +344,16 @@ class _GanttRow extends StatelessWidget {
       'Finish: ${row.endDate.month}/${row.endDate.day}/${row.endDate.year}',
     ];
     if (row.agileEpicTitle.isNotEmpty) parts.add('Epic: ${row.agileEpicTitle}');
-    if (row.agileFeatureTitle.isNotEmpty)
+    if (row.agileFeatureTitle.isNotEmpty) {
       parts.add('Feature: ${row.agileFeatureTitle}');
+    }
     if (row.sprintLabel.isNotEmpty) parts.add('Sprint: ${row.sprintLabel}');
     if (row.releaseLabel.isNotEmpty) parts.add('Release: ${row.releaseLabel}');
     if (row.hasWbs) parts.add('WBS linked');
     if (row.hasAgileStory) parts.add('Agile story linked');
-    if (row.prerequisiteCount > 0)
+    if (row.prerequisiteCount > 0) {
       parts.add('Prerequisites: ${row.prerequisiteCount}');
+    }
     return parts.join('\n');
   }
 

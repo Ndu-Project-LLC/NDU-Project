@@ -81,9 +81,9 @@ class _ChartBuilderWorkspaceState extends State<ChartBuilderWorkspace> {
           ),
           Container(
             width: 280,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               border: Border(left: BorderSide(color: AppSemanticColors.border)),
-              color: const Color(0xFFF9FAFB),
+              color: Color(0xFFF9FAFB),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,7 +186,7 @@ class _ChartTypeChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? LightModeColors.accent.withOpacity(0.18) : Colors.white,
+          color: isActive ? LightModeColors.accent.withValues(alpha: 0.18) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: isActive ? LightModeColors.accent : AppSemanticColors.border),
         ),
@@ -392,7 +392,7 @@ class _ChartPainter extends CustomPainter {
         ..lineTo(leftX, topY + chartHeight)
         ..close();
       final gradient = LinearGradient(
-        colors: [const Color(0xFF2563EB).withOpacity(0.35), Colors.white],
+        colors: [const Color(0xFF2563EB).withValues(alpha: 0.35), Colors.white],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       );

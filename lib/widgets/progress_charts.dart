@@ -70,7 +70,7 @@ class _TimelinePainter extends CustomPainter {
 
       // Calculate position (simplified - assumes date range)
       final daysDiff = dueDate.difference(now).inDays;
-      final maxDays = 90; // 3 months range
+      const maxDays = 90; // 3 months range
       final x = (daysDiff / maxDays * size.width).clamp(0.0, size.width);
 
       // Color based on status

@@ -81,7 +81,7 @@ class ExecutionPhaseService {
                   status: e['status']?.toString() ?? '',
                 );
               }
-              return LaunchEntry(title: '', details: '', status: '');
+              return const LaunchEntry(title: '', details: '', status: '');
             }).toList();
           }
         });

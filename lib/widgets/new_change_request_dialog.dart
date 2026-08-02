@@ -186,7 +186,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: Colors.grey.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.change_circle_outlined, color: Colors.black87),
@@ -236,9 +236,9 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.06),
+                        color: Colors.grey.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.withOpacity(0.25)),
+                        border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
                       ),
                       child: _attachmentUrl != null
                           ? Row(
@@ -281,7 +281,7 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
                                         onPressed: _pickAndUploadFile,
                                         style: OutlinedButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                          side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                           foregroundColor: Colors.black,
                                         ),
@@ -409,8 +409,8 @@ class _NewChangeRequestDialogState extends State<NewChangeRequestDialog> {
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.withOpacity(0.35))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.withOpacity(0.35))),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.6)),
       suffixIcon: suffixIcon,
     );

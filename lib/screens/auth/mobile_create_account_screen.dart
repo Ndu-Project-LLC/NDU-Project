@@ -453,22 +453,22 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
                           setState(() => _agreedToTerms = !_agreedToTerms);
                         },
                         child: RichText(
-                          text: TextSpan(
+                          text: const TextSpan(
                             text: 'You agree to our ',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: Colors.black87, fontSize: 12),
                             children: [
                               TextSpan(
                                 text: 'Privacy Policy',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Color(0xFFFFD700),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const TextSpan(text: ' and '),
+                              TextSpan(text: ' and '),
                               TextSpan(
                                 text: 'Terms & Conditions',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Color(0xFFFFD700),
                                   fontWeight: FontWeight.w600,
                                 ),

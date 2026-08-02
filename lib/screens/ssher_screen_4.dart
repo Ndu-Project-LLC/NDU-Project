@@ -22,7 +22,7 @@ class _SsherScreen4State extends State<SsherScreen4> {
  final sidebarWidth = AppBreakpoints.sidebarWidth(context);
 
  // Content shared between mobile and desktop
- final content = Column(
+ const content = Column(
  children: [
  SsherSectionCard(
  leadingIcon: Icons.gavel_outlined,
@@ -73,7 +73,7 @@ class _SsherScreen4State extends State<SsherScreen4> {
  backgroundColor: Colors.grey[50],
  drawer: Drawer(
  width: sidebarWidth,
- child: SafeArea(
+ child: const SafeArea(
  child: InitiationLikeSidebar(
  activeItemLabel: 'SSHE Planning',
  showHeader: true,

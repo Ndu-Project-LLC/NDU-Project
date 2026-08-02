@@ -26,16 +26,16 @@ class _SsherScreen3State extends State<SsherScreen3> {
  final content = Column(
  children: [
  // Health section (again per screenshot before Environment)
- SsherSectionCard(
+ const SsherSectionCard(
  leadingIcon: Icons.volunteer_activism_outlined,
- accentColor: const Color(0xFF1E88E5),
+ accentColor: Color(0xFF1E88E5),
  title: 'Health',
  subtitle: 'Occupational health and wellness programs',
  detailsPlaceholder:
  'Multi- layered security approach including physical access controls, cybersecurity measures, surveillance systems, and incident response',
  itemsLabel: '12 Items',
  addButtonLabel: 'Add Safety Item',
- columns: const [
+ columns: [
  '#',
  'Department',
  'Team Member',
@@ -44,7 +44,7 @@ class _SsherScreen3State extends State<SsherScreen3> {
  'Mitigation Strategy',
  'Actions'
  ],
- rows: const [
+ rows: [
  [
  Text('1', style: TextStyle(fontSize: 12)),
  Text('Operations', style: TextStyle(fontSize: 13)),
@@ -68,16 +68,16 @@ class _SsherScreen3State extends State<SsherScreen3> {
  ),
 
  // Environment section
- SsherSectionCard(
+ const SsherSectionCard(
  leadingIcon: Icons.eco_outlined,
- accentColor: const Color(0xFF2E7D32),
+ accentColor: Color(0xFF2E7D32),
  title: 'Environment',
  subtitle: 'Environmental sustainability and compliance',
  detailsPlaceholder:
  'Environmental stewardship program including waste reduction initiatives, energy efficiency measures, carbon footprint monitoring, and sustainable resource management. Regular environmental impact assessments ensure compliance with regulations .',
  itemsLabel: '9 Items',
  addButtonLabel: 'Add Safety Item',
- columns: const [
+ columns: [
  '#',
  'Department',
  'Team Member',
@@ -86,7 +86,7 @@ class _SsherScreen3State extends State<SsherScreen3> {
  'Mitigation Strategy',
  'Actions'
  ],
- rows: const [
+ rows: [
  [
  Text('1', style: TextStyle(fontSize: 12)),
  Text('Operations', style: TextStyle(fontSize: 13)),
@@ -134,7 +134,7 @@ class _SsherScreen3State extends State<SsherScreen3> {
  backgroundColor: Colors.grey[50],
  drawer: Drawer(
  width: sidebarWidth,
- child: SafeArea(
+ child: const SafeArea(
  child: InitiationLikeSidebar(
  activeItemLabel: 'SSHE Planning',
  showHeader: true,

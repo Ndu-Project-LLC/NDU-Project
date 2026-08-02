@@ -40,12 +40,12 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
 
   // Velocity trend data (last 6 sprints)
   final List<_VelocityPoint> _velocity = [
-    _VelocityPoint(sprint: 'S19', planned: 38, completed: 35),
-    _VelocityPoint(sprint: 'S20', planned: 40, completed: 42),
-    _VelocityPoint(sprint: 'S21', planned: 40, completed: 38),
-    _VelocityPoint(sprint: 'S22', planned: 44, completed: 41),
-    _VelocityPoint(sprint: 'S23', planned: 42, completed: 44),
-    _VelocityPoint(sprint: 'S24', planned: 45, completed: 42),
+    const _VelocityPoint(sprint: 'S19', planned: 38, completed: 35),
+    const _VelocityPoint(sprint: 'S20', planned: 40, completed: 42),
+    const _VelocityPoint(sprint: 'S21', planned: 40, completed: 38),
+    const _VelocityPoint(sprint: 'S22', planned: 44, completed: 41),
+    const _VelocityPoint(sprint: 'S23', planned: 42, completed: 44),
+    const _VelocityPoint(sprint: 'S24', planned: 45, completed: 42),
   ];
 
   double _predictability = 0.84;
@@ -54,22 +54,22 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
   int _escapedDefects = 4;
   int _openDefects = 11;
   final List<_DefectPoint> _defectTrend = [
-    _DefectPoint(sprint: 'S19', found: 6, escaped: 2),
-    _DefectPoint(sprint: 'S20', found: 8, escaped: 3),
-    _DefectPoint(sprint: 'S21', found: 7, escaped: 1),
-    _DefectPoint(sprint: 'S22', found: 9, escaped: 4),
-    _DefectPoint(sprint: 'S23', found: 5, escaped: 2),
-    _DefectPoint(sprint: 'S24', found: 7, escaped: 4),
+    const _DefectPoint(sprint: 'S19', found: 6, escaped: 2),
+    const _DefectPoint(sprint: 'S20', found: 8, escaped: 3),
+    const _DefectPoint(sprint: 'S21', found: 7, escaped: 1),
+    const _DefectPoint(sprint: 'S22', found: 9, escaped: 4),
+    const _DefectPoint(sprint: 'S23', found: 5, escaped: 2),
+    const _DefectPoint(sprint: 'S24', found: 7, escaped: 4),
   ];
 
   // Capacity utilization per team member
   final List<_CapacityMember> _capacity = [
-    _CapacityMember('Sarah Chen', 0.92, 'Tech Lead'),
-    _CapacityMember('Marcus Reed', 0.88, 'Backend'),
-    _CapacityMember('Priya Nair', 0.95, 'Frontend'),
-    _CapacityMember('James Okoro', 0.78, 'Frontend'),
-    _CapacityMember('Lena Park', 0.85, 'Frontend'),
-    _CapacityMember('DevOps Team', 0.70, 'DevOps'),
+    const _CapacityMember('Sarah Chen', 0.92, 'Tech Lead'),
+    const _CapacityMember('Marcus Reed', 0.88, 'Backend'),
+    const _CapacityMember('Priya Nair', 0.95, 'Frontend'),
+    const _CapacityMember('James Okoro', 0.78, 'Frontend'),
+    const _CapacityMember('Lena Park', 0.85, 'Frontend'),
+    const _CapacityMember('DevOps Team', 0.70, 'DevOps'),
   ];
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
@@ -224,10 +224,10 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Metrics saved'),
+          const SnackBar(
+            content: Text('Metrics saved'),
             backgroundColor: _kAccent,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -257,8 +257,8 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Metrics',
                     ),
                   ),
@@ -270,7 +270,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        PlanningPhaseHeader(
+                        const PlanningPhaseHeader(
                           title: 'Agile Metrics',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -352,7 +352,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
           decoration: BoxDecoration(
             color: _kAccentBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _kAccent.withOpacity(0.3)),
+            border: Border.all(color: _kAccent.withValues(alpha: 0.3)),
           ),
           child: const Text('DELIVERY ANALYTICS',
               style: TextStyle(
@@ -381,15 +381,15 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
           Expanded(
               child: _summaryCell('Avg Velocity',
                   '${(_velocity.map((v) => v.completed).reduce((a, b) => a + b) / _velocity.length).toStringAsFixed(1)} pts', Icons.speed)),
-          Container(width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
+          Container(width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child: _summaryCell('Predictability',
                   '${(_predictability * 100).toInt()}%', Icons.track_changes)),
-          Container(width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
+          Container(width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child: _summaryCell('Lead Time',
                   '${_leadTime.toStringAsFixed(1)} d', Icons.timer)),
-          Container(width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
+          Container(width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child: _summaryCell('Escaped Defects',
                   '$_escapedDefects', Icons.bug_report)),
@@ -412,7 +412,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
         Text(label,
             style: TextStyle(
                 fontSize: 11,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 fontWeight: FontWeight.w500)),
       ],
     );
@@ -499,11 +499,11 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.track_changes, size: 20, color: _kAccent),
-              const SizedBox(width: 8),
-              const Text('Sprint Predictability',
+              Icon(Icons.track_changes, size: 20, color: _kAccent),
+              SizedBox(width: 8),
+              Text('Sprint Predictability',
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -549,11 +549,11 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.timeline, size: 20, color: _kAccent),
-              const SizedBox(width: 8),
-              const Text('Lead Time vs Cycle Time',
+              Icon(Icons.timeline, size: 20, color: _kAccent),
+              SizedBox(width: 8),
+              Text('Lead Time vs Cycle Time',
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -696,7 +696,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -767,7 +767,7 @@ class _AgileMetricsScreenState extends State<AgileMetricsScreen> {
             children: [
               CircleAvatar(
                 radius: 12,
-                backgroundColor: color.withOpacity(0.15),
+                backgroundColor: color.withValues(alpha: 0.15),
                 child: Text(
                     c.name.split(' ').map((p) => p.isNotEmpty ? p[0] : '').take(2).join(),
                     style: TextStyle(
@@ -931,7 +931,7 @@ class _VelocityPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final pad = 12.0;
+    const pad = 12.0;
     final maxVal = velocity
         .map((v) => v.planned > v.completed ? v.planned : v.completed)
         .reduce((a, b) => a > b ? a : b);
@@ -987,8 +987,8 @@ class _GaugePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height * 0.75);
     final radius = (size.width * 0.4).clamp(40.0, 90.0);
-    final startAngle = math.pi;
-    final sweepAngle = math.pi;
+    const startAngle = math.pi;
+    const sweepAngle = math.pi;
     final rect = Rect.fromCircle(center: center, radius: radius);
 
     // Background arc
@@ -1045,7 +1045,7 @@ class _DefectPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final pad = 12.0;
+    const pad = 12.0;
     final maxVal = trend
         .map((d) => d.found > d.escaped ? d.found : d.escaped)
         .reduce((a, b) => a > b ? a : b);
@@ -1080,7 +1080,7 @@ class _DefectPainter extends CustomPainter {
         const Radius.circular(3),
       );
       canvas.drawRRect(escapedRect,
-          Paint()..color = Colors.red.withOpacity(0.6));
+          Paint()..color = Colors.red.withValues(alpha: 0.6));
     }
   }
 
@@ -1097,7 +1097,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

@@ -90,11 +90,11 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  ),
  child:
  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
- AppLogo(
+ const AppLogo(
  height: 56,
  width: 148,
  ),
- SizedBox(height: 20),
+ const SizedBox(height: 20),
  Row(children: [
  Container(
  width: 40,
@@ -327,7 +327,7 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  borderRadius: BorderRadius.circular(18),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.06),
+ color: Colors.black.withValues(alpha: 0.06),
  blurRadius: 6,
  offset: const Offset(0, 2))
  ],
@@ -358,7 +358,7 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  borderRadius: BorderRadius.circular(26),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.06),
+ color: Colors.black.withValues(alpha: 0.06),
  blurRadius: 8,
  offset: const Offset(0, 2))
  ],
@@ -417,7 +417,7 @@ class _SidebarItem extends StatelessWidget {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: BoxDecoration(
- color: isActive ? Colors.grey.withOpacity(0.06) : Colors.transparent,
+ color: isActive ? Colors.grey.withValues(alpha: 0.06) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(children: [

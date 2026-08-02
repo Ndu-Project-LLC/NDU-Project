@@ -52,7 +52,7 @@ class _SummarizeAccountRisksScreenState
   bool _hasLoaded = false;
   bool _suspendSave = false;
   final Map<String, bool> _kazAiRegenerating = {};
-  String _selectedView = 'full'; // 'full' or 'summary'
+  final String _selectedView = 'full'; // 'full' or 'summary'
 
   @override
   void initState() {
@@ -169,7 +169,7 @@ class _SummarizeAccountRisksScreenState
         ? 0.6
         : (0.6 + (stakeholderCount / 10)).clamp(0.0, 1.0);
 
-    final qualityScore = 0.82; // would come from quality mgmt data
+    const qualityScore = 0.82; // would come from quality mgmt data
 
     final radarAxes = <({String axis, double value})>[
       (axis: 'Schedule', value: scheduleScore),
@@ -328,13 +328,13 @@ class _SummarizeAccountRisksScreenState
           filled: true,
           fillColor: const Color(0xFFF8FAFC),
           border: OutlineInputBorder(
-              borderRadius: const BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
           enabledBorder: OutlineInputBorder(
-              borderRadius: const BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
           focusedBorder: OutlineInputBorder(
-              borderRadius: const BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFFFD700))),
         ),
         onChanged: (v) {
@@ -713,9 +713,10 @@ class _SummarizeAccountRisksScreenState
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
     }
@@ -755,9 +756,10 @@ class _SummarizeAccountRisksScreenState
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
     }
@@ -798,9 +800,10 @@ class _SummarizeAccountRisksScreenState
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
     }
@@ -1045,13 +1048,13 @@ class _SummarizeAccountRisksScreenState
           margin: const pw.EdgeInsets.all(32),
           build: (_) => [
             pw.Text('Project Summary',
-                style: const pw.TextStyle(
+                style: pw.TextStyle(
                     fontSize: 20, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 4),
             pw.Text(
                 '$projectName — Generated ${now.toLocal().toIso8601String()}',
                 style:
-                    const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                    pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
             pw.SizedBox(height: 16),
 
             // Highlights
@@ -1063,9 +1066,9 @@ class _SummarizeAccountRisksScreenState
               pw.Table.fromTextArray(
                 headers: ['Title', 'Details'],
                 data: _highlights.map((h) => [h.title, h.details]).toList(),
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: const pw.TextStyle(fontSize: 9),
+                cellStyle: pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1083,9 +1086,9 @@ class _SummarizeAccountRisksScreenState
                 data: _topRisks
                     .map((r) => [r.title, r.details, r.owner, r.status])
                     .toList(),
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: const pw.TextStyle(fontSize: 9),
+                cellStyle: pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1103,9 +1106,9 @@ class _SummarizeAccountRisksScreenState
                 data: _next90Days
                     .map((n) => [n.title, n.details, n.owner, n.status])
                     .toList(),
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: const pw.TextStyle(fontSize: 9),
+                cellStyle: pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -1130,13 +1133,13 @@ class _SummarizeAccountRisksScreenState
   pw.Widget _pdfSectionTitle(String title) {
     return pw.Text(title,
         style:
-            const pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold));
+            pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold));
   }
 
   pw.Widget _pdfCell(String text) {
     return pw.Padding(
         padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)));
+        child: pw.Text(text, style: pw.TextStyle(fontSize: 9)));
   }
 
   String _s(dynamic v) => (v ?? '').toString().trim();

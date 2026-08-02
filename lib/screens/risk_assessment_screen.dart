@@ -1259,20 +1259,20 @@ class _RiskMatrixCard extends StatelessWidget {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  // Title + legend
- Row(
+ const Row(
  children: [
- const Text(
+ Text(
  'Risk Matrix',
  style: TextStyle(
  fontSize: 16,
  fontWeight: FontWeight.w600,
  color: Color(0xFF111827)),
  ),
- const Spacer(),
+ Spacer(),
  _LegendDot(color: _high, label: 'High'),
- const SizedBox(width: 12),
+ SizedBox(width: 12),
  _LegendDot(color: _medium, label: 'Medium'),
- const SizedBox(width: 12),
+ SizedBox(width: 12),
  _LegendDot(color: _low, label: 'Low'),
  ],
  ),
@@ -1293,7 +1293,7 @@ class _RiskMatrixCard extends StatelessWidget {
  crossAxisAlignment: CrossAxisAlignment.center,
  children: [
  // Rotated "Likelihood" label
- SizedBox(
+ const SizedBox(
  width: 28,
  child: RotatedBox(
  quarterTurns: 3,
@@ -1303,7 +1303,7 @@ class _RiskMatrixCard extends StatelessWidget {
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w500,
- color: const Color(0xFF6B7280)),
+ color: Color(0xFF6B7280)),
  ),
  ),
  ),
@@ -1313,8 +1313,8 @@ class _RiskMatrixCard extends StatelessWidget {
  child: Column(
  children: [
  // X-axis headers
- Row(
- children: const [
+ const Row(
+ children: [
  SizedBox(width: 40),
  Expanded(
  child: Center(
@@ -1502,19 +1502,19 @@ class _MitigationPlanCard extends StatelessWidget {
  const Icon(Icons.shield_rounded,
  color: Color(0xFF475569), size: 20),
  const SizedBox(width: 10),
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const Text(
+ Text(
  'Mitigation plan',
  style: TextStyle(
  fontSize: 14,
  fontWeight: FontWeight.w600,
  color: Color(0xFF111827)),
  ),
- const SizedBox(height: 2),
- const Text(
+ SizedBox(height: 2),
+ Text(
  'Auto-filled with AI suggestions from initiation-phase risks.',
  style: TextStyle(
  fontSize: 12,
@@ -1769,8 +1769,8 @@ class _RiskRegister extends StatelessWidget {
  offset: Offset(0, 1)),
  ],
  ),
- child: Column(
- children: const [
+ child: const Column(
+ children: [
  Icon(Icons.description_outlined,
  size: 32, color: Color(0xFF9CA3AF)),
  SizedBox(height: 12),
@@ -1802,7 +1802,7 @@ class _RiskRegister extends StatelessWidget {
  width: tableWidth,
  child: Column(
  children: [
- _RegisterHeader(columnFlex: _columnFlex),
+ const _RegisterHeader(columnFlex: _columnFlex),
  const SizedBox(height: 12),
  ...List.generate(entries.length, (index) {
  final entry = entries[index];
@@ -2157,7 +2157,7 @@ Widget _dialogDropdownField({
  return Padding(
  padding: const EdgeInsets.only(bottom: 12),
  child: DropdownButtonFormField<String>(
- value: selected,
+ initialValue: selected,
  onChanged: enabled
  ? (next) {
  if (next == null) return;

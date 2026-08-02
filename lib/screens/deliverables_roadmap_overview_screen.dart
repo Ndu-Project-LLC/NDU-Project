@@ -107,8 +107,8 @@ class _DeliverablesRoadmapOverviewScreenState
               ],
             ),
           ),
-          MobileSidebarHamburger(
-            sidebar: const InitiationLikeSidebar(
+          const MobileSidebarHamburger(
+            sidebar: InitiationLikeSidebar(
               activeItemLabel: 'Roadmap Overview',
             ),
           ),
@@ -143,7 +143,7 @@ class _DeliverablesRoadmapOverviewScreenState
   }
 
   Widget _buildHeader() {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -154,16 +154,16 @@ class _DeliverablesRoadmapOverviewScreenState
                 children: [
                   Text(
                     'Deliverables Roadmap',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: _kHeadline,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     'Overview of all deliverables across Initiation and Planning phases',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       color: _kMuted,
                     ),
@@ -209,7 +209,7 @@ class _DeliverablesRoadmapOverviewScreenState
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _kCardBorder),
@@ -261,7 +261,7 @@ class _DeliverablesRoadmapOverviewScreenState
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _kCardBorder),
@@ -347,7 +347,7 @@ class _DeliverablesRoadmapOverviewScreenState
         SizedBox(
           width: 80,
           child: ClipRRect(
-            borderRadius: const BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: percent,
               backgroundColor: info.color.withValues(alpha: 0.2),
@@ -425,12 +425,12 @@ class _DeliverablesRoadmapOverviewScreenState
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, color: _kMuted, size: 20),
+                const Icon(Icons.chevron_right, color: _kMuted, size: 20),
               ],
             ),
           ),
         ),
-        if (showDivider) Divider(height: 1, color: _kCardBorder, indent: 56),
+        if (showDivider) const Divider(height: 1, color: _kCardBorder, indent: 56),
       ],
     );
   }
@@ -485,7 +485,7 @@ class _DeliverablesRoadmapOverviewScreenState
   Widget _buildAssigneeChip(String assignee) {
     return Row(
       children: [
-        Icon(Icons.person_outline, size: 12, color: _kMuted),
+        const Icon(Icons.person_outline, size: 12, color: _kMuted),
         const SizedBox(width: 4),
         Text(
           assignee,

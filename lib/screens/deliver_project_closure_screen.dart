@@ -135,7 +135,7 @@ class _DeliverProjectClosureScreenState
   // Launch Insights: KPIs + completion donut (auto-derived from project data)
   Widget _buildLaunchInsights() {
     final projectData = ProjectDataHelper.getData(context);
-    final totalChecks = 4; // charter + milestones + risks + allowances
+    const totalChecks = 4; // charter + milestones + risks + allowances
     var ready = 0;
     if (projectData.charterApprovalDate != null) ready++;
     if (projectData.keyMilestones.isNotEmpty) ready++;
@@ -196,16 +196,16 @@ class _DeliverProjectClosureScreenState
       title: 'Scope Acceptance',
       subtitle:
           'Track acceptance status for each deliverable. Items are editable inline.',
-      columns: [
-        const LaunchColumn(label: 'Deliverable', flexible: true),
-        const LaunchColumn(label: 'Criteria', flexible: true),
+      columns: const [
+        LaunchColumn(label: 'Deliverable', flexible: true),
+        LaunchColumn(label: 'Criteria', flexible: true),
         LaunchColumn(
           label: 'Status',
           width: 120,
           fieldType: LaunchFieldType.dropdown,
-          dropdownItems: const ['Pending', 'Accepted', 'Partial', 'Rejected'],
+          dropdownItems: ['Pending', 'Accepted', 'Partial', 'Rejected'],
         ),
-        const LaunchColumn(
+        LaunchColumn(
             label: 'Date', width: 130, fieldType: LaunchFieldType.date),
       ],
       rowCount: _scopeItems.length,
@@ -268,7 +268,7 @@ class _DeliverProjectClosureScreenState
           ),
           LaunchStatusDropdown(
             value: _scopeItems[i].status,
-            items: ['Pending', 'Accepted', 'Partial', 'Rejected'],
+            items: const ['Pending', 'Accepted', 'Partial', 'Rejected'],
             onChanged: (v) {
               if (v == null) return;
               _scopeItems[i] = _scopeItems[i].copyWith(status: v);
@@ -294,17 +294,17 @@ class _DeliverProjectClosureScreenState
     return LaunchDataTable(
       title: 'Delivery Milestones',
       subtitle: 'Track planned vs actual completion for key milestones.',
-      columns: [
-        const LaunchColumn(label: 'Milestone', flexible: true),
-        const LaunchColumn(
+      columns: const [
+        LaunchColumn(label: 'Milestone', flexible: true),
+        LaunchColumn(
             label: 'Planned', width: 120, fieldType: LaunchFieldType.date),
-        const LaunchColumn(
+        LaunchColumn(
             label: 'Actual', width: 120, fieldType: LaunchFieldType.date),
         LaunchColumn(
           label: 'Status',
           width: 120,
           fieldType: LaunchFieldType.dropdown,
-          dropdownItems: const [
+          dropdownItems: [
             'Pending',
             'In Progress',
             'Complete',
@@ -376,7 +376,7 @@ class _DeliverProjectClosureScreenState
           ),
           LaunchStatusDropdown(
             value: _milestones[i].status,
-            items: ['Pending', 'In Progress', 'Complete', 'Delayed'],
+            items: const ['Pending', 'In Progress', 'Complete', 'Delayed'],
             onChanged: (v) {
               if (v == null) return;
               _milestones[i] = _milestones[i].copyWith(status: v);
@@ -403,11 +403,11 @@ class _DeliverProjectClosureScreenState
           fieldType: LaunchFieldType.dropdown,
           dropdownItems: ownerNames,
         ),
-        LaunchColumn(
+        const LaunchColumn(
           label: 'Status',
           width: 120,
           fieldType: LaunchFieldType.dropdown,
-          dropdownItems: const ['Open', 'In Progress', 'Complete', 'Deferred'],
+          dropdownItems: ['Open', 'In Progress', 'Complete', 'Deferred'],
         ),
       ],
       rowCount: _outstandingItems.length,
@@ -477,7 +477,7 @@ class _DeliverProjectClosureScreenState
           ),
           LaunchStatusDropdown(
             value: _outstandingItems[i].status,
-            items: ['Open', 'In Progress', 'Complete', 'Deferred'],
+            items: const ['Open', 'In Progress', 'Complete', 'Deferred'],
             onChanged: (v) {
               if (v == null) return;
               _outstandingItems[i] = _outstandingItems[i].copyWith(status: v);
@@ -504,11 +504,11 @@ class _DeliverProjectClosureScreenState
           fieldType: LaunchFieldType.dropdown,
           dropdownItems: ownerNames,
         ),
-        LaunchColumn(
+        const LaunchColumn(
           label: 'Status',
           width: 120,
           fieldType: LaunchFieldType.dropdown,
-          dropdownItems: const ['Open', 'In Progress', 'Complete', 'Deferred'],
+          dropdownItems: ['Open', 'In Progress', 'Complete', 'Deferred'],
         ),
       ],
       rowCount: _riskFollowUps.length,
@@ -580,7 +580,7 @@ class _DeliverProjectClosureScreenState
           ),
           LaunchStatusDropdown(
             value: _riskFollowUps[i].status,
-            items: ['Open', 'In Progress', 'Complete', 'Deferred'],
+            items: const ['Open', 'In Progress', 'Complete', 'Deferred'],
             onChanged: (v) {
               if (v == null) return;
               _riskFollowUps[i] = _riskFollowUps[i].copyWith(status: v);
@@ -1276,20 +1276,20 @@ class _DeliverProjectClosureScreenState
           build: (_) => [
             pw.Text(
               'Deliver Project — Closure Summary',
-              style: const pw.TextStyle(
+              style: pw.TextStyle(
                   fontSize: 20, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Scope Acceptance'),
             pw.SizedBox(height: 6),
             if (_scopeItems.isEmpty)
               pw.Text('No scope items recorded.',
-                  style: const pw.TextStyle(
+                  style: pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1316,7 +1316,7 @@ class _DeliverProjectClosureScreenState
             pw.SizedBox(height: 6),
             if (_milestones.isEmpty)
               pw.Text('No milestones recorded.',
-                  style: const pw.TextStyle(
+                  style: pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1341,7 +1341,7 @@ class _DeliverProjectClosureScreenState
             pw.SizedBox(height: 6),
             if (_outstandingItems.isEmpty)
               pw.Text('No outstanding items.',
-                  style: const pw.TextStyle(
+                  style: pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1368,7 +1368,7 @@ class _DeliverProjectClosureScreenState
             pw.SizedBox(height: 6),
             if (_riskFollowUps.isEmpty)
               pw.Text('No post-delivery risks recorded.',
-                  style: const pw.TextStyle(
+                  style: pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey500))
             else
               pw.Table(
@@ -1411,7 +1411,7 @@ class _DeliverProjectClosureScreenState
   pw.Widget _pdfSectionTitle(String title) {
     return pw.Text(title,
         style:
-            const pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold));
+            pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold));
   }
 
   pw.Widget _pdfHeaderCell(String text) {
@@ -1419,14 +1419,14 @@ class _DeliverProjectClosureScreenState
       padding: const pw.EdgeInsets.all(6),
       child: pw.Text(text,
           style:
-              const pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+              pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
     );
   }
 
   pw.Widget _pdfCell(String text) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(6),
-      child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)),
+      child: pw.Text(text, style: pw.TextStyle(fontSize: 9)),
     );
   }
 
@@ -1555,15 +1555,15 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
       filled: true,
       fillColor: const Color(0xFFF9FAFB),
       border: OutlineInputBorder(
-        borderRadius: const BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: Color(0xFFD97706), width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1608,7 +1608,7 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       shape:
-          RoundedRectangleBorder(borderRadius: const BorderRadius.circular(20)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520),
         child: Padding(
@@ -1624,7 +1624,7 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -1702,12 +1702,12 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
                                   fontSize: 13, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 4),
                           DropdownButtonFormField<String>(
-                            value: _status,
+                            initialValue: _status,
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: const Color(0xFFF9FAFB),
                               border: OutlineInputBorder(
-                                borderRadius: const BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(10),
                                 borderSide:
                                     const BorderSide(color: Color(0xFFE5E7EB)),
                               ),
@@ -1779,7 +1779,7 @@ class _ScopeEditDialogState extends State<_ScopeEditDialog> {
                         backgroundColor: const Color(0xFFD97706),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                            borderRadius: const BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 12),
                       ),

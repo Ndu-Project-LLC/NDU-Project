@@ -187,7 +187,7 @@ class _InterfaceManagementPlanFormState
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Color(0xFFE5E7EB)),
@@ -267,7 +267,7 @@ class _InterfaceManagementPlanSection extends StatelessWidget {
 
     Widget summaryCard = Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -348,7 +348,7 @@ class _InterfaceManagementPlanSection extends StatelessWidget {
         summaryCard,
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileInterfaceManagementPlanActions()
+          const _MobileInterfaceManagementPlanActions()
         else
           const _DesktopInterfaceManagementPlanActions(),
       ],

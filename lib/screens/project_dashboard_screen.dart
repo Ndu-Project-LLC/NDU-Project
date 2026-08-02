@@ -146,7 +146,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  borderRadius: BorderRadius.circular(18),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.14),
+ color: Colors.black.withValues(alpha: 0.14),
  blurRadius: 24,
  offset: const Offset(0, 12),
  ),
@@ -301,7 +301,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: scheme.primary.withOpacity(0.1),
+ color: scheme.primary.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(Icons.create_new_folder,
@@ -334,7 +334,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  ),
  filled: true,
  fillColor:
- scheme.surfaceContainerHighest.withOpacity(0.3),
+ scheme.surfaceContainerHighest.withValues(alpha: 0.3),
  ),
  validator: (value) {
  if (value == null || value.trim().isEmpty) {
@@ -401,7 +401,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  borderRadius: BorderRadius.circular(12),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.15),
+ color: Colors.black.withValues(alpha: 0.15),
  blurRadius: 18,
  offset: const Offset(0, 12),
  ),
@@ -857,7 +857,7 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
  border: Border.all(color: Colors.grey.shade300),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  blurRadius: 8,
  offset: const Offset(0, 2),
  ),
@@ -915,7 +915,7 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
  backgroundColor: Colors.blue.shade600,
  foregroundColor: Colors.white,
  elevation: 2,
- shadowColor: Colors.black.withOpacity(0.1),
+ shadowColor: Colors.black.withValues(alpha: 0.1),
  padding: const EdgeInsets.symmetric(
  horizontal: 26, vertical: 18),
  shape: RoundedRectangleBorder(
@@ -1605,10 +1605,10 @@ class _SingleProjectsCardState extends State<_SingleProjectsCard> {
  ),
  child: Column(
  children: [
- Padding(
- padding: const EdgeInsets.fromLTRB(28, 20, 28, 18),
+ const Padding(
+ padding: EdgeInsets.fromLTRB(28, 20, 28, 18),
  child: Row(
- children: const [
+ children: [
  Expanded(
  flex: 32,
  child: _TableHeaderLabel('Project'),
@@ -1796,7 +1796,7 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: scheme.primary.withOpacity(0.1),
+ color: scheme.primary.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(Icons.layers, color: scheme.primary, size: 24),
@@ -1826,7 +1826,7 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
  borderRadius: BorderRadius.circular(12)),
  filled: true,
  fillColor:
- scheme.surfaceContainerHighest.withOpacity(0.3),
+ scheme.surfaceContainerHighest.withValues(alpha: 0.3),
  ),
  validator: (value) {
  if (value == null || value.trim().isEmpty) {
@@ -2338,7 +2338,7 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
  backgroundColor: const Color(0xFF111111),
  foregroundColor: Colors.white,
  elevation: selectedCount == 3 ? 10 : 0,
- shadowColor: Colors.black.withOpacity(0.3),
+ shadowColor: Colors.black.withValues(alpha: 0.3),
  padding: const EdgeInsets.symmetric(
  horizontal: 28, vertical: 22),
  shape: RoundedRectangleBorder(
@@ -2750,15 +2750,15 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  borderRadius: BorderRadius.circular(16),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.15),
+ color: Colors.black.withValues(alpha: 0.15),
  blurRadius: 24,
  offset: const Offset(0, 12),
  ),
  ],
  ),
- child: Column(
+ child: const Column(
  mainAxisAlignment: MainAxisAlignment.center,
- children: const [
+ children: [
  CircularProgressIndicator(strokeWidth: 3),
  SizedBox(height: 16),
  Text(
@@ -3010,7 +3010,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: scheme.primary.withOpacity(0.1),
+ color: scheme.primary.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(10),
  ),
  child:
@@ -3042,7 +3042,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  ),
  filled: true,
  fillColor:
- scheme.surfaceContainerHighest.withOpacity(0.3),
+ scheme.surfaceContainerHighest.withValues(alpha: 0.3),
  ),
  validator: (value) {
  if (value == null || value.trim().isEmpty) {
@@ -3710,14 +3710,14 @@ class _SelectableProjectRowFromFirebase extends StatelessWidget {
  boxShadow: selected
  ? [
  BoxShadow(
- color: const Color(0xFFFFC14A).withOpacity(0.4),
+ color: const Color(0xFFFFC14A).withValues(alpha: 0.4),
  blurRadius: 28,
  offset: const Offset(0, 14),
  ),
  ]
  : [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  blurRadius: 22,
  offset: const Offset(0, 12),
  ),
@@ -3883,12 +3883,12 @@ class _FrostedSurface extends StatelessWidget {
  return Container(
  padding: resolvedPadding,
  decoration: BoxDecoration(
- color: Colors.white.withOpacity(0.92),
+ color: Colors.white.withValues(alpha: 0.92),
  borderRadius: BorderRadius.circular(isCompact ? 22 : 28),
  border: Border.all(color: const Color(0xFFE4E7F3)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  blurRadius: 28,
  offset: const Offset(0, 18),
  ),
@@ -3948,16 +3948,16 @@ class _DesktopPremiumGreeting extends StatelessWidget {
  ),
  borderRadius: BorderRadius.circular(20),
  border: Border.all(
- color: const Color(0xFFE0E3E5).withOpacity(0.6),
+ color: const Color(0xFFE0E3E5).withValues(alpha: 0.6),
  ),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.03),
+ color: Colors.black.withValues(alpha: 0.03),
  blurRadius: 20,
  offset: const Offset(0, 4),
  ),
  BoxShadow(
- color: const Color(0xFFFFCC00).withOpacity(0.06),
+ color: const Color(0xFFFFCC00).withValues(alpha: 0.06),
  blurRadius: 32,
  offset: const Offset(0, 12),
  ),
@@ -3982,7 +3982,7 @@ class _DesktopPremiumGreeting extends StatelessWidget {
  borderRadius: BorderRadius.circular(16),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFFFFCC00).withOpacity(0.35),
+ color: const Color(0xFFFFCC00).withValues(alpha: 0.35),
  blurRadius: 14,
  offset: const Offset(0, 5),
  ),
@@ -4096,7 +4096,7 @@ class _DesktopPremiumGreeting extends StatelessWidget {
  border: Border.all(color: Colors.white, width: 1.5),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFF22C55E).withOpacity(0.4),
+ color: const Color(0xFF22C55E).withValues(alpha: 0.4),
  blurRadius: 4,
  offset: const Offset(0, 1),
  ),
@@ -4104,12 +4104,12 @@ class _DesktopPremiumGreeting extends StatelessWidget {
  ),
  ),
  const SizedBox(width: 6),
- Text(
+ const Text(
  'Online',
  style: TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w600,
- color: const Color(0xFF22C55E),
+ color: Color(0xFF22C55E),
  letterSpacing: 0.04,
  ),
  ),
@@ -4200,18 +4200,18 @@ class _CompactActionButtonState extends State<_CompactActionButton> {
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
  decoration: BoxDecoration(
  color: _isHovered
- ? widget.accent.withOpacity(0.08)
+ ? widget.accent.withValues(alpha: 0.08)
  : Colors.white,
  borderRadius: BorderRadius.circular(14),
  border: Border.all(
  color: _isHovered
- ? widget.accent.withOpacity(0.4)
+ ? widget.accent.withValues(alpha: 0.4)
  : const Color(0xFFE2E8F0),
  width: 1.5,
  ),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(_isHovered ? 0.06 : 0.03),
+ color: Colors.black.withValues(alpha: _isHovered ? 0.06 : 0.03),
  blurRadius: _isHovered ? 12 : 8,
  offset: const Offset(0, 4),
  ),
@@ -4223,7 +4223,7 @@ class _CompactActionButtonState extends State<_CompactActionButton> {
  width: 40,
  height: 40,
  decoration: BoxDecoration(
- color: widget.accent.withOpacity(0.12),
+ color: widget.accent.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(widget.icon, size: 20, color: widget.accent),
@@ -4235,11 +4235,11 @@ class _CompactActionButtonState extends State<_CompactActionButton> {
  children: [
  Text(
  widget.label,
- style: TextStyle(
+ style: const TextStyle(
  decoration: TextDecoration.none,
  fontSize: 14,
  fontWeight: FontWeight.w700,
- color: const Color(0xFF0F172A),
+ color: Color(0xFF0F172A),
  ),
  maxLines: 1,
  overflow: TextOverflow.ellipsis,

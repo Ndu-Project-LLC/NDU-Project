@@ -346,8 +346,9 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
 
   String _newDocId(String collection) {
     final projectId = ProjectDataHelper.getData(context).projectId;
-    if (projectId == null || projectId.isEmpty)
+    if (projectId == null || projectId.isEmpty) {
       return DateTime.now().millisecondsSinceEpoch.toString();
+    }
     return FirebaseFirestore.instance
         .collection('projects')
         .doc(projectId)
@@ -521,8 +522,8 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Security Management',
                     ),
                   ),
@@ -560,9 +561,9 @@ class _PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
           'Security Management',
           style: TextStyle(
@@ -712,7 +713,7 @@ class _SecurityNotesCardState extends State<_SecurityNotesCard> {
               hintText: 'Capture security notes here...',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
               ),
               filled: true,
               fillColor: const Color(0xFFF8FAFC),
@@ -739,7 +740,7 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: background ?? color.withOpacity(0.1),
+        color: background ?? color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
@@ -803,7 +804,7 @@ class _TabStrip extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 18,
               offset: const Offset(0, 12)),
         ],
@@ -1123,7 +1124,7 @@ class _SettingsViewState extends State<_SettingsView> {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 20,
               offset: const Offset(0, 14)),
         ],
@@ -1298,8 +1299,8 @@ class _SettingsViewState extends State<_SettingsView> {
                     color: const Color(0xFFF9FAFB),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 20),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         _TableHeaderCell(label: 'Setting', flex: 2),
                         _TableHeaderCell(label: 'Value', flex: 2),
                         _TableHeaderCell(label: 'Description', flex: 3),
@@ -1458,7 +1459,7 @@ class _AccessLogsViewState extends State<_AccessLogsView> {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 20,
               offset: const Offset(0, 14)),
         ],
@@ -1587,8 +1588,8 @@ class _AccessLogsViewState extends State<_AccessLogsView> {
                     color: const Color(0xFFF9FAFB),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 20),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         _TableHeaderCell(label: 'Time', flex: 2),
                         _TableHeaderCell(label: 'User', flex: 2),
                         _TableHeaderCell(label: 'Action', flex: 2),
@@ -1602,9 +1603,9 @@ class _AccessLogsViewState extends State<_AccessLogsView> {
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 68),
                       alignment: Alignment.center,
-                      child: Column(
+                      child: const Column(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
+                        children: [
                           Text('No access logs available',
                               style: TextStyle(
                                   fontSize: 15,
@@ -1995,7 +1996,7 @@ class _RolesView extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 20,
               offset: const Offset(0, 14)),
         ],
@@ -2017,10 +2018,10 @@ class _RolesView extends StatelessWidget {
                     color: Color(0xFF2563EB), size: 22),
               ),
               const SizedBox(width: 14),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       'Role Management',
                       style: TextStyle(
@@ -2071,8 +2072,8 @@ class _RolesView extends StatelessWidget {
                     color: const Color(0xFFF9FAFB),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 20),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         _TableHeaderCell(label: 'Role Name', flex: 2),
                         _TableHeaderCell(label: 'Tier'),
                         _TableHeaderCell(label: 'Description', flex: 3),
@@ -2132,13 +2133,13 @@ class _RolesView extends StatelessWidget {
                                     fontSize: 14, color: Color(0xFF4B5563)),
                               ),
                             ),
-                            Expanded(
+                            const Expanded(
                               flex: 2,
                               child: Align(
                                 alignment: Alignment.centerRight,
                                 child: Wrap(
                                   spacing: 10,
-                                  children: const [
+                                  children: [
                                     _TableActionButton(label: 'Edit'),
                                     _TableActionButton(label: 'Permissions'),
                                   ],
@@ -2268,7 +2269,7 @@ class _PermissionsViewState extends State<_PermissionsView> {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 20,
               offset: const Offset(0, 14)),
         ],
@@ -2290,10 +2291,10 @@ class _PermissionsViewState extends State<_PermissionsView> {
                     color: Color(0xFFB45309), size: 22),
               ),
               const SizedBox(width: 14),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       'Permissions',
                       style: TextStyle(
@@ -2376,8 +2377,8 @@ class _PermissionsViewState extends State<_PermissionsView> {
                     color: const Color(0xFFF9FAFB),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 20),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         _TableHeaderCell(label: 'Permission Name', flex: 2),
                         _TableHeaderCell(label: 'Resource'),
                         _TableHeaderCell(label: 'Action'),
@@ -3009,7 +3010,7 @@ class _SecurityStatusCard extends StatelessWidget {
             value: settingsCount.toString(),
           ),
           const SizedBox(height: 16),
-          Divider(color: Colors.grey.withOpacity(0.2), height: 1),
+          Divider(color: Colors.grey.withValues(alpha: 0.2), height: 1),
           const SizedBox(height: 16),
           Text(
             latestLog == null
@@ -3106,9 +3107,9 @@ class _RecentActivityCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(18),
                     color: const Color(0xFFF9FAFB),
                   ),
-                  child: Column(
+                  child: const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Icon(Icons.timeline_outlined,
                           color: Color(0xFFD1D5DB), size: 42),
                       SizedBox(height: 12),
@@ -3138,10 +3139,10 @@ class _RecentActivityCard extends StatelessWidget {
               ],
             ),
           const SizedBox(height: 18),
-          Wrap(
+          const Wrap(
             spacing: 16,
             runSpacing: 8,
-            children: const [
+            children: [
               _LegendEntry(
                   label: 'Success',
                   value: '',
@@ -3193,7 +3194,7 @@ class _ActivityRow extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.12),
+            color: statusColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(Icons.event_note_outlined, color: statusColor, size: 18),
@@ -3343,7 +3344,7 @@ class _MetricCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 18,
               offset: const Offset(0, 10)),
         ],

@@ -42,9 +42,9 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
  final List<_KpiRow> _customKpiRows = [];
  final List<_RiskSignalRow> _customSignalRows = [];
  final List<_ActionRow> _actionRows = [
- _ActionRow(id: 'act_1', title: 'Quarterly business review', priority: 'High', dueDate: 'Oct 21', owner: 'Vendor Manager', status: 'Agenda locked'),
- _ActionRow(id: 'act_2', title: 'Security compliance audit', priority: 'Critical', dueDate: 'Oct 25', owner: 'Compliance Lead', status: 'Docs requested'),
- _ActionRow(id: 'act_3', title: 'Performance tuning workshop', priority: 'Medium', dueDate: 'Nov 02', owner: 'Operations Lead', status: 'Pending invite'),
+ const _ActionRow(id: 'act_1', title: 'Quarterly business review', priority: 'High', dueDate: 'Oct 21', owner: 'Vendor Manager', status: 'Agenda locked'),
+ const _ActionRow(id: 'act_2', title: 'Security compliance audit', priority: 'Critical', dueDate: 'Oct 25', owner: 'Compliance Lead', status: 'Docs requested'),
+ const _ActionRow(id: 'act_3', title: 'Performance tuning workshop', priority: 'Medium', dueDate: 'Nov 02', owner: 'Operations Lead', status: 'Pending invite'),
  ];
 
  String? get _projectId {
@@ -207,10 +207,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildVendorRegister() {
  final policy = _crudPolicy;
  if (_projectId == null || _projectId!.isEmpty) {
- return _PanelShell(
+ return const _PanelShell(
  title: 'Vendor scorecard',
  subtitle: 'Performance, rating, and compliance checkpoints',
- child: const Center(
+ child: Center(
  child: Padding(
  padding: EdgeInsets.all(24.0),
  child: Text('No project selected. Please open a project first.',
@@ -305,10 +305,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildPerformancePanel() {
  if (_projectId == null) {
- return _PanelShell(
+ return const _PanelShell(
  title: 'Performance pulse',
  subtitle: 'Key service health indicators',
- child: const SizedBox.shrink(),
+ child: SizedBox.shrink(),
  );
  }
 
@@ -580,10 +580,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildSignalsPanel() {
  if (_projectId == null) {
- return _PanelShell(
+ return const _PanelShell(
  title: 'Risk signals',
  subtitle: 'Active alerts and vendor watch items',
- child: const SizedBox.shrink(),
+ child: SizedBox.shrink(),
  );
  }
 
@@ -652,7 +652,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.shield_outlined, size: 36, color: const Color(0xFF10B981).withOpacity(0.6)),
+ Icon(Icons.shield_outlined, size: 36, color: const Color(0xFF10B981).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No active risk signals', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w600)),
  ],
@@ -696,9 +696,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  borderRadius: BorderRadius.circular(6),
  border: Border(
  left: BorderSide(color: sevColor, width: 3),
- top: BorderSide(color: const Color(0xFFF3F4F6)),
- right: BorderSide(color: const Color(0xFFF3F4F6)),
- bottom: BorderSide(color: const Color(0xFFF3F4F6)),
+ top: const BorderSide(color: Color(0xFFF3F4F6)),
+ right: const BorderSide(color: Color(0xFFF3F4F6)),
+ bottom: const BorderSide(color: Color(0xFFF3F4F6)),
  ),
  ),
  child: Column(
@@ -719,7 +719,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  flex: 1,
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
- decoration: BoxDecoration(color: sevColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+ decoration: BoxDecoration(color: sevColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
  child: Text(sig.severity, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: sevColor), textAlign: TextAlign.center),
  ),
  ),
@@ -729,7 +729,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  flex: 1,
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
- decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+ decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
  child: Text(sig.status, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: statusColor), textAlign: TextAlign.center),
  ),
  ),
@@ -812,14 +812,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 12),
  Row(children: [
  Expanded(child: DropdownButtonFormField<String>(
- value: severity,
+ initialValue: severity,
  decoration: const InputDecoration(labelText: 'Severity', isDense: true, border: OutlineInputBorder()),
  items: ['Critical', 'High', 'Medium', 'Low'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) { if (v != null) setDState(() => severity = v); },
  )),
  const SizedBox(width: 12),
  Expanded(child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(labelText: 'Status', isDense: true, border: OutlineInputBorder()),
  items: ['Open', 'Monitoring', 'Mitigated', 'Closed'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) { if (v != null) setDState(() => status = v); },
@@ -893,7 +893,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.event_note_outlined, size: 36, color: const Color(0xFF9CA3AF).withOpacity(0.6)),
+ Icon(Icons.event_note_outlined, size: 36, color: const Color(0xFF9CA3AF).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No action items yet', style: TextStyle(color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500)),
  const SizedBox(height: 4),
@@ -946,7 +946,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  flex: 1,
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
- decoration: BoxDecoration(color: prioColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+ decoration: BoxDecoration(color: prioColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
  child: Text(act.priority, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: prioColor), textAlign: TextAlign.center),
  ),
  ),
@@ -962,7 +962,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  flex: 2,
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
- decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+ decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
  child: Text(act.status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: statusColor), textAlign: TextAlign.center),
  ),
  ),
@@ -1025,14 +1025,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 12),
  Row(children: [
  Expanded(child: DropdownButtonFormField<String>(
- value: priority,
+ initialValue: priority,
  decoration: const InputDecoration(labelText: 'Priority', isDense: true, border: OutlineInputBorder()),
  items: ['Critical', 'High', 'Medium', 'Low'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) { if (v != null) setDState(() => priority = v); },
  )),
  const SizedBox(width: 12),
  Expanded(child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(labelText: 'Status', isDense: true, border: OutlineInputBorder()),
  items: ['Agenda locked', 'Docs requested', 'Pending invite', 'Completed', 'Overdue'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) { if (v != null) setDState(() => status = v); },
@@ -1218,7 +1218,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedCategory,
+ initialValue: selectedCategory,
  decoration: const InputDecoration(labelText: 'Category *'),
  items: const [
  'Logistics',
@@ -1238,7 +1238,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedCriticality,
+ initialValue: selectedCriticality,
  decoration: const InputDecoration(labelText: 'Criticality *'),
  items: const ['High', 'Medium', 'Low']
  .map((crit) =>
@@ -1275,7 +1275,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  maxLines: 5),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: ratingController.text,
+ initialValue: ratingController.text,
  decoration: const InputDecoration(labelText: 'Rating *'),
  items: ['A', 'B', 'C', 'D']
  .map((r) => DropdownMenuItem(value: r, child: Text(r)))
@@ -1284,7 +1284,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: statusController.text,
+ initialValue: statusController.text,
  decoration: const InputDecoration(labelText: 'Status *'),
  items: ['Active', 'Watch', 'At risk', 'Onboard']
  .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -1299,7 +1299,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (contracts.isNotEmpty) ...[
  const SizedBox(height: 12),
  DropdownButtonFormField<String?>(
- value: selectedContractId,
+ initialValue: selectedContractId,
  decoration: const InputDecoration(
  labelText: 'Linked Contract (Optional)'),
  items: [
@@ -1372,7 +1372,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final slaPerformance =
  double.tryParse(slaPerformanceController.text) ?? 0.0;
 
- if (isEdit && vendor != null) {
+ if (isEdit) {
  await VendorService.updateVendor(
  projectId: projectId,
  vendorId: vendor.id,

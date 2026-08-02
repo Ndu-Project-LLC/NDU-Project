@@ -325,7 +325,7 @@ class LaunchPhaseAiSeed {
       sectionLabel: sectionLabel,
     );
     if (contextText.isEmpty) {
-      return LaunchAiResult(
+      return const LaunchAiResult(
         entries: {},
         isContextSufficient: false,
         missingAreas: ['No project data available. Please complete prior phases first.'],
@@ -359,12 +359,12 @@ class LaunchPhaseAiSeed {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded,
-                color: const Color(0xFFF59E0B), size: 28),
-            const SizedBox(width: 12),
-            const Flexible(
+                color: Color(0xFFF59E0B), size: 28),
+            SizedBox(width: 12),
+            Flexible(
               child: Text(
                 'Insufficient Context',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
@@ -386,8 +386,8 @@ class LaunchPhaseAiSeed {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.circle, size: 8,
-                          color: const Color(0xFFEF4444)),
+                      const Icon(Icons.circle, size: 8,
+                          color: Color(0xFFEF4444)),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(

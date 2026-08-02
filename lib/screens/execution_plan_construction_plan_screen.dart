@@ -150,7 +150,7 @@ class _ConstructionPlanSection extends StatelessWidget {
  ),
  const SizedBox(height: 44),
  if (isMobile)
- _MobileConstructionPlanActions()
+ const _MobileConstructionPlanActions()
  else
  const _DesktopConstructionPlanActions(),
  ],

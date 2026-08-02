@@ -754,8 +754,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final predecessorOptions = <_ScheduleRow>[];
     for (final candidate in _activityRows) {
       if (row != null && candidate.id == row.id) continue;
-      if (candidate.id.trim().isEmpty || seenPredIds.contains(candidate.id))
+      if (candidate.id.trim().isEmpty || seenPredIds.contains(candidate.id)) {
         continue;
+      }
       seenPredIds.add(candidate.id);
       predecessorOptions.add(candidate);
     }
@@ -840,7 +841,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     children: [
                       if (wbsItems.isNotEmpty)
                         DropdownButtonFormField<String>(
-                          value: selectedWbsRawId,
+                          initialValue: selectedWbsRawId,
                           decoration: const InputDecoration(
                             labelText: 'WBS Item (optional)',
                           ),
@@ -915,7 +916,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             const InputDecoration(labelText: 'Duration (days)'),
                       ),
                       DropdownButtonFormField<String?>(
-                        value: predecessorId,
+                        initialValue: predecessorId,
                         decoration:
                             const InputDecoration(labelText: 'Predecessor'),
                         items: [
@@ -958,7 +959,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: status,
+                              initialValue: status,
                               decoration:
                                   const InputDecoration(labelText: 'Status'),
                               items: const [
@@ -982,7 +983,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           const SizedBox(width: 16),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: priority,
+                              initialValue: priority,
                               decoration:
                                   const InputDecoration(labelText: 'Priority'),
                               items: const [
@@ -2488,8 +2489,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Schedule',
                     ),
                   ),
@@ -3055,11 +3056,11 @@ class _TimelineWorkspaceCard extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: AppSemanticColors.border),
+                    borderSide: const BorderSide(color: AppSemanticColors.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: AppSemanticColors.border),
+                    borderSide: const BorderSide(color: AppSemanticColors.border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -4889,11 +4890,11 @@ class _WorkPackagesTab extends StatelessWidget {
                           horizontal: 12, vertical: 0),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: AppSemanticColors.border),
+                        borderSide: const BorderSide(color: AppSemanticColors.border),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: AppSemanticColors.border),
+                        borderSide: const BorderSide(color: AppSemanticColors.border),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -5351,15 +5352,15 @@ class _ProcurementTimelineTab extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppSemanticColors.border),
         ),
-        child: Column(
+        child: const Column(
           children: [
-            const Icon(
+            Icon(
               Icons.shopping_cart_outlined,
               size: 48,
               color: Color(0xFF9CA3AF),
             ),
-            const SizedBox(height: 12),
-            const Text(
+            SizedBox(height: 12),
+            Text(
               'No Procurement Activities',
               style: TextStyle(
                 fontSize: 16,
@@ -5367,8 +5368,8 @@ class _ProcurementTimelineTab extends StatelessWidget {
                 color: Color(0xFF374151),
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: 8),
+            Text(
               'Procurement timeline will show here when activities are linked to procurement work packages.',
               style: TextStyle(
                 fontSize: 12,

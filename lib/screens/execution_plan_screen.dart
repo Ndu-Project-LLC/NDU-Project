@@ -67,7 +67,7 @@ class _ExecutionPlanScreenState extends State<ExecutionPlanScreen> {
  const SizedBox(height: 32),
  const SectionIntro(),
  const SizedBox(height: 28),
- ExecutionPlanForm(
+ const ExecutionPlanForm(
  hintText:
  'Describe the sequential, and overall, thought process for executing the project',
  noteKey: 'execution_plan_outline',

@@ -689,7 +689,7 @@ class AppRouter {
       GoRoute(
           name: AppRoutes.contractDetails,
           path: '/${AppRoutes.contractDetails}',
-          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: ContractDetailsDashboardScreen())),
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ContractDetailsDashboardScreen())),
       GoRoute(
           name: AppRoutes.scheduleManagementBoard,
           path: '/${AppRoutes.scheduleManagementBoard}',

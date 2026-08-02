@@ -862,7 +862,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
         ),
         const SizedBox(height: 4),
         DropdownButtonFormField<T>(
-          value: value,
+          initialValue: value,
           items: items
               .map((i) => DropdownMenuItem(
                     value: i,
@@ -924,9 +924,9 @@ class _AddLineDialogState extends State<AddLineDialog> {
               width: 0.5,
             ),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Icon(Icons.auto_awesome, size: 12, color: Color(0xFF6366F1)),
               SizedBox(width: 4),
               Text(
@@ -957,8 +957,8 @@ class _AddLineDialogState extends State<AddLineDialog> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Row(
-          children: const [
+        content: const Row(
+          children: [
             SizedBox(
               width: 20,
               height: 20,
@@ -1026,8 +1026,8 @@ class _AddLineDialogState extends State<AddLineDialog> {
         context: context,
         builder: (ctx) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: const [
+          title: const Row(
+            children: [
               Icon(Icons.auto_awesome, color: Color(0xFF6366F1), size: 20),
               SizedBox(width: 8),
               Text('KAZ AI Suggestion', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),

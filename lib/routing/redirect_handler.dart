@@ -87,18 +87,18 @@ Future<RedirectResult> evaluateRedirect(RedirectContext ctx) async {
   // On the admin host, only allowed emails may proceed.
   // Mirrors AccessPolicy.isRestrictedAdminHost() + isEmailAllowedForAdmin().
   if (ctx.isAdminHost && !ctx.isAllowedAdminUser) {
-    return RedirectResult('/${AppRoutes.signIn}');
+    return const RedirectResult('/${AppRoutes.signIn}');
   }
 
   // ── 2. Auth guard ───────────────────────────────────────────────────
   final isPublicRoute = publicRoutes.contains(ctx.matchedLocation);
   if (ctx.userId == null && !isPublicRoute) {
-    return RedirectResult('/${AppRoutes.signIn}');
+    return const RedirectResult('/${AppRoutes.signIn}');
   }
 
   // ── 3. Authenticated root → dashboard ────────────────────────────────
   if (ctx.userId != null && ctx.matchedLocation == '/') {
-    return RedirectResult('/${AppRoutes.dashboard}');
+    return const RedirectResult('/${AppRoutes.dashboard}');
   }
 
   // ── 4. Subscription guard ────────────────────────────────────────────
@@ -117,5 +117,5 @@ Future<RedirectResult> evaluateRedirect(RedirectContext ctx) async {
   }
 
   // ── 5. No redirect ──────────────────────────────────────────────────
-  return RedirectResult(null);
+  return const RedirectResult(null);
 }

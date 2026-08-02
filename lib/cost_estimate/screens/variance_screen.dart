@@ -23,20 +23,20 @@ class VarianceScreen extends StatelessWidget {
         final baseline = estimate.baseline;
 
         if (baseline == null) {
-          return Center(
+          return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.trending_down,
+                Icon(Icons.trending_down,
                     color: Color(0xFF9CA3AF), size: 48),
-                const SizedBox(height: 16),
-                const Text('No baseline to compare',
+                SizedBox(height: 16),
+                Text('No baseline to compare',
                     style: TextStyle(
                         color: Color(0xFF1A1D1F),
                         fontSize: 20,
                         fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: 8),
+                Text(
                     'Lock a baseline on the Review tab to start tracking variance.',
                     style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                     textAlign: TextAlign.center),

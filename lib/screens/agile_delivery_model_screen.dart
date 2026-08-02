@@ -367,8 +367,8 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                         activeItemLabel:
                             'Agile Delivery Model - Delivery Model'),
                   ),
@@ -388,10 +388,10 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                         const SizedBox(height: 32),
                         Row(
                           children: [
-                            Expanded(
+                            const Expanded(
                               child: Text(
                                 'Define the agile delivery approach for this project.',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 15, color: _kMuted),
                               ),
                             ),
@@ -423,18 +423,18 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                           const Center(child: CircularProgressIndicator())
                         else ...[
                           if (_isSaving)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 8),
                               child: Row(
                                 children: [
-                                  const SizedBox(
+                                  SizedBox(
                                       width: 12,
                                       height: 12,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2)),
-                                  const SizedBox(width: 8),
+                                  SizedBox(width: 8),
                                   Text('Saving...',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 12, color: _kMuted)),
                                 ],
                               ),
@@ -559,7 +559,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                 fontSize: 14, fontWeight: FontWeight.w600, color: _kHeadline)),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _estimationOptions.contains(_selectedEstimationMethod)
+          initialValue: _estimationOptions.contains(_selectedEstimationMethod)
               ? _selectedEstimationMethod
               : _estimationOptions[0],
           decoration: const InputDecoration(
@@ -604,7 +604,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Color(0xFFE0F2FE),
                     borderRadius: BorderRadius.circular(6),
                   ),
@@ -639,7 +639,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
               constraints: BoxConstraints(
                 minHeight: f.fullWidth ? 100 : 80,
               ),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Color(0xFFD1D5DB)),

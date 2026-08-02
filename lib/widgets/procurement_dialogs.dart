@@ -103,7 +103,7 @@ class ProcurementDialogShell extends StatelessWidget {
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFDBEAFE).withOpacity(0.4),
+                        color: const Color(0xFFDBEAFE).withValues(alpha: 0.4),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -250,7 +250,7 @@ class ContextChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -685,7 +685,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _category,
+                    initialValue: _category,
                     decoration: _dialogDecoration(label: 'Category'),
                     items: categoryOptions
                         .map((option) => DropdownMenuItem(
@@ -700,7 +700,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: DropdownButtonFormField<ProcurementItemStatus>(
-                    value: _status,
+                    initialValue: _status,
                     decoration: _dialogDecoration(label: 'Status'),
                     items: ProcurementItemStatus.values
                         .map((option) => DropdownMenuItem(
@@ -716,7 +716,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<ProcurementPriority>(
-              value: _priority,
+              initialValue: _priority,
               decoration: _dialogDecoration(label: 'Priority'),
               items: ProcurementPriority.values
                   .map((option) => DropdownMenuItem(
@@ -1486,7 +1486,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
             ],
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _category,
+              initialValue: _category,
               decoration: _dialogDecoration(label: 'Category'),
               items: categoryOptions
                   .map((option) =>
@@ -1780,7 +1780,7 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _category,
+                    initialValue: _category,
                     decoration: _dialogDecoration(label: 'Category'),
                     items: categoryOptions
                         .map((option) => DropdownMenuItem(
@@ -1895,7 +1895,7 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<RfqStatus>(
-                    value: _status,
+                    initialValue: _status,
                     decoration: _dialogDecoration(label: 'Status'),
                     items: RfqStatus.values
                         .map((option) => DropdownMenuItem(
@@ -1910,7 +1910,7 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: DropdownButtonFormField<ProcurementPriority>(
-                    value: _priority,
+                    initialValue: _priority,
                     decoration: _dialogDecoration(label: 'Priority'),
                     items: ProcurementPriority.values
                         .map((option) => DropdownMenuItem(
@@ -2217,7 +2217,7 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
                 )
               else
                 DropdownButtonFormField<String>(
-                  value: _selectedSourceItemId,
+                  initialValue: _selectedSourceItemId,
                   decoration:
                       _dialogDecoration(label: 'Item from procurement list'),
                   items: List<DropdownMenuItem<String>>.generate(
@@ -2289,7 +2289,7 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _category,
+                    initialValue: _category,
                     decoration: _dialogDecoration(label: 'Category'),
                     items: categoryOptions
                         .map((option) => DropdownMenuItem(
@@ -2387,7 +2387,7 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<PurchaseOrderStatus>(
-              value: _status,
+              initialValue: _status,
               decoration: _dialogDecoration(label: 'Status'),
               items: PurchaseOrderStatus.values
                   .map((option) => DropdownMenuItem(
@@ -2700,7 +2700,7 @@ class _AddContractDialogState extends State<AddContractDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<ContractStatus>(
-              value: _status,
+              initialValue: _status,
               decoration: _dialogDecoration(label: 'Status'),
               items: ContractStatus.values.map((option) {
                 final words = option.name

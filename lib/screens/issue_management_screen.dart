@@ -238,8 +238,8 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Issue Management',
                     ),
                   ),
@@ -282,7 +282,7 @@ class _IssuesOverviewCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -343,7 +343,7 @@ class _MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -438,7 +438,7 @@ class _IssuesByMilestoneCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -487,7 +487,7 @@ class _IssuesByMilestoneCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 18, vertical: 18),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Color(0xFFF9FAFB),
                       borderRadius: BorderRadius.circular(18),
                     ),
@@ -548,7 +548,7 @@ class _IssuesByMilestoneCard extends StatelessWidget {
       ValueChanged<String> onChanged) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -592,7 +592,7 @@ class _ProjectIssuesLogCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -620,15 +620,15 @@ class _ProjectIssuesLogCard extends StatelessWidget {
                     filled: true,
                     fillColor: const Color(0xFFF9FAFB),
                     contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                    border: const OutlineInputBorder(
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(color: Color(0xFFE5E7EB)),
                     ),
-                    enabledBorder: const OutlineInputBorder(
+                    enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(color: Color(0xFFE5E7EB)),
                     ),
-                    focusedBorder: const OutlineInputBorder(
+                    focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(color: Color(0xFFFFD54F)),
                     ),
@@ -646,7 +646,7 @@ class _ProjectIssuesLogCard extends StatelessWidget {
             )
           else
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFF9FAFB),
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -890,7 +890,7 @@ class _InlineStatusCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -900,7 +900,7 @@ class _InlineStatusCard extends StatelessWidget {
           Container(
             width: 46,
             height: 46,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFFFF7ED),
               borderRadius: BorderRadius.circular(14),
             ),
@@ -1052,7 +1052,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35))),
-      focusedBorder: const OutlineInputBorder(
+      focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: Color(0xFFFFD54F), width: 1.6)),
       suffixIcon: suffixIcon,
@@ -1080,7 +1080,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _selectedType,
+                  initialValue: _selectedType,
                   items: _types
                       .map((type) =>
                           DropdownMenuItem(value: type, child: Text(type)))
@@ -1091,7 +1091,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _selectedSeverity,
+                  initialValue: _selectedSeverity,
                   items: _severities
                       .map((severity) => DropdownMenuItem(
                           value: severity, child: Text(severity)))
@@ -1102,7 +1102,7 @@ class _NewIssueDialogState extends State<_NewIssueDialog> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _selectedStatus,
+                  initialValue: _selectedStatus,
                   items: _statuses
                       .map((status) =>
                           DropdownMenuItem(value: status, child: Text(status)))
@@ -1189,7 +1189,7 @@ class _UserChip extends StatelessWidget {
 
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(color: Color(0xFFE5E7EB)),
@@ -1240,7 +1240,7 @@ class _UserChip extends StatelessWidget {
 }
 
 class _YellowButton extends StatelessWidget {
-  const _YellowButton({required this.label, this.onPressed});
+  const _YellowButton({required this.label}) : onPressed = null;
 
   final String label;
   final VoidCallback? onPressed;
@@ -1254,7 +1254,7 @@ class _YellowButton extends StatelessWidget {
         foregroundColor: const Color(0xFF111827),
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14)),
         textStyle: const TextStyle(fontWeight: FontWeight.w600),
       ),

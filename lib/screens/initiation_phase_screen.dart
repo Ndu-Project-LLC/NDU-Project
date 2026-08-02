@@ -543,7 +543,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  await showDialog<void>(
  context: context,
  barrierDismissible: false,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (_) => const _RiskIdentificationTransitionDialog(),
  );
 
@@ -1068,7 +1068,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  }
 
  final borderColor =
- hasError ? Colors.red.withOpacity(0.2) : Colors.grey.withOpacity(0.2);
+ hasError ? Colors.red.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.2);
  final canRefresh = !loading && OpenAiConfig.isConfigured;
 
  return Container(
@@ -1080,7 +1080,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  border: Border.all(color: borderColor),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 10,
  offset: const Offset(0, 4),
  ),
@@ -1181,7 +1181,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  decoration: BoxDecoration(
  color: const Color(0xFFF8F9FB),
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: Colors.grey.withOpacity(0.22)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.22)),
  ),
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1248,7 +1248,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: Colors.grey.withOpacity(0.2)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  ),
  child: Icon(icon, size: 16, color: const Color(0xFF64748B)),
  ),
@@ -1290,8 +1290,8 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Business Case Detail',
  ),
  ),
@@ -1300,7 +1300,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  // Loading overlay for AI generation
  if (_isGeneratingAI)
  Container(
- color: Colors.black.withOpacity(0.5),
+ color: Colors.black.withValues(alpha: 0.5),
  child: const Center(
  child: Column(
  mainAxisSize: MainAxisSize.min,
@@ -1339,7 +1339,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  border: Border(
- right: BorderSide(color: Colors.grey.withOpacity(0.25), width: 0.8),
+ right: BorderSide(color: Colors.grey.withValues(alpha: 0.25), width: 0.8),
  ),
  ),
  child: Column(
@@ -1348,7 +1348,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  SizedBox(
  width: double.infinity,
  height: bannerHeight,
- child: Center(child: AppLogo(height: 64)),
+ child: const Center(child: AppLogo(height: 64)),
  ),
  Container(
  padding: const EdgeInsets.all(24),
@@ -1357,8 +1357,8 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  bottom: BorderSide(color: Color(0xFFFFD700), width: 1),
  ),
  ),
- child: Row(
- children: const [
+ child: const Row(
+ children: [
  CircleAvatar(
  radius: 20,
  backgroundColor: Color(0xFFFFD700),
@@ -1534,12 +1534,12 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  border: Border(
- top: BorderSide(color: Colors.grey.withOpacity(0.2)),
- bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+ top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
+ bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
  ),
  ),
- child: Row(
- children: const [
+ child: const Row(
+ children: [
  _MobilePhaseStep(index: '1', label: 'Initiation', active: true),
  SizedBox(width: 10),
  _MobilePhaseStep(index: '2', label: 'Design'),
@@ -1729,8 +1729,8 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
- children: const [
+ const Row(
+ children: [
  Expanded(
  child: Text(
  'Draft Scope Statement',
@@ -1861,7 +1861,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  ),
  if (_isGeneratingAI)
  Container(
- color: Colors.black.withOpacity(0.5),
+ color: Colors.black.withValues(alpha: 0.5),
  child: const Center(
  child: CircularProgressIndicator(
  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
@@ -1883,7 +1883,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -1927,7 +1927,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -1973,7 +1973,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -2037,7 +2037,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  border: Border.all(
  color: _notesInvalid
  ? Colors.red
- : Colors.grey.withOpacity(0.3)),
+ : Colors.grey.withValues(alpha: 0.3)),
  ),
  child: VoiceTextField(
  controller: _notesController,
@@ -2104,7 +2104,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  border: Border.all(
  color: _businessInvalid
  ? Colors.red
- : Colors.grey.withOpacity(0.3)),
+ : Colors.grey.withValues(alpha: 0.3)),
  ),
  child: VoiceTextField(
  controller: _businessCaseController,
@@ -2126,11 +2126,11 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  ),
  ),
  if (_businessInvalid)
- Padding(
- padding: const EdgeInsets.only(top: 8),
+ const Padding(
+ padding: EdgeInsets.only(top: 8),
  child: Text(
  'Please enter at least $_businessWordMinimum words for the Business Case.',
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 13,
  color: Colors.red,
  fontWeight: FontWeight.w500,
@@ -2468,7 +2468,7 @@ class _RiskIdentificationTransitionDialogState
  center: const Alignment(-0.4, -0.6),
  radius: 1.2,
  colors: [
- const Color(0xFFFFF5B0).withOpacity(0.40),
+ const Color(0xFFFFF5B0).withValues(alpha: 0.40),
  Colors.white,
  ],
  stops: const [0.0, 1.0],
@@ -2509,10 +2509,10 @@ class _RiskIdentificationTransitionDialogState
  ),
  ),
  const SizedBox(height: 20),
- _ShimmerText(
+ const _ShimmerText(
  text: 'Transferring initiation notes and context…',
- baseColor: const Color(0xFF3A3C41),
- highlightColor: const Color(0xFF90939A),
+ baseColor: Color(0xFF3A3C41),
+ highlightColor: Color(0xFF90939A),
  ),
  const SizedBox(height: 18),
  SizedBox(
@@ -2614,16 +2614,16 @@ class _ShimmerTextState extends State<_ShimmerText>
  begin: Alignment.centerLeft,
  end: Alignment.centerRight,
  colors: [
- widget.baseColor.withOpacity(0.6),
+ widget.baseColor.withValues(alpha: 0.6),
  widget.highlightColor,
- widget.baseColor.withOpacity(0.6),
+ widget.baseColor.withValues(alpha: 0.6),
  ],
  stops: [
  (_controller.value - 0.3).clamp(0.0, 1.0),
  _controller.value.clamp(0.0, 1.0),
  (_controller.value + 0.3).clamp(0.0, 1.0),
  ],
- transform: GradientRotation(0),
+ transform: const GradientRotation(0),
  ).createShader(Rect.fromLTWH(0, 0, width, bounds.height));
  },
  child: Text(
@@ -2660,10 +2660,10 @@ class _RingPainter extends CustomPainter {
 
  // Progress arc with sweep gradient
  final rect = Rect.fromCircle(center: center, radius: radius);
- final startAngle = -90 * 3.1415926535 / 180; // -90 degrees
+ const startAngle = -90 * 3.1415926535 / 180; // -90 degrees
  final sweep = progress * 2 * 3.1415926535;
 
- final gradient = SweepGradient(
+ const gradient = SweepGradient(
  startAngle: 0,
  endAngle: 2 * 3.1415926535,
  colors: const [

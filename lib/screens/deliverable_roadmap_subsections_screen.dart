@@ -125,7 +125,7 @@ class _DeliverableRoadmapAgileMapOutScreenState
 
   List<_DeliveryWave> _buildWaves() {
     if (_sprints.isEmpty) return [];
-    final waveSize = 2;
+    const waveSize = 2;
     final waves = <_DeliveryWave>[];
     for (var i = 0; i < _sprints.length; i += waveSize) {
       final waveSprints =
@@ -180,8 +180,8 @@ class _DeliverableRoadmapAgileMapOutScreenState
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Delivery Model - Agile Map Out',
                     ),
                   ),
@@ -512,11 +512,11 @@ class _CircleBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: const BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         width: 36,
         height: 36,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(color: Color(0xFFE5E7EB)),
@@ -545,7 +545,7 @@ class _UserChip extends StatelessWidget {
           final role = isAdmin ? 'Admin' : 'Member';
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: Color(0xFFE5E7EB)),
@@ -608,7 +608,7 @@ class _MetricCard extends StatelessWidget {
     return Container(
       width: 190,
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kCardBorder),
@@ -642,7 +642,7 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kCardBorder),
@@ -707,7 +707,7 @@ class _WaveRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _kCardBorder),
@@ -751,7 +751,7 @@ class _WaveRow extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           ClipRRect(
-            borderRadius: const BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
               value: progress / 100,
               backgroundColor: const Color(0xFFE5E7EB),
@@ -1004,7 +1004,7 @@ class _MilestoneRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFC),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: _kCardBorder),

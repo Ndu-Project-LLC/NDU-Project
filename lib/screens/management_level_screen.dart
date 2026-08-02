@@ -178,10 +178,10 @@ class _ManagementLevelScreenState extends State<ManagementLevelScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: Colors.grey.withOpacity(0.18)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.18)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.06),
+ color: Colors.black.withValues(alpha: 0.06),
  blurRadius: 12,
  offset: const Offset(0, 4),
  ),
@@ -195,7 +195,7 @@ class _ManagementLevelScreenState extends State<ManagementLevelScreen> {
  LayoutBuilder(
  builder: (context, constraints) {
  final dpr = MediaQuery.devicePixelRatioOf(context);
- final targetLogicalWidth = 120.0; // visible logical px we aim for
+ const targetLogicalWidth = 120.0; // visible logical px we aim for
  final cacheWidth = (targetLogicalWidth * dpr).round();
 
  Widget imageChild;
@@ -225,7 +225,7 @@ class _ManagementLevelScreenState extends State<ManagementLevelScreen> {
  height: 96,
  alignment: Alignment.center,
  decoration: BoxDecoration(
- color: Colors.grey.withOpacity(0.06),
+ color: Colors.grey.withValues(alpha: 0.06),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Padding(
@@ -259,7 +259,7 @@ class _ManagementLevelScreenState extends State<ManagementLevelScreen> {
  Widget _imageFallback() {
  return Container(
  decoration: BoxDecoration(
- color: Colors.grey.withOpacity(0.12),
+ color: Colors.grey.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  alignment: Alignment.center,

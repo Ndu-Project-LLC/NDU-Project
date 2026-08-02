@@ -229,7 +229,7 @@ class _AdminContentScreenState extends State<AdminContentScreen> {
  if (selected) setState(() => _selectedCategory = category);
  },
  selectedColor: const Color(0xFFFFC107),
- backgroundColor: Colors.grey.withOpacity(0.1),
+ backgroundColor: Colors.grey.withValues(alpha: 0.1),
  labelStyle: TextStyle(
  color: isSelected ? Colors.black : Colors.black87,
  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
@@ -370,9 +370,9 @@ class _StaticEditBanner extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
- color: effectiveAccent.withOpacity(0.08),
+ color: effectiveAccent.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: effectiveAccent.withOpacity(0.3)),
+ border: Border.all(color: effectiveAccent.withValues(alpha: 0.3)),
  ),
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -381,7 +381,7 @@ class _StaticEditBanner extends StatelessWidget {
  width: 44,
  height: 44,
  decoration: BoxDecoration(
- color: effectiveAccent.withOpacity(0.15),
+ color: effectiveAccent.withValues(alpha: 0.15),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Icon(isEnabled ? Icons.edit_note : Icons.edit_off,
@@ -462,7 +462,7 @@ class _ContentCard extends StatelessWidget {
  elevation: 0,
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(16),
- side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+ side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
  ),
  child: Padding(
  padding: const EdgeInsets.all(20),
@@ -475,7 +475,7 @@ class _ContentCard extends StatelessWidget {
  padding:
  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
- color: const Color(0xFFFFC107).withOpacity(0.2),
+ color: const Color(0xFFFFC107).withValues(alpha: 0.2),
  borderRadius: BorderRadius.circular(20),
  ),
  child: Text(

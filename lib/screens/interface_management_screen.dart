@@ -103,8 +103,8 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Interface Management',
                     ),
                   ),
@@ -246,7 +246,7 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
   Widget _buildTabBar() {
     return Container(
       padding: const EdgeInsets.all(6),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF4B422),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -256,13 +256,13 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
           return Expanded(
             child: InkWell(
               onTap: () => setState(() => _selectedTab = tab),
-              borderRadius: const BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 160),
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                 decoration: BoxDecoration(
                   color: selected ? Colors.white : Colors.transparent,
-                  borderRadius: const BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   tab.label,
@@ -285,7 +285,7 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -452,7 +452,7 @@ class _MetricCard extends StatelessWidget {
     final child = Container(
       width: 170,
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -540,7 +540,7 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
   Widget _buildFilterBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -554,7 +554,7 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
             width: 220,
             child: VoiceTextField(
               onChanged: (v) => setState(() => _searchQuery = v),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 prefixIcon:
                     Icon(Icons.search, size: 18, color: Color(0xFF9CA3AF)),
                 hintText: 'Search interfaces...',
@@ -571,8 +571,8 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
           SizedBox(
             width: 140,
             child: DropdownButtonFormField<String>(
-              value: _typeFilter,
-              decoration: const InputDecoration(
+              initialValue: _typeFilter,
+              decoration: InputDecoration(
                 labelText: 'Type',
                 labelStyle: TextStyle(fontSize: 11),
                 border:
@@ -595,8 +595,8 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
           SizedBox(
             width: 140,
             child: DropdownButtonFormField<String>(
-              value: _statusFilter,
-              decoration: const InputDecoration(
+              initialValue: _statusFilter,
+              decoration: InputDecoration(
                 labelText: 'Status',
                 labelStyle: TextStyle(fontSize: 11),
                 border:
@@ -619,8 +619,8 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
           SizedBox(
             width: 140,
             child: DropdownButtonFormField<String>(
-              value: _priorityFilter,
-              decoration: const InputDecoration(
+              initialValue: _priorityFilter,
+              decoration: InputDecoration(
                 labelText: 'Priority',
                 labelStyle: TextStyle(fontSize: 11),
                 border:
@@ -742,40 +742,40 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
           topRight: Radius.circular(8),
         ),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const SizedBox(
+          SizedBox(
               width: 36,
               child:
                   Text('#', style: headerStyle, textAlign: TextAlign.center)),
-          const SizedBox(width: 12),
-          const Expanded(
+          SizedBox(width: 12),
+          Expanded(
               flex: 3, child: Text('Boundary / Name', style: headerStyle)),
-          const SizedBox(width: 12),
-          const SizedBox(width: 130, child: Text('Type', style: headerStyle)),
-          const SizedBox(width: 12),
-          const SizedBox(
+          SizedBox(width: 12),
+          SizedBox(width: 130, child: Text('Type', style: headerStyle)),
+          SizedBox(width: 12),
+          SizedBox(
               width: 130, child: Text('Party A', style: headerStyle)),
-          const SizedBox(width: 12),
-          const SizedBox(
+          SizedBox(width: 12),
+          SizedBox(
               width: 130, child: Text('Party B', style: headerStyle)),
-          const SizedBox(width: 12),
-          const SizedBox(
+          SizedBox(width: 12),
+          SizedBox(
               width: 110,
               child: Text('Criticality',
                   style: headerStyle, textAlign: TextAlign.center)),
-          const SizedBox(width: 12),
-          const SizedBox(
+          SizedBox(width: 12),
+          SizedBox(
               width: 110,
               child: Text('Priority',
                   style: headerStyle, textAlign: TextAlign.center)),
-          const SizedBox(width: 12),
-          const SizedBox(
+          SizedBox(width: 12),
+          SizedBox(
               width: 110,
               child: Text('Status',
                   style: headerStyle, textAlign: TextAlign.center)),
-          const SizedBox(width: 12),
-          const SizedBox(
+          SizedBox(width: 12),
+          SizedBox(
               width: 80,
               child: Text('Actions',
                   style: headerStyle, textAlign: TextAlign.center)),
@@ -1175,7 +1175,7 @@ class _InterfaceEntryDialogState extends State<_InterfaceEntryDialog> {
         decoration: InputDecoration(
           labelText: label,
           border:
-              const OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+             OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         ),
@@ -1187,11 +1187,11 @@ class _InterfaceEntryDialogState extends State<_InterfaceEntryDialog> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: DropdownButtonFormField<String>(
-        value: items.contains(value) ? value : items.first,
+        initialValue: items.contains(value) ? value : items.first,
         decoration: InputDecoration(
           labelText: label,
           border:
-              const OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+             OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         ),
@@ -1366,9 +1366,9 @@ class _ArchitectureSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Interface architecture shows how systems connect, what data flows between them, and which protocols govern each connection. This visual summary draws from your Interface Register and Technology Planning data to give teams a shared understanding of integration touchpoints.',
-          style: const TextStyle(
+          style: TextStyle(
               fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
         ),
         const SizedBox(height: 24),
@@ -1407,10 +1407,10 @@ class _ArchitectureSection extends StatelessWidget {
           borderColor: const Color(0xFF2563EB),
           items: technical.isEmpty
               ? [
-                  _ArchCard(
+                  const _ArchCard(
                       title: 'No technical interfaces defined',
                       subtitle: 'Add entries to the register',
-                      color: const Color(0xFFE5E7EB),
+                      color: Color(0xFFE5E7EB),
                       dataFlow: null)
                 ]
               : technical
@@ -1437,10 +1437,10 @@ class _ArchitectureSection extends StatelessWidget {
           borderColor: const Color(0xFF10B981),
           items: organizational.isEmpty
               ? [
-                  _ArchCard(
+                  const _ArchCard(
                       title: 'Add organizational interfaces',
                       subtitle: 'Define Party A/B connections',
-                      color: const Color(0xFFE5E7EB),
+                      color: Color(0xFFE5E7EB),
                       dataFlow: null)
                 ]
               : organizational
@@ -1558,7 +1558,7 @@ class _ArchCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(10),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1640,27 +1640,27 @@ class _RaciGovernanceSection extends StatelessWidget {
           // Header
           _buildRaciHeader(),
           // Tooltip row
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 4),
             child: Row(
               children: [
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   flex: 3,
                   child: Text('',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 10, color: Color(0xFF9CA3AF))),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 _RaciTooltipBadge(
                     label: 'R', tip: 'Responsible — does the work'),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 _RaciTooltipBadge(
                     label: 'A', tip: 'Accountable — owns the outcome'),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 _RaciTooltipBadge(
                     label: 'C', tip: 'Consulted — provides input'),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 _RaciTooltipBadge(
                     label: 'I', tip: 'Informed — kept up to date'),
               ],
@@ -1739,23 +1739,23 @@ class _RaciGovernanceSection extends StatelessWidget {
           topRight: Radius.circular(8),
         ),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Expanded(flex: 3, child: Text('Interface', style: style)),
-          const SizedBox(width: 8),
-          const SizedBox(
+          Expanded(flex: 3, child: Text('Interface', style: style)),
+          SizedBox(width: 8),
+          SizedBox(
               width: 80,
               child: Text('R', style: style, textAlign: TextAlign.center)),
-          const SizedBox(width: 8),
-          const SizedBox(
+          SizedBox(width: 8),
+          SizedBox(
               width: 80,
               child: Text('A', style: style, textAlign: TextAlign.center)),
-          const SizedBox(width: 8),
-          const SizedBox(
+          SizedBox(width: 8),
+          SizedBox(
               width: 80,
               child: Text('C', style: style, textAlign: TextAlign.center)),
-          const SizedBox(width: 8),
-          const SizedBox(
+          SizedBox(width: 8),
+          SizedBox(
               width: 80,
               child: Text('I', style: style, textAlign: TextAlign.center)),
         ],
@@ -1789,7 +1789,7 @@ class _RaciGovernanceSection extends StatelessWidget {
             width: 80,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFDBEAFE),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -1806,7 +1806,7 @@ class _RaciGovernanceSection extends StatelessWidget {
             width: 80,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFFEF3C7),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -1823,7 +1823,7 @@ class _RaciGovernanceSection extends StatelessWidget {
             width: 80,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFD1FAE5),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -1840,7 +1840,7 @@ class _RaciGovernanceSection extends StatelessWidget {
             width: 80,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -2098,8 +2098,9 @@ class _MaturitySectionState extends State<_MaturitySection> {
     int score = 0;
     if (entry.boundary.trim().isNotEmpty) score += 10;
     if (entry.interfaceType.trim().isNotEmpty) score += 10;
-    if (entry.partyA.trim().isNotEmpty && entry.partyB.trim().isNotEmpty)
+    if (entry.partyA.trim().isNotEmpty && entry.partyB.trim().isNotEmpty) {
       score += 15;
+    }
     if (entry.criticality.trim().isNotEmpty) score += 10;
     if (entry.priority.trim().isNotEmpty) score += 10;
     if (entry.dataFlow.trim().isNotEmpty) score += 10;
@@ -2635,9 +2636,10 @@ class _AuditTrailSection extends StatelessWidget {
     // Updated / Status Changed / Imported
     final oldV = entry.oldValue.trim();
     final newV = entry.newValue.trim();
-    if (oldV.isEmpty && newV.isEmpty)
+    if (oldV.isEmpty && newV.isEmpty) {
       return const Text('-',
           style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)));
+    }
     return RichText(
       text: TextSpan(
         style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
@@ -2735,8 +2737,9 @@ class _HandoffReadinessSection extends StatelessWidget {
 
   int _handoffScore(InterfaceEntry entry) {
     int score = 0;
-    if (entry.partyA.trim().isNotEmpty && entry.partyB.trim().isNotEmpty)
+    if (entry.partyA.trim().isNotEmpty && entry.partyB.trim().isNotEmpty) {
       score++;
+    }
     if (entry.owner.trim().isNotEmpty) score++;
     if (entry.protocol.trim().isNotEmpty) score++;
     if (entry.cadence.trim().isNotEmpty) score++;
@@ -2770,7 +2773,7 @@ class _HandoffCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -2857,7 +2860,7 @@ class _ReadinessSummaryCard extends StatelessWidget {
     return Container(
       width: 150,
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -2891,7 +2894,7 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -2935,7 +2938,7 @@ class _SectionSubcard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -2961,7 +2964,7 @@ class _SectionSubcard extends StatelessWidget {
 }
 
 class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon, this.onTap});
+  const _CircleIconButton({required this.icon}) : onTap = null;
 
   final IconData icon;
   final VoidCallback? onTap;
@@ -2974,7 +2977,7 @@ class _CircleIconButton extends StatelessWidget {
       child: Container(
         width: 36,
         height: 36,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3012,7 +3015,7 @@ class _StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: const BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         label.trim(),
@@ -3111,7 +3114,7 @@ class _CriticalityBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: const BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         criticality.trim(),
@@ -3162,7 +3165,7 @@ class _RaciTooltipBadge extends StatelessWidget {
         message: tip,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(4),
           ),

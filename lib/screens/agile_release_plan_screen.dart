@@ -136,8 +136,8 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Delivery Model - Release Plan',
                     ),
                   ),
@@ -154,10 +154,10 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                                 context, 'agile_release_plan'),
                             onExportPdf: _exportPdf),
                         const SizedBox(height: 32),
-                        Text(
+                        const Text(
                             'Plan releases, PI increments, and versioned deployments.',
                             style:
-                                const TextStyle(fontSize: 15, color: _kMuted)),
+                                TextStyle(fontSize: 15, color: _kMuted)),
                         const SizedBox(height: 24),
                         if (_isLoading)
                           const Center(child: CircularProgressIndicator())
@@ -181,7 +181,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: _kAccent,
                               side: const BorderSide(color: _kAccent),
-                              shape: const RoundedRectangleBorder(
+                              shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8)),
                             ),
                           ),
@@ -238,7 +238,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
         plan.releaseDate != null ? _df.format(plan.releaseDate!) : 'Date TBD';
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
         side: BorderSide(color: _kBorder),
       ),
@@ -325,7 +325,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFFFF7ED),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Color(0xFFF59E0B)),
@@ -395,7 +395,7 @@ class _AgileReleasePlanScreenState extends State<AgileReleasePlanScreen> {
   Widget _buildEmptyState(String message) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -571,7 +571,7 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
             ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
-              value: _status,
+              initialValue: _status,
               decoration: const InputDecoration(
                   labelText: 'Status', border: OutlineInputBorder()),
               items: ['Draft', 'Ready', 'Approved']
@@ -590,7 +590,7 @@ class _ReleasePlanEditDialogState extends State<_ReleasePlanEditDialog> {
             ),
             const SizedBox(height: 10),
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border.all(color: Color(0xFFE5E7EB)),
                 borderRadius: BorderRadius.circular(4),
               ),

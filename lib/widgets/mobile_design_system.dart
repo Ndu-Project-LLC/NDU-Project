@@ -164,7 +164,7 @@ class MobileDesignSystem {
       border: Border.all(color: border),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.03),
+          color: Colors.black.withValues(alpha: 0.03),
           blurRadius: 8,
           offset: const Offset(0, 2),
         ),
@@ -322,7 +322,7 @@ class MobileDesignSystem {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: (iconColor ?? info).withOpacity(0.1),
+                  color: (iconColor ?? info).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: iconColor ?? info, size: isMobile ? 16 : 18),

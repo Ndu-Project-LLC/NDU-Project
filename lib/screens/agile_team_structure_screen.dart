@@ -258,7 +258,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
             if (isAiGenerated)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFE0F2FE),
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -470,8 +470,8 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Delivery Model - Team Structure',
                     ),
                   ),
@@ -518,18 +518,18 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
                           const Center(child: CircularProgressIndicator())
                         else ...[
                           if (_isSaving)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 8),
                               child: Row(
                                 children: [
-                                  const SizedBox(
+                                  SizedBox(
                                       width: 12,
                                       height: 12,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2)),
-                                  const SizedBox(width: 8),
+                                  SizedBox(width: 8),
                                   Text('Saving...',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 12, color: _kMuted)),
                                 ],
                               ),
@@ -553,7 +553,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: _kAccent,
                               side: const BorderSide(color: _kAccent),
-                              shape: const RoundedRectangleBorder(
+                              shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8)),
                             ),
                           ),
@@ -618,7 +618,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
     final ctrls = _controllersForTeam(team);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: _kBorder),
       ),
@@ -702,7 +702,7 @@ class _AgileTeamStructureScreenState extends State<AgileTeamStructureScreen> {
   Widget _buildEmptyState(String message) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(12),
       ),

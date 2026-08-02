@@ -223,8 +223,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Agile Development Iterations',
  ),
  ),
@@ -576,8 +576,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.speed, size: 16,
-                              color: const Color(0xFF7C3AED)),
+                          const Icon(Icons.speed, size: 16,
+                              color: Color(0xFF7C3AED)),
                           const SizedBox(width: 8),
                           Text(
                             epicEntry.key,
@@ -610,8 +610,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
                                   left: 12, bottom: 4),
                               child: Row(
                                 children: [
-                                  Icon(Icons.flag, size: 14,
-                                      color: const Color(0xFFF59E0B)),
+                                  const Icon(Icons.flag, size: 14,
+                                      color: Color(0xFFF59E0B)),
                                   const SizedBox(width: 6),
                                   Text(
                                     featureEntry.key,
@@ -729,7 +729,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
  key: assignedRoleFieldKey,
- value: _availableRoles.isEmpty
+ initialValue: _availableRoles.isEmpty
  ? null
  : (_availableRoles.contains(selectedRole)
  ? selectedRole
@@ -763,7 +763,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<int>(
- value: selectedStoryPoints,
+ initialValue: selectedStoryPoints,
  decoration:
  const InputDecoration(labelText: 'Story Points *'),
  items: const [1, 2, 3, 5, 8].map((points) {
@@ -774,7 +774,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedPriority,
+ initialValue: selectedPriority,
  decoration: const InputDecoration(labelText: 'Priority *'),
  items: const ['Critical', 'High', 'Medium', 'Low'].map((p) {
  return DropdownMenuItem<String>(value: p, child: Text(p));
@@ -783,7 +783,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(labelText: 'Status *'),
  items: const ['To-Do', 'In-Progress', 'Testing', 'Done']
  .map((s) {
@@ -794,7 +794,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
             const SizedBox(height: 12),
             if (_epics.isNotEmpty)
               DropdownButtonFormField<String>(
-                value: selectedEpicId,
+                initialValue: selectedEpicId,
                 decoration: const InputDecoration(
                     labelText: 'Epic *'),
                 items: _epics.map((e) => DropdownMenuItem<String>(
@@ -816,7 +816,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: DropdownButtonFormField<String>(
-                  value: selectedFeatureId.isNotEmpty
+                  initialValue: selectedFeatureId.isNotEmpty
                       ? selectedFeatureId
                       : null,
                   decoration: const InputDecoration(

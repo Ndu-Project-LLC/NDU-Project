@@ -187,10 +187,10 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Sprint review saved'),
+          const SnackBar(
+            content: Text('Sprint review saved'),
             backgroundColor: _kAccent,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -253,8 +253,8 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Sprint Reviews',
                     ),
                   ),
@@ -266,7 +266,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        PlanningPhaseHeader(
+                        const PlanningPhaseHeader(
                           title: 'Sprint Reviews',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -333,7 +333,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
           decoration: BoxDecoration(
             color: _kAccentBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _kAccent.withOpacity(0.3)),
+            border: Border.all(color: _kAccent.withValues(alpha: 0.3)),
           ),
           child: Text('$_currentSprint REVIEW',
               style: const TextStyle(
@@ -374,16 +374,16 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
               child:
                   _summaryCell('Accepted', '$accepted', Icons.check_circle)),
           Container(
-              width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
+              width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child: _summaryCell('Rejected', '$rejected', Icons.cancel)),
           Container(
-              width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
+              width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child: _summaryCell(
                   'Points', '$pointsDelivered', Icons.stars)),
           Container(
-              width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
+              width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child: _summaryCell(
                   'Stakeholder', avgRating.toStringAsFixed(1), Icons.star)),
@@ -406,7 +406,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
         Text(label,
             style: TextStyle(
                 fontSize: 11,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 fontWeight: FontWeight.w500)),
       ],
     );
@@ -446,8 +446,8 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildStoriesHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           SizedBox(width: 80,
               child: Text('Story',
                   style: TextStyle(
@@ -570,7 +570,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(value,
@@ -589,7 +589,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: c.withOpacity(0.1),
+        color: c.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(status,
@@ -677,7 +677,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      Icon(Icons.person_outline,
+                      const Icon(Icons.person_outline,
                           size: 11, color: _kMuted),
                       const SizedBox(width: 4),
                       Text(d.owner,
@@ -685,7 +685,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
                               fontSize: 11, color: _kMuted)),
                       if (d.notes.isNotEmpty) ...[
                         const SizedBox(width: 10),
-                        Icon(Icons.notes, size: 11, color: _kMuted),
+                        const Icon(Icons.notes, size: 11, color: _kMuted),
                         const SizedBox(width: 4),
                         Expanded(
                             child: Text(d.notes,
@@ -720,12 +720,12 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.feedback_outlined,
+              Icon(Icons.feedback_outlined,
                   size: 20, color: _kAccent),
-              const SizedBox(width: 8),
-              const Text('Stakeholder Feedback',
+              SizedBox(width: 8),
+              Text('Stakeholder Feedback',
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -762,7 +762,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             children: [
               CircleAvatar(
                 radius: 14,
-                backgroundColor: sentimentColor.withOpacity(0.15),
+                backgroundColor: sentimentColor.withValues(alpha: 0.15),
                 child: Text(
                     f.stakeholder.split(' ').map((p) => p.isNotEmpty ? p[0] : '').take(2).join(),
                     style: TextStyle(
@@ -846,8 +846,8 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildActionsHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           SizedBox(width: 30),
           Expanded(
               flex: 5,
@@ -1141,7 +1141,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

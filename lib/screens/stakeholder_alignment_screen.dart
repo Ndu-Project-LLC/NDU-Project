@@ -192,8 +192,8 @@ class _StakeholderAlignmentScreenState
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Stakeholder Alignment',
                     ),
                   ),
@@ -428,7 +428,7 @@ class _StakeholderAlignmentScreenState
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: selectedStakeholder,
+                    initialValue: selectedStakeholder,
                     decoration: const InputDecoration(
                       labelText: 'Stakeholder Name/Role',
                       hintText: 'Select from Core Stakeholders or enter new',
@@ -477,7 +477,7 @@ class _StakeholderAlignmentScreenState
                     ),
                   ],
                   DropdownButtonFormField<String>(
-                    value: selectedStatus,
+                    initialValue: selectedStatus,
                     decoration:
                         const InputDecoration(labelText: 'Alignment Status'),
                     items: ['Aligned', 'Neutral', 'Concerned', 'Resistent']
@@ -493,7 +493,7 @@ class _StakeholderAlignmentScreenState
                     },
                   ),
                   DropdownButtonFormField<String>(
-                    value: selectedKeyInterest,
+                    initialValue: selectedKeyInterest,
                     decoration:
                         const InputDecoration(labelText: 'Key Interest/Value'),
                     items: [

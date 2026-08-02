@@ -335,8 +335,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Finalize Project',
  ),
  ),
@@ -417,7 +417,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  Container(
  padding: const EdgeInsets.all(10),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Icon(icon, size: 20, color: color),
@@ -478,9 +478,9 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  OutlinedButton.icon(
  onPressed: () async {
  final rows = await showCsvImportDialog(context, tableTitle: 'Snapshot', columns: [
- CsvColumnSpec(key: 'title', label: 'Metric', sampleValue: 'Delivery Package'),
- CsvColumnSpec(key: 'subtitle', label: 'Description', sampleValue: 'Final artifacts and deployment notes'),
- CsvColumnSpec(key: 'value', label: 'Status', sampleValue: 'Ready'),
+ const CsvColumnSpec(key: 'title', label: 'Metric', sampleValue: 'Delivery Package'),
+ const CsvColumnSpec(key: 'subtitle', label: 'Description', sampleValue: 'Final artifacts and deployment notes'),
+ const CsvColumnSpec(key: 'value', label: 'Status', sampleValue: 'Ready'),
  ]);
  if (rows == null || !mounted) return;
  setState(() {
@@ -553,7 +553,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  onChanged: (v) => _updateSnapshotMetric(metric.copyWith(title: v)),
  )
  : Row(children: [
- Container(width: 4, height: 32, decoration: BoxDecoration(color: metric.accent.withOpacity(0.8), borderRadius: BorderRadius.circular(2))),
+ Container(width: 4, height: 32, decoration: BoxDecoration(color: metric.accent.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(2))),
  const SizedBox(width: 12),
  ConstrainedBox(constraints: const BoxConstraints(maxWidth: 200), child: Text(metric.title.isEmpty ? 'Untitled' : metric.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF111827)), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis)),
  ]),
@@ -571,8 +571,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  decoration: _inputDecoration('Status'),
  onChanged: (v) => _updateSnapshotMetric(metric.copyWith(value: v)),
  )
- : Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withOpacity(0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(metric.value.isEmpty ? Icons.radio_button_unchecked : Icons.check_circle, size: 12, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)), const SizedBox(width: 4), Text(metric.value.isEmpty ? 'Not set' : metric.value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)))]))),
- DataCell(Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withOpacity(0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(hasData ? Icons.lock : Icons.lock_outline, size: 12, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)), const SizedBox(width: 4), Text(hasData ? 'Saved' : 'Empty', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)))]))),
+ : Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withValues(alpha: 0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(metric.value.isEmpty ? Icons.radio_button_unchecked : Icons.check_circle, size: 12, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)), const SizedBox(width: 4), Text(metric.value.isEmpty ? 'Not set' : metric.value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)))]))),
+ DataCell(Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withValues(alpha: 0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(hasData ? Icons.lock : Icons.lock_outline, size: 12, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)), const SizedBox(width: 4), Text(hasData ? 'Saved' : 'Empty', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)))]))),
  if (true) DataCell(Row(
  mainAxisSize: MainAxisSize.min,
  children: [
@@ -636,11 +636,11 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  ),
  ),
  const SizedBox(width: 14),
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const Text(
+ Text(
  'No data entered',
  style: TextStyle(
  fontSize: 14,
@@ -648,12 +648,12 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  color: Color(0xFF9CA3AF),
  ),
  ),
- const SizedBox(height: 2),
+ SizedBox(height: 2),
  Text(
  'Click Edit to add this metric',
  style: TextStyle(
  fontSize: 12,
- color: const Color(0xFF9CA3AF),
+ color: Color(0xFF9CA3AF),
  ),
  ),
  ],
@@ -666,21 +666,21 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  borderRadius: BorderRadius.circular(20),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(
+ Icon(
  Icons.lock_outline,
  size: 12,
  color: Color(0xFF9CA3AF),
  ),
- const SizedBox(width: 4),
+ SizedBox(width: 4),
  Text(
  'Empty',
  style: TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w600,
- color: const Color(0xFF9CA3AF),
+ color: Color(0xFF9CA3AF),
  ),
  ),
  ],
@@ -702,7 +702,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFF0F172A).withOpacity(0.03),
+ color: const Color(0xFF0F172A).withValues(alpha: 0.03),
  blurRadius: 8,
  offset: const Offset(0, 2),
  ),
@@ -714,7 +714,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  width: 4,
  height: 40,
  decoration: BoxDecoration(
- color: safeAccent.withOpacity(0.8),
+ color: safeAccent.withValues(alpha: 0.8),
  borderRadius: BorderRadius.circular(2),
  ),
  ),
@@ -775,22 +775,22 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- color: const Color(0xFF16A34A).withOpacity(0.08),
+ color: const Color(0xFF16A34A).withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(20),
  border: Border.all(
- color: const Color(0xFF16A34A).withOpacity(0.2),
+ color: const Color(0xFF16A34A).withValues(alpha: 0.2),
  ),
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(
+ Icon(
  Icons.lock_rounded,
  size: 11,
  color: Color(0xFF16A34A),
  ),
- const SizedBox(width: 4),
- const Text(
+ SizedBox(width: 4),
+ Text(
  'Saved',
  style: TextStyle(
  fontSize: 11,
@@ -811,10 +811,10 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(20),
  border: Border.all(
- color: color.withOpacity(0.3),
+ color: color.withValues(alpha: 0.3),
  width: 1,
  ),
  ),
@@ -897,10 +897,10 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  OutlinedButton.icon(
  onPressed: () async {
  final rows = await showCsvImportDialog(context, tableTitle: 'Checklist', columns: [
- CsvColumnSpec(key: 'title', label: 'Checklist Item', sampleValue: 'Final deployment review'),
- CsvColumnSpec(key: 'owner', label: 'Owner', sampleValue: 'Project Manager'),
- CsvColumnSpec(key: 'dueDate', label: 'Due Date', sampleValue: '2026-07-15'),
- CsvColumnSpec(key: 'status', label: 'Status', sampleValue: 'Pending', allowedValues: ['Pending', 'In Progress', 'Done']),
+ const CsvColumnSpec(key: 'title', label: 'Checklist Item', sampleValue: 'Final deployment review'),
+ const CsvColumnSpec(key: 'owner', label: 'Owner', sampleValue: 'Project Manager'),
+ const CsvColumnSpec(key: 'dueDate', label: 'Due Date', sampleValue: '2026-07-15'),
+ const CsvColumnSpec(key: 'status', label: 'Status', sampleValue: 'Pending', allowedValues: ['Pending', 'In Progress', 'Done']),
  ]);
  if (rows == null || !mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${rows.length} checklist items imported from CSV'), backgroundColor: Colors.green));
@@ -984,7 +984,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  Expanded(
  flex: 2,
  child: DropdownButtonFormField<String>(
- value: item.status,
+ initialValue: item.status,
  decoration: _inputDecoration('Status', dense: true),
  items: _checklistStatuses
  .map((status) =>
@@ -1075,7 +1075,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  Expanded(
  flex: 2,
  child: DropdownButtonFormField<String>(
- value: item.status,
+ initialValue: item.status,
  decoration: _inputDecoration('Status', dense: true),
  items: _signOffStatuses
  .map((status) =>
@@ -1189,7 +1189,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: const Color(0xFFE5E7EB).withOpacity(0.7),
+                  color: const Color(0xFFE5E7EB).withValues(alpha: 0.7),
                 ),
               ),
             ),
@@ -1216,11 +1216,11 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                   ),
                 ),
                 const SizedBox(width: 14),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Finalize Decision Log',
                         style: TextStyle(
                           fontSize: 16,
@@ -1229,8 +1229,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                           letterSpacing: -0.3,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      const Text(
+                      SizedBox(height: 2),
+                      Text(
                         'Capture the final decision summary and next-step actions.',
                         style: TextStyle(
                           fontSize: 12,
@@ -1250,25 +1250,25 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        const Color(0xFFD1FAE5).withOpacity(0.7),
-                        const Color(0xFFECFDF5).withOpacity(0.5),
+                        const Color(0xFFD1FAE5).withValues(alpha: 0.7),
+                        const Color(0xFFECFDF5).withValues(alpha: 0.5),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: const Color(0xFF6EE7B7).withOpacity(0.5),
+                      color: const Color(0xFF6EE7B7).withValues(alpha: 0.5),
                     ),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.edit_outlined,
                         size: 12,
-                        color: const Color(0xFF059669),
+                        color: Color(0xFF059669),
                       ),
-                      const SizedBox(width: 6),
-                      const Text(
+                      SizedBox(width: 6),
+                      Text(
                         'Editable \u00B7 Auto-saves',
                         style: TextStyle(
                           fontSize: 11,
@@ -1386,13 +1386,13 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: hasContent
-                    ? const Color(0xFFD1FAE5).withOpacity(0.5)
-                    : const Color(0xFFFEF3C7).withOpacity(0.5),
+                    ? const Color(0xFFD1FAE5).withValues(alpha: 0.5)
+                    : const Color(0xFFFEF3C7).withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: hasContent
-                      ? const Color(0xFFA7F3D0).withOpacity(0.6)
-                      : const Color(0xFFFDE68A).withOpacity(0.6),
+                      ? const Color(0xFFA7F3D0).withValues(alpha: 0.6)
+                      : const Color(0xFFFDE68A).withValues(alpha: 0.6),
                 ),
               ),
               child: Row(
@@ -1444,8 +1444,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
             ),
             decoration: InputDecoration(
               hintText: hintText,
-              hintStyle: TextStyle(
-                color: const Color(0xFF9CA3AF),
+              hintStyle: const TextStyle(
+                color: Color(0xFF9CA3AF),
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
                 fontStyle: FontStyle.italic,
@@ -1462,10 +1462,10 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
           alignment: Alignment.centerRight,
           child: Text(
             '${controller.text.length} characters',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF9CA3AF),
+              color: Color(0xFF9CA3AF),
             ),
           ),
         ),
@@ -1716,8 +1716,8 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
           boxShadow: [
             BoxShadow(
               color: _isHovered
-                  ? const Color(0xFF6366F1).withOpacity(0.06)
-                  : Colors.black.withOpacity(0.03),
+                  ? const Color(0xFF6366F1).withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.03),
               blurRadius: _isHovered ? 16 : 8,
               offset: Offset(0, _isHovered ? 6 : 2),
             ),
@@ -1736,7 +1736,7 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                     end: Alignment.bottomCenter,
                     colors: [
                       const Color(0xFF6366F1),
-                      const Color(0xFF8B5CF6).withOpacity(0.6),
+                      const Color(0xFF8B5CF6).withValues(alpha: 0.6),
                     ],
                   ),
                   borderRadius: const BorderRadius.only(
@@ -1765,8 +1765,8 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  const Color(0xFF6366F1).withOpacity(0.12),
-                                  const Color(0xFF8B5CF6).withOpacity(0.08),
+                                  const Color(0xFF6366F1).withValues(alpha: 0.12),
+                                  const Color(0xFF8B5CF6).withValues(alpha: 0.08),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(10),
@@ -1784,16 +1784,16 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                             child: VoiceTextFormField(
                               key: ValueKey('insight-title-${widget.item.id}'),
                               initialValue: widget.item.title,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 hintText: 'Insight title',
                                 hintStyle: TextStyle(
-                                  color: const Color(0xFF9CA3AF),
+                                  color: Color(0xFF9CA3AF),
                                   fontWeight: FontWeight.w500,
                                 ),
                                 border: InputBorder.none,
                                 isDense: true,
                                 contentPadding:
-                                    const EdgeInsets.symmetric(vertical: 6),
+                                    EdgeInsets.symmetric(vertical: 6),
                               ),
                               style: TextStyle(
                                 fontSize: 15,
@@ -1815,8 +1815,8 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: hasTitle && hasDetail
-                                  ? const Color(0xFFD1FAE5).withOpacity(0.6)
-                                  : const Color(0xFFFEF3C7).withOpacity(0.5),
+                                  ? const Color(0xFFD1FAE5).withValues(alpha: 0.6)
+                                  : const Color(0xFFFEF3C7).withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: hasTitle && hasDetail
@@ -1863,17 +1863,17 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                           color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFE5E7EB).withOpacity(0.6),
+                            color: const Color(0xFFE5E7EB).withValues(alpha: 0.6),
                           ),
                         ),
                         child: VoiceTextFormField(
                           key: ValueKey('insight-detail-${widget.item.id}'),
                           initialValue: widget.item.detail,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             hintText:
                                 'Describe the risk, coverage need, or warranty detail…',
                             hintStyle: TextStyle(
-                              color: const Color(0xFF9CA3AF),
+                              color: Color(0xFF9CA3AF),
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -1898,14 +1898,14 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                       Row(
                         children: [
                           // Character / word count
-                          Icon(Icons.text_fields_rounded,
-                              size: 12, color: const Color(0xFF9CA3AF)),
+                          const Icon(Icons.text_fields_rounded,
+                              size: 12, color: Color(0xFF9CA3AF)),
                           const SizedBox(width: 4),
                           Text(
                             '${widget.item.detail.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length} words',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
-                              color: const Color(0xFF9CA3AF),
+                              color: Color(0xFF9CA3AF),
                               fontWeight: FontWeight.w500,
                             ),
                           ),

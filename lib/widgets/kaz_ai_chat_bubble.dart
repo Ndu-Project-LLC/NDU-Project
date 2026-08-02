@@ -29,7 +29,7 @@ class KazAiChatBubble extends StatelessWidget {
   static void openChat(BuildContext context) {
     showGeneralDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.15),
+      barrierColor: Colors.black.withValues(alpha: 0.15),
       barrierDismissible: true,
       barrierLabel: 'Close chat',
       transitionDuration: const Duration(milliseconds: 250),
@@ -68,7 +68,7 @@ class KazAiChatBubble extends StatelessWidget {
             color: const Color(0xFFFFC812),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFFC812).withOpacity(0.4),
+                color: const Color(0xFFFFC812).withValues(alpha: 0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -95,7 +95,7 @@ class KazAiChatBubble extends StatelessWidget {
   void _openKazAiChat(BuildContext context) {
     showGeneralDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.15),
+      barrierColor: Colors.black.withValues(alpha: 0.15),
       barrierDismissible: true,
       barrierLabel: 'Close chat',
       transitionDuration: const Duration(milliseconds: 250),
@@ -788,13 +788,13 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.black.withValues(alpha: 0.12),
                   blurRadius: 48,
                   offset: const Offset(0, 16),
                   spreadRadius: 0,
                 ),
                 BoxShadow(
-                  color: const Color(0xFFFFC812).withOpacity(0.08),
+                  color: const Color(0xFFFFC812).withValues(alpha: 0.08),
                   blurRadius: 24,
                   offset: const Offset(0, 4),
                 ),
@@ -848,8 +848,8 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                 height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.25),
-                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+                  color: Colors.white.withValues(alpha: 0.25),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
                 ),
                 child: const Icon(Icons.chat_bubble_rounded, color: Colors.white, size: 22),
               ),
@@ -880,7 +880,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                         Text(
                           _activeTab == 0 ? 'AI Assistant Online' : 'Support Agent',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
@@ -914,10 +914,10 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
   // ── Tab Bar ───────────────────────────────────────────────────────────
   Widget _buildTabBar(ThemeData theme, ColorScheme scheme) {
     return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
         border: Border(
-          bottom: BorderSide(color: const Color(0xFFE2E8F0), width: 1),
+          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
         ),
       ),
       child: TabBar(
@@ -930,15 +930,15 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
         indicatorWeight: 3,
         indicatorSize: TabBarIndicatorSize.label,
         dividerHeight: 0,
-        tabs: [
+        tabs: const [
           Tab(
             height: 40,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.psychology_rounded, size: 18),
-                const SizedBox(width: 8),
-                const Text('AI Assistant'),
+                Icon(Icons.psychology_rounded, size: 18),
+                SizedBox(width: 8),
+                Text('AI Assistant'),
               ],
             ),
           ),
@@ -947,9 +947,9 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.support_agent_rounded, size: 18),
-                const SizedBox(width: 8),
-                const Text('Support'),
+                Icon(Icons.support_agent_rounded, size: 18),
+                SizedBox(width: 8),
+                Text('Support'),
               ],
             ),
           ),
@@ -1057,8 +1057,8 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFFFABD00).withOpacity(0.06),
-              border: Border(bottom: BorderSide(color: const Color(0xFFFABD00).withOpacity(0.2))),
+              color: const Color(0xFFFABD00).withValues(alpha: 0.06),
+              border: Border(bottom: BorderSide(color: const Color(0xFFFABD00).withValues(alpha: 0.2))),
             ),
             child: Row(
               children: [
@@ -1140,7 +1140,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0xFFFABD00).withOpacity(0.25),
+                    color: const Color(0xFFFABD00).withValues(alpha: 0.25),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -1243,9 +1243,9 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Color(0xFFFABD00).withOpacity(0.06),
+              color: const Color(0xFFFABD00).withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Color(0xFFFABD00).withOpacity(0.2)),
+              border: Border.all(color: const Color(0xFFFABD00).withValues(alpha: 0.2)),
             ),
             child: const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1385,7 +1385,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: (color ?? const Color(0xFFFFC812)).withOpacity(0.08),
+              color: (color ?? const Color(0xFFFFC812)).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -1405,7 +1405,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: (color ?? scheme.primary).withOpacity(0.7),
+                    color: (color ?? scheme.primary).withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -1436,7 +1436,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
           bottomRight: Radius.circular(24),
         ),
         border: Border(
-          top: BorderSide(color: const Color(0xFFE2E8F0).withOpacity(0.5)),
+          top: BorderSide(color: const Color(0xFFE2E8F0).withValues(alpha: 0.5)),
         ),
       ),
       child: Row(
@@ -1477,13 +1477,13 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: [color, color.withOpacity(0.8)],
+                    colors: [color, color.withValues(alpha: 0.8)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: color.withOpacity(0.3),
+                      color: color.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -1539,7 +1539,7 @@ class _ChatBubble extends StatelessWidget {
       listBullet: baseStyle,
       code: baseStyle?.copyWith(
         fontFamily: appFontFamily,
-        backgroundColor: scheme.surfaceContainerHighest.withOpacity(0.6),
+        backgroundColor: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
         fontSize: 12,
       ),
     );
@@ -1567,7 +1567,7 @@ class _ChatBubble extends StatelessWidget {
                         ? []
                         : [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
+                              color: Colors.black.withValues(alpha: 0.03),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -1646,8 +1646,8 @@ class _ChatBubble extends StatelessWidget {
         height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFF2563EB).withOpacity(0.12),
-          border: Border.all(color: const Color(0xFF2563EB).withOpacity(0.2), width: 1.5),
+          color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+          border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.2), width: 1.5),
         ),
         child: const Icon(Icons.person_rounded, color: Color(0xFF2563EB), size: 16),
       );
@@ -1664,11 +1664,11 @@ class _ChatBubble extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: isSupport
-            ? LinearGradient(colors: [const Color(0xFFFABD00), const Color(0xFFFFD54F)])
-            : LinearGradient(colors: [const Color(0xFFFFC812), const Color(0xFFFF9800)]),
+            ? const LinearGradient(colors: [Color(0xFFFABD00), Color(0xFFFFD54F)])
+            : const LinearGradient(colors: [Color(0xFFFFC812), Color(0xFFFF9800)]),
         boxShadow: [
           BoxShadow(
-            color: bgColor.withOpacity(0.25),
+            color: bgColor.withValues(alpha: 0.25),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1679,8 +1679,8 @@ class _ChatBubble extends StatelessWidget {
   }
 
   Color _bubbleColor() {
-    if (message.isUser) return const Color(0xFF2563EB).withOpacity(0.1);
-    if (message.isSupportAgent) return Color(0xFFFABD00).withOpacity(0.06);
+    if (message.isUser) return const Color(0xFF2563EB).withValues(alpha: 0.1);
+    if (message.isSupportAgent) return const Color(0xFFFABD00).withValues(alpha: 0.06);
     return const Color(0xFFF8FAFC);
   }
 

@@ -452,8 +452,8 @@ class _AgileBacklogGovernanceScreenState
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                         activeItemLabel:
                             'Agile Delivery Model - Backlog Governance'),
                   ),
@@ -473,10 +473,10 @@ class _AgileBacklogGovernanceScreenState
                         const SizedBox(height: 32),
                         Row(
                           children: [
-                            Expanded(
+                            const Expanded(
                               child: Text(
                                 'Define the rules, criteria, and processes for managing the product backlog.',
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 15, color: _kMuted),
                               ),
                             ),
@@ -508,18 +508,18 @@ class _AgileBacklogGovernanceScreenState
                           const Center(child: CircularProgressIndicator())
                         else ...[
                           if (_isSaving)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 8),
                               child: Row(
                                 children: [
-                                  const SizedBox(
+                                  SizedBox(
                                       width: 12,
                                       height: 12,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2)),
-                                  const SizedBox(width: 8),
+                                  SizedBox(width: 8),
                                   Text('Saving...',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 12, color: _kMuted)),
                                 ],
                               ),
@@ -564,7 +564,7 @@ class _AgileBacklogGovernanceScreenState
   Widget _buildDoRSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -632,7 +632,7 @@ class _AgileBacklogGovernanceScreenState
   Widget _buildDoDSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -779,7 +779,7 @@ class _AgileBacklogGovernanceScreenState
   Widget _buildWorkingAgreementsSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -852,7 +852,7 @@ class _AgileBacklogGovernanceScreenState
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Color(0xFFE0F2FE),
                     borderRadius: BorderRadius.circular(6),
                   ),
@@ -887,7 +887,7 @@ class _AgileBacklogGovernanceScreenState
               constraints: BoxConstraints(
                 minHeight: f.fullWidth ? 100 : 80,
               ),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Color(0xFFD1D5DB)),

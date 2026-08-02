@@ -363,7 +363,7 @@ class _LongLeadEquipmentOrderingScreenState
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Icon(Icons.lightbulb_outline,
+ const Icon(Icons.lightbulb_outline,
  size: 18, color: LightModeColors.accent),
  const SizedBox(width: 8),
  Expanded(
@@ -486,7 +486,7 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: criticality,
+ initialValue: criticality,
  items: _criticalityOptions
  .map((option) => DropdownMenuItem(
  value: option,
@@ -610,7 +610,7 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: _equipmentStatusOptions
  .map((option) => DropdownMenuItem(
  value: option,
@@ -710,7 +710,7 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: _actionStatusOptions
  .map((option) => DropdownMenuItem(
  value: option,
@@ -1205,7 +1205,7 @@ class _DropdownCell extends StatelessWidget {
  final resolvedValue = options.contains(value) ? value : options.first;
  return DropdownButtonFormField<String>(
  key: ValueKey(fieldKey),
- value: resolvedValue,
+ initialValue: resolvedValue,
  items: options
  .map((option) => DropdownMenuItem(value: option, child: Text(option)))
  .toList(),

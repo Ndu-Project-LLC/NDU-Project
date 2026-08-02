@@ -456,7 +456,7 @@ class LaunchModalDropdown<T> extends StatelessWidget {
         LaunchModalLabel(label),
         const SizedBox(height: 4),
         DropdownButtonFormField<T>(
-          value: value,
+          initialValue: value,
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down_rounded,
               color: _kModalTextSecondary, size: 20),

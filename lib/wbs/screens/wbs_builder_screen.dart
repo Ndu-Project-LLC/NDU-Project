@@ -66,7 +66,7 @@ class _TopDownConnectorPainter extends CustomPainter {
     }
     const firstAnchor = 72.0;
     final lastX = size.width - 72.0;
-    canvas.drawLine(Offset(firstAnchor, 12.0), Offset(lastX, 12.0), paint);
+    canvas.drawLine(const Offset(firstAnchor, 12.0), Offset(lastX, 12.0), paint);
     for (int i = 0; i < childCount; i++) {
       final x = 72.0 + (144.0 * i);
       canvas.drawLine(Offset(x, 12.0), Offset(x, size.height), paint);
@@ -426,8 +426,9 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
 
   Widget _buildSmallMethodologyBadge(
       String? methodology, WBSFramework framework) {
-    if (methodology == null || methodology.isEmpty)
+    if (methodology == null || methodology.isEmpty) {
       return const SizedBox.shrink();
+    }
     final color = switch (methodology) {
       'agile' => const Color(0xFF7C3AED),
       'waterfall' => const Color(0xFF2563EB),
@@ -1538,7 +1539,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
       child: Column(
         children: [
           Icon(Icons.layers,
-              color: Color(0xFF9CA3AF).withValues(alpha: 0.5), size: 40),
+              color: const Color(0xFF9CA3AF).withValues(alpha: 0.5), size: 40),
           const SizedBox(height: 12),
           Text(
             'No ${fm.level1Label} nodes yet.',
@@ -1612,7 +1613,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Icon(Icons.add_circle_outline,
+            const Icon(Icons.add_circle_outline,
                 color: LightModeColors.accent, size: 20),
             const SizedBox(width: 8),
             Text('Add Level $level — $levelLabel',
@@ -1683,7 +1684,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                   if (isHybrid && level == 1) ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: selectedMethodology,
+                      initialValue: selectedMethodology,
                       decoration: InputDecoration(
                         labelText: 'Methodology',
                         labelStyle: const TextStyle(color: Color(0xFF6B7280)),
@@ -1754,7 +1755,7 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Icon(Icons.edit_outlined, color: LightModeColors.accent, size: 20),
+            const Icon(Icons.edit_outlined, color: LightModeColors.accent, size: 20),
             const SizedBox(width: 8),
             Text('Edit $levelLabel',
                 style: const TextStyle(color: Color(0xFF1A1D1F), fontSize: 16)),
@@ -2203,10 +2204,10 @@ class _TreeBranchPainter extends CustomPainter {
     // Vertical line from top to mid (connecting from parent)
     if (isLast) {
       // Last child: line stops at the branch point
-      canvas.drawLine(Offset(0, 0), Offset(0, midY), paint);
+      canvas.drawLine(const Offset(0, 0), Offset(0, midY), paint);
     } else {
       // Middle child: line continues below the branch
-      canvas.drawLine(Offset(0, 0), Offset(0, h), paint);
+      canvas.drawLine(const Offset(0, 0), Offset(0, h), paint);
     }
   }
 

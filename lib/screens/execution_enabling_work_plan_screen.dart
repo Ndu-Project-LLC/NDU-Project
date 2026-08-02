@@ -162,7 +162,7 @@ class _EnablingWorksPlanSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Enabling Works',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'aspect',
                       label: 'Enabling Work Aspect',
@@ -231,7 +231,7 @@ class _EnablingWorksPlanSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileEnablingWorksActions()
+          const _MobileEnablingWorksActions()
         else
           const _DesktopEnablingWorksActions(),
       ],
@@ -509,7 +509,7 @@ class _EnablingWorksPlanTable extends StatelessWidget {
           }
 
           return Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: Color(0xFFE5E7EB)),
             ),

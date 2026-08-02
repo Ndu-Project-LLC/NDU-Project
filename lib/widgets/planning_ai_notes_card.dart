@@ -244,7 +244,7 @@ class _PlanningAiNotesCardState extends State<PlanningAiNotesCard> {
                     const Icon(Icons.undo, size: 18, color: Color(0xFF6B7280)),
               ),
               if (_saving)
-                _StatusChip(label: 'Saving...', color: const Color(0xFF64748B))
+                const _StatusChip(label: 'Saving...', color: Color(0xFF64748B))
               else if (savedAt != null)
                 _StatusChip(
                   label:
@@ -322,7 +322,7 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: background ?? color.withOpacity(0.1),
+        color: background ?? color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(

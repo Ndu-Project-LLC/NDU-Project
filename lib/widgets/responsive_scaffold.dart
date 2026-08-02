@@ -3,7 +3,6 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
-import 'package:ndu_project/widgets/activity_log_app_bar_button.dart';
 
 /// A responsive scaffold that adapts sidebar behavior based on screen size.
 /// - Desktop/Tablet: Shows sidebar in a Row layout with draggable handle

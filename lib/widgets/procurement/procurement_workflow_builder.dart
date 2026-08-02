@@ -82,7 +82,7 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
                 SizedBox(
                   width: 320,
                   child: DropdownButtonFormField<String>(
-                    value: selectedScopeId,
+                    initialValue: selectedScopeId,
                     decoration: const InputDecoration(
                       labelText: 'Procurement Scope',
                       isDense: true,

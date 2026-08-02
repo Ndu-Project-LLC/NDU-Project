@@ -8,7 +8,6 @@
 // Pre-overhaul baseline: TBD — run and record.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 
 import 'scaffold.dart';
 

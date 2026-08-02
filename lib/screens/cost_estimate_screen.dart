@@ -294,8 +294,8 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Cost Estimate',
                     ),
                   ),
@@ -380,7 +380,7 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
               onAddItem: () => _showAddItem(context),
             ),
             const SizedBox(height: 18),
-            _SubsectionHeader(
+            const _SubsectionHeader(
               title: 'Initiation baseline',
               subtitle:
                   'Imported baseline items confirmed for the current estimate.',
@@ -396,7 +396,7 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
               onDelete: (item) => _deleteItem(context, item),
             ),
             const SizedBox(height: 20),
-            _SubsectionHeader(
+            const _SubsectionHeader(
               title: 'Planning adjustments',
               subtitle:
                   'Manual lines and imported planning deltas linked to project sources.',
@@ -413,7 +413,7 @@ class _CostEstimateScreenState extends State<CostEstimateScreen> {
             ),
             if (_includeSupersededLines) ...[
               const SizedBox(height: 20),
-              _SubsectionHeader(
+              const _SubsectionHeader(
                 title: 'Superseded by reconciliation',
                 subtitle:
                     'Raw imported lines that were collapsed because a stronger cost state exists for the same scope.',
@@ -2598,7 +2598,7 @@ class _TopUtilityBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -2632,7 +2632,7 @@ class _TopUtilityBar extends StatelessWidget {
       child: Container(
         width: 42,
         height: 42,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(color: Color(0xFFE5E7EB)),
@@ -2661,13 +2661,13 @@ class _HeroBanner extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Project Cost Estimate',
                   style: TextStyle(
@@ -2683,8 +2683,8 @@ class _HeroBanner extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 32),
-          const Icon(Icons.stacked_bar_chart_rounded,
+          SizedBox(width: 32),
+          Icon(Icons.stacked_bar_chart_rounded,
               color: Colors.white, size: 46),
         ],
       ),
@@ -2907,17 +2907,17 @@ class _SupersededToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Include Superseded Lines',
                   style: TextStyle(
@@ -2971,7 +2971,7 @@ class _CostEstimateTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -2995,7 +2995,7 @@ class _CostEstimateTopBar extends StatelessWidget {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Color(0xFFECFDF5),
                     borderRadius: BorderRadius.circular(999),
                   ),
@@ -3066,7 +3066,7 @@ class _WorkspaceTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(6),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3112,7 +3112,7 @@ class _OverviewRollupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3181,7 +3181,7 @@ class _CoverageSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3302,7 +3302,7 @@ class _BoeSummaryCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3324,7 +3324,7 @@ class _BoeSummaryCard extends StatelessWidget {
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(999),
                 ),
@@ -3555,7 +3555,7 @@ class _CostProfileCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3695,7 +3695,7 @@ class _ContractStrategyCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3717,7 +3717,7 @@ class _ContractStrategyCard extends StatelessWidget {
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(999),
                 ),
@@ -3968,7 +3968,7 @@ class _SourceSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -4034,7 +4034,7 @@ class _ReconciliationReportCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -4092,7 +4092,7 @@ class _ReconciliationEntryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -4151,7 +4151,7 @@ class _SourceDetailList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -4286,7 +4286,7 @@ class _ContingencyRiskPanel extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -4622,7 +4622,7 @@ class _CbsTreeWorkspace extends StatelessWidget {
     final tree = _buildTree();
     return Container(
       padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -4976,8 +4976,9 @@ class _CostVsScheduleWorkspace extends StatelessWidget {
       final end = _tryParseDate(wp.plannedEnd) ?? _tryParseDate(wp.actualEnd);
       if (start == null || end == null || end.isBefore(start)) continue;
 
-      if (earliestStart == null || start.isBefore(earliestStart))
+      if (earliestStart == null || start.isBefore(earliestStart)) {
         earliestStart = start;
+      }
       if (latestEnd == null || end.isAfter(latestEnd)) latestEnd = end;
 
       final months = _monthSpan(start, end);
@@ -5067,7 +5068,7 @@ class _CostVsScheduleWorkspace extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -5317,7 +5318,7 @@ class _EarnedValueMetricsRow extends StatelessWidget {
       width: 120,
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -5344,8 +5345,9 @@ class _EarnedValueMetricsRow extends StatelessWidget {
   }
 
   Color _evmColor(double ratio, double target) {
-    if (ratio >= target * 0.95 && ratio <= target * 1.05)
+    if (ratio >= target * 0.95 && ratio <= target * 1.05) {
       return const Color(0xFF059669);
+    }
     if (ratio >= target * 0.85) return const Color(0xFFC2410C);
     return const Color(0xFFDC2626);
   }
@@ -5394,7 +5396,7 @@ class _ViewSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(6),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -5505,11 +5507,11 @@ class _SectionHeader extends StatelessWidget {
                     final rows = await showCsvImportDialog(context,
                         tableTitle: 'Cost Items',
                         columns: [
-                          CsvColumnSpec(
+                          const CsvColumnSpec(
                               key: 'item',
                               label: 'Item',
                               sampleValue: 'Development'),
-                          CsvColumnSpec(
+                          const CsvColumnSpec(
                               key: 'cost', label: 'Cost', sampleValue: '50000'),
                         ]);
 
@@ -5547,7 +5549,7 @@ class _OutlinedActionButton extends StatelessWidget {
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16)),
         side: const BorderSide(color: Color(0xFFE2E8F0)),
         foregroundColor: const Color(0xFF0F172A),
@@ -5573,7 +5575,7 @@ class _FilledActionButton extends StatelessWidget {
       onPressed: onPressed,
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18)),
         backgroundColor: const Color(0xFFFFB200),
         foregroundColor: Colors.white,
@@ -5646,7 +5648,7 @@ class _SupersededCostList extends StatelessWidget {
     if (items.isEmpty) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: Color(0xFFE5E7EB)),
@@ -5790,7 +5792,7 @@ class _ContextBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -5893,7 +5895,7 @@ class _DeltaMetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -5963,7 +5965,7 @@ class _EmptyCostState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -5973,7 +5975,7 @@ class _EmptyCostState extends StatelessWidget {
           Container(
             width: 46,
             height: 46,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFFFF3CD),
               borderRadius: BorderRadius.circular(14),
             ),
@@ -6039,7 +6041,7 @@ class _CategoryTile extends StatelessWidget {
           Container(
             width: 38,
             height: 38,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -6120,7 +6122,7 @@ class _SupersededCategoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFFDE68A)),
@@ -6131,7 +6133,7 @@ class _SupersededCategoryTile extends StatelessWidget {
           Container(
             width: 38,
             height: 38,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
@@ -6243,7 +6245,7 @@ class _OverheadConfigCard extends StatelessWidget {
     return Container(
       width: 360,
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -6289,7 +6291,7 @@ class _OverheadConfigCard extends StatelessWidget {
                                   : '')
                               .length),
                     ),
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   style: const TextStyle(
                       fontSize: 13, fontWeight: FontWeight.w600),
                   decoration: const InputDecoration(
@@ -6577,7 +6579,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+         RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       backgroundColor: Colors.white,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 760, maxHeight: 820),
@@ -6656,7 +6658,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _DialogLabel(label: 'Category'),
+                        const _DialogLabel(label: 'Category'),
                         const SizedBox(height: 8),
                         _TypeSelector(
                           selectedView: _selectedView,
@@ -6762,7 +6764,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'Cost item'),
+                        const _DialogLabel(label: 'Cost item'),
                         const SizedBox(height: 8),
                         VoiceTextFormField(
                           controller: _titleController,
@@ -6831,7 +6833,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'Estimated amount'),
+                        const _DialogLabel(label: 'Estimated amount'),
                         const SizedBox(height: 8),
                         VoiceTextFormField(
                           controller: _amountController,
@@ -6871,7 +6873,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'Estimating basis'),
+                        const _DialogLabel(label: 'Estimating basis'),
                         const SizedBox(height: 8),
                         VoiceTextFormField(
                           controller: _estimatingBasisController,
@@ -6882,7 +6884,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'Scope / BOE (optional)'),
+                        const _DialogLabel(label: 'Scope / BOE (optional)'),
                         const SizedBox(height: 8),
                         VoiceTextFormField(
                           controller: _scopeIncludedController,
@@ -7028,7 +7030,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'PERT Risk Ranges (optional)'),
+                        const _DialogLabel(label: 'PERT Risk Ranges (optional)'),
                         const SizedBox(height: 8),
                         Row(
                           children: [
@@ -7079,7 +7081,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _DialogLabel(label: 'Notes (optional)'),
+                        const _DialogLabel(label: 'Notes (optional)'),
                         const SizedBox(height: 8),
                         VoiceTextFormField(
                           controller: _notesController,
@@ -7097,7 +7099,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                                 style: OutlinedButton.styleFrom(
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 14),
-                                  shape: const RoundedRectangleBorder(
+                                  shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(14)),
                                   side: const BorderSide(
                                       color: Color(0xFFE2E8F0)),
@@ -7117,7 +7119,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
                                       const EdgeInsets.symmetric(vertical: 14),
                                   backgroundColor: accent,
                                   foregroundColor: Colors.white,
-                                  shape: const RoundedRectangleBorder(
+                                  shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(14)),
                                   elevation: 0,
                                 ),
@@ -7196,11 +7198,11 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
       filled: true,
       fillColor: const Color(0xFFF8FAFC),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      border: const OutlineInputBorder(
+      border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Color(0xFFE2E8F0)),
       ),
-      enabledBorder: const OutlineInputBorder(
+      enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Color(0xFFE2E8F0)),
       ),
@@ -7224,7 +7226,7 @@ class _AddCostItemDialogState extends State<_AddCostItemDialog> {
     required ValueChanged<T?> onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       items: items,
       onChanged: onChanged,
       decoration: _inputDecoration(label),
@@ -7252,7 +7254,7 @@ class _TypeSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -7348,7 +7350,7 @@ class _UserChip extends StatelessWidget {
 
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(color: Color(0xFFE5E7EB)),
@@ -7823,7 +7825,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+         RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       backgroundColor: Colors.white,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
@@ -7842,7 +7844,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Color(0xFFDBEAFE),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -7850,10 +7852,10 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                         color: Color(0xFF2563EB), size: 24),
                   ),
                   const SizedBox(width: 16),
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'AI Cost Suggestions',
                           style: TextStyle(
@@ -8001,7 +8003,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                                                         horizontal: 8,
                                                         vertical: 2),
                                                     decoration:
-                                                        const BoxDecoration(
+                                                       BoxDecoration(
                                                       color: Color(0xFFF1F5F9),
                                                       borderRadius:
                                                           BorderRadius.circular(
@@ -8080,7 +8082,7 @@ class _AiSuggestionsDialogState extends State<_AiSuggestionsDialog> {
                           backgroundColor: const Color(0xFF2563EB),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 12),
-                          shape: const RoundedRectangleBorder(
+                          shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                         ),
                         child:

@@ -113,7 +113,7 @@ class UnifiedPhaseHeader extends StatelessWidget {
           decoration: BoxDecoration(
             color: _Tokens.surface,
             border: Border(
-              bottom: BorderSide(color: _Tokens.outlineVariant.withOpacity(0.5)),
+              bottom: BorderSide(color: _Tokens.outlineVariant.withValues(alpha: 0.5)),
             ),
           ),
           child: Padding(
@@ -185,7 +185,7 @@ class UnifiedPhaseHeader extends StatelessWidget {
           decoration: BoxDecoration(
             color: _Tokens.surface,
             border: Border(
-              bottom: BorderSide(color: _Tokens.outlineVariant.withOpacity(0.5)),
+              bottom: BorderSide(color: _Tokens.outlineVariant.withValues(alpha: 0.5)),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -352,7 +352,7 @@ class _BreadcrumbNavButton extends StatelessWidget {
           border: Border.all(
             color: enabled
                 ? _Tokens.outlineVariant
-                : _Tokens.outlineVariant.withOpacity(0.3),
+                : _Tokens.outlineVariant.withValues(alpha: 0.3),
           ),
         ),
         alignment: Alignment.center,
@@ -361,7 +361,7 @@ class _BreadcrumbNavButton extends StatelessWidget {
           size: 18,
           color: enabled
               ? _Tokens.onSurfaceVariant
-              : _Tokens.outlineVariant.withOpacity(0.4),
+              : _Tokens.outlineVariant.withValues(alpha: 0.4),
         ),
       ),
     );

@@ -22,7 +22,7 @@ class DesignSpecificationsCard extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -100,9 +100,9 @@ class DesignSpecificationsCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.5)),
+          border: Border.all(color: color.withValues(alpha: 0.5)),
         ),
         child: Text(
           spec.status,
@@ -200,7 +200,7 @@ class DesignDocumentsCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFBBF7D0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -239,7 +239,7 @@ class DesignDocumentsCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF16A34A).withOpacity(0.12),
+                          color: const Color(0xFF16A34A).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -266,12 +266,12 @@ class DesignDocumentsCard extends StatelessWidget {
                   children: [
                     Icon(Icons.folder_open,
                         size: 48,
-                        color: const Color(0xFF16A34A).withOpacity(0.3)),
+                        color: const Color(0xFF16A34A).withValues(alpha: 0.3)),
                     const SizedBox(height: 12),
                     Text(
                       'No documents linked',
                       style: TextStyle(
-                          color: const Color(0xFF16A34A).withOpacity(0.6),
+                          color: const Color(0xFF16A34A).withValues(alpha: 0.6),
                           fontSize: 14,
                           fontWeight: FontWeight.w500),
                     ),
@@ -337,7 +337,7 @@ class DesignDocumentsCard extends StatelessWidget {
                                           horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF16A34A)
-                                            .withOpacity(0.1),
+                                            .withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(doc.type,
@@ -452,7 +452,7 @@ class DesignDocumentsCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: docType,
+                  initialValue: docType,
                   decoration: const InputDecoration(labelText: 'Type'),
                   items: ['Input', 'Output', 'Reference'].map((t) {
                     return DropdownMenuItem(value: t, child: Text(t));
@@ -630,7 +630,7 @@ class DesignToolsCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFFDE68A)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -669,7 +669,7 @@ class DesignToolsCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD97706).withOpacity(0.12),
+                          color: const Color(0xFFD97706).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -696,12 +696,12 @@ class DesignToolsCard extends StatelessWidget {
                   children: [
                     Icon(Icons.handyman,
                         size: 48,
-                        color: const Color(0xFFD97706).withOpacity(0.3)),
+                        color: const Color(0xFFD97706).withValues(alpha: 0.3)),
                     const SizedBox(height: 12),
                     Text(
                       'No tools configured',
                       style: TextStyle(
-                          color: const Color(0xFFD97706).withOpacity(0.6),
+                          color: const Color(0xFFD97706).withValues(alpha: 0.6),
                           fontSize: 14,
                           fontWeight: FontWeight.w500),
                     ),
@@ -766,7 +766,7 @@ class DesignToolsCard extends StatelessWidget {
                                           horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFD97706)
-                                            .withOpacity(0.1),
+                                            .withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(

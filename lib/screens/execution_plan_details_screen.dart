@@ -172,7 +172,7 @@ class _ExecutionPlanDetailsScreenState
             if (widget.showPlanDetails) ...[
               const SectionIntro(title: 'Execution Plan Details'),
               const SizedBox(height: 28),
-              ExecutionPlanForm(
+              const ExecutionPlanForm(
                 title: 'Execution Plan Details',
                 hintText: 'Input your notes here...',
                 noteKey: 'execution_plan_details',
@@ -248,7 +248,7 @@ class _EarlyWorksSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Early Works',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'tool',
                       label: 'Execution Tool',
@@ -308,7 +308,7 @@ class _EarlyWorksSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileEarlyWorksActions()
+          const _MobileEarlyWorksActions()
         else
           const _DesktopEarlyWorksActions(),
       ],
@@ -587,7 +587,7 @@ class _EarlyWorksTable extends StatelessWidget {
           }
 
           return Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: Color(0xFFE5E7EB)),
             ),

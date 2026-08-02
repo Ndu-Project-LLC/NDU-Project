@@ -185,7 +185,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
   String? _hoveredNodeId;
   bool _showGrid = true;
   Offset? _connectionDragEnd;
-  bool _isPanning = false;
+  final bool _isPanning = false;
 
   @override
   void initState() {
@@ -298,7 +298,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
               title: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: selectedType.accentColor.withOpacity(0.08),
+                  color: selectedType.accentColor.withValues(alpha: 0.08),
                   borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(12)),
                 ),
@@ -732,7 +732,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.92),
+                color: Colors.white.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFE4E7EC)),
               ),
@@ -812,7 +812,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
       message: 'Toggle $label',
       waitDuration: const Duration(milliseconds: 400),
       child: Material(
-        color: isActive ? activeColor.withOpacity(0.1) : Colors.transparent,
+        color: isActive ? activeColor.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: onTap,
@@ -958,7 +958,7 @@ class _EdgePainter extends CustomPainter {
       if (a != null) {
         final fromCenter = a.position + Offset(a.width / 2, a.height / 2);
         final paint = Paint()
-          ..color = const Color(0xFF7C3AED).withOpacity(0.6)
+          ..color = const Color(0xFF7C3AED).withValues(alpha: 0.6)
           ..strokeWidth = 2
           ..style = PaintingStyle.stroke;
         canvas.drawLine(fromCenter, dragEnd!, paint);
@@ -1077,14 +1077,14 @@ class _ProNodeWidget extends StatelessWidget {
                     : isSelected
                         ? accent
                         : isHovered
-                            ? accent.withOpacity(0.5)
+                            ? accent.withValues(alpha: 0.5)
                             : const Color(0xFFE4E7EC),
                 width: selectedForConnection || isSelected ? 2.5 : 1,
               ),
               boxShadow: [
                 BoxShadow(
                   color: isSelected
-                      ? accent.withOpacity(0.15)
+                      ? accent.withValues(alpha: 0.15)
                       : const Color(0x08000000),
                   blurRadius: isSelected ? 16 : 8,
                   offset: const Offset(0, 4),
@@ -1100,7 +1100,7 @@ class _ProNodeWidget extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.06),
+                    color: accent.withValues(alpha: 0.06),
                     borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(13)),
                   ),
@@ -1110,7 +1110,7 @@ class _ProNodeWidget extends StatelessWidget {
                         width: 28,
                         height: 28,
                         decoration: BoxDecoration(
-                          color: accent.withOpacity(0.12),
+                          color: accent.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child:
@@ -1125,7 +1125,7 @@ class _ProNodeWidget extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 13,
-                            color: accent.withOpacity(0.9),
+                            color: accent.withValues(alpha: 0.9),
                           ),
                         ),
                       ),
@@ -1157,7 +1157,7 @@ class _ProNodeWidget extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: accent.withOpacity(0.08),
+                            color: accent.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -1167,7 +1167,7 @@ class _ProNodeWidget extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: accent.withOpacity(0.7),
+                              color: accent.withValues(alpha: 0.7),
                             ),
                           ),
                         ),
@@ -1269,7 +1269,7 @@ class _Minimap extends StatelessWidget {
       width: mapW + 12,
       height: mapH + 12,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFE4E7EC)),
         boxShadow: const [
@@ -1353,8 +1353,8 @@ class _MinimapPainter extends CustomPainter {
         RRect.fromRectXY(rect, 3, 3),
         Paint()
           ..color = isSelected
-              ? n.nodeType.accentColor.withOpacity(0.3)
-              : n.nodeType.accentColor.withOpacity(0.12),
+              ? n.nodeType.accentColor.withValues(alpha: 0.3)
+              : n.nodeType.accentColor.withValues(alpha: 0.12),
       );
       canvas.drawRRect(
         RRect.fromRectXY(rect, 3, 3),

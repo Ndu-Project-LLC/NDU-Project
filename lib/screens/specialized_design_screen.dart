@@ -375,7 +375,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildFrameworkGuide() {
  return Container(
  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 6))]),
+ boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 6))]),
  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
  // Clickable header row
  InkWell(
@@ -391,7 +391,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  AnimatedRotation(
  duration: const Duration(milliseconds: 200),
  turns: _frameworkGuideExpanded ? 0.5 : 0,
- child: Icon(Icons.expand_more, size: 22, color: const Color(0xFF6B7280)),
+ child: const Icon(Icons.expand_more, size: 22, color: Color(0xFF6B7280)),
  ),
  ],
  ),
@@ -431,10 +431,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildGuideCard(IconData icon, String title, String description, Color color) {
  return Container(
  width: double.infinity, padding: const EdgeInsets.all(14),
- decoration: BoxDecoration(color: color.withOpacity(0.04), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.12))),
+ decoration: BoxDecoration(color: color.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.12))),
  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
  Row(children: [
- Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(8)), child: Icon(icon, size: 16, color: color)),
+ Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)), child: Icon(icon, size: 16, color: color)),
  const SizedBox(width: 10),
  Expanded(child: Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color))),
  ]),
@@ -449,7 +449,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildPanelShell({required String title, required String subtitle, Widget? trailing, required Widget child}) {
  return Container(
  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 6))]),
+ boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 6))]),
  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
  Padding(padding: const EdgeInsets.all(20), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -496,7 +496,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  case 'Deprecated': color = const Color(0xFF9CA3AF); break;
  default: color = const Color(0xFF6B7280);
  }
- return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+ return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
  child: Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)));
  }
 
@@ -508,7 +508,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  case 'Medium': color = const Color(0xFFF59E0B); break;
  default: color = const Color(0xFF6B7280);
  }
- return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+ return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
  child: Text(priority, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)));
  }
 
@@ -522,7 +522,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  case 'Not assessed': color = const Color(0xFF9CA3AF); break;
  default: color = const Color(0xFF6B7280);
  }
- return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+ return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
  child: Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)));
  }
 
@@ -537,7 +537,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  case 'Not Started': color = const Color(0xFF9CA3AF); break;
  default: color = const Color(0xFF6B7280);
  }
- return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+ return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
  child: Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)));
  }
 
@@ -646,9 +646,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: const Color(0xFFF59E0B).withOpacity(0.1),
+ color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
+ border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -677,7 +677,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Security & Compliance Patterns',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'pattern', label: 'PATTERN', required: true),
  CsvColumnSpec(key: 'decision', label: 'DECISION & SCOPE', required: true),
  CsvColumnSpec(key: 'owner', label: 'OWNER'),
@@ -742,7 +742,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Performance & Scale Patterns',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'hotspot', label: 'HOTSPOT', required: true),
  CsvColumnSpec(key: 'focus', label: 'DESIGN FOCUS', required: true),
  CsvColumnSpec(key: 'sla', label: 'SLA'),
@@ -807,7 +807,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Integration Contracts',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'flow', label: 'FLOW', required: true),
  CsvColumnSpec(key: 'system', label: 'SYSTEM'),
  CsvColumnSpec(key: 'owner', label: 'OWNER'),
@@ -872,7 +872,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Compliance & Certification',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'standard', label: 'STANDARD', required: true),
  CsvColumnSpec(key: 'description', label: 'DESCRIPTION'),
  CsvColumnSpec(key: 'owner', label: 'OWNER'),
@@ -939,7 +939,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Review Gates',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'gate', label: 'GATE', required: true),
  CsvColumnSpec(key: 'description', label: 'DESCRIPTION'),
  CsvColumnSpec(key: 'approver', label: 'APPROVER'),
@@ -1025,7 +1025,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(children: [
  Expanded(child: VoiceTextField(controller: ownerCtrl, decoration: const InputDecoration(labelText: 'Owner', border: OutlineInputBorder()))),
  const SizedBox(width: 12),
- Expanded(child: DropdownButtonFormField<String>(value: status, items: _statusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
+ Expanded(child: DropdownButtonFormField<String>(initialValue: status, items: _statusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => status = v); }, decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()))),
  ]),
  ])),
@@ -1068,7 +1068,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(children: [
  Expanded(child: VoiceTextField(controller: slaCtrl, decoration: const InputDecoration(labelText: 'SLA target', border: OutlineInputBorder()))),
  const SizedBox(width: 12),
- Expanded(child: DropdownButtonFormField<String>(value: status, items: _statusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
+ Expanded(child: DropdownButtonFormField<String>(initialValue: status, items: _statusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => status = v); }, decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()))),
  ]),
  ])),
@@ -1111,7 +1111,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(children: [
  Expanded(child: VoiceTextField(controller: ownerCtrl, decoration: const InputDecoration(labelText: 'Owner', border: OutlineInputBorder()))),
  const SizedBox(width: 12),
- Expanded(child: DropdownButtonFormField<String>(value: status, items: _statusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
+ Expanded(child: DropdownButtonFormField<String>(initialValue: status, items: _statusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => status = v); }, decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()))),
  ]),
  ])),
@@ -1155,7 +1155,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(children: [
  Expanded(child: VoiceTextField(controller: ownerCtrl, decoration: const InputDecoration(labelText: 'Owner', border: OutlineInputBorder()))),
  const SizedBox(width: 12),
- Expanded(child: DropdownButtonFormField<String>(value: status, items: _complianceStatusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
+ Expanded(child: DropdownButtonFormField<String>(initialValue: status, items: _complianceStatusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => status = v); }, decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()))),
  ]),
  const SizedBox(height: 12),
@@ -1207,10 +1207,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ]),
  const SizedBox(height: 12),
  Row(children: [
- Expanded(child: DropdownButtonFormField<String>(value: priority, items: ['Critical', 'High', 'Medium', 'Low'].map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
+ Expanded(child: DropdownButtonFormField<String>(initialValue: priority, items: ['Critical', 'High', 'Medium', 'Low'].map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => priority = v); }, decoration: const InputDecoration(labelText: 'Priority', border: OutlineInputBorder()))),
  const SizedBox(width: 12),
- Expanded(child: DropdownButtonFormField<String>(value: status, items: _reviewGateStatusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
+ Expanded(child: DropdownButtonFormField<String>(initialValue: status, items: _reviewGateStatusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => status = v); }, decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()))),
  ]),
  ])),

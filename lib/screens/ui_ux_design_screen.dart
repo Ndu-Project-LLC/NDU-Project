@@ -842,9 +842,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  ),
  const SizedBox(height: 10),
- Column(
+ const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'UI/UX Design',
  style: TextStyle(
@@ -1034,9 +1034,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: double.infinity,
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
- color: color.withOpacity(0.04),
+ color: color.withValues(alpha: 0.04),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.12)),
+ border: Border.all(color: color.withValues(alpha: 0.12)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1046,7 +1046,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(icon, size: 16, color: color),
@@ -1094,7 +1094,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -1160,7 +1160,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'User Journeys',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'title', label: 'JOURNEY', required: true, hint: 'Journey name'),
  CsvColumnSpec(key: 'touchpoints', label: 'TOUCHPOINTS', hint: 'Key touchpoints'),
  CsvColumnSpec(key: 'owner', label: 'OWNER', hint: 'Journey owner'),
@@ -1279,7 +1279,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Interface Architecture',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'area', label: 'INTERFACE', required: true, hint: 'Interface area name'),
  CsvColumnSpec(key: 'fidelity', label: 'FIDELITY', allowedValues: ['Low-fi', 'Mid-fi', 'High-fi', 'Prototype', 'Production'], defaultValue: 'Low-fi'),
  CsvColumnSpec(key: 'owner', label: 'OWNER', hint: 'Interface owner'),
@@ -1394,7 +1394,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Design System Tokens',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'title', label: 'TOKEN', required: true, hint: 'Token name'),
  CsvColumnSpec(key: 'category', label: 'CATEGORY', allowedValues: ['Color', 'Typography', 'Spacing', 'Elevation', 'Motion', 'Icon'], defaultValue: 'Color'),
  CsvColumnSpec(key: 'status', label: 'STATUS', allowedValues: ['Ready', 'Draft', 'In review', 'Planned', 'Deprecated'], defaultValue: 'Draft'),
@@ -1509,7 +1509,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Usability & Accessibility',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'criteria', label: 'CRITERIA', required: true, hint: 'Validation criteria'),
  CsvColumnSpec(key: 'description', label: 'DESCRIPTION', hint: 'Detailed description'),
  CsvColumnSpec(key: 'standard', label: 'STANDARD', hint: 'e.g. WCAG 2.1 AA'),
@@ -1626,7 +1626,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Review Gates',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'gate', label: 'GATE', required: true, hint: 'Gate name'),
  CsvColumnSpec(key: 'description', label: 'DESCRIPTION', hint: 'Gate description'),
  CsvColumnSpec(key: 'approver', label: 'APPROVER', hint: 'Gate approver'),
@@ -1802,7 +1802,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(priority,
@@ -1832,7 +1832,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(status,
@@ -1858,7 +1858,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(fidelity,
@@ -1893,7 +1893,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(state,
@@ -1928,7 +1928,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(category,
@@ -1960,7 +1960,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(status,
@@ -1992,7 +1992,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(status,
@@ -2027,7 +2027,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(status,
@@ -2084,14 +2084,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(
  children: [
  Expanded(child: DropdownButtonFormField<String>(
- value: priority,
+ initialValue: priority,
  items: ['Critical', 'High', 'Medium', 'Low'].map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => priority = v); },
  decoration: const InputDecoration(labelText: 'Priority', border: OutlineInputBorder()),
  )),
  const SizedBox(width: 12),
  Expanded(child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: _journeyStatusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => status = v); },
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
@@ -2169,14 +2169,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(
  children: [
  Expanded(child: DropdownButtonFormField<String>(
- value: fidelity,
+ initialValue: fidelity,
  items: ['High', 'Medium', 'Low'].map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => fidelity = v); },
  decoration: const InputDecoration(labelText: 'Fidelity', border: OutlineInputBorder()),
  )),
  const SizedBox(width: 12),
  Expanded(child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: _interfaceStateOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => status = v); },
  decoration: const InputDecoration(labelText: 'State', border: OutlineInputBorder()),
@@ -2253,14 +2253,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(
  children: [
  Expanded(child: DropdownButtonFormField<String>(
- value: category,
+ initialValue: category,
  items: ['Colors', 'Typography', 'Layout', 'Effects', 'Motion', 'Iconography'].map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => category = v); },
  decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
  )),
  const SizedBox(width: 12),
  Expanded(child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: _tokenStatusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => status = v); },
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
@@ -2334,7 +2334,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(child: _buildKazAiTextField(controller: standardController, labelText: 'Standard', aiHint: 'e.g. WCAG 2.1 AA')), 
  const SizedBox(width: 12),
  Expanded(child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: _usabilityStatusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => status = v); },
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
@@ -2429,14 +2429,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(
  children: [
  Expanded(child: DropdownButtonFormField<String>(
- value: priority,
+ initialValue: priority,
  items: ['Critical', 'High', 'Medium', 'Low'].map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => priority = v); },
  decoration: const InputDecoration(labelText: 'Priority', border: OutlineInputBorder()),
  )),
  const SizedBox(width: 12),
  Expanded(child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: _reviewGateStatusOptions.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
  onChanged: (v) { if (v != null) setModalState(() => status = v); },
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),

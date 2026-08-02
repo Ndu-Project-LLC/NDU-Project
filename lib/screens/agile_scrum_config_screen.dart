@@ -300,8 +300,8 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                         activeItemLabel:
                             'Agile Delivery Model - Scrum Configuration'),
                   ),
@@ -323,18 +323,18 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
                           const Center(child: CircularProgressIndicator())
                         else ...[
                           if (_isSaving)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 8),
                               child: Row(
                                 children: [
-                                  const SizedBox(
+                                  SizedBox(
                                       width: 12,
                                       height: 12,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2)),
-                                  const SizedBox(width: 8),
+                                  SizedBox(width: 8),
                                   Text('Saving...',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 12, color: _kMuted)),
                                 ],
                               ),
@@ -379,7 +379,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
   Widget _buildRolesSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -413,7 +413,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
   Widget _buildEventDurations() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -468,7 +468,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
                 fontSize: 13, fontWeight: FontWeight.w600, color: _kHeadline)),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: options.contains(_selectedValues[key])
+          initialValue: options.contains(_selectedValues[key])
               ? _selectedValues[key]
               : options[0],
           decoration: const InputDecoration(
@@ -520,7 +520,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
   Widget _buildDefinitionOfAgreement() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -558,7 +558,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
   Widget _buildWorkingAgreements() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -604,7 +604,7 @@ class _AgileScrumConfigScreenState extends State<AgileScrumConfigScreen> {
           SizedBox(
             width: 140,
             child: DropdownButtonFormField<String>(
-              value: [
+              initialValue: [
                 'Communication',
                 'Code Quality',
                 'Collaboration',

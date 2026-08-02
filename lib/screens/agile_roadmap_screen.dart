@@ -179,8 +179,8 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
                       ),
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Project Hub - Agile Roadmap',
                     ),
                   ),
@@ -861,7 +861,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFBEB).withValues(alpha: 0.5),
+        color: const Color(0x0ffffbeb).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFFCD34D).withValues(alpha: 0.3)),
       ),

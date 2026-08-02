@@ -353,7 +353,7 @@ class _InlineEditableTextState extends State<InlineEditableText> {
         width: 28,
         height: 28,
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: IconButton(

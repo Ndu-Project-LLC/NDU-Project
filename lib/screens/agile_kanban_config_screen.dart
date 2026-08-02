@@ -305,8 +305,8 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                         activeItemLabel:
                             'Agile Delivery Model - Kanban Configuration'),
                   ),
@@ -367,7 +367,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
   Widget _buildColumnsSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -402,7 +402,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
             onReorder: _moveColumn,
             proxyDecorator: (child, index, animation) => Material(
               elevation: 2,
-              borderRadius: const BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8),
               child: child,
             ),
             itemBuilder: (context, index) {
@@ -411,7 +411,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
                 key: ValueKey(col.id),
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: _kBorder),
@@ -539,7 +539,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
   Widget _buildClassesOfService() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -567,7 +567,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: _kBorder),
@@ -577,7 +577,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
           Expanded(
             flex: 2,
             child: DropdownButtonFormField<String>(
-              value: _cosOptions.contains(cos.name) ? cos.name : _cosOptions[0],
+              initialValue: _cosOptions.contains(cos.name) ? cos.name : _cosOptions[0],
               decoration: const InputDecoration(
                 labelText: 'Service Class',
                 border: OutlineInputBorder(),
@@ -655,7 +655,7 @@ class _AgileKanbanConfigScreenState extends State<AgileKanbanConfigScreen> {
   Widget _buildSettingsSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),

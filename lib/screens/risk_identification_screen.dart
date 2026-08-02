@@ -46,7 +46,7 @@ import 'package:ndu_project/widgets/csv_table_import_button.dart';
 // widget from blanking the entire page.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 class SafeSection extends StatelessWidget {
-  SafeSection({
+  const SafeSection({
     super.key,
     required this.title,
     required this.builder,
@@ -588,8 +588,8 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                   ),
                 ],
               ),
-              MobileSidebarHamburger(
-                sidebar: const InitiationLikeSidebar(
+              const MobileSidebarHamburger(
+                sidebar: InitiationLikeSidebar(
                   activeItemLabel: 'Risk Identification',
                 ),
               ),
@@ -998,7 +998,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
           SizedBox(
             width: double.infinity,
             height: bannerHeight,
-            child: Center(child: AppLogo(height: 64)),
+            child: const Center(child: AppLogo(height: 64)),
           ),
           Container(
             padding: const EdgeInsets.all(24),
@@ -1006,15 +1006,15 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
               border: Border(
                   bottom: BorderSide(color: Color(0xFFFFD700), width: 1)),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 20,
                   backgroundColor: Color(0xFFFFD700),
                   child: Icon(Icons.person_outline, color: Colors.black87),
                 ),
-                const SizedBox(width: 12),
-                const Column(
+                SizedBox(width: 12),
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('StackOne',
@@ -1109,7 +1109,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+            color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -1147,7 +1147,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+            color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -1185,7 +1185,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+            color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -1224,7 +1224,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+            color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -1311,7 +1311,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.45),
+      barrierColor: Colors.black.withValues(alpha: 0.45),
       builder: (_) => const _LoadingDialog(),
     );
 
@@ -1422,7 +1422,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1494,9 +1494,9 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                           horizontal: 12, vertical: 10),
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.08),
+                        color: Colors.red.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1809,9 +1809,9 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     if (isMobile) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
             color: Colors.white,
-            border: Border(top: BorderSide(color: const Color(0xFFE4E7EC)))),
+            border: Border(top: BorderSide(color: Color(0xFFE4E7EC)))),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             _numberBadge(index + 1),
@@ -2015,7 +2015,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.withOpacity(0.25)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2124,8 +2124,8 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                scheme.primary.withOpacity(0.1),
-                scheme.secondary.withOpacity(0.1)
+                scheme.primary.withValues(alpha: 0.1),
+                scheme.secondary.withValues(alpha: 0.1)
               ],
             ),
             borderRadius: BorderRadius.circular(6),
@@ -2246,7 +2246,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                             color: Colors.grey[50],
                             borderRadius: BorderRadius.circular(8),
                             border:
-                                Border.all(color: Colors.grey.withOpacity(0.2)),
+                                Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                           ),
                           child: Row(
                             children: [

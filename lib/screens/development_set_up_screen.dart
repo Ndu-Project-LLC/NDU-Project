@@ -196,7 +196,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -603,7 +603,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  'Prepare environments, tooling, pipelines, quality gates, and security baselines so execution can start without blockers. Content aligns with PMI PMBOK 7th Ed., ISO/IEC 12207, and SAFe 6.0 standards for $_selectedMethodology methodology.',
  style: TextStyle(
  fontSize: 14,
- color: Colors.white.withOpacity(0.84),
+ color: Colors.white.withValues(alpha: 0.84),
  height: 1.5,
  ),
  ),
@@ -626,10 +626,10 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  width: 48,
  height: 48,
  decoration: BoxDecoration(
- color: Colors.white.withOpacity(0.10),
+ color: Colors.white.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(16),
  border: Border.all(
- color: Colors.white.withOpacity(0.14),
+ color: Colors.white.withValues(alpha: 0.14),
  ),
  ),
  child: const Icon(
@@ -654,10 +654,10 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  width: 48,
  height: 48,
  decoration: BoxDecoration(
- color: Colors.white.withOpacity(0.10),
+ color: Colors.white.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(16),
  border: Border.all(
- color: Colors.white.withOpacity(0.14),
+ color: Colors.white.withValues(alpha: 0.14),
  ),
  ),
  child: const Icon(
@@ -722,13 +722,13 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
  color: highlight
- ? const Color(0xFFD97706).withOpacity(0.20)
- : Colors.white.withOpacity(0.10),
+ ? const Color(0xFFD97706).withValues(alpha: 0.20)
+ : Colors.white.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(8),
  border: Border.all(
  color: highlight
- ? const Color(0xFFD97706).withOpacity(0.30)
- : Colors.white.withOpacity(0.14),
+ ? const Color(0xFFD97706).withValues(alpha: 0.30)
+ : Colors.white.withValues(alpha: 0.14),
  ),
  ),
  child: Row(
@@ -747,7 +747,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  label,
  style: TextStyle(
  fontSize: 11,
- color: Colors.white.withOpacity(0.70),
+ color: Colors.white.withValues(alpha: 0.70),
  ),
  ),
  ],
@@ -807,14 +807,14 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  duration: const Duration(milliseconds: 200),
  padding: const EdgeInsets.all(18),
  decoration: BoxDecoration(
- color: isSelected ? color.withOpacity(0.08) : const Color(0xFFF8FAFC),
+ color: isSelected ? color.withValues(alpha: 0.08) : const Color(0xFFF8FAFC),
  borderRadius: BorderRadius.circular(18),
  border: Border.all(
  color: isSelected ? color : const Color(0xFFE2E8F0),
  width: isSelected ? 2.0 : 1.0,
  ),
  boxShadow: isSelected
- ? [BoxShadow(color: color.withOpacity(0.12), blurRadius: 12, offset: const Offset(0, 4))]
+ ? [BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 12, offset: const Offset(0, 4))]
  : [],
  ),
  child: Column(
@@ -826,9 +826,9 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  width: 38,
  height: 38,
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.22)),
+ border: Border.all(color: color.withValues(alpha: 0.22)),
  ),
  child: Icon(icon, color: color, size: 20),
  ),
@@ -870,7 +870,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  selected: selected,
  selectedColor: const Color(0xFF111827),
  backgroundColor: Colors.white,
- shape: StadiumBorder(side: BorderSide(color: const Color(0xFFE5E7EB))),
+ shape: const StadiumBorder(side: BorderSide(color: Color(0xFFE5E7EB))),
  onSelected: (value) {
  setState(() {
  if (value) {
@@ -957,7 +957,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
  border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 6))],
+ boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 6))],
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -976,7 +976,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  AnimatedRotation(
  duration: const Duration(milliseconds: 200),
  turns: _frameworkGuideExpanded ? 0.5 : 0,
- child: Icon(Icons.expand_more, size: 22, color: const Color(0xFF6B7280)),
+ child: const Icon(Icons.expand_more, size: 22, color: Color(0xFF6B7280)),
  ),
  ],
  ),
@@ -1020,13 +1020,13 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  return Container(
  width: double.infinity,
  padding: const EdgeInsets.all(14),
- decoration: BoxDecoration(color: color.withOpacity(0.04), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.12))),
+ decoration: BoxDecoration(color: color.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.12))),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Row(
  children: [
- Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(8)), child: Icon(icon, size: 16, color: color)),
+ Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)), child: Icon(icon, size: 16, color: color)),
  const SizedBox(width: 10),
  Expanded(child: Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color))),
  ],
@@ -1083,7 +1083,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  final color = _statusColor(item.status);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
- decoration: BoxDecoration(color: index.isEven ? Colors.white : const Color(0xFFF8FAFC), border: Border(bottom: BorderSide(color: const Color(0xFFF1F5F9)))),
+ decoration: BoxDecoration(color: index.isEven ? Colors.white : const Color(0xFFF8FAFC), border: const Border(bottom: BorderSide(color: Color(0xFFF1F5F9)))),
  child: Row(
  children: [
  Expanded(flex: 4, child: Text(item.environment, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)))),
@@ -1212,7 +1212,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  final color = _statusColor(item.status);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
- decoration: BoxDecoration(color: index.isEven ? Colors.white : const Color(0xFFF8FAFC), border: Border(bottom: BorderSide(color: const Color(0xFFF1F5F9)))),
+ decoration: BoxDecoration(color: index.isEven ? Colors.white : const Color(0xFFF8FAFC), border: const Border(bottom: BorderSide(color: Color(0xFFF1F5F9)))),
  child: Row(
  children: [
  Expanded(flex: 3, child: Text(item.stage, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)))),
@@ -1339,7 +1339,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  final color = _statusColor(item.status);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
- decoration: BoxDecoration(color: index.isEven ? Colors.white : const Color(0xFFF8FAFC), border: Border(bottom: BorderSide(color: const Color(0xFFF1F5F9)))),
+ decoration: BoxDecoration(color: index.isEven ? Colors.white : const Color(0xFFF8FAFC), border: const Border(bottom: BorderSide(color: Color(0xFFF1F5F9)))),
  child: Row(
  children: [
  Expanded(flex: 3, child: Text(item.tool, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)))),
@@ -1469,7 +1469,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  final color = _statusColor(item.status);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
- decoration: BoxDecoration(color: index.isEven ? Colors.white : const Color(0xFFF8FAFC), border: Border(bottom: BorderSide(color: const Color(0xFFF1F5F9)))),
+ decoration: BoxDecoration(color: index.isEven ? Colors.white : const Color(0xFFF8FAFC), border: const Border(bottom: BorderSide(color: Color(0xFFF1F5F9)))),
  child: Row(
  children: [
  Expanded(flex: 3, child: Text(item.gate, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)))),
@@ -1533,7 +1533,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  _dialogField('Criteria', critCtrl, hint: 'e.g. All acceptance tests pass'),
  const SizedBox(height: 4),
  DropdownButtonFormField<String>(
- value: selectedMethodology,
+ initialValue: selectedMethodology,
  decoration: const InputDecoration(
  labelText: 'Methodology',
  border: OutlineInputBorder(),
@@ -1550,7 +1550,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(
  labelText: 'Status',
  border: OutlineInputBorder(),
@@ -1676,7 +1676,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  final color = _statusColor(item.status);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
- decoration: BoxDecoration(color: index.isEven ? Colors.white : const Color(0xFFF8FAFC), border: Border(bottom: BorderSide(color: const Color(0xFFF1F5F9)))),
+ decoration: BoxDecoration(color: index.isEven ? Colors.white : const Color(0xFFF8FAFC), border: const Border(bottom: BorderSide(color: Color(0xFFF1F5F9)))),
  child: Row(
  children: [
  Expanded(flex: 3, child: Text(item.control, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)))),
@@ -1786,9 +1786,9 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  margin: const EdgeInsets.only(bottom: 12),
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
- color: color.withOpacity(0.04),
+ color: color.withValues(alpha: 0.04),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.15)),
+ border: Border.all(color: color.withValues(alpha: 0.15)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1797,7 +1797,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  children: [
  Container(
  padding: const EdgeInsets.all(8),
- decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
+ decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
  child: Icon(Icons.verified_user_outlined, size: 18, color: color),
  ),
  const SizedBox(width: 12),
@@ -1976,7 +1976,7 @@ class _PanelShell extends StatelessWidget {
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
  border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 6))],
+ boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 6))],
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,

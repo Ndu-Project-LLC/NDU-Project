@@ -295,7 +295,7 @@ class _SignInScreenState extends State<SignInScreen> {
       return InputDecoration(
         hintText: hint,
         hintStyle:
-            TextStyle(color: secondaryText.withOpacity(0.6), fontSize: 15),
+            TextStyle(color: secondaryText.withValues(alpha: 0.6), fontSize: 15),
         filled: true,
         fillColor: const Color(0xFFF9FAFB),
         border: OutlineInputBorder(
@@ -338,9 +338,9 @@ class _SignInScreenState extends State<SignInScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-                  Center(child: AppLogo(height: 320)),
+                  const Center(child: AppLogo(height: 320)),
                   const SizedBox(height: 8),
-                  Center(
+                  const Center(
                     child: Text(
                       'Welcome back',
                       style: TextStyle(
@@ -459,8 +459,9 @@ class _SignInScreenState extends State<SignInScreen> {
                                   _showSnack('Failed to send reset email: $e',
                                       Colors.red);
                                 } finally {
-                                  if (mounted)
+                                  if (mounted) {
                                     setState(() => _isLoading = false);
+                                  }
                                 }
                               },
                               child: const Text(
@@ -517,12 +518,12 @@ class _SignInScreenState extends State<SignInScreen> {
                         );
                       },
                       child: RichText(
-                        text: TextSpan(
-                          style: const TextStyle(
+                        text: const TextSpan(
+                          style: TextStyle(
                               color: secondaryText, fontSize: 13),
                           children: [
-                            const TextSpan(text: "Don't have an account? "),
-                            const TextSpan(
+                            TextSpan(text: "Don't have an account? "),
+                            TextSpan(
                               text: 'Create Account',
                               style: TextStyle(
                                   color: headlineAccent,

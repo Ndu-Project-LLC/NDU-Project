@@ -94,8 +94,8 @@ class _OperationsControlScreenState extends State<OperationsControlScreen> {
  backgroundColor: Colors.grey[50],
  drawer: Drawer(
  width: sidebarWidth,
- child: SafeArea(
- child: const InitiationLikeSidebar(
+ child: const SafeArea(
+ child: InitiationLikeSidebar(
  activeItemLabel: 'Operations Control',
  ),
  ),
@@ -106,8 +106,8 @@ class _OperationsControlScreenState extends State<OperationsControlScreen> {
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Operations Control',
  ),
  ),

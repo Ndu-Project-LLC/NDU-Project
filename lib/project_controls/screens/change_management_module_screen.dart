@@ -29,6 +29,7 @@ import 'package:ndu_project/project_controls/models/change_management_models.dar
 import 'package:ndu_project/project_controls/providers/change_management_provider.dart';
 import 'package:ndu_project/utils/download_helper.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/theme.dart';
 
@@ -999,6 +1000,14 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
   }
 
   Widget _buildTableView(List<CMChangeRequest> crs) {
+    return FullScreenTableWrapper(
+      title: 'Change Management',
+      child: _buildCRTableTree(crs),
+      tableBuilder: (_) => _buildCRTableTree(crs),
+    );
+  }
+
+  Widget _buildCRTableTree(List<CMChangeRequest> crs) {
     return Container(
       decoration: BoxDecoration(
         color: _cardBg,
@@ -1091,50 +1100,19 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
               selected: isSelected,
               onSelectChanged: (_) => widget.onSelectCR(cr.id),
               cells: [
-                DataCell(Text(cr.id,
-                    style: const TextStyle(
-                        color: Color(0xFF6366F1),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600))),
+                DataCell(WrappedText(cr.id, style: const TextStyle(color: Color(0xFF6366F1), fontSize: 12, fontWeight: FontWeight.w600))),
                 DataCell(ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 200),
-                  child: Text(cr.title,
-                      style: const TextStyle(
-                          color: _textPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600),
-                      overflow: TextOverflow.ellipsis),
+                  constraints: const BoxConstraints(maxWidth: 240),
+                  child: WrappedText(cr.title, style: const TextStyle(color: _textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
                 )),
-                DataCell(Text(cr.changeType.label,
-                    style:
-                        const TextStyle(color: _textSecondary, fontSize: 12))),
+                DataCell(WrappedText(cr.changeType.label, style: const TextStyle(color: _textSecondary, fontSize: 12))),
                 DataCell(_priorityBadge(cr.priority)),
                 DataCell(_statusBadge(cr.status)),
-                DataCell(Text(cr.impact.compositeImpactScore.toStringAsFixed(2),
-                    style: TextStyle(
-                        color: _scoreColor(cr.impact.compositeImpactScore),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700))),
-                DataCell(Text(
-                    '\$${cr.impact.totalCostImpact.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                        color: Color(0xFFEF4444),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600))),
-                DataCell(Text(
-                    '${cr.impact.totalScheduleImpact > 0 ? "+" : ""}${cr.impact.totalScheduleImpact.toStringAsFixed(0)}d',
-                    style: TextStyle(
-                        color: cr.impact.totalScheduleImpact > 0
-                            ? const Color(0xFFEF4444)
-                            : const Color(0xFF10B981),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600))),
-                DataCell(Text(cr.submittedBy,
-                    style:
-                        const TextStyle(color: _textSecondary, fontSize: 12))),
-                DataCell(Text(_formatDate(cr.dateSubmitted),
-                    style:
-                        const TextStyle(color: _textSecondary, fontSize: 12))),
+                DataCell(WrappedText(cr.impact.compositeImpactScore.toStringAsFixed(2), style: TextStyle(color: _scoreColor(cr.impact.compositeImpactScore), fontSize: 12, fontWeight: FontWeight.w700))),
+                DataCell(WrappedText('\$${cr.impact.totalCostImpact.toStringAsFixed(0)}', style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.w600))),
+                DataCell(WrappedText('${cr.impact.totalScheduleImpact > 0 ? "+" : ""}${cr.impact.totalScheduleImpact.toStringAsFixed(0)}d', style: TextStyle(color: cr.impact.totalScheduleImpact > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981), fontSize: 12, fontWeight: FontWeight.w600))),
+                DataCell(WrappedText(cr.submittedBy, style: const TextStyle(color: _textSecondary, fontSize: 12))),
+                DataCell(WrappedText(_formatDate(cr.dateSubmitted), style: const TextStyle(color: _textSecondary, fontSize: 12))),
               ],
             );
           }).toList(),

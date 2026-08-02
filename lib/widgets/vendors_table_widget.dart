@@ -52,17 +52,17 @@ class VendorsTableWidget extends StatelessWidget {
               ),
             ],
           ),
-          child: ResponsiveDataTableWrapper(
+          child: buildNduTableWithExpand(
+            context: context,
+            title: 'Vendors',
             minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 1100,
             maxHeight: 520,
-            child: buildNduDataTable(
-              context: context,
-              columnSpacing: 20,
-              horizontalMargin: 18,
-              headingRowHeight: 52,
-              dataRowMinHeight: 56,
-              dataRowMaxHeight: 72,
-              columns: const [
+            columnSpacing: 20,
+            horizontalMargin: 18,
+            headingRowHeight: 52,
+            dataRowMinHeight: 56,
+            dataRowMaxHeight: 72,
+            columns: const [
                 DataColumn(
                   label: _TableHeader('Vendor', icon: Icons.business_outlined),
                 ),
@@ -153,7 +153,6 @@ class VendorsTableWidget extends StatelessWidget {
                   ],
                 );
               }).toList(),
-            ),
           ),
         );
       },

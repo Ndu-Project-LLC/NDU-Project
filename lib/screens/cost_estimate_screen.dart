@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5065,200 +5067,191 @@ class _CostVsScheduleWorkspace extends StatelessWidget {
 
     final bool hasData = bac > 0 || totalActual > 0;
 
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Cost vs Schedule',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF111827),
-            ),
-          ),
-          if (hasData) ...[
-            const SizedBox(height: 16),
-            _EarnedValueMetricsRow(
-              bac: bac,
-              pv: pvAtNow,
-              ev: ev,
-              ac: ac,
-              cpi: cpi,
-              spi: spi,
-              cv: cv,
-              sv: sv,
-              eac: eac,
-              etc: forecast.etc,
-              tcpii: forecast.tcpii,
-            ),
-          ],
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 320,
-            child: SCurveChart(
-              plannedData: plannedData,
-              actualData: actualData,
-              startDate: chartStart,
-              endDate: chartEnd,
-              height: 320,
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Monthly Cash Flow',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF111827),
-            ),
-          ),
-          const SizedBox(height: 10),
-          if (sortedMonths.isEmpty)
-            const Text(
-              'No scheduled work packages with dates for cash flow projection.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-            )
-          else
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columnSpacing: 24,
-                headingRowColor:
-                    WidgetStateProperty.all(const Color(0xFF1F2937)),
-                columns: const [
-                  DataColumn(
-                      label: Text('Month',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 12))),
-                  DataColumn(
-                      label: Text('Planned',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 12)),
-                      numeric: true),
-                  DataColumn(
-                      label: Text('Actual',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 12)),
-                      numeric: true),
-                  DataColumn(
-                      label: Text('Variance',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 12)),
-                      numeric: true),
-                ],
-                rows: sortedMonths.map((key) {
-                  final parts = key.split('-');
-                  final month = int.parse(parts[1]);
-                  final year = int.parse(parts[0]);
-                  final label = '${_monthNames[month - 1]} $year';
-                  final planned = monthlyPlanned[key] ?? 0;
-                  final actual = monthlyActual[key] ?? 0;
-                  final variance = planned - actual;
-                  return DataRow(cells: [
-                    DataCell(Text(label, style: const TextStyle(fontSize: 12))),
-                    DataCell(Text(formatCurrency(planned),
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w600))),
-                    DataCell(Text(actual > 0 ? formatCurrency(actual) : '-',
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: actual > 0
-                                ? const Color(0xFF047857)
-                                : const Color(0xFFCBD5E1)))),
-                    DataCell(
-                        Text(variance != 0 ? formatCurrency(variance) : '-',
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: variance > 0
-                                    ? const Color(0xFF059669)
-                                    : variance < 0
-                                        ? const Color(0xFFDC2626)
-                                        : const Color(0xFFCBD5E1)))),
-                  ]);
-                }).toList(),
-              ),
-            ),
-          const SizedBox(height: 24),
-          const Text(
-            'Work Package Budgets',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF111827),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '$linkedCount estimate line(s) linked to work packages or schedule activities.',
-            style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-          ),
-          const SizedBox(height: 12),
-          if (workPackages.isEmpty)
-            const Text(
-              'No work packages available yet for cost/schedule mapping.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-            )
-          else
-            ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: workPackages.length,
-                itemBuilder: (context, i) {
-                  final wp = workPackages[i];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                wp.title.trim().isEmpty
-                                    ? 'Untitled Work Package'
-                                    : wp.title.trim(),
-                                style: const TextStyle(
-                                    fontSize: 13, color: Color(0xFF111827)),
-                              ),
-                              if (wp.plannedStart != null ||
-                                  wp.plannedEnd != null)
-                                Text(
-                                  '${wp.plannedStart ?? '?'} \u2192 ${wp.plannedEnd ?? '?'}',
-                                  style: const TextStyle(
-                                      fontSize: 11, color: Color(0xFF94A3B8)),
-                                ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          formatCurrency(wp.budgetedCost),
-                          style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w700),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-        ],
-      ),
-    );
-  }
+ return Container(
+ padding: const EdgeInsets.all(22),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(20),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text(
+ 'Cost vs Schedule',
+ style: TextStyle(
+ fontSize: 18,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ ),
+ if (hasData) ...[
+ const SizedBox(height: 16),
+ _EarnedValueMetricsRow(
+ bac: bac,
+ pv: pvAtNow,
+ ev: ev,
+ ac: ac,
+ cpi: cpi,
+ spi: spi,
+ cv: cv,
+ sv: sv,
+ eac: eac,
+ etc: forecast.etc,
+ tcpii: forecast.tcpii,
+ ),
+ ],
+ const SizedBox(height: 16),
+ SizedBox(
+ height: 320,
+ child: SCurveChart(
+ plannedData: plannedData,
+ actualData: actualData,
+ startDate: chartStart,
+ endDate: chartEnd,
+ height: 320,
+ ),
+ ),
+ const SizedBox(height: 24),
+ const Text(
+ 'Monthly Cash Flow',
+ style: TextStyle(
+ fontSize: 15,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ ),
+ const SizedBox(height: 10),
+ if (sortedMonths.isEmpty)
+ const Text(
+ 'No scheduled work packages with dates for cash flow projection.',
+ style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+ )
+ else
+ _buildMonthlyCashFlowTable(context, sortedMonths, monthlyPlanned, monthlyActual),
+ const SizedBox(height: 24),
+ const Text(
+ 'Work Package Budgets',
+ style: TextStyle(
+ fontSize: 15,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ ),
+ const SizedBox(height: 4),
+ Text(
+ '$linkedCount estimate line(s) linked to work packages or schedule activities.',
+ style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+ ),
+ const SizedBox(height: 12),
+ if (workPackages.isEmpty)
+ const Text(
+ 'No work packages available yet for cost/schedule mapping.',
+ style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+ )
+ else
+ ...workPackages.map((wp) => Padding(
+ padding: const EdgeInsets.only(bottom: 10),
+ child: Row(
+ children: [
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ wp.title.trim().isEmpty ? 'Untitled Work Package' : wp.title.trim(),
+ style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+ ),
+ if (wp.plannedStart != null || wp.plannedEnd != null)
+ Text(
+ '${wp.plannedStart ?? '?'} \u2192 ${wp.plannedEnd ?? '?'}',
+ style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+ ),
+ ],
+ ),
+ ),
+ Text(
+ formatCurrency(wp.budgetedCost),
+ style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+ ),
+ ],
+ ),
+ )),
+ ],
+ ),
+ );
+ }
 
   int _monthSpan(DateTime start, DateTime end) {
     return (end.year - start.year) * 12 + (end.month - start.month) + 1;
   }
 
-  String _monthKey(DateTime date) =>
-      '${date.year}-${date.month.toString().padLeft(2, '0')}';
+ String _monthKey(DateTime date) => '${date.year}-${date.month.toString().padLeft(2, '0')}';
+
+ Widget _buildMonthlyCashFlowTable(
+ BuildContext context,
+ List<String> sortedMonths,
+ Map<String, double> monthlyPlanned,
+ Map<String, double> monthlyActual,
+ ) {
+ final rows = sortedMonths.map((key) {
+ final parts = key.split('-');
+ final month = int.parse(parts[1]);
+ final year = int.parse(parts[0]);
+ final label = '${_monthNames[month - 1]} $year';
+ final planned = monthlyPlanned[key] ?? 0;
+ final actual = monthlyActual[key] ?? 0;
+ final variance = planned - actual;
+ return DataRow(cells: [
+ DataCell(WrappedText(label, style: const TextStyle(fontSize: 12))),
+ DataCell(WrappedText(formatCurrency(planned), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataCell(WrappedText(actual > 0 ? formatCurrency(actual) : '-', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: actual > 0 ? const Color(0xFF047857) : const Color(0xFFCBD5E1)))),
+ DataCell(WrappedText(variance != 0 ? formatCurrency(variance) : '-', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: variance > 0 ? const Color(0xFF059669) : variance < 0 ? const Color(0xFFDC2626) : const Color(0xFFCBD5E1)))),
+ ]);
+ }).toList();
+
+ return FullScreenTableWrapper(
+ title: 'Monthly Cash Flow',
+ child: ResponsiveDataTableWrapper(
+ child: buildNduDataTable(
+ context: context,
+ columns: const [
+ DataColumn(label: Text('Month', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12))),
+ DataColumn(label: Text('Planned', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(label: Text('Actual', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(label: Text('Variance', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ ],
+ rows: rows,
+ headingRowColor: const Color(0xFF1F2937),
+ headingTextStyle: const TextStyle(
+ fontWeight: FontWeight.w700,
+ fontSize: 12,
+ color: Colors.white,
+ ),
+ zebra: true,
+ columnSpacing: 24,
+ ),
+ ),
+ tableBuilder: (fsContext) => buildNduDataTable(
+ context: fsContext,
+ columns: const [
+ DataColumn(label: Text('Month', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12))),
+ DataColumn(label: Text('Planned', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(label: Text('Actual', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(label: Text('Variance', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ ],
+ rows: rows,
+ headingRowColor: const Color(0xFF1F2937),
+ headingTextStyle: const TextStyle(
+ fontWeight: FontWeight.w700,
+ fontSize: 12,
+ color: Colors.white,
+ ),
+ zebra: true,
+ columnSpacing: 32,
+ ),
+ );
+ }
 }
 
 class _EarnedValueMetricsRow extends StatelessWidget {

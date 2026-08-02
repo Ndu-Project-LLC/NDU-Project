@@ -840,7 +840,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
                                       height: 32,
                                       margin: const EdgeInsets.only(right: 4),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFFB800).withOpacity(0.15),
+                                        color: const Color(0xFFFFB800).withValues(alpha: 0.15),
                                         shape: BoxShape.circle,
                                       ),
                                       child: IconButton(
@@ -891,7 +891,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
                                           margin: const EdgeInsets.all(6),
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFFFB800)
-                                                .withOpacity(0.15),
+                                                .withValues(alpha: 0.15),
                                             shape: BoxShape.circle,
                                           ),
                                           child: IconButton(
@@ -943,12 +943,12 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
         ],
         if (_aiEnabled && _isBasicPlanProject && _aiLimitReached) ...[
           const SizedBox(height: 10),
-          _AiLimitBanner(
+          const _AiLimitBanner(
             message:
                 'AI suggestions are not available for this section on the Basic plan.',
-            background: const Color(0xFFF3F4F6),
-            border: const Color(0xFFE5E7EB),
-            textColor: const Color(0xFF6B7280),
+            background: Color(0xFFF3F4F6),
+            border: Color(0xFFE5E7EB),
+            textColor: Color(0xFF6B7280),
           ),
         ] else if (_aiEnabled && _showLastChanceNote) ...[
           const SizedBox(height: 10),
@@ -1035,7 +1035,6 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
 
 class _AiLimitBanner extends StatelessWidget {
   const _AiLimitBanner({
-    super.key,
     required this.message,
     required this.background,
     required this.border,

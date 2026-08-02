@@ -132,9 +132,9 @@ class EditableContentText extends StatelessWidget {
       borderRadius: BorderRadius.circular(4),
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: accent.withOpacity(0.3), width: 1),
+          border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
           borderRadius: BorderRadius.circular(4),
-          color: accent.withOpacity(0.05),
+          color: accent.withValues(alpha: 0.05),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: Row(
@@ -150,7 +150,7 @@ class EditableContentText extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.edit, size: 14, color: accent.withOpacity(0.7)),
+            Icon(Icons.edit, size: 14, color: accent.withValues(alpha: 0.7)),
           ],
         ),
       ),

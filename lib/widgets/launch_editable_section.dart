@@ -338,7 +338,7 @@ class LaunchEditableSection extends StatelessWidget {
                                       label: entries[i].status!,
                                     ),
                                   )
-                                : Text('Not set', style: detailStyle),
+                                : const Text('Not set', style: detailStyle),
                           ),
                         Expanded(
                           flex: columns.last.flex,

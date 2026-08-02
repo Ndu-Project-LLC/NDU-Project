@@ -5,7 +5,7 @@
 /// On web, [DocxImportService] always reads `PlatformFile.bytes` directly
 /// from the [FilePicker] result, so this stub is never actually invoked.
 /// It exists only to satisfy the analyzer and dart2js compiler.
-library ndu_project.io_stub;
+library;
 
 class File {
   // ignore: avoid_unused_constructor_parameters

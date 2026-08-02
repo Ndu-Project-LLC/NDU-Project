@@ -379,11 +379,11 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
           contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: AppSemanticColors.border),
+            borderSide: const BorderSide(color: AppSemanticColors.border),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: AppSemanticColors.border),
+            borderSide: const BorderSide(color: AppSemanticColors.border),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
@@ -845,15 +845,15 @@ class _EmptyGanttView extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
-      child: Column(
+      child: const Column(
         children: [
           Icon(
             Icons.view_timeline_outlined,
             size: 48,
-            color: const Color(0xFF9CA3AF),
+            color: Color(0xFF9CA3AF),
           ),
-          const SizedBox(height: 12),
-          const Text(
+          SizedBox(height: 12),
+          Text(
             'No Schedule Activities',
             style: TextStyle(
               fontSize: 16,
@@ -861,8 +861,8 @@ class _EmptyGanttView extends StatelessWidget {
               color: Color(0xFF374151),
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Add schedule activities or import from WBS to see the Gantt chart.',
             style: TextStyle(
               fontSize: 12,

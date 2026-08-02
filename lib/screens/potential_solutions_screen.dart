@@ -45,7 +45,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 // widget from blanking the entire page.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 class SafeSection extends StatelessWidget {
- SafeSection({
+ const SafeSection({
  super.key,
  required this.title,
  required this.builder,
@@ -599,8 +599,8 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Potential Solutions',
  ),
  ),
@@ -1066,7 +1066,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  SizedBox(
  width: double.infinity,
  height: bannerHeight,
- child: Center(child: AppLogo(height: 64)),
+ child: const Center(child: AppLogo(height: 64)),
  ),
  // Header with brand divider (gold)
  Container(
@@ -1076,8 +1076,8 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  bottom: BorderSide(color: Color(0xFFFFD700), width: 1),
  ),
  ),
- child: Row(
- children: const [
+ child: const Row(
+ children: [
  CircleAvatar(
  radius: 20,
  backgroundColor: Color(0xFFFFD700),
@@ -1191,7 +1191,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -1229,7 +1229,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -1267,7 +1267,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -1307,7 +1307,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -1519,9 +1519,9 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Padding(
- padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
- child: const Text(
+ const Padding(
+ padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
+ child: Text(
  'Notes',
  style: TextStyle(
  fontSize: 16,
@@ -2233,7 +2233,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  await showDialog<void>(
  context: context,
  barrierDismissible: false,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (_) => const _LoadingDialog(),
  );
 

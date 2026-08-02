@@ -320,8 +320,8 @@ class _AgileCapacityPlanningScreenState
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                         activeItemLabel:
                             'Agile Delivery Model - Capacity Planning'),
                   ),
@@ -436,7 +436,7 @@ class _AgileCapacityPlanningScreenState
   Widget _buildCapacityInputs() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -511,7 +511,7 @@ class _AgileCapacityPlanningScreenState
   Widget _buildLeaveCalendar() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -558,7 +558,7 @@ class _AgileCapacityPlanningScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: _kBorder),
@@ -586,7 +586,7 @@ class _AgileCapacityPlanningScreenState
             onTap: () => _pickDateRange(context, entry, true),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border.all(color: _kBorder),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -604,7 +604,7 @@ class _AgileCapacityPlanningScreenState
             onTap: () => _pickDateRange(context, entry, false),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border.all(color: _kBorder),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -629,7 +629,7 @@ class _AgileCapacityPlanningScreenState
   Widget _buildHolidays() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -676,7 +676,7 @@ class _AgileCapacityPlanningScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: _kBorder),
@@ -704,7 +704,7 @@ class _AgileCapacityPlanningScreenState
             onTap: () => _pickHolidayDate(context, entry),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border.all(color: _kBorder),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -729,7 +729,7 @@ class _AgileCapacityPlanningScreenState
   Widget _buildVelocitySection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),

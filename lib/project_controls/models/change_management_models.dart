@@ -3,6 +3,7 @@
 /// Per the Change Management Process docs (Waterfall: 313 paragraphs,
 /// Agile: 338 paragraphs) + supporting document tables (24 WF docs,
 /// 30 Agile docs).
+library;
 
 import 'package:flutter/material.dart';
 

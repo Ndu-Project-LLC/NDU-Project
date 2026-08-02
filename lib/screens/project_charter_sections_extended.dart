@@ -309,9 +309,9 @@ class CharterSecurity extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.all(20),
  decoration: kCardDecoration,
- child: Column(
+ child: const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text('SECURITY', style: kSectionTitleStyle),
  SizedBox(height: 16),
  Text('No specific security configurations defined.',

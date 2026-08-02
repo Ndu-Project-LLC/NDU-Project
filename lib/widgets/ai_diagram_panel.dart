@@ -163,11 +163,11 @@ class _DiagramLayout {
     }
 
     // ── Compute positions (D6: centered rows, adequate spacing) ──────────
-    final W = _DiagramPainter._nodeW;
-    final H = _DiagramPainter._nodeH;
-    final hGap = _DiagramPainter._hGap;
-    final vGap = _DiagramPainter._vGap;
-    final pad = _DiagramPainter._pad;
+    const W = _DiagramPainter._nodeW;
+    const H = _DiagramPainter._nodeH;
+    const hGap = _DiagramPainter._hGap;
+    const vGap = _DiagramPainter._vGap;
+    const pad = _DiagramPainter._pad;
 
     // Determine widest row for dynamic centering
     final levels = groups.keys.toList()..sort();
@@ -784,7 +784,7 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
                 color: const Color(0xFFE1EEFF),
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: Row(children: const [
+              child: const Row(children: [
                 Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
                 SizedBox(width: 6),
                 Text('AI Diagram',
@@ -1078,8 +1078,8 @@ class _AiDiagramPanelState extends State<AiDiagramPanel>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.hub_outlined,
-                      size: 48, color: const Color(0xFFD1D5DB)),
+                  const Icon(Icons.hub_outlined,
+                      size: 48, color: Color(0xFFD1D5DB)),
                   const SizedBox(height: 16),
                   const Text(
                     'Generate a strategic reasoning diagram',

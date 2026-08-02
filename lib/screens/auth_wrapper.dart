@@ -8,7 +8,7 @@ import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/access_policy.dart';
 import 'package:ndu_project/services/subscription_service.dart'; // Added
-import 'package:ndu_project/screens/pricing_screen.dart'; // Re-added
+// Re-added
 import 'package:ndu_project/widgets/restricted_access.dart';
 
 class AuthWrapper extends StatefulWidget {

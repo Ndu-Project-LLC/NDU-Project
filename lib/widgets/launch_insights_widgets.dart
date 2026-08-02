@@ -526,8 +526,8 @@ class LaunchPlannedVsActualBarChart extends StatelessWidget {
                       fontSize: 12, fontWeight: FontWeight.w700, color: _kInk),
                 ),
               ),
-              Row(
-                children: const [
+              const Row(
+                children: [
                   _LegendDot(color: _kSlate, label: 'Planned'),
                   SizedBox(width: 10),
                   _LegendDot(color: _kAmber, label: 'Actual'),
@@ -563,7 +563,7 @@ class LaunchPlannedVsActualBarChart extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${unit}${b.actual.toStringAsFixed(0)}',
+                            '$unit${b.actual.toStringAsFixed(0)}',
                             style: const TextStyle(
                                 fontSize: 10, color: _kAmberDark),
                           ),
@@ -1247,7 +1247,7 @@ class LaunchDonutBreakdown extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final isWide = constraints.maxWidth >= 420;
-              final donutSize = 130.0;
+              const donutSize = 130.0;
               return isWide
                   ? Row(
                       children: [

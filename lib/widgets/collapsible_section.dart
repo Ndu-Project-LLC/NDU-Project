@@ -114,10 +114,10 @@ class _CollapsibleSectionState extends State<CollapsibleSection>
                   builder: (context, _) {
                     return Transform.rotate(
                       angle: _chevronRotation.value * 3.14159265,
-                      child: Icon(
+                      child: const Icon(
                         Icons.keyboard_arrow_down_rounded,
                         size: 22,
-                        color: const Color(0xFF94A3B8),
+                        color: Color(0xFF94A3B8),
                       ),
                     );
                   },

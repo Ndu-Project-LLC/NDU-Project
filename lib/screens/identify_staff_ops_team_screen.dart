@@ -141,10 +141,10 @@ class _IdentifyStaffOpsTeamScreenState
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     'Identify & Staff Ops Team',
                     style: TextStyle(
@@ -180,11 +180,11 @@ class _IdentifyStaffOpsTeamScreenState
           final rows = await showCsvImportDialog(context,
               tableTitle: 'Ops Team',
               columns: [
-                CsvColumnSpec(
+                const CsvColumnSpec(
                     key: 'name', label: 'Member Name', sampleValue: 'John Doe'),
-                CsvColumnSpec(
+                const CsvColumnSpec(
                     key: 'role', label: 'Role', sampleValue: 'Operations Lead'),
-                CsvColumnSpec(
+                const CsvColumnSpec(
                     key: 'email',
                     label: 'Email',
                     sampleValue: 'john@company.com'),
@@ -397,10 +397,10 @@ class _IdentifyStaffOpsTeamScreenState
 
   Widget _buildRosterPanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Ops roster',
         subtitle: 'Role assignments, workload, and focus areas',
-        child: const Center(
+        child: Center(
           child: Padding(
             padding: EdgeInsets.all(24.0),
             child: Text('No project selected. Please open a project first.',
@@ -533,10 +533,10 @@ class _IdentifyStaffOpsTeamScreenState
 
   Widget _buildCoveragePanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Capability coverage',
         subtitle: 'Readiness by operational capability',
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
     }
 
@@ -637,10 +637,10 @@ class _IdentifyStaffOpsTeamScreenState
 
   Widget _buildChecklistPanel() {
     if (_projectId == null) {
-      return _PanelShell(
+      return const _PanelShell(
         title: 'Readiness checklist',
         subtitle: 'Pre-handover verification',
-        child: const SizedBox.shrink(),
+        child: SizedBox.shrink(),
       );
     }
 
@@ -811,7 +811,7 @@ class _IdentifyStaffOpsTeamScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(label,
@@ -829,7 +829,7 @@ class _IdentifyStaffOpsTeamScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text('$value%',
@@ -1150,8 +1150,8 @@ class _HandoffItem extends StatelessWidget {
           Container(
             width: 10,
             height: 10,
-            decoration: BoxDecoration(
-                color: const Color(0xFF0EA5E9), shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+                color: Color(0xFF0EA5E9), shape: BoxShape.circle),
           ),
           const SizedBox(width: 10),
           Expanded(

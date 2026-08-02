@@ -51,7 +51,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
   bool _hasLoaded = false;
   bool _suspendSave = false;
   final Map<String, bool> _kazAiRegenerating = {};
-  String _selectedView = 'full'; // 'full' or 'summary'
+  final String _selectedView = 'full'; // 'full' or 'summary'
 
   @override
   void initState() {
@@ -882,9 +882,10 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
     }
@@ -927,9 +928,10 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
     }
@@ -972,9 +974,10 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
     }
@@ -1013,9 +1016,10 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
     }
@@ -1074,13 +1078,13 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
           build: (_) => [
             pw.Text(
               'Contract Close Out',
-              style: const pw.TextStyle(
+              style: pw.TextStyle(
                   fontSize: 20, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Financial Summary'),
@@ -1088,14 +1092,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_financialSummary.isEmpty)
               pw.Text('No financial metrics.',
                   style:
-                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellStyle: pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1115,14 +1119,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_contracts.isEmpty)
               pw.Text('No contracts.',
                   style:
-                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellStyle: pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1144,14 +1148,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_closeOutSteps.isEmpty)
               pw.Text('No close-out steps.',
                   style:
-                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellStyle: pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1172,14 +1176,14 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             if (_signOffs.isEmpty)
               pw.Text('No sign-off records.',
                   style:
-                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellStyle: pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1232,7 +1236,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
         borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
       ),
       child: pw.Text(title,
-          style: const pw.TextStyle(
+          style: pw.TextStyle(
               fontSize: 11,
               fontWeight: pw.FontWeight.bold,
               color: PdfColors.white)),

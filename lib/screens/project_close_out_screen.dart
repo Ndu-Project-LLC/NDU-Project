@@ -609,13 +609,13 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
           filled: true,
           fillColor: const Color(0xFFF8FAFC),
           border: OutlineInputBorder(
-              borderRadius: const BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
           enabledBorder: OutlineInputBorder(
-              borderRadius: const BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
           focusedBorder: OutlineInputBorder(
-              borderRadius: const BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFFFD700))),
         ),
         onChanged: (v) {
@@ -652,7 +652,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
                 return Container(
                   width: 180,
                   padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Color(0xFFE5E7EB)),
@@ -993,13 +993,13 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
           build: (_) => [
             pw.Text(
               'Project Close-Out Report',
-              style: const pw.TextStyle(
+              style: pw.TextStyle(
                   fontSize: 20, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Close-Out Checklist'),
@@ -1007,14 +1007,14 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
             if (_closeOutChecklist.isEmpty)
               pw.Text('No checklist items.',
                   style:
-                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellStyle: pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1035,14 +1035,14 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
             if (_approvals.isEmpty)
               pw.Text('No approval records.',
                   style:
-                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellStyle: pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1070,14 +1070,14 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
             if (_archive.isEmpty)
               pw.Text('No archive items.',
                   style:
-                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellStyle: pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1106,7 +1106,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
               _lessonsLearned.notes.trim().isEmpty
                   ? 'No lessons learned recorded.'
                   : _lessonsLearned.notes.trim(),
-              style: const pw.TextStyle(fontSize: 9),
+              style: pw.TextStyle(fontSize: 9),
             ),
           ],
         ),
@@ -1145,7 +1145,7 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
         borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
       ),
       child: pw.Text(title,
-          style: const pw.TextStyle(
+          style: pw.TextStyle(
               fontSize: 11,
               fontWeight: pw.FontWeight.bold,
               color: PdfColors.white)),
@@ -1165,17 +1165,22 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
     if (risks.isEmpty ||
         risks.every((r) =>
             r.status.toLowerCase() == 'closed' ||
-            r.status.toLowerCase() == 'mitigated')) checksPassed++;
+            r.status.toLowerCase() == 'mitigated')) {
+      checksPassed++;
+    }
     final ms = projectData.keyMilestones;
     if (ms.isEmpty ||
         ms.every((m) =>
             m.comments.toLowerCase().contains('complete') ||
-            m.comments.toLowerCase().contains('done'))) checksPassed++;
+            m.comments.toLowerCase().contains('done'))) {
+      checksPassed++;
+    }
     final allowances = projectData.frontEndPlanning.allowanceItems;
     if (allowances.isEmpty ||
         allowances.every((a) =>
-            a.releaseStatus == 'Closed' || a.releaseStatus == 'Consumed'))
+            a.releaseStatus == 'Closed' || a.releaseStatus == 'Consumed')) {
       checksPassed++;
+    }
     final completionPct = checksPassed / 4;
     return LaunchInsightsHeader(
       sectionTitle: 'Project Closeout Status',

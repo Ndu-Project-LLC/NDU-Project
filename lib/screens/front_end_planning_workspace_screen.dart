@@ -620,9 +620,9 @@ class _FrontEndPlanningWorkspaceScreenState
                           const SizedBox(height: 24),
 
                           // Executive Summary Section (Legacy/Fallback)
-                          Row(
+                          const Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
-                            children: const [
+                            children: [
                               EditableContentText(
                                 contentKey: 'fep_workspace_summary_title',
                                 fallback: 'Executive Summary',
@@ -765,7 +765,7 @@ class _ListEditorCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -777,11 +777,11 @@ class _ListEditorCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.05),
+              color: color.withValues(alpha: 0.05),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(12)),
               border: Border(
-                bottom: BorderSide(color: color.withOpacity(0.1)),
+                bottom: BorderSide(color: color.withValues(alpha: 0.1)),
               ),
             ),
             child: Row(
@@ -793,7 +793,7 @@ class _ListEditorCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: color.withOpacity(0.8),
+                    color: color.withValues(alpha: 0.8),
                   ),
                 ),
                 const Spacer(),

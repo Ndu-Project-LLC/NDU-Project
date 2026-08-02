@@ -47,7 +47,7 @@ class ExecutionActionBar extends StatelessWidget {
 
   Widget _buildAction(BuildContext context, ExecutionActionItem action) {
     final bool disabled = action.onPressed == null || action.isLoading;
-    final Color aiColor = const Color(0xFF5B5BD6);
+    const Color aiColor = Color(0xFF5B5BD6);
 
     switch (action.tone) {
       case ExecutionActionTone.primary:
@@ -98,7 +98,7 @@ class ExecutionActionBar extends StatelessWidget {
           label: Text(action.label),
           style: OutlinedButton.styleFrom(
             foregroundColor: aiColor,
-            side: BorderSide(color: aiColor.withOpacity(0.28)),
+            side: BorderSide(color: aiColor.withValues(alpha: 0.28)),
             backgroundColor: const Color(0xFFF8F7FF),
             padding: EdgeInsets.symmetric(
               horizontal: compact ? 14 : 16,
@@ -189,7 +189,7 @@ class ExecutionPageHeader extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 22,
             offset: const Offset(0, 14),
           ),
@@ -329,7 +329,7 @@ class ExecutionMetricsGrid extends StatelessWidget {
       builder: (context, constraints) {
         final double width = constraints.maxWidth;
         final int count = metrics.length;
-        final double spacing = 12;
+        const double spacing = 12;
 
         // Wide screens: single row with equal-width Expanded cards
         if (width >= 900) {
@@ -428,7 +428,7 @@ class ExecutionMetricCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -457,7 +457,7 @@ class ExecutionMetricCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: metric.emphasisColor.withOpacity(0.12),
+                  color: metric.emphasisColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(metric.icon, size: 20, color: metric.emphasisColor),
@@ -596,7 +596,7 @@ class _ExecutionPanelShellState extends State<ExecutionPanelShell>
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 18,
             offset: const Offset(0, 12),
           ),
@@ -637,7 +637,7 @@ class _ExecutionPanelShellState extends State<ExecutionPanelShell>
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
                   color: (widget.headerIconColor ?? const Color(0xFF6366F1))
-                      .withOpacity(0.1),
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(

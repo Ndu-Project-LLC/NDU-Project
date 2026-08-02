@@ -8,7 +8,6 @@ import 'package:ndu_project/widgets/ai_diagram_panel.dart';
 import 'package:ndu_project/widgets/execution_plan_shared.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
-import 'package:ndu_project/screens/staff_team_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 class ExecutionPlanInterfaceManagementOverviewScreen extends StatelessWidget {
@@ -69,7 +68,7 @@ class _ExecutionPlanDetailsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -144,7 +143,7 @@ class _InterfaceManagementSection extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -543,7 +542,7 @@ class _DoneButton extends StatelessWidget {
         foregroundColor: Colors.black87,
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         elevation: 0,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8)),
       ),
       child: const Text('Done',

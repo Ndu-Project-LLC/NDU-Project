@@ -47,7 +47,7 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
   int _totalStaff = 0;
   int _totalRoles = 0;
   int _upcomingMeetings = 0;
-  int _activeTrainings = 0;
+  final int _activeTrainings = 0;
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
 
@@ -379,8 +379,8 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
                       ),
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Project Team Activities',
                     ),
                   ),
@@ -534,11 +534,11 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
           icon: Icons.event_outlined,
           color: const Color(0xFF0891B2),
         ),
-        _MetricCard(
+        const _MetricCard(
           label: 'Active Sections',
           value: '7',
           icon: Icons.dashboard_outlined,
-          color: const Color(0xFF10B981),
+          color: Color(0xFF10B981),
         ),
       ];
 
@@ -810,19 +810,19 @@ class _ProjectTeamActivitiesScreenState extends State<ProjectTeamActivitiesScree
                               ),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Row(
+                            child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
                                   'Explore Section',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                const SizedBox(width: 6),
-                                const Icon(Icons.arrow_forward,
+                                SizedBox(width: 6),
+                                Icon(Icons.arrow_forward,
                                     color: Colors.white, size: 16),
                               ],
                             ),

@@ -33,7 +33,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Center(child: AppLogo(height: 80)),
+ const Center(child: AppLogo(height: 80)),
  const SizedBox(height: 32),
  Center(
  child: Text(

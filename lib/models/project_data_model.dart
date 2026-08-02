@@ -414,7 +414,7 @@ class ProjectDataModel {
         obsElements = obsElements ?? [],
         cbsElements = cbsElements ?? [],
         designDeliverablesData =
-            designDeliverablesData ?? DesignDeliverablesData(),
+            designDeliverablesData ?? const DesignDeliverablesData(),
         projectRoles = projectRoles ?? [],
         raciMatrixRows = raciMatrixRows ?? [],
         staffingRequirements = staffingRequirements ?? [],
@@ -1137,7 +1137,7 @@ class ProjectDataModel {
           safeParseList('trainingActivities', TrainingActivity.fromJson),
       designDeliverablesData: safeParseSingle(
               'designDeliverables', DesignDeliverablesData.fromJson) ??
-          DesignDeliverablesData(),
+          const DesignDeliverablesData(),
       executionPhaseData:
           safeParseSingle('executionPhaseData', ExecutionPhaseData.fromJson),
       designManagementData: safeParseSingle(
@@ -7487,24 +7487,24 @@ class QualityComputedSnapshot {
     required this.generatedAt,
   });
 
-  factory QualityComputedSnapshot.empty() => QualityComputedSnapshot(
+  factory QualityComputedSnapshot.empty() => const QualityComputedSnapshot(
         averageTimeToResolutionDays: 0,
         targetTimeToResolutionDays: 15,
         averageTaskCompletionPercent: 0,
         plannedAuditsCompletionPercent: 0,
-        statusTallies: const {
+        statusTallies: {
           'notStarted': 0,
           'inProgress': 0,
           'complete': 0,
           'blocked': 0,
         },
-        priorityTallies: const {
+        priorityTallies: {
           'minimal': 0,
           'moderate': 0,
           'critical': 0,
         },
-        defectTrendData: const [],
-        satisfactionTrendData: const [],
+        defectTrendData: [],
+        satisfactionTrendData: [],
         generatedAt: '',
       );
 

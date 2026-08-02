@@ -420,7 +420,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -491,9 +491,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: double.infinity,
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
- color: color.withOpacity(0.04),
+ color: color.withValues(alpha: 0.04),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.12)),
+ border: Border.all(color: color.withValues(alpha: 0.12)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -503,7 +503,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(icon, size: 16, color: color),
@@ -539,10 +539,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildContractRegister() {
  final contractsStream = _contractStreamForProject();
  if (contractsStream == null) {
- return _PanelShell(
+ return const _PanelShell(
  title: 'Contract register',
  subtitle: 'Track scope, owners, and renewal milestones',
- child: const Center(
+ child: Center(
  child: Padding(
  padding: EdgeInsets.all(24.0),
  child: Text('No project selected. Please open a project first.',
@@ -613,13 +613,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildRenewalPanel() {
  if (_projectId == null) {
- return _PanelShell(
+ return const _PanelShell(
  title: 'Renewal pipeline',
  subtitle:
  'Contract renewal tracker aligned with PMI PMBOK Control Procurements. '
  'Monitor contracts approaching expiry, assign renewal owners, and track '
  'renegotiation progress across urgency windows.',
- child: const SizedBox.shrink(),
+ child: SizedBox.shrink(),
  );
  }
 
@@ -630,7 +630,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -644,11 +644,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const Text(
+ Text(
  'Renewal pipeline',
  style: TextStyle(
  fontSize: 16,
@@ -656,12 +656,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color: Color(0xFF111827),
  ),
  ),
- const SizedBox(height: 6),
+ SizedBox(height: 6),
  Text(
  'Contract renewal tracker aligned with PMI PMBOK Control '
  'Procurements. Monitor contracts approaching expiry, assign '
  'renewal owners, and track renegotiation progress across urgency windows.',
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w500,
  color: Color(0xFF6B7280),
@@ -689,14 +689,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
  if (_renewalLanes.isEmpty)
- Padding(
- padding: const EdgeInsets.all(32),
+ const Padding(
+ padding: EdgeInsets.all(32),
  child: Center(
  child: Column(
  children: [
- const Icon(Icons.autorenew_outlined, color: Color(0xFF9CA3AF), size: 32),
- const SizedBox(height: 12),
- const Text(
+ Icon(Icons.autorenew_outlined, color: Color(0xFF9CA3AF), size: 32),
+ SizedBox(height: 12),
+ Text(
  'No contracts in the renewal pipeline. Add contracts to start tracking renewals.',
  style: TextStyle(
  fontSize: 13,
@@ -759,10 +759,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildSignalsPanel() {
  if (_projectId == null) {
- return _PanelShell(
+ return const _PanelShell(
  title: 'Risk signals',
  subtitle: 'Items that need attention this week',
- child: const SizedBox.shrink(),
+ child: SizedBox.shrink(),
  );
  }
 
@@ -790,13 +790,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildApprovalsPanel() {
  if (_projectId == null) {
- return _PanelShell(
+ return const _PanelShell(
  title: 'Approval readiness',
  subtitle:
  'Contract approval gates aligned with PMI PMBOK Close Procurements '
  'and organizational authority matrices. Each gate must be cleared '
  'before the contract advances to the next stage.',
- child: const SizedBox.shrink(),
+ child: SizedBox.shrink(),
  );
  }
 
@@ -807,7 +807,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -822,11 +822,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const Text(
+ Text(
  'Approval readiness',
  style: TextStyle(
  fontSize: 16,
@@ -834,12 +834,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color: Color(0xFF111827),
  ),
  ),
- const SizedBox(height: 6),
+ SizedBox(height: 6),
  Text(
  'Contract approval gates aligned with PMI PMBOK Close Procurements '
  'and organizational authority matrices. Each gate must be cleared '
  'before the contract advances to the next stage.',
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w500,
  color: Color(0xFF6B7280),
@@ -868,14 +868,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
  // Table
  if (_approvalCheckpoints.isEmpty)
- Padding(
- padding: const EdgeInsets.all(32),
+ const Padding(
+ padding: EdgeInsets.all(32),
  child: Center(
  child: Column(
  children: [
- const Icon(Icons.verified_outlined, color: Color(0xFF9CA3AF), size: 32),
- const SizedBox(height: 12),
- const Text(
+ Icon(Icons.verified_outlined, color: Color(0xFF9CA3AF), size: 32),
+ SizedBox(height: 12),
+ Text(
  'No approval gates defined. Add gates to set up the approval workflow.',
  style: TextStyle(
  fontSize: 13,
@@ -1212,7 +1212,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedType,
+ initialValue: selectedType,
  decoration: const InputDecoration(
  labelText: 'Contract type',
  isDense: true,
@@ -1229,7 +1229,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedAction,
+ initialValue: selectedAction,
  decoration: const InputDecoration(
  labelText: 'Renewal action',
  isDense: true,
@@ -1282,7 +1282,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<int>(
- value: _daysLeftOptions.contains(selectedDaysLeft) ? selectedDaysLeft : null,
+ initialValue: _daysLeftOptions.contains(selectedDaysLeft) ? selectedDaysLeft : null,
  decoration: const InputDecoration(
  labelText: 'Days left',
  isDense: true,
@@ -1328,7 +1328,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(
  labelText: 'Renewal status',
  isDense: true,
@@ -1506,7 +1506,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(
  labelText: 'Status',
  ),
@@ -1706,7 +1706,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedDepartment,
+ initialValue: selectedDepartment,
  decoration: const InputDecoration(
  labelText: 'Department',
  isDense: true,
@@ -1728,7 +1728,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedPriority,
+ initialValue: selectedPriority,
  decoration: const InputDecoration(
  labelText: 'Priority',
  isDense: true,
@@ -1746,7 +1746,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(
  labelText: 'Status',
  isDense: true,
@@ -1990,7 +1990,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: contractTypeController.text.isEmpty
+ initialValue: contractTypeController.text.isEmpty
  ? null
  : contractTypeController.text,
  decoration: const InputDecoration(
@@ -2026,7 +2026,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus.isEmpty ? null : selectedStatus,
+ initialValue: selectedStatus.isEmpty ? null : selectedStatus,
  decoration: const InputDecoration(
  labelText: 'Status *',
  isDense: true,
@@ -2522,9 +2522,9 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: deptColor.withOpacity(0.08),
+ color: deptColor.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: deptColor.withOpacity(0.18)),
+ border: Border.all(color: deptColor.withValues(alpha: 0.18)),
  ),
  child: Text(
  c.department,
@@ -2545,7 +2545,7 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: priorityColor.withOpacity(0.08),
+ color: priorityColor.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Row(
@@ -2580,7 +2580,7 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.1),
+ color: statusColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -2822,10 +2822,10 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
  padding:
  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: typeColor.withOpacity(0.08),
+ color: typeColor.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(6),
  border:
- Border.all(color: typeColor.withOpacity(0.18)),
+ Border.all(color: typeColor.withValues(alpha: 0.18)),
  ),
  child: Text(
  e.contractType,
@@ -2861,7 +2861,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
  padding:
  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: urgencyColor.withOpacity(0.08),
+ color: urgencyColor.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Row(
@@ -2900,7 +2900,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
  padding:
  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: actionColor.withOpacity(0.08),
+ color: actionColor.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -2923,7 +2923,7 @@ class _RenewalEntryRowState extends State<_RenewalEntryRow> {
  padding:
  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.1),
+ color: statusColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -3031,9 +3031,9 @@ class _RiskSignalPill extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.08),
+ color: color.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: color.withOpacity(0.18)),
+ border: Border.all(color: color.withValues(alpha: 0.18)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,

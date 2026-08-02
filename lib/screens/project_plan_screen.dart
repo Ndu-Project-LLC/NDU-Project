@@ -315,8 +315,8 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Project Plan',
                     ),
                   ),
@@ -435,21 +435,21 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                   color: Color(0xFF374151))),
         ),
         const SizedBox(width: 12),
-        Row(
+        const Row(
           children: [
-            const Icon(Icons.calendar_today_outlined,
+            Icon(Icons.calendar_today_outlined,
                 size: 14, color: Color(0xFF6B7280)),
-            const SizedBox(width: 6),
-            const Text('Start —',
+            SizedBox(width: 6),
+            Text('Start —',
                 style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
           ],
         ),
         const SizedBox(width: 12),
-        Row(
+        const Row(
           children: [
-            const Icon(Icons.flag_outlined, size: 14, color: Color(0xFF6B7280)),
-            const SizedBox(width: 6),
-            const Text('End —',
+            Icon(Icons.flag_outlined, size: 14, color: Color(0xFF6B7280)),
+            SizedBox(width: 6),
+            Text('End —',
                 style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
           ],
         ),
@@ -3942,7 +3942,7 @@ class _LabeledDropdown extends StatelessWidget {
                 color: Color(0xFF374151))),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           items: options
               .map((option) =>
                   DropdownMenuItem(value: option, child: Text(option)))
@@ -4108,7 +4108,7 @@ class _DropdownCell extends StatelessWidget {
     final resolvedValue = options.contains(value) ? value : options.first;
     return DropdownButtonFormField<String>(
       key: ValueKey(fieldKey),
-      value: resolvedValue,
+      initialValue: resolvedValue,
       items: options
           .map((option) => DropdownMenuItem(value: option, child: Text(option)))
           .toList(),

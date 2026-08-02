@@ -14,7 +14,7 @@
 // (currently all platforms support it; the helper exists for future-proofing
 // and to centralize the dpr multiplier).
 
-import 'dart:ui' show FlutterView;
+import 'dart:ui' show FlutterView, PlatformDispatcher;
 
 import 'package:flutter/widgets.dart';
 

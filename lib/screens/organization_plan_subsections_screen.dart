@@ -587,7 +587,7 @@ class _OrganizationRolesResponsibilitiesScreenState
           children: [
             PremiumEditDialog.fieldLabel('Title'),
             DropdownButtonFormField<String>(
-              value: selectedTitle,
+              initialValue: selectedTitle,
               items: [
                 ..._roleTitleOptions,
                 _customRoleOption,
@@ -675,7 +675,7 @@ class _OrganizationRolesResponsibilitiesScreenState
           children: [
             PremiumEditDialog.fieldLabel('Title'),
             DropdownButtonFormField<String>(
-              value: selectedTitle,
+              initialValue: selectedTitle,
               items: [
                 ..._roleTitleOptions,
                 _customRoleOption,
@@ -984,8 +984,8 @@ class _OrganizationRaciMatrixScreenState
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Organization Plan - RACI Matrix',
                     ),
                   ),
@@ -1019,7 +1019,7 @@ class _OrganizationRaciMatrixScreenState
                               TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
                         ),
                         const SizedBox(height: 20),
-                        PlanningAiNotesCard(
+                        const PlanningAiNotesCard(
                           title: 'Notes',
                           sectionLabel: 'RACI Matrix',
                           noteKey: 'planning_organization_raci_matrix',
@@ -1055,10 +1055,10 @@ class _OrganizationRaciMatrixScreenState
                           ],
                         ),
                         const SizedBox(height: 20),
-                        Wrap(
+                        const Wrap(
                           spacing: 10,
                           runSpacing: 10,
-                          children: const [
+                          children: [
                             _RaciLegendChip(code: 'R', label: 'Responsible'),
                             _RaciLegendChip(code: 'A', label: 'Accountable'),
                             _RaciLegendChip(code: 'C', label: 'Consulted'),
@@ -1105,7 +1105,7 @@ class _OrganizationRaciMatrixScreenState
                           )
                         else
                           Container(
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(color: Color(0xFFE5E7EB)),
@@ -1118,7 +1118,7 @@ class _OrganizationRaciMatrixScreenState
                               ],
                             ),
                             child: ClipRRect(
-                              borderRadius: const BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(14),
                               child: _RaciMatrixTable(
                                 rows: rows,
                                 columns: _raciColumns,
@@ -1212,7 +1212,7 @@ class _OrganizationRaciMatrixScreenState
             const SizedBox(height: 16),
             PremiumEditDialog.fieldLabel('Framework'),
             DropdownButtonFormField<String>(
-              value: framework,
+              initialValue: framework,
               items: const ['Both', 'Agile', 'Waterfall']
                   .map((value) =>
                       DropdownMenuItem(value: value, child: Text(value)))
@@ -1235,7 +1235,7 @@ class _OrganizationRaciMatrixScreenState
             for (final column in _raciColumns) ...[
               PremiumEditDialog.fieldLabel(column),
               DropdownButtonFormField<String>(
-                value: assignmentValues[column]?.isEmpty == true
+                initialValue: assignmentValues[column]?.isEmpty == true
                     ? ''
                     : assignmentValues[column],
                 items: const ['', 'R', 'A', 'C', 'I']
@@ -1303,7 +1303,7 @@ class _OrganizationRaciMatrixScreenState
             const SizedBox(height: 16),
             PremiumEditDialog.fieldLabel('Framework'),
             DropdownButtonFormField<String>(
-              value: framework,
+              initialValue: framework,
               items: const ['Both', 'Agile', 'Waterfall']
                   .map((value) =>
                       DropdownMenuItem(value: value, child: Text(value)))
@@ -1324,7 +1324,7 @@ class _OrganizationRaciMatrixScreenState
             for (final column in _raciColumns) ...[
               PremiumEditDialog.fieldLabel(column),
               DropdownButtonFormField<String>(
-                value: assignmentValues[column],
+                initialValue: assignmentValues[column],
                 items: const ['', 'R', 'A', 'C', 'I']
                     .map((value) => DropdownMenuItem(
                           value: value,
@@ -1914,8 +1914,8 @@ class _OrganizationStaffingPlanScreenState
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Organization Plan - Staffing Plan',
                     ),
                   ),
@@ -2005,7 +2005,7 @@ class _OrganizationStaffingPlanScreenState
                           )
                         else
                           Container(
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(color: Color(0xFFE5E7EB)),
@@ -2017,7 +2017,7 @@ class _OrganizationStaffingPlanScreenState
                               ],
                             ),
                             child: ClipRRect(
-                              borderRadius: const BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(14),
                               child: _StaffingPlanTable(
                                 requirements: requirements,
                                 onEdit: (index, req) =>
@@ -2163,7 +2163,7 @@ class _OrganizationStaffingPlanScreenState
                     children: [
                       PremiumEditDialog.fieldLabel('Employment'),
                       DropdownButtonFormField<String>(
-                        value: empType,
+                        initialValue: empType,
                         items: ['FT', 'PT']
                             .map((s) =>
                                 DropdownMenuItem(value: s, child: Text(s)))
@@ -2172,7 +2172,7 @@ class _OrganizationStaffingPlanScreenState
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.grey[50],
-                          border: const OutlineInputBorder(
+                          border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none),
                         ),
@@ -2187,7 +2187,7 @@ class _OrganizationStaffingPlanScreenState
                     children: [
                       PremiumEditDialog.fieldLabel('Category'),
                       DropdownButtonFormField<String>(
-                        value: employeeType,
+                        initialValue: employeeType,
                         items: ['Employee', 'Contractor']
                             .map((s) =>
                                 DropdownMenuItem(value: s, child: Text(s)))
@@ -2197,7 +2197,7 @@ class _OrganizationStaffingPlanScreenState
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.grey[50],
-                          border: const OutlineInputBorder(
+                          border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none),
                         ),
@@ -2314,7 +2314,7 @@ class _RaciLegendChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -2326,7 +2326,7 @@ class _RaciLegendChip extends StatelessWidget {
             width: 22,
             height: 22,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFFFF7CC),
               borderRadius: BorderRadius.circular(999),
             ),
@@ -2586,7 +2586,7 @@ class _RaciFrameworkCell extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: const BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           framework.isEmpty ? 'Both' : framework,
@@ -2624,7 +2624,7 @@ class _RaciValuePill extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: style.bg,
-        borderRadius: const BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         normalized.isEmpty ? '—' : normalized,
@@ -2672,8 +2672,8 @@ class _PlanningSubsectionScreen extends StatelessWidget {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Organization Plan - Staffing Plan',
                     ),
                   ),
@@ -3047,7 +3047,7 @@ class _StaffingStatusPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: const BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         label,
@@ -3139,7 +3139,7 @@ class _TopHeader extends StatelessWidget {
         foregroundColor: const Color(0xFF1F2933),
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12)),
         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
       ),
@@ -3157,11 +3157,11 @@ class _CircleIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: const BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         width: 36,
         height: 36,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3182,7 +3182,7 @@ class _UserChip extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3278,7 +3278,7 @@ class _MetricCard extends StatelessWidget {
     return Container(
       width: 190,
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3346,7 +3346,7 @@ class _SectionCard extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3463,7 +3463,7 @@ class _StatusRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: data.color.withValues(alpha: 0.12),
-              borderRadius: const BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
               data.value,
@@ -3490,7 +3490,7 @@ class _SectionEmptyState extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -3500,7 +3500,7 @@ class _SectionEmptyState extends StatelessWidget {
           Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFFFF7ED),
               borderRadius: BorderRadius.circular(14),
             ),

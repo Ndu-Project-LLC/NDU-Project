@@ -284,9 +284,9 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
                             context, 'agile_sprint_calendar'),
                         onExportPdf: _exportPdf),
                     const SizedBox(height: 32),
-                    Text(
+                    const Text(
                         'Define sprint duration, dates, and ceremony schedule.',
-                        style: const TextStyle(fontSize: 15, color: _kMuted)),
+                        style: TextStyle(fontSize: 15, color: _kMuted)),
                     const SizedBox(height: 24),
                     if (_isLoading)
                       const Center(child: CircularProgressIndicator())
@@ -298,7 +298,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
                         decoration: InputDecoration(
                           hintText: 'Search sprints...',
                           prefixIcon: const Icon(Icons.search, size: 20),
-                          border: const OutlineInputBorder(
+                          border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10)),
                           isDense: true,
                           contentPadding:
@@ -329,7 +329,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: _kAccent,
                               side: const BorderSide(color: _kAccent),
-                              shape: const RoundedRectangleBorder(
+                              shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8)),
                             ),
                           ),
@@ -344,7 +344,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFF059669),
                               side: const BorderSide(color: Color(0xFF059669)),
-                              shape: const RoundedRectangleBorder(
+                              shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8)),
                             ),
                           ),
@@ -539,7 +539,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
         side: BorderSide(color: _kBorder),
       ),
@@ -616,7 +616,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
   Widget _buildEmptyState(String message) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(12),
       ),

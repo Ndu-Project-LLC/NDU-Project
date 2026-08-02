@@ -3655,8 +3655,11 @@ $domainHints
     if (!cleaned.startsWith('[')) {
       // Try to find the first [ character
       final idx = cleaned.indexOf('[');
-      if (idx >= 0) cleaned = cleaned.substring(idx);
-      else return null;
+      if (idx >= 0) {
+        cleaned = cleaned.substring(idx);
+      } else {
+        return null;
+      }
     }
     try {
       final decoded = jsonDecode(cleaned);

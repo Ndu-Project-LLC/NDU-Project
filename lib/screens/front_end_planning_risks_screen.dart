@@ -615,7 +615,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  final result = await showDialog<_RiskItem>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (ctx) {
  final viewInsets = MediaQuery.of(ctx).viewInsets;
  return Center(
@@ -634,8 +634,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  mainAxisSize: MainAxisSize.min,
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
- children: const [
+ const Row(
+ children: [
  Icon(Icons.edit_note, color: Color(0xFF111827)),
  SizedBox(width: 8),
  Text('Edit Risk',
@@ -1355,11 +1355,11 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment:
  CrossAxisAlignment.start,
- children: const [
+ children: [
  EditableContentText(
  contentKey:
  'fep_initial_project_risks_title',
@@ -1477,8 +1477,8 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Risks',
  ),
  ),
@@ -1981,7 +1981,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  decoration: BoxDecoration(
  color: background,
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: foreground.withOpacity(0.25)),
+ border: Border.all(color: foreground.withValues(alpha: 0.25)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -2009,10 +2009,10 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  }
 
  Widget _buildRiskTable(BuildContext context) {
- final border = const BorderSide(color: Color(0xFFE5E7EB));
- final headerStyle = const TextStyle(
+ const border = BorderSide(color: Color(0xFFE5E7EB));
+ const headerStyle = TextStyle(
  fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
- final cellStyle = const TextStyle(fontSize: 14, color: Color(0xFF111827));
+ const cellStyle = TextStyle(fontSize: 14, color: Color(0xFF111827));
 
  return Container(
  key: _riskTableKey,
@@ -2027,7 +2027,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  child: LayoutBuilder(
  builder: (context, constraints) {
- final minTableWidth = 1940.0;
+ const minTableWidth = 1940.0;
  final tableWidth = constraints.maxWidth < minTableWidth
  ? minTableWidth
  : constraints.maxWidth;
@@ -2535,8 +2535,8 @@ class _BottomOverlays extends StatelessWidget {
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFD7E5FF)),
  ),
- child: Row(
- children: const [
+ child: const Row(
+ children: [
  Icon(Icons.lightbulb_outline, color: Color(0xFF2563EB)),
  SizedBox(width: 8),
  Text('Hint',
@@ -2588,10 +2588,9 @@ class _LabeledField extends StatelessWidget {
  const _LabeledField({
  required this.label,
  required this.controller,
- this.hintText,
  this.autofocus = false,
  this.enabled = true,
- });
+ }) : hintText = null;
 
  @override
  Widget build(BuildContext context) {
@@ -2615,7 +2614,7 @@ class _LabeledField extends StatelessWidget {
  controller: controller,
  autofocus: autofocus,
  enabled: enabled,
- decoration: InputDecoration(
+ decoration: const InputDecoration(
  border: InputBorder.none,
  ),
  ),

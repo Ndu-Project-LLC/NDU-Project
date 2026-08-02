@@ -251,7 +251,7 @@ class _IssuesManagementSectionState extends State<_IssuesManagementSection> {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Issues',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'issueTopic',
                       label: 'Issue Topic',
@@ -340,7 +340,7 @@ class _IssuesManagementSectionState extends State<_IssuesManagementSection> {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileIssueManagementActions()
+          const _MobileIssueManagementActions()
         else
           const _DesktopIssueManagementActions(),
       ],
@@ -654,7 +654,7 @@ class _IssuesManagementTable extends StatelessWidget {
           }
 
           return Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: Color(0xFFE5E7EB)),
             ),

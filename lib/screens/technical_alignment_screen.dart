@@ -395,10 +395,10 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       debugPrint('Error saving technical alignment: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Failed to save. Please check your permissions and try again.'),
-            backgroundColor: const Color(0xFFB91C1C),
-            duration: const Duration(seconds: 5),
+          const SnackBar(
+            content: Text('Failed to save. Please check your permissions and try again.'),
+            backgroundColor: Color(0xFFB91C1C),
+            duration: Duration(seconds: 5),
           ),
         );
       }
@@ -639,7 +639,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Icon(Icons.lightbulb_outline,
+ const Icon(Icons.lightbulb_outline,
  size: 18, color: LightModeColors.accent),
  const SizedBox(width: 8),
  Expanded(
@@ -856,7 +856,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: Row(
  children: [
- Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.delivery_dining_outlined, color: Colors.white, size: 26)),
+ Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.delivery_dining_outlined, color: Colors.white, size: 26)),
  const SizedBox(width: 16),
  const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Add Delivery Model', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)), SizedBox(height: 4), Text('Define a new delivery model with alignment evidence and exit standards', style: TextStyle(fontSize: 13, color: Colors.white70))])),
  IconButton(onPressed: () => Navigator.of(dialogContext).pop(), icon: const Icon(Icons.close, color: Colors.white, size: 22)),
@@ -881,7 +881,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 12),
  Container(
  padding: const EdgeInsets.all(14),
- decoration: BoxDecoration(color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFFCD34D).withOpacity(0.4))),
+ decoration: BoxDecoration(color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFFCD34D).withValues(alpha: 0.4))),
  child: Row(children: [
  const Icon(Icons.auto_awesome, size: 18, color: Color(0xFFD97706)),
  const SizedBox(width: 10),
@@ -908,7 +908,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  Container(
  padding: const EdgeInsets.fromLTRB(28, 12, 28, 20),
- decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)), border: Border(top: BorderSide(color: const Color(0xFFE5E7EB), width: 1))),
+ decoration: const BoxDecoration(color: Color(0xFFF9FAFB), borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)), border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1))),
  child: Row(
  mainAxisAlignment: MainAxisAlignment.end,
  children: [
@@ -1100,7 +1100,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Icon(Icons.delivery_dining_outlined,
  size: 36,
- color: const Color(0xFF9CA3AF).withOpacity(0.6)),
+ color: const Color(0xFF9CA3AF).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No delivery models yet',
  style: TextStyle(
@@ -1393,9 +1393,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFF59E0B).withOpacity(0.1),
+ color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
+ border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -1601,7 +1601,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Icon(Icons.fact_check_outlined,
  size: 36,
- color: const Color(0xFF9CA3AF).withOpacity(0.6)),
+ color: const Color(0xFF9CA3AF).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No readiness gate items yet',
  style: TextStyle(
@@ -1699,7 +1699,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 5, vertical: 3),
                   decoration: BoxDecoration(
-                    color: decisionColor.withOpacity(0.1),
+                    color: decisionColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4)),
                   child: Text(row.decision,
                     style: TextStyle(
@@ -1858,7 +1858,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: decision,
+ initialValue: decision,
  decoration: const InputDecoration(
  labelText: 'Decision',
  isDense: true,
@@ -1869,8 +1869,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  value: s, child: Text(s)))
  .toList(),
  onChanged: (v) {
- if (v != null)
- setDState(() => decision = v);
+ if (v != null) {
+   setDState(() => decision = v);
+ }
  },
  ),
  ),
@@ -1933,7 +1934,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ? options
  : [normalized, ...options];
  return DropdownButtonFormField<String>(
- value: normalized.isEmpty ? items.first : normalized,
+ initialValue: normalized.isEmpty ? items.first : normalized,
  alignment: Alignment.center,
  isExpanded: true,
  style: TextStyle(
@@ -2010,7 +2011,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Icon(Icons.link_outlined,
  size: 36,
- color: const Color(0xFF9CA3AF).withOpacity(0.6)),
+ color: const Color(0xFF9CA3AF).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No traceability items yet',
  style: TextStyle(
@@ -2302,7 +2303,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -2376,7 +2377,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -2449,7 +2450,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -2579,7 +2580,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  label: const Text('Export summary'),
  style: OutlinedButton.styleFrom(
  foregroundColor: Colors.white,
- side: BorderSide(color: Colors.white.withOpacity(0.24)),
+ side: BorderSide(color: Colors.white.withValues(alpha: 0.24)),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
  ),
  );
@@ -2630,7 +2631,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Technical Alignment for ${snapshot.projectLabel}. This dashboard checks the design concept against real systems, legacy dependencies, venue conditions, security obligations, and operational workarounds.',
  style: TextStyle(
  fontSize: 14,
- color: Colors.white.withOpacity(0.84),
+ color: Colors.white.withValues(alpha: 0.84),
  height: 1.5,
  ),
  ),
@@ -2670,10 +2671,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: double.infinity,
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
- color: Colors.white.withOpacity(0.08),
+ color: Colors.white.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(16),
  border: Border.all(
- color: Colors.white.withOpacity(0.10),
+ color: Colors.white.withValues(alpha: 0.10),
  ),
  ),
  child: Text(
@@ -2681,7 +2682,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  
  style: TextStyle(
  fontSize: 12.5,
- color: Colors.white.withOpacity(0.82),
+ color: Colors.white.withValues(alpha: 0.82),
  height: 1.45,
  ),
  ),
@@ -2767,7 +2768,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildGovernanceGrid(_TechnicalAlignmentDashboardSnapshot snapshot) {
  return LayoutBuilder(
  builder: (context, constraints) {
- final spacing = 20.0;
+ const spacing = 20.0;
  final columns = constraints.maxWidth >= 1080 ? 2 : 1;
  final cardWidth = columns == 1
  ? constraints.maxWidth
@@ -3018,7 +3019,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: _severityColor(item.severity).withOpacity(0.14),
+ color: _severityColor(item.severity).withValues(alpha: 0.14),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Icon(
@@ -3510,7 +3511,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 34,
  height: 34,
  decoration: BoxDecoration(
- color: _protocolColor(item.status).withOpacity(0.12),
+ color: _protocolColor(item.status).withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(
@@ -3717,9 +3718,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 42,
  height: 42,
  decoration: BoxDecoration(
- color: accent.withOpacity(0.10),
+ color: accent.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: accent.withOpacity(0.18)),
+ border: Border.all(color: accent.withValues(alpha: 0.18)),
  ),
  child: Icon(icon, color: accent),
  ),
@@ -3761,9 +3762,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: Colors.white.withOpacity(0.08),
+ color: Colors.white.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: Colors.white.withOpacity(0.12)),
+ border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -3773,7 +3774,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Colors.white.withOpacity(0.72),
+ color: Colors.white.withValues(alpha: 0.72),
  ),
  ),
  const SizedBox(height: 4),
@@ -3794,9 +3795,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: color.withOpacity(0.22)),
+ border: Border.all(color: color.withValues(alpha: 0.22)),
  ),
  child: Text(
  label,
@@ -3902,7 +3903,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  decoration: BoxDecoration(
  color: color,
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: color.withOpacity(0.9)),
+ border: Border.all(color: color.withValues(alpha: 0.9)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -3972,7 +3973,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: AppSemanticColors.border),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -4040,7 +4041,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: AppSemanticColors.border),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -4107,7 +4108,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: AppSemanticColors.border),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -4328,9 +4329,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 44,
  height: 44,
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: color.withOpacity(0.2)),
+ border: Border.all(color: color.withValues(alpha: 0.2)),
  ),
  child: Icon(icon, color: color, size: 22),
  ),
@@ -4806,7 +4807,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ? _statusOptions
  : [normalized, ..._statusOptions];
  return DropdownButtonFormField<String>(
- value: normalized.isEmpty ? items.first : normalized,
+ initialValue: normalized.isEmpty ? items.first : normalized,
  alignment: Alignment.center,
  isExpanded: true,
  style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
@@ -4861,7 +4862,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ? options
  : [normalized, ...options];
  return DropdownButtonFormField<String>(
- value: normalized.isEmpty ? items.first : normalized,
+ initialValue: normalized.isEmpty ? items.first : normalized,
  alignment: Alignment.center,
  isExpanded: true,
  style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
@@ -5969,9 +5970,9 @@ class _DeliveryModelPanelShell extends StatelessWidget {
  width: 44,
  height: 44,
  decoration: BoxDecoration(
- color: accent.withOpacity(0.12),
+ color: accent.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: accent.withOpacity(0.2)),
+ border: Border.all(color: accent.withValues(alpha: 0.2)),
  ),
  child: Icon(icon, color: accent, size: 22),
  ),

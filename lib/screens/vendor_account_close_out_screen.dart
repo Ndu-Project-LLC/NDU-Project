@@ -51,7 +51,7 @@ class _VendorAccountCloseOutScreenState
   bool _hasLoaded = false;
   bool _suspendSave = false;
   final Map<String, bool> _kazAiRegenerating = {};
-  String _selectedView = 'full'; // 'full' or 'summary'
+  final String _selectedView = 'full'; // 'full' or 'summary'
 
   @override
   void initState() {
@@ -976,9 +976,10 @@ class _VendorAccountCloseOutScreenState
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
     }
@@ -1021,9 +1022,10 @@ class _VendorAccountCloseOutScreenState
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
     }
@@ -1064,9 +1066,10 @@ class _VendorAccountCloseOutScreenState
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
     }
@@ -1108,9 +1111,10 @@ class _VendorAccountCloseOutScreenState
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('KAZ AI failed: $e')));
+      }
     } finally {
       if (mounted) setState(() => _kazAiRegenerating[key] = false);
     }
@@ -1139,13 +1143,13 @@ class _VendorAccountCloseOutScreenState
           build: (_) => [
             pw.Text(
               'Vendor Account Close Out',
-              style: const pw.TextStyle(
+              style: pw.TextStyle(
                   fontSize: 20, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 4),
             pw.Text(
               '$projectName — Generated ${now.toLocal().toIso8601String()}',
-              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 16),
             _pdfSectionTitle('Vendor Close-Out Table'),
@@ -1153,14 +1157,14 @@ class _VendorAccountCloseOutScreenState
             if (_vendors.isEmpty)
               pw.Text('No vendors.',
                   style:
-                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellStyle: pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1188,14 +1192,14 @@ class _VendorAccountCloseOutScreenState
             if (_accessItems.isEmpty)
               pw.Text('No access items.',
                   style:
-                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellStyle: pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1223,14 +1227,14 @@ class _VendorAccountCloseOutScreenState
             if (_obligations.isEmpty)
               pw.Text('No obligations.',
                   style:
-                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellStyle: pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1251,14 +1255,14 @@ class _VendorAccountCloseOutScreenState
             if (_closureChecklist.isEmpty)
               pw.Text('No checklist items.',
                   style:
-                      const pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
+                      pw.TextStyle(fontSize: 9, color: PdfColors.grey500))
             else
               pw.TableHelper.fromTextArray(
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColor(0.93, 0.95, 0.98)),
-                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellStyle: pw.TextStyle(fontSize: 8.5),
                 cellAlignment: pw.Alignment.topLeft,
                 headerAlignment: pw.Alignment.centerLeft,
                 cellPadding:
@@ -1310,7 +1314,7 @@ class _VendorAccountCloseOutScreenState
         borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
       ),
       child: pw.Text(title,
-          style: const pw.TextStyle(
+          style: pw.TextStyle(
               fontSize: 11,
               fontWeight: pw.FontWeight.bold,
               color: PdfColors.white)),

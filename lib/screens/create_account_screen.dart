@@ -425,7 +425,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 16),
-                  Center(child: AppLogo(height: 120)),
+                  const Center(child: AppLogo(height: 120)),
                   const SizedBox(height: 24),
                   Center(
                     child: Text(

@@ -120,7 +120,7 @@ class _ExecutionPlanSolutionsScreenState
             const SizedBox(height: 32),
             const SectionIntro(title: 'Executive Plan Strategy'),
             const SizedBox(height: 28),
-            ExecutionPlanForm(
+            const ExecutionPlanForm(
               title: 'Executive Plan Strategy',
               hintText: 'Input your notes here...',
               noteKey: 'execution_plan_strategy',
@@ -135,7 +135,7 @@ class _ExecutionPlanSolutionsScreenState
                 children: [
                   CsvTableImportButton(
                     tableTitle: 'Execution Tools',
-                    columns: [
+                    columns: const [
                       CsvColumnSpec(
                           key: 'tool',
                           label: 'Tool',
@@ -502,7 +502,7 @@ class _ExecutionPlanTable extends StatelessWidget {
           }
 
           return Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: Color(0xFFE5E7EB)),
             ),

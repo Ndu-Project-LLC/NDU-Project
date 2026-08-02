@@ -593,8 +593,8 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Scope Completion',
  ),
  ),
@@ -813,7 +813,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 6),
  if (_workPackages.isEmpty)
- _InlineEmptyState(
+ const _InlineEmptyState(
  title: 'No work packages yet',
  message: 'Add work packages to track delivered scope against baseline.',
  icon: Icons.inventory_2_outlined,
@@ -982,7 +982,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.1),
+ color: statusColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -1002,7 +1002,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
  decoration: BoxDecoration(
- color: impactColor.withOpacity(0.1),
+ color: impactColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -1496,7 +1496,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 6),
  if (_acceptanceCheckpoints.isEmpty)
- _InlineEmptyState(
+ const _InlineEmptyState(
  title: 'No checkpoints yet',
  message: 'List the acceptance checkpoints for sponsor sign-off.',
  icon: Icons.checklist_outlined,
@@ -1632,7 +1632,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.1),
+ color: statusColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -1933,7 +1933,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 6),
  if (_acceptanceTags.isEmpty)
- _InlineEmptyState(
+ const _InlineEmptyState(
  title: 'No acceptance signals yet',
  message: 'Add sponsor and operations acceptance signals.',
  icon: Icons.verified_outlined,
@@ -2009,7 +2009,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: categoryColor.withOpacity(0.1),
+ color: categoryColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -2029,7 +2029,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.1),
+ color: statusColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -2352,7 +2352,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 6),
  if (_scopeChanges.isEmpty)
- _InlineEmptyState(
+ const _InlineEmptyState(
  title: 'No scope changes yet',
  message: 'Add the most impactful scope changes.',
  icon: Icons.swap_horiz_outlined,
@@ -2454,7 +2454,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
  decoration: BoxDecoration(
- color: typeColor.withOpacity(0.1),
+ color: typeColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -2474,7 +2474,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
  decoration: BoxDecoration(
- color: impactColor.withOpacity(0.1),
+ color: impactColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -2511,7 +2511,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.1),
+ color: statusColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -3126,16 +3126,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
 
  Widget _buildTipRow(BuildContext context) {
- return Row(
+ return const Row(
  children: [
- Icon(Icons.lightbulb_outline, size: 18, color: const Color(0xFFFFC812)),
- const SizedBox(width: 8),
+ Icon(Icons.lightbulb_outline, size: 18, color: Color(0xFFFFC812)),
+ SizedBox(width: 8),
  Expanded(
  child: Text(
  'If someone reads only this page, can they quickly see what was delivered, what moved, and that the right people have agreed?',
  style: TextStyle(
  fontSize: 13,
- color: const Color(0xFF9CA3AF),
+ color: Color(0xFF9CA3AF),
  fontStyle: FontStyle.italic),
  ),
  ),
@@ -3228,7 +3228,7 @@ class _ReadinessCard extends StatelessWidget {
  decoration: BoxDecoration(
  color: _background,
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: _accent.withOpacity(0.18)),
+ border: Border.all(color: _accent.withValues(alpha: 0.18)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,

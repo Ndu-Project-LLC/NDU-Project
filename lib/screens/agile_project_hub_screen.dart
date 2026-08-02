@@ -541,8 +541,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
                       ),
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Project Hub',
                     ),
                   ),

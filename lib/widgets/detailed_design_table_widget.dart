@@ -46,7 +46,7 @@ class DetailedDesignTableWidget extends StatelessWidget {
             border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -385,7 +385,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error regenerating specification: $e'),
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -417,7 +417,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error deleting component: $e'),
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -572,7 +572,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
-              color: typeColor.withOpacity(0.08),
+              color: typeColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(6),
             ),
             child: DropdownButton<String>(
@@ -621,7 +621,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
-              color: priorityColor.withOpacity(0.08),
+              color: priorityColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(6),
             ),
             child: DropdownButton<String>(
@@ -714,7 +714,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
-              color: _getStatusColor(_component.status).withOpacity(0.1),
+              color: _getStatusColor(_component.status).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButton<String>(

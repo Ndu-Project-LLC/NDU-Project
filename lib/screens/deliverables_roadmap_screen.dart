@@ -54,8 +54,8 @@ class DeliverablesRoadmapScreen extends StatelessWidget {
               ],
             ),
           ),
-          MobileSidebarHamburger(
-            sidebar: const InitiationLikeSidebar(
+          const MobileSidebarHamburger(
+            sidebar: InitiationLikeSidebar(
               activeItemLabel: 'Deliverables Roadmap',
             ),
           ),
@@ -524,7 +524,7 @@ class _DeliverablesRoadmapBodyState extends State<_DeliverablesRoadmapBody> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF2F4FA),
         borderRadius: BorderRadius.circular(26),
       ),
@@ -704,7 +704,7 @@ class _StatCard extends StatelessWidget {
     return Container(
       width: 170,
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kCardBorder),
@@ -770,7 +770,7 @@ class _SprintMenu extends StatelessWidget {
     return PopupMenuButton<String>(
       padding: EdgeInsets.zero,
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+         RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       onSelected: (v) {
         if (v == 'edit') onEdit();
         if (v == 'delete') onDelete();
@@ -785,7 +785,7 @@ class _SprintMenu extends StatelessWidget {
       child: Container(
         width: 28,
         height: 28,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: _kCardBorder),
@@ -984,7 +984,7 @@ class _PopupMenu extends StatelessWidget {
     return PopupMenuButton<String>(
       padding: EdgeInsets.zero,
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+         RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       onSelected: (v) {
         if (v == 'edit') return onEdit();
         if (v == 'delete') return onDelete();
@@ -1070,7 +1070,7 @@ class _EmptyState extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: _kCardBorder),
@@ -1080,7 +1080,7 @@ class _EmptyState extends StatelessWidget {
           Container(
             width: 56,
             height: 56,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFFFF7ED),
               borderRadius: BorderRadius.circular(16),
             ),
@@ -1103,7 +1103,7 @@ class _EmptyState extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kAccent,
                 foregroundColor: _kHeadline,
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -1134,7 +1134,7 @@ Future<Map<String, dynamic>?> _showSprintDialog(
     builder: (ctx) {
       return StatefulBuilder(builder: (ctx, setDialogState) {
         return AlertDialog(
-          shape: const RoundedRectangleBorder(
+          shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14)),
           title: Text(
             existing == null ? 'Create Sprint' : 'Edit Sprint',
@@ -1206,7 +1206,7 @@ Future<Map<String, dynamic>?> _showSprintDialog(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kAccent,
                 foregroundColor: _kHeadline,
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
               child: const Text('Save'),
@@ -1246,7 +1246,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
     builder: (ctx) {
       return StatefulBuilder(builder: (ctx, setDialogState) {
         return AlertDialog(
-          shape: const RoundedRectangleBorder(
+          shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(22)),
           title: Text(
             existing == null ? 'Create Deliverable' : 'Edit Deliverable',
@@ -1278,7 +1278,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value:
+                    initialValue:
                         sprints.any((s) => s.id == sprintId) ? sprintId : null,
                     decoration: const InputDecoration(labelText: 'Sprint'),
                     items: sprints
@@ -1297,7 +1297,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
                       Expanded(
                         child:
                             DropdownButtonFormField<RoadmapDeliverableStatus>(
-                          value: status,
+                          initialValue: status,
                           decoration:
                               const InputDecoration(labelText: 'Status'),
                           items: RoadmapDeliverableStatus.values
@@ -1315,7 +1315,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
                       Expanded(
                         child:
                             DropdownButtonFormField<RoadmapDeliverablePriority>(
-                          value: priority,
+                          initialValue: priority,
                           decoration:
                               const InputDecoration(labelText: 'Priority'),
                           items: RoadmapDeliverablePriority.values
@@ -1336,7 +1336,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<int>(
-                          value: storyPoints,
+                          initialValue: storyPoints,
                           decoration:
                               const InputDecoration(labelText: 'Story Points'),
                           items: [1, 2, 3, 5, 8, 13, 21]
@@ -1490,7 +1490,7 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kAccent,
                 foregroundColor: _kHeadline,
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
               child: const Text('Save'),
@@ -1507,7 +1507,7 @@ Future<bool?> _showConfirmDialog(String title, String message) {
     context: GlobalKey<NavigatorState>().currentContext!,
     builder: (ctx) => AlertDialog(
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+         RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       title: Text(title,
           style:
               const TextStyle(fontWeight: FontWeight.w800, color: _kHeadline)),
@@ -1522,7 +1522,7 @@ Future<bool?> _showConfirmDialog(String title, String message) {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFEF4444),
             foregroundColor: Colors.white,
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14)),
           ),
           child: const Text('Delete'),

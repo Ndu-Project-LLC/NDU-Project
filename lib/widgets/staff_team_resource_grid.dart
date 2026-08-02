@@ -733,7 +733,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -860,8 +860,8 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
           children: [
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF3F4F6),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.people_outline_rounded,
@@ -1044,7 +1044,7 @@ class _PremiumSuggestionPill extends StatelessWidget {
           border: Border.all(color: const Color(0xFFC4B5FD)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -1383,7 +1383,7 @@ class _PremiumStaffingRowState extends State<_PremiumStaffingRow> {
                           color: _statusBg(_row.status),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: _statusColor(_row.status).withOpacity(0.2),
+                            color: _statusColor(_row.status).withValues(alpha: 0.2),
                           ),
                         ),
                         child: Text(

@@ -7,6 +7,7 @@
 ///   "The Project Controls module should serve as the single source of truth
 ///    for monitoring project scope, schedule, cost, progress, performance,
 ///    forecasting, and change management throughout the project lifecycle."
+library;
 
 import 'package:flutter/material.dart';
 

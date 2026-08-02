@@ -22,19 +22,19 @@ class BaselineScreen extends StatelessWidget {
         final baseline = estimate.baseline;
 
         if (baseline == null) {
-          return Center(
+          return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.lock, color: Color(0xFF9CA3AF), size: 48),
-                const SizedBox(height: 16),
-                const Text('No baseline yet',
+                Icon(Icons.lock, color: Color(0xFF9CA3AF), size: 48),
+                SizedBox(height: 16),
+                Text('No baseline yet',
                     style: TextStyle(
                         color: Color(0xFF1A1D1F),
                         fontSize: 20,
                         fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: 8),
+                Text(
                     'Complete the Review & Acceptance flow to lock the baseline.',
                     style: TextStyle(color: Color(0xFF6B7280), fontSize: 14)),
               ],

@@ -21,7 +21,7 @@ class AutoBulletTextController extends TextEditingController {
     const bullet = kListBullet;
 
     if (currentText.isEmpty) {
-      value = TextEditingValue(
+      value = const TextEditingValue(
         text: bullet,
         selection: TextSelection.collapsed(offset: bullet.length),
       );
@@ -96,7 +96,7 @@ extension AutoBulletExtension on TextEditingController {
     const bullet = kListBullet;
 
     if (currentText.isEmpty) {
-      value = TextEditingValue(
+      value = const TextEditingValue(
         text: bullet,
         selection: TextSelection.collapsed(offset: bullet.length),
       );

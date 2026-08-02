@@ -106,13 +106,13 @@ class _SsherCategoryFullViewState extends State<SsherCategoryFullView> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: Colors.grey.withOpacity(0.2)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  ),
  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
  Container(
  width: 36,
  height: 36,
- decoration: BoxDecoration(color: widget.accentColor.withOpacity(0.15), shape: BoxShape.circle),
+ decoration: BoxDecoration(color: widget.accentColor.withValues(alpha: 0.15), shape: BoxShape.circle),
  child: Icon(widget.icon, color: widget.accentColor, size: 20),
  ),
  const SizedBox(width: 12),
@@ -125,7 +125,7 @@ class _SsherCategoryFullViewState extends State<SsherCategoryFullView> {
  ),
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
- decoration: BoxDecoration(color: widget.accentColor.withOpacity(0.12), borderRadius: BorderRadius.circular(16)),
+ decoration: BoxDecoration(color: widget.accentColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(16)),
  child: Text(countText, style: TextStyle(fontSize: 12, color: widget.accentColor, fontWeight: FontWeight.w600)),
  ),
  const SizedBox(width: 10),
@@ -150,7 +150,7 @@ class _SsherCategoryFullViewState extends State<SsherCategoryFullView> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: Colors.grey.withOpacity(0.25)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
  ),
  child: Text(widget.detailsText, style: TextStyle(fontSize: 13, color: Colors.grey[700])),
  ),
@@ -160,12 +160,12 @@ class _SsherCategoryFullViewState extends State<SsherCategoryFullView> {
  Container(
  decoration: BoxDecoration(
  color: Colors.white,
- border: Border.all(color: Colors.grey.withOpacity(0.25)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Column(children: [
  Container(
- decoration: BoxDecoration(color: widget.accentColor.withOpacity(0.08), borderRadius: const BorderRadius.vertical(top: Radius.circular(10))),
+ decoration: BoxDecoration(color: widget.accentColor.withValues(alpha: 0.08), borderRadius: const BorderRadius.vertical(top: Radius.circular(10))),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  child: Row(children: [
  for (var i = 0; i < widget.columns.length; i++)
@@ -187,7 +187,7 @@ class _SsherCategoryFullViewState extends State<SsherCategoryFullView> {
  ),
  for (int idx = 0; idx < rows.length; idx++)
  Container(
- decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2)))),
+ decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)))),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
  child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
  for (var i = 0; i < rows[idx].length; i++)
@@ -211,7 +211,7 @@ class _SsherCategoryFullViewState extends State<SsherCategoryFullView> {
  label: Text(widget.addButtonLabel),
  style: OutlinedButton.styleFrom(
  foregroundColor: widget.accentColor,
- side: BorderSide(color: widget.accentColor.withOpacity(0.5)),
+ side: BorderSide(color: widget.accentColor.withValues(alpha: 0.5)),
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
  ),

@@ -376,8 +376,8 @@ class _AgileAcceptanceCriteriaScreenState
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel:
                           'Agile Delivery Model - Acceptance Criteria Planning',
                     ),
@@ -396,27 +396,27 @@ class _AgileAcceptanceCriteriaScreenState
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 32),
-                        Text(
+                        const Text(
                           'Define acceptance criteria templates, configure criteria per work item type, and score readiness for execution.',
-                          style: const TextStyle(fontSize: 15, color: _kMuted),
+                          style: TextStyle(fontSize: 15, color: _kMuted),
                         ),
                         const SizedBox(height: 24),
                         if (_isLoading)
                           const Center(child: CircularProgressIndicator())
                         else ...[
                           if (_isSaving)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 8),
                               child: Row(
                                 children: [
-                                  const SizedBox(
+                                  SizedBox(
                                       width: 12,
                                       height: 12,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2)),
-                                  const SizedBox(width: 8),
+                                  SizedBox(width: 8),
                                   Text('Saving...',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 12, color: _kMuted)),
                                 ],
                               ),
@@ -502,7 +502,7 @@ class _AgileAcceptanceCriteriaScreenState
   Widget _buildTemplateList() {
     final filtered = _filteredTemplates;
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -583,7 +583,7 @@ class _AgileAcceptanceCriteriaScreenState
           color:
               selected ? _kAccent.withValues(alpha: 0.06) : Colors.transparent,
           border: Border(
-            top: BorderSide(color: _kBorder, width: 0.5),
+            top: const BorderSide(color: _kBorder, width: 0.5),
             left: BorderSide(
               color: selected ? _kAccent : Colors.transparent,
               width: 3,
@@ -630,7 +630,7 @@ class _AgileAcceptanceCriteriaScreenState
     if (t == null) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -743,7 +743,7 @@ class _AgileAcceptanceCriteriaScreenState
     if (t == null) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -788,7 +788,7 @@ class _AgileAcceptanceCriteriaScreenState
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: _kBorder),
@@ -801,7 +801,7 @@ class _AgileAcceptanceCriteriaScreenState
                 SizedBox(
                   width: 200,
                   child: DropdownButtonFormField<CriterionCategory>(
-                    value: c.category,
+                    initialValue: c.category,
                     decoration: const InputDecoration(
                       hintText: 'Category',
                       border: OutlineInputBorder(),

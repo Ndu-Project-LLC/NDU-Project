@@ -265,7 +265,7 @@ class ScheduleProvider extends ChangeNotifier {
     final dm = _schedule!.basis.deliveryModel;
     final isAgile = dm == 'AGILE' || dm == 'HYBRID';
 
-    ScheduleActivity _buildActivity(WbsImportNode node, int level) {
+    ScheduleActivity buildActivity(WbsImportNode node, int level) {
       // Use Agile-specific types and domain for Agile/Hybrid projects
       final type = isAgile
           ? (level <= 2 ? ActivityType.summary : ActivityType.activity)
@@ -289,13 +289,13 @@ class ScheduleProvider extends ChangeNotifier {
         definitionOfReady: isAgile ? _schedule!.basis.definitionOfReady : null,
         definitionOfDone: isAgile ? _schedule!.basis.definitionOfDone : null,
         children:
-            node.children.map((c) => _buildActivity(c, level + 1)).toList(),
+            node.children.map((c) => buildActivity(c, level + 1)).toList(),
       );
     }
 
     final newChildren = [
       ...root.children,
-      ...wbsNodes.map((n) => _buildActivity(n, 1)),
+      ...wbsNodes.map((n) => buildActivity(n, 1)),
     ];
     final updatedRoot =
         recalcActivityCodes(root.copyWith(children: newChildren));

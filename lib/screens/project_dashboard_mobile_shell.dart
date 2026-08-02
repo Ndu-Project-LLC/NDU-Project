@@ -249,7 +249,7 @@ class _ProjectDashboardMobileShellState
  borderRadius: BorderRadius.circular(_Tokens.radiusXl),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 20,
  offset: const Offset(0, 4),
  ),
@@ -330,7 +330,7 @@ class _ProjectDashboardMobileShellState
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(_Tokens.radiusXl),
  borderSide:
- BorderSide(color: _Tokens.primary.withOpacity(0.2), width: 2),
+ BorderSide(color: _Tokens.primary.withValues(alpha: 0.2), width: 2),
  ),
  enabledBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(_Tokens.radiusXl),
@@ -381,7 +381,7 @@ class _ProjectDashboardMobileShellState
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(12),
  border:
- Border.all(color: _Tokens.outlineVariant.withOpacity(0.5)),
+ Border.all(color: _Tokens.outlineVariant.withValues(alpha: 0.5)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +402,7 @@ class _ProjectDashboardMobileShellState
  padding: const EdgeInsets.symmetric(
  horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: healthColor.withOpacity(0.1),
+ color: healthColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -470,16 +470,16 @@ class _ProjectDashboardMobileShellState
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(_Tokens.radiusXl),
  border: Border.all(
- color: _Tokens.outlineVariant.withOpacity(0.5),
+ color: _Tokens.outlineVariant.withValues(alpha: 0.5),
  width: 2,
  style: BorderStyle.solid,
  ),
- color: _Tokens.surface.withOpacity(0.5),
+ color: _Tokens.surface.withValues(alpha: 0.5),
  ),
  child: Column(
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
- Icon(Icons.work_off_outlined,
+ const Icon(Icons.work_off_outlined,
  size: 48, color: _Tokens.outlineVariant),
  const SizedBox(height: 8),
  Text(
@@ -562,7 +562,7 @@ class _ProjectDashboardMobileShellState
  color: _Tokens.surfaceContainerLowest,
  border: Border(
  bottom: BorderSide(
- color: _Tokens.outlineVariant.withOpacity(0.5)),
+ color: _Tokens.outlineVariant.withValues(alpha: 0.5)),
  ),
  ),
  child: Padding(
@@ -652,7 +652,7 @@ class _ProjectDashboardMobileShellState
  border: Border(
  bottom: BorderSide(
  color:
- _Tokens.outlineVariant.withOpacity(0.5)),
+ _Tokens.outlineVariant.withValues(alpha: 0.5)),
  ),
  ),
  padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -666,13 +666,13 @@ class _ProjectDashboardMobileShellState
  shape: BoxShape.circle,
  border: Border.all(
  color: _Tokens.outlineVariant
- .withOpacity(0.3)),
+ .withValues(alpha: 0.3)),
  ),
  alignment: Alignment.center,
  child: Icon(Icons.chevron_left_rounded,
  size: 18,
  color: _Tokens.onSurfaceVariant
- .withOpacity(0.4)),
+ .withValues(alpha: 0.4)),
  ),
  const SizedBox(width: 4),
  const Text(
@@ -737,13 +737,13 @@ class _ProjectDashboardMobileShellState
  border: Border.all(
  color: _Tokens.outlineVariant),
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.domain,
+ Icon(Icons.domain,
  size: 16,
  color: _Tokens.onSurfaceVariant),
- const SizedBox(width: 6),
+ SizedBox(width: 6),
  Text(
  'Project workspace overview',
  style: TextStyle(
@@ -845,7 +845,7 @@ class _ProjectDashboardMobileShellState
  BorderRadius.circular(_Tokens.radiusXl),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 20,
  offset: const Offset(0, 4),
  ),
@@ -910,7 +910,7 @@ class _ProjectDashboardMobileShellState
  _Tokens.radiusXl),
  border: Border.all(
  color: _Tokens.outlineVariant
- .withOpacity(0.3),
+ .withValues(alpha: 0.3),
  ),
  ),
  child: Row(
@@ -975,7 +975,7 @@ class _ProjectDashboardMobileShellState
  _Tokens.radiusXl),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 20,
  offset: const Offset(0, 4),
  ),
@@ -1043,14 +1043,14 @@ class _ProjectDashboardMobileShellState
  color: _Tokens.outlineVariant,
  ),
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.filter_list,
+ Icon(Icons.filter_list,
  size: 18,
  color:
  _Tokens.onSurfaceVariant),
- const SizedBox(width: 6),
+ SizedBox(width: 6),
  Text(
  'Up to 3 projects',
  style: TextStyle(
@@ -1083,16 +1083,16 @@ class _ProjectDashboardMobileShellState
  padding: const EdgeInsets.all(24),
  decoration: BoxDecoration(
  color: _Tokens.onSecondaryFixed
- .withOpacity(0.05),
+ .withValues(alpha: 0.05),
  borderRadius:
  BorderRadius.circular(
  _Tokens.radiusXl),
  border: Border.all(
  color: _Tokens.onSecondaryFixed
- .withOpacity(0.1),
+ .withValues(alpha: 0.1),
  ),
  ),
- child: Center(
+ child: const Center(
  child: Text(
  'Sign in to group projects',
  style: TextStyle(
@@ -1217,16 +1217,16 @@ class _PremiumUserGreeting extends StatelessWidget {
  ),
  borderRadius: BorderRadius.circular(16),
  border: Border.all(
- color: const Color(0xFFE0E3E5).withOpacity(0.6),
+ color: const Color(0xFFE0E3E5).withValues(alpha: 0.6),
  ),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.03),
+ color: Colors.black.withValues(alpha: 0.03),
  blurRadius: 16,
  offset: const Offset(0, 4),
  ),
  BoxShadow(
- color: const Color(0xFFFFCC00).withOpacity(0.06),
+ color: const Color(0xFFFFCC00).withValues(alpha: 0.06),
  blurRadius: 24,
  offset: const Offset(0, 8),
  ),
@@ -1251,7 +1251,7 @@ class _PremiumUserGreeting extends StatelessWidget {
  borderRadius: BorderRadius.circular(14),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFFFFCC00).withOpacity(0.35),
+ color: const Color(0xFFFFCC00).withValues(alpha: 0.35),
  blurRadius: 12,
  offset: const Offset(0, 4),
  ),
@@ -1368,7 +1368,7 @@ class _PremiumUserGreeting extends StatelessWidget {
  border: Border.all(color: Colors.white, width: 2),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFF22C55E).withOpacity(0.4),
+ color: const Color(0xFF22C55E).withValues(alpha: 0.4),
  blurRadius: 6,
  offset: const Offset(0, 1),
  ),

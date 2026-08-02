@@ -21,7 +21,6 @@
 // All benchmarks require the Flutter SDK (NOT available in the agent's
 // sandbox) — the user runs these locally or in CI.
 
-import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 

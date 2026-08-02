@@ -140,28 +140,28 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
     ];
     _escalation.clear();
     _escalation.addAll([
-      _EscalationStep(
+      const _EscalationStep(
           level: 'L1 — Team',
           owner: 'Scrum Master',
           sla: '24 hours',
           description: 'Surface impediment in daily standup. Scrum Master facilitates resolution.',
           status: 'Active',
           color: Colors.green),
-      _EscalationStep(
+      const _EscalationStep(
           level: 'L2 — Engineering Manager',
           owner: 'Engineering Manager',
           sla: '48 hours',
           description: 'If unresolved, escalate to Engineering Manager for resource or decision support.',
           status: 'Active',
           color: _kAccent),
-      _EscalationStep(
+      const _EscalationStep(
           level: 'L3 — Director',
           owner: 'Engineering Director',
           sla: '72 hours',
           description: 'Cross-team or external blockers escalated to Director for org-level intervention.',
           status: 'On Standby',
           color: Colors.orange),
-      _EscalationStep(
+      const _EscalationStep(
           level: 'L4 — Executive',
           owner: 'VP Engineering',
           sla: '5 days',
@@ -199,7 +199,9 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
 
   void _rebuildHeatmap() {
     for (final row in _heatMatrix) {
-      for (int i = 0; i < row.length; i++) row[i] = 0;
+      for (int i = 0; i < row.length; i++) {
+        row[i] = 0;
+      }
     }
     for (final b in _blockers) {
       final p = (b.probability - 1).clamp(0, 4);
@@ -226,10 +228,10 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Risks & impediments saved'),
+          const SnackBar(
+            content: Text('Risks & impediments saved'),
             backgroundColor: _kAccent,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -279,8 +281,8 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Risks & Impediments',
                     ),
                   ),
@@ -292,7 +294,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        PlanningPhaseHeader(
+                        const PlanningPhaseHeader(
                           title: 'Agile Risks & Impediments',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -359,7 +361,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
           decoration: BoxDecoration(
             color: _kAccentBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _kAccent.withOpacity(0.3)),
+            border: Border.all(color: _kAccent.withValues(alpha: 0.3)),
           ),
           child: const Text('RISK REGISTER',
               style: TextStyle(
@@ -394,13 +396,13 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
         children: [
           Expanded(
               child: _summaryCell('Open', '$open', Icons.error_outline)),
-          Container(width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
+          Container(width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child: _summaryCell('Escalated', '$escalated', Icons.arrow_upward)),
-          Container(width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
+          Container(width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child: _summaryCell('Overdue SLA', '$overdue', Icons.warning)),
-          Container(width: 1, height: 36, color: Colors.white.withOpacity(0.3)),
+          Container(width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child: _summaryCell('Resolved', '$resolved', Icons.check_circle)),
         ],
@@ -422,7 +424,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
         Text(label,
             style: TextStyle(
                 fontSize: 11,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 fontWeight: FontWeight.w500)),
       ],
     );
@@ -469,8 +471,8 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
   Widget _buildBlockerHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           SizedBox(width: 70,
               child: Text('ID',
                   style: TextStyle(
@@ -567,7 +569,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
                 children: [
                   CircleAvatar(
                     radius: 9,
-                    backgroundColor: _kAccent.withOpacity(0.15),
+                    backgroundColor: _kAccent.withValues(alpha: 0.15),
                     child: Text(
                         b.owner.split(' ').map((p) => p.isNotEmpty ? p[0] : '').take(2).join(),
                         style: const TextStyle(
@@ -592,7 +594,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: overdue
-                      ? Colors.red.withOpacity(0.1)
+                      ? Colors.red.withValues(alpha: 0.1)
                       : const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -632,7 +634,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(status,
@@ -652,26 +654,26 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.grid_view, size: 20, color: _kAccent),
-              const SizedBox(width: 8),
-              const Text('Risk Heatmap',
+              Icon(Icons.grid_view, size: 20, color: _kAccent),
+              SizedBox(width: 8),
+              Text('Risk Heatmap',
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: _kHeadline)),
-              const Spacer(),
-              const Text('Probability →',
+              Spacer(),
+              Text('Probability →',
                   style: TextStyle(fontSize: 11, color: _kMuted)),
             ],
           ),
           const SizedBox(height: 16),
           _buildHeatmapGrid(),
           const SizedBox(height: 12),
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
+            children: [
               Text('Impact ↑', style: TextStyle(fontSize: 11, color: _kMuted)),
               Text('Risk score = Probability × Impact',
                   style: TextStyle(fontSize: 10, color: _kMuted, fontStyle: FontStyle.italic)),
@@ -709,10 +711,10 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
                 child: Container(
                   margin: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: count > 0 ? color : color.withOpacity(0.15),
+                    color: count > 0 ? color : color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: color.withOpacity(0.4), width: 1),
+                        color: color.withValues(alpha: 0.4), width: 1),
                   ),
                   child: Center(
                     child: Text(
@@ -772,11 +774,11 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.trending_up, size: 20, color: _kAccent),
-              const SizedBox(width: 8),
-              const Text('Blocker Trend Analysis',
+              Icon(Icons.trending_up, size: 20, color: _kAccent),
+              SizedBox(width: 8),
+              Text('Blocker Trend Analysis',
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -803,10 +805,10 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.08),
+              color: Colors.red.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
-              border: Border(
-                left: const BorderSide(color: Colors.red, width: 3),
+              border: const Border(
+                left: BorderSide(color: Colors.red, width: 3),
               ),
             ),
             child: Row(
@@ -840,12 +842,12 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.account_tree_outlined,
+              Icon(Icons.account_tree_outlined,
                   size: 20, color: _kAccent),
-              const SizedBox(width: 8),
-              const Text('Escalation Workflow',
+              SizedBox(width: 8),
+              Text('Escalation Workflow',
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -875,7 +877,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: e.color.withOpacity(0.15),
+              color: e.color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(Icons.layers, size: 18, color: e.color),
@@ -897,7 +899,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 1),
                       decoration: BoxDecoration(
-                        color: e.color.withOpacity(0.15),
+                        color: e.color.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text('SLA ${e.sla}',
@@ -1084,7 +1086,7 @@ class _TrendPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final pad = 12.0;
+    const pad = 12.0;
     final maxVal = trend
         .map((t) => t.blockers > t.resolved ? t.blockers : t.resolved)
         .reduce((a, b) => a > b ? a : b);
@@ -1103,8 +1105,11 @@ class _TrendPainter extends CustomPainter {
     for (int i = 0; i < trend.length; i++) {
       final x = pad + (w - 2 * pad) * i / (trend.length - 1);
       final y = pad + (h - 2 * pad) * (1 - trend[i].resolved / maxVal);
-      if (i == 0) resolvedPath.moveTo(x, y);
-      else resolvedPath.lineTo(x, y);
+      if (i == 0) {
+        resolvedPath.moveTo(x, y);
+      } else {
+        resolvedPath.lineTo(x, y);
+      }
     }
     canvas.drawPath(
         resolvedPath,
@@ -1119,8 +1124,11 @@ class _TrendPainter extends CustomPainter {
     for (int i = 0; i < trend.length; i++) {
       final x = pad + (w - 2 * pad) * i / (trend.length - 1);
       final y = pad + (h - 2 * pad) * (1 - trend[i].blockers / maxVal);
-      if (i == 0) blockersPath.moveTo(x, y);
-      else blockersPath.lineTo(x, y);
+      if (i == 0) {
+        blockersPath.moveTo(x, y);
+      } else {
+        blockersPath.lineTo(x, y);
+      }
     }
     // Fill area under blockers
     final areaPath = Path.from(blockersPath)
@@ -1133,7 +1141,7 @@ class _TrendPainter extends CustomPainter {
           ..shader = LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [const Color(0xFFF59E0B).withOpacity(0.25), const Color(0xFFF59E0B).withOpacity(0.0)],
+            colors: [const Color(0xFFF59E0B).withValues(alpha: 0.25), const Color(0xFFF59E0B).withValues(alpha: 0.0)],
           ).createShader(Rect.fromLTWH(0, 0, w, h)));
     canvas.drawPath(
         blockersPath,
@@ -1169,7 +1177,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

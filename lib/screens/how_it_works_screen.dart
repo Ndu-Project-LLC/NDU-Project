@@ -211,25 +211,25 @@ class HowItWorksScreen extends StatelessWidget {
 
   Widget _buildTimelineRow(bool isDesktop) {
     final phases = [
-      _PhaseTimelineItem(
+      const _PhaseTimelineItem(
         number: '01',
         title: 'Initiation',
         icon: Icons.flag_rounded,
-        color: const Color(0xFF3B82F6),
+        color: Color(0xFF3B82F6),
         duration: 'Weeks 1–4',
       ),
-      _PhaseTimelineItem(
+      const _PhaseTimelineItem(
         number: '02',
         title: 'Planning',
         icon: Icons.architecture_rounded,
-        color: const Color(0xFF8B5CF6),
+        color: Color(0xFF8B5CF6),
         duration: 'Weeks 4–12',
       ),
-      _PhaseTimelineItem(
+      const _PhaseTimelineItem(
         number: '03',
         title: 'Execution & Launch',
         icon: Icons.rocket_launch_rounded,
-        color: const Color(0xFF10B981),
+        color: Color(0xFF10B981),
         duration: 'Weeks 12+',
       ),
     ];
@@ -786,33 +786,33 @@ class HowItWorksScreen extends StatelessWidget {
 
   Widget _buildWhyItWorksSection(bool isDesktop) {
     final reasons = [
-      _WhyItWorksItem(
+      const _WhyItWorksItem(
         icon: Icons.verified_outlined,
         title: 'Phase-Gated Quality',
         description:
             'Every phase has readiness gates that ensure completeness before progressing — no skipped steps, no surprises.',
-        color: const Color(0xFF3B82F6),
+        color: Color(0xFF3B82F6),
       ),
-      _WhyItWorksItem(
+      const _WhyItWorksItem(
         icon: Icons.insights_outlined,
         title: 'AI-Powered Guidance',
         description:
             'KAZ AI assistant embedded throughout — generating content, analyzing risks, and recommending next steps.',
-        color: const Color(0xFFA855F7),
+        color: Color(0xFFA855F7),
       ),
-      _WhyItWorksItem(
+      const _WhyItWorksItem(
         icon: Icons.layers_outlined,
         title: 'Scales Across Levels',
         description:
             'From individual projects to programs and portfolios — the PDOS framework adapts to your delivery scope.',
-        color: const Color(0xFF10B981),
+        color: Color(0xFF10B981),
       ),
-      _WhyItWorksItem(
+      const _WhyItWorksItem(
         icon: Icons.integration_instructions,
         title: 'PDOS Integrated',
         description:
             'Seamlessly connects initiation, planning, execution, and launch into one unified delivery operating system.',
-        color: const Color(0xFFF59E0B),
+        color: Color(0xFFF59E0B),
       ),
     ];
 

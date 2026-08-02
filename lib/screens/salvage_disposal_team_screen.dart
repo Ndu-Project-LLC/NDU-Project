@@ -1217,7 +1217,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: stat.color.withOpacity(0.1),
+ color: stat.color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(stat.icon, size: 18, color: stat.color),
@@ -1300,13 +1300,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  OutlinedButton.icon(
  onPressed: () async {
  final rows = await showCsvImportDialog(context, tableTitle: 'Asset Inventory', columns: [
- CsvColumnSpec(key: 'assetId', label: 'Asset ID', sampleValue: 'SVG-001'),
- CsvColumnSpec(key: 'name', label: 'Asset Name', sampleValue: 'Server Rack'),
- CsvColumnSpec(key: 'category', label: 'Category', sampleValue: 'Physical Infrastructure'),
- CsvColumnSpec(key: 'condition', label: 'Condition', sampleValue: 'Good', allowedValues: ['Excellent', 'Good', 'Fair', 'Needs Review']),
- CsvColumnSpec(key: 'location', label: 'Location', sampleValue: 'Main Site'),
- CsvColumnSpec(key: 'status', label: 'Status', sampleValue: 'Ready', allowedValues: ['Ready', 'Pending', 'Flagged']),
- CsvColumnSpec(key: 'estimatedValue', label: 'Est. Value', sampleValue: '5200'),
+ const CsvColumnSpec(key: 'assetId', label: 'Asset ID', sampleValue: 'SVG-001'),
+ const CsvColumnSpec(key: 'name', label: 'Asset Name', sampleValue: 'Server Rack'),
+ const CsvColumnSpec(key: 'category', label: 'Category', sampleValue: 'Physical Infrastructure'),
+ const CsvColumnSpec(key: 'condition', label: 'Condition', sampleValue: 'Good', allowedValues: ['Excellent', 'Good', 'Fair', 'Needs Review']),
+ const CsvColumnSpec(key: 'location', label: 'Location', sampleValue: 'Main Site'),
+ const CsvColumnSpec(key: 'status', label: 'Status', sampleValue: 'Ready', allowedValues: ['Ready', 'Pending', 'Flagged']),
+ const CsvColumnSpec(key: 'estimatedValue', label: 'Est. Value', sampleValue: '5200'),
  ]);
  if (rows == null || !mounted) return;
  final pid = _getProjectId();
@@ -2426,8 +2426,8 @@ Execution snapshot:
  _buildSignalCard(
  title: 'Category Mix',
  subtitle: 'Distribution of assets by category',
- child: Column(
- children: const [
+ child: const Column(
+ children: [
  _SignalBar(
  label: 'Electronics', value: 0.42, color: Color(0xFF0EA5E9)),
  _SignalBar(
@@ -2445,9 +2445,9 @@ Execution snapshot:
  _buildSignalCard(
  title: 'Condition Snapshot',
  subtitle: 'Asset readiness by condition',
- child: Column(
+ child: const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  _ConditionItem(
  label: 'Excellent',
  count: '28 assets',
@@ -2710,11 +2710,11 @@ Execution snapshot:
  OutlinedButton.icon(
  onPressed: () async {
  final rows = await showCsvImportDialog(context, tableTitle: 'Team Allocation', columns: [
- CsvColumnSpec(key: 'name', label: 'Member Name', sampleValue: 'John Doe'),
- CsvColumnSpec(key: 'role', label: 'Role', sampleValue: 'Product Owner'),
- CsvColumnSpec(key: 'focus', label: 'Focus Area', sampleValue: 'Operations Support'),
- CsvColumnSpec(key: 'workload', label: 'Workload %', sampleValue: '48'),
- CsvColumnSpec(key: 'status', label: 'Status', sampleValue: 'Active', allowedValues: ['Active', 'On Leave']),
+ const CsvColumnSpec(key: 'name', label: 'Member Name', sampleValue: 'John Doe'),
+ const CsvColumnSpec(key: 'role', label: 'Role', sampleValue: 'Product Owner'),
+ const CsvColumnSpec(key: 'focus', label: 'Focus Area', sampleValue: 'Operations Support'),
+ const CsvColumnSpec(key: 'workload', label: 'Workload %', sampleValue: '48'),
+ const CsvColumnSpec(key: 'status', label: 'Status', sampleValue: 'Active', allowedValues: ['Active', 'On Leave']),
  ]);
  if (rows == null || !mounted) return;
  setState(() {
@@ -2868,7 +2868,7 @@ Execution snapshot:
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Text('$workload%',
@@ -2967,7 +2967,7 @@ Execution snapshot:
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Text(mode,
@@ -3129,7 +3129,7 @@ Execution snapshot:
  CircleAvatar(
  radius: 14,
  backgroundColor: const Color(0xFF0EA5E9)
- .withOpacity(0.1),
+ .withValues(alpha: 0.1),
  child: Text(
  initial,
  style: const TextStyle(
@@ -3318,10 +3318,10 @@ Execution snapshot:
  rows: items.isEmpty
  ? [
  DataRow(cells: [
- DataCell(Text(
+ const DataCell(Text(
  'No disposal items added yet.',
  style: TextStyle(
- color: const Color(0xFF64748B),
+ color: Color(0xFF64748B),
  fontStyle: FontStyle.italic))),
  for (var i = 0; i < 12; i++) const DataCell(SizedBox()),
  ]),
@@ -4891,19 +4891,19 @@ Execution snapshot:
 
  Widget _buildInsightsRow(bool isNarrow) {
  final insights = [
- _InsightCard(
+ const _InsightCard(
  'Cost Recovery Potential',
  '\$58,200',
  'Based on current market valuations for salvageable assets.',
  Icons.trending_up,
  Colors.green),
- _InsightCard(
+ const _InsightCard(
  'Environmental Impact',
  '12.5 tons',
  'CO2 emissions avoided through proper recycling.',
  Icons.eco,
  Colors.teal),
- _InsightCard('Average Disposal Time', '18 days',
+ const _InsightCard('Average Disposal Time', '18 days',
  '23% faster than industry benchmark.', Icons.speed, Colors.blue),
  ];
 
@@ -4946,7 +4946,7 @@ Execution snapshot:
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: insight.color.withOpacity(0.1),
+ color: insight.color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(insight.icon, size: 18, color: insight.color),
@@ -4976,7 +4976,7 @@ Execution snapshot:
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Row(
@@ -5058,9 +5058,9 @@ Execution snapshot:
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: color.withOpacity(0.3)),
+ border: Border.all(color: color.withValues(alpha: 0.3)),
  ),
  child: Text(priority,
  style: TextStyle(

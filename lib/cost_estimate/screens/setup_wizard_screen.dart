@@ -47,13 +47,13 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Brand
-              Row(
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.trending_up,
+                  Icon(Icons.trending_up,
                       color: LightModeColors.accent, size: 28),
-                  const SizedBox(width: 8),
-                  const Text(
+                  SizedBox(width: 8),
+                  Text(
                     'NDU ',
                     style: TextStyle(
                       color: Color(0xFF1A1D1F),
@@ -61,7 +61,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Text(
+                  Text(
                     'PROJECT',
                     style: TextStyle(
                       color: LightModeColors.accent,

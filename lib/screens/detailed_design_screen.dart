@@ -293,9 +293,9 @@ Future<void> _loadComponents() async {
  final entries = generated['designComponents'] ?? const [];
  if (entries.isEmpty) return;
 
- final typeRotation = DesignComponent.specificationTypes;
- final priorityRotation = DesignComponent.priorities;
- final ownerRotation = DesignComponent.ownerRoles;
+ const typeRotation = DesignComponent.specificationTypes;
+ const priorityRotation = DesignComponent.priorities;
+ const ownerRotation = DesignComponent.ownerRoles;
 
  final newComponents = <DesignComponent>[];
  for (var i = 0; i < entries.length; i++) {
@@ -443,7 +443,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.03),
+ color: Colors.black.withValues(alpha: 0.03),
  blurRadius: 14,
  offset: const Offset(0, 8),
  ),
@@ -552,10 +552,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  duration: const Duration(milliseconds: 200),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
  decoration: BoxDecoration(
- color: selected ? m.$4.withOpacity(0.06) : const Color(0xFFF8FAFC),
+ color: selected ? m.$4.withValues(alpha: 0.06) : const Color(0xFFF8FAFC),
  borderRadius: BorderRadius.circular(14),
  border: Border.all(
- color: selected ? m.$4.withOpacity(0.3) : const Color(0xFFE5E7EB),
+ color: selected ? m.$4.withValues(alpha: 0.3) : const Color(0xFFE5E7EB),
  width: selected ? 1.5 : 1,
  ),
  ),
@@ -582,7 +582,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  m.$3,
  style: TextStyle(
  fontSize: 10,
- color: selected ? m.$4.withOpacity(0.7) : const Color(0xFF9CA3AF),
+ color: selected ? m.$4.withValues(alpha: 0.7) : const Color(0xFF9CA3AF),
  ),
  ),
  ],
@@ -790,7 +790,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(
  labelText: 'Status',
  isDense: true,
@@ -817,7 +817,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 40,
  height: 40,
  decoration: BoxDecoration(
- color: isSelected ? e.value.value.withOpacity(0.15) : const Color(0xFFF8FAFC),
+ color: isSelected ? e.value.value.withValues(alpha: 0.15) : const Color(0xFFF8FAFC),
  borderRadius: BorderRadius.circular(10),
  border: Border.all(
  color: isSelected ? e.value.value : const Color(0xFFE5E7EB),
@@ -883,15 +883,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildSpecificationRegister() {
  if (_isLoading) {
- return ExecutionPanelShell(
+ return const ExecutionPanelShell(
  title: 'Design Specification Register',
  subtitle:
  'Traceable specifications with MoSCoW prioritization, methodology phasing, and requirements traceability',
  collapsible: true,
  initiallyExpanded: true,
  headerIcon: Icons.folder_special_outlined,
- headerIconColor: const Color(0xFF2563EB),
- child: const Center(
+ headerIconColor: Color(0xFF2563EB),
+ child: Center(
  child: Padding(
  padding: EdgeInsets.all(24.0),
  child: CircularProgressIndicator(),
@@ -916,7 +916,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Design Specification Register',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'specId', label: 'Spec ID', hint: 'e.g. DS-001'),
  CsvColumnSpec(key: 'componentName', label: 'Design Element', required: true, hint: 'Design element name'),
  CsvColumnSpec(key: 'specificationType', label: 'Type', allowedValues: ['Functional', 'Non-Functional', 'Interface', 'Data', 'Security', 'Performance'], defaultValue: 'Functional'),
@@ -990,9 +990,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.06),
+ color: color.withValues(alpha: 0.06),
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: color.withOpacity(0.2)),
+ border: Border.all(color: color.withValues(alpha: 0.2)),
  ),
  child: Text(
  type,
@@ -1107,7 +1107,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(
@@ -1178,7 +1178,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: const Color(0xFF2563EB).withOpacity(0.1),
+ color: const Color(0xFF2563EB).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(Icons.add_rounded,
@@ -1212,7 +1212,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedPriority,
+ initialValue: selectedPriority,
  decoration: const InputDecoration(
  labelText: 'Priority *', isDense: true),
  items: DesignComponent.priorities
@@ -1246,7 +1246,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedType,
+ initialValue: selectedType,
  decoration: const InputDecoration(
  labelText: 'Type *', isDense: true),
  items: DesignComponent.specificationTypes
@@ -1268,7 +1268,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedPhase,
+ initialValue: selectedPhase,
  decoration: const InputDecoration(
  labelText: 'Phase', isDense: true),
  items: _getPhaseOptionsForDialog()
@@ -1285,7 +1285,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedOwner,
+ initialValue: selectedOwner,
  decoration: const InputDecoration(
  labelText: 'Owner', isDense: true),
  items: DesignComponent.ownerRoles
@@ -1302,7 +1302,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(
  labelText: 'Status *', isDense: true),
  items: DesignComponent.statuses
@@ -1465,7 +1465,7 @@ class _ArchitecturePatternCard extends StatelessWidget {
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: pattern.color.withOpacity(0.1),
+ color: pattern.color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(pattern.icon, size: 18, color: pattern.color),
@@ -1551,7 +1551,7 @@ class _SecurityControlCard extends StatelessWidget {
  Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.1),
+ color: statusColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(Icons.security_rounded, size: 16, color: statusColor),
@@ -1587,7 +1587,7 @@ class _SecurityControlCard extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.08),
+ color: statusColor.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Text(control.status,
@@ -1630,7 +1630,7 @@ class _NFRCard extends StatelessWidget {
  Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: categoryColor.withOpacity(0.1),
+ color: categoryColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(Icons.speed_rounded, size: 16, color: categoryColor),
@@ -1653,7 +1653,7 @@ class _NFRCard extends StatelessWidget {
  padding: const EdgeInsets.symmetric(
  horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: categoryColor.withOpacity(0.08),
+ color: categoryColor.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(item.category,
@@ -1725,7 +1725,7 @@ class _ADRecordCard extends StatelessWidget {
  padding:
  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.08),
+ color: statusColor.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Text(record.status,
@@ -1752,7 +1752,7 @@ class _ADRecordCard extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.08),
+ color: color.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(label,

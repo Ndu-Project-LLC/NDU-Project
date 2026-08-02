@@ -524,7 +524,7 @@ Opportunity generation constraints:
       _useFallbackOpportunities();
       if (!autoTriggered && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text(
                 'Opportunity generation failed. Using fallback suggestions.'),
           ),
@@ -562,8 +562,8 @@ Opportunity generation constraints:
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Project Opportunities',
                     ),
                   ),
@@ -586,7 +586,7 @@ Opportunity generation constraints:
                               LayoutBuilder(
                                 builder: (context, constraints) {
                                   final isCompact = constraints.maxWidth < 1120;
-                                  final titleSection = const Column(
+                                  const titleSection = Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
@@ -1746,10 +1746,10 @@ class _OpportunityTableState extends State<_OpportunityTable> {
 
   @override
   Widget build(BuildContext context) {
-    final border = const BorderSide(color: Color(0xFFE5E7EB));
-    final headerStyle = const TextStyle(
+    const border = BorderSide(color: Color(0xFFE5E7EB));
+    const headerStyle = TextStyle(
         fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
-    final cellStyle = const TextStyle(fontSize: 14, color: Color(0xFF111827));
+    const cellStyle = TextStyle(fontSize: 14, color: Color(0xFF111827));
 
     Widget td(Widget child, {VoidCallback? onDoubleTap}) => Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -2149,8 +2149,8 @@ class _BottomOverlays extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFD7E5FF)),
       ),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           Icon(Icons.lightbulb_outline, color: Color(0xFF2563EB)),
           SizedBox(width: 8),
           Text('Hint',

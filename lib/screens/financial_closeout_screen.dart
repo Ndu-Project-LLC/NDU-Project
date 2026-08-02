@@ -325,7 +325,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
           completionPercent: utilization.clamp(0.0, 1.0),
           completionLabel: 'BUDGET USED',
           completionCaption:
-              '${utilizationPct}% of approved budget spent • ${isUnderBudget ? "under budget" : "over budget"}',
+              '$utilizationPct% of approved budget spent • ${isUnderBudget ? "under budget" : "over budget"}',
           kpiTiles: [
             LaunchKpiTile(
               label: 'Approved Budget',
@@ -460,7 +460,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFEFF6FF),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFF3B82F6)),
@@ -542,7 +542,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
                 .map((h) => Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: Color(0xFFBFDBFE)),

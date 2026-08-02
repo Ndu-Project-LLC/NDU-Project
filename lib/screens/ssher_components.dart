@@ -33,9 +33,9 @@ class SsherSectionCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final headerTint = accentColor.withOpacity(0.08);
- final headerBorder = accentColor.withOpacity(0.12);
- final headerBg = Colors.white;
+ final headerTint = accentColor.withValues(alpha: 0.08);
+ final headerBorder = accentColor.withValues(alpha: 0.12);
+ const headerBg = Colors.white;
  final isMobile = AppBreakpoints.isMobile(context);
 
  return Container(
@@ -43,9 +43,9 @@ class SsherSectionCard extends StatelessWidget {
  decoration: BoxDecoration(
  color: headerBg,
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: Colors.grey.withOpacity(0.2)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  boxShadow: [
- BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 2)),
+ BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 2)),
  ],
  ),
  child: Column(
@@ -68,7 +68,7 @@ class SsherSectionCard extends StatelessWidget {
  Container(
  width: 30,
  height: 30,
- decoration: BoxDecoration(color: accentColor.withOpacity(0.15), shape: BoxShape.circle),
+ decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.15), shape: BoxShape.circle),
  child: Icon(leadingIcon, size: 18, color: accentColor),
  ),
  const SizedBox(width: 12),
@@ -148,7 +148,7 @@ class SsherSectionCard extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: Colors.grey.withOpacity(0.25)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
  ),
  child: Text(
  detailsPlaceholder,
@@ -169,7 +169,7 @@ class SsherSectionCard extends StatelessWidget {
  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
  decoration: BoxDecoration(
  color: Colors.white,
- border: Border.all(color: Colors.grey.withOpacity(0.25)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Column(
@@ -177,7 +177,7 @@ class SsherSectionCard extends StatelessWidget {
  // header row
  Container(
  decoration: BoxDecoration(
- color: accentColor.withOpacity(0.08),
+ color: accentColor.withValues(alpha: 0.08),
  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
  ),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -205,7 +205,7 @@ class SsherSectionCard extends StatelessWidget {
  for (final r in rows)
  Container(
  decoration: BoxDecoration(
- border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
+ border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
  ),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
  child: Row(
@@ -226,9 +226,9 @@ class SsherSectionCard extends StatelessWidget {
  // add item
  Container(
  padding: const EdgeInsets.all(14),
- decoration: BoxDecoration(
+ decoration: const BoxDecoration(
  color: Colors.white,
- borderRadius: const BorderRadius.vertical(bottom: Radius.circular(10)),
+ borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
  ),
  child: Align(
  alignment: Alignment.centerLeft,
@@ -238,7 +238,7 @@ class SsherSectionCard extends StatelessWidget {
  label: Text(addButtonLabel),
  style: OutlinedButton.styleFrom(
  foregroundColor: accentColor,
- side: BorderSide(color: accentColor.withOpacity(0.5)),
+ side: BorderSide(color: accentColor.withValues(alpha: 0.5)),
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
  ),
@@ -265,7 +265,7 @@ class _ItemsChip extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(16),
  ),
  child: Text(text, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
@@ -294,7 +294,7 @@ class RiskBadge extends StatelessWidget {
  margin: const EdgeInsets.only(right: 8),
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.25),
+ color: color.withValues(alpha: 0.25),
  borderRadius: BorderRadius.circular(16),
  ),
  child: Text(level, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
@@ -352,7 +352,7 @@ class _MobileTable extends StatelessWidget {
  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
  decoration: BoxDecoration(
  color: Colors.white,
- border: Border.all(color: Colors.grey.withOpacity(0.25)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Column(
@@ -361,7 +361,7 @@ class _MobileTable extends StatelessWidget {
  Column(
  children: [
  if (rowIndex != 0)
- Divider(height: 1, color: Colors.grey.withOpacity(0.2)),
+ Divider(height: 1, color: Colors.grey.withValues(alpha: 0.2)),
  Padding(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
  child: Column(
@@ -377,7 +377,7 @@ class _MobileTable extends StatelessWidget {
  ),
  ],
  ),
- Divider(height: 1, color: Colors.grey.withOpacity(0.2)),
+ Divider(height: 1, color: Colors.grey.withValues(alpha: 0.2)),
  Container(
  padding: const EdgeInsets.all(14),
  decoration: const BoxDecoration(
@@ -391,7 +391,7 @@ class _MobileTable extends StatelessWidget {
  label: Text(addButtonLabel),
  style: OutlinedButton.styleFrom(
  foregroundColor: accentColor,
- side: BorderSide(color: accentColor.withOpacity(0.5)),
+ side: BorderSide(color: accentColor.withValues(alpha: 0.5)),
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
  ),

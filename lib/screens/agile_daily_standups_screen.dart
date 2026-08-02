@@ -190,10 +190,10 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Standup data saved'),
+          const SnackBar(
+            content: Text('Standup data saved'),
             backgroundColor: _kAccent,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -240,8 +240,8 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Daily Standups',
                     ),
                   ),
@@ -253,7 +253,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        PlanningPhaseHeader(
+                        const PlanningPhaseHeader(
                           title: 'Daily Standups',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -307,7 +307,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
           decoration: BoxDecoration(
             color: _kAccentBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _kAccent.withOpacity(0.3)),
+            border: Border.all(color: _kAccent.withValues(alpha: 0.3)),
           ),
           child: const Text('DAILY 9:30 AM',
               style: TextStyle(
@@ -342,7 +342,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
           Container(
               width: 1,
               height: 36,
-              color: Colors.white.withOpacity(0.3)),
+              color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
             child:
                 _summaryCell('Blockers', '$blockers', Icons.warning_amber),
@@ -350,7 +350,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
           Container(
               width: 1,
               height: 36,
-              color: Colors.white.withOpacity(0.3)),
+              color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
             child: _summaryCell('Action Items', '${_actionItems.length}',
                 Icons.assignment_outlined),
@@ -358,7 +358,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
           Container(
               width: 1,
               height: 36,
-              color: Colors.white.withOpacity(0.3)),
+              color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
             child: _summaryCell(
                 'Duration', '14 min', Icons.timer_outlined),
@@ -382,7 +382,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
         Text(label,
             style: TextStyle(
                 fontSize: 11,
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 fontWeight: FontWeight.w500)),
       ],
     );
@@ -446,7 +446,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                         color: selected
                             ? _kAccent
                             : d.isToday
-                                ? _kAccent.withOpacity(0.3)
+                                ? _kAccent.withValues(alpha: 0.3)
                                 : _kBorder,
                       ),
                     ),
@@ -459,7 +459,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               color: selected
-                                  ? Colors.white.withOpacity(0.85)
+                                  ? Colors.white.withValues(alpha: 0.85)
                                   : _kMuted),
                         ),
                         const SizedBox(height: 4),
@@ -573,7 +573,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: e.color.withOpacity(0.15),
+                backgroundColor: e.color.withValues(alpha: 0.15),
                 child: Text(e.avatar,
                     style: TextStyle(
                         fontSize: 12,
@@ -632,7 +632,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(
-        color: entry.$1.withOpacity(0.12),
+        color: entry.$1.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -656,7 +656,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
         border: Border(
           left: BorderSide(color: color, width: 3),
@@ -730,8 +730,8 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
   Widget _buildTableHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: Row(
-        children: const [
+      child: const Row(
+        children: [
           SizedBox(width: 30),
           Expanded(
               flex: 4,
@@ -846,7 +846,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(status,
@@ -1000,7 +1000,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

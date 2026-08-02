@@ -77,7 +77,7 @@ class WBSValidator {
             'Every ${frameworkMeta.level1Label} has at least 2 ${frameworkMeta.level2Label} children.',
       ));
     } else if (level1Nodes.isEmpty) {
-      checks.add(ValidationCheck(
+      checks.add(const ValidationCheck(
         id: 'V2',
         severity: ValidationSeverity.warn,
         title: 'No Level 1 nodes yet',
@@ -102,7 +102,7 @@ class WBSValidator {
     ];
     final verbNodes = allNodes.where((n) => _isActivityVerb(n.name)).toList();
     if (verbNodes.isEmpty) {
-      checks.add(ValidationCheck(
+      checks.add(const ValidationCheck(
         id: 'V3',
         severity: ValidationSeverity.pass,
         title: 'Deliverable-focused names',
@@ -150,7 +150,7 @@ class WBSValidator {
 
     // V6: Phase-Based warning
     if (wbs.framework == WBSFramework.waterfallPhase) {
-      checks.add(ValidationCheck(
+      checks.add(const ValidationCheck(
         id: 'V6',
         severity: ValidationSeverity.warn,
         title: 'Phase-Based framework (least preferred)',
@@ -176,7 +176,7 @@ class WBSValidator {
       final notWorkPackage =
           level2Nodes.where((n) => n.isWorkPackage != true).toList();
       if (level2Nodes.isEmpty) {
-        checks.add(ValidationCheck(
+        checks.add(const ValidationCheck(
           id: 'V7',
           severity: ValidationSeverity.warn,
           title: 'No Level 2 work packages',
@@ -202,7 +202,7 @@ class WBSValidator {
         ));
       }
     } else {
-      checks.add(ValidationCheck(
+      checks.add(const ValidationCheck(
         id: 'V7',
         severity: ValidationSeverity.pass,
         title: 'Agile framework — work package flag N/A',
@@ -214,7 +214,7 @@ class WBSValidator {
     // V8: AI-suggested nodes need validation
     final aiNodes = allNodes.where((n) => n.aiGenerated).toList();
     if (aiNodes.isEmpty) {
-      checks.add(ValidationCheck(
+      checks.add(const ValidationCheck(
         id: 'V8',
         severity: ValidationSeverity.pass,
         title: 'No AI-suggested nodes pending validation',

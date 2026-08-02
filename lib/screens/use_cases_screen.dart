@@ -52,12 +52,12 @@ class UseCasesScreen extends StatelessWidget {
               const SizedBox(height: 32),
               _sectionSubTitle('Program Demonstration'),
               const SizedBox(height: 16),
-              _demoCard(_Demo('Enterprise Digital Transformation Program', 'Multi-Industry', 'Program', Icons.view_module, const Color(0xFF0EA5E9),
+              _demoCard(const _Demo('Enterprise Digital Transformation Program', 'Multi-Industry', 'Program', Icons.view_module, Color(0xFF0EA5E9),
                 ['Program Dashboard', 'Interface Management', 'Cross Project Dependencies', 'Benefits Tracking', 'Shared Resources', 'Program Timeline', 'Executive Reporting'])),
               const SizedBox(height: 24),
               _sectionSubTitle('Portfolio Demonstration'),
               const SizedBox(height: 16),
-              _demoCard(_Demo('Strategic Enterprise Portfolio', 'Enterprise', 'Portfolio', Icons.dashboard, const Color(0xFFEC4899),
+              _demoCard(const _Demo('Strategic Enterprise Portfolio', 'Enterprise', 'Portfolio', Icons.dashboard, Color(0xFFEC4899),
                 ['Portfolio Dashboard', 'Executive KPIs', 'Portfolio Heat Maps', 'Resource Capacity', 'Financial Performance', 'Strategic Alignment', 'Portfolio Prioritization', 'Cross Program Reporting'])),
               const SizedBox(height: 64),
             ],
@@ -101,9 +101,9 @@ class UseCasesScreen extends StatelessWidget {
             color: const Color(0xFF06B6D4).withValues(alpha: 0.12),
             border: Border.all(color: const Color(0xFF06B6D4).withValues(alpha: 0.3)),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Icon(Icons.explore, color: Color(0xFF22D3EE), size: 16),
               SizedBox(width: 8),
               Text('Use Cases & Demo Center', style: TextStyle(color: Color(0xFF22D3EE), fontWeight: FontWeight.w700, fontSize: 14)),
@@ -151,12 +151,12 @@ class UseCasesScreen extends StatelessWidget {
 
   Widget _industryGrid(BuildContext context, bool isDesktop) {
     final industries = [
-      _Industry(icon: Icons.bolt, name: 'Energy', demo: 'Solar Farm Expansion', color: const Color(0xFFF59E0B), highlights: ['Business Case', 'WBS', 'Procurement', 'Contractor Mgmt', 'Schedule', 'Risk Register', 'Exec Dashboard']),
-      _Industry(icon: Icons.computer, name: 'Information Technology', demo: 'AI Customer Support Platform', color: const Color(0xFF3B82F6), highlights: ['Business Case', 'Frontend Planning', 'Sprint Planning', 'Kanban Board', 'Burndown Charts', 'Release Planning']),
-      _Industry(icon: Icons.local_hospital, name: 'Healthcare', demo: 'Hospital Imaging Center Construction', color: const Color(0xFFEF4444), highlights: ['Regulatory Planning', 'Equipment Procurement', 'Construction Tracking', 'Budget Control', 'Commissioning']),
-      _Industry(icon: Icons.school, name: 'Education', demo: 'University Mobile Student App', color: const Color(0xFF10B981), highlights: ['Product Discovery', 'Sprint Planning', 'Stakeholder Mgmt', 'UAT']),
-      _Industry(icon: Icons.factory, name: 'Manufacturing', demo: 'Smart Manufacturing Transformation', color: const Color(0xFF8B5CF6), highlights: ['Facility Upgrades', 'IoT Integration', 'ERP Integration', 'Agile Software Delivery']),
-      _Industry(icon: Icons.account_balance, name: 'Government', demo: 'City Infrastructure Modernization', color: const Color(0xFF06B6D4), highlights: ['Capital Planning', 'Procurement', 'Public Stakeholders', 'Executive Reporting']),
+      const _Industry(icon: Icons.bolt, name: 'Energy', demo: 'Solar Farm Expansion', color: Color(0xFFF59E0B), highlights: ['Business Case', 'WBS', 'Procurement', 'Contractor Mgmt', 'Schedule', 'Risk Register', 'Exec Dashboard']),
+      const _Industry(icon: Icons.computer, name: 'Information Technology', demo: 'AI Customer Support Platform', color: Color(0xFF3B82F6), highlights: ['Business Case', 'Frontend Planning', 'Sprint Planning', 'Kanban Board', 'Burndown Charts', 'Release Planning']),
+      const _Industry(icon: Icons.local_hospital, name: 'Healthcare', demo: 'Hospital Imaging Center Construction', color: Color(0xFFEF4444), highlights: ['Regulatory Planning', 'Equipment Procurement', 'Construction Tracking', 'Budget Control', 'Commissioning']),
+      const _Industry(icon: Icons.school, name: 'Education', demo: 'University Mobile Student App', color: Color(0xFF10B981), highlights: ['Product Discovery', 'Sprint Planning', 'Stakeholder Mgmt', 'UAT']),
+      const _Industry(icon: Icons.factory, name: 'Manufacturing', demo: 'Smart Manufacturing Transformation', color: Color(0xFF8B5CF6), highlights: ['Facility Upgrades', 'IoT Integration', 'ERP Integration', 'Agile Software Delivery']),
+      const _Industry(icon: Icons.account_balance, name: 'Government', demo: 'City Infrastructure Modernization', color: Color(0xFF06B6D4), highlights: ['Capital Planning', 'Procurement', 'Public Stakeholders', 'Executive Reporting']),
     ];
     final cols = isDesktop ? 3 : 1;
     final screenWidth = MediaQuery.sizeOf(context).width;
@@ -185,16 +185,16 @@ class UseCasesScreen extends StatelessWidget {
           child: Text(h, style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.7))))).toList()),
         const SizedBox(height: 14),
         Center(child: TextButton(onPressed: () {}, style: TextButton.styleFrom(foregroundColor: ind.color),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [const Text('View Project Demo', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)), const SizedBox(width: 4), const Icon(Icons.arrow_forward, size: 14)]))),
+          child: const Row(mainAxisSize: MainAxisSize.min, children: [Text('View Project Demo', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)), SizedBox(width: 4), Icon(Icons.arrow_forward, size: 14)]))),
       ]),
     );
   }
 
   Widget _methodologyGrid(BuildContext context, bool isDesktop) {
     final meths = [
-      _Methodology(name: 'Waterfall Projects', desc: 'Designed for engineering, construction, infrastructure, capital projects, and regulated industries.', demos: ['Solar Farm Expansion', 'Hospital Imaging Center Construction'], color: const Color(0xFF3B82F6)),
-      _Methodology(name: 'Agile Projects', desc: 'Built for software development, innovation, and product teams.', demos: ['AI Customer Support Platform', 'University Mobile Student App'], color: const Color(0xFF10B981)),
-      _Methodology(name: 'Hybrid Projects', desc: 'Combines structured planning with iterative execution.', demos: ['Smart Manufacturing Transformation', 'Enterprise EHR Modernization'], color: const Color(0xFF8B5CF6)),
+      const _Methodology(name: 'Waterfall Projects', desc: 'Designed for engineering, construction, infrastructure, capital projects, and regulated industries.', demos: ['Solar Farm Expansion', 'Hospital Imaging Center Construction'], color: Color(0xFF3B82F6)),
+      const _Methodology(name: 'Agile Projects', desc: 'Built for software development, innovation, and product teams.', demos: ['AI Customer Support Platform', 'University Mobile Student App'], color: Color(0xFF10B981)),
+      const _Methodology(name: 'Hybrid Projects', desc: 'Combines structured planning with iterative execution.', demos: ['Smart Manufacturing Transformation', 'Enterprise EHR Modernization'], color: Color(0xFF8B5CF6)),
     ];
     final cols = isDesktop ? 3 : 1;
     final screenWidth = MediaQuery.sizeOf(context).width;
@@ -240,10 +240,10 @@ class UseCasesScreen extends StatelessWidget {
         Row(children: [
           Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFF0EA5E9).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.view_module, color: Color(0xFF0EA5E9), size: 22)),
           const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Program Management Demo', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-            const SizedBox(height: 2),
-            Text('Digital Transformation Program', style: TextStyle(fontSize: 12, color: const Color(0xFF0EA5E9))),
+          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Program Management Demo', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+            SizedBox(height: 2),
+            Text('Digital Transformation Program', style: TextStyle(fontSize: 12, color: Color(0xFF0EA5E9))),
           ])),
         ]),
         const SizedBox(height: 12),
@@ -269,10 +269,10 @@ class UseCasesScreen extends StatelessWidget {
         Row(children: [
           Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFEC4899).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.dashboard, color: Color(0xFFEC4899), size: 22)),
           const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Portfolio Management Demo', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-            const SizedBox(height: 2),
-            Text('Enterprise Strategic Portfolio', style: TextStyle(fontSize: 12, color: const Color(0xFFEC4899))),
+          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Portfolio Management Demo', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+            SizedBox(height: 2),
+            Text('Enterprise Strategic Portfolio', style: TextStyle(fontSize: 12, color: Color(0xFFEC4899))),
           ])),
         ]),
         const SizedBox(height: 12),
@@ -292,12 +292,12 @@ class UseCasesScreen extends StatelessWidget {
 
   Widget _demoGrid(BuildContext context, bool isDesktop) {
     final demos = [
-      _Demo('Solar Farm Expansion', 'Energy', 'Waterfall', Icons.wb_sunny, const Color(0xFFF59E0B), ['Project Charter', 'AI-generated WBS', 'Schedule Builder', 'Procurement Planning', 'Contractor Management', 'Risk Dashboard', 'Executive Reporting']),
-      _Demo('AI Customer Support Platform', 'Information Technology', 'Agile', Icons.support_agent, const Color(0xFF3B82F6), ['Product Vision', 'Product Backlog', 'Sprint Planning', 'AI Story Generation', 'Sprint Boards', 'Sprint Reviews', 'Burndown Charts']),
-      _Demo('Hospital Imaging Center Construction', 'Healthcare', 'Waterfall', Icons.local_hospital, const Color(0xFFEF4444), ['Business Case', 'Scope Planning', 'Budget Management', 'Procurement', 'Construction Tracking', 'Equipment Installation', 'Project Closeout']),
-      _Demo('University Student Mobile App', 'Education', 'Agile', Icons.school, const Color(0xFF10B981), ['User Personas', 'Product Roadmap', 'Sprint Planning', 'Feature Prioritization', 'User Testing', 'Release Management']),
-      _Demo('Smart Manufacturing Transformation', 'Manufacturing', 'Hybrid', Icons.factory, const Color(0xFF8B5CF6), ['Facility Assessment', 'Engineering Planning', 'ERP Integration', 'IoT Dashboard', 'Agile Software Delivery', 'Executive Reporting']),
-      _Demo('Enterprise EHR Modernization', 'Healthcare', 'Hybrid', Icons.favorite, const Color(0xFFEC4899), ['Program Governance', 'Multi-site Rollout', 'Vendor Management', 'Data Migration', 'Sprint Planning', 'Change Management', 'Executive Reporting']),
+      const _Demo('Solar Farm Expansion', 'Energy', 'Waterfall', Icons.wb_sunny, Color(0xFFF59E0B), ['Project Charter', 'AI-generated WBS', 'Schedule Builder', 'Procurement Planning', 'Contractor Management', 'Risk Dashboard', 'Executive Reporting']),
+      const _Demo('AI Customer Support Platform', 'Information Technology', 'Agile', Icons.support_agent, Color(0xFF3B82F6), ['Product Vision', 'Product Backlog', 'Sprint Planning', 'AI Story Generation', 'Sprint Boards', 'Sprint Reviews', 'Burndown Charts']),
+      const _Demo('Hospital Imaging Center Construction', 'Healthcare', 'Waterfall', Icons.local_hospital, Color(0xFFEF4444), ['Business Case', 'Scope Planning', 'Budget Management', 'Procurement', 'Construction Tracking', 'Equipment Installation', 'Project Closeout']),
+      const _Demo('University Student Mobile App', 'Education', 'Agile', Icons.school, Color(0xFF10B981), ['User Personas', 'Product Roadmap', 'Sprint Planning', 'Feature Prioritization', 'User Testing', 'Release Management']),
+      const _Demo('Smart Manufacturing Transformation', 'Manufacturing', 'Hybrid', Icons.factory, Color(0xFF8B5CF6), ['Facility Assessment', 'Engineering Planning', 'ERP Integration', 'IoT Dashboard', 'Agile Software Delivery', 'Executive Reporting']),
+      const _Demo('Enterprise EHR Modernization', 'Healthcare', 'Hybrid', Icons.favorite, Color(0xFFEC4899), ['Program Governance', 'Multi-site Rollout', 'Vendor Management', 'Data Migration', 'Sprint Planning', 'Change Management', 'Executive Reporting']),
     ];
     final cols = isDesktop ? 3 : 1;
     final screenWidth = MediaQuery.sizeOf(context).width;

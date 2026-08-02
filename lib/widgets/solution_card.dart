@@ -63,9 +63,9 @@ class _SolutionCardState extends State<SolutionCard> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final baseBorderColor = widget.isSelected
-        ? const Color(0xFFFFD700).withOpacity(0.9)
+        ? const Color(0xFFFFD700).withValues(alpha: 0.9)
         : Colors.grey.shade300;
-    final hoverBorderColor = const Color(0xFFFFD700).withOpacity(0.6);
+    final hoverBorderColor = const Color(0xFFFFD700).withValues(alpha: 0.6);
     final borderColor = _isHovering && !widget.isSelected 
         ? hoverBorderColor 
         : baseBorderColor;

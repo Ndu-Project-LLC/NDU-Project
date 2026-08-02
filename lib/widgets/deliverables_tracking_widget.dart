@@ -190,7 +190,7 @@ class _DeliverablesTrackingWidgetState
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -200,11 +200,11 @@ class _DeliverablesTrackingWidgetState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          Padding(
-            padding: const EdgeInsets.all(20),
+          const Padding(
+            padding: EdgeInsets.all(20),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Deliverable status updates',
                     style: TextStyle(
@@ -226,15 +226,15 @@ class _DeliverablesTrackingWidgetState
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.all(32),
+    return const Padding(
+      padding: EdgeInsets.all(32),
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.inventory_2_outlined,
+            Icon(Icons.inventory_2_outlined,
                 color: Color(0xFF9CA3AF), size: 32),
-            const SizedBox(height: 12),
-            const Text(
+            SizedBox(height: 12),
+            Text(
               'No deliverables yet. Add details to get started.',
               style: TextStyle(
                 fontSize: 13,
@@ -261,7 +261,7 @@ class _DeliverablesTrackingWidgetState
               topRight: Radius.circular(12),
             ),
           ),
-          child: Row(
+          child: const Row(
             children: [
               _TableHeaderCell('Deliverable', flex: 4),
               _TableHeaderCell('Owner', flex: 2),
@@ -431,7 +431,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value:
+                    initialValue:
                         selectedStatus.isEmpty ? null : selectedStatus,
                     decoration: const InputDecoration(
                       labelText: 'Status',
@@ -587,7 +587,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
                             horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: _getStatusColor(_deliverable.status)
-                              .withOpacity(0.1),
+                              .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

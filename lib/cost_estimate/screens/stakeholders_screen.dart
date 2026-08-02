@@ -245,12 +245,12 @@ class StakeholdersScreen extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   children: [
-                    const Icon(Icons.shield,
+                    Icon(Icons.shield,
                         color: LightModeColors.accent, size: 16),
-                    const SizedBox(width: 6),
-                    const Text('Access Control',
+                    SizedBox(width: 6),
+                    Text('Access Control',
                         style: TextStyle(
                             color: Color(0xFF1A1D1F),
                             fontSize: 16,
@@ -520,7 +520,7 @@ class StakeholdersScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<RBACRole>(
-                value: role,
+                initialValue: role,
                 items: RBACRole.values
                     .map((r) => DropdownMenuItem(
                           value: r,

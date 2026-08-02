@@ -199,7 +199,7 @@ class _FrontEndPlanningPersonnelScreenState
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(
  labelText: 'Status',
  border: OutlineInputBorder(),
@@ -440,9 +440,9 @@ class _SectionTitle extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Column(
+ return const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  EditableContentText(
  contentKey: 'fep_personnel_title',
  fallback: 'Project Personnel',
@@ -558,13 +558,13 @@ class _PersonnelTable extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final border = const BorderSide(color: Color(0xFFE5E7EB));
- final headerStyle = const TextStyle(
+ const border = BorderSide(color: Color(0xFFE5E7EB));
+ const headerStyle = TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w700,
  color: Color(0xFF4B5563),
  );
- final cellStyle = const TextStyle(fontSize: 14, color: Color(0xFF111827));
+ const cellStyle = TextStyle(fontSize: 14, color: Color(0xFF111827));
 
  Widget th(String text) => Padding(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -796,8 +796,8 @@ class _BottomOverlays extends StatelessWidget {
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFD7E5FF)),
  ),
- child: Row(
- children: const [
+ child: const Row(
+ children: [
  Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
  SizedBox(width: 8),
  Text(

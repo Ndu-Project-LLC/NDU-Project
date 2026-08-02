@@ -54,7 +54,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
 
   String? _csvText;
   CsvValidationResult? _result;
-  bool _isDragging = false;
+  final bool _isDragging = false;
   bool _showPreview = false;
   bool _isFileLoading = false;
   final _pasteController = TextEditingController();
@@ -217,7 +217,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 40,
                 offset: const Offset(0, 20),
               ),
@@ -263,7 +263,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child:
@@ -287,7 +287,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
                   widget.tableTitle,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -298,7 +298,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close, color: Colors.white, size: 22),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.15),
+              backgroundColor: Colors.white.withValues(alpha: 0.15),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
@@ -343,12 +343,12 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.description_outlined,
+              Icon(Icons.description_outlined,
                   size: 18, color: Color(0xFF0284C7)),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'Required CSV Format',
                 style: TextStyle(
                   fontSize: 13,
@@ -356,7 +356,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
                   color: Color(0xFF0C4A6E),
                 ),
               ),
-              const Spacer(),
+              Spacer(),
             ],
           ),
           const SizedBox(height: 12),
@@ -471,7 +471,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: _isDragging
-                      ? const Color(0xFF2563EB).withOpacity(0.1)
+                      ? const Color(0xFF2563EB).withValues(alpha: 0.1)
                       : const Color(0xFFF3F4F6),
                   shape: BoxShape.circle,
                 ),
@@ -505,7 +505,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
               _isFileLoading ? '' : 'or click to browse files',
               style: TextStyle(
                 fontSize: 13,
-                color: const Color(0xFF6B7280).withOpacity(0.8),
+                color: const Color(0xFF6B7280).withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(height: 12),
@@ -768,7 +768,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
                   headingRowColor:
-                      MaterialStateProperty.all(const Color(0xFFF8FAFC)),
+                      WidgetStateProperty.all(const Color(0xFFF8FAFC)),
                   headingRowHeight: 40,
                   dataRowHeight: 36,
                   columnSpacing: 16,

@@ -174,7 +174,7 @@ class _MobilePricingScreenState extends State<MobilePricingScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
                   ),
@@ -224,7 +224,7 @@ class _MobilePricingScreenState extends State<MobilePricingScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFFFD700).withOpacity(0.1)
+              ? const Color(0xFFFFD700).withValues(alpha: 0.1)
               : Colors.white,
           border: Border.all(
             color: isSelected ? const Color(0xFFFFD700) : Colors.grey.shade300,

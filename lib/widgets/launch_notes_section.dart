@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 /// A reusable Notes section widget for Launch Phase screens.
 /// Provides a labeled text area with KAZ AI, clear-all, text formatting,

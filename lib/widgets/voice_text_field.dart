@@ -271,11 +271,11 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       if (!started) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(kIsWeb
                   ? 'Voice input unavailable. Use Chrome/Edge/Safari over HTTPS and allow mic access. Firefox is not supported.'
                   : 'Speech recognition is not available on this device.'),
-              duration: const Duration(seconds: 3),
+              duration: Duration(seconds: 3),
             ),
           );
         }
@@ -485,7 +485,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: Padding(
@@ -523,7 +523,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: IconButton(
@@ -570,7 +570,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
           borderRadius: BorderRadius.circular(24),
         ),
         contentPadding: EdgeInsets.zero,
-        content: Container(
+        content: SizedBox(
           width: 420,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -595,7 +595,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                       width: 72,
                       height: 72,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
+                        color: Colors.white.withValues(alpha: 0.25),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -653,11 +653,11 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                         color: const Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFFFCD34D).withOpacity(0.4),
+                          color: const Color(0xFFFCD34D).withValues(alpha: 0.4),
                         ),
                       ),
-                      child: Row(
-                        children: const [
+                      child: const Row(
+                        children: [
                           Icon(Icons.info_outline,
                               size: 16, color: Color(0xFF92400E)),
                           SizedBox(width: 8),
@@ -1032,11 +1032,11 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
       if (!started) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(kIsWeb
                   ? 'Voice input unavailable. Use Chrome/Edge/Safari over HTTPS and allow mic access. Firefox is not supported.'
                   : 'Speech recognition is not available on this device.'),
-              duration: const Duration(seconds: 3),
+              duration: Duration(seconds: 3),
             ),
           );
         }
@@ -1251,7 +1251,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: Padding(
@@ -1289,7 +1289,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: IconButton(

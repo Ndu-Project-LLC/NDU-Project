@@ -42,7 +42,7 @@ class DesignDeliverablesScreen extends StatefulWidget {
 }
 
 class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
- DesignDeliverablesData _data = DesignDeliverablesData();
+ DesignDeliverablesData _data = const DesignDeliverablesData();
  bool _loading = false;
  String? _error;
  final _saveDebouncer = _Debouncer();
@@ -342,7 +342,7 @@ class _DesignDeliverablesScreenState extends State<DesignDeliverablesScreen> {
  setState(() {
  _loading = false;
  _error = 'Unable to generate content. Please try again later.';
- _data = DesignDeliverablesData();
+ _data = const DesignDeliverablesData();
  });
  }
  }
@@ -811,9 +811,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  ),
  const SizedBox(height: 10),
- Column(
+ const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Design Deliverables',
  style: TextStyle(
@@ -865,7 +865,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -894,7 +894,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  AnimatedRotation(
  duration: const Duration(milliseconds: 200),
  turns: _frameworkGuideExpanded ? 0.5 : 0,
- child: Icon(Icons.expand_more, size: 22, color: const Color(0xFF6B7280)),
+ child: const Icon(Icons.expand_more, size: 22, color: Color(0xFF6B7280)),
  ),
  ],
  ),
@@ -973,9 +973,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: double.infinity,
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
- color: color.withOpacity(0.04),
+ color: color.withValues(alpha: 0.04),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.12)),
+ border: Border.all(color: color.withValues(alpha: 0.12)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -985,7 +985,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(icon, size: 16, color: color),
@@ -1035,7 +1035,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Deliverable Register',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'name', label: 'DELIVERABLE', required: true, hint: 'Deliverable name'),
  CsvColumnSpec(key: 'owner', label: 'OWNER', hint: 'Deliverable owner'),
  CsvColumnSpec(key: 'due', label: 'DUE/GATE', hint: 'Due date or gate'),
@@ -1072,15 +1072,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: _RegisterHeaderRow(isNarrow: isNarrow),
  ),
  if (filtered.isEmpty)
- Padding(
- padding: const EdgeInsets.all(32),
+ const Padding(
+ padding: EdgeInsets.all(32),
  child: Center(
  child: Column(
  children: [
- const Icon(Icons.inventory_2_outlined,
+ Icon(Icons.inventory_2_outlined,
  color: Color(0xFF9CA3AF), size: 32),
- const SizedBox(height: 12),
- const Text(
+ SizedBox(height: 12),
+ Text(
  'No deliverables found. Add deliverables to start tracking.',
  style: TextStyle(
  fontSize: 13,
@@ -1124,7 +1124,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Acceptance Evidence',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'evidenceArea', label: 'EVIDENCE AREA', required: true, hint: 'Evidence area'),
  CsvColumnSpec(key: 'whatMustBeCaptured', label: 'WHAT MUST BE CAPTURED', hint: 'What must be captured'),
  CsvColumnSpec(key: 'verificationMethod', label: 'VERIFICATION METHOD', hint: 'Verification method'),
@@ -1200,7 +1200,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Handoff Governance',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'control', label: 'CONTROL', required: true, hint: 'Control name'),
  CsvColumnSpec(key: 'industryStandardPractice', label: 'INDUSTRY STANDARD PRACTICE', hint: 'Industry standard practice'),
  CsvColumnSpec(key: 'waterfallEvidence', label: 'WATERFALL EVIDENCE', hint: 'Waterfall evidence'),
@@ -1276,7 +1276,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Approval Gates',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'gate', label: 'GATE', required: true, hint: 'Gate name'),
  CsvColumnSpec(key: 'description', label: 'DESCRIPTION', hint: 'Gate description'),
  CsvColumnSpec(key: 'approver', label: 'APPROVER', hint: 'Approver'),
@@ -1466,7 +1466,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
- value: owner,
+ initialValue: owner,
  items: const [
  DropdownMenuItem(value: 'Design Lead', child: Text('Design Lead')),
  DropdownMenuItem(value: 'Architecture', child: Text('Architecture')),
@@ -1480,7 +1480,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: const [
  DropdownMenuItem(value: 'In progress', child: Text('In progress')),
  DropdownMenuItem(value: 'In review', child: Text('In review')),
@@ -1498,7 +1498,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
- value: risk,
+ initialValue: risk,
  items: const [
  DropdownMenuItem(value: 'Low', child: Text('Low')),
  DropdownMenuItem(value: 'Medium', child: Text('Medium')),
@@ -1724,7 +1724,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  labelText: 'Agile/Hybrid Evidence')),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: decision,
+ initialValue: decision,
  items: const [
  DropdownMenuItem(value: 'Required', child: Text('Required')),
  DropdownMenuItem(value: 'Conditional', child: Text('Conditional')),
@@ -1835,7 +1835,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  decoration: const InputDecoration(labelText: 'Approver')),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: priority,
+ initialValue: priority,
  items: const [
  DropdownMenuItem(value: 'Critical', child: Text('Critical')),
  DropdownMenuItem(value: 'High', child: Text('High')),
@@ -1848,7 +1848,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: const [
  DropdownMenuItem(value: 'Not Started', child: Text('Not Started')),
  DropdownMenuItem(value: 'In Review', child: Text('In Review')),
@@ -1970,7 +1970,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  labelText: 'Owner / Responsible Party')),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: priority,
+ initialValue: priority,
  items: const [
  DropdownMenuItem(
  value: 'Critical', child: Text('Critical')),
@@ -1988,7 +1988,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: const [
  DropdownMenuItem(
  value: 'Open', child: Text('Open')),
@@ -2109,7 +2109,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  labelText: 'Stage or deliverable')),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: const [
  DropdownMenuItem(value: 'In progress', child: Text('In progress')),
  DropdownMenuItem(value: 'Pending', child: Text('Pending')),
@@ -2172,7 +2172,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  labelText: 'Stage or deliverable')),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: const [
  DropdownMenuItem(value: 'In progress', child: Text('In progress')),
  DropdownMenuItem(value: 'Pending', child: Text('Pending')),
@@ -2384,7 +2384,7 @@ class _PanelShell extends StatelessWidget {
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -2505,7 +2505,7 @@ Widget _statusBadge(String text, Color color) {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(text,

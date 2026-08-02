@@ -225,8 +225,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Punchlist Actions',
  ),
  ),
@@ -499,21 +499,21 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  List<_PunchlistInsight> _defaultPriorityItems() => [
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Rework integrations interface alerts',
  owner: 'N. Chan',
  dueIn: 'Due in 2 days',
  severity: _PunchlistSeverity.high,
  status: 'Field team ready',
  ),
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Validate HVAC balancing readings',
  owner: 'S. Patel',
  dueIn: 'Due Friday',
  severity: _PunchlistSeverity.medium,
  status: 'QA pending',
  ),
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Backfill cabinet missing fasteners',
  owner: 'L. Santos',
  dueIn: 'Overdue by 1 day',
@@ -523,14 +523,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ];
 
  List<_PunchlistInsight> _defaultTechnicalInsights() => [
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'P-107: Airside zoning dampers',
  owner: 'Systems',
  dueIn: 'QA sign-off pending',
  severity: _PunchlistSeverity.medium,
  status: 'Close out ready',
  ),
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Interface bus failover checks',
  owner: 'Integration',
  dueIn: 'Pending metrics',
@@ -540,14 +540,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ];
 
  List<_PunchlistInsight> _defaultRemediationItems() => [
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Resource planning aligned with sprint 42',
  owner: 'Operations',
  dueIn: 'In progress',
  severity: _PunchlistSeverity.medium,
  status: 'Capacity 80%',
  ),
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Vendor escalation touchpoint',
  owner: 'Supply chain',
  dueIn: 'Tomorrow',
@@ -557,14 +557,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ];
 
  List<_PunchlistInsight> _defaultFieldExecutionItems() => [
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Mobile inspections checklist sync',
  owner: 'Field Ops',
  dueIn: 'Sync nightly',
  severity: _PunchlistSeverity.low,
  status: 'Stable',
  ),
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Crew photo verification backlog',
  owner: 'QA',
  dueIn: 'Need 6 uploads',
@@ -574,14 +574,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ];
 
  List<_PunchlistInsight> _defaultTechDebtItems() => [
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Legacy tag cleanup for zone controllers',
  owner: 'Platform',
  dueIn: 'Sprint 43',
  severity: _PunchlistSeverity.high,
  status: 'Ready for grooming',
  ),
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Telemetry schema versioning',
  owner: 'Data services',
  dueIn: 'Needs impact review',
@@ -591,14 +591,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ];
 
  List<_PunchlistInsight> _defaultClosureItems() => [
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Stakeholder walkthrough sign-offs',
  owner: 'PMO',
  dueIn: '3 of 5 complete',
  severity: _PunchlistSeverity.low,
  status: 'Schedule review',
  ),
- _PunchlistInsight(
+ const _PunchlistInsight(
  title: 'Final acceptance documentation pack',
  owner: 'Quality',
  dueIn: 'Draft ready',
@@ -677,14 +677,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  title: 'Punchlist completion health',
  subtitle:
  '62% of punch actions closed this sprint window. 12 blockers remain triaged.',
- child: Row(
+ child: const Row(
  children: [
  SizedBox(
  width: 140,
  height: 140,
  child: Stack(
  alignment: Alignment.center,
- children: const [
+ children: [
  SizedBox(
  width: 140,
  height: 140,
@@ -720,11 +720,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  ),
  ),
- const SizedBox(width: 24),
+ SizedBox(width: 24),
  Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  _LegendRow(
  label: 'Closed', color: Color(0xFF2563EB), value: '112'),
  SizedBox(height: 10),
@@ -1037,9 +1037,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  )),
  ],
  )),
- DataCell(Text('${row.throughput.toStringAsFixed(1)}/sp', style: TextStyle(
- fontWeight: FontWeight.w700, color: const Color(0xFF475569),
- fontFeatures: const [FontFeature.tabularFigures()],
+ DataCell(Text('${row.throughput.toStringAsFixed(1)}/sp', style: const TextStyle(
+ fontWeight: FontWeight.w700, color: Color(0xFF475569),
+ fontFeatures: [FontFeature.tabularFigures()],
  ))),
  DataCell(Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -1528,7 +1528,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 24,
  offset: const Offset(0, 18),
  ),
@@ -1745,7 +1745,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ]),
  const SizedBox(height: 14),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
  items: ['Active', 'Under Review', 'Monitoring', 'At Risk'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) => setDialogState(() => status = v ?? 'Active'),
@@ -1842,7 +1842,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ]),
  const SizedBox(height: 14),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
  items: ['On Track', 'Improving', 'Stable', 'At Risk'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) => setDialogState(() => status = v ?? 'On Track'),
@@ -2017,7 +2017,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: riskLevel,
+ initialValue: riskLevel,
  decoration: const InputDecoration(labelText: 'Risk Level', border: OutlineInputBorder()),
  items: ['High', 'Medium', 'Low'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) => setDialogState(() => riskLevel = v ?? 'Medium'),
@@ -2026,7 +2026,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 10),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
  items: ['Active', 'On Track', 'Under Review', 'At Risk', 'Monitoring'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) => setDialogState(() => status = v ?? 'Active'),
@@ -2177,7 +2177,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: complianceStatus,
+ initialValue: complianceStatus,
  decoration: const InputDecoration(labelText: 'Compliance', border: OutlineInputBorder()),
  items: ['Compliant', 'Conditional', 'Non-Compliant'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) => setDialogState(() => complianceStatus = v ?? 'Compliant'),
@@ -2186,7 +2186,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 10),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: riskFlag,
+ initialValue: riskFlag,
  decoration: const InputDecoration(labelText: 'Risk Flag', border: OutlineInputBorder()),
  items: ['None', 'Low', 'Medium', 'High', 'Critical'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) => setDialogState(() => riskFlag = v ?? 'None'),
@@ -2195,7 +2195,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 10),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
  items: ['Full', 'Covered', 'Partial', 'Understaffed'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) => setDialogState(() => status = v ?? 'Covered'),
@@ -2288,7 +2288,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
- color: badgeColor.withOpacity(0.1),
+ color: badgeColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(16),
  ),
  child: Text(
@@ -2344,7 +2344,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: insight.severity.color.withOpacity(0.15),
+ color: insight.severity.color.withValues(alpha: 0.15),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Icon(
@@ -2841,9 +2841,9 @@ class _MetricPill extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
  decoration: BoxDecoration(
- color: color.withOpacity(0.08),
+ color: color.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(20),
- border: Border.all(color: color.withOpacity(0.28)),
+ border: Border.all(color: color.withValues(alpha: 0.28)),
  ),
  child: Row(
  children: [

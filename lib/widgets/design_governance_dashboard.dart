@@ -152,10 +152,10 @@ class DesignGovernanceDashboard extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                   border:
-                      Border.all(color: Colors.white.withOpacity(0.14)),
+                      Border.all(color: Colors.white.withValues(alpha: 0.14)),
                 ),
                 child: const Icon(
                   Icons.admin_panel_settings_outlined,
@@ -178,7 +178,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                     Text(
                       '${_fallbackText(projectData.projectName, 'Current design package')} is orchestrating review gates from prior scope, risks, milestones, team inputs, and AI-assisted working notes.',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.82),
+                        color: Colors.white.withValues(alpha: 0.82),
                         height: 1.45,
                       ),
                     ),
@@ -789,7 +789,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       height: 38,
                       decoration: BoxDecoration(
                         color: entry.locked
-                            ? Colors.white.withOpacity(0.08)
+                            ? Colors.white.withValues(alpha: 0.08)
                             : const Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -828,7 +828,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: entry.locked
-                                      ? Colors.white.withOpacity(0.78)
+                                      ? Colors.white.withValues(alpha: 0.78)
                                       : const Color(0xFF64748B),
                                 ),
                               ),
@@ -840,7 +840,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               color: entry.locked
-                                  ? Colors.white.withOpacity(0.82)
+                                  ? Colors.white.withValues(alpha: 0.82)
                                   : const Color(0xFF64748B),
                               height: 1.4,
                             ),
@@ -1325,9 +1325,9 @@ class _HeaderBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withOpacity(0.14)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1362,9 +1362,9 @@ class _MetricPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1381,7 +1381,7 @@ class _MetricPill extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.82),
+              color: Colors.white.withValues(alpha: 0.82),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -1406,7 +1406,7 @@ class _CompactInfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(

@@ -386,7 +386,7 @@ class _ProjectFrameworkNextScreenState
       drawer: isMobile
           ? Drawer(
               width: AppBreakpoints.sidebarWidth(context),
-              child: SafeArea(
+              child: const SafeArea(
                 child: InitiationLikeSidebar(
                   activeItemLabel: 'Project Goals & Milestones',
                   showHeader: true,
@@ -418,8 +418,8 @@ class _ProjectFrameworkNextScreenState
                   Expanded(
                     child: Stack(
                       children: [
-                        MobileSidebarHamburger(
-                          sidebar: const InitiationLikeSidebar(
+                        const MobileSidebarHamburger(
+                          sidebar: InitiationLikeSidebar(
                             activeItemLabel: 'Project Goals & Milestones',
                           ),
                         ),
@@ -535,7 +535,7 @@ class _ProjectFrameworkNextScreenState
                 Container(
                   width: 32,
                   height: 32,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: _kLightYellow,
                     shape: BoxShape.circle,
                   ),
@@ -557,15 +557,15 @@ class _ProjectFrameworkNextScreenState
               color: _kLightGray,
               border: Border(top: BorderSide(color: _kBorderColor)),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                const Text('Planning Phase',
+                Text('Planning Phase',
                     style: TextStyle(fontSize: 12, color: _kSecondaryText)),
-                const SizedBox(width: 4),
-                const Icon(Icons.chevron_right,
+                SizedBox(width: 4),
+                Icon(Icons.chevron_right,
                     size: 14, color: _kSecondaryText),
-                const SizedBox(width: 4),
-                const Text('Project Goals & Milestones',
+                SizedBox(width: 4),
+                Text('Project Goals & Milestones',
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -593,12 +593,12 @@ class _ProjectFrameworkNextScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.description_outlined,
+              Icon(Icons.description_outlined,
                   size: 20, color: _kAccentColor),
-              const SizedBox(width: 8),
-              const Text('Notes',
+              SizedBox(width: 8),
+              Text('Notes',
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1445,10 +1445,10 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
           // ── Gray header bar ──
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF9FAFB),
               borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
+                  BorderRadius.vertical(top: Radius.circular(12)),
               border: Border(bottom: BorderSide(color: _kBorderColor)),
             ),
             child: Row(
@@ -1708,7 +1708,7 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                               ),
                             ),
                           );
-                        }).toList(),
+                        }),
                       const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerRight,

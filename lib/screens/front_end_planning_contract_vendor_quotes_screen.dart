@@ -579,7 +579,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedUnit,
+ initialValue: selectedUnit,
  decoration: const InputDecoration(labelText: 'Duration Unit'),
  items: _workflowDurationUnits
  .map(
@@ -887,7 +887,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SizedBox(
  width: 130,
  child: DropdownButtonFormField<String>(
- value: step.unit,
+ initialValue: step.unit,
  decoration: const InputDecoration(
  isDense: true,
  labelText: 'Unit',
@@ -1000,7 +1000,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SizedBox(
  width: 320,
  child: DropdownButtonFormField<String>(
- value: effectiveScopeId,
+ initialValue: effectiveScopeId,
  decoration: const InputDecoration(
  labelText: 'Contract Scope',
  isDense: true,
@@ -1705,10 +1705,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  else ...[
  Row(
  children: [
- Expanded(
+ const Expanded(
  child: Text(
  'Commence scope processes in this stage using role-based authority.',
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 12,
  color: Color(0xFF6B7280),
  ),
@@ -1734,7 +1734,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SizedBox(
  width: 240,
  child: DropdownButtonFormField<String>(
- value: actingRole,
+ initialValue: actingRole,
  decoration: const InputDecoration(
  labelText: 'Acting Role',
  isDense: true,
@@ -1855,7 +1855,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SizedBox(
  width: 260,
  child: DropdownButtonFormField<String>(
- value: availableRoles
+ initialValue: availableRoles
  .contains(state.authorizedRole)
  ? state.authorizedRole
  : _defaultAuthorizedRole(
@@ -2101,7 +2101,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  return;
  }
 
- final categoryOptions = const [
+ const categoryOptions = [
  'Construction',
  'Services',
  'Consulting',
@@ -2110,7 +2110,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final result = await showDialog<ContractModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (ctx) => AddContractDialog(
  contextChips: _buildDialogContextChips(),
  categoryOptions: categoryOptions,
@@ -2127,7 +2127,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final projectId = _activeProjectIdOrNull();
  if (projectId == null) return;
 
- final categoryOptions = const [
+ const categoryOptions = [
  'Construction',
  'Services',
  'Consulting',
@@ -2136,7 +2136,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final result = await showDialog<ContractModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (ctx) => AddContractDialog(
  contextChips: _buildDialogContextChips(),
  categoryOptions: categoryOptions,
@@ -2207,7 +2207,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  return;
  }
 
- final categoryOptions = const [
+ const categoryOptions = [
  'Construction Services',
  'Services',
  'Consulting',
@@ -2220,7 +2220,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final result = await showDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) => AddVendorDialog(
  contextChips: _buildDialogContextChips(),
  categoryOptions: categoryOptions,
@@ -2295,7 +2295,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final projectId = _activeProjectIdOrNull();
  if (projectId == null) return;
 
- final categoryOptions = const [
+ const categoryOptions = [
  'Construction Services',
  'Services',
  'Consulting',
@@ -2308,7 +2308,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final result = await showDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) => AddVendorDialog(
  contextChips: _buildDialogContextChips(),
  categoryOptions: categoryOptions,
@@ -2426,7 +2426,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final result = await showDialog<ProcurementItemModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
  title: Text(existing == null
@@ -2463,7 +2463,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: contractType,
+ initialValue: contractType,
  items: _contractTypeOptions
  .map((option) => DropdownMenuItem<String>(
  value: option,
@@ -2495,7 +2495,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: biddingRequired,
+ initialValue: biddingRequired,
  items: _biddingOptions
  .map((option) => DropdownMenuItem<String>(
  value: option,
@@ -2511,7 +2511,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: startStage,
+ initialValue: startStage,
  items: _startStageOptions
  .map((option) => DropdownMenuItem<String>(
  value: option,
@@ -2778,7 +2778,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  mainAxisSize: MainAxisSize.min,
  children: [
  DropdownButtonFormField<String>(
- value:
+ initialValue:
  candidates.isNotEmpty ? candidates.first : null,
  items: candidates
  .map((name) => DropdownMenuItem<String>(
@@ -3621,9 +3621,9 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
  decoration: BoxDecoration(
- color: tone.withOpacity(0.2),
+ color: tone.withValues(alpha: 0.2),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: tone.withOpacity(0.6)),
+ border: Border.all(color: tone.withValues(alpha: 0.6)),
  ),
  child: Text(
  label,
@@ -3640,9 +3640,9 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: tone.withOpacity(0.12),
+ color: tone.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: tone.withOpacity(0.35)),
+ border: Border.all(color: tone.withValues(alpha: 0.35)),
  ),
  child: Text(
  label,
@@ -3713,7 +3713,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  mainAxisSize: MainAxisSize.min,
  children: [
  DropdownButtonFormField<String>(
- value: selected.id,
+ initialValue: selected.id,
  decoration: const InputDecoration(labelText: 'Scope'),
  items: scopes
  .map((scope) => DropdownMenuItem<String>(
@@ -3739,7 +3739,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration:
  const InputDecoration(labelText: 'Tracking Status'),
  items: _trackingStatusOptions
@@ -3806,7 +3806,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(labelText: 'Status'),
  items: _reportStatusOptions
  .map((option) => DropdownMenuItem<String>(
@@ -5498,21 +5498,21 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFFEE2E2)),
  ),
- child: Column(
+ child: const Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.cloud_off_outlined,
+ Icon(Icons.cloud_off_outlined,
  size: 48, color: Color(0xFFEF4444)),
- const SizedBox(height: 16),
- const Text(
+ SizedBox(height: 16),
+ Text(
  'Unable to load contracting data',
  style: TextStyle(
  fontWeight: FontWeight.bold,
  color: Color(0xFFB91C1C),
  fontSize: 16),
  ),
- const SizedBox(height: 8),
- const Text(
+ SizedBox(height: 8),
+ Text(
  'Please refresh the page or contact support if the issue persists.',
  textAlign: TextAlign.center,
  style: TextStyle(color: Color(0xFFB91C1C), fontSize: 13),
@@ -5555,8 +5555,8 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Contracting',
  ),
  ),
@@ -6084,7 +6084,7 @@ class _BottomOverlay extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  border: Border(
- top: BorderSide(color: Colors.grey.withOpacity(0.2)),
+ top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
  ),
  ),
  child: Row(
@@ -6262,7 +6262,7 @@ class _ContractScopeDetailsBoard extends StatelessWidget {
  : width > 940
  ? 2
  : 1;
- final spacing = 12.0;
+ const spacing = 12.0;
  final cardWidth = cardsPerRow == 1
  ? width
  : (width - ((cardsPerRow - 1) * spacing)) / cardsPerRow;
@@ -6573,7 +6573,7 @@ class _ContractScopeDetailCardState extends State<_ContractScopeDetailCard> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: stage,
+ initialValue: stage,
  decoration: const InputDecoration(
  labelText: 'Contracting Start Stage',
  isDense: true,

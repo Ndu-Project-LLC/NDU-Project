@@ -127,7 +127,7 @@ class CharterHeroHeader extends StatelessWidget {
  Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
- Text(
+ const Text(
  'PROJECT CHARTER',
  style: TextStyle(
  fontSize: 12,
@@ -170,7 +170,7 @@ class CharterHeroHeader extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
  decoration: BoxDecoration(
- color: BrandColors.primaryContainer.withOpacity(0.1),
+ color: BrandColors.primaryContainer.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(20),
  ),
  child: const Text(
@@ -269,7 +269,7 @@ class CharterDashboardStats extends StatelessWidget {
  label,
  textAlign: isMobile ? TextAlign.left : TextAlign.center,
  style: TextStyle(
- color: Colors.white.withOpacity(0.6),
+ color: Colors.white.withValues(alpha: 0.6),
  fontSize: 11,
  fontWeight: FontWeight.w600,
  letterSpacing: 1.0,
@@ -296,7 +296,7 @@ class CharterDashboardStats extends StatelessWidget {
  return Container(
  height: 40,
  width: 1,
- color: Colors.white.withOpacity(0.2),
+ color: Colors.white.withValues(alpha: 0.2),
  );
  }
 
@@ -703,7 +703,7 @@ class CharterProjectDefinition extends StatelessWidget {
  const Divider(color: BrandColors.outlineVariant),
  const SizedBox(height: 16),
  // Business Case subsection
- Text(
+ const Text(
  'BUSINESS CASE',
  style: TextStyle(
  fontSize: 12,
@@ -893,7 +893,7 @@ class CharterFinancialOverview extends StatelessWidget {
  child: Text(
  '${pct.toStringAsFixed(1)}%',
  textAlign: TextAlign.right,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 12, color: BrandColors.onSurfaceVariant),
  ),
  ),
@@ -1136,7 +1136,7 @@ class CharterScope extends StatelessWidget {
  const SizedBox(height: 16),
 
  // Within Scope - tag pills
- Text(
+ const Text(
  'WITHIN SCOPE',
  style: TextStyle(
  fontSize: 12,
@@ -1164,11 +1164,11 @@ class CharterScope extends StatelessWidget {
  color: BrandColors.primaryFixed,
  borderRadius: BorderRadius.circular(16),
  border: Border.all(
- color: BrandColors.primary.withOpacity(0.3)),
+ color: BrandColors.primary.withValues(alpha: 0.3)),
  ),
  child: Text(
  item.trim(),
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w500,
  color: BrandColors.onPrimaryFixedVariant,
@@ -1181,7 +1181,7 @@ class CharterScope extends StatelessWidget {
  const SizedBox(height: 20),
 
  // Out of Scope - bullet list with error-colored label
- Text(
+ const Text(
  'OUT OF SCOPE',
  style: TextStyle(
  fontSize: 12,
@@ -1313,7 +1313,7 @@ class CharterRisks extends StatelessWidget {
  ),
  child: Text(
  '$totalRisksCount Total',
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
  color: BrandColors.onErrorContainer,
@@ -1367,7 +1367,7 @@ class CharterRisks extends StatelessWidget {
  ),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.03),
+ color: Colors.black.withValues(alpha: 0.03),
  offset: const Offset(0, 1),
  blurRadius: 2,
  )
@@ -1702,7 +1702,7 @@ class CharterTechnicalProcurementBento extends StatelessWidget {
  decoration: BoxDecoration(
  color: bgColor,
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: accentColor.withOpacity(0.2)),
+ border: Border.all(color: accentColor.withValues(alpha: 0.2)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1717,7 +1717,7 @@ class CharterTechnicalProcurementBento extends StatelessWidget {
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: accentColor.withOpacity(0.8))),
+ color: accentColor.withValues(alpha: 0.8))),
  ],
  ),
  ),
@@ -1868,7 +1868,7 @@ class _TimelineItem extends StatelessWidget {
  const SizedBox(height: 4),
  Text(
  date,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 12,
  color: BrandColors.outline,
  fontWeight: FontWeight.w500,
@@ -1920,7 +1920,7 @@ class _CharterFloatingApprovalBarState
         color: BrandColors.inverseSurface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             offset: const Offset(0, -4),
             blurRadius: 12,
           )
@@ -1964,7 +1964,7 @@ class _CharterFloatingApprovalBarState
           child: Text(
             'Approval Authority: $signerName ($signerRole) — Charter to be approved by sponsor, owner or applicable lead',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -2014,7 +2014,7 @@ class _CharterFloatingApprovalBarState
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-              color: BrandColors.primary.withOpacity(0.3),
+              color: BrandColors.primary.withValues(alpha: 0.3),
               offset: const Offset(0, 2),
               blurRadius: 8,
             )
@@ -2069,12 +2069,12 @@ class _CharterFloatingApprovalBarState
         builder: (dialogContext, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16)),
-          title: Row(
+          title: const Row(
             children: [
-              const Icon(Icons.gavel_outlined,
+              Icon(Icons.gavel_outlined,
                   color: BrandColors.primary, size: 22),
-              const SizedBox(width: 10),
-              const Text('Confirm Charter Approval'),
+              SizedBox(width: 10),
+              Text('Confirm Charter Approval'),
             ],
           ),
           content: ConstrainedBox(

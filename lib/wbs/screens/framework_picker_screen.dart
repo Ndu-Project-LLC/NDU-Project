@@ -33,7 +33,7 @@ class _FrameworkPickerScreenState extends State<FrameworkPickerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final totalSteps = 2;
+    const totalSteps = 2;
     return ResponsiveScaffold(
       activeItemLabel: 'Work Breakdown Structure',
       appBarTitle: 'Work Breakdown Structure',
@@ -49,18 +49,18 @@ class _FrameworkPickerScreenState extends State<FrameworkPickerScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Brand
-              Row(
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.folder_open,
                       color: LightModeColors.accent, size: 28),
-                  const SizedBox(width: 8),
-                  const Text('NDU ',
+                  SizedBox(width: 8),
+                  Text('NDU ',
                       style: TextStyle(
                           color: Color(0xFF1A1D1F),
                           fontSize: 24,
                           fontWeight: FontWeight.bold)),
-                  const Text('PROJECT',
+                  Text('PROJECT',
                       style: TextStyle(
                           color: LightModeColors.accent,
                           fontSize: 24,
@@ -335,10 +335,10 @@ class _FrameworkPickerScreenState extends State<FrameworkPickerScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Pick a WBS framework',
+            Text('Pick a WBS framework',
                 style: TextStyle(
                     color: Color(0xFF1A1D1F),
                     fontSize: 28,

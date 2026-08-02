@@ -105,10 +105,10 @@ class _ProgramBasicsContentState extends State<_ProgramBasicsContentStateful> {
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  _StepProgressIndicator(),
  SizedBox(height: 12),
  Text(
@@ -151,7 +151,7 @@ class _ProgramBasicsContentState extends State<_ProgramBasicsContentStateful> {
  border: Border.all(color: _kSurfaceBorder),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 12),
  ),
@@ -183,14 +183,14 @@ class _ProgramBasicsContentState extends State<_ProgramBasicsContentStateful> {
  children: [
  Text(
  _displayName(),
- style: TextStyle(
+ style: const TextStyle(
  color: _kTextPrimary,
  fontSize: 15,
  fontWeight: FontWeight.w700,
  ),
  ),
- SizedBox(height: 2),
- Text(
+ const SizedBox(height: 2),
+ const Text(
  'Owner',
  style: TextStyle(
  color: _kTextSecondary,
@@ -219,9 +219,9 @@ class _ProgramBasicsContentState extends State<_ProgramBasicsContentStateful> {
  maxLines: 6,
  ),
  const SizedBox(height: 42),
- Row(
+ const Row(
  mainAxisAlignment: MainAxisAlignment.end,
- children: const [
+ children: [
  _CircularNavButton(
  icon: Icons.arrow_back_ios_new_rounded,
  background: Colors.white,
@@ -245,8 +245,8 @@ class _StepProgressIndicator extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Row(
- children: const [
+ return const Row(
+ children: [
  Expanded(child: _StepSegment(color: _kAccentColor)),
  SizedBox(width: 10),
  Expanded(child: _StepSegment(color: Color(0xFFE5E7EB))),
@@ -358,7 +358,7 @@ class _CircularNavButton extends StatelessWidget {
  border: Border.all(color: borderColor),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -509,12 +509,12 @@ void _showAiHintDialog(BuildContext context) {
  const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
  shape:
  RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
- child: Padding(
- padding: const EdgeInsets.all(24.0),
+ child: const Padding(
+ padding: EdgeInsets.all(24.0),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  crossAxisAlignment: CrossAxisAlignment.center,
- children: const [
+ children: [
  Icon(Icons.lightbulb_outline, color: _kAccentColor, size: 36),
  SizedBox(height: 12),
  Text(
@@ -542,13 +542,13 @@ class _FrameworkHeader extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Row(
+ return const Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Project Details',
  style: TextStyle(
@@ -570,8 +570,8 @@ class _FrameworkHeader extends StatelessWidget {
  ],
  ),
  ),
- const SizedBox(width: 24),
- const _ProfileSummaryCard(),
+ SizedBox(width: 24),
+ _ProfileSummaryCard(),
  ],
  );
  }
@@ -594,7 +594,7 @@ class _ProfileSummaryCard extends StatelessWidget {
  border: Border.all(color: _kSurfaceBorder),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 12),
  ),
@@ -706,25 +706,25 @@ class _FrameworkDetailCard extends StatelessWidget {
  border: Border.all(color: _kSurfaceBorder),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.03),
+ color: Colors.black.withValues(alpha: 0.03),
  blurRadius: 26,
  offset: const Offset(0, 14),
  ),
  ],
  ),
- child: Column(
+ child: const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Expanded(child: _FrameworkCardHeaderText()),
  SizedBox(width: 24),
  _AddGoalButton(),
  ],
  ),
- const SizedBox(height: 28),
- const Text(
+ SizedBox(height: 28),
+ Text(
  'Overall Project Framework',
  style: TextStyle(
  color: _kTextPrimary,
@@ -732,10 +732,10 @@ class _FrameworkDetailCard extends StatelessWidget {
  fontWeight: FontWeight.w700,
  ),
  ),
- const SizedBox(height: 16),
- const _FrameworkDropdown(text: 'Select a Framework'),
- const SizedBox(height: 12),
- const Text(
+ SizedBox(height: 16),
+ _FrameworkDropdown(text: 'Select a Framework'),
+ SizedBox(height: 12),
+ Text(
  "If 'Waterfall' or 'Agile' is chosen, all goals below will inherit this framework. If 'Hybrid' is chosen, you can set a framework for each goal individually .",
  style: TextStyle(
  color: _kTextSecondary,
@@ -743,8 +743,8 @@ class _FrameworkDetailCard extends StatelessWidget {
  fontWeight: FontWeight.w500,
  ),
  ),
- const SizedBox(height: 30),
- const Text(
+ SizedBox(height: 30),
+ Text(
  'Project Goals',
  style: TextStyle(
  color: _kTextPrimary,
@@ -752,8 +752,8 @@ class _FrameworkDetailCard extends StatelessWidget {
  fontWeight: FontWeight.w700,
  ),
  ),
- const SizedBox(height: 18),
- const _GoalRow(),
+ SizedBox(height: 18),
+ _GoalRow(),
  ],
  ),
  );
@@ -765,9 +765,9 @@ class _FrameworkCardHeaderText extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Column(
+ return const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Project Details',
  style: TextStyle(
@@ -859,7 +859,7 @@ class _GoalRow extends StatelessWidget {
  borderRadius: BorderRadius.circular(22),
  border: Border.all(color: _kSurfaceBorder),
  ),
- child: Row(
+ child: const Row(
  children: [
  Expanded(
  child: Text(

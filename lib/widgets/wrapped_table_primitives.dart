@@ -51,6 +51,14 @@ class WrappedText extends StatelessWidget {
   final double? maxWidth;
   final StrutStyle? strutStyle;
 
+  /// Creates a [Text] that always wraps and never overflows.
+  ///
+  /// By default [overflow] is [TextOverflow.visible] and [softWrap] is true,
+  /// which means the text wraps to fit the available width and any single
+  /// word that is wider than the line paints outside the bounds (rather
+  /// than being clipped or ellipsized). Pass [overflow] to override —
+  /// e.g. [TextOverflow.ellipsis] when the original [Text] used
+  /// `maxLines: 1, overflow: TextOverflow.ellipsis`.
   const WrappedText(
     this.data, {
     super.key,
@@ -61,8 +69,8 @@ class WrappedText extends StatelessWidget {
     this.maxLines,
     this.maxWidth,
     this.strutStyle,
-  })  : softWrap = true,
-        overflow = TextOverflow.visible;
+    this.overflow = TextOverflow.visible,
+  }) : softWrap = true;
 
   @override
   Widget build(BuildContext context) {
@@ -428,17 +436,42 @@ Widget buildWrappedDataTable({
 }
 
 DataCell _wrapCell(DataCell cell) {
-  if (cell.child is Text) {
-    final t = cell.child as Text;
+  final child = cell.child;
+  if (child is Text) {
+    // If the Text was created with Text.rich() (data is null but
+    // textSpan is not), fall back to a RichText so we don't lose the
+    // spans. Otherwise use WrappedText for guaranteed wrapping.
+    if (child.data == null && child.textSpan != null) {
+      return DataCell(
+        RichText(
+          text: child.textSpan!,
+          textAlign: child.textAlign ?? TextAlign.start,
+          textDirection: child.textDirection,
+          locale: child.locale,
+          softWrap: true,
+          overflow: TextOverflow.visible,
+          maxLines: child.maxLines,
+          strutStyle: child.strutStyle,
+        ),
+        placeholder: cell.placeholder,
+        showEditIcon: cell.showEditIcon,
+        onTap: cell.onTap,
+        onLongPress: cell.onLongPress,
+        onDoubleTap: cell.onDoubleTap,
+        onTapDown: cell.onTapDown,
+        onTapCancel: cell.onTapCancel,
+      );
+    }
     return DataCell(
       WrappedText(
-        t.data ?? '',
-        style: t.style,
-        textAlign: t.textAlign,
-        textDirection: t.textDirection,
-        locale: t.locale,
-        maxLines: t.maxLines,
-        strutStyle: t.strutStyle,
+        child.data ?? '',
+        style: child.style,
+        textAlign: child.textAlign,
+        textDirection: child.textDirection,
+        locale: child.locale,
+        maxLines: child.maxLines,
+        strutStyle: child.strutStyle,
+        overflow: child.overflow,
       ),
       placeholder: cell.placeholder,
       showEditIcon: cell.showEditIcon,

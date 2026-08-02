@@ -324,41 +324,116 @@ class SidebarSeedResult {
 }
 
 /// Deterministic seed for the Issue Management screen.
-/// Pulls REAL issue-log items from the planning phase (in-memory model).
-/// Returns empty if no real issues exist — never invents issues.
+/// Pulls REAL items from prior-phase risk register (risks that became issues)
+/// plus the planning issue log. Returns empty if no real issues exist —
+/// never invents issues.
 SidebarSeedResult seedIssueManagement(ProjectDataModel data) {
-  final items = data.issueLogItems;
-  if (items.isEmpty) return const SidebarSeedResult();
-  final rows = items.map((i) => <String, dynamic>{
-        'title': i.title,
-        'description': i.description,
-        'type': i.type,
-        'severity': i.severity,
-        'status': i.status,
-        'assignee': i.assignee,
-        'dueDate': i.dueDate,
-        'milestone': i.milestone,
-      }).toList();
-  return SidebarSeedResult(rows: rows, source: 'planning issue log');
+  final rows = <Map<String, dynamic>>[];
+
+  // 1. Planning issue log items (if any were captured during planning).
+  for (final i in data.issueLogItems) {
+    if (i.title.trim().isEmpty && i.description.trim().isEmpty) continue;
+    rows.add(<String, dynamic>{
+      'title': i.title,
+      'description': i.description,
+      'type': i.type.isEmpty ? 'Issue' : i.type,
+      'severity': i.severity.isEmpty ? 'Medium' : i.severity,
+      'status': i.status.isEmpty ? 'Open' : i.status,
+      'assignee': i.assignee,
+      'dueDate': i.dueDate,
+      'milestone': i.milestone,
+    });
+  }
+
+  // 2. Risk register items that are typed as "Issue" or have materialized.
+  for (final r in data.frontEndPlanning.riskRegisterItems) {
+    final typeLower = r.type.toLowerCase();
+    final catLower = r.category.toLowerCase();
+    final isIssue = typeLower.contains('issue') ||
+        catLower.contains('issue') ||
+        typeLower.contains('problem') ||
+        r.status.toLowerCase().contains('materialized') ||
+        r.status.toLowerCase().contains('occurred');
+    if (!isIssue) continue;
+    if (r.riskName.trim().isEmpty && r.description.trim().isEmpty) continue;
+    rows.add(<String, dynamic>{
+      'title': r.riskName.trim().isEmpty
+          ? 'Issue from risk register'
+          : r.riskName,
+      'description': r.description,
+      'type': 'Issue',
+      'severity': r.impactLevel.isEmpty ? 'Medium' : r.impactLevel,
+      'status': r.status.isEmpty ? 'Open' : r.status,
+      'assignee': r.owner,
+      'dueDate': '',
+      'milestone': '',
+    });
+  }
+
+  if (rows.isEmpty) return const SidebarSeedResult();
+  return SidebarSeedResult(rows: rows, source: 'planning issue log + risk register');
 }
 
 /// Deterministic seed for the Lessons Learned screen.
-/// Pulls REAL lesson records from in-memory model.
+/// Pulls REAL lesson records from the in-memory model. If none exist yet,
+/// also scans prior-phase notes (FEP summary, project charter notes) for
+/// any captured insights that can serve as initial lessons. Never invents
+/// lessons.
 SidebarSeedResult seedLessonsLearned(ProjectDataModel data) {
-  final items = data.lessonsLearned;
-  if (items.isEmpty) return const SidebarSeedResult();
-  final rows = items.map((l) => <String, dynamic>{
-        'lesson': l.lesson,
-        'category': l.category,
-        'type': l.type,
-        'phase': l.phase,
-        'status': l.status,
-        'submittedBy': l.submittedBy,
-        'notes': l.notes,
-        'impact': l.impact,
-        'highlight': l.highlight,
-      }).toList();
-  return SidebarSeedResult(rows: rows, source: 'lessons learned register');
+  final rows = <Map<String, dynamic>>[];
+
+  // 1. Existing lessons learned records.
+  for (final l in data.lessonsLearned) {
+    if (l.lesson.trim().isEmpty) continue;
+    rows.add(<String, dynamic>{
+      'lesson': l.lesson,
+      'category': l.category,
+      'type': l.type,
+      'phase': l.phase,
+      'status': l.status,
+      'submittedBy': l.submittedBy,
+      'notes': l.notes,
+      'impact': l.impact,
+      'highlight': l.highlight,
+    });
+  }
+
+  // 2. Front-end planning summary often contains implicit lessons.
+  final fepSummary = data.frontEndPlanning.summary.trim();
+  if (fepSummary.isNotEmpty && rows.length < 8) {
+    rows.add(<String, dynamic>{
+      'lesson': 'FEP summary captured — review for lessons: '
+          '${fepSummary.length > 120 ? fepSummary.substring(0, 120) : fepSummary}…',
+      'category': 'Planning',
+      'type': 'Insight',
+      'phase': 'Front-End Planning',
+      'status': 'Draft',
+      'submittedBy': '',
+      'notes': fepSummary,
+      'impact': 'Medium',
+      'highlight': false,
+    });
+  }
+
+  // 3. Project charter notes can contain lessons from initiation.
+  final charterNotes = data.notes.trim();
+  if (charterNotes.isNotEmpty && rows.length < 8) {
+    rows.add(<String, dynamic>{
+      'lesson': 'Project notes captured — review for lessons: '
+          '${charterNotes.length > 120 ? charterNotes.substring(0, 120) : charterNotes}…',
+      'category': 'Initiation',
+      'type': 'Insight',
+      'phase': 'Initiation',
+      'status': 'Draft',
+      'submittedBy': '',
+      'notes': charterNotes,
+      'impact': 'Medium',
+      'highlight': false,
+    });
+  }
+
+  if (rows.isEmpty) return const SidebarSeedResult();
+  return SidebarSeedResult(rows: rows, source: 'lessons register + planning notes');
 }
 
 /// Deterministic seed for the Security Management screen.

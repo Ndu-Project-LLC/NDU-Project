@@ -28,6 +28,9 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/project_controls/models/change_management_models.dart';
 import 'package:ndu_project/project_controls/providers/change_management_provider.dart';
 import 'package:ndu_project/utils/download_helper.dart';
+import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
@@ -53,6 +56,9 @@ class _ChangeManagementModuleScreenState
   late TabController _tabController;
   // Currently-selected CR id (drives Impact Detail / Workflow / Implementation tabs).
   String? _selectedCRId;
+  bool _autoPopulated = false;
+  bool _isAutoPopulating = false;
+  String? _carriedContext;
 
   @override
   void initState() {
@@ -63,7 +69,63 @@ class _ChangeManagementModuleScreenState
       final provider = context.read<ChangeManagementProvider>();
       // Load real data from Firestore — no phantom/demo data
       provider.loadFromFirestore();
+      _autoPopulateIfNeeded();
     });
+  }
+
+  Future<void> _autoPopulateIfNeeded() async {
+    if (_autoPopulated || _isAutoPopulating) return;
+    _autoPopulated = true;
+    _isAutoPopulating = true;
+    if (mounted) setState(() {});
+
+    try {
+      final data = ProjectDataHelper.getData(context);
+
+      // Pull real carried context for the banner.
+      final carried = await buildAccumulatedContext(context, 'change_management');
+      if (mounted) setState(() => _carriedContext = carried);
+
+      final provider = context.read<ChangeManagementProvider>();
+      // If the provider already has CRs, do nothing.
+      if (provider.changeRequests.isNotEmpty) {
+        if (mounted) setState(() => _isAutoPopulating = false);
+        return;
+      }
+
+      // Deterministic seed: pull REAL change requests from risk register +
+      // execution-phase Firestore collection. Never invents CRs.
+      final seed = await seedChangeManagement(data, data.projectId);
+      if (seed.isNotEmpty && mounted) {
+        for (final row in seed.rows) {
+          final titleStr = (row['title'] ?? '').toString();
+          final descStr = (row['description'] ?? '').toString();
+          final sourceStr = (row['source'] ?? '').toString();
+          provider.createChangeRequest(
+            title: titleStr,
+            description: descStr.isEmpty ? sourceStr : descStr,
+            changeType: CMChangeType.risk,
+            priority: CMPriority.medium,
+            businessJustification:
+                'Auto-seeded from $sourceStr (no hallucination).',
+            rootCause: sourceStr,
+          );
+        }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Seeded ${seed.rows.length} change request(s) from ${seed.source}.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('ChangeManagement auto-populate error: $e');
+    } finally {
+      if (mounted) setState(() => _isAutoPopulating = false);
+    }
   }
 
   void _onTabChanged() {
@@ -115,6 +177,25 @@ class _ChangeManagementModuleScreenState
           breadcrumbTitle: 'Change Management',
           body: Column(
             children: [
+              // ── Carried context banner (real prior-phase data only) ──
+              if (_isAutoPopulating ||
+                  (_carriedContext != null && _carriedContext!.isNotEmpty))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_isAutoPopulating)
+                        const AutoPopulatingIndicator(),
+                      if (_carriedContext != null &&
+                          _carriedContext!.isNotEmpty)
+                        CarriedContextBanner(
+                          checkpoint: 'change_management',
+                          contextText: _carriedContext!,
+                        ),
+                    ],
+                  ),
+                ),
               // ── World-class Section Navigator ─────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),

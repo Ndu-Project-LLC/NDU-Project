@@ -11,7 +11,9 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -90,6 +92,10 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   bool _suspendOverviewSave = false;
   bool _suspendBudgetSave = false;
 
+  bool _autoPopulated = false;
+  bool _isAutoPopulating = false;
+  String? _carriedContext;
+
   static const String _kOverviewInitialized =
       'project_plan_overview_initialized';
   static const String _kResourcesInitialized =
@@ -133,7 +139,67 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       _loadTasks();
       _loadBudget();
       _loadRisks();
+      _autoPopulateIfNeeded();
     });
+  }
+
+  Future<void> _autoPopulateIfNeeded() async {
+    if (_autoPopulated || _isAutoPopulating) return;
+    _autoPopulated = true;
+    _isAutoPopulating = true;
+    if (mounted) setState(() {});
+
+    try {
+      // Pull real carried context for the banner.
+      final carried = await buildAccumulatedContext(context, 'project_plan');
+      if (mounted) setState(() => _carriedContext = carried);
+
+      // If overview already has content, don't seed.
+      if (_overviewObjectives.isNotEmpty ||
+          _overviewScope.isNotEmpty ||
+          _overviewMilestones.isNotEmpty) {
+        if (mounted) setState(() => _isAutoPopulating = false);
+        return;
+      }
+
+      final data = ProjectDataHelper.getData(context);
+      final seed = seedProjectPlan(data);
+      if (seed.isNotEmpty && mounted) {
+        final newMilestones = <_MilestoneEntry>[];
+        for (final r in seed.rows) {
+          if (r['kind'] == 'milestone') {
+            newMilestones.add(_MilestoneEntry(
+              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              title: (r['name'] ?? '').toString(),
+              targetDate: (r['dueDate'] ?? '').toString(),
+              owner: (r['discipline'] ?? '').toString(),
+              status: 'Planned',
+              notes: 'Auto-seeded from ${r['source']}.',
+            ));
+          }
+        }
+        if (newMilestones.isNotEmpty && mounted) {
+          setState(() {
+            _overviewMilestones
+              ..clear()
+              ..addAll(newMilestones);
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Seeded ${newMilestones.length} milestone(s) from ${seed.source}.'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('ProjectPlan auto-populate error: $e');
+    } finally {
+      if (mounted) setState(() => _isAutoPopulating = false);
+    }
   }
 
   @override
@@ -240,6 +306,17 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                                 context, 'project_plan'),
                             onExportPdf: _exportPdf),
                         const SizedBox(height: 16),
+                        if (_isAutoPopulating)
+                          const AutoPopulatingIndicator(),
+                        if (_carriedContext != null &&
+                            _carriedContext!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: CarriedContextBanner(
+                              checkpoint: 'project_plan',
+                              contextText: _carriedContext!,
+                            ),
+                          ),
                         _buildHeader(isMobile),
                         const SizedBox(height: 24),
                         const PlanningAiNotesCard(

@@ -40,6 +40,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 class PreferredSolutionAnalysisScreen extends StatefulWidget {
   final String notes;
@@ -4259,6 +4260,14 @@ class _PreferredSolutionAnalysisScreenState
           style: TextStyle(fontSize: 14));
     }
 
+    return FullScreenTableWrapper(
+      title: 'Cost Benefit Table',
+      child: _buildCostBenefitTableContent(cbaRows),
+      tableBuilder: (fsContext) => _buildCostBenefitTableContent(cbaRows),
+    );
+  }
+
+  Widget _buildCostBenefitTableContent(List<CostRowData> cbaRows) {
     return Table(
       border: TableBorder.all(color: Colors.grey.shade300),
       children: [
@@ -4286,14 +4295,14 @@ class _PreferredSolutionAnalysisScreenState
             children: [
               Padding(
                 padding: const EdgeInsets.all(8),
-                child: Text(row.itemName, style: const TextStyle(fontSize: 12)),
+                child: WrappedText(row.itemName, style: const TextStyle(fontSize: 12)),
               ),
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Align(
                     alignment: Alignment.centerLeft,
                     child:
-                        Text(row.cost, style: const TextStyle(fontSize: 12))),
+                        WrappedText(row.cost, style: const TextStyle(fontSize: 12))),
               ),
             ],
           ),
@@ -4309,6 +4318,14 @@ class _PreferredSolutionAnalysisScreenState
             '${_analysis[i].solution.title.isNotEmpty ? _analysis[i].solution.title : 'Solution ${i + 1}'}',
     ];
 
+    return FullScreenTableWrapper(
+      title: 'Side-by-side Solution Comparison',
+      child: _buildComparisonMatrixContent(headers),
+      tableBuilder: (fsContext) => _buildComparisonMatrixContent(headers),
+    );
+  }
+
+  Widget _buildComparisonMatrixContent(List<String> headers) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -4459,11 +4476,10 @@ class _PreferredSolutionAnalysisScreenState
 
     return Padding(
       padding: const EdgeInsets.all(12),
-      child: Text(
-        text.isNotEmpty ? text : 'N/A',
-        style: style,
-        softWrap: true,
-      ),
+      child: isHeader
+          ? Text(text.isNotEmpty ? text : 'N/A',
+              style: style, softWrap: true)
+          : WrappedText(text.isNotEmpty ? text : 'N/A', style: style),
     );
   }
 
@@ -6508,6 +6524,16 @@ class _ComparisonContent extends StatelessWidget {
         '${i + 1}. ${analysis[i].solution.title.isNotEmpty ? analysis[i].solution.title : 'Solution ${i + 1}'}',
     ];
 
+    return FullScreenTableWrapper(
+      title: 'Side-by-side Summary',
+      child: _buildComparisonMatrixContent(analysis, headers),
+      tableBuilder: (fsContext) =>
+          _buildComparisonMatrixContent(analysis, headers),
+    );
+  }
+
+  static Widget _buildComparisonMatrixContent(
+      List<_SolutionAnalysisData> analysis, List<String> headers) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -6683,7 +6709,10 @@ class _ComparisonContent extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.all(12),
-      child: Text(text.isNotEmpty ? text : 'N/A', style: style, softWrap: true),
+      child: isHeader
+          ? Text(text.isNotEmpty ? text : 'N/A',
+              style: style, softWrap: true)
+          : WrappedText(text.isNotEmpty ? text : 'N/A', style: style),
     );
   }
 
@@ -6769,6 +6798,15 @@ class _PreferredSolutionDetailsScreenState
           style: TextStyle(fontSize: 14));
     }
 
+    return FullScreenTableWrapper(
+      title: 'Cost Benefit Analysis Data',
+      child: _buildCbaDataTableContent(cbaRows, currency),
+      tableBuilder: (fsContext) =>
+          _buildCbaDataTableContent(cbaRows, currency),
+    );
+  }
+
+  Widget _buildCbaDataTableContent(List<CostRowData> cbaRows, String currency) {
     return LayoutBuilder(
       builder: (context, constraints) {
         const minTableWidth = 800.0;
@@ -6887,7 +6925,7 @@ class _PreferredSolutionDetailsScreenState
                                 flex: 2,
                                 child: Align(
                                   alignment: Alignment.centerLeft,
-                                  child: Text(
+                                  child: WrappedText(
                                     cbaRows[i].itemName.isEmpty
                                         ? 'Cost item'
                                         : cbaRows[i].itemName,
@@ -6900,7 +6938,7 @@ class _PreferredSolutionDetailsScreenState
                                 flex: 1,
                                 child: Align(
                                   alignment: Alignment.centerLeft,
-                                  child: Text(
+                                  child: WrappedText(
                                     cbaRows[i].cost.isEmpty
                                         ? '-'
                                         : cbaRows[i].cost,
@@ -6916,14 +6954,13 @@ class _PreferredSolutionDetailsScreenState
                                 flex: 2,
                                 child: Align(
                                   alignment: Alignment.centerLeft,
-                                  child: Text(
+                                  child: WrappedText(
                                     cbaRows[i].description.isEmpty
                                         ? '-'
                                         : cbaRows[i].description,
                                     style: const TextStyle(fontSize: 11),
                                     textAlign: TextAlign.left,
                                     maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ),

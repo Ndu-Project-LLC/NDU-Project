@@ -52,17 +52,17 @@ class DetailedDesignTableWidget extends StatelessWidget {
               ),
             ],
           ),
-          child: ResponsiveDataTableWrapper(
+          child: buildNduTableWithExpand(
+            context: context,
+            title: 'Design Specifications',
             minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 1200,
             maxHeight: 560,
-            child: buildNduDataTable(
-              context: context,
-              columnSpacing: 16,
-              horizontalMargin: 16,
-              headingRowHeight: 52,
-              dataRowMinHeight: 48,
-              dataRowMaxHeight: 120,
-              columns: const [
+            columnSpacing: 16,
+            horizontalMargin: 16,
+            headingRowHeight: 52,
+            dataRowMinHeight: 48,
+            dataRowMaxHeight: 120,
+            columns: const [
                 DataColumn(
                   label: Center(
                     child: Text('Spec ID',
@@ -240,7 +240,6 @@ class DetailedDesignTableWidget extends StatelessWidget {
                   ],
                 );
               }).toList(),
-            ),
           ),
         );
       },

@@ -17,6 +17,7 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 /// Front End Planning – Project Risks page
 /// Matches the provided screenshot with:
 /// - Top bar (back/forward, centered title, user chip)
@@ -2009,6 +2010,14 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  }
 
  Widget _buildRiskTable(BuildContext context) {
+ return FullScreenTableWrapper(
+ title: 'Risks',
+ child: _buildRiskTableContent(),
+ tableBuilder: (fsContext) => _buildRiskTableContent(),
+ );
+ }
+
+ Widget _buildRiskTableContent() {
  final border = const BorderSide(color: Color(0xFFE5E7EB));
  final headerStyle = const TextStyle(
  fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
@@ -2087,7 +2096,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  final severity = _displayRiskSeverity(r);
  final rowCanUndo = _canUndoRiskRow(i);
  return TableRow(children: [
- _td(Text(r.id, style: cellStyle),
+ _td(WrappedText(r.id, style: cellStyle),
  onDoubleTap: () => _showEditRiskSheet(i)),
  _td(
  _ExpandableCellText(
@@ -2110,7 +2119,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  const Color(0xFF7C3AED)),
  onDoubleTap: () => _showEditRiskSheet(i)),
  _td(
- Text(
+ WrappedText(
  r.probability.trim().isEmpty
  ? '-'
  : r.probability,
@@ -2118,7 +2127,7 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  ),
  onDoubleTap: () => _showEditRiskSheet(i)),
  _td(
- Text(
+ WrappedText(
  r.impact.trim().isEmpty ? '-' : r.impact,
  style: cellStyle,
  ),

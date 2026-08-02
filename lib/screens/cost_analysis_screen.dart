@@ -48,6 +48,7 @@ import 'package:ndu_project/widgets/expandable_text.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 class CostAnalysisScreen extends StatefulWidget {
   final String notes;
@@ -3550,6 +3551,14 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   Widget _buildMultiYearBenefitTable() {
+    return FullScreenTableWrapper(
+      title: 'Projected Benefit Horizons',
+      child: _buildMultiYearBenefitTableContent(),
+      tableBuilder: (fsContext) => _buildMultiYearBenefitTableContent(),
+    );
+  }
+
+  Widget _buildMultiYearBenefitTableContent() {
     final amountText = _projectValueAmountController.text.trim();
     final explicitValue = _parseCurrencyInput(amountText);
 
@@ -3666,12 +3675,14 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       ),
       child: Row(children: [
         Expanded(
-            flex: 2, child: Text(label, style: const TextStyle(fontSize: 13))),
+            flex: 2,
+            child:
+                WrappedText(label, style: const TextStyle(fontSize: 13))),
         Expanded(
           flex: 3,
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text(
+            child: WrappedText(
               _formatCurrencyValue(value),
               style: TextStyle(
                   fontSize: 13,
@@ -5442,7 +5453,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           flex: 2,
           child: Align(
             alignment: Alignment.center,
-            child: Text(
+            child: WrappedText(
               _formatCurrencyValue(row.currentCost()),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
@@ -6017,11 +6028,39 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   Widget _buildInitialCostTable(int solutionIndex) {
-    final rows = _rowsPerSolution[solutionIndex];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LayoutBuilder(
+        FullScreenTableWrapper(
+          title: 'Initial Cost Estimate',
+          child: _buildInitialCostTableContent(solutionIndex),
+          tableBuilder: (fsContext) =>
+              _buildInitialCostTableContent(solutionIndex),
+        ),
+        const SizedBox(height: 10),
+        _buildContingencyButtons(solutionIndex),
+        const SizedBox(height: 10),
+        Row(children: [
+          CsvTableImportButton(
+            tableTitle: 'Initial Cost Estimate',
+            columns: _costCsvColumns,
+            onImport: (rows) => _handleCostCsvImport(solutionIndex, rows),
+            compact: true,
+          ),
+          const Spacer(),
+          OutlinedButton.icon(
+            onPressed: () => _addInitialCostRow(solutionIndex),
+            icon: const Icon(Icons.add),
+            label: const Text('Add row'),
+          ),
+        ]),
+      ],
+    );
+  }
+
+  Widget _buildInitialCostTableContent(int solutionIndex) {
+    final rows = _rowsPerSolution[solutionIndex];
+    return LayoutBuilder(
           builder: (context, constraints) {
             const minTableWidth = 920.0;
             final tableWidth = constraints.maxWidth < minTableWidth
@@ -6130,7 +6169,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                                 Expanded(
                                   flex: 3,
                                   child: Center(
-                                    child: Text('Total',
+                                    child: WrappedText('Total',
                                         style: const TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700)),
@@ -6141,7 +6180,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                                   flex: 2,
                                   child: Align(
                                     alignment: Alignment.center,
-                                    child: Text(
+                                    child: WrappedText(
                                       _formatCurrencyValue(
                                           _solutionTotalCost(solutionIndex)),
                                       style: const TextStyle(
@@ -6168,26 +6207,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
               ),
             );
           },
-        ),
-        const SizedBox(height: 10),
-        _buildContingencyButtons(solutionIndex),
-        const SizedBox(height: 10),
-        Row(children: [
-          CsvTableImportButton(
-            tableTitle: 'Initial Cost Estimate',
-            columns: _costCsvColumns,
-            onImport: (rows) => _handleCostCsvImport(solutionIndex, rows),
-            compact: true,
-          ),
-          const Spacer(),
-          OutlinedButton.icon(
-            onPressed: () => _addInitialCostRow(solutionIndex),
-            icon: const Icon(Icons.add),
-            label: const Text('Add row'),
-          ),
-        ]),
-      ],
-    );
+        );
   }
 
   void _applyContingency(int solutionIndex, int percent) {
@@ -6581,6 +6601,15 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             'Add one or more solutions to see ROI, NPV, and IRR results.'),
       );
     }
+    return FullScreenTableWrapper(
+      title: 'Profitability Analysis',
+      child: _buildProfitabilitySummaryTableContent(),
+      tableBuilder: (fsContext) => _buildProfitabilitySummaryTableContent(),
+    );
+  }
+
+  Widget _buildProfitabilitySummaryTableContent() {
+    final count = _rowsPerSolution.length;
     final horizon = _npvHorizon;
     return Container(
       width: double.infinity,
@@ -6679,25 +6708,25 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             flex: 4,
             child: Center(
                 child:
-                    Text(solutionLabel, style: const TextStyle(fontSize: 13)))),
+                    WrappedText(solutionLabel, style: const TextStyle(fontSize: 13)))),
         Expanded(
             flex: 2,
             child: Align(
                 alignment: Alignment.center,
-                child: Text(_formatPercentValue(roiPct),
+                child: WrappedText(_formatPercentValue(roiPct),
                     textAlign: TextAlign.center))),
         const SizedBox(width: 16),
         Expanded(
             flex: 2,
             child: Align(
                 alignment: Alignment.center,
-                child: Text(_formatCurrencyValue(npv)))),
+                child: WrappedText(_formatCurrencyValue(npv)))),
         const SizedBox(width: 16),
         Expanded(
             flex: 2,
             child: Align(
                 alignment: Alignment.center,
-                child: Text(_formatPercentValue(irrPercent),
+                child: WrappedText(_formatPercentValue(irrPercent),
                     textAlign: TextAlign.center))),
       ]),
     );

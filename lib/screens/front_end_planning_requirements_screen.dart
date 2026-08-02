@@ -27,6 +27,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
@@ -994,6 +995,14 @@ class _FrontEndPlanningRequirementsScreenState
   }
 
   Widget _buildTableView() {
+    return FullScreenTableWrapper(
+      title: 'Requirements',
+      child: _buildTableViewContent(context),
+      tableBuilder: (fsContext) => _buildTableViewContent(fsContext),
+    );
+  }
+
+  Widget _buildTableViewContent(BuildContext context) {
     final headerStyle = const TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w700,
@@ -1171,7 +1180,7 @@ class _FrontEndPlanningRequirementsScreenState
       width: width,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Text(
+        child: WrappedText(
           text,
           style: TextStyle(
               fontSize: 12,
@@ -1180,7 +1189,6 @@ class _FrontEndPlanningRequirementsScreenState
                   : const Color(0xFF111827)),
           textAlign: center ? TextAlign.center : TextAlign.left,
           maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
       ),
     );

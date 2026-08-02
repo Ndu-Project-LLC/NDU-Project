@@ -8,6 +8,7 @@ import 'package:ndu_project/services/execution_service.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -546,134 +547,243 @@ class _InterfaceRegisterTable extends StatelessWidget {
             height: 1.5,
           );
 
-          Widget buildCell(String text,
-              {bool isHeader = false,
-              TextAlign align = TextAlign.left,
-              TextStyle? style}) {
-            return Container(
-              color: isHeader ? const Color(0xFFF3F4F6) : Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-              child: Text(
-                text,
-                textAlign: align,
-                style: style ?? (isHeader ? headerStyle : cellStyle),
-              ),
-            );
-          }
+ Widget buildCell(String text,
+ {bool isHeader = false,
+ TextAlign align = TextAlign.left,
+ TextStyle? style}) {
+ return Container(
+ color: isHeader ? const Color(0xFFF3F4F6) : Colors.white,
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+ child: WrappedText(
+ text,
+ textAlign: align,
+ style: style ?? (isHeader ? headerStyle : cellStyle),
+ ),
+ );
+ }
 
-          return Container(
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Color(0xFFE5E7EB)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Table(
-                columnWidths: const {
-                  0: FixedColumnWidth(70),
-                  1: FixedColumnWidth(120),
-                  2: FixedColumnWidth(140),
-                  3: FixedColumnWidth(110),
-                  4: FixedColumnWidth(110),
-                  5: FixedColumnWidth(110),
-                  6: FixedColumnWidth(100),
-                  7: FixedColumnWidth(100),
-                  8: FixedColumnWidth(150),
-                  9: FixedColumnWidth(100),
-                },
-                border: const TableBorder(
-                  horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
-                  verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
-                  top: BorderSide(color: Color(0xFFE5E7EB)),
-                  bottom: BorderSide(color: Color(0xFFE5E7EB)),
-                  left: BorderSide(color: Color(0xFFE5E7EB)),
-                  right: BorderSide(color: Color(0xFFE5E7EB)),
-                ),
-                children: [
-                  TableRow(
-                    children: [
-                      buildCell('No', isHeader: true, align: TextAlign.center),
-                      buildCell('Interface ID', isHeader: true),
-                      buildCell('Name', isHeader: true),
-                      buildCell('Type', isHeader: true),
-                      buildCell('Party A', isHeader: true),
-                      buildCell('Party B', isHeader: true),
-                      buildCell('Status', isHeader: true),
-                      buildCell('Frequency', isHeader: true),
-                      buildCell('Comments', isHeader: true),
-                      buildCell('Actions',
-                          isHeader: true, align: TextAlign.center),
-                    ],
-                  ),
-                  if (entries.isEmpty)
-                    TableRow(
-                      children: [
-                        buildCell('', align: TextAlign.center),
-                        buildCell('No interface entries added yet',
-                            style: const TextStyle(
-                                color: Color(0xFF64748B),
-                                fontStyle: FontStyle.italic)),
-                        buildCell(''),
-                        buildCell(''),
-                        buildCell(''),
-                        buildCell(''),
-                        buildCell(''),
-                        buildCell(''),
-                        buildCell(''),
-                        buildCell(''),
-                      ],
-                    )
-                  else
-                    ...entries.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final item = entry.value;
-                      return TableRow(
-                        children: [
-                          buildCell('${index + 1}', align: TextAlign.center),
-                          buildCell(item.interfaceId),
-                          buildCell(item.interfaceName),
-                          buildCell(item.interfaceType),
-                          buildCell(item.partyA),
-                          buildCell(item.partyB),
-                          buildCell(item.status),
-                          buildCell(item.frequency),
-                          buildCell(item.comments),
-                          Container(
-                            color: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 18),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit,
-                                      size: 18, color: Color(0xFF64748B)),
-                                  onPressed: () =>
-                                      showEditDialog(context, item),
-                                  tooltip: 'Edit',
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      size: 18, color: Color(0xFFEF4444)),
-                                  onPressed: () =>
-                                      showDeleteDialog(context, item),
-                                  tooltip: 'Delete',
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    }),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+ return FullScreenTableWrapper(
+ title: 'Interface Register',
+ child: Container(
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ clipBehavior: Clip.antiAlias,
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(70),
+ 1: FixedColumnWidth(120),
+ 2: FixedColumnWidth(140),
+ 3: FixedColumnWidth(110),
+ 4: FixedColumnWidth(110),
+ 5: FixedColumnWidth(110),
+ 6: FixedColumnWidth(100),
+ 7: FixedColumnWidth(100),
+ 8: FixedColumnWidth(150),
+ 9: FixedColumnWidth(100),
+ },
+ border: const TableBorder(
+ horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ top: BorderSide(color: Color(0xFFE5E7EB)),
+ bottom: BorderSide(color: Color(0xFFE5E7EB)),
+ left: BorderSide(color: Color(0xFFE5E7EB)),
+ right: BorderSide(color: Color(0xFFE5E7EB)),
+ ),
+ children: [
+ TableRow(
+ children: [
+ buildCell('No', isHeader: true, align: TextAlign.center),
+ buildCell('Interface ID', isHeader: true),
+ buildCell('Name', isHeader: true),
+ buildCell('Type', isHeader: true),
+ buildCell('Party A', isHeader: true),
+ buildCell('Party B', isHeader: true),
+ buildCell('Status', isHeader: true),
+ buildCell('Frequency', isHeader: true),
+ buildCell('Comments', isHeader: true),
+ buildCell('Actions',
+ isHeader: true, align: TextAlign.center),
+ ],
+ ),
+ if (entries.isEmpty)
+ TableRow(
+ children: [
+ buildCell('', align: TextAlign.center),
+ buildCell('No interface entries added yet',
+ style: const TextStyle(
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic)),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ ],
+ )
+ else
+ ...entries.asMap().entries.map((entry) {
+ final index = entry.key;
+ final item = entry.value;
+ return TableRow(
+ children: [
+ buildCell('${index + 1}', align: TextAlign.center),
+ buildCell(item.interfaceId),
+ buildCell(item.interfaceName),
+ buildCell(item.interfaceType),
+ buildCell(item.partyA),
+ buildCell(item.partyB),
+ buildCell(item.status),
+ buildCell(item.frequency),
+ buildCell(item.comments),
+ Container(
+ color: Colors.white,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 18),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit,
+ size: 18, color: Color(0xFF64748B)),
+ onPressed: () => showEditDialog(context, item),
+ tooltip: 'Edit',
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete,
+ size: 18, color: Color(0xFFEF4444)),
+ onPressed: () =>
+ showDeleteDialog(context, item),
+ tooltip: 'Delete',
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }),
+ ],
+ ),
+ ),
+ ),
+ tableBuilder: (fsContext) => Container(
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ clipBehavior: Clip.antiAlias,
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(70),
+ 1: FixedColumnWidth(120),
+ 2: FixedColumnWidth(140),
+ 3: FixedColumnWidth(110),
+ 4: FixedColumnWidth(110),
+ 5: FixedColumnWidth(110),
+ 6: FixedColumnWidth(100),
+ 7: FixedColumnWidth(100),
+ 8: FixedColumnWidth(150),
+ 9: FixedColumnWidth(100),
+ },
+ border: const TableBorder(
+ horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ top: BorderSide(color: Color(0xFFE5E7EB)),
+ bottom: BorderSide(color: Color(0xFFE5E7EB)),
+ left: BorderSide(color: Color(0xFFE5E7EB)),
+ right: BorderSide(color: Color(0xFFE5E7EB)),
+ ),
+ children: [
+ TableRow(
+ children: [
+ buildCell('No', isHeader: true, align: TextAlign.center),
+ buildCell('Interface ID', isHeader: true),
+ buildCell('Name', isHeader: true),
+ buildCell('Type', isHeader: true),
+ buildCell('Party A', isHeader: true),
+ buildCell('Party B', isHeader: true),
+ buildCell('Status', isHeader: true),
+ buildCell('Frequency', isHeader: true),
+ buildCell('Comments', isHeader: true),
+ buildCell('Actions',
+ isHeader: true, align: TextAlign.center),
+ ],
+ ),
+ if (entries.isEmpty)
+ TableRow(
+ children: [
+ buildCell('', align: TextAlign.center),
+ buildCell('No interface entries added yet',
+ style: const TextStyle(
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic)),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ ],
+ )
+ else
+ ...entries.asMap().entries.map((entry) {
+ final index = entry.key;
+ final item = entry.value;
+ return TableRow(
+ children: [
+ buildCell('${index + 1}', align: TextAlign.center),
+ buildCell(item.interfaceId),
+ buildCell(item.interfaceName),
+ buildCell(item.interfaceType),
+ buildCell(item.partyA),
+ buildCell(item.partyB),
+ buildCell(item.status),
+ buildCell(item.frequency),
+ buildCell(item.comments),
+ Container(
+ color: Colors.white,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 18),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit,
+ size: 18, color: Color(0xFF64748B)),
+ onPressed: () => showEditDialog(context, item),
+ tooltip: 'Edit',
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete,
+ size: 18, color: Color(0xFFEF4444)),
+ onPressed: () =>
+ showDeleteDialog(context, item),
+ tooltip: 'Delete',
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }),
+ ],
+ ),
+ ),
+ ),
+ );
+ },
+ );
+ }
 }
 
 class _DesktopInterfaceManagementActions extends StatelessWidget {

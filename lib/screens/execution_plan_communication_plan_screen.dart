@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -532,130 +533,235 @@ class _CommunicationPlanTable extends StatelessWidget {
             height: 1.5,
           );
 
-          Widget buildCell(String text,
-              {bool isHeader = false,
-              TextAlign align = TextAlign.left,
-              TextStyle? style}) {
-            return Container(
-              color: isHeader ? const Color(0xFFF3F4F6) : Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-              child: Text(
-                text,
-                textAlign: align,
-                style: style ?? (isHeader ? headerStyle : cellStyle),
-              ),
-            );
-          }
+ Widget buildCell(String text,
+ {bool isHeader = false,
+ TextAlign align = TextAlign.left,
+ TextStyle? style}) {
+ return Container(
+ color: isHeader ? const Color(0xFFF3F4F6) : Colors.white,
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+ child: WrappedText(
+ text,
+ textAlign: align,
+ style: style ?? (isHeader ? headerStyle : cellStyle),
+ ),
+ );
+ }
 
-          return Container(
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Color(0xFFE5E7EB)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Table(
-                columnWidths: const {
-                  0: FixedColumnWidth(70),
-                  1: FixedColumnWidth(140),
-                  2: FixedColumnWidth(120),
-                  3: FixedColumnWidth(110),
-                  4: FixedColumnWidth(110),
-                  5: FixedColumnWidth(120),
-                  6: FixedColumnWidth(100),
-                  7: FixedColumnWidth(150),
-                  8: FixedColumnWidth(100),
-                },
-                border: const TableBorder(
-                  horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
-                  verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
-                  top: BorderSide(color: Color(0xFFE5E7EB)),
-                  bottom: BorderSide(color: Color(0xFFE5E7EB)),
-                  left: BorderSide(color: Color(0xFFE5E7EB)),
-                  right: BorderSide(color: Color(0xFFE5E7EB)),
-                ),
-                children: [
-                  TableRow(
-                    children: [
-                      buildCell('No', isHeader: true, align: TextAlign.center),
-                      buildCell('Stakeholder', isHeader: true),
-                      buildCell('Info Type', isHeader: true),
-                      buildCell('Frequency', isHeader: true),
-                      buildCell('Channel', isHeader: true),
-                      buildCell('Owner', isHeader: true),
-                      buildCell('Status', isHeader: true),
-                      buildCell('Comments', isHeader: true),
-                      buildCell('Actions',
-                          isHeader: true, align: TextAlign.center),
-                    ],
-                  ),
-                  if (entries.isEmpty)
-                    TableRow(
-                      children: [
-                        buildCell('', align: TextAlign.center),
-                        buildCell('No communication entries added yet',
-                            style: const TextStyle(
-                                color: Color(0xFF64748B),
-                                fontStyle: FontStyle.italic)),
-                        buildCell(''),
-                        buildCell(''),
-                        buildCell(''),
-                        buildCell(''),
-                        buildCell(''),
-                        buildCell(''),
-                        buildCell(''),
-                      ],
-                    )
-                  else
-                    ...entries.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final item = entry.value;
-                      return TableRow(
-                        children: [
-                          buildCell('${index + 1}', align: TextAlign.center),
-                          buildCell(item.stakeholder),
-                          buildCell(item.infoType),
-                          buildCell(item.frequency),
-                          buildCell(item.channel),
-                          buildCell(item.owner),
-                          buildCell(item.status),
-                          buildCell(item.comments),
-                          Container(
-                            color: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 18),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit,
-                                      size: 18, color: Color(0xFF64748B)),
-                                  onPressed: () =>
-                                      showEditDialog(context, item),
-                                  tooltip: 'Edit',
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      size: 18, color: Color(0xFFEF4444)),
-                                  onPressed: () =>
-                                      showDeleteDialog(context, item),
-                                  tooltip: 'Delete',
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    }),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+ return FullScreenTableWrapper(
+ title: 'Communication Plan',
+ child: Container(
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ clipBehavior: Clip.antiAlias,
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(70),
+ 1: FixedColumnWidth(140),
+ 2: FixedColumnWidth(120),
+ 3: FixedColumnWidth(110),
+ 4: FixedColumnWidth(110),
+ 5: FixedColumnWidth(120),
+ 6: FixedColumnWidth(100),
+ 7: FixedColumnWidth(150),
+ 8: FixedColumnWidth(100),
+ },
+ border: const TableBorder(
+ horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ top: BorderSide(color: Color(0xFFE5E7EB)),
+ bottom: BorderSide(color: Color(0xFFE5E7EB)),
+ left: BorderSide(color: Color(0xFFE5E7EB)),
+ right: BorderSide(color: Color(0xFFE5E7EB)),
+ ),
+ children: [
+ TableRow(
+ children: [
+ buildCell('No', isHeader: true, align: TextAlign.center),
+ buildCell('Stakeholder', isHeader: true),
+ buildCell('Info Type', isHeader: true),
+ buildCell('Frequency', isHeader: true),
+ buildCell('Channel', isHeader: true),
+ buildCell('Owner', isHeader: true),
+ buildCell('Status', isHeader: true),
+ buildCell('Comments', isHeader: true),
+ buildCell('Actions',
+ isHeader: true, align: TextAlign.center),
+ ],
+ ),
+ if (entries.isEmpty)
+ TableRow(
+ children: [
+ buildCell('', align: TextAlign.center),
+ buildCell('No communication entries added yet',
+ style: const TextStyle(
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic)),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ ],
+ )
+ else
+ ...entries.asMap().entries.map((entry) {
+ final index = entry.key;
+ final item = entry.value;
+ return TableRow(
+ children: [
+ buildCell('${index + 1}', align: TextAlign.center),
+ buildCell(item.stakeholder),
+ buildCell(item.infoType),
+ buildCell(item.frequency),
+ buildCell(item.channel),
+ buildCell(item.owner),
+ buildCell(item.status),
+ buildCell(item.comments),
+ Container(
+ color: Colors.white,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 18),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit,
+ size: 18, color: Color(0xFF64748B)),
+ onPressed: () => showEditDialog(context, item),
+ tooltip: 'Edit',
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete,
+ size: 18, color: Color(0xFFEF4444)),
+ onPressed: () =>
+ showDeleteDialog(context, item),
+ tooltip: 'Delete',
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }),
+ ],
+ ),
+ ),
+ ),
+ tableBuilder: (fsContext) => Container(
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ clipBehavior: Clip.antiAlias,
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(70),
+ 1: FixedColumnWidth(140),
+ 2: FixedColumnWidth(120),
+ 3: FixedColumnWidth(110),
+ 4: FixedColumnWidth(110),
+ 5: FixedColumnWidth(120),
+ 6: FixedColumnWidth(100),
+ 7: FixedColumnWidth(150),
+ 8: FixedColumnWidth(100),
+ },
+ border: const TableBorder(
+ horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ top: BorderSide(color: Color(0xFFE5E7EB)),
+ bottom: BorderSide(color: Color(0xFFE5E7EB)),
+ left: BorderSide(color: Color(0xFFE5E7EB)),
+ right: BorderSide(color: Color(0xFFE5E7EB)),
+ ),
+ children: [
+ TableRow(
+ children: [
+ buildCell('No', isHeader: true, align: TextAlign.center),
+ buildCell('Stakeholder', isHeader: true),
+ buildCell('Info Type', isHeader: true),
+ buildCell('Frequency', isHeader: true),
+ buildCell('Channel', isHeader: true),
+ buildCell('Owner', isHeader: true),
+ buildCell('Status', isHeader: true),
+ buildCell('Comments', isHeader: true),
+ buildCell('Actions',
+ isHeader: true, align: TextAlign.center),
+ ],
+ ),
+ if (entries.isEmpty)
+ TableRow(
+ children: [
+ buildCell('', align: TextAlign.center),
+ buildCell('No communication entries added yet',
+ style: const TextStyle(
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic)),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ ],
+ )
+ else
+ ...entries.asMap().entries.map((entry) {
+ final index = entry.key;
+ final item = entry.value;
+ return TableRow(
+ children: [
+ buildCell('${index + 1}', align: TextAlign.center),
+ buildCell(item.stakeholder),
+ buildCell(item.infoType),
+ buildCell(item.frequency),
+ buildCell(item.channel),
+ buildCell(item.owner),
+ buildCell(item.status),
+ buildCell(item.comments),
+ Container(
+ color: Colors.white,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 18),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit,
+ size: 18, color: Color(0xFF64748B)),
+ onPressed: () => showEditDialog(context, item),
+ tooltip: 'Edit',
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete,
+ size: 18, color: Color(0xFFEF4444)),
+ onPressed: () =>
+ showDeleteDialog(context, item),
+ tooltip: 'Delete',
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }),
+ ],
+ ),
+ ),
+ ),
+ );
+ },
+ );
+ }
 }
 
 class _DesktopCommunicationPlanActions extends StatelessWidget {

@@ -13,6 +13,7 @@ import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -720,218 +721,215 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
             : MediaQuery.of(context).size.width;
         final tableWidth = math.max(960.0, availableWidth);
 
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints:
-                BoxConstraints(minWidth: tableWidth, maxWidth: tableWidth),
-            child: Column(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: const [
-                      Expanded(flex: 6, child: Text('#', style: headerStyle)),
-                      Expanded(
-                          flex: 32, child: Text('Lesson', style: headerStyle)),
-                      Expanded(
-                          flex: 14, child: Text('Type', style: headerStyle)),
-                      Expanded(
-                          flex: 14,
-                          child: Text('Category', style: headerStyle)),
-                      Expanded(
-                          flex: 14, child: Text('Phase', style: headerStyle)),
-                      Expanded(
-                          flex: 12, child: Text('Impact', style: headerStyle)),
-                      Expanded(
-                          flex: 14, child: Text('Status', style: headerStyle)),
-                      Expanded(
-                          flex: 20,
-                          child: Text('Submitted By', style: headerStyle)),
-                      Expanded(
-                          flex: 14, child: Text('Date', style: headerStyle)),
-                      Expanded(
-                          flex: 10,
-                          child: Text('Actions',
-                              style: headerStyle, textAlign: TextAlign.center)),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border:
-                        Border.all(color: Colors.grey.withValues(alpha: 0.12)),
-                  ),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: entries.length,
-                    itemBuilder: (context, i) => Container(
-                      decoration: BoxDecoration(
-                        color: entries[i].highlight
-                            ? Colors.white
-                            : Colors.grey
-                                .withValues(alpha: 0.05 * ((i % 2) + 1)),
-                        borderRadius: i == 0
-                            ? const BorderRadius.vertical(
-                                top: Radius.circular(16))
-                            : i == entries.length - 1
-                                ? const BorderRadius.vertical(
-                                    bottom: Radius.circular(16))
-                                : BorderRadius.zero,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 18),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                              flex: 6,
-                              child: Text('${i + 1}', style: cellStyle)),
-                          Expanded(
-                            flex: 32,
-                            child: Text(
-                              entries[i].lesson,
-                              style: cellStyle.copyWith(
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                          Expanded(
-                              flex: 14, child: _statusPill(entries[i].type)),
-                          Expanded(
-                              flex: 14,
-                              child:
-                                  Text(entries[i].category, style: cellStyle)),
-                          Expanded(
-                              flex: 14,
-                              child: Text(entries[i].phase, style: cellStyle)),
-                          Expanded(
-                            flex: 12,
-                            child: Text(
-                              entries[i].impact,
-                              style: entries[i].impact == 'High'
-                                  ? cellStyle.copyWith(color: Colors.redAccent)
-                                  : cellStyle,
-                            ),
-                          ),
-                          Expanded(
-                              flex: 14,
-                              child: Text(entries[i].status, style: cellStyle)),
-                          Expanded(
-                            flex: 20,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(entries[i].submittedBy, style: cellStyle),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                              flex: 14,
-                              child: Text(entries[i].date, style: cellStyle)),
-                          Expanded(
-                            flex: 10,
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    onPressed: () =>
-                                        _openLessonDialog(entries[i]),
-                                    icon: const Icon(Icons.edit_outlined,
-                                        size: 18, color: Colors.grey),
-                                    tooltip: 'Edit lesson',
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(
-                                        minWidth: 32, minHeight: 32),
-                                  ),
-                                  IconButton(
-                                    onPressed: () =>
-                                        _confirmDelete(entries[i].id),
-                                    icon: const Icon(Icons.delete_outline,
-                                        size: 18, color: Colors.redAccent),
-                                    tooltip: 'Delete lesson',
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(
-                                        minWidth: 32, minHeight: 32),
-                                  ),
-                                  IconButton(
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content: Text(
-                                                'KAZ AI: Generating suggestions...'),
-                                            duration: Duration(seconds: 2)),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.auto_awesome,
-                                        size: 16, color: Color(0xFFF59E0B)),
-                                    tooltip: 'KAZ AI',
-                                    padding: EdgeInsets.zero,
-                                    constraints:
-                                        const BoxConstraints(minWidth: 28),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+ Widget buildTable(BuildContext context) {
+ return LayoutBuilder(
+ builder: (bc, constraints) {
+ final availableWidth = constraints.hasBoundedWidth
+ ? constraints.maxWidth
+ : MediaQuery.of(bc).size.width;
+ final tableWidth = math.max(960.0, availableWidth);
 
-  Widget _statusPill(String value) {
-    Color background;
-    Color foreground;
-    switch (value.toLowerCase()) {
-      case 'success':
-        background = const Color(0xFFE8F5E9);
-        foreground = const Color(0xFF2E7D32);
-        break;
-      case 'challenge':
-        background = const Color(0xFFFFF3E0);
-        foreground = const Color(0xFFF57C00);
-        break;
-      default:
-        background = const Color(0xFFE8EAF6);
-        foreground = const Color(0xFF3949AB);
-    }
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints:
+ BoxConstraints(minWidth: tableWidth, maxWidth: tableWidth),
+ child: Column(
+ children: [
+ Container(
+ padding:
+ const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+ decoration: BoxDecoration(
+ color: Colors.grey.withOpacity(0.12),
+ borderRadius: BorderRadius.circular(12),
+ ),
+ child: Row(
+ children: const [
+ Expanded(flex: 6, child: Text('#', style: headerStyle)),
+ Expanded(
+ flex: 32, child: Text('Lesson', style: headerStyle)),
+ Expanded(
+ flex: 14, child: Text('Type', style: headerStyle)),
+ Expanded(
+ flex: 14,
+ child: Text('Category', style: headerStyle)),
+ Expanded(
+ flex: 14, child: Text('Phase', style: headerStyle)),
+ Expanded(
+ flex: 12, child: Text('Impact', style: headerStyle)),
+ Expanded(
+ flex: 14, child: Text('Status', style: headerStyle)),
+ Expanded(
+ flex: 20,
+ child: Text('Submitted By', style: headerStyle)),
+ Expanded(
+ flex: 14, child: Text('Date', style: headerStyle)),
+ Expanded(
+ flex: 10,
+ child: Text('Actions',
+ style: headerStyle, textAlign: TextAlign.center)),
+ ],
+ ),
+ ),
+ const SizedBox(height: 8),
+ Container(
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(16),
+ border:
+ Border.all(color: Colors.grey.withOpacity(0.12)),
+ ),
+ child: Column(
+ children: [
+ for (int i = 0; i < entries.length; i++)
+ Container(
+ decoration: BoxDecoration(
+ color: entries[i].highlight
+ ? Colors.white
+ : Colors.grey
+ .withOpacity(0.05 * ((i % 2) + 1)),
+ borderRadius: i == 0
+ ? const BorderRadius.vertical(
+ top: Radius.circular(16))
+ : i == entries.length - 1
+ ? const BorderRadius.vertical(
+ bottom: Radius.circular(16))
+ : BorderRadius.zero,
+ ),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 20, vertical: 18),
+ child: Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Expanded(
+ flex: 6,
+ child: WrappedText('${i + 1}', style: cellStyle)),
+ Expanded(
+ flex: 32,
+ child: WrappedText(
+ entries[i].lesson,
+ style: cellStyle.copyWith(
+ fontWeight: FontWeight.w600),
+ ),
+ ),
+ Expanded(
+ flex: 14,
+ child: _statusPill(entries[i].type)),
+ Expanded(
+ flex: 14,
+ child: WrappedText(entries[i].category,
+ style: cellStyle)),
+ Expanded(
+ flex: 14,
+ child:
+ WrappedText(entries[i].phase, style: cellStyle)),
+ Expanded(
+ flex: 12,
+ child: WrappedText(
+ entries[i].impact,
+ style: entries[i].impact == 'High'
+ ? cellStyle.copyWith(
+ color: Colors.redAccent)
+ : cellStyle,
+ ),
+ ),
+ Expanded(
+ flex: 14,
+ child: WrappedText(entries[i].status,
+ style: cellStyle)),
+ Expanded(
+ flex: 20,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ WrappedText(entries[i].submittedBy,
+ style: cellStyle),
+ ],
+ ),
+ ),
+ Expanded(
+ flex: 14,
+ child:
+ WrappedText(entries[i].date, style: cellStyle)),
+ Expanded(
+ flex: 10,
+ child: Align(
+ alignment: Alignment.centerRight,
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ onPressed: () =>
+ _openLessonDialog(entries[i]),
+ icon: const Icon(Icons.edit_outlined,
+ size: 18, color: Colors.grey),
+ tooltip: 'Edit lesson',
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(
+ minWidth: 32, minHeight: 32),
+ ),
+ IconButton(
+ onPressed: () =>
+ _confirmDelete(entries[i].id),
+ icon: const Icon(Icons.delete_outline,
+ size: 18, color: Colors.redAccent),
+ tooltip: 'Delete lesson',
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(
+ minWidth: 32, minHeight: 32),
+ ),
+ IconButton(
+   onPressed: () {
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
+     );
+   },
+   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
+   tooltip: 'KAZ AI',
+   padding: EdgeInsets.zero,
+   constraints: const BoxConstraints(minWidth: 28),
+ ),
+ ],
+ ),
+ ),
+ ),
+ ],
+ ),
+ ),
+ ],
+ ),
+ ),
+ ],
+ ),
+ ),
+ );
+ },
+ );
+ }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      alignment: Alignment.centerLeft,
-      child: Text(
-        value,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: foreground,
-        ),
-      ),
-    );
-  }
+ return FullScreenTableWrapper(
+ title: 'Lessons Learned — Tasks',
+ child: buildTable(context),
+ tableBuilder: buildTable,
+ );
+ }
+
+ Widget _statusPill(String value) {
+ Color background;
+ Color foreground;
+ switch (value.toLowerCase()) {
+ case 'success':
+ background = const Color(0xFFE8F5E9);
+ foreground = const Color(0xFF2E7D32);
+ break;
+ case 'challenge':
+ background = const Color(0xFFFFF3E0);
+ foreground = const Color(0xFFF57C00);
+ break;
+ default:
+ background = const Color(0xFFE8EAF6);
+ foreground = const Color(0xFF3949AB);
+ }
 
   Widget _circularIconButton(IconData icon, {VoidCallback? onTap}) {
     return InkWell(

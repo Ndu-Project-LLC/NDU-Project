@@ -16,7 +16,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
-
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 class FinalizeProjectScreen extends StatefulWidget {
   const FinalizeProjectScreen({super.key});
 
@@ -457,309 +457,156 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
     );
   }
 
-  Widget _buildSnapshotSection(BuildContext context) {
-    return _SectionCard(
-      title: 'Finalization Snapshot',
-      subtitle: 'Summarize readiness signals for leadership review.',
-      icon: Icons.dashboard_outlined,
-      trailing: OutlinedButton.icon(
-        onPressed: () =>
-            setState(() => _isEditingSnapshot = !_isEditingSnapshot),
-        icon: Icon(_isEditingSnapshot ? Icons.check : Icons.edit_outlined,
-            size: 16),
-        label: Text(_isEditingSnapshot ? 'Done' : 'Edit'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: _isEditingSnapshot
-              ? const Color(0xFF10B981)
-              : const Color(0xFF475569),
-          side: BorderSide(
-              color: _isEditingSnapshot
-                  ? const Color(0xFF10B981)
-                  : const Color(0xFFCBD5E1)),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_isEditingSnapshot) ...[
-            Row(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    final rows = await showCsvImportDialog(context,
-                        tableTitle: 'Snapshot',
-                        columns: [
-                          CsvColumnSpec(
-                              key: 'title',
-                              label: 'Metric',
-                              sampleValue: 'Delivery Package'),
-                          CsvColumnSpec(
-                              key: 'subtitle',
-                              label: 'Description',
-                              sampleValue:
-                                  'Final artifacts and deployment notes'),
-                          CsvColumnSpec(
-                              key: 'value',
-                              label: 'Status',
-                              sampleValue: 'Ready'),
-                        ]);
-                    if (rows == null || !mounted) return;
-                    setState(() {
-                      _snapshotMetrics.clear();
-                      for (final r in rows) {
-                        _snapshotMetrics.add(_SnapshotMetric(
-                          id: _newId(),
-                          title: r['title'] ?? '',
-                          subtitle: r['subtitle'] ?? '',
-                          value: r['value'] ?? '',
-                          accent: const Color(0xFF2563EB),
-                        ));
-                      }
-                    });
-                    _scheduleSave();
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content:
-                            Text('${rows.length} metrics imported from CSV'),
-                        backgroundColor: Colors.green));
-                  },
-                  icon: const Icon(Icons.upload_file_outlined, size: 16),
-                  label: const Text('Import CSV'),
-                  style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                      foregroundColor: const Color(0xFF2563EB),
-                      side: const BorderSide(color: Color(0xFF93C5FD))),
-                ),
-                const SizedBox(width: 8),
-                FilledButton.icon(
-                  onPressed: _addSnapshotMetric,
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Add metric'),
-                  style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10))),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
-          _snapshotMetrics.isEmpty
-              ? const _InlineEmptyState(
-                  title: 'No snapshot metrics',
-                  message: 'Add the metrics that summarize project closeout.',
-                )
-              : LayoutBuilder(builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: ConstrainedBox(
-                      constraints:
-                          BoxConstraints(minWidth: constraints.maxWidth),
-                      child: DataTable(
-                        headingRowColor:
-                            WidgetStateProperty.all(const Color(0xFF0F172A)),
-                        headingRowHeight: 48,
-                        dataRowMinHeight: 56,
-                        dataRowMaxHeight: 72,
-                        columnSpacing: 24,
-                        horizontalMargin: 16,
-                        headingTextStyle: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            letterSpacing: 0.5),
-                        dataTextStyle: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF1E293B)),
-                        columns: const [
-                          DataColumn(label: Text('Metric')),
-                          DataColumn(label: Text('Description')),
-                          DataColumn(label: Text('Status')),
-                          DataColumn(label: Text('Readiness')),
-                          if (true) DataColumn(label: Text('Actions')),
-                        ],
-                        rows: _snapshotMetrics.asMap().entries.map((entry) {
-                          final idx = entry.key;
-                          final metric = entry.value;
-                          final hasData = metric.title.isNotEmpty ||
-                              metric.value.isNotEmpty;
-                          return DataRow(
-                            color: WidgetStateProperty.all(idx.isEven
-                                ? Colors.white
-                                : const Color(0xFFFAFBFC)),
-                            cells: [
-                              DataCell(
-                                _isEditingSnapshot
-                                    ? VoiceTextFormField(
-                                        initialValue: metric.title,
-                                        decoration: _inputDecoration('Metric'),
-                                        onChanged: (v) => _updateSnapshotMetric(
-                                            metric.copyWith(title: v)),
-                                      )
-                                    : Row(children: [
-                                        Container(
-                                            width: 4,
-                                            height: 32,
-                                            decoration: BoxDecoration(
-                                                color: metric.accent
-                                                    .withValues(alpha: 0.8),
-                                                borderRadius:
-                                                    BorderRadius.circular(2))),
-                                        const SizedBox(width: 12),
-                                        ConstrainedBox(
-                                            constraints: const BoxConstraints(
-                                                maxWidth: 200),
-                                            child: Text(
-                                                metric.title.isEmpty
-                                                    ? 'Untitled'
-                                                    : metric.title,
-                                                style: const TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Color(0xFF111827)),
-                                                softWrap: true,
-                                                maxLines: 2,
-                                                overflow:
-                                                    TextOverflow.ellipsis)),
-                                      ]),
-                              ),
-                              DataCell(_isEditingSnapshot
-                                  ? VoiceTextFormField(
-                                      initialValue: metric.subtitle,
-                                      decoration:
-                                          _inputDecoration('Description'),
-                                      onChanged: (v) => _updateSnapshotMetric(
-                                          metric.copyWith(subtitle: v)),
-                                    )
-                                  : ConstrainedBox(
-                                      constraints:
-                                          const BoxConstraints(maxWidth: 300),
-                                      child: Text(
-                                          metric.subtitle.isEmpty
-                                              ? '—'
-                                              : metric.subtitle,
-                                          style: const TextStyle(
-                                              fontSize: 13,
-                                              color: Color(0xFF64748B)),
-                                          softWrap: true,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis))),
-                              DataCell(_isEditingSnapshot
-                                  ? VoiceTextFormField(
-                                      initialValue: metric.value,
-                                      decoration: _inputDecoration('Status'),
-                                      onChanged: (v) => _updateSnapshotMetric(
-                                          metric.copyWith(value: v)),
-                                    )
-                                  : Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 6),
-                                      decoration: BoxDecoration(
-                                          color: (metric.value.isEmpty
-                                                  ? const Color(0xFF9CA3AF)
-                                                  : const Color(0xFF22C55E))
-                                              .withValues(alpha: 0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          border: Border.all(
-                                              color: (metric.value.isEmpty
-                                                      ? const Color(0xFF9CA3AF)
-                                                      : const Color(0xFF22C55E))
-                                                  .withValues(alpha: 0.3))),
-                                      child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                                metric.value.isEmpty
-                                                    ? Icons
-                                                        .radio_button_unchecked
-                                                    : Icons.check_circle,
-                                                size: 12,
-                                                color: metric.value.isEmpty
-                                                    ? const Color(0xFF9CA3AF)
-                                                    : const Color(0xFF22C55E)),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                                metric.value.isEmpty
-                                                    ? 'Not set'
-                                                    : metric.value,
-                                                style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: metric.value.isEmpty
-                                                        ? const Color(
-                                                            0xFF9CA3AF)
-                                                        : const Color(
-                                                            0xFF22C55E)))
-                                          ]))),
-                              DataCell(Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 6),
-                                  decoration: BoxDecoration(
-                                      color: (hasData
-                                              ? const Color(0xFF22C55E)
-                                              : const Color(0xFF9CA3AF))
-                                          .withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                          color: (hasData
-                                                  ? const Color(0xFF22C55E)
-                                                  : const Color(0xFF9CA3AF))
-                                              .withValues(alpha: 0.3))),
-                                  child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                            hasData
-                                                ? Icons.lock
-                                                : Icons.lock_outline,
-                                            size: 12,
-                                            color: hasData
-                                                ? const Color(0xFF22C55E)
-                                                : const Color(0xFF9CA3AF)),
-                                        const SizedBox(width: 4),
-                                        Text(hasData ? 'Saved' : 'Empty',
-                                            style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: hasData
-                                                    ? const Color(0xFF22C55E)
-                                                    : const Color(0xFF9CA3AF)))
-                                      ]))),
-                              if (true)
-                                DataCell(Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (_isEditingSnapshot)
-                                      IconButton(
-                                        icon: const Icon(Icons.delete_outline,
-                                            color: Color(0xFFEF4444), size: 18),
-                                        tooltip: 'Delete',
-                                        onPressed: () =>
-                                            _deleteSnapshotMetric(metric.id),
-                                      ),
-                                  ],
-                                )),
-                            ],
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  );
-                }),
-        ],
-      ),
-    );
-  }
+ Widget _buildSnapshotSection(BuildContext context) {
+ return _SectionCard(
+ title: 'Finalization Snapshot',
+ subtitle: 'Summarize readiness signals for leadership review.',
+ icon: Icons.dashboard_outlined,
+ trailing: OutlinedButton.icon(
+ onPressed: () => setState(() => _isEditingSnapshot = !_isEditingSnapshot),
+ icon: Icon(_isEditingSnapshot ? Icons.check : Icons.edit_outlined, size: 16),
+ label: Text(_isEditingSnapshot ? 'Done' : 'Edit'),
+ style: OutlinedButton.styleFrom(
+ foregroundColor: _isEditingSnapshot ? const Color(0xFF10B981) : const Color(0xFF475569),
+ side: BorderSide(color: _isEditingSnapshot ? const Color(0xFF10B981) : const Color(0xFFCBD5E1)),
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+ ),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ if (_isEditingSnapshot) ...[
+ Row(
+ children: [
+ OutlinedButton.icon(
+ onPressed: () async {
+ final rows = await showCsvImportDialog(context, tableTitle: 'Snapshot', columns: [
+ CsvColumnSpec(key: 'title', label: 'Metric', sampleValue: 'Delivery Package'),
+ CsvColumnSpec(key: 'subtitle', label: 'Description', sampleValue: 'Final artifacts and deployment notes'),
+ CsvColumnSpec(key: 'value', label: 'Status', sampleValue: 'Ready'),
+ ]);
+ if (rows == null || !mounted) return;
+ setState(() {
+ _snapshotMetrics.clear();
+ for (final r in rows) {
+ _snapshotMetrics.add(_SnapshotMetric(
+ id: _newId(),
+ title: r['title'] ?? '',
+ subtitle: r['subtitle'] ?? '',
+ value: r['value'] ?? '',
+ accent: const Color(0xFF2563EB),
+ ));
+ }
+ });
+ _scheduleSave();
+ ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${rows.length} metrics imported from CSV'), backgroundColor: Colors.green));
+ },
+ icon: const Icon(Icons.upload_file_outlined, size: 16),
+ label: const Text('Import CSV'),
+ style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), foregroundColor: const Color(0xFF2563EB), side: const BorderSide(color: Color(0xFF93C5FD))),
+ ),
+ const SizedBox(width: 8),
+ FilledButton.icon(
+ onPressed: _addSnapshotMetric,
+ icon: const Icon(Icons.add, size: 16),
+ label: const Text('Add metric'),
+ style: FilledButton.styleFrom(backgroundColor: const Color(0xFF0F172A), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+ ),
+ ],
+ ),
+ const SizedBox(height: 16),
+ ],
+ _snapshotMetrics.isEmpty
+ ? const _InlineEmptyState(
+ title: 'No snapshot metrics',
+ message: 'Add the metrics that summarize project closeout.',
+ )
+ : FullScreenTableWrapper(
+ title: 'Finalization Snapshot Metrics',
+ child: LayoutBuilder(builder: (context, constraints) {
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: BoxConstraints(minWidth: constraints.maxWidth),
+ child: _buildSnapshotMetricsDataTable(),
+ ),
+ );
+ }),
+ tableBuilder: (fsContext) => _buildSnapshotMetricsDataTable(),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildSnapshotMetricsDataTable() {
+ return DataTable(
+ headingRowColor: WidgetStateProperty.all(const Color(0xFF0F172A)),
+ headingRowHeight: 48,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 72,
+ columnSpacing: 24,
+ horizontalMargin: 16,
+ headingTextStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5),
+ dataTextStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
+ columns: const [
+ DataColumn(label: Text('Metric')),
+ DataColumn(label: Text('Description')),
+ DataColumn(label: Text('Status')),
+ DataColumn(label: Text('Readiness')),
+ if (true) DataColumn(label: Text('Actions')),
+ ],
+ rows: _snapshotMetrics.asMap().entries.map((entry) {
+ final idx = entry.key;
+ final metric = entry.value;
+ final hasData = metric.title.isNotEmpty || metric.value.isNotEmpty;
+ return DataRow(
+ color: WidgetStateProperty.all(idx.isEven ? Colors.white : const Color(0xFFFAFBFC)),
+ cells: [
+ DataCell(_isEditingSnapshot
+ ? VoiceTextFormField(
+ initialValue: metric.title,
+ decoration: _inputDecoration('Metric'),
+ onChanged: (v) => _updateSnapshotMetric(metric.copyWith(title: v)),
+ )
+ : Row(children: [
+ Container(width: 4, height: 32, decoration: BoxDecoration(color: metric.accent.withOpacity(0.8), borderRadius: BorderRadius.circular(2))),
+ const SizedBox(width: 12),
+ ConstrainedBox(constraints: const BoxConstraints(maxWidth: 200), child: Text(metric.title.isEmpty ? 'Untitled' : metric.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF111827)), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis)),
+ ]),
+ ),
+ DataCell(_isEditingSnapshot
+ ? VoiceTextFormField(
+ initialValue: metric.subtitle,
+ decoration: _inputDecoration('Description'),
+ onChanged: (v) => _updateSnapshotMetric(metric.copyWith(subtitle: v)),
+ )
+ : ConstrainedBox(constraints: const BoxConstraints(maxWidth: 300), child: Text(metric.subtitle.isEmpty ? '—' : metric.subtitle, style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis))),
+ DataCell(_isEditingSnapshot
+ ? VoiceTextFormField(
+ initialValue: metric.value,
+ decoration: _inputDecoration('Status'),
+ onChanged: (v) => _updateSnapshotMetric(metric.copyWith(value: v)),
+ )
+ : Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)).withOpacity(0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(metric.value.isEmpty ? Icons.radio_button_unchecked : Icons.check_circle, size: 12, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)), const SizedBox(width: 4), Text(metric.value.isEmpty ? 'Not set' : metric.value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: metric.value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF22C55E)))]))),
+ DataCell(Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: (hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)).withOpacity(0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(hasData ? Icons.lock : Icons.lock_outline, size: 12, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)), const SizedBox(width: 4), Text(hasData ? 'Saved' : 'Empty', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: hasData ? const Color(0xFF22C55E) : const Color(0xFF9CA3AF)))]))),
+ if (true) DataCell(Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ if (_isEditingSnapshot)
+ IconButton(
+ icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 18),
+ tooltip: 'Delete',
+ onPressed: () => _deleteSnapshotMetric(metric.id),
+ ),
+ ],
+ )),
+ ],
+ );
+ }).toList(),
+ );
+ }
 
   Widget _buildSnapshotReadOnlyRow(_SnapshotMetric metric) {
     final valueColor = _getValueColor(metric.value);

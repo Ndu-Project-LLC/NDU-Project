@@ -13,8 +13,10 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -46,13 +48,34 @@ class _Level1ScheduleScreenState
  String _methodology = 'Waterfall';
  bool _hasBaseline = false;
  List<_L1Phase> _baselinePhases = [];
+ bool _autoPopulated = false;
+ bool _isAutoPopulating = false;
+ String? _carriedContext;
 
  @override
  void initState() {
  super.initState();
  WidgetsBinding.instance.addPostFrameCallback((_) {
  _loadData();
+ _autoPopulateIfNeeded();
  });
+ }
+
+ Future<void> _autoPopulateIfNeeded() async {
+ if (_autoPopulated || _isAutoPopulating) return;
+ _autoPopulated = true;
+ _isAutoPopulating = true;
+ if (mounted) setState(() {});
+
+ try {
+ final carried = await buildAccumulatedContext(
+ context, 'project_plan_level1_schedule');
+ if (mounted) setState(() => _carriedContext = carried);
+ } catch (e) {
+ debugPrint('Level1Schedule carried-context error: $e');
+ } finally {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ }
  }
 
  void _loadData() {
@@ -326,6 +349,16 @@ class _Level1ScheduleScreenState
  context, 'project_plan_level1_schedule'),
  ),
  const SizedBox(height: 12),
+ if (_isAutoPopulating)
+ const AutoPopulatingIndicator(),
+ if (_carriedContext != null && _carriedContext!.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(bottom: 12),
+ child: CarriedContextBanner(
+ checkpoint: 'project_plan_level1_schedule',
+ contextText: _carriedContext!,
+ ),
+ ),
  Text(
  'Map major phases, milestone timing, and governance checkpoints.',
  style: const TextStyle(
@@ -1757,11 +1790,34 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  Timer? _saveDebounce;
  final ScrollController _horizontalScrollController = ScrollController();
  final ScrollController _verticalScrollController = ScrollController();
+ bool _autoPopulated = false;
+ bool _isAutoPopulating = false;
+ String? _carriedContext;
 
  @override
  void initState() {
  super.initState();
- WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+ WidgetsBinding.instance.addPostFrameCallback((_) {
+ _loadData();
+ _autoPopulateIfNeeded();
+ });
+ }
+
+ Future<void> _autoPopulateIfNeeded() async {
+ if (_autoPopulated || _isAutoPopulating) return;
+ _autoPopulated = true;
+ _isAutoPopulating = true;
+ if (mounted) setState(() {});
+
+ try {
+ final carried = await buildAccumulatedContext(
+ context, 'project_plan_detailed_schedule');
+ if (mounted) setState(() => _carriedContext = carried);
+ } catch (e) {
+ debugPrint('DetailedSchedule carried-context error: $e');
+ } finally {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ }
  }
 
  @override
@@ -2033,6 +2089,16 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  children: [
  _buildHeader(isMobile),
  const SizedBox(height: 20),
+ if (_isAutoPopulating)
+ const AutoPopulatingIndicator(),
+ if (_carriedContext != null && _carriedContext!.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(bottom: 16),
+ child: CarriedContextBanner(
+ checkpoint: 'project_plan_detailed_schedule',
+ contextText: _carriedContext!,
+ ),
+ ),
  PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Detailed Project Schedule',
@@ -3617,6 +3683,9 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  String? _undoBeforeAi;
  Timer? _saveDebounce;
  DateTime? _lastSavedAt;
+ bool _autoPopulated = false;
+ bool _isAutoPopulating = false;
+ String? _carriedContext;
 
  _SummaryData _summaryData = _SummaryData.empty();
 
@@ -3624,7 +3693,27 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  void initState() {
  super.initState();
  _summaryController.addListener(_handleSummaryChanged);
- WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+ WidgetsBinding.instance.addPostFrameCallback((_) {
+ _loadData();
+ _autoPopulateIfNeeded();
+ });
+ }
+
+ Future<void> _autoPopulateIfNeeded() async {
+ if (_autoPopulated || _isAutoPopulating) return;
+ _autoPopulated = true;
+ _isAutoPopulating = true;
+ if (mounted) setState(() {});
+
+ try {
+ final carried = await buildAccumulatedContext(
+ context, 'project_plan_condensed_summary');
+ if (mounted) setState(() => _carriedContext = carried);
+ } catch (e) {
+ debugPrint('CondensedSummary carried-context error: $e');
+ } finally {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ }
  }
 
  @override
@@ -3957,6 +4046,16 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  children: [
  _buildHeader(isMobile),
  const SizedBox(height: 20),
+ if (_isAutoPopulating)
+ const AutoPopulatingIndicator(),
+ if (_carriedContext != null && _carriedContext!.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(bottom: 16),
+ child: CarriedContextBanner(
+ checkpoint: 'project_plan_condensed_summary',
+ contextText: _carriedContext!,
+ ),
+ ),
  PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Condensed Project Summary',

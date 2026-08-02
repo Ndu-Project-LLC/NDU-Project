@@ -237,7 +237,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -315,15 +315,15 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.all(32),
+    return const Padding(
+      padding: EdgeInsets.all(32),
       child: Center(
         child: Column(
           children: [
-            const Icon(Icons.event_note_outlined,
+            Icon(Icons.event_note_outlined,
                 color: Color(0xFF9CA3AF), size: 32),
-            const SizedBox(height: 12),
-            const Text(
+            SizedBox(height: 12),
+            Text(
               'No meetings scheduled yet. Add details to get started.',
               style: TextStyle(
                 fontSize: 13,
@@ -346,7 +346,7 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
           decoration: const BoxDecoration(
             color: Color(0xFF1F2937),
           ),
-          child: Row(
+          child: const Row(
             children: [
               _TableHeaderCell('Meeting Type', flex: 2),
               _TableHeaderCell('Frequency', flex: 2),
@@ -396,7 +396,7 @@ class _SummaryCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -547,7 +547,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                 children: [
                   // Meeting Type
                   DropdownButtonFormField<String>(
-                    value: selectedMeetingType.isEmpty
+                    initialValue: selectedMeetingType.isEmpty
                         ? null
                         : selectedMeetingType,
                     decoration: const InputDecoration(
@@ -580,7 +580,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                   const SizedBox(height: 12),
                   // Frequency
                   DropdownButtonFormField<String>(
-                    value:
+                    initialValue:
                         selectedFrequency.isEmpty ? null : selectedFrequency,
                     decoration: const InputDecoration(
                       labelText: 'Frequency *',
@@ -706,7 +706,7 @@ class _MeetingRowWidgetState extends State<_MeetingRowWidget> {
                   const SizedBox(height: 12),
                   // Status
                   DropdownButtonFormField<String>(
-                    value:
+                    initialValue:
                         selectedStatus.isEmpty ? null : selectedStatus,
                     decoration: const InputDecoration(
                       labelText: 'Status',

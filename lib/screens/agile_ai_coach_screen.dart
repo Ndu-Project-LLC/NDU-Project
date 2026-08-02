@@ -42,7 +42,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
 
   // AI capability cards
   final List<_AiCapability> _capabilities = [
-    _AiCapability(
+    const _AiCapability(
         id: 'sprint_planning',
         title: 'Sprint Planning',
         description: 'AI recommends which stories to pull based on velocity, capacity, and dependencies.',
@@ -50,7 +50,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
         confidence: 0.92,
         lastRun: '2h ago',
         enabled: true),
-    _AiCapability(
+    const _AiCapability(
         id: 'story_writing',
         title: 'Story Writing',
         description: 'Generate user stories, acceptance criteria, and INVEST check from briefs.',
@@ -58,7 +58,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
         confidence: 0.88,
         lastRun: '5h ago',
         enabled: true),
-    _AiCapability(
+    const _AiCapability(
         id: 'estimation',
         title: 'Estimation Assistant',
         description: 'Suggest story points using historical analogy and team velocity baseline.',
@@ -66,7 +66,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
         confidence: 0.81,
         lastRun: '1d ago',
         enabled: true),
-    _AiCapability(
+    const _AiCapability(
         id: 'risk_id',
         title: 'Risk Identification',
         description: 'Scan sprint backlog for technical, schedule, and dependency risks.',
@@ -74,7 +74,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
         confidence: 0.86,
         lastRun: '6h ago',
         enabled: true),
-    _AiCapability(
+    const _AiCapability(
         id: 'retro_insights',
         title: 'Retrospective Insights',
         description: 'Detect recurring themes across retros and propose experiments.',
@@ -82,7 +82,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
         confidence: 0.79,
         lastRun: '2d ago',
         enabled: true),
-    _AiCapability(
+    const _AiCapability(
         id: 'predictability',
         title: 'Predictability Forecast',
         description: 'Forecast sprint completion probability from daily burn rate.',
@@ -90,7 +90,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
         confidence: 0.90,
         lastRun: '1h ago',
         enabled: true),
-    _AiCapability(
+    const _AiCapability(
         id: 'blocker_triage',
         title: 'Blocker Triage',
         description: 'Auto-categorize blockers and recommend owner and SLA.',
@@ -98,7 +98,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
         confidence: 0.74,
         lastRun: '12h ago',
         enabled: false),
-    _AiCapability(
+    const _AiCapability(
         id: 'maturity_coach',
         title: 'Maturity Coach',
         description: 'Track agile maturity dimensions and recommend next practices.',
@@ -110,34 +110,34 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
 
   // Agile maturity scorecard
   final List<_MaturityDimension> _maturity = [
-    _MaturityDimension('Backlog Management', 0.85, 'Performing'),
-    _MaturityDimension('Sprint Cadence', 0.92, 'Optimizing'),
-    _MaturityDimension('Definition of Ready', 0.65, 'Practicing'),
-    _MaturityDimension('Definition of Done', 0.78, 'Performing'),
-    _MaturityDimension('Stakeholder Engagement', 0.88, 'Performing'),
-    _MaturityDimension('Continuous Improvement', 0.72, 'Practicing'),
-    _MaturityDimension('Engineering Practices', 0.80, 'Performing'),
-    _MaturityDimension('Flow & WIP Discipline', 0.55, 'Practicing'),
+    const _MaturityDimension('Backlog Management', 0.85, 'Performing'),
+    const _MaturityDimension('Sprint Cadence', 0.92, 'Optimizing'),
+    const _MaturityDimension('Definition of Ready', 0.65, 'Practicing'),
+    const _MaturityDimension('Definition of Done', 0.78, 'Performing'),
+    const _MaturityDimension('Stakeholder Engagement', 0.88, 'Performing'),
+    const _MaturityDimension('Continuous Improvement', 0.72, 'Practicing'),
+    const _MaturityDimension('Engineering Practices', 0.80, 'Performing'),
+    const _MaturityDimension('Flow & WIP Discipline', 0.55, 'Practicing'),
   ];
 
   // Best practice tips
   final List<_PracticeTip> _tips = [
-    _PracticeTip(
+    const _PracticeTip(
         title: 'Right-size your stories',
         body: 'Keep stories under 5 points. Larger stories hide risk and inflate WIP.',
         icon: Icons.crop_square,
         tag: 'Backlog'),
-    _PracticeTip(
+    const _PracticeTip(
         title: 'Refine mid-sprint',
         body: 'Run a 30-min refinement mid-sprint to keep the backlog ready.',
         icon: Icons.tune,
         tag: 'Ceremony'),
-    _PracticeTip(
+    const _PracticeTip(
         title: 'Enforce WIP limits',
         body: 'Limit In Progress to 3 per developer to reduce context switching.',
         icon: Icons.layers_clear,
         tag: 'Flow'),
-    _PracticeTip(
+    const _PracticeTip(
         title: 'Demo dry-runs',
         body: 'Hold a demo dry-run the day before review to catch integration issues.',
         icon: Icons.play_circle_outline,
@@ -172,7 +172,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
           from: 'ai',
           text: 'Hi! I\'m Kaz, your Agile AI Coach. I\'m using project-wide backlog, schedule, and risk context for $sprintLabel. Want me to prioritize the next best work item?',
           time: '2:14 PM'),
-      _ChatMessage(
+      const _ChatMessage(
           from: 'user',
           text: 'What should the team focus on first?',
           time: '2:15 PM'),
@@ -243,10 +243,10 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('AI coach preferences saved'),
+          const SnackBar(
+            content: Text('AI coach preferences saved'),
             backgroundColor: _kAccent,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -369,8 +369,8 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'AI Agile Coach',
                     ),
                   ),
@@ -382,7 +382,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        PlanningPhaseHeader(
+                        const PlanningPhaseHeader(
                           title: 'AI Agile Coach',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -449,11 +449,11 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
           decoration: BoxDecoration(
             color: _kAccentBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _kAccent.withOpacity(0.3)),
+            border: Border.all(color: _kAccent.withValues(alpha: 0.3)),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Icon(Icons.auto_awesome, size: 14, color: _kAccent),
               SizedBox(width: 6),
               Text('KAZ AI ACTIVE',
@@ -485,9 +485,9 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: _kAccent.withOpacity(0.2),
+              color: _kAccent.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _kAccent.withOpacity(0.4)),
+              border: Border.all(color: _kAccent.withValues(alpha: 0.4)),
             ),
             child: const Icon(Icons.auto_awesome,
                 size: 32, color: _kAccentLight),
@@ -531,9 +531,9 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.15)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
       ),
       child: Text(label,
           style: const TextStyle(
@@ -585,7 +585,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: c.enabled ? _kAccent.withOpacity(0.3) : _kBorder),
+            color: c.enabled ? _kAccent.withValues(alpha: 0.3) : _kBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -596,7 +596,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: c.enabled
-                      ? _kAccent.withOpacity(0.12)
+                      ? _kAccent.withValues(alpha: 0.12)
                       : const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -608,7 +608,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
               Switch(
                 value: c.enabled,
                 onChanged: (_) => _toggleCapability(c),
-                activeColor: _kAccent,
+                activeThumbColor: _kAccent,
                 activeTrackColor: _kAccentBg,
               ),
             ],
@@ -636,7 +636,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
                     minHeight: 6,
                     backgroundColor: const Color(0xFFF3F4F6),
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(_kAccent),
+                        const AlwaysStoppedAnimation<Color>(_kAccent),
                   ),
                 ),
               ),
@@ -651,7 +651,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
           const SizedBox(height: 6),
           Row(
             children: [
-              Icon(Icons.access_time, size: 10, color: _kMuted),
+              const Icon(Icons.access_time, size: 10, color: _kMuted),
               const SizedBox(width: 4),
               Text('Last run ${c.lastRun}',
                   style: const TextStyle(
@@ -679,7 +679,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: _kAccent.withOpacity(0.12),
+                  color: _kAccent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.smart_toy_outlined,
@@ -724,7 +724,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
                       if (!isUser) ...[
                         CircleAvatar(
                           radius: 12,
-                          backgroundColor: _kAccent.withOpacity(0.15),
+                          backgroundColor: _kAccent.withValues(alpha: 0.15),
                           child: const Icon(Icons.auto_awesome,
                               size: 12, color: _kAccent),
                         ),
@@ -760,7 +760,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
                                   style: TextStyle(
                                       fontSize: 9,
                                       color: isUser
-                                          ? Colors.white.withOpacity(0.7)
+                                          ? Colors.white.withValues(alpha: 0.7)
                                           : _kMuted)),
                             ],
                           ),
@@ -942,12 +942,12 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.tips_and_updates_outlined,
+              Icon(Icons.tips_and_updates_outlined,
                   size: 20, color: _kAccent),
-              const SizedBox(width: 8),
-              const Text('Best Practice Tips',
+              SizedBox(width: 8),
+              Text('Best Practice Tips',
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -979,8 +979,8 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFFAFAFA),
         borderRadius: BorderRadius.circular(10),
-        border: Border(
-          left: const BorderSide(color: _kAccent, width: 3),
+        border: const Border(
+          left: BorderSide(color: _kAccent, width: 3),
         ),
       ),
       child: Row(
@@ -989,7 +989,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _kAccent.withOpacity(0.12),
+              color: _kAccent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(t.icon, size: 16, color: _kAccent),
@@ -1132,7 +1132,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

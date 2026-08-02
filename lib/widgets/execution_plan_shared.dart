@@ -525,9 +525,9 @@ class AiBadge extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Row(
+      child: const Row(
         mainAxisSize: MainAxisSize.min,
-        children: const [
+        children: [
           Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
           SizedBox(width: 6),
           Text(

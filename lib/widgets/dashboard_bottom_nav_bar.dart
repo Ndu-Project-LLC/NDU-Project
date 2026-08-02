@@ -58,7 +58,7 @@ class DashboardBottomNavBar extends StatelessWidget {
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
         ),
-        border: Border(
+        border: const Border(
           top: BorderSide(color: _Tokens.outlineVariant, width: 1),
         ),
         boxShadow: [

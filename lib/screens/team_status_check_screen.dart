@@ -164,8 +164,8 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel:
                           'Project Team Activities - Team Status Check',
                     ),

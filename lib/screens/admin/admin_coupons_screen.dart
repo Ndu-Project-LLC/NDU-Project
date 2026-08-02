@@ -31,11 +31,11 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
-        title: Row(
+        title: const Row(
           children: [
-            const Icon(Icons.local_offer, color: Color(0xFF4CAF50), size: 28),
-            const SizedBox(width: 12),
-            const Text('Coupon Management',
+            Icon(Icons.local_offer, color: Color(0xFF4CAF50), size: 28),
+            SizedBox(width: 12),
+            Text('Coupon Management',
                 style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -141,8 +141,8 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.05),
-        border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.2))),
+        color: Colors.grey.withValues(alpha: 0.05),
+        border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
       ),
       child: Row(
         children: [
@@ -163,7 +163,7 @@ class _AdminCouponsScreenState extends State<AdminCouponsScreen> {
                     if (selected) setState(() => _filterBy = filter['value']!);
                   },
                   selectedColor: const Color(0xFF4CAF50),
-                  backgroundColor: Colors.grey.withOpacity(0.1),
+                  backgroundColor: Colors.grey.withValues(alpha: 0.1),
                   labelStyle: TextStyle(
                     color: _filterBy == filter['value']
                         ? Colors.white
@@ -308,7 +308,7 @@ class _CouponCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: statusColor.withOpacity(0.3)),
+        side: BorderSide(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -321,7 +321,7 @@ class _CouponCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withOpacity(0.1),
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -349,7 +349,7 @@ class _CouponCard extends StatelessWidget {
             Text(coupon.description,
                 style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
             const SizedBox(height: 16),
-            Divider(color: Colors.grey.withOpacity(0.2)),
+            Divider(color: Colors.grey.withValues(alpha: 0.2)),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -428,7 +428,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(label,
@@ -570,8 +570,9 @@ class _CouponFormDialogState extends State<_CouponFormDialog> {
                         validator: (v) {
                           if (v?.isEmpty == true) return 'Required';
                           final val = double.tryParse(v!);
-                          if (val == null || val < 0 || val > 100)
+                          if (val == null || val < 0 || val > 100) {
                             return 'Invalid %';
+                          }
                           return null;
                         },
                       ),

@@ -161,10 +161,10 @@ class _ItemsToolbar extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SearchField(),
+          const _SearchField(),
           const SizedBox(height: 12),
-          Row(
-            children: const [
+          const Row(
+            children: [
               Expanded(child: _DropdownField(label: 'All Categories')),
               SizedBox(width: 12),
               Expanded(child: _DropdownField(label: 'All Statuses')),

@@ -68,7 +68,7 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppLogo(
+          const AppLogo(
             height: 56,
             width: 148,
           ),
@@ -85,7 +85,7 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
           ),
           const SizedBox(height: 14),
           // Brand banner above the "StackOne" label, spanning sidebar width
-          RepaintBoundary(
+          const RepaintBoundary(
             child: SizedBox(
               width: double.infinity,
               height: 96,
@@ -111,11 +111,11 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
               style: const TextStyle(color: _kTextPrimary, fontSize: 14, fontWeight: FontWeight.w500),
               decoration: InputDecoration(
                 hintText: 'Search menu...',
-                hintStyle: TextStyle(color: _kTextSecondary.withOpacity(0.6), fontSize: 14),
-                prefixIcon: Icon(Icons.search_rounded, color: _kTextSecondary.withOpacity(0.7), size: 20),
+                hintStyle: TextStyle(color: _kTextSecondary.withValues(alpha: 0.6), fontSize: 14),
+                prefixIcon: Icon(Icons.search_rounded, color: _kTextSecondary.withValues(alpha: 0.7), size: 20),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: Icon(Icons.clear_rounded, color: _kTextSecondary.withOpacity(0.7), size: 18),
+                        icon: Icon(Icons.clear_rounded, color: _kTextSecondary.withValues(alpha: 0.7), size: 18),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
@@ -136,11 +136,11 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.search_off_rounded, color: _kTextSecondary.withOpacity(0.4), size: 40),
+                        Icon(Icons.search_off_rounded, color: _kTextSecondary.withValues(alpha: 0.4), size: 40),
                         const SizedBox(height: 12),
                         Text(
                           'No results found',
-                          style: TextStyle(color: _kTextSecondary.withOpacity(0.6), fontSize: 13, fontWeight: FontWeight.w500),
+                          style: TextStyle(color: _kTextSecondary.withValues(alpha: 0.6), fontSize: 13, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -182,10 +182,10 @@ class _SidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = isActive ? _kAccentColor.withOpacity(0.18) : Colors.transparent;
-    final borderColor = isActive ? _kAccentColor.withOpacity(0.35) : Colors.transparent;
+    final background = isActive ? _kAccentColor.withValues(alpha: 0.18) : Colors.transparent;
+    final borderColor = isActive ? _kAccentColor.withValues(alpha: 0.35) : Colors.transparent;
     final iconColor = isActive ? _kAccentColor : const Color(0xFF6B7280);
-    final labelColor = _kTextPrimary;
+    const labelColor = _kTextPrimary;
     return Material(
       color: Colors.transparent,
       child: InkWell(

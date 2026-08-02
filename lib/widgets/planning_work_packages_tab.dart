@@ -27,7 +27,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
     super.initState();
     final data = ProjectDataHelper.getData(context, listen: false);
     final methodology = data.planningNotes['planning_schedule_methodology'];
-    if (methodology != null && methodology is String && methodology.isNotEmpty) {
+    if (methodology != null && methodology.isNotEmpty) {
       _selectedMethodology = methodology;
     }
   }
@@ -519,12 +519,12 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide:
-                          BorderSide(color: AppSemanticColors.border),
+                          const BorderSide(color: AppSemanticColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                       borderSide:
-                          BorderSide(color: AppSemanticColors.border),
+                          const BorderSide(color: AppSemanticColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),

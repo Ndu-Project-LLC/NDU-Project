@@ -73,10 +73,10 @@ class _AgileDeliveryPlanSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isMobile = AppBreakpoints.isMobile(context);
 
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Agile Delivery Plan',
           style: TextStyle(
             fontSize: 22,
@@ -84,8 +84,8 @@ class _AgileDeliveryPlanSection extends StatelessWidget {
             color: Color(0xFF111827),
           ),
         ),
-        const SizedBox(height: 24),
-        const PlanDecisionSection(
+        SizedBox(height: 24),
+        PlanDecisionSection(
           question: 'Will agile delivery be used for this project?',
           planKeyPrefix: 'execution_agile_delivery_plan',
           formTitle: 'Agile Delivery Plan Inputs',
@@ -483,7 +483,7 @@ class _PlanDecisionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFBDBDBD),
         borderRadius: BorderRadius.circular(18),
       ),
@@ -544,7 +544,7 @@ class _PlanDecisionButton extends StatelessWidget {
         backgroundColor: isSelected ? color : Colors.white,
         foregroundColor: isSelected ? Colors.white : color,
         padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12)),
         side: BorderSide(color: color, width: 1.4),
         elevation: 0,
@@ -578,7 +578,7 @@ class _PlanInputCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -590,7 +590,7 @@ class _PlanInputCard extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final gap = 16.0;
+          const gap = 16.0;
           final bool twoCol = width >= 760;
           final double halfWidth = twoCol ? (width - gap) / 2 : width;
 
@@ -672,7 +672,7 @@ class _PlanTextField extends StatelessWidget {
         hintText: hint,
         alignLabelWithHint: true,
         border:
-            const OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+           OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: const Color(0xFFF9FAFB),
       ),

@@ -9,6 +9,7 @@
 /// Final CTA → Footer
 ///
 /// Plus: Careers page, Media/Blog links, Partner form
+library;
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -103,7 +104,7 @@ class LandingPageScreen extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: _bg.withValues(alpha: 0.85),
-              border: Border(bottom: BorderSide(color: _border, width: 1)),
+              border: const Border(bottom: BorderSide(color: _border, width: 1)),
             ),              child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 48),
@@ -115,10 +116,10 @@ class LandingPageScreen extends StatelessWidget {
                     children: [
                       // Logo
                       Row(children: [
-                        Container(width: 32, height: 32, decoration: BoxDecoration(gradient: LinearGradient(colors: [_gold, _goldDeep]), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.trending_up, color: Color(0xFF0A0E1A), size: 18)),
+                        Container(width: 32, height: 32, decoration: BoxDecoration(gradient: const LinearGradient(colors: [_gold, _goldDeep]), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.trending_up, color: Color(0xFF0A0E1A), size: 18)),
                         const SizedBox(width: 10),
-                        Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
-                        Text(' Project', style: TextStyle(color: _gold, fontSize: 18, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
+                        const Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
+                        const Text(' Project', style: TextStyle(color: _gold, fontSize: 18, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
                       ]),
                       // Nav items (desktop)
                       if (MediaQuery.sizeOf(context).width > 900)
@@ -139,7 +140,7 @@ class LandingPageScreen extends StatelessWidget {
                         _socialIcon(Icons.play_circle_outline, 'https://youtube.com/@nduproject'),
                         _socialIcon(Icons.music_note, 'https://tiktok.com/@nduproject'),
                         const SizedBox(width: 12),
-                        TextButton(onPressed: () => context.go('/sign-in'), child: Text('Sign In', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
+                        TextButton(onPressed: () => context.go('/sign-in'), child: const Text('Sign In', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
                         const SizedBox(width: 16),
                         _yellowButton('Start Your Project', () => context.go('/create-account')),
                       ]),
@@ -157,7 +158,7 @@ class LandingPageScreen extends StatelessWidget {
   void _scrollTo(BuildContext context, String key) {
     final ctx = context;
     Scrollable.ensureVisible(
-      ctx.findRenderObject() as BuildContext != null ? ctx : ctx,
+      ctx,
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
     );
@@ -168,7 +169,7 @@ class LandingPageScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: TextButton(
         onPressed: onTap,
-        child: Text(label, style: TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily)),
+        child: Text(label, style: const TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily)),
       ),
     );
   }
@@ -197,13 +198,13 @@ class LandingPageScreen extends StatelessWidget {
         PopupMenuItem(value: 'demo', child: Text('Demo')),
         PopupMenuItem(value: 'partner', child: Text('Partner with Us')),
       ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Solutions', style: TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily)),
-            const SizedBox(width: 2),
+            SizedBox(width: 2),
             Icon(Icons.keyboard_arrow_down, color: _textMuted, size: 16),
           ],
         ),
@@ -235,13 +236,13 @@ class LandingPageScreen extends StatelessWidget {
         PopupMenuItem(value: 'training', child: Text('Training')),
         PopupMenuItem(value: 'consultation', child: Text('Consultation')),
       ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Services', style: TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily)),
-            const SizedBox(width: 2),
+            SizedBox(width: 2),
             Icon(Icons.keyboard_arrow_down, color: _textMuted, size: 16),
           ],
         ),
@@ -273,13 +274,13 @@ class LandingPageScreen extends StatelessWidget {
         PopupMenuItem(value: 'media', child: Text('Media')),
         PopupMenuItem(value: 'announcements', child: Text('Announcements')),
       ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Resources', style: TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily)),
-            const SizedBox(width: 2),
+            SizedBox(width: 2),
             Icon(Icons.keyboard_arrow_down, color: _textMuted, size: 16),
           ],
         ),
@@ -299,7 +300,7 @@ class LandingPageScreen extends StatelessWidget {
   Widget _yellowButton(String label, VoidCallback onTap) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [_gold, _goldDeep]),
+        gradient: const LinearGradient(colors: [_gold, _goldDeep]),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Material(
@@ -311,7 +312,7 @@ class LandingPageScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             child: Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 color: _bg,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -352,19 +353,19 @@ class _HeroSection extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Badge
-                Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), decoration: BoxDecoration(color: _blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: _blue.withValues(alpha: 0.3))), child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), decoration: BoxDecoration(color: _blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: _blue.withValues(alpha: 0.3))), child: const Row(mainAxisSize: MainAxisSize.min, children: [
                   Icon(Icons.auto_awesome, color: _blue, size: 14),
-                  const SizedBox(width: 6),
+                  SizedBox(width: 6),
                   Text('Project Delivery Operating System (PDOS)', style: TextStyle(color: _blueLight, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: appFontFamily)),
                 ])),
                 const SizedBox(height: 32),
                 // Headline
-                Text('42% of Projects Fail to meet original scope.\nFix Project Failure Before It Starts',
+                const Text('42% of Projects Fail to meet original scope.\nFix Project Failure Before It Starts',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: _textPrimary, fontSize: 42, fontWeight: FontWeight.w800, letterSpacing: -1, height: 1.2, fontFamily: appFontFamily)),
                 const SizedBox(height: 24),
                 // Subheadline
-                Text('Ndu Project is a Project Delivery Operating System — a SaaS platform that integrates AI, analytics, and human decision making to deliver projects from initiation through completion.',
+                const Text('Ndu Project is a Project Delivery Operating System — a SaaS platform that integrates AI, analytics, and human decision making to deliver projects from initiation through completion.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: _textSecondary, fontSize: 18, height: 1.6, fontFamily: appFontFamily)),
                 const SizedBox(height: 32),
@@ -427,7 +428,7 @@ class _HeroSection extends StatelessWidget {
   }
 
   Widget _valueProp(String text) {
-    return Row(children: [Icon(Icons.check_circle, color: _green, size: 16), const SizedBox(width: 6), Text(text, style: TextStyle(color: _textSecondary, fontSize: 13, fontFamily: appFontFamily))]);
+    return Row(children: [const Icon(Icons.check_circle, color: _green, size: 16), const SizedBox(width: 6), Text(text, style: const TextStyle(color: _textSecondary, fontSize: 13, fontFamily: appFontFamily))]);
   }
 
   Widget _ctaButton(String label, Color bg, Color fg, VoidCallback onTap, {bool border = false}) {
@@ -457,11 +458,11 @@ class _HeroSection extends StatelessWidget {
         child: Icon(icon ?? Icons.circle, color: color, size: 32),
       ),
       const SizedBox(height: 8),
-      Text(label, style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+      Text(label, style: const TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
     ]);
   }
 
-  Widget _arrow() => Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Icon(Icons.arrow_forward, color: _textMuted, size: 20));
+  Widget _arrow() => const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Icon(Icons.arrow_forward, color: _textMuted, size: 20));
 
   Widget _overlayChip(String label, Color color) {
     return Container(margin: const EdgeInsets.symmetric(horizontal: 6), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)), child: Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600, fontFamily: appFontFamily)));
@@ -480,7 +481,7 @@ class _SocialProofSection extends StatelessWidget {
       child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Column(children: [
-          Text('Built from real-world delivery experience across global enterprises and high-growth organizations',
+          const Text('Built from real-world delivery experience across global enterprises and high-growth organizations',
             textAlign: TextAlign.center,
             style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
           const SizedBox(height: 24),
@@ -494,7 +495,7 @@ class _SocialProofSection extends StatelessWidget {
           ]),
           const SizedBox(height: 32),
           // Trusted by
-          Text('TRUSTED BY', style: TextStyle(color: _textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 2, fontFamily: appFontFamily)),
+          const Text('TRUSTED BY', style: TextStyle(color: _textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 2, fontFamily: appFontFamily)),
           const SizedBox(height: 16),
           Wrap(spacing: 24, runSpacing: 12, alignment: WrapAlignment.center, children: [
             _trustedBy('Start-ups'),
@@ -508,11 +509,11 @@ class _SocialProofSection extends StatelessWidget {
   }
 
   Widget _trustBadge(String label, IconData icon) {
-    return Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [Icon(icon, color: _gold, size: 16), const SizedBox(width: 8), Text(label, style: TextStyle(color: _textSecondary, fontSize: 12, fontWeight: FontWeight.w500, fontFamily: appFontFamily))]));
+    return Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [Icon(icon, color: _gold, size: 16), const SizedBox(width: 8), Text(label, style: const TextStyle(color: _textSecondary, fontSize: 12, fontWeight: FontWeight.w500, fontFamily: appFontFamily))]));
   }
 
   Widget _trustedBy(String label) {
-    return Container(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10), decoration: BoxDecoration(color: _surface.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Text(label, style: TextStyle(color: _textPrimary, fontSize: 14, fontWeight: FontWeight.w600, fontFamily: appFontFamily)));
+    return Container(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10), decoration: BoxDecoration(color: _surface.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Text(label, style: const TextStyle(color: _textPrimary, fontSize: 14, fontWeight: FontWeight.w600, fontFamily: appFontFamily)));
   }
 }
 
@@ -536,24 +537,24 @@ class _ProblemSection extends StatelessWidget {
       child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Column(children: [
-          Text('Projects Don\'t Fail in Execution.\nThey Fail Before Execution Begins',
+          const Text('Projects Don\'t Fail in Execution.\nThey Fail Before Execution Begins',
             textAlign: TextAlign.center,
             style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, height: 1.3, fontFamily: appFontFamily)),
           const SizedBox(height: 16),
-          Text('Most project tools focus on tracking work after it starts. But by then, the most critical decisions have already been made… and often made poorly.',
+          const Text('Most project tools focus on tracking work after it starts. But by then, the most critical decisions have already been made… and often made poorly.',
             textAlign: TextAlign.center,
             style: TextStyle(color: _textSecondary, fontSize: 16, height: 1.6, fontFamily: appFontFamily)),
           const SizedBox(height: 40),
           Wrap(spacing: 20, runSpacing: 20, alignment: WrapAlignment.center, children: problems.map((p) => _problemCard(p.$1, p.$2, p.$3)).toList()),
           const SizedBox(height: 40),
-          Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _red.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(12), border: Border.all(color: _red.withValues(alpha: 0.2))), child: Text('The issue isn\'t execution. It\'s the lack of a system governing the full lifecycle.', textAlign: TextAlign.center, style: TextStyle(color: _red, fontSize: 16, fontWeight: FontWeight.w600, fontFamily: appFontFamily))),
+          Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _red.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(12), border: Border.all(color: _red.withValues(alpha: 0.2))), child: const Text('The issue isn\'t execution. It\'s the lack of a system governing the full lifecycle.', textAlign: TextAlign.center, style: TextStyle(color: _red, fontSize: 16, fontWeight: FontWeight.w600, fontFamily: appFontFamily))),
         ]),
       )),
     );
   }
 
   Widget _problemCard(String text, IconData icon, Color color) {
-    return Container(width: 220, padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)), const SizedBox(height: 12), Text(text, textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily))]));
+    return Container(width: 220, padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)), const SizedBox(height: 12), Text(text, textAlign: TextAlign.center, style: const TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily))]));
   }
 }
 
@@ -576,11 +577,11 @@ class _SolutionSection extends StatelessWidget {
       child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Column(children: [
-          Text('A New Category: Project Delivery Operating System',
+          const Text('A New Category: Project Delivery Operating System',
             textAlign: TextAlign.center,
             style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
           const SizedBox(height: 16),
-          Text('Ndu Project replaces disconnected tools with a unified system that governs how projects are defined, planned, and delivered.',
+          const Text('Ndu Project replaces disconnected tools with a unified system that governs how projects are defined, planned, and delivered.',
             textAlign: TextAlign.center,
             style: TextStyle(color: _textSecondary, fontSize: 16, height: 1.6, fontFamily: appFontFamily)),
           const SizedBox(height: 40),
@@ -589,7 +590,7 @@ class _SolutionSection extends StatelessWidget {
           const SizedBox(height: 40),
           // Comparison table
           Container(decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(children: [
-            Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: _surfaceHigh.withValues(alpha: 0.5), borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12))), child: Row(children: [Expanded(child: Text('Traditional Tools', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 14, fontWeight: FontWeight.w600, fontFamily: appFontFamily))), Expanded(child: Text('Ndu Project (PDOS)', textAlign: TextAlign.center, style: TextStyle(color: _gold, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: appFontFamily)))])),
+            Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: _surfaceHigh.withValues(alpha: 0.5), borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12))), child: const Row(children: [Expanded(child: Text('Traditional Tools', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 14, fontWeight: FontWeight.w600, fontFamily: appFontFamily))), Expanded(child: Text('Ndu Project (PDOS)', textAlign: TextAlign.center, style: TextStyle(color: _gold, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: appFontFamily)))])),
             _compareRow('Focus on tracking', 'Governs full lifecycle'),
             _compareRow('Reactive insights', 'Predictive analytics'),
             _compareRow('Siloed workflows', 'Integrated system'),
@@ -601,11 +602,11 @@ class _SolutionSection extends StatelessWidget {
   }
 
   Widget _capCard(String title, String desc, IconData icon, Color color) {
-    return Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)), const SizedBox(height: 12), Text(title, textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: appFontFamily)), const SizedBox(height: 6), Text(desc, textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]));
+    return Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)), const SizedBox(height: 12), Text(title, textAlign: TextAlign.center, style: const TextStyle(color: _textPrimary, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: appFontFamily)), const SizedBox(height: 6), Text(desc, textAlign: TextAlign.center, style: const TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]));
   }
 
   Widget _compareRow(String trad, String ndu) {
-    return Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: const BoxDecoration(border: Border(top: BorderSide(color: _border))), child: Row(children: [Expanded(child: Row(children: [Icon(Icons.close, color: _red, size: 14), const SizedBox(width: 6), Text(trad, style: TextStyle(color: _textSecondary, fontSize: 13, fontFamily: appFontFamily))])), Expanded(child: Row(children: [Icon(Icons.check, color: _green, size: 14), const SizedBox(width: 6), Text(ndu, style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily))]))]));
+    return Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: const BoxDecoration(border: Border(top: BorderSide(color: _border))), child: Row(children: [Expanded(child: Row(children: [const Icon(Icons.close, color: _red, size: 14), const SizedBox(width: 6), Text(trad, style: const TextStyle(color: _textSecondary, fontSize: 13, fontFamily: appFontFamily))])), Expanded(child: Row(children: [const Icon(Icons.check, color: _green, size: 14), const SizedBox(width: 6), Text(ndu, style: const TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w500, fontFamily: appFontFamily))]))]));
   }
 }
 
@@ -628,13 +629,13 @@ class _HowItWorksSection extends StatelessWidget {
       child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Column(children: [
-          Text('How Ndu Project Delivers Results', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+          const Text('How Ndu Project Delivers Results', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
           const SizedBox(height: 8),
-          Text('For projects, programs, and portfolios — Agile, Waterfall, and Hybrid', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
+          const Text('For projects, programs, and portfolios — Agile, Waterfall, and Hybrid', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
           const SizedBox(height: 48),
           Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: steps.map((s) => Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
             _stepCard(s.$1, s.$2, s.$3, s.$4, s.$5),
-            if (s.$1 != '03') Padding(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40), child: Icon(Icons.arrow_forward, color: _textMuted, size: 28)),
+            if (s.$1 != '03') const Padding(padding: EdgeInsets.symmetric(horizontal: 24, vertical: 40), child: Icon(Icons.arrow_forward, color: _textMuted, size: 28)),
           ])).toList()),
         ]),
       )),
@@ -647,9 +648,9 @@ class _HowItWorksSection extends StatelessWidget {
       const SizedBox(height: 8),
       Container(width: 48, height: 48, decoration: BoxDecoration(gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: Colors.white, size: 24)),
       const SizedBox(height: 16),
-      Text(title, style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+      Text(title, style: const TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
       const SizedBox(height: 8),
-      Text(desc, textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 13, height: 1.5, fontFamily: appFontFamily)),
+      Text(desc, textAlign: TextAlign.center, style: const TextStyle(color: _textSecondary, fontSize: 13, height: 1.5, fontFamily: appFontFamily)),
     ]));
   }
 }
@@ -667,10 +668,10 @@ class _DifferentiatorsSection extends StatelessWidget {
       child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Column(children: [
-          Text('Built Differently From Traditional Project Tools', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+          const Text('Built Differently From Traditional Project Tools', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
           const SizedBox(height: 32),
           // Value prop statement
-          Container(padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: _purple.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(16), border: Border.all(color: _purple.withValues(alpha: 0.2))), child: Text('Our AI-powered end-to-end platform helps project managers and executives improve profitability through more effective delivery. It reduces implementation costs by 15–30% and cuts rework by 30–50% via structured initiation and planning. Unlike execution-focused tools that primarily track execution across only a few later phases, our platform drives disciplined, integrated delivery across the full project lifecycle.',
+          Container(padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: _purple.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(16), border: Border.all(color: _purple.withValues(alpha: 0.2))), child: const Text('Our AI-powered end-to-end platform helps project managers and executives improve profitability through more effective delivery. It reduces implementation costs by 15–30% and cuts rework by 30–50% via structured initiation and planning. Unlike execution-focused tools that primarily track execution across only a few later phases, our platform drives disciplined, integrated delivery across the full project lifecycle.',
             textAlign: TextAlign.center,
             style: TextStyle(color: _textPrimary, fontSize: 15, height: 1.7, fontFamily: appFontFamily))),
           const SizedBox(height: 32),
@@ -697,11 +698,11 @@ class _DifferentiatorsSection extends StatelessWidget {
   }
 
   Widget _stat(String value, String label, Color color) {
-    return Container(margin: const EdgeInsets.symmetric(horizontal: 24), child: Column(children: [Text(value, style: TextStyle(color: color, fontSize: 40, fontWeight: FontWeight.w900, fontFamily: appFontFamily)), const SizedBox(height: 4), Text(label, textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]));
+    return Container(margin: const EdgeInsets.symmetric(horizontal: 24), child: Column(children: [Text(value, style: TextStyle(color: color, fontSize: 40, fontWeight: FontWeight.w900, fontFamily: appFontFamily)), const SizedBox(height: 4), Text(label, textAlign: TextAlign.center, style: const TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]));
   }
 
   Widget _expBadge(String label, IconData icon) {
-    return Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [Icon(icon, color: _gold, size: 14), const SizedBox(width: 6), Text(label, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]));
+    return Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(8), border: Border.all(color: _border)), child: Row(children: [Icon(icon, color: _gold, size: 14), const SizedBox(width: 6), Text(label, style: const TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]));
   }
 }
 
@@ -725,9 +726,9 @@ class _UseCasesSection extends StatelessWidget {
       child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Column(children: [
-          Text('Projects We Help You Deliver', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+          const Text('Projects We Help You Deliver', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
           const SizedBox(height: 8),
-          Text('Industry-agnostic — project delivery is the heart of every business', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
+          const Text('Industry-agnostic — project delivery is the heart of every business', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
           const SizedBox(height: 40),
           Wrap(spacing: 20, runSpacing: 20, alignment: WrapAlignment.center, children: cases.map((c) => _useCaseCard(c.$1, c.$2, c.$3, c.$4)).toList()),
         ]),
@@ -736,7 +737,7 @@ class _UseCasesSection extends StatelessWidget {
   }
 
   Widget _useCaseCard(String title, String desc, IconData icon, Color color) {
-    return Container(width: 280, padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)), child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 22)), const SizedBox(height: 16), Text(title, textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w700, fontFamily: appFontFamily)), const SizedBox(height: 8), Text(desc, textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 13, height: 1.5, fontFamily: appFontFamily))]));
+    return Container(width: 280, padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)), child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 22)), const SizedBox(height: 16), Text(title, textAlign: TextAlign.center, style: const TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w700, fontFamily: appFontFamily)), const SizedBox(height: 8), Text(desc, textAlign: TextAlign.center, style: const TextStyle(color: _textSecondary, fontSize: 13, height: 1.5, fontFamily: appFontFamily))]));
   }
 }
 
@@ -754,11 +755,11 @@ class _KazAISection extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), decoration: BoxDecoration(color: _purple.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)), child: Text('KAZ AI', style: TextStyle(color: _purpleLight, fontSize: 12, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
+            Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), decoration: BoxDecoration(color: _purple.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)), child: const Text('KAZ AI', style: TextStyle(color: _purpleLight, fontSize: 12, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
             const SizedBox(height: 16),
-            Text('Your knowledgeable project delivery sidekick', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+            const Text('Your knowledgeable project delivery sidekick', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
             const SizedBox(height: 16),
-            Text('KAZ AI provides intelligent suggestions, continuity across the project lifecycle, and core AI capabilities within the platform.', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, height: 1.6, fontFamily: appFontFamily)),
+            const Text('KAZ AI provides intelligent suggestions, continuity across the project lifecycle, and core AI capabilities within the platform.', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, height: 1.6, fontFamily: appFontFamily)),
             const SizedBox(height: 24),
             _aiFeature('AI Suggestions', 'Contextual recommendations at every project stage'),
             _aiFeature('Continuity', 'Knowledge carries across initiation, planning, and execution'),
@@ -766,11 +767,11 @@ class _KazAISection extends StatelessWidget {
           ])),
           const SizedBox(width: 48),
           Expanded(child: Container(padding: const EdgeInsets.all(32), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(20), border: Border.all(color: _purple.withValues(alpha: 0.2))), child: Column(children: [
-            Container(width: 64, height: 64, decoration: BoxDecoration(gradient: LinearGradient(colors: [_purple, _blue]), borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.psychology, color: Colors.white, size: 32)),
+            Container(width: 64, height: 64, decoration: BoxDecoration(gradient: const LinearGradient(colors: [_purple, _blue]), borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.psychology, color: Colors.white, size: 32)),
             const SizedBox(height: 16),
-            Text('KAZ AI', style: TextStyle(color: _textPrimary, fontSize: 24, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
+            const Text('KAZ AI', style: TextStyle(color: _textPrimary, fontSize: 24, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
             const SizedBox(height: 4),
-            Text('Project Delivery Intelligence', style: TextStyle(color: _purpleLight, fontSize: 13, fontFamily: appFontFamily)),
+            const Text('Project Delivery Intelligence', style: TextStyle(color: _purpleLight, fontSize: 13, fontFamily: appFontFamily)),
             const SizedBox(height: 24),
             _chatBubble('What risks should I watch for in Phase 2?'),
             _chatBubble('Suggest a mitigation plan for the supply chain delay.'),
@@ -783,11 +784,11 @@ class _KazAISection extends StatelessWidget {
   }
 
   Widget _aiFeature(String title, String desc) {
-    return Padding(padding: const EdgeInsets.only(bottom: 16), child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [Icon(Icons.check_circle, color: _purple, size: 18), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [Text(title, textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 14, fontWeight: FontWeight.w600, fontFamily: appFontFamily)), Text(desc, textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]))]));
+    return Padding(padding: const EdgeInsets.only(bottom: 16), child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [const Icon(Icons.check_circle, color: _purple, size: 18), const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [Text(title, textAlign: TextAlign.center, style: const TextStyle(color: _textPrimary, fontSize: 14, fontWeight: FontWeight.w600, fontFamily: appFontFamily)), Text(desc, textAlign: TextAlign.center, style: const TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]))]));
   }
 
   Widget _chatBubble(String text) {
-    return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: _purple.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)), child: Row(children: [Icon(Icons.auto_awesome, color: _purple, size: 14), const SizedBox(width: 8), Expanded(child: Text(text, style: TextStyle(color: _textPrimary, fontSize: 12, fontFamily: appFontFamily)))]));
+    return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: _purple.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)), child: Row(children: [const Icon(Icons.auto_awesome, color: _purple, size: 14), const SizedBox(width: 8), Expanded(child: Text(text, style: const TextStyle(color: _textPrimary, fontSize: 12, fontFamily: appFontFamily)))]));
   }
 }
 
@@ -811,18 +812,18 @@ class _BenefitsSection extends StatelessWidget {
       child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Column(children: [
-          Text('What You Achieve with PDOS', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+          const Text('What You Achieve with PDOS', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
           const SizedBox(height: 40),
           Wrap(spacing: 20, runSpacing: 20, alignment: WrapAlignment.center, children: benefits.map((b) => _benefitCard(b.$1, b.$2, b.$3)).toList()),
           const SizedBox(height: 32),
-          Container(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12), decoration: BoxDecoration(color: _green.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12), border: Border.all(color: _green.withValues(alpha: 0.2))), child: Text('Up to 30% reduction in rework', style: TextStyle(color: _green, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
+          Container(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12), decoration: BoxDecoration(color: _green.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12), border: Border.all(color: _green.withValues(alpha: 0.2))), child: const Text('Up to 30% reduction in rework', style: TextStyle(color: _green, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily))),
         ]),
       )),
     );
   }
 
   Widget _benefitCard(String text, IconData icon, Color color) {
-    return Container(width: 260, padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Row(children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)), const SizedBox(width: 14), Expanded(child: Text(text, style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: appFontFamily)))]));
+    return Container(width: 260, padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Row(children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)), const SizedBox(width: 14), Expanded(child: Text(text, style: const TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: appFontFamily)))]));
   }
 }
 
@@ -861,10 +862,10 @@ class _PricingSectionState extends State<_PricingSection> {
           const SizedBox(height: 32),
 
           // Main Title
-          Text('Simple, Scalable Pricing for Every Level of Project Delivery',
+          const Text('Simple, Scalable Pricing for Every Level of Project Delivery',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: const Color(0xFF111827),
+              color: Color(0xFF111827),
               fontSize: 36,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
@@ -1073,7 +1074,7 @@ class _PricingSectionState extends State<_PricingSection> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(badgeText,
-              style: TextStyle(
+              style: const TextStyle(
                 color: _accentGoldDark,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -1089,9 +1090,9 @@ class _PricingSectionState extends State<_PricingSection> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: _accentGold.withValues(alpha: 0.3)),
               ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
+              child: const Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(Icons.check_circle, color: _accentGoldDark, size: 14),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Text('Selected',
                   style: TextStyle(
                     color: _accentGoldDark,
@@ -1107,8 +1108,8 @@ class _PricingSectionState extends State<_PricingSection> {
 
         // Description
         Text(description,
-          style: TextStyle(
-            color: const Color(0xFF111827),
+          style: const TextStyle(
+            color: Color(0xFF111827),
             fontSize: 14,
             fontWeight: FontWeight.w500,
             height: 1.4,
@@ -1120,8 +1121,8 @@ class _PricingSectionState extends State<_PricingSection> {
         // Price
         Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
           Text(price,
-            style: TextStyle(
-              color: const Color(0xFF111827),
+            style: const TextStyle(
+              color: Color(0xFF111827),
               fontSize: 36,
               fontWeight: FontWeight.w800,
               fontFamily: appFontFamily,
@@ -1159,7 +1160,7 @@ class _PricingSectionState extends State<_PricingSection> {
               margin: const EdgeInsets.only(top: 3),
               width: 8,
               height: 8,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: _accentGold,
                 shape: BoxShape.circle,
               ),
@@ -1193,7 +1194,7 @@ class _PricingSectionState extends State<_PricingSection> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: Text(isSelected ? 'Selected' : 'Select Plan',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 fontFamily: appFontFamily,
@@ -1220,9 +1221,9 @@ class _ServicesSection extends StatelessWidget {
       child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Column(children: [
-          Text('Services', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
+          const Text('Services', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -0.5, fontFamily: appFontFamily)),
           const SizedBox(height: 8),
-          Text('Beyond software — we help you deliver', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
+          const Text('Beyond software — we help you deliver', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
           const SizedBox(height: 40),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             _serviceCard('Project Delivery', 'Access our PDOS platform with full lifecycle tools. Start a project now and move from initiation to launch.', Icons.assignment_outlined, _blue, 'Start a Project', () => context.go('/create-account')),
@@ -1240,9 +1241,9 @@ class _ServicesSection extends StatelessWidget {
     return Expanded(child: Container(padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(16), border: Border.all(color: _border)), child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
       Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 22)),
       const SizedBox(height: 16),
-      Text(title, textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+      Text(title, textAlign: TextAlign.center, style: const TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
       const SizedBox(height: 8),
-      Text(desc, textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 13, height: 1.5, fontFamily: appFontFamily)),
+      Text(desc, textAlign: TextAlign.center, style: const TextStyle(color: _textSecondary, fontSize: 13, height: 1.5, fontFamily: appFontFamily)),
       const SizedBox(height: 20),
       TextButton(onPressed: onTap, child: Row(mainAxisSize: MainAxisSize.min, children: [Text(cta, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)), const SizedBox(width: 4), Icon(Icons.arrow_forward, color: color, size: 14)])),
     ])));
@@ -1261,17 +1262,17 @@ class _FinalCTASection extends StatelessWidget {
       child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 800),
         child: Column(children: [
-          Text('Ready to Transform How You Deliver Projects?', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 36, fontWeight: FontWeight.w800, letterSpacing: -0.5, fontFamily: appFontFamily)),
+          const Text('Ready to Transform How You Deliver Projects?', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 36, fontWeight: FontWeight.w800, letterSpacing: -0.5, fontFamily: appFontFamily)),
           const SizedBox(height: 16),
-          Text('Move beyond tracking tools. Implement a system designed for real project success.', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 17, fontFamily: appFontFamily)),
+          const Text('Move beyond tracking tools. Implement a system designed for real project success.', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 17, fontFamily: appFontFamily)),
           const SizedBox(height: 32),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Container(decoration: BoxDecoration(gradient: LinearGradient(colors: [_blue, _purple]), borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: _blue.withValues(alpha: 0.3), blurRadius: 16)]), child: Material(color: Colors.transparent, child: InkWell(onTap: () => context.go('/create-account'), borderRadius: BorderRadius.circular(24), child: Padding(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16), child: Text('Start Your Project', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, fontFamily: appFontFamily)))))),
+            Container(decoration: BoxDecoration(gradient: const LinearGradient(colors: [_blue, _purple]), borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: _blue.withValues(alpha: 0.3), blurRadius: 16)]), child: Material(color: Colors.transparent, child: InkWell(onTap: () => context.go('/create-account'), borderRadius: BorderRadius.circular(24), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16), child: Text('Start Your Project', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, fontFamily: appFontFamily)))))),
             const SizedBox(width: 16),
-            Container(decoration: BoxDecoration(color: Colors.transparent, borderRadius: BorderRadius.circular(24), border: Border.all(color: _border)), child: Material(color: Colors.transparent, child: InkWell(onTap: () => _launchUrl('mailto:contact@nduproject.com'), borderRadius: BorderRadius.circular(24), child: Padding(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16), child: Text('Contact Us', style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w600, fontFamily: appFontFamily)))))),
+            Container(decoration: BoxDecoration(color: Colors.transparent, borderRadius: BorderRadius.circular(24), border: Border.all(color: _border)), child: Material(color: Colors.transparent, child: InkWell(onTap: () => _launchUrl('mailto:contact@nduproject.com'), borderRadius: BorderRadius.circular(24), child: const Padding(padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16), child: Text('Contact Us', style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w600, fontFamily: appFontFamily)))))),
           ]),
           const SizedBox(height: 24),
-          Text('Execution Doesn\'t Fix Bad Starts.\nNdu Project ensures projects start right, and stay right.', textAlign: TextAlign.center, style: TextStyle(color: _gold, fontSize: 15, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic, height: 1.6, fontFamily: appFontFamily)),
+          const Text('Execution Doesn\'t Fix Bad Starts.\nNdu Project ensures projects start right, and stay right.', textAlign: TextAlign.center, style: TextStyle(color: _gold, fontSize: 15, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic, height: 1.6, fontFamily: appFontFamily)),
         ]),
       )),
     );
@@ -1288,16 +1289,16 @@ class _FooterSection extends StatelessWidget {
     return Container(
       key: const Key('footer'),
       padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 60),
-      decoration: BoxDecoration(color: _surface, border: Border(top: BorderSide(color: _border))),
+      decoration: const BoxDecoration(color: _surface, border: Border(top: BorderSide(color: _border))),
       child: Center(child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1200),
         child: Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             // Brand column
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-              Row(mainAxisSize: MainAxisSize.min, children: [Container(width: 28, height: 28, decoration: BoxDecoration(gradient: LinearGradient(colors: [_gold, _goldDeep]), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.trending_up, color: Color(0xFF0A0E1A), size: 16)), const SizedBox(width: 8), Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily)), Text(' Project', style: TextStyle(color: _gold, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily))]),
+              Row(mainAxisSize: MainAxisSize.min, children: [Container(width: 28, height: 28, decoration: BoxDecoration(gradient: const LinearGradient(colors: [_gold, _goldDeep]), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.trending_up, color: Color(0xFF0A0E1A), size: 16)), const SizedBox(width: 8), const Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily)), const Text(' Project', style: TextStyle(color: _gold, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily))]),
               const SizedBox(height: 12),
-              Text('The Project Delivery Operating System', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily)),
+              const Text('The Project Delivery Operating System', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily)),
               const SizedBox(height: 16),
               // Social icons
               Row(mainAxisSize: MainAxisSize.min, children: [
@@ -1316,22 +1317,22 @@ class _FooterSection extends StatelessWidget {
             _footerCol('About', ['Our Story', 'Careers', 'Partners', 'Blog', 'Contact']),
             // Contact
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-              Text('Contact', style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+              const Text('Contact', style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
               const SizedBox(height: 12),
               _contactRow(Icons.email_outlined, 'contact@nduproject.com', () => _launchUrl('mailto:contact@nduproject.com')),
               _contactRow(Icons.phone_outlined, '+1 (225) 555-0199', () => _launchUrl('https://wa.me/12255550199')),
               _contactRow(Icons.location_on_outlined, '5635 Main Street, Suite A-160\nZachary, LA 70791', () {}),
               const SizedBox(height: 12),
               // Careers link
-              InkWell(onTap: () => context.go('/careers'), child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: _blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: _blue.withValues(alpha: 0.2))), child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.work_outline, color: _blue, size: 14), const SizedBox(width: 6), Text('We\'re Hiring — View Careers', style: TextStyle(color: _blueLight, fontSize: 11, fontWeight: FontWeight.w600, fontFamily: appFontFamily))]))),
+              InkWell(onTap: () => context.go('/careers'), child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: _blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: _blue.withValues(alpha: 0.2))), child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.work_outline, color: _blue, size: 14), SizedBox(width: 6), Text('We\'re Hiring — View Careers', style: TextStyle(color: _blueLight, fontSize: 11, fontWeight: FontWeight.w600, fontFamily: appFontFamily))]))),
             ])),
           ]),
           const SizedBox(height: 40),
-          Divider(color: _border),
+          const Divider(color: _border),
           const SizedBox(height: 20),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text('© 2026 Ndu Project. All rights reserved.', style: TextStyle(color: _textMuted, fontSize: 11, fontFamily: appFontFamily)),
-            Row(children: [TextButton(onPressed: () {}, child: Text('Privacy', style: TextStyle(color: _textMuted, fontSize: 11, fontFamily: appFontFamily))), TextButton(onPressed: () {}, child: Text('Terms', style: TextStyle(color: _textMuted, fontSize: 11, fontFamily: appFontFamily)))]),
+            const Text('© 2026 Ndu Project. All rights reserved.', style: TextStyle(color: _textMuted, fontSize: 11, fontFamily: appFontFamily)),
+            Row(children: [TextButton(onPressed: () {}, child: const Text('Privacy', style: TextStyle(color: _textMuted, fontSize: 11, fontFamily: appFontFamily))), TextButton(onPressed: () {}, child: const Text('Terms', style: TextStyle(color: _textMuted, fontSize: 11, fontFamily: appFontFamily)))]),
           ]),
         ]),
       )),
@@ -1340,9 +1341,9 @@ class _FooterSection extends StatelessWidget {
 
   Widget _footerCol(String title, List<String> items) {
     return Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-      Text(title, style: TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+      Text(title, style: const TextStyle(color: _textPrimary, fontSize: 13, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
       const SizedBox(height: 12),
-      ...items.map((item) => Padding(padding: const EdgeInsets.only(bottom: 8), child: TextButton(onPressed: () {}, style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero), child: Text(item, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))))),
+      ...items.map((item) => Padding(padding: const EdgeInsets.only(bottom: 8), child: TextButton(onPressed: () {}, style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero), child: Text(item, style: const TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))))),
     ]));
   }
 
@@ -1351,6 +1352,6 @@ class _FooterSection extends StatelessWidget {
   }
 
   Widget _contactRow(IconData icon, String text, VoidCallback onTap) {
-    return Padding(padding: const EdgeInsets.only(bottom: 8), child: InkWell(onTap: onTap, child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center, children: [Icon(icon, color: _textMuted, size: 14), const SizedBox(width: 8), Flexible(child: Text(text, textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 11, height: 1.4, fontFamily: appFontFamily)))])));
+    return Padding(padding: const EdgeInsets.only(bottom: 8), child: InkWell(onTap: onTap, child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center, children: [Icon(icon, color: _textMuted, size: 14), const SizedBox(width: 8), Flexible(child: Text(text, textAlign: TextAlign.center, style: const TextStyle(color: _textSecondary, fontSize: 11, height: 1.4, fontFamily: appFontFamily)))])));
   }
 }

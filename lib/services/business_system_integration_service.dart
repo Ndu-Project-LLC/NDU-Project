@@ -431,7 +431,7 @@ class BusinessSystemIntegrationService {
     BusinessSystemIntegration current;
     if (existing.exists) {
       current = BusinessSystemIntegration.fromFirestore(
-          existing as DocumentSnapshot<Map<String, dynamic>>);
+          existing);
     } else {
       final user = _auth.currentUser;
       current = BusinessSystemIntegration.disconnected(

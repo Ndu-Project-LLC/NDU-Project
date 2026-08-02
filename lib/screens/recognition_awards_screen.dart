@@ -252,12 +252,12 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
         TextField(
           controller: controller,
           maxLines: maxLines,
-          decoration: InputDecoration(
-            border: const OutlineInputBorder(
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
               borderSide: BorderSide(color: Color(0xFFD1D5DB)),
             ),
-            contentPadding: const EdgeInsets.all(10),
+            contentPadding: EdgeInsets.all(10),
           ),
           style: const TextStyle(fontSize: 13),
         ),
@@ -276,7 +276,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
                 fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
-          value: value ?? (controller != null ? controller.text : null),
+          initialValue: value ?? (controller?.text),
           items: items
               .map((item) => DropdownMenuItem(value: item, child: Text(item)))
               .toList(),
@@ -342,8 +342,8 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel:
                           'Project Team Activities - Recognition & Awards',
                     ),

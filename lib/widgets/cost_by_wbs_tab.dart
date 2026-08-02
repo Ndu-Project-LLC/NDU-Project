@@ -263,16 +263,16 @@ class CostByWBSTab extends StatelessWidget {
                     decoration: BoxDecoration(
                         color: const Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(8)),
-                    child: Row(
+                    child: const Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded,
+                        Icon(Icons.warning_amber_rounded,
                             color: Color(0xFFD97706), size: 18),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Expanded(
                           child: Text(
                               'These cost lines have no WBS reference. Link them in the Cost Estimate Builder for full traceability.',
                               style: TextStyle(
-                                  color: const Color(0xFF92400E),
+                                  color: Color(0xFF92400E),
                                   fontSize: 12)),
                         ),
                       ],
@@ -297,7 +297,7 @@ class CostByWBSTab extends StatelessWidget {
                                     overflow:
                                         TextOverflow.ellipsis)),
                             const SizedBox(width: 8),
-                            Text('${line.category.label}',
+                            Text(line.category.label,
                                 style: const TextStyle(
                                     color: _textSecondary,
                                     fontSize: 10)),
@@ -402,11 +402,11 @@ class CostByWBSTab extends StatelessWidget {
                       const SizedBox(height: 10),
                       Text(
                           '$currencySymbol${_fmt(totalAll)}',
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: LightModeColors.accent,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              fontFeatures: const [
+                              fontFeatures: [
                                 FontFeature.tabularFigures()
                               ])),
                       const SizedBox(height: 4),

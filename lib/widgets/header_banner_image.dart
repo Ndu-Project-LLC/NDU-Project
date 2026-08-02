@@ -102,7 +102,7 @@ class _HeaderBannerImageState extends State<HeaderBannerImage> {
         child: Icon(
           Icons.image_outlined,
           size: 32,
-          color: Colors.amber.withOpacity(0.5),
+          color: Colors.amber.withValues(alpha: 0.5),
         ),
       ),
     );

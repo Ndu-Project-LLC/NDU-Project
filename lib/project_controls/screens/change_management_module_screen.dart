@@ -121,7 +121,7 @@ class _ChangeManagementModuleScreenState
                   title: 'Change Management Navigation',
                   subtitle: 'Navigate between change management sections',
                   icon: Icons.sync_alt,
-                  tabs: [
+                  tabs: const [
                     SectionTab(
                         icon: Icons.dashboard_outlined, label: 'Dashboard'),
                     SectionTab(icon: Icons.list_alt, label: 'Change Register'),
@@ -160,11 +160,11 @@ class _ChangeManagementModuleScreenState
                         _selectCR(crId);
                         _navigateToTab(1);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Change request created'),
+                          const SnackBar(
+                            content: Text('Change request created'),
                             behavior: SnackBarBehavior.floating,
-                            backgroundColor: const Color(0xFF10B981),
-                            duration: const Duration(seconds: 3),
+                            backgroundColor: Color(0xFF10B981),
+                            duration: Duration(seconds: 3),
                           ),
                         );
                       },
@@ -317,7 +317,7 @@ class _DashboardTab extends StatelessWidget {
     ][DateTime.now().weekday - 1];
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
           color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _surfaceBorder)),
@@ -366,7 +366,7 @@ class _DashboardTab extends StatelessWidget {
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(10),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -434,7 +434,7 @@ class _DashboardTab extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                   color: _textPrimary,
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
@@ -449,7 +449,7 @@ class _DashboardTab extends StatelessWidget {
   Widget _contingencyReserveCard() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
           color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _surfaceBorder)),
@@ -472,7 +472,7 @@ class _DashboardTab extends StatelessWidget {
         // Total impact
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -491,7 +491,7 @@ class _DashboardTab extends StatelessWidget {
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -529,7 +529,7 @@ class _DashboardTab extends StatelessWidget {
       ]),
       const SizedBox(height: 6),
       ClipRRect(
-          borderRadius: const BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
               value: pct,
               backgroundColor: const Color(0xFFE4E7EC),
@@ -541,7 +541,7 @@ class _DashboardTab extends StatelessWidget {
   Widget _impactSummaryCard() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
           color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _surfaceBorder)),
@@ -632,7 +632,7 @@ class _DashboardTab extends StatelessWidget {
   Widget _recentCRsCard() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
           color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _surfaceBorder)),
@@ -691,7 +691,7 @@ class _DashboardTab extends StatelessWidget {
       ..sort((a, b) => b.value.compareTo(a.value));
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
           color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _surfaceBorder)),
@@ -850,7 +850,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
               children: [
                 // View toggle: Card / Table
                 Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Color(0xFFF9FAFB),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: _surfaceBorder),
@@ -878,7 +878,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                   style: ElevatedButton.styleFrom(
                       backgroundColor: LightModeColors.accent,
                       foregroundColor: _textPrimary,
-                      shape: const RoundedRectangleBorder(
+                      shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8))),
                 ),
               ],
@@ -892,7 +892,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
           // Filter row
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
                 color: _cardBg,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: _surfaceBorder)),
@@ -952,15 +952,15 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
           if (filtered.isEmpty)
             Container(
               padding: const EdgeInsets.all(40),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                   color: _cardBg,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: _surfaceBorder)),
-              child: Center(
+              child: const Center(
                   child: Column(children: [
-                const Icon(Icons.search_off, color: _textSecondary, size: 36),
-                const SizedBox(height: 12),
-                const Text('No change requests match your filters',
+                Icon(Icons.search_off, color: _textSecondary, size: 36),
+                SizedBox(height: 12),
+                Text('No change requests match your filters',
                     style: TextStyle(color: _textSecondary, fontSize: 13)),
               ])),
             )
@@ -1209,7 +1209,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
@@ -1255,10 +1255,10 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
               const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           filled: true,
           fillColor: const Color(0xFFF9FAFB),
-          border: const OutlineInputBorder(
+          border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: _surfaceBorder)),
-          enabledBorder: const OutlineInputBorder(
+          enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: _surfaceBorder)),
         ),
@@ -1356,7 +1356,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                   margin: const EdgeInsets.only(left: 8),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                       color: Color(0xFFDC2626),
                       borderRadius: BorderRadius.circular(4)),
                   child: const Text('EMERGENCY',
@@ -1499,7 +1499,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor:
                       isSelected ? const Color(0xFFD97706) : _textSecondary,
-                  shape: const RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6)),
                   side: BorderSide(
                       color:
@@ -1514,7 +1514,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                     style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF10B981),
                         foregroundColor: Colors.white,
-                        shape: const RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6))),
                     child: Text(
                         'Approve as ${cr.currentStepIndex < cr.approvalSteps.length ? cr.approvalSteps[cr.currentStepIndex].roleLabel : "N/A"}')),
@@ -1524,7 +1524,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                         .rejectCR(cr.id, reason: 'Rejected from UI'),
                     style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFEF4444),
-                        shape: const RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6))),
                     child: const Text('Reject')),
               ],
@@ -1535,7 +1535,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                     style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF6366F1),
                         foregroundColor: Colors.white,
-                        shape: const RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6))),
                     child: const Text('Implement Change')),
               ],
@@ -1575,16 +1575,19 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
       final color =
           d.isCritical ? const Color(0xFFEF4444) : const Color(0xFF6366F1);
       final labelParts = <String>[];
-      if (d.scheduleDays != null && d.scheduleDays != 0)
+      if (d.scheduleDays != null && d.scheduleDays != 0) {
         labelParts.add(
             '${d.scheduleDays! > 0 ? "+" : ""}${d.scheduleDays!.round()}d');
-      if (d.costAmount != null && d.costAmount != 0)
+      }
+      if (d.costAmount != null && d.costAmount != 0) {
         labelParts.add('\$${(d.costAmount! / 1000).round()}K');
+      }
       if (d.impactLevel > 0) labelParts.add('L${d.impactLevel}');
-      if (d.impact != null)
+      if (d.impact != null) {
         labelParts.add(d.impact!.length > 30
             ? '${d.impact!.substring(0, 30)}...'
             : d.impact!);
+      }
       chips.add(Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -1646,7 +1649,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                     style: const TextStyle(color: Color(0xFF1A1D1F))),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<CMChangeType>(
-                    value: type,
+                    initialValue: type,
                     decoration: const InputDecoration(labelText: 'Change Type'),
                     items: CMChangeType.values
                         .map((t) =>
@@ -1655,7 +1658,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                     onChanged: (v) => setState(() => type = v!)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<CMPriority>(
-                    value: priority,
+                    initialValue: priority,
                     decoration: const InputDecoration(labelText: 'Priority'),
                     items: CMPriority.values
                         .map((p) =>
@@ -1758,7 +1761,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
     if (crs.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
             color: _cardBg,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: _surfaceBorder)),
@@ -1773,8 +1776,9 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
     for (final cr in crs) {
       final all = cr.impact.all;
       for (var i = 0; i < all.length && i < aggregateLevels.length; i++) {
-        if (all[i].impactLevel > aggregateLevels[i])
+        if (all[i].impactLevel > aggregateLevels[i]) {
           aggregateLevels[i] = all[i].impactLevel;
+        }
       }
     }
     final avgComposite = crs
@@ -1786,7 +1790,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
     final maxDimName = dims[maxDimIdx].name;
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
           color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _surfaceBorder)),
@@ -1823,7 +1827,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(10),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -1846,7 +1850,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
   Widget _impactApprovalCard(CMChangeRequest cr) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
           color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _surfaceBorder)),
@@ -2020,7 +2024,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
               const SizedBox(height: 12),
               Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                       color: Color(0xFFF9FAFB),
                       borderRadius: BorderRadius.circular(8)),
                   child: Row(
@@ -2109,8 +2113,9 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
       if (_actionFilter != 'All' && e.action != _actionFilter) return false;
       if (_fromDate != null &&
           e.timestamp.isBefore(
-              DateTime(_fromDate!.year, _fromDate!.month, _fromDate!.day)))
+              DateTime(_fromDate!.year, _fromDate!.month, _fromDate!.day))) {
         return false;
+      }
       if (_toDate != null) {
         final end = DateTime(_toDate!.year, _toDate!.month, _toDate!.day)
             .add(const Duration(days: 1));
@@ -2207,7 +2212,7 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
             style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6366F1),
                 foregroundColor: Colors.white,
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8))),
           ),
         ]),
@@ -2215,7 +2220,7 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
         // Filter card
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: _cardBg,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: _surfaceBorder)),
@@ -2361,15 +2366,15 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
         if (filtered.isEmpty)
           Container(
             padding: const EdgeInsets.all(40),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
                 color: _cardBg,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: _surfaceBorder)),
-            child: Center(
+            child: const Center(
                 child: Column(children: [
-              const Icon(Icons.filter_alt_off, color: _textSecondary, size: 32),
-              const SizedBox(height: 12),
-              const Text('No audit entries match your filters',
+              Icon(Icons.filter_alt_off, color: _textSecondary, size: 32),
+              SizedBox(height: 12),
+              Text('No audit entries match your filters',
                   style: TextStyle(color: _textSecondary, fontSize: 13)),
             ])),
           )
@@ -2396,7 +2401,7 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
                       Expanded(
                           child: Container(
                         padding: const EdgeInsets.all(10),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                             color: _cardBg,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: _surfaceBorder)),
@@ -2480,7 +2485,7 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
       const SizedBox(height: 4),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
             color: Color(0xFFF9FAFB),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: _surfaceBorder)),
@@ -2513,10 +2518,10 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
       const SizedBox(height: 4),
       InkWell(
         onTap: onTap,
-        borderRadius: const BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
@@ -2851,7 +2856,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                     checkmarkColor: _textPrimary,
                     backgroundColor: _bgColor,
                     side: const BorderSide(color: _surfaceBorder),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6)),
                   );
                 }).toList()),
@@ -2915,7 +2920,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                   color: Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(8)),
               child: Row(children: [
@@ -2948,10 +2953,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                   ),
                 );
               },
-              borderRadius: const BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8),
               child: Container(
                 padding: const EdgeInsets.all(24),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
@@ -3007,7 +3012,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
             }),
             style: OutlinedButton.styleFrom(
                 foregroundColor: _textSecondary,
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8))),
             child: const Text('Reset form'),
           ),
@@ -3021,7 +3026,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
               foregroundColor: _textPrimary,
               disabledBackgroundColor: const Color(0xFFE4E7EC),
               disabledForegroundColor: const Color(0xFF9CA3AF),
-              shape: const RoundedRectangleBorder(
+              shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             ),
@@ -3036,7 +3041,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       String letter, String title, IconData icon, Widget child) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
           color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _surfaceBorder)),
@@ -3090,10 +3095,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
               const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           filled: true,
           fillColor: _bgColor,
-          border: const OutlineInputBorder(
+          border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: _surfaceBorder)),
-          enabledBorder: const OutlineInputBorder(
+          enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: _surfaceBorder)),
         ),
@@ -3112,7 +3117,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       const SizedBox(height: 4),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
             color: Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: _surfaceBorder)),
@@ -3135,10 +3140,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       const SizedBox(height: 4),
       InkWell(
         onTap: onTap,
-        borderRadius: const BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: _bgColor,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
@@ -3167,7 +3172,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
       const SizedBox(height: 4),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
             color: _bgColor,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: _surfaceBorder)),
@@ -3209,10 +3214,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
               const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           filled: true,
           fillColor: _bgColor,
-          border: const OutlineInputBorder(
+          border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: _surfaceBorder)),
-          enabledBorder: const OutlineInputBorder(
+          enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: _surfaceBorder)),
           prefixIcon: allowNegative
@@ -3220,7 +3225,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                   size: 14, color: color.withValues(alpha: 0.5))
               : null,
         ),
-        style: TextStyle(
+        style: const TextStyle(
             color: _textPrimary, fontSize: 12, fontWeight: FontWeight.w700),
       ),
     ]);
@@ -3243,10 +3248,10 @@ class _CreateCRTabState extends State<_CreateCRTab> {
               const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           filled: true,
           fillColor: _bgColor,
-          border: const OutlineInputBorder(
+          border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: _surfaceBorder)),
-          enabledBorder: const OutlineInputBorder(
+          enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: _surfaceBorder)),
           prefixIcon: const Icon(Icons.attach_money,
@@ -3459,7 +3464,7 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
         // CR switcher
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: _bgColor,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
@@ -3496,7 +3501,7 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
               style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6366F1),
                   foregroundColor: Colors.white,
-                  shape: const RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8))),
             ),
             if (_showComposite) ...[
@@ -3515,7 +3520,7 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
             style: ElevatedButton.styleFrom(
                 backgroundColor: LightModeColors.accent,
                 foregroundColor: _textPrimary,
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8))),
           ),
         ]),
@@ -3615,10 +3620,10 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
                 const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             filled: true,
             fillColor: _bgColor,
-            border: const OutlineInputBorder(
+            border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
                 borderSide: BorderSide(color: _surfaceBorder)),
-            enabledBorder: const OutlineInputBorder(
+            enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
                 borderSide: BorderSide(color: _surfaceBorder)),
           ),
@@ -3639,10 +3644,10 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
             fillColor: _bgColor,
             prefixIcon: const Icon(Icons.person_outline,
                 size: 12, color: _textSecondary),
-            border: const OutlineInputBorder(
+            border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
                 borderSide: BorderSide(color: _surfaceBorder)),
-            enabledBorder: const OutlineInputBorder(
+            enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
                 borderSide: BorderSide(color: _surfaceBorder)),
           ),
@@ -3652,10 +3657,10 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
         // Due date
         InkWell(
           onTap: () => _pickDueDate(index),
-          borderRadius: const BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(6),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
                 color: _bgColor,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: _surfaceBorder)),
@@ -3752,7 +3757,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
             width: 380,
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               DropdownButtonFormField<ApprovalRole>(
-                value: role,
+                initialValue: role,
                 decoration: const InputDecoration(labelText: 'Approval Role'),
                 items: ApprovalRole.values
                     .map((r) => DropdownMenuItem(
@@ -3789,7 +3794,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 14),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                         color: _bgColor,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: _surfaceBorder)),
@@ -3982,7 +3987,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
               style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6366F1),
                   foregroundColor: Colors.white,
-                  shape: const RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8))),
             ),
             const SizedBox(width: 8),
@@ -4014,7 +4019,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
                 foregroundColor: _textPrimary,
                 disabledBackgroundColor: const Color(0xFFE4E7EC),
                 disabledForegroundColor: const Color(0xFF9CA3AF),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),
             ),
@@ -4024,7 +4029,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
         // CR switcher
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: _bgColor,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
@@ -4054,7 +4059,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
         // Status summary
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
@@ -4140,7 +4145,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
               child: Center(
                   child: decision == ApprovalDecision.pending
                       ? Text('$stepNum',
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: _textSecondary,
                               fontSize: 12,
                               fontWeight: FontWeight.w700))
@@ -4200,8 +4205,8 @@ class _WorkflowTabState extends State<_WorkflowTab> {
             Row(children: [
               const Icon(Icons.person_outline, size: 12, color: _textSecondary),
               const SizedBox(width: 4),
-              Text('Decision-maker: ',
-                  style: const TextStyle(color: _textSecondary, fontSize: 11)),
+              const Text('Decision-maker: ',
+                  style: TextStyle(color: _textSecondary, fontSize: 11)),
               Text(step.assigneeName ?? 'Unassigned',
                   style: const TextStyle(
                       color: _textPrimary,
@@ -4230,7 +4235,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
               const SizedBox(height: 6),
               Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                       color: Color(0xFFF9FAFB),
                       borderRadius: BorderRadius.circular(6)),
                   child: Row(
@@ -4565,7 +4570,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                 foregroundColor: _textPrimary,
                 disabledBackgroundColor: const Color(0xFFE4E7EC),
                 disabledForegroundColor: const Color(0xFF9CA3AF),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),
             ),
@@ -4579,7 +4584,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: const Color(0xFFE4E7EC),
                 disabledForegroundColor: const Color(0xFF9CA3AF),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),
             ),
@@ -4589,7 +4594,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
         // CR switcher
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: _bgColor,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _surfaceBorder)),
@@ -4625,11 +4630,11 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                     color: const Color(0xFFF59E0B).withValues(alpha: 0.2))),
-            child: Row(children: [
-              const Icon(Icons.lock_outline,
+            child: const Row(children: [
+              Icon(Icons.lock_outline,
                   color: Color(0xFFF59E0B), size: 18),
-              const SizedBox(width: 12),
-              const Expanded(
+              SizedBox(width: 12),
+              Expanded(
                   child: Text(
                       'Implementation tasks are only available for approved / implemented CRs. Approve this CR via the Workflow tab first.',
                       style:
@@ -4640,7 +4645,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
           // Implementation progress bar
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
                 color: _cardBg,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: _surfaceBorder)),
@@ -4661,7 +4666,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
               ]),
               const SizedBox(height: 12),
               ClipRRect(
-                borderRadius: const BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(6),
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 12,
@@ -4697,7 +4702,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
           if (tasks.isEmpty)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                   color: _cardBg,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: _surfaceBorder)),
@@ -4753,7 +4758,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
         if (baselineHistory.isEmpty)
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
                 color: _cardBg,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: _surfaceBorder)),
@@ -4782,7 +4787,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
           color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: _surfaceBorder)),
@@ -4827,7 +4832,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                       color: _bgColor,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: _surfaceBorder)),
@@ -4851,10 +4856,11 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                               ])))
                           .toList(),
                       onChanged: (v) {
-                        if (v != null)
+                        if (v != null) {
                           widget.provider.updateImplementationTask(
                               crId, task.id,
                               status: v);
+                        }
                       },
                     ),
                   ),
@@ -4874,7 +4880,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                       color: _bgColor,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: _surfaceBorder)),
@@ -4903,10 +4909,11 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                               child: Text(a, overflow: TextOverflow.ellipsis)))
                           .toList(),
                       onChanged: (v) {
-                        if (v != null)
+                        if (v != null) {
                           widget.provider.updateImplementationTask(
                               crId, task.id,
                               assignee: v);
+                        }
                       },
                     ),
                   ),
@@ -4926,11 +4933,11 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                 const SizedBox(height: 4),
                 InkWell(
                   onTap: () => _pickTaskDueDate(task.id, task.dueDate),
-                  borderRadius: const BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(6),
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                         color: _bgColor,
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: _surfaceBorder)),
@@ -4958,7 +4965,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
           const SizedBox(height: 8),
           Container(
               padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                   color: Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(6)),
               child:
@@ -5019,7 +5026,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(10),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
               color: Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
           child: Column(children: [
             // BAC diff

@@ -34,7 +34,7 @@ class _PortfolioGanttCardState extends State<PortfolioGanttCard> {
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -126,15 +126,15 @@ class _GanttPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (projects.isEmpty) return;
 
-    final barHeight = 24.0;
-    final rowHeight = 44.0;
-    final labelWidth = 120.0;
+    const barHeight = 24.0;
+    const rowHeight = 44.0;
+    const labelWidth = 120.0;
     final chartLeft = labelWidth + 8;
     final chartWidth = size.width - chartLeft - 16;
-    final chartTop = 24.0;
+    const chartTop = 24.0;
 
     // Draw header labels
-    final headerStyle = TextStyle(
+    const headerStyle = TextStyle(
       color: const Color(0xFF94A3B8),
       fontSize: 10,
       fontWeight: FontWeight.w600,
@@ -216,7 +216,7 @@ class _GanttPainter extends CustomPainter {
       );
       canvas.drawRRect(
         barRect,
-        Paint()..color = barColor.withOpacity(0.15),
+        Paint()..color = barColor.withValues(alpha: 0.15),
       );
       // Draw bar fill
       canvas.drawRRect(
@@ -368,7 +368,7 @@ class _PortfolioProjectLogCardState extends State<PortfolioProjectLogCard> {
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),

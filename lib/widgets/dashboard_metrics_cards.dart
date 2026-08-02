@@ -29,7 +29,7 @@ class AssignedActivitiesCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -52,7 +52,7 @@ class AssignedActivitiesCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withOpacity(0.12),
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text('${activities.length}',
@@ -233,7 +233,7 @@ class PastDueActivitiesCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.red.shade50.withOpacity(0.3),
+        color: Colors.red.shade50.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.red.shade200),
       ),
@@ -371,11 +371,11 @@ class ProjectMetricsCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-              color: _overallColor(rollup.overallStatus).withOpacity(0.4),
+              color: _overallColor(rollup.overallStatus).withValues(alpha: 0.4),
               width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: _overallColor(rollup.overallStatus).withOpacity(0.06),
+              color: _overallColor(rollup.overallStatus).withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -450,9 +450,9 @@ class ProjectMetricsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: c.withOpacity(0.12),
+        color: c.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: c.withOpacity(0.3)),
+        border: Border.all(color: c.withValues(alpha: 0.3)),
       ),
       child: Text(label,
           style: TextStyle(
@@ -470,7 +470,7 @@ class ProjectMetricsCard extends StatelessWidget {
             height: 28,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: c.withOpacity(0.15),
+              color: c.withValues(alpha: 0.15),
               border: Border.all(color: c, width: 2),
             ),
             child: Icon(Icons.circle, color: c, size: 10),

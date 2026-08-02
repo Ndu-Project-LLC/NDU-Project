@@ -449,7 +449,7 @@ class _PanelShell extends StatelessWidget {
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -1044,7 +1044,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -1153,7 +1153,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _structuralStatusOptions.contains(status)
+ initialValue: _structuralStatusOptions.contains(status)
  ? status
  : _structuralStatusOptions.first,
  items: _structuralStatusOptions
@@ -1278,7 +1278,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _componentStatusOptions.contains(status)
+ initialValue: _componentStatusOptions.contains(status)
  ? status
  : _componentStatusOptions.first,
  items: _componentStatusOptions
@@ -1403,7 +1403,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _calculationStatusOptions.contains(status)
+ initialValue: _calculationStatusOptions.contains(status)
  ? status
  : _calculationStatusOptions.first,
  items: _calculationStatusOptions
@@ -1421,7 +1421,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _peStampOptions.contains(peStamp)
+ initialValue: _peStampOptions.contains(peStamp)
  ? peStamp
  : _peStampOptions.first,
  items: _peStampOptions
@@ -1548,7 +1548,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _complianceStatusOptions.contains(complianceStatus)
+ initialValue: _complianceStatusOptions.contains(complianceStatus)
  ? complianceStatus
  : _complianceStatusOptions.first,
  items: _complianceStatusOptions
@@ -1674,7 +1674,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _ecnPriorityOptions.contains(priority)
+ initialValue: _ecnPriorityOptions.contains(priority)
  ? priority
  : _ecnPriorityOptions.first,
  items: _ecnPriorityOptions
@@ -1692,7 +1692,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _ecnStatusOptions.contains(status)
+ initialValue: _ecnStatusOptions.contains(status)
  ? status
  : _ecnStatusOptions.first,
  items: _ecnStatusOptions
@@ -1824,7 +1824,7 @@ class _EngineeringDesignScreenState extends State<EngineeringDesignScreen> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _readinessStatusOptions.contains(status)
+ initialValue: _readinessStatusOptions.contains(status)
  ? status
  : _readinessStatusOptions.first,
  items: _readinessStatusOptions
@@ -1945,7 +1945,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -1974,7 +1974,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  AnimatedRotation(
  duration: const Duration(milliseconds: 200),
  turns: _frameworkGuideExpanded ? 0.5 : 0,
- child: Icon(Icons.expand_more, size: 22, color: const Color(0xFF6B7280)),
+ child: const Icon(Icons.expand_more, size: 22, color: Color(0xFF6B7280)),
  ),
  ],
  ),
@@ -2054,9 +2054,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: double.infinity,
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
- color: color.withOpacity(0.04),
+ color: color.withValues(alpha: 0.04),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.12)),
+ border: Border.all(color: color.withValues(alpha: 0.12)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -2066,7 +2066,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(icon, size: 16, color: color),
@@ -2132,7 +2132,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Structural Architecture',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'layer', label: 'LAYER', required: true),
  CsvColumnSpec(key: 'description', label: 'DESCRIPTION', required: true),
  CsvColumnSpec(key: 'specification', label: 'SPECIFICATION'),
@@ -2310,7 +2310,7 @@ IconButton(
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Component Interface',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'component', label: 'COMPONENT', required: true),
  CsvColumnSpec(key: 'responsibility', label: 'RESPONSIBILITY', required: true),
  CsvColumnSpec(key: 'interfaceType', label: 'INTERFACE TYPE'),
@@ -2489,7 +2489,7 @@ IconButton(
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Calculations & Analysis',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'calculation', label: 'CALCULATION', required: true),
  CsvColumnSpec(key: 'type', label: 'TYPE'),
  CsvColumnSpec(key: 'standard', label: 'STANDARD'),
@@ -2680,7 +2680,7 @@ IconButton(
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Compliance',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'standard', label: 'STANDARD', required: true),
  CsvColumnSpec(key: 'scope', label: 'SCOPE'),
  CsvColumnSpec(key: 'applicability', label: 'APPLICABILITY'),
@@ -2868,7 +2868,7 @@ IconButton(
  CsvTableImportButton(
  compact: true,
  tableTitle: 'ECN',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'ecnId', label: 'ECN ID', required: true),
  CsvColumnSpec(key: 'title', label: 'TITLE', required: true),
  CsvColumnSpec(key: 'priority', label: 'PRIORITY', allowedValues: ['High', 'Medium', 'Low'], defaultValue: 'Medium'),
@@ -3063,7 +3063,7 @@ IconButton(
  CsvTableImportButton(
  compact: true,
  tableTitle: 'Readiness Gates',
- columns: [
+ columns: const [
  CsvColumnSpec(key: 'gate', label: 'GATE', required: true),
  CsvColumnSpec(key: 'owner', label: 'OWNER'),
  CsvColumnSpec(key: 'status', label: 'STATUS', allowedValues: ['Not Started', 'In Progress', 'Pending', 'Complete'], defaultValue: 'Not Started'),
@@ -3196,7 +3196,7 @@ IconButton(
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -3210,7 +3210,7 @@ IconButton(
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: const Color(0xFF0EA5E9).withOpacity(0.12),
+ color: const Color(0xFF0EA5E9).withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: const Icon(Icons.edit_note_outlined,

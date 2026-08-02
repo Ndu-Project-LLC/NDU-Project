@@ -389,7 +389,7 @@ class _FatMechanicalCompletionScreenState
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFFCD34D)),
@@ -434,8 +434,8 @@ class _FatMechanicalCompletionScreenState
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -512,7 +512,7 @@ class _StatusDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Color(0xFFE5E7EB)),

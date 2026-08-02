@@ -38,8 +38,7 @@ class _MetricItem {
     required this.key,
     required this.label,
     required this.description,
-    this.selected = false,
-  });
+  }) : selected = false;
 }
 
 final List<_MetricGroup> _allMetricGroups = [
@@ -316,8 +315,8 @@ class _AgileMetricsPlanningScreenState
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                         activeItemLabel:
                             'Agile Delivery Model - Metrics Planning'),
                   ),
@@ -340,11 +339,11 @@ class _AgileMetricsPlanningScreenState
                         else ...[
                           Row(
                             children: [
-                              Expanded(
+                              const Expanded(
                                 child: Text(
                                   'Select the metrics your team will track during execution. '
                                   'Selections auto-configure the execution dashboard.',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 15, color: _kMuted),
                                 ),
                               ),
@@ -371,18 +370,18 @@ class _AgileMetricsPlanningScreenState
                           ),
                           const SizedBox(height: 16),
                           if (_isSaving)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 8),
                               child: Row(
                                 children: [
-                                  const SizedBox(
+                                  SizedBox(
                                       width: 12,
                                       height: 12,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2)),
-                                  const SizedBox(width: 8),
+                                  SizedBox(width: 8),
                                   Text('Saving...',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 12, color: _kMuted)),
                                 ],
                               ),
@@ -462,7 +461,7 @@ class _AgileMetricsPlanningScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),

@@ -37,8 +37,8 @@ class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Start-Up Planning',
  ),
  ),
@@ -48,7 +48,7 @@ class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
  child: LayoutBuilder(
  builder: (context, constraints) {
  final width = constraints.maxWidth;
- final gap = 24.0;
+ const gap = 24.0;
  final twoCol = width >= 980;
  final halfWidth = twoCol ? (width - gap) / 2 : width;
  return Column(
@@ -161,10 +161,10 @@ class _ReadinessRow extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Wrap(
+ return const Wrap(
  spacing: 16,
  runSpacing: 16,
- children: const [
+ children: [
  _MetricCard(
  label: 'Readiness Score', value: '82%', accent: Color(0xFF10B981)),
  _MetricCard(
@@ -220,11 +220,11 @@ class _GoLiveChecklistCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return _SectionCard(
+ return const _SectionCard(
  title: 'Go-Live Readiness Checklist',
  subtitle: 'Critical items required before launch.',
  child: Column(
- children: const [
+ children: [
  _ChecklistRow(text: 'Data migration validation completed'),
  _ChecklistRow(text: 'Performance tests signed off'),
  _ChecklistRow(text: 'Support escalation paths confirmed'),
@@ -240,11 +240,11 @@ class _TrainingEnablementCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return _SectionCard(
+ return const _SectionCard(
  title: 'Training & Enablement',
  subtitle: 'Ensure teams are ready for launch day.',
  child: Column(
- children: const [
+ children: [
  _BulletRow(
  text: 'Role-based training sessions scheduled for all teams.'),
  _BulletRow(
@@ -261,11 +261,11 @@ class _CutoverPlanCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return _SectionCard(
+ return const _SectionCard(
  title: 'Cutover & Launch Timeline',
  subtitle: 'Sequenced steps for the go-live window.',
  child: Column(
- children: const [
+ children: [
  _TimelineRow(
  time: 'T-48h', task: 'Freeze scope and final smoke tests'),
  _TimelineRow(
@@ -286,11 +286,11 @@ class _HypercarePlanCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return _SectionCard(
+ return const _SectionCard(
  title: 'Hypercare Plan',
  subtitle: 'Post-launch monitoring and support.',
  child: Column(
- children: const [
+ children: [
  _ChecklistRow(text: 'Daily incident review with owners'),
  _ChecklistRow(text: 'Real-time SLA tracking dashboard'),
  _ChecklistRow(text: 'Bug triage and prioritization within 2 hours'),
@@ -305,11 +305,11 @@ class _OpsHandoffCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return _SectionCard(
+ return const _SectionCard(
  title: 'Operations Handoff',
  subtitle: 'Ownership transition after launch.',
  child: Column(
- children: const [
+ children: [
  _BulletRow(text: 'Ops runbooks completed and reviewed'),
  _BulletRow(text: 'Support contacts and SLAs shared with teams'),
  _BulletRow(text: 'Monthly health checks scheduled'),

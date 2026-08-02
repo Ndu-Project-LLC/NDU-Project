@@ -430,7 +430,7 @@ class DesignPhaseService {
   Future<Map<String, dynamic>> _getOverallProgressMap(String projectId) async {
     try {
       final readiness = await getDesignProgress(projectId);
-      final totalSections = 14;
+      const totalSections = 14;
       final completedSections =
           (readiness.overallScore * totalSections).round();
 

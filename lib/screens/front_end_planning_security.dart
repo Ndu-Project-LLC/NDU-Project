@@ -759,7 +759,7 @@ Security Training:
  color: isOdd ? const Color(0xFFFAFCFF) : Colors.white,
  border: Border(
  bottom: BorderSide(
- color: const Color(0xFFE2E8F0).withOpacity(0.6),
+ color: const Color(0xFFE2E8F0).withValues(alpha: 0.6),
  width: 0.5,
  ),
  ),
@@ -781,7 +781,7 @@ Security Training:
  decoration: BoxDecoration(
  color: const Color(0xFFF8FAFC),
  border: Border(
- top: BorderSide(color: const Color(0xFFE2E8F0).withOpacity(0.6)),
+ top: BorderSide(color: const Color(0xFFE2E8F0).withValues(alpha: 0.6)),
  ),
  ),
  child: Text(
@@ -965,7 +965,7 @@ Security Training:
  content: Text(
  'Continuing to $destinationLabel. You can complete Security details later.',
  ),
- duration: Duration(seconds: 3),
+ duration: const Duration(seconds: 3),
  ),
  );
  }
@@ -1122,8 +1122,8 @@ Security Training:
  _BottomOverlay(
  onNext: _handleNextPressed,
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Security',
  ),
  ),
@@ -1236,9 +1236,9 @@ class _BottomOverlay extends StatelessWidget {
  borderRadius: BorderRadius.circular(14),
  border: Border.all(color: const Color(0xFFD7E5FF)),
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
- children: const [
+ children: [
  Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
  SizedBox(width: 10),
  Text('AI',

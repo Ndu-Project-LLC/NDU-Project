@@ -29,7 +29,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  final List<_RiskItem> _risks = [];
 
  List<_RiskSignal> _signals = [
- _RiskSignal(
+ const _RiskSignal(
  id: 'SIG-001',
  title: 'Critical path dependencies',
  category: 'Leading',
@@ -41,7 +41,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  trend: 'Increasing',
  detectedDate: '2026-05-06',
  ),
- _RiskSignal(
+ const _RiskSignal(
  id: 'SIG-002',
  title: 'Security posture drift',
  category: 'Lagging',
@@ -53,7 +53,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  trend: 'Stable',
  detectedDate: '2026-05-04',
  ),
- _RiskSignal(
+ const _RiskSignal(
  id: 'SIG-003',
  title: 'Budget volatility',
  category: 'Leading',
@@ -65,7 +65,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  trend: 'Increasing',
  detectedDate: '2026-05-07',
  ),
- _RiskSignal(
+ const _RiskSignal(
  id: 'SIG-004',
  title: 'Resource utilization imbalance',
  category: 'Leading',
@@ -80,7 +80,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  ];
 
  final List<_EscalationReadiness> _escalations = [
- _EscalationReadiness(
+ const _EscalationReadiness(
  id: 'ESC-001',
  event: 'Executive sync — critical path unblock',
  level: 'L3-Executive',
@@ -93,7 +93,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  decisionRequired: 'Approve expedited vendor failover deployment',
  lastReview: '2026-05-07',
  ),
- _EscalationReadiness(
+ const _EscalationReadiness(
  id: 'ESC-002',
  event: 'Risk board update — regulatory submission',
  level: 'L2-Management',
@@ -106,7 +106,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  decisionRequired: 'Authorize parallel regulatory submission track',
  lastReview: '2026-05-06',
  ),
- _EscalationReadiness(
+ const _EscalationReadiness(
  id: 'ESC-003',
  event: 'Ops stakeholder review — security posture',
  level: 'L2-Management',
@@ -119,7 +119,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  decisionRequired: 'Approve emergency patch cycle & retest schedule',
  lastReview: '2026-05-05',
  ),
- _EscalationReadiness(
+ const _EscalationReadiness(
  id: 'ESC-004',
  event: 'Budget variance escalation — forecast drift',
  level: 'L3-Executive',
@@ -135,7 +135,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  ];
 
  List<_MitigationPlan> _plans = [
- _MitigationPlan(
+ const _MitigationPlan(
  id: 'MIT-001',
  riskId: 'R-001',
  strategy: 'Vendor API stability — failover circuit breaker implementation',
@@ -147,7 +147,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  effectiveness: 'High',
  residualRisk: 'Low',
  ),
- _MitigationPlan(
+ const _MitigationPlan(
  id: 'MIT-002',
  riskId: 'R-002',
  strategy: 'Regulatory review delay — parallel submission track with legal',
@@ -159,7 +159,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  effectiveness: 'Medium',
  residualRisk: 'High',
  ),
- _MitigationPlan(
+ const _MitigationPlan(
  id: 'MIT-003',
  riskId: 'R-003',
  strategy: 'Data quality regression — automated validation pipeline deployment',
@@ -171,7 +171,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  effectiveness: 'High',
  residualRisk: 'Medium',
  ),
- _MitigationPlan(
+ const _MitigationPlan(
  id: 'MIT-004',
  riskId: 'R-004',
  strategy: 'Security posture drift — scheduled penetration retest & patch cycle',
@@ -183,7 +183,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  effectiveness: 'Medium',
  residualRisk: 'Medium',
  ),
- _MitigationPlan(
+ const _MitigationPlan(
  id: 'MIT-005',
  riskId: 'R-005',
  strategy: 'Budget volatility — revised forecast with contingency allocation',
@@ -356,10 +356,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 10),
  Row(
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Risk Tracking',
  style: TextStyle(
@@ -823,7 +823,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.shield_outlined, size: 40, color: const Color(0xFFCBD5E1)),
+ const Icon(Icons.shield_outlined, size: 40, color: Color(0xFFCBD5E1)),
  const SizedBox(height: 12),
  const Text(
  'No mitigation plans defined.',
@@ -922,7 +922,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -947,7 +947,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(effectiveness,
@@ -965,7 +965,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.10),
+ color: color.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(residual,
@@ -1093,7 +1093,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.radar, size: 40, color: const Color(0xFFCBD5E1)),
+ const Icon(Icons.radar, size: 40, color: Color(0xFFCBD5E1)),
  const SizedBox(height: 12),
  const Text(
  'No risk signals detected.',
@@ -1123,7 +1123,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1150,7 +1150,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1175,7 +1175,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(confidence,
@@ -1194,7 +1194,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.10),
+ color: color.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1345,7 +1345,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.vertical_align_top, size: 40, color: const Color(0xFFCBD5E1)),
+ const Icon(Icons.vertical_align_top, size: 40, color: Color(0xFFCBD5E1)),
  const SizedBox(height: 12),
  const Text(
  'No escalation paths defined.',
@@ -1412,7 +1412,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1440,7 +1440,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1466,7 +1466,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.10),
+ color: color.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1527,7 +1527,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedLevel,
+ initialValue: selectedLevel,
  items: ['L1-Operational', 'L2-Management', 'L3-Executive', 'L4-Board/C-Suite']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -1555,7 +1555,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: ['Ready', 'Pending', 'In progress', 'Escalated', 'Deferred']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -1673,7 +1673,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedLevel,
+ initialValue: selectedLevel,
  items: ['L1-Operational', 'L2-Management', 'L3-Executive', 'L4-Board/C-Suite']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -1699,7 +1699,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: ['Ready', 'Pending', 'In progress', 'Escalated', 'Deferred']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -1832,7 +1832,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(label,
@@ -1850,7 +1850,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(label,
@@ -1914,11 +1914,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  decoration: const InputDecoration(
  labelText: 'Probability (e.g., 0.42)'),
  keyboardType:
- TextInputType.numberWithOptions(decimal: true),
+ const TextInputType.numberWithOptions(decimal: true),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedImpact,
+ initialValue: selectedImpact,
  items: const ['Low', 'Medium', 'High']
  .map((impact) => DropdownMenuItem(
  value: impact, child: Text(impact)))
@@ -1932,7 +1932,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: const [
  'Mitigating',
  'Monitoring',
@@ -2041,11 +2041,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  VoiceTextFormField(
  controller: probabilityController,
  decoration: const InputDecoration(labelText: 'Probability'),
- keyboardType: TextInputType.numberWithOptions(decimal: true),
+ keyboardType: const TextInputType.numberWithOptions(decimal: true),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedImpact,
+ initialValue: selectedImpact,
  items: ['Low', 'Medium', 'High']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2054,7 +2054,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: ['Mitigating', 'Monitoring', 'Escalated', 'Accepted']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2185,7 +2185,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedCategory,
+ initialValue: selectedCategory,
  items: ['Integrations', 'Compliance', 'Data team', 'Cybersecurity', 'Finance', 'General']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2194,7 +2194,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: ['Not started', 'In progress', 'On track', 'At risk', 'Completed']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2227,7 +2227,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedEffectiveness,
+ initialValue: selectedEffectiveness,
  items: ['High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2236,7 +2236,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedResidual,
+ initialValue: selectedResidual,
  items: ['Low', 'Medium', 'High']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2325,7 +2325,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedCategory,
+ initialValue: selectedCategory,
  items: ['Integrations', 'Compliance', 'Data team', 'Cybersecurity', 'Finance', 'General']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2334,7 +2334,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: ['Not started', 'In progress', 'On track', 'At risk', 'Completed']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2366,7 +2366,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedEffectiveness,
+ initialValue: selectedEffectiveness,
  items: ['High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2375,7 +2375,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedResidual,
+ initialValue: selectedResidual,
  items: ['Low', 'Medium', 'High']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2489,7 +2489,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedCategory,
+ initialValue: selectedCategory,
  items: ['Leading', 'Lagging']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2498,7 +2498,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedSeverity,
+ initialValue: selectedSeverity,
  items: ['Critical', 'High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2507,7 +2507,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedConfidence,
+ initialValue: selectedConfidence,
  items: ['High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2529,7 +2529,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedTrend,
+ initialValue: selectedTrend,
  items: ['Increasing', 'Stable', 'Decreasing']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2609,7 +2609,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedCategory,
+ initialValue: selectedCategory,
  items: ['Leading', 'Lagging']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2618,7 +2618,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedSeverity,
+ initialValue: selectedSeverity,
  items: ['Critical', 'High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2627,7 +2627,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedConfidence,
+ initialValue: selectedConfidence,
  items: ['High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2648,7 +2648,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedTrend,
+ initialValue: selectedTrend,
  items: ['Increasing', 'Stable', 'Decreasing']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),

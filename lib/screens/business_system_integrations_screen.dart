@@ -170,18 +170,18 @@ class _BusinessSystemIntegrationsScreenState
  return Container(
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
- color: const Color(0xFFFFD700).withOpacity(0.08),
+ color: const Color(0xFFFFD700).withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+ border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.3)),
  ),
- child: Row(
+ child: const Row(
  children: [
- const Icon(Icons.link, color: Color(0xFFFFD700)),
- const SizedBox(width: 12),
+ Icon(Icons.link, color: Color(0xFFFFD700)),
+ SizedBox(width: 12),
  Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Connect your business systems',
  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
@@ -250,13 +250,13 @@ class _BusinessSystemIntegrationsScreenState
  borderRadius: BorderRadius.circular(12),
  border: Border.all(
  color: connected
- ? const Color(0xFF22C55E).withOpacity(0.4)
+ ? const Color(0xFF22C55E).withValues(alpha: 0.4)
  : const Color(0xFFE2E8F0),
  width: connected ? 1.5 : 1),
  boxShadow: connected
  ? [
  BoxShadow(
- color: const Color(0xFF22C55E).withOpacity(0.08),
+ color: const Color(0xFF22C55E).withValues(alpha: 0.08),
  blurRadius: 8,
  offset: const Offset(0, 2),
  ),
@@ -377,7 +377,7 @@ class _BusinessSystemIntegrationsScreenState
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: c.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+ color: c.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
  child: Text(label,
  style: TextStyle(
  color: c, fontSize: 10.5, fontWeight: FontWeight.w700)),
@@ -545,10 +545,10 @@ class _ProviderConfigDialogState extends State<_ProviderConfigDialog> {
  Container(
  padding: const EdgeInsets.all(12),
  decoration: BoxDecoration(
- color: const Color(0xFF0EA5E9).withOpacity(0.08),
+ color: const Color(0xFF0EA5E9).withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(8),
  border: Border.all(
- color: const Color(0xFF0EA5E9).withOpacity(0.3)),
+ color: const Color(0xFF0EA5E9).withValues(alpha: 0.3)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -606,8 +606,8 @@ class _ProviderConfigDialogState extends State<_ProviderConfigDialog> {
  ),
  ),
  const SizedBox(height: 12),
- Text('Base URL override (optional)',
- style: const TextStyle(
+ const Text('Base URL override (optional)',
+ style: TextStyle(
  fontSize: 13, fontWeight: FontWeight.w600)),
  const SizedBox(height: 6),
  VoiceTextField(

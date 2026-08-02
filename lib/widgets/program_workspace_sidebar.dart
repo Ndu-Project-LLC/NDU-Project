@@ -73,7 +73,7 @@ class ProgramWorkspaceSidebar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          SizedBox(
+          const SizedBox(
             width: double.infinity,
             height: 96,
             child: Center(child: AppLogo(height: 64)),
@@ -121,10 +121,10 @@ class _SidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = isActive ? kProgramSidebarAccentColor.withOpacity(0.18) : Colors.transparent;
-    final borderColor = isActive ? kProgramSidebarAccentColor.withOpacity(0.35) : Colors.transparent;
+    final background = isActive ? kProgramSidebarAccentColor.withValues(alpha: 0.18) : Colors.transparent;
+    final borderColor = isActive ? kProgramSidebarAccentColor.withValues(alpha: 0.35) : Colors.transparent;
     final iconColor = isActive ? kProgramSidebarAccentColor : const Color(0xFF6B7280);
-    final labelColor = kProgramSidebarTextPrimary;
+    const labelColor = kProgramSidebarTextPrimary;
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),

@@ -193,7 +193,7 @@ class _AccountingScreenState extends State<AccountingScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.account_balance,
+                              const Icon(Icons.account_balance,
                                   color: LightModeColors.accent, size: 20),
                               const SizedBox(width: 12),
                               Expanded(

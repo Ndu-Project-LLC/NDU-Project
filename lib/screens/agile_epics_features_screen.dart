@@ -155,7 +155,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
             content: Text(
                 'Synced ${result.total} items from WBS: ${result.epicsCreated} epics, ${result.featuresCreated} features, ${result.storiesCreated} stories.'),
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Color(0xFF059669),
+            backgroundColor: const Color(0xFF059669),
           ),
         );
       } else {
@@ -431,8 +431,8 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel:
                           'Agile Delivery Model - Epics & Features',
                     ),
@@ -455,10 +455,10 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                         else ...[
                           Row(
                             children: [
-                              Expanded(
+                              const Expanded(
                                 child: Text(
                                     'Define epics (large bodies of work) and their features.',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 15, color: _kMuted)),
                               ),
                               const SizedBox(width: 12),
@@ -532,8 +532,8 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                           if (_selectedEpicId != null) ...[
                             Row(
                               children: [
-                                Text('Features for selected epic',
-                                    style: const TextStyle(
+                                const Text('Features for selected epic',
+                                    style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                         color: _kHeadline)),
@@ -596,7 +596,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
             color: isSelected ? _kAccent : _kBorder, width: isSelected ? 2 : 1),
       ),
       child: InkWell(
-        borderRadius: const BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
         onTap: () {
           setState(() => _selectedEpicId = epic.id);
           _loadFeatures();
@@ -685,10 +685,10 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                   ),
                   const SizedBox(width: 4),
                   if (epic.wbsId.isNotEmpty)
-                    Tooltip(
+                    const Tooltip(
                       message: 'Synced from WBS',
                       child: Icon(Icons.link,
-                          size: 16, color: const Color(0xFF059669)),
+                          size: 16, color: Color(0xFF059669)),
                     ),
                   const SizedBox(width: 4),
                   IconButton(
@@ -718,7 +718,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                 ],
               ),
               VoiceTextField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Epic description',
                   border: InputBorder.none,
                   isDense: true,
@@ -742,7 +742,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
   Widget _buildFeatureCard(int index, Feature feature) {
     return Card(
       margin: const EdgeInsets.only(bottom: 6, left: 16),
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: _kBorder),
       ),
@@ -831,10 +831,10 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                 ),
                 const SizedBox(width: 4),
                 if (feature.wbsId.isNotEmpty)
-                  Tooltip(
+                  const Tooltip(
                     message: 'Synced from WBS',
                     child: Icon(Icons.link,
-                        size: 14, color: const Color(0xFF059669)),
+                        size: 14, color: Color(0xFF059669)),
                   ),
                 const SizedBox(width: 4),
                 IconButton(
@@ -847,7 +847,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
               ],
             ),
             VoiceTextField(
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Feature description',
                 border: InputBorder.none,
                 isDense: true,
@@ -949,7 +949,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
   Widget _buildEmptyState(String message) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(12),
       ),

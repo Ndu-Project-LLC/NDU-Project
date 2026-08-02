@@ -163,7 +163,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                   title: 'Schedule Navigation',
                   subtitle: 'Navigate between schedule sections',
                   icon: Icons.calendar_month_outlined,
-                  tabs: [
+                  tabs: const [
                     SectionTab(icon: Icons.build_outlined, label: 'Builder'),
                     SectionTab(icon: Icons.bar_chart, label: 'Gantt'),
                     SectionTab(icon: Icons.list_alt, label: 'List View'),
@@ -238,10 +238,10 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
-                  children: [
-                    const BuilderScreen(),
-                    const GanttScreen(),
-                    const ListViewScreen(),
+                  children: const [
+                    BuilderScreen(),
+                    GanttScreen(),
+                    ListViewScreen(),
                   ],
                 ),
               ),

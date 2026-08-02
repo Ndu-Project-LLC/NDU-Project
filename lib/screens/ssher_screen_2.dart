@@ -26,16 +26,16 @@ class _SsherScreen2State extends State<SsherScreen2> {
  final content = Column(
  children: [
  // Security section
- SsherSectionCard(
+ const SsherSectionCard(
  leadingIcon: Icons.shield_outlined,
- accentColor: const Color(0xFFEF5350),
+ accentColor: Color(0xFFEF5350),
  title: 'Security',
  subtitle: 'Physical and cyber security measures',
  detailsPlaceholder:
  'Multi- layered security approach including physical access controls, cybersecurity measures, surveillance systems, and incident response',
  itemsLabel: '12 Items',
  addButtonLabel: 'Add Safety Item',
- columns: const [
+ columns: [
  '#',
  'Department',
  'Team Member',
@@ -44,7 +44,7 @@ class _SsherScreen2State extends State<SsherScreen2> {
  'Mitigation Strategy',
  'Actions'
  ],
- rows: const [
+ rows: [
  [
  Text('1', style: TextStyle(fontSize: 12)),
  Text('Operations', style: TextStyle(fontSize: 13)),
@@ -68,16 +68,16 @@ class _SsherScreen2State extends State<SsherScreen2> {
  ),
 
  // Health section
- SsherSectionCard(
+ const SsherSectionCard(
  leadingIcon: Icons.volunteer_activism_outlined,
- accentColor: const Color(0xFF1E88E5),
+ accentColor: Color(0xFF1E88E5),
  title: 'Health',
  subtitle: 'Occupational health and wellness programs',
  detailsPlaceholder:
  'Multi- layered security approach including physical access controls, cybersecurity measures, surveillance systems, and incident response',
  itemsLabel: '12 Items',
  addButtonLabel: 'Add Safety Item',
- columns: const [
+ columns: [
  '#',
  'Department',
  'Team Member',
@@ -86,7 +86,7 @@ class _SsherScreen2State extends State<SsherScreen2> {
  'Mitigation Strategy',
  'Actions'
  ],
- rows: const [
+ rows: [
  [
  Text('1', style: TextStyle(fontSize: 12)),
  Text('Operations', style: TextStyle(fontSize: 13)),
@@ -134,7 +134,7 @@ class _SsherScreen2State extends State<SsherScreen2> {
  backgroundColor: Colors.grey[50],
  drawer: Drawer(
  width: sidebarWidth,
- child: SafeArea(
+ child: const SafeArea(
  child: InitiationLikeSidebar(
  activeItemLabel: 'SSHE Planning',
  showHeader: true,

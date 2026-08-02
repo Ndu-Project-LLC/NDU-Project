@@ -1,5 +1,6 @@
 /// Stub implementation for non-web platforms.
 /// All functions return false/no-op since the Web Speech API is not available.
+library;
 import 'voice_input_service.dart';
 
 /// Creates a SpeechRecognition JS object. No-op on non-web.

@@ -139,14 +139,14 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
   }
 
   Future<void> _loadDismissState() async {
-    final dismissed = await HintService.isPageDismissed('${_dismissPrefix}${widget.pageId}');
+    final dismissed = await HintService.isPageDismissed('$_dismissPrefix${widget.pageId}');
     if (mounted && dismissed) {
       setState(() => _dismissed = true);
     }
   }
 
   Future<void> _dismissPermanently() async {
-    await HintService.markPageDismissed('${_dismissPrefix}${widget.pageId}');
+    await HintService.markPageDismissed('$_dismissPrefix${widget.pageId}');
     if (mounted) {
       await _animController.reverse();
       setState(() => _dismissed = true);
@@ -179,12 +179,12 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: widget.accentColor.withOpacity(0.18),
+            color: widget.accentColor.withValues(alpha: 0.18),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: widget.accentColor.withOpacity(0.07),
+              color: widget.accentColor.withValues(alpha: 0.07),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -216,7 +216,7 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 10, 12),
       decoration: BoxDecoration(
-        color: widget.accentColor.withOpacity(0.04),
+        color: widget.accentColor.withValues(alpha: 0.04),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
       ),
       child: Column(
@@ -229,7 +229,7 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: widget.accentColor.withOpacity(0.12),
+                  color: widget.accentColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -245,19 +245,19 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
                   children: [
                     Text(
                       '${widget.pageTitle} Navigation',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF111827),
+                        color: Color(0xFF111827),
                       ),
                     ),
                     if (widget.description != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         widget.description!,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
-                          color: const Color(0xFF6B7280),
+                          color: Color(0xFF6B7280),
                           height: 1.3,
                         ),
                         maxLines: 2,
@@ -346,14 +346,14 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
       children: [
         const SizedBox(height: 6),
         // Section hint text
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'Navigate between sections of this page:',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF6B7280),
+              color: Color(0xFF6B7280),
             ),
           ),
         ),
@@ -391,16 +391,16 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              Icon(Icons.route_outlined, size: 14, color: const Color(0xFF6B7280)),
-              const SizedBox(width: 6),
+              Icon(Icons.route_outlined, size: 14, color: Color(0xFF6B7280)),
+              SizedBox(width: 6),
               Text(
                 'Page Route',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF6B7280),
+                  color: Color(0xFF6B7280),
                 ),
               ),
             ],
@@ -438,7 +438,7 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
                                 ? [
                                     BoxShadow(
                                       color:
-                                          widget.accentColor.withOpacity(0.3),
+                                          widget.accentColor.withValues(alpha: 0.3),
                                       blurRadius: 6,
                                       offset: const Offset(0, 2),
                                     ),
@@ -478,7 +478,7 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
       case InnerPageSectionStatus.locked:
         return const Color(0xFFE5E7EB);
       case InnerPageSectionStatus.available:
-        return widget.accentColor.withOpacity(0.15);
+        return widget.accentColor.withValues(alpha: 0.15);
       case InnerPageSectionStatus.current:
         return Colors.white;
     }
@@ -587,8 +587,8 @@ class _SectionChip extends StatelessWidget {
     IconData? trailingIcon;
 
     if (isCurrent) {
-      bgColor = accentColor.withOpacity(0.1);
-      borderColor = accentColor.withOpacity(0.4);
+      bgColor = accentColor.withValues(alpha: 0.1);
+      borderColor = accentColor.withValues(alpha: 0.4);
       textColor = accentColor;
       trailingIcon = Icons.radio_button_checked;
     } else if (isCompleted) {
@@ -633,7 +633,7 @@ class _SectionChip extends StatelessWidget {
                   width: 18,
                   height: 18,
                   decoration: BoxDecoration(
-                    color: textColor.withOpacity(0.12),
+                    color: textColor.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   child: Center(

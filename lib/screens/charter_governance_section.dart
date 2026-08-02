@@ -32,7 +32,7 @@ class CharterGovernanceSection extends StatelessWidget {
  border: Border.all(color: Colors.grey.shade300),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  offset: const Offset(0, 4),
  blurRadius: 12,
  )
@@ -458,12 +458,12 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  children: [
- const Icon(Icons.person_pin_outlined,
+ Icon(Icons.person_pin_outlined,
  size: 18, color: Color(0xFFD97706)),
- const SizedBox(width: 8),
- const Expanded(
+ SizedBox(width: 8),
+ Expanded(
  child: Text(
  'Charter to be approved by sponsor, owner or applicable lead',
  style: TextStyle(
@@ -560,12 +560,12 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  builder: (dialogContext) => AlertDialog(
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(16)),
- title: Row(
+ title: const Row(
  children: [
- const Icon(Icons.person_add_outlined,
+ Icon(Icons.person_add_outlined,
  color: Color(0xFFD97706), size: 22),
- const SizedBox(width: 10),
- const Text('Invite Sponsor'),
+ SizedBox(width: 10),
+ Text('Invite Sponsor'),
  ],
  ),
  content: ConstrainedBox(
@@ -728,12 +728,12 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  builder: (dialogContext, setDialogState) => AlertDialog(
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(16)),
- title: Row(
+ title: const Row(
  children: [
- const Icon(Icons.gavel_outlined,
+ Icon(Icons.gavel_outlined,
  color: Color(0xFF2563EB), size: 22),
- const SizedBox(width: 10),
- const Text('Confirm Charter Approval'),
+ SizedBox(width: 10),
+ Text('Confirm Charter Approval'),
  ],
  ),
  content: ConstrainedBox(

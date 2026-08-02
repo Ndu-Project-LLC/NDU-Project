@@ -44,7 +44,7 @@ class PremiumEditDialog extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFC812).withOpacity(0.1),
+                      color: const Color(0xFFFFC812).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(icon, color: const Color(0xFFD97706), size: 24),

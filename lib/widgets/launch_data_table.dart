@@ -529,7 +529,7 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
       return sum + (col.width ?? _defaultColumnWidth);
     });
     final gapWidth = columns.isEmpty ? 0 : _columnGap * (columns.length - 1);
-    final rowPadding = _tableHorizontalPadding * 2;
+    const rowPadding = _tableHorizontalPadding * 2;
     final actionWidth = hasRowActions ? _actionColumnWidth : 0.0;
     return columnWidths + gapWidth + rowPadding + actionWidth;
   }
@@ -569,9 +569,9 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
             ),
           ),
           if (hasRowActions)
-            SizedBox(
+            const SizedBox(
               width: _actionColumnWidth,
-              child: const Center(
+              child: Center(
                 child: Text(
                   'Actions',
                   style: TextStyle(

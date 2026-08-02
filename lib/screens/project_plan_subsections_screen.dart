@@ -304,8 +304,8 @@ class _Level1ScheduleScreenState
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Plan - Level 1 - Project Schedule',
  ),
  ),
@@ -325,13 +325,13 @@ class _Level1ScheduleScreenState
  context, 'project_plan_level1_schedule'),
  ),
  const SizedBox(height: 12),
- Text(
+ const Text(
  'Map major phases, milestone timing, and governance checkpoints.',
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 14, color: Color(0xFF6B7280)),
  ),
  const SizedBox(height: 20),
- PlanningAiNotesCard(
+ const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Level 1 - Project Schedule',
  noteKey: 'planning_project_plan_level1_notes',
@@ -505,14 +505,14 @@ class _Level1ScheduleScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Padding(
- padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+ const Padding(
+ padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
  child: Row(
  children: [
- const Icon(Icons.table_chart_outlined,
+ Icon(Icons.table_chart_outlined,
  size: 18, color: Color(0xFF6B7280)),
- const SizedBox(width: 8),
- const Text(
+ SizedBox(width: 8),
+ Text(
  'Phase Summary',
  style: TextStyle(
  fontSize: 16,
@@ -644,7 +644,7 @@ class _Level1ScheduleScreenState
  padding: const EdgeInsets.symmetric(
  horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.12),
+ color: statusColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -1187,7 +1187,7 @@ class _L1GanttChart extends StatelessWidget {
  pxPerDay,
  decoration: BoxDecoration(
  color: const Color(0xFFE5E7EB)
- .withOpacity(0.6),
+ .withValues(alpha: 0.6),
  borderRadius: BorderRadius.circular(6),
  border: Border.all(
  color: const Color(0xFFD1D5DB),
@@ -1225,7 +1225,7 @@ class _L1GanttChart extends StatelessWidget {
  child: Container(
  decoration: BoxDecoration(
  color: _phaseColor(index)
- .withOpacity(0.85),
+ .withValues(alpha: 0.85),
  ),
  ),
  ),
@@ -1266,7 +1266,7 @@ class _L1GanttChart extends StatelessWidget {
  width: 20,
  height: 10,
  decoration: BoxDecoration(
- color: const Color(0xFFE5E7EB).withOpacity(0.6),
+ color: const Color(0xFFE5E7EB).withValues(alpha: 0.6),
  borderRadius: BorderRadius.circular(3),
  border: Border.all(color: const Color(0xFFD1D5DB)),
  ),
@@ -1347,10 +1347,10 @@ class _L1GanttChart extends StatelessWidget {
  child: Tooltip(
  message:
  '${m.name}${m.targetDate != null ? ' — ${_fmtDate(m.targetDate!)}' : ''}',
- child: CustomPaint(
- size: const Size(12, 12),
+ child: const CustomPaint(
+ size: Size(12, 12),
  painter: _DiamondPainter(
- color: const Color(0xFFF59E0B),
+ color: Color(0xFFF59E0B),
  ),
  ),
  ),
@@ -1784,14 +1784,14 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  children: [
  DraggableSidebar(
  openWidth: AppBreakpoints.sidebarWidth(context),
- child: InitiationLikeSidebar(
+ child: const InitiationLikeSidebar(
  activeItemLabel: 'Project Plan - Detailed Project Schedule'),
  ),
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Plan - Level 1 - Project Schedule',
  ),
  ),
@@ -1806,7 +1806,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  children: [
  _buildHeader(isMobile),
  const SizedBox(height: 20),
- PlanningAiNotesCard(
+ const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Detailed Project Schedule',
  noteKey: 'planning_project_plan_detailed_notes',
@@ -1938,7 +1938,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  boxShadow: isSelected
  ? [
  BoxShadow(
- color: Colors.black.withOpacity(0.08),
+ color: Colors.black.withValues(alpha: 0.08),
  blurRadius: 4)
  ]
  : null,
@@ -2032,7 +2032,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
 
  Widget _buildGanttSection() {
  if (_tasks.isEmpty) {
- return _SectionEmptyState(
+ return const _SectionEmptyState(
  title: 'No schedule tasks yet',
  message: 'Add tasks to see the detailed Gantt chart.',
  icon: Icons.timeline_outlined,
@@ -2107,20 +2107,20 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  Widget _buildGanttLegend() {
  return Row(
  children: [
- _LegendItem(color: const Color(0xFF3B82F6), label: 'Not Started'),
+ const _LegendItem(color: Color(0xFF3B82F6), label: 'Not Started'),
  const SizedBox(width: 16),
- _LegendItem(color: const Color(0xFFF59E0B), label: 'In Progress'),
+ const _LegendItem(color: Color(0xFFF59E0B), label: 'In Progress'),
  const SizedBox(width: 16),
- _LegendItem(color: const Color(0xFF10B981), label: 'Completed'),
+ const _LegendItem(color: Color(0xFF10B981), label: 'Completed'),
  const SizedBox(width: 16),
- _LegendItem(color: const Color(0xFFEF4444), label: 'At Risk'),
+ const _LegendItem(color: Color(0xFFEF4444), label: 'At Risk'),
  if (_showBaseline) ...[
  const SizedBox(width: 24),
  Container(
  width: 20,
  height: 10,
  decoration: BoxDecoration(
- color: const Color(0xFFE5E7EB).withOpacity(0.6),
+ color: const Color(0xFFE5E7EB).withValues(alpha: 0.6),
  borderRadius: BorderRadius.circular(3),
  border: Border.all(color: const Color(0xFFD1D5DB)),
  ),
@@ -2191,16 +2191,16 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  width: constraints.maxWidth > 980 ? constraints.maxWidth : 980,
  child: Table(
  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
- columnWidths: {
- 0: const FixedColumnWidth(56),
- 1: const FlexColumnWidth(3.6),
- 2: const FixedColumnWidth(98),
- 3: const FixedColumnWidth(98),
- 4: const FixedColumnWidth(84),
- 5: const FixedColumnWidth(112),
- 6: const FixedColumnWidth(116),
- 7: const FixedColumnWidth(96),
- 8: const FixedColumnWidth(88),
+ columnWidths: const {
+ 0: FixedColumnWidth(56),
+ 1: FlexColumnWidth(3.6),
+ 2: FixedColumnWidth(98),
+ 3: FixedColumnWidth(98),
+ 4: FixedColumnWidth(84),
+ 5: FixedColumnWidth(112),
+ 6: FixedColumnWidth(116),
+ 7: FixedColumnWidth(96),
+ 8: FixedColumnWidth(88),
  },
  border: const TableBorder(
  horizontalInside: border,
@@ -2604,7 +2604,7 @@ class _DetailedGanttChart extends StatelessWidget {
  : const Color(0xFFFAFAFA)),
  border: Border(
  bottom: BorderSide(
- color: const Color(0xFFE5E7EB).withOpacity(0.5),
+ color: const Color(0xFFE5E7EB).withValues(alpha: 0.5),
  ),
  ),
  ),
@@ -2691,7 +2691,7 @@ class _DetailedGanttChart extends StatelessWidget {
  .clamp(20.0, 2000.0),
  height: _rowHeight - 16,
  decoration: BoxDecoration(
- color: const Color(0xFFE5E7EB).withOpacity(0.6),
+ color: const Color(0xFFE5E7EB).withValues(alpha: 0.6),
  borderRadius: BorderRadius.circular(6),
  border: Border.all(color: const Color(0xFFD1D5DB)),
  ),
@@ -2716,7 +2716,7 @@ class _DetailedGanttChart extends StatelessWidget {
  widthFactor: task.progress.clamp(0, 1),
  child: Container(
  decoration: BoxDecoration(
- color: barColor.withOpacity(0.7),
+ color: barColor.withValues(alpha: 0.7),
  ),
  ),
  ),
@@ -3213,7 +3213,7 @@ class _StatusCell extends StatelessWidget {
  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -3251,7 +3251,7 @@ class _PriorityCell extends StatelessWidget {
  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -3600,14 +3600,14 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  children: [
  DraggableSidebar(
  openWidth: AppBreakpoints.sidebarWidth(context),
- child: InitiationLikeSidebar(
+ child: const InitiationLikeSidebar(
  activeItemLabel: 'Project Plan - Condensed Project Summary'),
  ),
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Plan - Level 1 - Project Schedule',
  ),
  ),
@@ -3621,7 +3621,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  children: [
  _buildHeader(isMobile),
  const SizedBox(height: 20),
- PlanningAiNotesCard(
+ const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Condensed Project Summary',
  noteKey:
@@ -3693,10 +3693,10 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  ],
  ),
  const SizedBox(height: 12),
- Text(
+ const Text(
  'Executive view of schedule, cost, scope, and readiness.',
  style:
- const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+ TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
  ),
  ],
  )
@@ -3710,10 +3710,10 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  color: Color(0xFF111827)),
  ),
  const Spacer(),
- Text(
+ const Text(
  'Executive view of project status',
  style:
- const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+ TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
  ),
  const SizedBox(width: 16),
  _buildAIGenerateButton(),
@@ -4148,7 +4148,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  padding: const EdgeInsets.symmetric(
  horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.12),
+ color: statusColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -4180,11 +4180,11 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  children: [
- const Icon(Icons.checklist, size: 18, color: Color(0xFF8B5CF6)),
- const SizedBox(width: 8),
- const Text(
+ Icon(Icons.checklist, size: 18, color: Color(0xFF8B5CF6)),
+ SizedBox(width: 8),
+ Text(
  'Scope Summary',
  style: TextStyle(
  fontSize: 14,
@@ -4282,11 +4282,11 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  children: [
- const Icon(Icons.people, size: 18, color: Color(0xFF3B82F6)),
- const SizedBox(width: 8),
- const Text(
+ Icon(Icons.people, size: 18, color: Color(0xFF3B82F6)),
+ SizedBox(width: 8),
+ Text(
  'Team Summary',
  style: TextStyle(
  fontSize: 14,
@@ -4363,7 +4363,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Column(
@@ -4426,7 +4426,7 @@ class _KpiCard extends StatelessWidget {
  width: 32,
  height: 32,
  decoration: BoxDecoration(
- color: iconColor.withOpacity(0.12),
+ color: iconColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(icon, size: 18, color: iconColor),
@@ -4462,7 +4462,7 @@ class _KpiCard extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.12),
+ color: statusColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -4603,8 +4603,8 @@ class _ProjectPlanSectionScreen extends StatelessWidget {
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Plan - Level 1 - Project Schedule',
  ),
  ),
@@ -5045,7 +5045,7 @@ class _StatusRow extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- color: data.color.withOpacity(0.12),
+ color: data.color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(

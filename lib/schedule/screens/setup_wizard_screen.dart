@@ -45,18 +45,18 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Brand
-              Row(
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.calendar_today,
+                  Icon(Icons.calendar_today,
                       color: LightModeColors.accent, size: 28),
-                  const SizedBox(width: 8),
-                  const Text('NDU ',
+                  SizedBox(width: 8),
+                  Text('NDU ',
                       style: TextStyle(
                           color: Color(0xFF1A1D1F),
                           fontSize: 24,
                           fontWeight: FontWeight.bold)),
-                  const Text('PROJECT',
+                  Text('PROJECT',
                       style: TextStyle(
                           color: LightModeColors.accent,
                           fontSize: 24,
@@ -195,16 +195,16 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: const Color(0xFFE4E7EC)),
           ),
-          child: Row(
+          child: const Row(
             children: [
-              const Icon(Icons.info_outline,
+              Icon(Icons.info_outline,
                   size: 16, color: LightModeColors.accent),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'You can rename the project later from the Builder tab. The delivery model picked next controls the activity-type vocabulary and review gate flow.',
                   style: TextStyle(
-                      color: const Color(0xFF6B7280), fontSize: 12, height: 1.4),
+                      color: Color(0xFF6B7280), fontSize: 12, height: 1.4),
                 ),
               ),
             ],

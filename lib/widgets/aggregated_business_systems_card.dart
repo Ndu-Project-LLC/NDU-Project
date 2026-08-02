@@ -71,7 +71,7 @@ class _AggregatedBusinessSystemsCardState
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -215,10 +215,10 @@ class _AggregatedBusinessSystemsCardState
                   fontSize: 12,
                   fontWeight: FontWeight.w600)),
           backgroundColor:
-              has ? const Color(0xFFFFD700).withOpacity(0.12) : const Color(0xFFF1F5F9),
+              has ? const Color(0xFFFFD700).withValues(alpha: 0.12) : const Color(0xFFF1F5F9),
           side: BorderSide(
               color: has
-                  ? const Color(0xFFFFD700).withOpacity(0.4)
+                  ? const Color(0xFFFFD700).withValues(alpha: 0.4)
                   : const Color(0xFFE2E8F0)),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8)),
@@ -266,9 +266,9 @@ class _AggregatedBusinessSystemsCardState
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.06),
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [

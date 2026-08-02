@@ -573,7 +573,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  drawer: isMobile
  ? Drawer(
  width: AppBreakpoints.sidebarWidth(context),
- child: SafeArea(
+ child: const SafeArea(
  child: InitiationLikeSidebar(
  activeItemLabel: 'SSHER',
  showHeader: true,
@@ -626,8 +626,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'SSHER',
  ),
  ),
@@ -881,11 +881,11 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  children: [
- const Icon(Icons.notes, size: 16, color: _Palette.outline),
- const SizedBox(width: 6),
- const Text(
+ Icon(Icons.notes, size: 16, color: _Palette.outline),
+ SizedBox(width: 6),
+ Text(
  'General Notes',
  style: TextStyle(
  fontSize: 12,
@@ -906,7 +906,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  fillColor: _Palette.surfaceBright,
  hintText:
  'Add any overarching safety notes for this project phase...',
- hintStyle: TextStyle(
+ hintStyle: const TextStyle(
  color: _Palette.outlineVariant,
  fontSize: 14,
  ),
@@ -940,7 +940,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
 
  // ── Phase Navigation Tabs (Scrollable Pills) ──
  Widget _buildPhaseTabs(bool isMobile) {
- final categories = _SsherCategory.values;
+ const categories = _SsherCategory.values;
 
  return Container(
  decoration: isMobile
@@ -1112,11 +1112,11 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  ),
  GestureDetector(
  onTap: () => _handleAddItem(),
- child: Row(
+ child: const Row(
  children: [
  Icon(Icons.add_circle,
  size: 18, color: _Palette.primary),
- const SizedBox(width: 4),
+ SizedBox(width: 4),
  Text(
  'Add Item',
  style: TextStyle(
@@ -1460,13 +1460,13 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
 
  // ── Loading State ──
  Widget _buildLoadingState() {
- return Center(
+ return const Center(
  child: Padding(
- padding: const EdgeInsets.all(32),
+ padding: EdgeInsets.all(32),
  child: Column(
  children: [
- const CircularProgressIndicator(strokeWidth: 2),
- const SizedBox(height: 16),
+ CircularProgressIndicator(strokeWidth: 2),
+ SizedBox(height: 16),
  Text(
  'KAZ AI is generating SSHE entries...',
  style: TextStyle(color: _Palette.primary, fontSize: 14),
@@ -1502,7 +1502,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  const SizedBox(height: 8),
  Text(
  'Tap "Add Item" to create your first $catLabel entry, or let KAZ AI generate suggestions.',
- style: TextStyle(fontSize: 14, color: _Palette.outline),
+ style: const TextStyle(fontSize: 14, color: _Palette.outline),
  textAlign: TextAlign.center,
  ),
  const SizedBox(height: 16),
@@ -1564,7 +1564,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
  const SizedBox(height: 8),
  Text(_aiPlanSummary,
- style: TextStyle(
+ style: const TextStyle(
  color: _Palette.onSurfaceVariant,
  fontSize: 14,
  height: 1.5)),
@@ -1658,12 +1658,12 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  onTap: () =>
  PlanningPhaseNavigation.goToNext(context, 'ssher'),
  borderRadius: BorderRadius.circular(12),
- child: Center(
+ child: const Center(
  child: Row(
  mainAxisAlignment: MainAxisAlignment.center,
  mainAxisSize: MainAxisSize.min,
  children: [
- const Text(
+ Text(
  'Save & Continue to Next Phase',
  style: TextStyle(
  fontSize: 15,
@@ -1671,8 +1671,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  color: _Palette.onTertiaryFixed,
  ),
  ),
- const SizedBox(width: 8),
- const Icon(Icons.arrow_forward,
+ SizedBox(width: 8),
+ Icon(Icons.arrow_forward,
  size: 20, color: _Palette.onTertiaryFixed),
  ],
  ),

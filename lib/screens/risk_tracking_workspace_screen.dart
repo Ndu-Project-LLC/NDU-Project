@@ -1124,7 +1124,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 40,
  height: 40,
  decoration: BoxDecoration(
- color: severityColor.withOpacity(0.15),
+ color: severityColor.withValues(alpha: 0.15),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(
@@ -1591,7 +1591,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(5),
  ),
  child: Text(
@@ -1627,7 +1627,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: color.withOpacity(0.15),
+ color: color.withValues(alpha: 0.15),
  borderRadius: BorderRadius.circular(5),
  border: Border.all(color: color, width: 1),
  ),
@@ -1836,7 +1836,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color: Color(0xFF111827),
  ),
  ),
- Text(
+ const Text(
  'Fill in the risk details below',
  style: TextStyle(
  fontSize: 13,
@@ -1959,7 +1959,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  decoration: BoxDecoration(
- color: _getRiskScoreColor(likelihoodScore * impactScore).withOpacity(0.15),
+ color: _getRiskScoreColor(likelihoodScore * impactScore).withValues(alpha: 0.15),
  border: Border.all(
  color: _getRiskScoreColor(likelihoodScore * impactScore),
  ),
@@ -2198,7 +2198,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: probability,
+ initialValue: probability,
  items: const ['Low', 'Medium', 'High']
  .map((v) =>
  DropdownMenuItem(value: v, child: Text(v)))
@@ -2212,7 +2212,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 14),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: impact,
+ initialValue: impact,
  items: const ['Low', 'Medium', 'High', 'Critical']
  .map((v) =>
  DropdownMenuItem(value: v, child: Text(v)))
@@ -2226,7 +2226,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 14),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: const [
  'Open',
  'Monitoring',
@@ -2484,7 +2484,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: severity,
+ initialValue: severity,
  items: const ['Low', 'Medium', 'High', 'Critical']
  .map((v) =>
  DropdownMenuItem(value: v, child: Text(v)))
@@ -2498,7 +2498,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 14),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: confidenceLevel,
+ initialValue: confidenceLevel,
  items: const ['Low', 'Medium', 'High']
  .map((v) =>
  DropdownMenuItem(value: v, child: Text(v)))
@@ -2513,7 +2513,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 14),
  DropdownButtonFormField<String>(
- value: associatedRiskIdController.text.isEmpty
+ initialValue: associatedRiskIdController.text.isEmpty
  ? null
  : associatedRiskIdController.text,
  items: _risks
@@ -2737,7 +2737,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 14),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: const [
  'Planning',
  'In Progress',
@@ -2793,7 +2793,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 14),
  DropdownButtonFormField<String>(
- value: associatedRiskIdController.text.isEmpty
+ initialValue: associatedRiskIdController.text.isEmpty
  ? null
  : associatedRiskIdController.text,
  items: _risks
@@ -2987,7 +2987,7 @@ class _RiskData {
  final String createdAt;
  final String lastModified;
 
- static _RiskData empty() => _RiskData(
+ static _RiskData empty() => const _RiskData(
  id: '',
  title: '',
  owner: '',

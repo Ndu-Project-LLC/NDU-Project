@@ -168,7 +168,7 @@ class _InfrastructurePlanSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileInfrastructurePlanActions()
+          const _MobileInfrastructurePlanActions()
         else
           const _DesktopInfrastructurePlanActions(),
       ],
@@ -386,7 +386,7 @@ class _PlanningInfrastructureCostSectionState
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Color(0xFFE5E7EB)),
@@ -401,7 +401,7 @@ class _PlanningInfrastructureCostSectionState
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Color(0xFFE5E7EB)),

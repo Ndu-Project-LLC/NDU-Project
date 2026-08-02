@@ -174,7 +174,7 @@ class _TwoFactorVerificationScreenState
   Widget build(BuildContext context) {
     const primaryText = Color(0xFF1F2933);
     const secondaryText = Color(0xFF616E7C);
-    final headlineAccent = LightModeColors.accent;
+    const headlineAccent = LightModeColors.accent;
 
     final bool isTablet = AppBreakpoints.isTablet(context);
     final bool isDesktop = AppBreakpoints.isDesktop(context);
@@ -197,9 +197,9 @@ class _TwoFactorVerificationScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-                  Center(child: AppLogo(height: 240)),
+                  const Center(child: AppLogo(height: 240)),
                   const SizedBox(height: 16),
-                  Center(
+                  const Center(
                     child: Text(
                       'Two-Factor Verification',
                       style: TextStyle(
@@ -210,7 +210,7 @@ class _TwoFactorVerificationScreenState
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Center(
+                  const Center(
                     child: Text(
                       'Enter the 6-digit code sent to',
                       style: TextStyle(fontSize: 14, color: secondaryText),

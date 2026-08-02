@@ -581,7 +581,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
  border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 6))],
+ boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 6))],
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -601,7 +601,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  AnimatedRotation(
  duration: const Duration(milliseconds: 200),
  turns: _frameworkGuideExpanded ? 0.5 : 0,
- child: Icon(Icons.expand_more, size: 22, color: const Color(0xFF6B7280)),
+ child: const Icon(Icons.expand_more, size: 22, color: Color(0xFF6B7280)),
  ),
  ],
  ),
@@ -645,33 +645,33 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  List<Widget> _frameworkCards() {
  return [
- _FrameworkGuideCard(
+ const _FrameworkGuideCard(
  icon: Icons.code_rounded,
  title: 'Build & Sprint Execution',
  description:
  'Parallel workstreams, sprint sequencing, burndown tracking, and continuous integration.',
- color: const Color(0xFF0EA5E9),
+ color: Color(0xFF0EA5E9),
  ),
- _FrameworkGuideCard(
+ const _FrameworkGuideCard(
  icon: Icons.link_rounded,
  title: 'Integration & Interface Proving',
  description:
  'Contract testing, API validation, physical system handoff, and integration verification.',
- color: const Color(0xFF059669),
+ color: Color(0xFF059669),
  ),
- _FrameworkGuideCard(
+ const _FrameworkGuideCard(
  icon: Icons.verified_user_rounded,
  title: 'Quality & Defect Management',
  description:
  'Code review, fabrication tolerance, rework control, and ISO 9001 compliance gates.',
- color: const Color(0xFFF59E0B),
+ color: Color(0xFFF59E0B),
  ),
- _FrameworkGuideCard(
+ const _FrameworkGuideCard(
  icon: Icons.rocket_launch_rounded,
  title: 'Release & Deployment Readiness',
  description:
  'Go-live gates, rollback paths, handover playbooks, and production cut-over controls.',
- color: const Color(0xFFEF4444),
+ color: Color(0xFFEF4444),
  ),
  ];
  }
@@ -1175,7 +1175,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Icon(Icons.shield_outlined,
  size: 36,
- color: const Color(0xFF10B981).withOpacity(0.6)),
+ color: const Color(0xFF10B981).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No active risk signals',
  style: TextStyle(
@@ -1443,7 +1443,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  borderRadius: BorderRadius.circular(16),
  border: Border.all(
  color: isActive
- ? const Color(0xFF059669).withOpacity(0.3)
+ ? const Color(0xFF059669).withValues(alpha: 0.3)
  : const Color(0xFFD1D5DB),
  ),
  ),
@@ -1585,9 +1585,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.2)),
+ border: Border.all(color: color.withValues(alpha: 0.2)),
  ),
  child: Text(status,
  style: TextStyle(
@@ -1600,9 +1600,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.2)),
+ border: Border.all(color: color.withValues(alpha: 0.2)),
  ),
  child: Text(severity,
  style: TextStyle(
@@ -1617,9 +1617,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.2)),
+ border: Border.all(color: color.withValues(alpha: 0.2)),
  ),
  child: Text(type,
  style: TextStyle(
@@ -1740,7 +1740,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _workstreamStatusOptions.contains(status)
+ initialValue: _workstreamStatusOptions.contains(status)
  ? status
  : _workstreamStatusOptions.first,
  items: _workstreamStatusOptions
@@ -1930,7 +1930,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: _buildStatusOptions.contains(status)
+ initialValue: _buildStatusOptions.contains(status)
  ? status
  : _buildStatusOptions.first,
  items: _buildStatusOptions
@@ -1953,7 +1953,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: type,
+ initialValue: type,
  items: ['Software', 'Physical', 'Mixed']
  .map((option) => DropdownMenuItem(
  value: option,
@@ -2105,7 +2105,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _integrationStatusOptions.contains(status)
+ initialValue: _integrationStatusOptions.contains(status)
  ? status
  : _integrationStatusOptions.first,
  items: _integrationStatusOptions
@@ -2243,7 +2243,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _severityOptions.contains(severity)
+ initialValue: _severityOptions.contains(severity)
  ? severity
  : _severityOptions[1],
  items: _severityOptions
@@ -2395,7 +2395,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _severityOptions.contains(severity)
+ initialValue: _severityOptions.contains(severity)
  ? severity
  : _severityOptions[1],
  items: _severityOptions
@@ -2548,7 +2548,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _ownerOptions(currentValue: owner).contains(owner)
+ initialValue: _ownerOptions(currentValue: owner).contains(owner)
  ? owner
  : _ownerOptions(currentValue: owner).first,
  items: _ownerOptions(currentValue: owner)
@@ -2569,7 +2569,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: _readinessStatusOptions.contains(status)
+ initialValue: _readinessStatusOptions.contains(status)
  ? status
  : _readinessStatusOptions.first,
  items: _readinessStatusOptions
@@ -2638,7 +2638,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  context: context,
  builder: (ctx) => AlertDialog(
  title: const Text('Delete checklist item?'),
- content: Text(
+ content: const Text(
  'Are you sure you want to delete this item? This action can be undone.'),
  actions: [
  TextButton(
@@ -2654,7 +2654,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
  content:
- Text('Checklist item deleted'),
+ const Text('Checklist item deleted'),
  action: SnackBarAction(
  label: 'Undo',
  onPressed: () {
@@ -3122,9 +3122,9 @@ class _FrameworkGuideCard extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
- color: color.withOpacity(0.04),
+ color: color.withValues(alpha: 0.04),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.15)),
+ border: Border.all(color: color.withValues(alpha: 0.15)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -3133,7 +3133,7 @@ class _FrameworkGuideCard extends StatelessWidget {
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(icon, size: 18, color: color),

@@ -111,7 +111,7 @@ class _LessonsLearnedSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Lessons Learned',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'issueTopic',
                       label: 'Topic',
@@ -207,7 +207,7 @@ class _LessonsLearnedSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileLessonsLearnedActions()
+          const _MobileLessonsLearnedActions()
         else
           const _DesktopLessonsLearnedActions(),
       ],
@@ -545,7 +545,7 @@ class LessonsLearnedTable extends StatelessWidget {
           }
 
           return Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: Color(0xFFE5E7EB)),
             ),

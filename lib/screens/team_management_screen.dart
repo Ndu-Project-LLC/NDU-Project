@@ -46,8 +46,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
  final emailController = TextEditingController();
  final responsibilitiesController = TextEditingController();
  final formKey = GlobalKey<FormState>();
- final focusColor = const Color(0xFFFFD700);
- final List<String> suggestedRoles = const [
+ const focusColor = Color(0xFFFFD700);
+ const List<String> suggestedRoles = [
  'Product Manager',
  'Project Lead',
  'Engineering Lead',
@@ -279,7 +279,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
  : width >= 840
  ? 2
  : 1;
- final gap = 24.0;
+ const gap = 24.0;
  final cardAspectRatio = width >= 1200 ? 0.95 : width >= 840 ? 0.9 : 0.85;
 
  return SingleChildScrollView(

@@ -555,7 +555,7 @@ class _ProjectActivitiesLogScreenState
  Expanded(
  child: DropdownButtonFormField<
  ProjectActivityStatus>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(
  labelText: 'Status',
  border: OutlineInputBorder(),
@@ -579,7 +579,7 @@ class _ProjectActivitiesLogScreenState
  Expanded(
  child: DropdownButtonFormField<
  ProjectApprovalStatus>(
- value: selectedApproval,
+ initialValue: selectedApproval,
  decoration: const InputDecoration(
  labelText: 'Approval',
  border: OutlineInputBorder(),

@@ -232,7 +232,7 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
     if (projectData.projectGoals.isNotEmpty) {
       var idx = 0;
       for (final goal in projectData.projectGoals.take(6)) {
-        final planned = 100.0; // nominal planned value per goal
+        const planned = 100.0; // nominal planned value per goal
         final actual = 78.0 + (goal.name.hashCode.abs() % 20);
         categories.add((
           label: goal.name.isEmpty ? 'Goal ${idx + 1}' : goal.name,
@@ -380,7 +380,7 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFECFDF5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFF10B981)),
@@ -461,7 +461,7 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
                 .map((h) => Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFECFDF5),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: Color(0xFFA7F3D0)),

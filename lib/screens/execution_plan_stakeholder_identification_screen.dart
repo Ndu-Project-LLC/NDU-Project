@@ -333,7 +333,7 @@ class _StakeholderIdentificationSectionState
             children: [
               CsvTableImportButton(
                 tableTitle: 'Stakeholders',
-                columns: [
+                columns: const [
                   CsvColumnSpec(
                       key: 'stakeholderGroup',
                       label: 'Stakeholder Group',
@@ -394,7 +394,7 @@ class _StakeholderIdentificationSectionState
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          _MobileStakeholderIdentificationActions()
+          const _MobileStakeholderIdentificationActions()
         else
           const _DesktopStakeholderIdentificationActions(),
       ],
@@ -443,7 +443,7 @@ class _StakeholderIdentificationTable extends StatelessWidget {
     }
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Color(0xFFE5E7EB)),
       ),

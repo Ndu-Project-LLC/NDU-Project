@@ -4,7 +4,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/app_strings.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:ndu_project/firebase_options.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/api_config_secure.dart'
@@ -156,7 +156,7 @@ void main() async {
         },
       );
     }
-    firestore.settings = Settings(
+    firestore.settings = const Settings(
       persistenceEnabled: !kIsWeb,
       // Cap Firestore cache size to prevent unbounded IndexedDB growth on web.
       // CACHE_SIZE_UNLIMITED caused multi-hundred-MB IndexedDB bloat in long

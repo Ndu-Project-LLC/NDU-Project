@@ -121,7 +121,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16)),
         title: const Text('Delete Lesson'),
         content: const Text(
@@ -136,7 +136,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
-              shape: const RoundedRectangleBorder(
+              shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
             ),
             child: const Text('Delete'),
@@ -245,8 +245,8 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
               ],
             ),
           ),
-          MobileSidebarHamburger(
-            sidebar: const InitiationLikeSidebar(
+          const MobileSidebarHamburger(
+            sidebar: InitiationLikeSidebar(
               activeItemLabel: 'Lessons Learned',
             ),
           ),
@@ -316,7 +316,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
                     side: const BorderSide(color: Color(0xFFD1D5DB)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 12),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
@@ -332,7 +332,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 12),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
@@ -485,7 +485,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
         Container(
           width: 36,
           height: 36,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFE8F5E9),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -572,7 +572,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
                           fillColor: Colors.grey.withValues(alpha: 0.1),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
-                          border: const OutlineInputBorder(
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
@@ -593,7 +593,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
                         foregroundColor: Colors.grey[800],
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 14),
-                        shape: const RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
@@ -608,7 +608,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 14),
-                        shape: const RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
@@ -630,7 +630,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
                       fillColor: Colors.grey.withValues(alpha: 0.1),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
-                      border: const OutlineInputBorder(
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
                       ),
@@ -653,7 +653,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
                             foregroundColor: Colors.grey[800],
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 14),
-                            shape: const RoundedRectangleBorder(
+                            shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
@@ -670,7 +670,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 14),
-                            shape: const RoundedRectangleBorder(
+                            shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
@@ -734,8 +734,8 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
                     color: Colors.grey.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    children: const [
+                  child: const Row(
+                    children: [
                       Expanded(flex: 6, child: Text('#', style: headerStyle)),
                       Expanded(
                           flex: 32, child: Text('Lesson', style: headerStyle)),
@@ -936,7 +936,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
   Widget _circularIconButton(IconData icon, {VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,
-      borderRadius: const BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
         width: 44,
         height: 44,
@@ -1125,7 +1125,7 @@ class _LessonDialogState extends State<_LessonDialog> {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       shape:
-          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+         RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
         child: Padding(
@@ -1311,7 +1311,7 @@ class _LessonDialogState extends State<_LessonDialog> {
                           onPressed: () => Navigator.of(context).pop(),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: const RoundedRectangleBorder(
+                            shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                           ),
                           child: const Text('Cancel'),
@@ -1326,7 +1326,7 @@ class _LessonDialogState extends State<_LessonDialog> {
                             foregroundColor: Colors.black,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: const RoundedRectangleBorder(
+                            shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                           ),
                           child: Text(_isEdit ? 'Update Lesson' : 'Add Lesson'),
@@ -1349,7 +1349,7 @@ class _LessonDialogState extends State<_LessonDialog> {
       hintText: hintText,
       filled: true,
       fillColor: Colors.grey.withValues(alpha: 0.08),
-      border: const OutlineInputBorder(
+      border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),

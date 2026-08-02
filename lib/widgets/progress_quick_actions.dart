@@ -27,7 +27,7 @@ class ProgressQuickActions extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -43,9 +43,9 @@ class ProgressQuickActions extends StatelessWidget {
             color: const Color(0xFF2563EB),
           ),
           if (showRegenerate) ...[
-            SizedBox(
+            const SizedBox(
               height: 32,
-              child: const VerticalDivider(
+              child: VerticalDivider(
                 thickness: 1,
                 color: Color(0xFFE5E7EB),
               ),
@@ -58,9 +58,9 @@ class ProgressQuickActions extends StatelessWidget {
             ),
           ],
           if (showExport) ...[
-            SizedBox(
+            const SizedBox(
               height: 32,
-              child: const VerticalDivider(
+              child: VerticalDivider(
                 thickness: 1,
                 color: Color(0xFFE5E7EB),
               ),

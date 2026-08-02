@@ -45,9 +45,9 @@ enum ProjectMethodology {
       };
 
   Color get color => switch (this) {
-        ProjectMethodology.waterfall => Color(0xFF2563EB),
-        ProjectMethodology.agile => Color(0xFF7C3AED),
-        ProjectMethodology.hybrid => Color(0xFF059669),
+        ProjectMethodology.waterfall => const Color(0xFF2563EB),
+        ProjectMethodology.agile => const Color(0xFF7C3AED),
+        ProjectMethodology.hybrid => const Color(0xFF059669),
       };
 }
 

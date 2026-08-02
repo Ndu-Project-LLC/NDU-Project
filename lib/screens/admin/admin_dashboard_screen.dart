@@ -354,7 +354,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, size: 28, color: color),
@@ -428,7 +428,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: role.color.withOpacity(0.15),
+                  color: role.color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
@@ -532,7 +532,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,

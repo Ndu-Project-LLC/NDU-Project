@@ -121,7 +121,7 @@ CustomTransitionPage<void> shimmerTransitionPage({
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFFFC812).withOpacity(0.4),
+                                color: const Color(0xFFFFC812).withValues(alpha: 0.4),
                                 blurRadius: 8,
                                 spreadRadius: 1,
                               ),

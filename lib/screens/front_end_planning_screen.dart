@@ -76,7 +76,7 @@ class _FrontEndPlanningScreenState extends State<FrontEndPlanningScreen> {
  child: SingleChildScrollView(
  padding: EdgeInsets.symmetric(
  vertical: isMobile ? 32 : 64, horizontal: padding),
- child: Column(
+ child: const Column(
  mainAxisSize: MainAxisSize.min,
  children: [
  _TitleBlock(),
@@ -120,7 +120,7 @@ class _StripedBackdrop extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Stack(
+ return const Stack(
  fit: StackFit.expand,
  children: [
  ColoredBox(color: Color(0xFFF3F5F9)),
@@ -155,7 +155,7 @@ class _TitleBlock extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return EditableContentText(
+ return const EditableContentText(
  contentKey: 'fep_charter_title',
  fallback: 'The components of a project charter',
  category: 'front_end_planning',
@@ -206,7 +206,7 @@ class _ProjectCharterTable extends StatelessWidget {
  ),
  child: ClipRRect(
  borderRadius: BorderRadius.circular(18),
- child: Column(
+ child: const Column(
  mainAxisSize: MainAxisSize.min,
  children: [
  _TableRowCells(

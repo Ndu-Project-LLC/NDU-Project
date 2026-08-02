@@ -1102,8 +1102,8 @@ $requirementsList
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Requirements',
  ),
  ),
@@ -1135,11 +1135,11 @@ $requirementsList
  crossAxisAlignment:
  CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment:
  CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Requirements Plan',
  style: TextStyle(
@@ -1365,13 +1365,13 @@ $requirementsList
  ),
  );
  }  Widget _buildRequirementsTable(BuildContext context) {
-    final headerStyle = const TextStyle(
+    const headerStyle = TextStyle(
       fontSize: 13,
       fontWeight: FontWeight.w700,
       color: Color(0xFF4B5563),
     );
-    final borderColor = const Color(0xFFE5E7EB);
-    final bgHeader = const Color(0xFFF9FAFB);
+    const borderColor = Color(0xFFE5E7EB);
+    const bgHeader = Color(0xFFF9FAFB);
 
     // Column widths matching the original table
     const colW = <double>[
@@ -1420,7 +1420,7 @@ $requirementsList
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.drag_indicator, size: 18, color: const Color(0xFF9CA3AF)),
+                      const Icon(Icons.drag_indicator, size: 18, color: Color(0xFF9CA3AF)),
                       const SizedBox(width: 2),
                       Text('${row.number}',
                         style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
@@ -1743,14 +1743,14 @@ $requirementsList
  }
 
   List<CsvColumnSpec> get _csvColumns => [
-    CsvColumnSpec(key: 'description', label: 'Requirement', required: true, sampleValue: 'The system shall support user authentication'),
-    CsvColumnSpec(key: 'type', label: 'Type', allowedValues: _RequirementRow.requirementTypeOptions, defaultValue: 'Functional', sampleValue: 'Functional'),
-    CsvColumnSpec(key: 'discipline', label: 'Discipline', allowedValues: _RequirementRow.disciplineOptions, defaultValue: 'IT', sampleValue: 'IT'),
-    CsvColumnSpec(key: 'role', label: 'Role', sampleValue: 'Requirements Lead'),
-    CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
-    CsvColumnSpec(key: 'phase', label: 'Phase', allowedValues: _RequirementRow.phaseOptions, defaultValue: 'Planning', sampleValue: 'Planning'),
-    CsvColumnSpec(key: 'source', label: 'Source', sampleValue: 'Stakeholder interview'),
-    CsvColumnSpec(key: 'comments', label: 'Comments', sampleValue: 'High priority'),
+    const CsvColumnSpec(key: 'description', label: 'Requirement', required: true, sampleValue: 'The system shall support user authentication'),
+    const CsvColumnSpec(key: 'type', label: 'Type', allowedValues: _RequirementRow.requirementTypeOptions, defaultValue: 'Functional', sampleValue: 'Functional'),
+    const CsvColumnSpec(key: 'discipline', label: 'Discipline', allowedValues: _RequirementRow.disciplineOptions, defaultValue: 'IT', sampleValue: 'IT'),
+    const CsvColumnSpec(key: 'role', label: 'Role', sampleValue: 'Requirements Lead'),
+    const CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
+    const CsvColumnSpec(key: 'phase', label: 'Phase', allowedValues: _RequirementRow.phaseOptions, defaultValue: 'Planning', sampleValue: 'Planning'),
+    const CsvColumnSpec(key: 'source', label: 'Source', sampleValue: 'Stakeholder interview'),
+    const CsvColumnSpec(key: 'comments', label: 'Comments', sampleValue: 'High priority'),
   ];
 
   void _downloadTemplate() {

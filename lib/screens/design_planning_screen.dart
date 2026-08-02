@@ -174,7 +174,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   DateTime? _lastSavedAt;
   // ValueNotifier for lightweight save-indicator rebuilds without full setState
   final ValueNotifier<_SaveIndicatorState> _saveIndicatorNotifier =
-      ValueNotifier<_SaveIndicatorState>(_SaveIndicatorState(
+      ValueNotifier<_SaveIndicatorState>(const _SaveIndicatorState(
           saving: false, pending: false, lastSavedAt: null));
   final Map<String, bool> _aiGenerating = {};
   late Map<String, _SectionProgressState> _sectionProgress;
@@ -1031,7 +1031,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
             pw.SizedBox(height: 4),
             pw.Text(
               'Generated ${generatedAt.toLocal().toIso8601String()}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 12),
             pw.TableHelper.fromTextArray(
@@ -1742,7 +1742,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
           Container(
             width: 32,
             height: 32,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: _kBrandDark,
               borderRadius: BorderRadius.circular(6),
             ),
@@ -2134,7 +2134,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
               width: double.infinity,
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFFFF7ED),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Color(0xFFF59E0B)),
@@ -2382,7 +2382,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: _kBorder),
@@ -2395,7 +2395,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                         width: double.infinity,
                         margin: const EdgeInsets.only(bottom: 10),
                         padding: const EdgeInsets.all(10),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Color(0xFFFFF7ED),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Color(0xFFF59E0B)),
@@ -2415,7 +2415,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                         width: double.infinity,
                         margin: const EdgeInsets.only(bottom: 10),
                         padding: const EdgeInsets.all(10),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Color(0xFFFEF2F2),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Color(0xFFFCA5A5)),
@@ -2444,7 +2444,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                         CsvTableImportButton(
                           compact: true,
                           tableTitle: 'Specifications',
-                          columns: [
+                          columns: const [
                             CsvColumnSpec(
                                 key: 'title',
                                 label: 'Title',
@@ -3118,7 +3118,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                     const Color(0xFF0D9488).withValues(alpha: 0.4),
                 disabledForegroundColor: Colors.white70,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),
             ),
@@ -3629,7 +3629,7 @@ class _MappingCard extends StatelessWidget {
         : null;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -3651,7 +3651,7 @@ class _MappingCard extends StatelessWidget {
           ),
           if (specificationOptions.isNotEmpty)
             DropdownButtonFormField<String>(
-              value: selectedId,
+              initialValue: selectedId,
               isExpanded: true,
               decoration: _inputDecoration('Select specification item'),
               items: specificationOptions
@@ -3816,7 +3816,7 @@ class _WorkItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -3947,7 +3947,7 @@ class _SpecificationPlanRowCard extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4164,7 +4164,7 @@ class _SpecificationDeviationCard extends StatelessWidget {
         : null;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4187,7 +4187,7 @@ class _SpecificationDeviationCard extends StatelessWidget {
           ),
           if (specificationOptions.isNotEmpty)
             DropdownButtonFormField<String>(
-              value: selectedId,
+              initialValue: selectedId,
               isExpanded: true,
               decoration: _inputDecoration('Select specification item'),
               items: specificationOptions
@@ -4259,7 +4259,7 @@ class _SpecificationDocumentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4373,7 +4373,7 @@ class _RiskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFFDE68A)),
@@ -4470,7 +4470,7 @@ class _DependencyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4579,7 +4579,7 @@ class _DecisionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4681,7 +4681,7 @@ class _ApprovalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4783,7 +4783,7 @@ class _DropdownField extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: selected,
+          initialValue: selected,
           isExpanded: true,
           decoration: _inputDecoration(''),
           items: items
@@ -4959,7 +4959,7 @@ class _FilterableCreatableDropdownFieldState
               child: Material(
                 elevation: 8,
                 color: _kSurface,
-                borderRadius: const BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     maxHeight: 240,
@@ -5257,7 +5257,7 @@ class _RequirementMultiSelectFieldState
         const SizedBox(height: 6),
         InkWell(
           onTap: widget.options.isEmpty ? null : _openSelector,
-          borderRadius: const BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12),
           child: InputDecorator(
             decoration: _inputDecoration(
               widget.options.isEmpty ? 'No requirements available' : '',
@@ -5356,7 +5356,7 @@ class _FourColumnGrid extends StatelessWidget {
     final preferredColumns = isMobile ? 1 : (isTablet ? 2 : 4);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final spacing = 12.0;
+        const spacing = 12.0;
         final maxWidth = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : MediaQuery.sizeOf(context).width;
@@ -5402,7 +5402,7 @@ class _ActionButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         foregroundColor: _kText,
         side: const BorderSide(color: _kBorder),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -5592,7 +5592,7 @@ class _EmptyState extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -5623,15 +5623,15 @@ InputDecoration _inputDecoration(String hintText) {
     filled: true,
     fillColor: const Color(0xFFF9FAFB).withValues(alpha: 0.5),
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-    border: const OutlineInputBorder(
+    border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
       borderSide: BorderSide(color: Color(0xFFD1D5DB)),
     ),
-    enabledBorder: const OutlineInputBorder(
+    enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
       borderSide: BorderSide(color: Color(0xFFD1D5DB)),
     ),
-    focusedBorder: const OutlineInputBorder(
+    focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
       borderSide: BorderSide(color: _kBrandYellow, width: 1.5),
     ),

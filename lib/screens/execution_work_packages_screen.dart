@@ -45,7 +45,6 @@ class _ExecutionWorkPackagesScreenState
     final data = ProjectDataHelper.getData(context, listen: false);
     final methodology = data.planningNotes['planning_schedule_methodology'];
     if (methodology != null &&
-        methodology is String &&
         methodology.isNotEmpty) {
       _selectedMethodology = methodology;
     }
@@ -606,7 +605,7 @@ class _ExecutionWorkPackagesScreenState
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: contractType,
+                  initialValue: contractType,
                   decoration: const InputDecoration(labelText: 'Contract Type'),
                   items: const [
                     DropdownMenuItem(
@@ -623,7 +622,7 @@ class _ExecutionWorkPackagesScreenState
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: paymentType,
+                  initialValue: paymentType,
                   decoration: const InputDecoration(labelText: 'Payment Type'),
                   items: const [
                     DropdownMenuItem(
@@ -726,7 +725,7 @@ class _ExecutionWorkPackagesScreenState
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xFFFFFBEB),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Color(0xFFFDE68A)),
@@ -754,7 +753,7 @@ class _ExecutionWorkPackagesScreenState
 
   Widget _buildReadinessBar(WorkPackage wp) {
     final warnings = IntegratedWorkPackageService.validateReadiness(wp);
-    final maxChecks = 8;
+    const maxChecks = 8;
     final passed = maxChecks - warnings.length;
     final progress = (passed / maxChecks).clamp(0.0, 1.0);
     final color = progress >= 0.8
@@ -799,7 +798,7 @@ class _ExecutionWorkPackagesScreenState
       child: Container(
         constraints: const BoxConstraints(maxWidth: 480),
         padding: const EdgeInsets.all(48),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppSemanticColors.border),
@@ -946,7 +945,7 @@ class _ExecutionWorkPackagesScreenState
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppSemanticColors.border),
@@ -1029,7 +1028,7 @@ class _ExecutionWorkPackagesScreenState
     final values = ['all', 'ewp', 'procurement', 'cwp', 'precomm', 'comm'];
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -1075,7 +1074,7 @@ class _ExecutionWorkPackagesScreenState
   Widget _buildActionBar() {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppSemanticColors.border),
@@ -1106,15 +1105,15 @@ class _ExecutionWorkPackagesScreenState
                 fillColor: const Color(0xFFF9FAFB),
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                border: const OutlineInputBorder(
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: AppSemanticColors.border),
                 ),
-                enabledBorder: const OutlineInputBorder(
+                enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: AppSemanticColors.border),
                 ),
-                focusedBorder: const OutlineInputBorder(
+                focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: Color(0xFFF59E0B), width: 1.5),
                 ),
@@ -1123,7 +1122,7 @@ class _ExecutionWorkPackagesScreenState
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: AppSemanticColors.border),
@@ -1186,7 +1185,7 @@ class _ExecutionWorkPackagesScreenState
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppSemanticColors.border),
@@ -1229,7 +1228,7 @@ class _ExecutionWorkPackagesScreenState
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppSemanticColors.border),
@@ -1294,7 +1293,7 @@ class _ExecutionWorkPackagesScreenState
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 5, vertical: 2),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFFFF7ED),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(color: Color(0xFFF97316)),

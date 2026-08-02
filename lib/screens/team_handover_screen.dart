@@ -253,8 +253,8 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel:
                           'Project Team Activities - Team Handover',
                     ),

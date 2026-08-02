@@ -318,8 +318,8 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  Expanded(child: _buildMainContent()),
  ])),
  ]),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Core Stakeholders',
  ),
  ),
@@ -402,7 +402,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  SizedBox(
  width: double.infinity,
  height: bannerHeight,
- child: Center(child: AppLogo(height: 64)),
+ child: const Center(child: AppLogo(height: 64)),
  ),
  Container(
  padding: const EdgeInsets.all(24),
@@ -495,7 +495,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(children: [
@@ -531,7 +531,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(children: [
@@ -565,7 +565,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(children: [
@@ -604,7 +604,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(children: [
@@ -641,7 +641,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(children: [
@@ -767,19 +767,19 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  color: Colors.white,
  border: Border(bottom: BorderSide(color: gray200, width: 1)),
  ),
- child: Row(
+ child: const Row(
  children: [
  Text('Initiation Phase',
  style: TextStyle(fontSize: 13, color: gray500)),
- const SizedBox(width: 6),
+ SizedBox(width: 6),
  Icon(Icons.chevron_right, size: 16, color: gray500),
- const SizedBox(width: 6),
+ SizedBox(width: 6),
  Text('Business Case',
  style: TextStyle(fontSize: 13, color: gray500)),
- const SizedBox(width: 6),
+ SizedBox(width: 6),
  Icon(Icons.chevron_right, size: 16, color: gray500),
- const SizedBox(width: 6),
- const Text('Core Stakeholders',
+ SizedBox(width: 6),
+ Text('Core Stakeholders',
  style: TextStyle(
  fontSize: 13,
  color: brandYellow,
@@ -803,11 +803,11 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const EditableContentText(
+ EditableContentText(
  contentKey: 'core_stakeholders_heading',
  fallback: 'Core Stakeholders',
  category: 'business_case',
@@ -818,7 +818,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  letterSpacing: -0.5,
  ),
  ),
- const SizedBox(height: 4),
+ SizedBox(height: 4),
  EditableContentText(
  contentKey: 'core_stakeholders_description',
  fallback:
@@ -854,10 +854,10 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  horizontal: 12, vertical: 10),
  margin: const EdgeInsets.only(bottom: 8),
  decoration: BoxDecoration(
- color: Colors.red.withOpacity(0.08),
+ color: Colors.red.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(6),
  border: Border.all(
- color: Colors.red.withOpacity(0.3))),
+ color: Colors.red.withValues(alpha: 0.3))),
  child: Row(children: [
  const Icon(Icons.error_outline,
  color: Colors.red, size: 18),
@@ -976,9 +976,9 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  // Notes heading + Format button
- Row(
+ const Row(
  children: [
- const EditableContentText(
+ EditableContentText(
  contentKey: 'core_stakeholders_notes_heading',
  fallback: 'Notes',
  category: 'business_case',
@@ -988,7 +988,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  color: gray900,
  ),
  ),
- const Spacer(),
+ Spacer(),
  // Format button
  ],
  ),
@@ -1006,7 +1006,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  child: VoiceTextField(
  controller: _notesController,
  keyboardType: TextInputType.multiline,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 14, color: gray700, height: 1.5),
  decoration: InputDecoration(
  hintText: 'Input your notes here...',
@@ -1038,7 +1038,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  ),
  ),
  const SizedBox(height: 4),
- Text(
+ const Text(
  'Reminder: update text within each box.',
  style: TextStyle(
  fontSize: 12,
@@ -1152,9 +1152,9 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  // Add Item button
  if (_canUseAdminControls)
  Row(children: [
- Tooltip(
+ const Tooltip(
  message: 'Add a new stakeholder entry manually',
- child: const Icon(Icons.lightbulb_outline,
+ child: Icon(Icons.lightbulb_outline,
  color: Colors.black87),
  ),
  const SizedBox(width: 8),
@@ -1810,7 +1810,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  width: 24,
  height: 24,
  decoration: BoxDecoration(
- color: brandYellow.withOpacity(0.2),
+ color: brandYellow.withValues(alpha: 0.2),
  shape: BoxShape.circle,
  border: Border.all(color: brandYellow, width: 2),
  ),

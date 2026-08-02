@@ -316,7 +316,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  decoration: const InputDecoration(labelText: 'Cost'),
  ),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(labelText: 'Status'),
  items: _statusOptions
  .map((s) => DropdownMenuItem<String>(
@@ -445,7 +445,7 @@ class _PlanningTechnologyScreenState extends State<PlanningTechnologyScreen> {
  decoration: const InputDecoration(labelText: 'Description'),
  ),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(labelText: 'Status'),
  items: _statusOptions
  .map((s) => DropdownMenuItem<String>(
@@ -993,8 +993,8 @@ onBack: () =>
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Technology Planning',
  ),
  ),
@@ -1170,7 +1170,7 @@ onBack: () =>
  width: 280,
  child: DropdownButtonFormField<String>(
  isExpanded: true,
- value: _categories.contains(_inventoryCategory)
+ initialValue: _categories.contains(_inventoryCategory)
  ? _inventoryCategory
  : 'All Categories',
  items: _categories
@@ -1635,7 +1635,7 @@ class _StatusBadge extends StatelessWidget {
  ? const Color(0xFF991B1B)
  : const Color(0xFF92400E);
 
- final bg = Color.alphaBlend(color.withOpacity(0.12), Colors.white);
+ final bg = Color.alphaBlend(color.withValues(alpha: 0.12), Colors.white);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(

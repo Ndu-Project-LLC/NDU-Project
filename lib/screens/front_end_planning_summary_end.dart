@@ -91,8 +91,8 @@ class _FrontEndPlanningSummaryEndScreenState extends State<FrontEndPlanningSumma
  ],
  ),
  const _BottomOverlay(),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Summary',
  ),
  ),
@@ -245,9 +245,9 @@ class _BottomOverlay extends StatelessWidget {
  borderRadius: BorderRadius.circular(14),
  border: Border.all(color: const Color(0xFFD7E5FF)),
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
- children: const [
+ children: [
  Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
  SizedBox(width: 10),
  Text('AI', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),

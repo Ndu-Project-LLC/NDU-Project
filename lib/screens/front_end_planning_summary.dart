@@ -359,9 +359,9 @@ class _FrontEndPlanningSummaryScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  crossAxisAlignment: CrossAxisAlignment.end,
- children: const [
+ children: [
  Text(
  'Description',
  style: TextStyle(
@@ -1430,7 +1430,7 @@ class _GoalsCard extends StatelessWidget {
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  blurRadius: 4,
  offset: const Offset(0, 2),
  ),
@@ -1586,9 +1586,9 @@ class _BottomOverlay extends StatelessWidget {
  borderRadius: BorderRadius.circular(14),
  border: Border.all(color: const Color(0xFFD7E5FF)),
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
- children: const [
+ children: [
  Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
  SizedBox(width: 10),
  Text('AI',

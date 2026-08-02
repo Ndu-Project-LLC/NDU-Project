@@ -127,12 +127,12 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              const Row(
                 children: [
-                  const Icon(Icons.auto_awesome,
+                  Icon(Icons.auto_awesome,
                       color: LightModeColors.accent, size: 20),
-                  const SizedBox(width: 8),
-                  const Text(
+                  SizedBox(width: 8),
+                  Text(
                     'AI Assistant',
                     style: TextStyle(
                         color: Color(0xFF1A1D1F),
@@ -331,23 +331,23 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
           ],
           // Empty state
           if (!_loading && _suggestions.isEmpty && _activeAction == null)
-            Center(
+            const Center(
               child: Padding(
-                padding: const EdgeInsets.all(48),
+                padding: EdgeInsets.all(48),
                 child: Column(
                   children: [
-                    const Icon(Icons.lightbulb,
+                    Icon(Icons.lightbulb,
                         color: LightModeColors.accent, size: 48),
-                    const SizedBox(height: 16),
-                    const Text(
+                    SizedBox(height: 16),
+                    Text(
                       'Pick an action to start',
                       style: TextStyle(
                           color: Color(0xFF1A1D1F),
                           fontSize: 15,
                           fontWeight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
+                    SizedBox(height: 4),
+                    Text(
                       'KAZ AI can propose cost lines, suggest rates, find gaps, propose savings, and validate your estimate.',
                       style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
                       textAlign: TextAlign.center,

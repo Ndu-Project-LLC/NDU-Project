@@ -130,10 +130,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Technical Debt Management',
  style: TextStyle(
@@ -221,13 +221,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildStatsRow(bool isNarrow) {
  final stats = [
- _StatCardData(
- 'Open debt items', '18', '6 critical', const Color(0xFFEF4444)),
- _StatCardData(
- 'In remediation', '7', '2 sprint owners', const Color(0xFF0EA5E9)),
- _StatCardData(
- 'Monthly burn-down', '14%', 'Goal 20%', const Color(0xFF10B981)),
- _StatCardData('Owner coverage', '92%', '2 gaps', const Color(0xFF6366F1)),
+ const _StatCardData(
+ 'Open debt items', '18', '6 critical', Color(0xFFEF4444)),
+ const _StatCardData(
+ 'In remediation', '7', '2 sprint owners', Color(0xFF0EA5E9)),
+ const _StatCardData(
+ 'Monthly burn-down', '14%', 'Goal 20%', Color(0xFF10B981)),
+ const _StatCardData('Owner coverage', '92%', '2 gaps', Color(0xFF6366F1)),
  ];
 
  if (isNarrow) {
@@ -1169,7 +1169,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedSeverity,
+ initialValue: selectedSeverity,
  decoration: const InputDecoration(labelText: 'Severity'),
  items: const ['Critical', 'High', 'Medium', 'Low']
  .map((value) =>
@@ -1183,7 +1183,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(labelText: 'Status'),
  items: const ['Backlog', 'In progress', 'Blocked', 'Done']
  .map((value) =>
@@ -1364,7 +1364,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<int>(
- value: selectedColorValue,
+ initialValue: selectedColorValue,
  decoration: const InputDecoration(labelText: 'Risk color'),
  items: _governanceColorOptions
  .map((option) => DropdownMenuItem<int>(
@@ -1504,7 +1504,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
- value: selectedTier,
+ initialValue: selectedTier,
  decoration: const InputDecoration(labelText: 'Risk tier'),
  items: const [
  DropdownMenuItem(
@@ -1521,7 +1521,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<int>(
- value: selectedColorValue,
+ initialValue: selectedColorValue,
  decoration:
  const InputDecoration(labelText: 'Severity color'),
  items: _governanceColorOptions
@@ -1686,7 +1686,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<int>(
- value: selectedColorValue,
+ initialValue: selectedColorValue,
  decoration:
  const InputDecoration(labelText: 'Workstream color'),
  items: _governanceColorOptions
@@ -1991,7 +1991,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(16),
  ),
  child: Text(label,
@@ -2009,7 +2009,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(16),
  ),
  child: Text(label,
@@ -2357,7 +2357,7 @@ class _RiskTierCell extends StatelessWidget {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(16),
  ),
  child: Text(
@@ -2390,7 +2390,7 @@ class _OwnerCoverageCell extends StatelessWidget {
  children: [
  CircleAvatar(
  radius: 15,
- backgroundColor: const Color(0xFF0EA5E9).withOpacity(0.14),
+ backgroundColor: const Color(0xFF0EA5E9).withValues(alpha: 0.14),
  child: Text(
  initial,
  style: const TextStyle(

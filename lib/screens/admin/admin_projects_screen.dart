@@ -22,11 +22,11 @@ class AdminProjectsScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
-        title: Row(
+        title: const Row(
           children: [
-            const Icon(Icons.folder_open, color: Color(0xFF9C27B0), size: 28),
-            const SizedBox(width: 12),
-            const Text('Project Overview',
+            Icon(Icons.folder_open, color: Color(0xFF9C27B0), size: 28),
+            SizedBox(width: 12),
+            Text('Project Overview',
                 style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -66,13 +66,13 @@ class AdminProjectsScreen extends StatelessWidget {
             final projects = snapshot.data ?? [];
 
             if (projects.isEmpty) {
-              return Center(
+              return const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.folder_off, size: 64, color: Colors.grey),
-                    const SizedBox(height: 16),
-                    const Text('No projects found',
+                    Icon(Icons.folder_off, size: 64, color: Colors.grey),
+                    SizedBox(height: 16),
+                    Text('No projects found',
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.w600)),
                   ],
@@ -112,7 +112,7 @@ class _ProjectCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -124,7 +124,7 @@ class _ProjectCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF9C27B0).withOpacity(0.1),
+                    color: const Color(0xFF9C27B0).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.folder,
@@ -148,7 +148,7 @@ class _ProjectCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Divider(color: Colors.grey.withOpacity(0.2)),
+            Divider(color: Colors.grey.withValues(alpha: 0.2)),
             const SizedBox(height: 16),
             Row(
               children: [

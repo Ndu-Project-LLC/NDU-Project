@@ -152,7 +152,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     final story = AgileTask(
       epicId: feature.epicId,
       featureId: feature.id,
-      userStory: 'New story ${nextOrder}',
+      userStory: 'New story $nextOrder',
       storyPoints: 3,
       priority: 'Medium',
       status: 'To-Do',
@@ -226,9 +226,9 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 16),
-                        Text(
+                        const Text(
                           'Break features into backlog stories, size them, set sprint/release targets, and prepare the same AgileTask items that execution Kanban and schedule import will use.',
-                          style: const TextStyle(fontSize: 15, color: _kMuted),
+                          style: TextStyle(fontSize: 15, color: _kMuted),
                         ),
                         const SizedBox(height: 20),
                         if (_isLoading)
@@ -241,7 +241,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                             decoration: InputDecoration(
                               hintText: 'Search stories...',
                               prefixIcon: const Icon(Icons.search, size: 20),
-                              border: const OutlineInputBorder(
+                              border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10)),
                             ),
                             onChanged: (v) => setState(() => _searchQuery = v),
@@ -276,8 +276,8 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel:
                           'Agile Delivery Model - Stories & Backlog Breakdown',
                     ),
@@ -320,7 +320,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
   Widget _summaryChip(IconData icon, String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -364,7 +364,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     final stories = _storiesForFeature(feature.id);
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -442,7 +442,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
@@ -464,7 +464,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.blue.withValues(alpha: 0.08),
-                    borderRadius: const BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('WBS linked',
                       style: TextStyle(fontSize: 11, color: Colors.blue[700])),
@@ -625,7 +625,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -671,7 +671,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     return SizedBox(
       width: 220,
       child: DropdownButtonFormField<T>(
-        value: items.contains(value) ? value : null,
+        initialValue: items.contains(value) ? value : null,
         decoration: InputDecoration(
             labelText: label, border: const OutlineInputBorder()),
         items: items

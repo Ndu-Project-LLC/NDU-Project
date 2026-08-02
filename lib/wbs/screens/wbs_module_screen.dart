@@ -123,7 +123,7 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
                   title: 'WBS Navigation',
                   subtitle: 'Navigate between WBS sections',
                   icon: Icons.account_tree_outlined,
-                  tabs: [
+                  tabs: const [
                     SectionTab(icon: Icons.folder_open, label: 'Builder'),
                     SectionTab(icon: Icons.attach_money_outlined, label: 'Cost by WBS'),
                     SectionTab(icon: Icons.auto_awesome, label: 'AI Generator'),
@@ -165,12 +165,12 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
-                  children: [
-                    const WBSBuilderScreen(),
-                    const CostByWBSTab(),
-                    const WBSAIScreen(),
-                    const WBSValidatorScreen(),
-                    const _ExportAndLinkTab(),
+                  children: const [
+                    WBSBuilderScreen(),
+                    CostByWBSTab(),
+                    WBSAIScreen(),
+                    WBSValidatorScreen(),
+                    _ExportAndLinkTab(),
                   ],
                 ),
               ),
@@ -286,12 +286,12 @@ class _ExportAndLinkTab extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Row(
+              const Row(
                 children: [
-                  const Icon(Icons.trending_up,
+                  Icon(Icons.trending_up,
                       color: LightModeColors.accent, size: 20),
-                  const SizedBox(width: 8),
-                  const Text('Export & Link',
+                  SizedBox(width: 8),
+                  Text('Export & Link',
                       style: TextStyle(
                           color: Color(0xFF1A1D1F),
                           fontSize: 20,

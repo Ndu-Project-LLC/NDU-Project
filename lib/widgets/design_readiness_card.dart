@@ -206,7 +206,7 @@ class DesignReadinessCard extends StatelessWidget {
           backgroundColor: Colors.grey.shade100,
           valueColor: AlwaysStoppedAnimation<Color>(barColor),
           minHeight: 4,
-          borderRadius: const BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(2),
         ),
       ],
     );

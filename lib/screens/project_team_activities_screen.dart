@@ -650,7 +650,7 @@ class _ProjectTeamActivitiesScreenState
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -839,7 +839,7 @@ class _ProjectTeamActivitiesScreenState
                           return Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: Color(0xFFF3F4F6),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(color: Color(0xFFE5E7EB)),
@@ -909,7 +909,7 @@ class _ProjectTeamActivitiesScreenState
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
         ),

@@ -572,7 +572,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
     barrierDismissible: true,
     builder: (dialogContext) {
       return AlertDialog(
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
         contentPadding: EdgeInsets.zero,
@@ -695,7 +695,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                         onPressed: () => Navigator.of(dialogContext).pop(false),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: const RoundedRectangleBorder(
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
@@ -723,7 +723,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                           backgroundColor: const Color(0xFFFFB800),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: const RoundedRectangleBorder(
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           elevation: 0,

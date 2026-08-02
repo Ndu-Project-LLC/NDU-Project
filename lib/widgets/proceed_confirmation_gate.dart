@@ -32,7 +32,7 @@ Future<bool> showProceedWithoutReviewDialog(
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16)),
             titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
             contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
@@ -112,7 +112,7 @@ Future<bool> showProceedWithoutReviewDialog(
                   elevation: 0,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  shape: const RoundedRectangleBorder(
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
                 child: const Text('Confirm & Continue'),

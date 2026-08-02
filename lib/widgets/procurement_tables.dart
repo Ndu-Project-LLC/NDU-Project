@@ -557,7 +557,7 @@ class _ResponsiblePickerCell extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 190),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Color(0xFFE2E8F0)),

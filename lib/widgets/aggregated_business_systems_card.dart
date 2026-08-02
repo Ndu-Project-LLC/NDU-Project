@@ -67,7 +67,7 @@ class _AggregatedBusinessSystemsCardState
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
@@ -145,7 +145,7 @@ class _AggregatedBusinessSystemsCardState
   Widget _emptyState() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -184,7 +184,7 @@ class _AggregatedBusinessSystemsCardState
               foregroundColor: const Color(0xFF0F172A),
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: const RoundedRectangleBorder(
+              shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
             ),
           ),
@@ -219,7 +219,7 @@ class _AggregatedBusinessSystemsCardState
               color: has
                   ? const Color(0xFFFFD700).withValues(alpha: 0.4)
                   : const Color(0xFFE2E8F0)),
-          shape: const RoundedRectangleBorder(
+          shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -266,7 +266,7 @@ class _AggregatedBusinessSystemsCardState
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: const BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
@@ -319,7 +319,7 @@ class _AggregatedBusinessSystemsCardState
             height: 24,
             decoration: BoxDecoration(
               color: Color(i.provider.brandColorArgb),
-              borderRadius: const BorderRadius.circular(5),
+              borderRadius: BorderRadius.circular(5),
             ),
             child: Center(
               child: Text(

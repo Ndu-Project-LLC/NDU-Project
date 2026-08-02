@@ -148,7 +148,7 @@ class _WhiteButton extends StatelessWidget {
         foregroundColor: Colors.black87,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8)),
       ),
       icon: Icon(icon, size: 18),
@@ -177,7 +177,7 @@ class _AiAssistButton extends StatelessWidget {
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         elevation: 0,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8)),
       ),
       icon: Icon(icon, size: 18),
@@ -199,11 +199,11 @@ class CircleIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: const BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(999),
       child: Container(
         width: 44,
         height: 44,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(color: Color(0xFFE5E7EB)),
@@ -246,7 +246,7 @@ class CurrentUserProfileChip extends StatelessWidget {
 
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(color: Color(0xFFE5E7EB)),
@@ -492,7 +492,7 @@ class AiTipCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFE1EEFF),
         borderRadius: BorderRadius.circular(14),
       ),
@@ -525,7 +525,7 @@ class AiBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
       ),
@@ -570,7 +570,7 @@ class AddRowButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         backgroundColor: Colors.white,
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16)),
       ),
     );
@@ -599,7 +599,7 @@ class AddSolutionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         backgroundColor: Colors.white,
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16)),
       ),
     );
@@ -617,7 +617,7 @@ class CrossReferenceNote extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFBBF7D0)),
@@ -658,7 +658,7 @@ class YellowActionButton extends StatelessWidget {
         foregroundColor: Colors.black,
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
         elevation: 0,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24)),
       ),
       child: Text(

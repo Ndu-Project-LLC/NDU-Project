@@ -378,7 +378,7 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFEEF2FF),
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -420,7 +420,7 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
   Widget _buildBottomActionBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Color(0xFFE5E7EB)),

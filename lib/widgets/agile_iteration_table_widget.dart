@@ -38,7 +38,7 @@ class AgileIterationTableWidget extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: const BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
@@ -501,7 +501,7 @@ class _PriorityPill extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: _PriorityPill._getStaticColor(p),
-              borderRadius: const BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               p,
@@ -554,7 +554,7 @@ class _StatusPill extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: _StatusPill._getStaticColor(s),
-              borderRadius: const BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               s,

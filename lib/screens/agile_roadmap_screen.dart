@@ -312,7 +312,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
 
   Widget _buildTabBar() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -357,7 +357,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Color(0xFFECFDF5), Color(0xFFF0FDF4)],
             ),
@@ -369,7 +369,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
               Container(
                 width: 56,
                 height: 56,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Color(0xFF059669), Color(0xFF047857)],
                   ),
@@ -565,7 +565,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
   Widget _buildTimelineView(String title, List<Map<String, String>> items) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -676,7 +676,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(24),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Color(0xFFE5E7EB)),
@@ -796,7 +796,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(28),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Color(0xFFE5E7EB)),
@@ -860,7 +860,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
   Widget _progressStat(String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -890,7 +890,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(24),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Color(0xFFE5E7EB)),
@@ -986,7 +986,7 @@ class _AgileRoadmapScreenState extends State<AgileRoadmapScreen>
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(24),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Color(0xFFE5E7EB)),

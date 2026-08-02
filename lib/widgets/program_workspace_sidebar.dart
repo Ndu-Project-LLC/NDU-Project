@@ -192,13 +192,13 @@ class _SidebarItem extends StatelessWidget {
     final labelColor = kProgramSidebarTextPrimary;
 
     return InkWell(
-      borderRadius: const BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: const BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: borderColor),
         ),
         child: Row(

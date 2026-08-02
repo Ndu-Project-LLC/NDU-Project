@@ -324,7 +324,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
     final blockers = _entries.where((e) => e.blockers.isNotEmpty).length;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
@@ -382,7 +382,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
   Widget _buildCalendar() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -520,7 +520,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: _kAccentBg,
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -553,7 +553,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
   Widget _buildStandupCard(_StandupEntry e) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -688,7 +688,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
   Widget _buildActionItemsTableContent() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -810,7 +810,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
               flex: 1,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -865,7 +865,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -878,7 +878,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -989,7 +989,7 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),

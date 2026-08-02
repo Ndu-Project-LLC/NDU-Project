@@ -246,7 +246,7 @@ class _AgileDevelopmentIterationsScreenState
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(4),
           ),
@@ -317,7 +317,7 @@ class _AgileDevelopmentIterationsScreenState
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Color(0xFFE2E8F0)),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10)),
           ),
         ),
@@ -333,7 +333,7 @@ class _AgileDevelopmentIterationsScreenState
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Color(0xFFE2E8F0)),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10)),
           ),
         ),
@@ -470,7 +470,7 @@ class _AgileDevelopmentIterationsScreenState
   Widget _buildStatCard(_StatCardData data) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -532,7 +532,7 @@ class _AgileDevelopmentIterationsScreenState
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -571,7 +571,7 @@ class _AgileDevelopmentIterationsScreenState
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFF3F4F6),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -1042,7 +1042,7 @@ class _MilestoneLinkButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xFFFFF8E1),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Color(0xFFFFE082)),

@@ -337,13 +337,13 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
           margin: const pw.EdgeInsets.all(32),
           build: (_) => [
             pw.Text('Launch Checklist',
-                style: const pw.TextStyle(
+                style: pw.TextStyle(
                     fontSize: 20, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 4),
             pw.Text(
                 '$projectName — Generated ${now.toLocal().toIso8601String()}',
                 style:
-                    const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                    pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
             pw.SizedBox(height: 16),
 
             // Checklist Items
@@ -357,9 +357,9 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
                 data: _checklistItems
                     .map((c) => [c.title, c.detail, c.owner, c.due, c.status])
                     .toList(),
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: const pw.TextStyle(fontSize: 9),
+                cellStyle: pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -377,9 +377,9 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
                 data: _approvals
                     .map((a) => [a.label, a.detail, a.approver, a.status])
                     .toList(),
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: const pw.TextStyle(fontSize: 9),
+                cellStyle: pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -397,9 +397,9 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
                 data: _milestones
                     .map((m) => [m.title, m.detail, m.due, m.status])
                     .toList(),
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: const pw.TextStyle(fontSize: 9),
+                cellStyle: pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -417,9 +417,9 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
                 data: _timelineStages
                     .map((t) => [t.label, t.detail, t.date, t.status])
                     .toList(),
-                headerStyle: const pw.TextStyle(
+                headerStyle: pw.TextStyle(
                     fontSize: 9, fontWeight: pw.FontWeight.bold),
-                cellStyle: const pw.TextStyle(fontSize: 9),
+                cellStyle: pw.TextStyle(fontSize: 9),
                 headerDecoration:
                     const pw.BoxDecoration(color: PdfColors.grey200),
                 cellPadding: const pw.EdgeInsets.all(6),
@@ -444,21 +444,21 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
   pw.Widget _pdfSectionTitle(String title) {
     return pw.Text(title,
         style:
-            const pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold));
+            pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold));
   }
 
   pw.Widget _pdfHeaderCell(String text) {
     return pw.Padding(
         padding: const pw.EdgeInsets.all(6),
         child: pw.Text(text,
-            style: const pw.TextStyle(
+            style: pw.TextStyle(
                 fontSize: 9, fontWeight: pw.FontWeight.bold)));
   }
 
   pw.Widget _pdfCell(String text) {
     return pw.Padding(
         padding: const pw.EdgeInsets.all(6),
-        child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)));
+        child: pw.Text(text, style: pw.TextStyle(fontSize: 9)));
   }
 
   String _s(dynamic v) => (v ?? '').toString().trim();

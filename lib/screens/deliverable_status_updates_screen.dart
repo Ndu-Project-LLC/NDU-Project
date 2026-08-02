@@ -276,7 +276,7 @@ class _DeliverableStatusUpdatesScreenState
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFF0F9FF),
             borderRadius: BorderRadius.circular(10),
           ),

@@ -44,8 +44,8 @@ class ContractsTableWidget extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -800,7 +800,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                         decoration: BoxDecoration(
                           color: _getStatusColor(_contract.status)
                               .withValues(alpha: 0.1),
-                          borderRadius: const BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           _contract.status,
@@ -869,11 +869,11 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                             child: InkWell(
                               onTap:
                                   _isRegenerating ? null : _regenerateKeyTerms,
-                              borderRadius: const BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(8),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 5),
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   color: Color(0xFFF5F3FF),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(color: Color(0xFFDDD6FE)),

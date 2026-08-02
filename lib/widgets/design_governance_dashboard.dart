@@ -123,7 +123,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -252,7 +252,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       right: 18,
                       child: Container(
                         height: 6,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Color(0xFFE2E8F0),
                           borderRadius: BorderRadius.circular(999),
                         ),
@@ -266,7 +266,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                                 (snapshot.readinessPercent / 100.0))
                             .clamp(0.0, usableWidth),
                         height: 6,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
                               Color(0xFF0F172A),
@@ -364,7 +364,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       horizontal: 12,
                       vertical: 8,
                     ),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(color: Color(0xFFE2E8F0)),
@@ -441,7 +441,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     ClipRRect(
-                      borderRadius: const BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(999),
                       child: LinearProgressIndicator(
                         minHeight: 10,
                         value: entry.utilization / 100,
@@ -684,7 +684,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
               (entry) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Color(0xFFE2E8F0)),
@@ -869,7 +869,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
               (entry) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Color(0xFFE2E8F0)),
@@ -949,7 +949,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
               (entry) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Color(0xFFE2E8F0)),
@@ -960,7 +960,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                     Container(
                       width: 34,
                       height: 34,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -1024,7 +1024,7 @@ class _GovernanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -1045,7 +1045,7 @@ class _GovernanceCard extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
                       Color(0xFF0F172A),
@@ -1484,7 +1484,7 @@ class _TableHeaderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE2E8F0)),
@@ -1527,7 +1527,7 @@ class _TableDataRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE2E8F0)),

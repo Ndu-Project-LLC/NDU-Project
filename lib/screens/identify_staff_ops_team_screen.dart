@@ -128,7 +128,7 @@ class _IdentifyStaffOpsTeamScreenState
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(6),
           ),
@@ -215,7 +215,7 @@ class _IdentifyStaffOpsTeamScreenState
       style: OutlinedButton.styleFrom(
         side: const BorderSide(color: Color(0xFFE2E8F0)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -237,7 +237,7 @@ class _IdentifyStaffOpsTeamScreenState
         backgroundColor: const Color(0xFF0EA5E9),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -397,146 +397,6 @@ class _IdentifyStaffOpsTeamScreenState
         .doc('ops_handoff');
   }
 
-  Widget _buildRosterPanel() {
-    if (_projectId == null) {
-      return _PanelShell(
-        title: 'Ops roster',
-        subtitle: 'Role assignments, workload, and focus areas',
-        child: const Center(
-          child: Padding(
-            padding: EdgeInsets.all(24.0),
-            child: Text('No project selected. Please open a project first.',
-                style: TextStyle(color: Color(0xFF64748B))),
-          ),
-        ),
-      );
-    }
-
-    return _PanelShell(
-      title: 'Ops roster',
-      subtitle: 'Role assignments, workload, and focus areas',
-      trailing: _actionButton(Icons.filter_list, 'Filter'),
-      child: RepaintBoundary(
-        child: StreamBuilder<List<OpsMemberModel>>(
-          stream: OpsService.streamMembers(_projectId!),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                  child: Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: CircularProgressIndicator()));
-            }
-
-            if (snapshot.hasError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Text('Error loading members: ${snapshot.error}',
-                      style: const TextStyle(color: Colors.red)),
-                ),
-              );
-            }
-
-            final members = snapshot.data ?? [];
-
-            if (members.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    children: [
-                      const Text('No ops members found.',
-                          style: TextStyle(color: Color(0xFF64748B))),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: () => _showAddMemberDialog(context),
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Add First Member'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            return SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                headingRowHeight: 32,
-                dataRowMinHeight: 28,
-                dataRowMaxHeight: 36,
-                columnSpacing: 14,
-                horizontalMargin: 12,
-                headingRowColor:
-                    WidgetStateProperty.all(const Color(0xFF1F2937)),
-                columns: const [
-                  DataColumn(
-                      label: Text('Name',
-                          style: TextStyle(fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Role',
-                          style: TextStyle(fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Responsibility',
-                          style: TextStyle(fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Status',
-                          style: TextStyle(fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Readiness',
-                          style: TextStyle(fontWeight: FontWeight.w600))),
-                  DataColumn(
-                      label: Text('Actions',
-                          style: TextStyle(fontWeight: FontWeight.w600))),
-                ],
-                rows: members.map((member) {
-                  return DataRow(cells: [
-                    DataCell(Text(member.name,
-                        style: const TextStyle(fontSize: 13))),
-                    DataCell(Text(member.role,
-                        style: const TextStyle(fontSize: 13))),
-                    DataCell(Text(member.responsibility,
-                        style: const TextStyle(
-                            fontSize: 13, color: Color(0xFF64748B)))),
-                    DataCell(_statusChip(member.status)),
-                    DataCell(_capacityChip(member.readinessScore)),
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          InkWell(
-                            onTap: () => _showEditMemberDialog(context, member),
-                            borderRadius: BorderRadius.circular(4),
-                            child: const Padding(
-                              padding: EdgeInsets.all(4),
-                              child: Icon(Icons.edit,
-                                  size: 16, color: Color(0xFF64748B)),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          InkWell(
-                            onTap: () =>
-                                _showDeleteMemberDialog(context, member),
-                            borderRadius: BorderRadius.circular(4),
-                            child: const Padding(
-                              padding: EdgeInsets.all(4),
-                              child: Icon(Icons.delete,
-                                  size: 16, color: Color(0xFFEF4444)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ]);
-                }).toList(),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
   Widget _buildCoveragePanel() {
     if (_projectId == null) {
       return _PanelShell(
@@ -646,6 +506,69 @@ class _IdentifyStaffOpsTeamScreenState
       ),
     );
   }
+
+  Widget _buildRosterPanel() {
+    if (_projectId == null) {
+      return const _PanelShell(
+        title: 'Ops roster',
+        subtitle: 'Role assignments, workload, and focus areas',
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Text('No project selected. Please open a project first.',
+                style: TextStyle(color: Color(0xFF64748B))),
+          ),
+        ),
+      );
+    }
+
+    return _PanelShell(
+      title: 'Ops roster',
+      subtitle: 'Role assignments, workload, and focus areas',
+      trailing: _actionButton(Icons.filter_list, 'Filter'),
+      child: RepaintBoundary(
+        child: StreamBuilder<List<OpsMemberModel>>(
+        stream: OpsService.streamMembers(_projectId!),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+                child: Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: CircularProgressIndicator()));
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Text('Error loading members: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.red)),
+              ),
+            );
+          }
+
+          final members = snapshot.data ?? [];
+
+          if (members.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    const Text('No ops members found.',
+                        style: TextStyle(color: Color(0xFF64748B))),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () => _showAddMemberDialog(context),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Add First Member'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
 
  return FullScreenTableWrapper(
  title: 'Staff & Ops Team',
@@ -793,8 +716,19 @@ class _IdentifyStaffOpsTeamScreenState
  );
  },
  ),
- );
+      ),
+    );
  }
+
+  Widget _buildChecklistPanel() {
+    if (_projectId == null) {
+      return const _PanelShell(
+        title: 'Readiness checklist',
+        subtitle: 'Pre-handover verification',
+        child: SizedBox.shrink(),
+      );
+    }
+
 
     return RepaintBoundary(
       child: StreamBuilder<List<OpsChecklistItemModel>>(
@@ -1257,7 +1191,7 @@ class _PanelShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -1304,7 +1238,7 @@ class _HandoffItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),

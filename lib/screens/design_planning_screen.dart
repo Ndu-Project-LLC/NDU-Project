@@ -3218,7 +3218,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                     const Color(0xFF0D9488).withValues(alpha: 0.4),
                 disabledForegroundColor: Colors.white70,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: const RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
               ),
             ),
@@ -3729,7 +3729,7 @@ class _MappingCard extends StatelessWidget {
         : null;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -3916,7 +3916,7 @@ class _WorkItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4047,7 +4047,7 @@ class _SpecificationPlanRowCard extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4264,7 +4264,7 @@ class _SpecificationDeviationCard extends StatelessWidget {
         : null;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4359,7 +4359,7 @@ class _SpecificationDocumentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4473,7 +4473,7 @@ class _RiskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFFDE68A)),
@@ -4570,7 +4570,7 @@ class _DependencyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4679,7 +4679,7 @@ class _DecisionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -4781,7 +4781,7 @@ class _ApprovalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kBorder),
@@ -5059,7 +5059,7 @@ class _FilterableCreatableDropdownFieldState
               child: Material(
                 elevation: 8,
                 color: _kSurface,
-                borderRadius: const BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     maxHeight: 240,
@@ -5357,7 +5357,7 @@ class _RequirementMultiSelectFieldState
         const SizedBox(height: 6),
         InkWell(
           onTap: widget.options.isEmpty ? null : _openSelector,
-          borderRadius: const BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12),
           child: InputDecorator(
             decoration: _inputDecoration(
               widget.options.isEmpty ? 'No requirements available' : '',
@@ -5502,7 +5502,7 @@ class _ActionButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         foregroundColor: _kText,
         side: const BorderSide(color: _kBorder),
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -5692,7 +5692,7 @@ class _EmptyState extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -5723,15 +5723,15 @@ InputDecoration _inputDecoration(String hintText) {
     filled: true,
     fillColor: const Color(0xFFF9FAFB).withValues(alpha: 0.5),
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-    border: const OutlineInputBorder(
+    border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
       borderSide: BorderSide(color: Color(0xFFD1D5DB)),
     ),
-    enabledBorder: const OutlineInputBorder(
+    enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
       borderSide: BorderSide(color: Color(0xFFD1D5DB)),
     ),
-    focusedBorder: const OutlineInputBorder(
+    focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
       borderSide: BorderSide(color: _kBrandYellow, width: 1.5),
     ),

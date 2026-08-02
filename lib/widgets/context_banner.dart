@@ -90,7 +90,7 @@ class _ContextBannerState extends State<ContextBanner> {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Color(0xFFE4E7EC)),
@@ -124,7 +124,7 @@ class _ContextBannerState extends State<ContextBanner> {
           const SizedBox(width: 6),
           InkWell(
             onTap: _dismiss,
-            borderRadius: const BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10),
             child: Tooltip(
               message: 'Hide context banner',
               child: Padding(

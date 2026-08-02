@@ -276,7 +276,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFFFDF2F8), Color(0xFFFCE7F3)],
         ),
@@ -369,7 +369,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
           ),
           const SizedBox(height: 16),
           ClipRRect(
-            borderRadius: const BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: total > 0 ? completed / total : 0,
               minHeight: 12,
@@ -458,7 +458,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
               padding: const EdgeInsets.only(bottom: 8),
               child: InkWell(
                 onTap: () => _toggleItem(category, index),
-                borderRadius: const BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(8),
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -570,7 +570,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFFCD34D)),

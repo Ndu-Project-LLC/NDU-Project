@@ -114,7 +114,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setModalState) => Dialog(
             backgroundColor: Colors.white,
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24)),
             elevation: 24,
             child: Container(
@@ -773,7 +773,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     if (_loadingSuggestions) {
       return Container(
         padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: Color(0xFFE5E7EB)),
@@ -795,7 +795,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     if (_suggestionError != null) {
       return Container(
         padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Color(0xFFFFF3CD),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: Color(0xFFFFC107)),
@@ -817,7 +817,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF5F3FF),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFDDD6FE)),
@@ -829,7 +829,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFF7C3AED),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -867,8 +867,8 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.circular(16),
-        border: const Border.all(color: Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -886,7 +886,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Color(0xFFEEF2FF),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -927,7 +927,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                     textStyle: const TextStyle(fontWeight: FontWeight.w700),
                   ),
@@ -943,7 +943,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                     side: const BorderSide(color: Color(0xFFE5E7EB)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                     textStyle: const TextStyle(fontWeight: FontWeight.w600),
                   ),
@@ -959,7 +959,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                     side: const BorderSide(color: Color(0xFFE5E7EB)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                     textStyle: const TextStyle(fontWeight: FontWeight.w600),
                   ),
@@ -1780,10 +1780,10 @@ class _KazAiActionButtonState extends State<_KazAiActionButton> {
       message: 'KAZ AI — Auto-suggest role details',
       child: InkWell(
         onTap: _loading ? null : _generate,
-        borderRadius: const BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: _loading ? Color(0xFFF3F0FF) : Color(0xFFF5F3FF),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Color(0xFFDDD6FE)),

@@ -168,7 +168,7 @@ class _ExecutionPhasePageState extends State<ExecutionPhasePage> {
         : [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Color(0xFFE2E8F0)),

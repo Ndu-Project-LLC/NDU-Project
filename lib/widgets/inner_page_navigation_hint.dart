@@ -298,13 +298,13 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
             children: [
               Expanded(
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(6),
                   child: SizedBox(
                     height: 6,
                     child: Stack(
                       children: [
                         Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: Color(0xFFE5E7EB),
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -316,7 +316,7 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
                               color: progress >= 1.0
                                   ? const Color(0xFF16A34A)
                                   : widget.accentColor,
-                              borderRadius: const BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                           ),
                         ),
@@ -386,7 +386,7 @@ class _InnerPageNavigationHintState extends State<InnerPageNavigationHint>
   Widget _buildMiniMap(int currentIndex) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -622,12 +622,12 @@ class _SectionChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: const BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: const BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: borderColor, width: isCurrent ? 1.5 : 1),
           ),
           child: Row(

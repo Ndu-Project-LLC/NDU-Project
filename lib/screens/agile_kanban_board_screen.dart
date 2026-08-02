@@ -246,7 +246,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14)),
         title: Row(
           children: [
@@ -470,7 +470,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     final pointsTotal = _stories.fold<int>(0, (a, c) => a + c.storyPoints);
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
@@ -534,7 +534,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     }
     return Container(
       height: 640,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -558,7 +558,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                       ? const BorderSide(color: _kBorder, width: 1)
                       : BorderSide.none),
             )
-          : const BoxDecoration(
+          : BoxDecoration(
               color: _kSurface,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: _kBorder),
@@ -677,7 +677,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(
                               vertical: 24, horizontal: 12),
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                               border: Border.all(color: _kBorder),
                               borderRadius: BorderRadius.circular(8)),
                           child: const Center(
@@ -703,8 +703,8 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: _kSurface,
-        borderRadius: const BorderRadius.circular(10),
-        border: const Border.all(color: _kBorder),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _kBorder),
         boxShadow: [
           BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -713,7 +713,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
         ],
       ),
       child: InkWell(
-        borderRadius: const BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10),
         onTap: () => _showStoryDetail(story),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -731,7 +731,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                       color: _kAccentBg,
                       borderRadius: BorderRadius.circular(6)),
                   child: Text('${story.storyPoints}',
@@ -806,7 +806,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   Widget _smallTag(String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
           color: Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(6)),
       child: Text(label, style: const TextStyle(fontSize: 10, color: _kMuted)),
     );
@@ -847,7 +847,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -860,7 +860,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const RoundedRectangleBorder(
+            shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -894,7 +894,7 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Color(0xFFE5E7EB)),

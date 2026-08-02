@@ -33,7 +33,7 @@ class CloseableInfoBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: const BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: borderColor),
       ),
       child: Row(
@@ -53,7 +53,7 @@ class CloseableInfoBanner extends StatelessWidget {
               message: 'Close banner',
               child: InkWell(
                 onTap: onDismiss,
-                borderRadius: const BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12),
                 child: const Padding(
                   padding: EdgeInsets.all(4),
                   child: Icon(

@@ -695,6 +695,7 @@ class _EnablingWorksPlanTable extends StatelessWidget {
  ),
  );
  },
+ ),
  );
  }
 }

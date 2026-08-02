@@ -81,7 +81,7 @@ class BatchDeleteBar extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: backgroundColor ?? const Color(0xFFFEF2F2),
-                  borderRadius: const BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFFECACA)),
                 ),
                 child: Row(
@@ -90,7 +90,7 @@ class BatchDeleteBar extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFDC2626),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -124,7 +124,7 @@ class BatchDeleteBar extends StatelessWidget {
                         foregroundColor: const Color(0xFFDC2626),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
-                        shape: const RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),

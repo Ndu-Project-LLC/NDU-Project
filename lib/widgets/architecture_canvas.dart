@@ -606,7 +606,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: Color(0xFFE4E7EC)),
@@ -623,7 +623,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                       Container(
                         width: 24,
                         height: 24,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(6),
                         ),
@@ -638,7 +638,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Color(0xFFF0FDF4),
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -656,7 +656,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: Color(0xFFE4E7EC)),

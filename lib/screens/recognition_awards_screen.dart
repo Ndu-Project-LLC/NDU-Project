@@ -394,7 +394,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
         ),
@@ -486,7 +486,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFE5E7EB)),
@@ -507,7 +507,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
               return Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                   ),
@@ -539,7 +539,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(48),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Color(0xFFE5E7EB)),
@@ -622,7 +622,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
               Container(
                 width: 44,
                 height: 44,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                   ),
@@ -668,7 +668,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Color(0xFFF9FAFB),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -721,7 +721,7 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),

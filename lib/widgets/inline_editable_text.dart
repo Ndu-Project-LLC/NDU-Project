@@ -282,15 +282,15 @@ class _InlineEditableTextState extends State<InlineEditableText> {
             decoration: InputDecoration(
               hintText: widget.hint,
               hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
-              border: const OutlineInputBorder(
+              border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
                 borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5),
               ),
-              enabledBorder: const OutlineInputBorder(
+              enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
                 borderSide: BorderSide(color: Color(0xFFE5E7EB)),
               ),
-              focusedBorder: const OutlineInputBorder(
+              focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
                 borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5),
               ),
@@ -309,7 +309,7 @@ class _InlineEditableTextState extends State<InlineEditableText> {
     // Display mode - clickable text
     return InkWell(
       onTap: _startEditing,
-      borderRadius: const BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(4),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: Row(

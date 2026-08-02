@@ -231,7 +231,7 @@ class MobileSidebarHamburger extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: const BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12),
             onTap: () {
               showModalBottomSheet<void>(
                 context: context,

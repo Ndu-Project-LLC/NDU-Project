@@ -2573,7 +2573,7 @@ class _LegendRow extends StatelessWidget {
           width: 12,
           height: 12,
           decoration: BoxDecoration(
-              color: color, borderRadius: const BorderRadius.circular(4)),
+              color: color, borderRadius: BorderRadius.circular(4)),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -2945,7 +2945,7 @@ class _MetricPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.28)),
@@ -2956,7 +2956,7 @@ class _MetricPill extends StatelessWidget {
             width: 10,
             height: 10,
             decoration: BoxDecoration(
-                color: color, borderRadius: const BorderRadius.circular(999)),
+                color: color, borderRadius: BorderRadius.circular(999)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -2965,7 +2965,7 @@ class _MetricPill extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: color.darken(),

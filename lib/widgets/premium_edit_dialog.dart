@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class PremiumEditDialog extends StatelessWidget {
   const PremiumEditDialog({
     super.key,
@@ -22,7 +23,8 @@ class PremiumEditDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape:
+          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       elevation: 12,
       backgroundColor: Colors.white,
       child: ConstrainedBox(
@@ -45,7 +47,7 @@ class PremiumEditDialog extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFC812).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: const BorderRadius.circular(10),
                     ),
                     child: Icon(icon, color: const Color(0xFFD97706), size: 24),
                   ),
@@ -60,13 +62,14 @@ class PremiumEditDialog extends StatelessWidget {
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Color(0xFF9CA3AF), size: 20),
+                    icon: const Icon(Icons.close,
+                        color: Color(0xFF9CA3AF), size: 20),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
             ),
-            
+
             // Content
             Flexible(
               child: SingleChildScrollView(
@@ -78,13 +81,14 @@ class PremiumEditDialog extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Actions
             Container(
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
                 color: Color(0xFFF9FAFB),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(20)),
                 border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
               ),
               child: Row(
@@ -94,7 +98,8 @@ class PremiumEditDialog extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFF4B5563),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                     ),
                     child: Text(
                       cancelLabel,
@@ -108,8 +113,10 @@ class PremiumEditDialog extends StatelessWidget {
                       backgroundColor: const Color(0xFFFFC812),
                       foregroundColor: Colors.black,
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 28, vertical: 14),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Text(
                       saveLabel,
@@ -148,10 +155,10 @@ class PremiumEditDialog extends StatelessWidget {
     TextInputType? keyboardType,
   }) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFD1D5DB)),
+        border: Border.all(color: Color(0xFFD1D5DB)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: VoiceTextField(

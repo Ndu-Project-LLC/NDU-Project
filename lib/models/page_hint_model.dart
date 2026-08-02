@@ -104,4 +104,13 @@ class PageHintConfig {
             '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
         .join(' ');
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PageHintConfig && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

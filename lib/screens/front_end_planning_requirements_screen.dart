@@ -27,6 +27,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
@@ -653,8 +654,8 @@ class _FrontEndPlanningRequirementsScreenState
             Expanded(
               child: Stack(
                 children: [
-                  const MobileSidebarHamburger(
-                    sidebar: InitiationLikeSidebar(
+                  MobileSidebarHamburger(
+                    sidebar: const InitiationLikeSidebar(
                       activeItemLabel: 'Project Requirements',
                     ),
                   ),
@@ -683,12 +684,12 @@ class _FrontEndPlanningRequirementsScreenState
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Expanded(
+                                        Expanded(
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              EditableContentText(
+                                              const EditableContentText(
                                                 contentKey:
                                                     'fep_requirements_title',
                                                 fallback:
@@ -699,8 +700,8 @@ class _FrontEndPlanningRequirementsScreenState
                                                     fontWeight: FontWeight.w700,
                                                     color: Color(0xFF111827)),
                                               ),
-                                              SizedBox(height: 6),
-                                              EditableContentText(
+                                              const SizedBox(height: 6),
+                                              const EditableContentText(
                                                 contentKey:
                                                     'fep_requirements_subtitle',
                                                 fallback:
@@ -857,7 +858,7 @@ class _FrontEndPlanningRequirementsScreenState
           boxShadow: active
               ? [
                   BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06), blurRadius: 2)
+                      color: Colors.black.withOpacity(0.06), blurRadius: 2)
                 ]
               : [],
         ),
@@ -994,7 +995,15 @@ class _FrontEndPlanningRequirementsScreenState
   }
 
   Widget _buildTableView() {
-    const headerStyle = TextStyle(
+    return FullScreenTableWrapper(
+      title: 'Requirements',
+      child: _buildTableViewContent(context),
+      tableBuilder: (fsContext) => _buildTableViewContent(fsContext),
+    );
+  }
+
+  Widget _buildTableViewContent(BuildContext context) {
+    final headerStyle = const TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w700,
       color: Color(0xFF4B5563),
@@ -1045,8 +1054,8 @@ class _FrontEndPlanningRequirementsScreenState
                   return Container(
                     key: ValueKey('req_table_row_$index'),
                     decoration: BoxDecoration(
-                      border: const Border(
-                        bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                      border: Border(
+                        bottom: BorderSide(color: const Color(0xFFE5E7EB)),
                       ),
                       color:
                           index.isEven ? Colors.white : const Color(0xFFFAFBFC),
@@ -1171,7 +1180,7 @@ class _FrontEndPlanningRequirementsScreenState
       width: width,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Text(
+        child: WrappedText(
           text,
           style: TextStyle(
               fontSize: 12,
@@ -1180,7 +1189,6 @@ class _FrontEndPlanningRequirementsScreenState
                   : const Color(0xFF111827)),
           textAlign: center ? TextAlign.center : TextAlign.left,
           maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
       ),
     );
@@ -1687,7 +1695,7 @@ class _FrontEndPlanningRequirementsScreenState
                 children: [
                   Text(
                     isNew ? 'Add Requirement' : 'Edit Requirement',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 12),
                   VoiceTextField(
@@ -1928,37 +1936,37 @@ class _FrontEndPlanningRequirementsScreenState
   }
 
   List<CsvColumnSpec> get _csvColumns => [
-        const CsvColumnSpec(
+        CsvColumnSpec(
             key: 'description',
             label: 'Requirement',
             required: true,
             sampleValue: 'The system shall support user authentication'),
-        const CsvColumnSpec(
+        CsvColumnSpec(
             key: 'type',
             label: 'Type',
             allowedValues: _RequirementRow.requirementTypeOptions,
             defaultValue: 'Functional',
             sampleValue: 'Functional'),
-        const CsvColumnSpec(
+        CsvColumnSpec(
             key: 'discipline',
             label: 'Discipline',
             allowedValues: _RequirementRow.disciplineOptions,
             defaultValue: 'IT',
             sampleValue: 'IT'),
-        const CsvColumnSpec(
+        CsvColumnSpec(
             key: 'role', label: 'Role', sampleValue: 'Requirements Lead'),
-        const CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
-        const CsvColumnSpec(
+        CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
+        CsvColumnSpec(
             key: 'phase',
             label: 'Phase',
             allowedValues: _RequirementRow.phaseOptions,
             defaultValue: 'Planning',
             sampleValue: 'Planning'),
-        const CsvColumnSpec(
+        CsvColumnSpec(
             key: 'source',
             label: 'Source',
             sampleValue: 'Stakeholder interview'),
-        const CsvColumnSpec(
+        CsvColumnSpec(
             key: 'comments', label: 'Comments', sampleValue: 'High priority'),
       ];
 
@@ -2735,13 +2743,14 @@ class _RequirementRow {
   _RequirementRow({
     required this.number,
     this.onChanged,
-    this.isExpanded = false,
+    bool isExpanded = false,
   })  : descriptionController = TextEditingController(),
         commentsController = TextEditingController(),
         roleController = TextEditingController(),
         personController = TextEditingController(),
         sourceController = TextEditingController(),
-        descriptionFocusNode = FocusNode() {
+        descriptionFocusNode = FocusNode(),
+        isExpanded = isExpanded {
     descriptionFocusNode.addListener(_handleDescriptionFocusChange);
   }
 
@@ -3211,7 +3220,7 @@ class _RequirementCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 16),
-                  const _RequirementFieldLabel('Requirement description'),
+                  _RequirementFieldLabel('Requirement description'),
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(

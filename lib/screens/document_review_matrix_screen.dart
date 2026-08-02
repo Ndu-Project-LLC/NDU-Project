@@ -12,7 +12,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 const Color _kBackground = Color(0xFFF7F8FC);
 const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
@@ -139,8 +139,8 @@ class _DocumentReviewMatrixScreenState
               ],
             ),
           ),
-          const MobileSidebarHamburger(
-            sidebar: InitiationLikeSidebar(
+          MobileSidebarHamburger(
+            sidebar: const InitiationLikeSidebar(
               activeItemLabel: 'Document Review Matrix',
             ),
           ),
@@ -205,22 +205,22 @@ class _DocumentReviewMatrixScreenState
                 ),
               ),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Document Review Matrix',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: _kHeadline,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'Track and approve all project documents',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         color: _kMuted,
                       ),
@@ -306,7 +306,7 @@ class _DocumentReviewMatrixScreenState
       children: [
         Expanded(
           child: VoiceTextField(
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               hintText: 'Search documents...',
               prefixIcon: Icon(Icons.search),
               border: OutlineInputBorder(
@@ -396,7 +396,7 @@ class _DocumentReviewMatrixScreenState
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             border: Border.all(color: _kCardBorder),
             borderRadius: BorderRadius.circular(8),
           ),
@@ -419,24 +419,43 @@ class _DocumentReviewMatrixScreenState
     );
   }
 
-  Widget _buildDocumentsTable() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        children: [
-          _buildTableHeader(),
-          if (_filteredDocuments.isEmpty)
-            _buildEmptyState()
-          else
-            _buildTableRows(),
-        ],
-      ),
-    );
-  }
+ Widget _buildDocumentsTable() {
+ return FullScreenTableWrapper(
+ title: 'Document Review Matrix',
+ child: Container(
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ children: [
+ _buildTableHeader(),
+ if (_filteredDocuments.isEmpty)
+ _buildEmptyState()
+ else
+ _buildTableRows(),
+ ],
+ ),
+ ),
+ tableBuilder: (fsContext) => Container(
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ children: [
+ _buildTableHeader(),
+ if (_filteredDocuments.isEmpty)
+ _buildEmptyState()
+ else
+ _buildTableRows(),
+ ],
+ ),
+ ),
+ );
+ }
 
   Widget _buildTableHeader() {
     return Container(
@@ -478,18 +497,18 @@ class _DocumentReviewMatrixScreenState
           Icon(Icons.description_outlined,
               size: 64, color: _kMuted.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'No documents found',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
               color: _kMuted,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Try adjusting your filters or search terms',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               color: _kMuted,
             ),
@@ -1018,7 +1037,7 @@ class _DocumentPreviewDialog extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.withValues(alpha: 0.05),
-        border: const Border(bottom: BorderSide(color: _kCardBorder)),
+        border: Border(bottom: BorderSide(color: _kCardBorder)),
       ),
       child: Row(
         children: [
@@ -1201,7 +1220,7 @@ class _DocumentPreviewDialog extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.withValues(alpha: 0.05),
-        border: const Border(top: BorderSide(color: _kCardBorder)),
+        border: Border(top: BorderSide(color: _kCardBorder)),
       ),
       child: Row(
         children: [
@@ -1292,7 +1311,7 @@ class _AssignReviewerDialogState extends State<_AssignReviewerDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           DropdownButtonFormField<ReviewerRole>(
-            initialValue: _selectedRole,
+            value: _selectedRole,
             decoration: const InputDecoration(
               labelText: 'Role',
               border: OutlineInputBorder(),
@@ -1307,7 +1326,7 @@ class _AssignReviewerDialogState extends State<_AssignReviewerDialog> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            initialValue: _selectedUserId.isEmpty ? null : _selectedUserId,
+            value: _selectedUserId.isEmpty ? null : _selectedUserId,
             decoration: const InputDecoration(
               labelText: 'Team Member',
               border: OutlineInputBorder(),
@@ -1357,11 +1376,11 @@ class _NavCircleBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: const BorderRadius.circular(18),
       child: Container(
         width: 36,
         height: 36,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(color: Color(0xFFE5E7EB)),

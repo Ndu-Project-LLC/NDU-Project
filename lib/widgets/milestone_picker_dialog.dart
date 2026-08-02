@@ -52,7 +52,8 @@ class _MilestonePickerDialogState extends State<MilestonePickerDialog> {
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape:
+          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -60,8 +61,7 @@ class _MilestonePickerDialogState extends State<MilestonePickerDialog> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
-              border: Border(
-                  bottom: BorderSide(color: Color(0xFFE2E8F0))),
+              border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
             ),
             child: Row(
               children: [
@@ -95,8 +95,7 @@ class _MilestonePickerDialogState extends State<MilestonePickerDialog> {
                     child: Text(
                       'No milestones available. Add them in Front End Planning > Milestone.',
                       textAlign: TextAlign.center,
-                      style:
-                          TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                      style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
                     ),
                   )
                 : ListView.builder(
@@ -105,8 +104,7 @@ class _MilestonePickerDialogState extends State<MilestonePickerDialog> {
                     itemCount: sorted.length,
                     itemBuilder: (context, index) {
                       final milestone = sorted[index];
-                      final selected =
-                          _selected.contains(milestone.id);
+                      final selected = _selected.contains(milestone.id);
                       return CheckboxListTile(
                         value: selected,
                         onChanged: (value) {
@@ -136,15 +134,13 @@ class _MilestonePickerDialogState extends State<MilestonePickerDialog> {
                             Text(
                               _formatDate(milestone.dueDate),
                               style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF64748B)),
+                                  fontSize: 12, color: Color(0xFF64748B)),
                             ),
                             if (milestone.discipline.trim().isNotEmpty)
                               Text(
                                 milestone.discipline.trim(),
                                 style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF64748B)),
+                                    fontSize: 12, color: Color(0xFF64748B)),
                               ),
                           ],
                         ),
@@ -156,8 +152,7 @@ class _MilestonePickerDialogState extends State<MilestonePickerDialog> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: const BoxDecoration(
-              border: Border(
-                  top: BorderSide(color: Color(0xFFE2E8F0))),
+              border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -168,12 +163,13 @@ class _MilestonePickerDialogState extends State<MilestonePickerDialog> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(_selected.toList()),
+                  onPressed: () =>
+                      Navigator.of(context).pop(_selected.toList()),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFFC107),
                     foregroundColor: const Color(0xFF1E293B),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(
+                    shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
                   child: const Text('Apply'),

@@ -23,6 +23,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 const Color _kBrandYellow = Color(0xFFFFC812);
 const Color _kFabYellow = Color(0xFFFBBF24);
@@ -3077,15 +3078,29 @@ class _EvaluationContractRow extends StatelessWidget {
  if (scores.isNotEmpty && criteria.isNotEmpty && ranking.isNotEmpty)
  Padding(
  padding: const EdgeInsets.only(bottom: 12),
+ child: FullScreenTableWrapper(
+ title: 'Vendor Comparison Sheet',
  child: _VendorComparisonTable(
  ranking: ranking,
  criteria: criteria,
  ),
+ tableBuilder: (fsContext) => _VendorComparisonTable(
+ ranking: ranking,
+ criteria: criteria,
+ ),
+ ),
  ),
  if (scores.isNotEmpty)
- _ScoreTable(
+ FullScreenTableWrapper(
+ title: 'Vendor Evaluation Scores',
+ child: _ScoreTable(
  scores: scores,
  criteria: criteria,
+ ),
+ tableBuilder: (fsContext) => _ScoreTable(
+ scores: scores,
+ criteria: criteria,
+ ),
  ),
  ],
  );
@@ -3507,9 +3522,9 @@ class _ScoreTable extends StatelessWidget {
  ),
  ...scores.map((s) => TableRow(children: [
  _TableCell(
- Text(s.vendorName, style: const TextStyle(fontSize: 12))),
+ WrappedText(s.vendorName, style: const TextStyle(fontSize: 12))),
  _TableCell(
- Text(
+ WrappedText(
  criteria
  .where((criterion) => criterion.id == s.criteriaId)
  .map((criterion) => criterion.name)
@@ -3517,10 +3532,10 @@ class _ScoreTable extends StatelessWidget {
  s.criteriaId,
  style: const TextStyle(fontSize: 12),
  )),
- _TableCell(Text(s.score.toStringAsFixed(1),
+ _TableCell(WrappedText(s.score.toStringAsFixed(1),
  style: const TextStyle(
  fontSize: 12, fontWeight: FontWeight.w600))),
- _TableCell(Text(s.notes,
+ _TableCell(WrappedText(s.notes,
  style:
  const TextStyle(fontSize: 12, color: Color(0xFF6B7280)))),
  ])),
@@ -3574,10 +3589,10 @@ class _VendorComparisonTable extends StatelessWidget {
  ],
  ),
  ...ranking.map((entry) => TableRow(children: [
- _TableCell(Text(entry.key,
+ _TableCell(WrappedText(entry.key,
  style: const TextStyle(
  fontSize: 12, fontWeight: FontWeight.w600))),
- _TableCell(Text(entry.value.toStringAsFixed(1),
+ _TableCell(WrappedText(entry.value.toStringAsFixed(1),
  style: const TextStyle(fontSize: 12))),
  ])),
  ],
@@ -3938,15 +3953,15 @@ class _PaymentContractExpansion extends StatelessWidget {
  ],
  ),
  ...milestones.map((m) => TableRow(children: [
- _TableCell(Text(m.name,
+ _TableCell(WrappedText(m.name,
  style: const TextStyle(
  fontSize: 12, fontWeight: FontWeight.w500))),
- _TableCell(Text('\$${_formatCurrency(m.amount)}',
+ _TableCell(WrappedText('\$${_formatCurrency(m.amount)}',
  style: const TextStyle(fontSize: 12))),
- _TableCell(Text(
+ _TableCell(WrappedText(
  '${m.percentOfContract.toStringAsFixed(0)}%',
  style: const TextStyle(fontSize: 12))),
- _TableCell(Text('${m.retentionPercent.toStringAsFixed(0)}%',
+ _TableCell(WrappedText('${m.retentionPercent.toStringAsFixed(0)}%',
  style: const TextStyle(
  fontSize: 12, color: Color(0xFF6B7280)))),
  _TableCell(_StatusChip(
@@ -4325,11 +4340,11 @@ class _NegotiationContractCard extends StatelessWidget {
  ],
  ),
  ...items.map((item) => TableRow(children: [
- _TableCell(Text(item.item,
+ _TableCell(WrappedText(item.item,
  style: const TextStyle(fontSize: 12))),
- _TableCell(Text(item.ourPosition,
+ _TableCell(WrappedText(item.ourPosition,
  style: const TextStyle(fontSize: 12))),
- _TableCell(Text(item.theirPosition,
+ _TableCell(WrappedText(item.theirPosition,
  style: const TextStyle(
  fontSize: 12, color: Color(0xFF6B7280)))),
  _TableCell(_StatusChip(
@@ -4589,9 +4604,16 @@ class _BudgetTabState extends State<_BudgetTab> {
  onChanged: (v) {},
  ),
  const SizedBox(height: 16),
- _BudgetEditableTable(
+ FullScreenTableWrapper(
+ title: 'Contract Budget (Editable)',
+ child: _BudgetEditableTable(
  contracts: filteredContracts,
  projectId: projectId,
+ ),
+ tableBuilder: (fsContext) => _BudgetEditableTable(
+ contracts: filteredContracts,
+ projectId: projectId,
+ ),
  ),
  ],
  ),

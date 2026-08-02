@@ -28,7 +28,8 @@ class UserModel {
         'displayName': displayName,
         'isAdmin': isAdmin,
         'createdAt': Timestamp.fromDate(createdAt),
-        'lastLoginAt': lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
+        'lastLoginAt':
+            lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
         'photoUrl': photoUrl,
         'isActive': isActive,
       };

@@ -12,7 +12,8 @@ class CouponModel {
   final int? maxUses; // null = unlimited
   final int currentUses;
   final bool isActive;
-  final List<String> applicableTiers; // 'project', 'program', 'portfolio', or empty for all
+  final List<String>
+      applicableTiers; // 'project', 'program', 'portfolio', or empty for all
   final DateTime createdAt;
   final DateTime updatedAt;
   final String createdBy;
@@ -45,21 +46,21 @@ class CouponModel {
   int get remainingUses => maxUses == null ? -1 : maxUses! - currentUses;
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'code': code.toUpperCase(),
-    'description': description,
-    'discountPercent': discountPercent,
-    'discountAmount': discountAmount,
-    'validFrom': Timestamp.fromDate(validFrom),
-    'validUntil': Timestamp.fromDate(validUntil),
-    'maxUses': maxUses,
-    'currentUses': currentUses,
-    'isActive': isActive,
-    'applicableTiers': applicableTiers,
-    'createdAt': Timestamp.fromDate(createdAt),
-    'updatedAt': Timestamp.fromDate(updatedAt),
-    'createdBy': createdBy,
-  };
+        'id': id,
+        'code': code.toUpperCase(),
+        'description': description,
+        'discountPercent': discountPercent,
+        'discountAmount': discountAmount,
+        'validFrom': Timestamp.fromDate(validFrom),
+        'validUntil': Timestamp.fromDate(validUntil),
+        'maxUses': maxUses,
+        'currentUses': currentUses,
+        'isActive': isActive,
+        'applicableTiers': applicableTiers,
+        'createdAt': Timestamp.fromDate(createdAt),
+        'updatedAt': Timestamp.fromDate(updatedAt),
+        'createdBy': createdBy,
+      };
 
   factory CouponModel.fromJson(Map<String, dynamic> json) {
     return CouponModel(
@@ -69,7 +70,8 @@ class CouponModel {
       discountPercent: (json['discountPercent'] ?? 0).toDouble(),
       discountAmount: json['discountAmount']?.toDouble(),
       validFrom: (json['validFrom'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      validUntil: (json['validUntil'] as Timestamp?)?.toDate() ?? DateTime.now().add(const Duration(days: 30)),
+      validUntil: (json['validUntil'] as Timestamp?)?.toDate() ??
+          DateTime.now().add(const Duration(days: 30)),
       maxUses: json['maxUses'],
       currentUses: json['currentUses'] ?? 0,
       isActive: json['isActive'] ?? true,

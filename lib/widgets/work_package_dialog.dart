@@ -3,6 +3,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/milestone_item_linkage_service.dart';
 import 'package:ndu_project/widgets/milestone_picker_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class WorkPackageDialog extends StatefulWidget {
   const WorkPackageDialog({
     super.key,
@@ -119,19 +120,37 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
     // with [DropdownButton]'s value"). Stale data from deleted WBS items
     // or changed enum values can cause this.
     const allowedTypes = {
-      'design', 'construction', 'execution', 'agile', 'procurement', 'delivery'
+      'design',
+      'construction',
+      'execution',
+      'agile',
+      'procurement',
+      'delivery'
     };
     const allowedPhases = {'design', 'execution', 'launch'};
     const allowedStatuses = {
-      'planned', 'in_progress', 'complete', 'blocked', 'on_hold'
+      'planned',
+      'in_progress',
+      'complete',
+      'blocked',
+      'on_hold'
     };
     const allowedClassifications = {
-      'engineeringEwp', 'procurementPackage', 'constructionCwp',
-      'deliveryPackage', 'implementationWorkPackage', 'agileIterationPackage',
-      'preCommissioningPackage', 'commissioningPackage', ''
+      'engineeringEwp',
+      'procurementPackage',
+      'constructionCwp',
+      'deliveryPackage',
+      'implementationWorkPackage',
+      'agileIterationPackage',
+      'preCommissioningPackage',
+      'commissioningPackage',
+      ''
     };
     const allowedReleaseStatuses = {
-      'draft', 'ready_for_review', 'released', 'blocked'
+      'draft',
+      'ready_for_review',
+      'released',
+      'blocked'
     };
     if (!allowedTypes.contains(_type)) _type = 'design';
     if (!allowedPhases.contains(_phase)) _phase = 'design';
@@ -303,7 +322,8 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
     if (allMilestones.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No milestones available. Add them in Front End Planning > Milestone.'),
+          content: Text(
+              'No milestones available. Add them in Front End Planning > Milestone.'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -479,15 +499,13 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
                   decoration:
                       const InputDecoration(labelText: 'Release Status'),
                   items: const [
-                    DropdownMenuItem(
-                        value: 'draft', child: Text('Draft')),
+                    DropdownMenuItem(value: 'draft', child: Text('Draft')),
                     DropdownMenuItem(
                         value: 'ready_for_review',
                         child: Text('Ready for Review')),
                     DropdownMenuItem(
                         value: 'released', child: Text('Released')),
-                    DropdownMenuItem(
-                        value: 'blocked', child: Text('Blocked')),
+                    DropdownMenuItem(value: 'blocked', child: Text('Blocked')),
                   ],
                   onChanged: (v) {
                     if (v != null) setState(() => _releaseStatus = v);
@@ -543,16 +561,13 @@ class _WorkPackageDialogState extends State<WorkPackageDialog> {
                   initialValue: _status,
                   decoration: const InputDecoration(labelText: 'Status'),
                   items: const [
-                    DropdownMenuItem(
-                        value: 'planned', child: Text('Planned')),
+                    DropdownMenuItem(value: 'planned', child: Text('Planned')),
                     DropdownMenuItem(
                         value: 'in_progress', child: Text('In Progress')),
                     DropdownMenuItem(
                         value: 'complete', child: Text('Complete')),
-                    DropdownMenuItem(
-                        value: 'blocked', child: Text('Blocked')),
-                    DropdownMenuItem(
-                        value: 'on_hold', child: Text('On Hold')),
+                    DropdownMenuItem(value: 'blocked', child: Text('Blocked')),
+                    DropdownMenuItem(value: 'on_hold', child: Text('On Hold')),
                   ],
                   onChanged: (v) {
                     if (v != null) setState(() => _status = v);
@@ -894,8 +909,7 @@ class _MilestoneLinkChip extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.flag_outlined,
-                size: 16, color: Color(0xFFFFC107)),
+            const Icon(Icons.flag_outlined, size: 16, color: Color(0xFFFFC107)),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -911,8 +925,7 @@ class _MilestoneLinkChip extends StatelessWidget {
                 ),
               ),
             ),
-            const Icon(Icons.edit_outlined,
-                size: 14, color: Color(0xFF64748B)),
+            const Icon(Icons.edit_outlined, size: 14, color: Color(0xFF64748B)),
           ],
         ),
       ),

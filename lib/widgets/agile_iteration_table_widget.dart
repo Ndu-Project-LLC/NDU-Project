@@ -38,7 +38,7 @@ class AgileIterationTableWidget extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.circular(16),
             border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
@@ -48,17 +48,17 @@ class AgileIterationTableWidget extends StatelessWidget {
               ),
             ],
           ),
-          child: ResponsiveDataTableWrapper(
+          child: buildNduTableWithExpand(
+            context: context,
+            title: 'Agile Iteration Tasks',
             minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 900,
             maxHeight: 560,
-            child: buildNduDataTable(
-              context: context,
-              columnSpacing: 24,
-              horizontalMargin: 20,
-              headingRowHeight: 56,
-              dataRowMinHeight: 52,
-              dataRowMaxHeight: 120,
-              columns: const [
+            columnSpacing: 24,
+            horizontalMargin: 20,
+            headingRowHeight: 56,
+            dataRowMinHeight: 52,
+            dataRowMaxHeight: 120,
+            columns: const [
                 DataColumn(
                   label: Center(
                     child: Text('User Story/Task',
@@ -168,7 +168,6 @@ class AgileIterationTableWidget extends StatelessWidget {
                   ],
                 );
               }).toList(),
-            ),
           ),
         );
       },
@@ -209,6 +208,14 @@ class _AgileTaskRowWidgetState extends State<_AgileTaskRowWidget> {
   AgileTask? _redoState;
   final _Debouncer _debouncer = _Debouncer();
   bool _isRegenerating = false;
+
+  @override
+  void dispose() {
+    // Cancel any pending debounced save Timer to prevent
+    // setState/fire-and-forget writes after the widget is unmounted.
+    _debouncer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -494,7 +501,7 @@ class _PriorityPill extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: _PriorityPill._getStaticColor(p),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.circular(12),
             ),
             child: Text(
               p,
@@ -547,7 +554,7 @@ class _StatusPill extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: _StatusPill._getStaticColor(s),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.circular(12),
             ),
             child: Text(
               s,

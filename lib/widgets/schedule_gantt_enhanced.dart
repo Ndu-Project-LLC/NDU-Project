@@ -3,6 +3,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/theme.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class ScheduleGanttEnhanced extends StatefulWidget {
   const ScheduleGanttEnhanced({
     super.key,
@@ -157,7 +158,8 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
               const Icon(Icons.search_off, size: 40, color: Color(0xFF9CA3AF)),
               const SizedBox(height: 8),
               Text('No activities match "$_searchQuery"',
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
+                  style:
+                      const TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
             ],
           ),
         );
@@ -205,8 +207,7 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
               const Spacer(),
               // Zoom controls (P8)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(8),
@@ -223,8 +224,8 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
                         });
                       },
                       tooltip: 'Zoom out',
-                      constraints: const BoxConstraints(
-                          minWidth: 28, minHeight: 28),
+                      constraints:
+                          const BoxConstraints(minWidth: 28, minHeight: 28),
                       padding: EdgeInsets.zero,
                     ),
                     Container(
@@ -246,8 +247,8 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
                         });
                       },
                       tooltip: 'Zoom in',
-                      constraints: const BoxConstraints(
-                          minWidth: 28, minHeight: 28),
+                      constraints:
+                          const BoxConstraints(minWidth: 28, minHeight: 28),
                       padding: EdgeInsets.zero,
                     ),
                     IconButton(
@@ -258,8 +259,8 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
                         });
                       },
                       tooltip: 'Fit to screen',
-                      constraints: const BoxConstraints(
-                          minWidth: 28, minHeight: 28),
+                      constraints:
+                          const BoxConstraints(minWidth: 28, minHeight: 28),
                       padding: EdgeInsets.zero,
                     ),
                   ],
@@ -302,7 +303,8 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
                               CustomPaint(
                                 size: Size(
                                   _leftColumnWidth + timelineWidth,
-                                  (items.length * _chartHeightPerRow + 36).toDouble(),
+                                  (items.length * _chartHeightPerRow + 36)
+                                      .toDouble(),
                                 ),
                                 painter: _EnhancedGanttGridPainter(
                                   rowHeight: _chartHeightPerRow,
@@ -315,7 +317,8 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
                               CustomPaint(
                                 size: Size(
                                   _leftColumnWidth + timelineWidth,
-                                  (items.length * _chartHeightPerRow + 36).toDouble(),
+                                  (items.length * _chartHeightPerRow + 36)
+                                      .toDouble(),
                                 ),
                                 painter: _EnhancedDependencyPainter(
                                   items: items,
@@ -376,7 +379,8 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
               : null,
           filled: true,
           fillColor: const Color(0xFFF9FAFB),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppSemanticColors.border),
@@ -387,8 +391,7 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide:
-                const BorderSide(color: Color(0xFFF59E0B), width: 1.5),
+            borderSide: const BorderSide(color: Color(0xFFF59E0B), width: 1.5),
           ),
         ),
         style: const TextStyle(fontSize: 12),
@@ -582,8 +585,7 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
                       Future.microtask(() {
                         if (mounted) setState(() => _hoveredId = item.id);
                       });
-                      widget.onActivityHover
-                          ?.call(_findActivity(item.id));
+                      widget.onActivityHover?.call(_findActivity(item.id));
                     },
                     onExit: (_) {
                       Future.microtask(() {
@@ -594,8 +596,7 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
                     child: GestureDetector(
                       onTap: () {
                         setState(() => _selectedId = item.id);
-                        widget.onActivityTap
-                            ?.call(_findActivity(item.id));
+                        widget.onActivityTap?.call(_findActivity(item.id));
                       },
                       child: Container(
                         height: _chartHeightPerRow - 18,
@@ -668,7 +669,11 @@ class _ScheduleGanttEnhancedState extends State<ScheduleGanttEnhanced> {
     var current = DateTime(start.year, start.month, 1);
     while (!current.isAfter(DateTime(end.year, end.month, 31))) {
       final daysInMonth = DateTime(current.year, current.month + 1, 0).day;
-      final days = daysInMonth - (current.isAtSameMomentAs(DateTime(start.year, start.month, start.day)) ? start.day - 1 : 0);
+      final days = daysInMonth -
+          (current.isAtSameMomentAs(
+                  DateTime(start.year, start.month, start.day))
+              ? start.day - 1
+              : 0);
       segments.add(_MonthSegment(
         year: current.year,
         month: current.month,
@@ -804,8 +809,9 @@ class _EnhancedDependencyPainter extends CustomPainter {
 
       final targetRow = items.indexWhere((e) => e.id == target.id);
       final targetY = targetRow * rowHeight + (rowHeight / 2);
-      final targetX =
-          leftColumnWidth + (target.startDate ?? startDate).difference(startDate).inDays * pxPerDay;
+      final targetX = leftColumnWidth +
+          (target.startDate ?? startDate).difference(startDate).inDays *
+              pxPerDay;
 
       for (final predId in target.predecessorIds) {
         final pred = byId[predId];
@@ -816,7 +822,8 @@ class _EnhancedDependencyPainter extends CustomPainter {
         final predWidth =
             (pred.durationDays == 0 ? 1 : pred.durationDays) * pxPerDay;
         final predX = leftColumnWidth +
-            (pred.startDate ?? startDate).difference(startDate).inDays * pxPerDay +
+            (pred.startDate ?? startDate).difference(startDate).inDays *
+                pxPerDay +
             predWidth;
 
         final path = Path()

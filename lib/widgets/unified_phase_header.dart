@@ -113,7 +113,8 @@ class UnifiedPhaseHeader extends StatelessWidget {
           decoration: BoxDecoration(
             color: _Tokens.surface,
             border: Border(
-              bottom: BorderSide(color: _Tokens.outlineVariant.withValues(alpha: 0.5)),
+              bottom: BorderSide(
+                  color: _Tokens.outlineVariant.withValues(alpha: 0.5)),
             ),
           ),
           child: Padding(
@@ -123,10 +124,12 @@ class UnifiedPhaseHeader extends StatelessWidget {
                 // Left: Hamburger menu
                 if (showDrawerButton)
                   IconButton(
-                    icon: const Icon(Icons.menu, color: _Tokens.onSurface, size: 24),
+                    icon: const Icon(Icons.menu,
+                        color: _Tokens.onSurface, size: 24),
                     tooltip: 'Open menu',
                     padding: const EdgeInsets.all(8),
-                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    constraints:
+                        const BoxConstraints(minWidth: 40, minHeight: 40),
                     onPressed: () => _openDrawer(context),
                   ),
                 const Spacer(),
@@ -147,7 +150,8 @@ class UnifiedPhaseHeader extends StatelessWidget {
                       color: _Tokens.onSurface, size: 22),
                   tooltip: 'Notifications',
                   padding: const EdgeInsets.all(8),
-                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                  constraints:
+                      const BoxConstraints(minWidth: 40, minHeight: 40),
                   onPressed: () {
                     // Placeholder for notification action
                   },
@@ -185,7 +189,8 @@ class UnifiedPhaseHeader extends StatelessWidget {
           decoration: BoxDecoration(
             color: _Tokens.surface,
             border: Border(
-              bottom: BorderSide(color: _Tokens.outlineVariant.withValues(alpha: 0.5)),
+              bottom: BorderSide(
+                  color: _Tokens.outlineVariant.withValues(alpha: 0.5)),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -296,7 +301,8 @@ class UnifiedPhaseHeader extends StatelessWidget {
                       context: context,
                       screenTitle: title,
                       sections: [
-                        PdfSection.text(title, 'Project section export from Ndu Project.'),
+                        PdfSection.text(
+                            title, 'Project section export from Ndu Project.'),
                       ],
                     );
                   },
@@ -307,7 +313,8 @@ class UnifiedPhaseHeader extends StatelessWidget {
               label: 'AI Assist',
               onTap: onAiAssist ??
                   () {
-                    AiAssistHelper.generateForSection(context, sectionLabel: title);
+                    AiAssistHelper.generateForSection(context,
+                        sectionLabel: title);
                   },
             ),
           if (showAiAssist) const SizedBox(width: 8),
@@ -389,11 +396,11 @@ class _CircleNavButton extends StatelessWidget {
       child: Container(
         width: 36,
         height: 36,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
           border: Border.all(
-            color: const Color(0xFFE2E8F0),
+            color: Color(0xFFE2E8F0),
           ),
         ),
         alignment: Alignment.center,
@@ -440,12 +447,13 @@ class UnifiedScaffoldAppBar extends StatelessWidget
         builder: (context) => IconButton(
           icon: const Icon(Icons.menu, color: Color(0xFF374151)),
           tooltip: 'Open menu',
-          onPressed: onMenuTap ?? () {
-            final scaffold = Scaffold.maybeOf(context);
-            if (scaffold != null && scaffold.hasDrawer) {
-              scaffold.openDrawer();
-            }
-          },
+          onPressed: onMenuTap ??
+              () {
+                final scaffold = Scaffold.maybeOf(context);
+                if (scaffold != null && scaffold.hasDrawer) {
+                  scaffold.openDrawer();
+                }
+              },
         ),
       ),
       title: title == null
@@ -545,53 +553,55 @@ class UnifiedProfileMenu extends StatelessWidget {
               children: [
                 avatar,
                 const SizedBox(width: 10),
-                StreamBuilder<bool>(
-                  stream: adminStatusStream,
-                  builder: (context, snapshot) {
-                    final isAdmin =
-                        snapshot.data ?? UserService.isAdminEmail(email);
-                    final role = isAdmin ? 'Admin' : 'Member';
-                    final emailIsDuplicate =
-                        email.isNotEmpty && displayName == email;
-                    return ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 220),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            displayName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
-                          ),
-                          if (!emailIsDuplicate)
+                RepaintBoundary(
+                  child: StreamBuilder<bool>(
+                    stream: adminStatusStream,
+                    builder: (context, snapshot) {
+                      final isAdmin =
+                          snapshot.data ?? UserService.isAdminEmail(email);
+                      final role = isAdmin ? 'Admin' : 'Member';
+                      final emailIsDuplicate =
+                          email.isNotEmpty && displayName == email;
+                      return ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 220),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              email.isEmpty ? 'No email' : email,
+                              displayName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 11,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
+                            ),
+                            if (!emailIsDuplicate)
+                              Text(
+                                email.isEmpty ? 'No email' : email,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            Text(
+                              role,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
                                 color: Colors.grey,
                               ),
                             ),
-                          Text(
-                            role,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -653,10 +663,10 @@ class _ActivityLogAction extends StatelessWidget {
             horizontal: compact ? 8 : 10,
             vertical: 8,
           ),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF7E0),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFF7E0),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFFFD873)),
+            border: Border.all(color: Color(0xFFFFD873)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -706,10 +716,10 @@ class _HeaderActionChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF0F4FF),
+          decoration: const BoxDecoration(
+            color: Color(0xFFF0F4FF),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFC7D2FE)),
+            border: Border.all(color: Color(0xFFC7D2FE)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -751,8 +761,8 @@ class _AiAssistChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF4154F1),
+          decoration: const BoxDecoration(
+            color: Color(0xFF4154F1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(

@@ -246,7 +246,8 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14)),
         title: Row(
           children: [
             _priorityDot(story.priority),
@@ -385,8 +386,8 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  const MobileSidebarHamburger(
-                    sidebar: InitiationLikeSidebar(
+                  MobileSidebarHamburger(
+                    sidebar: const InitiationLikeSidebar(
                       activeItemLabel: 'Agile Kanban Board',
                     ),
                   ),
@@ -397,7 +398,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        const PlanningPhaseHeader(
+                        PlanningPhaseHeader(
                           title: 'Kanban Board',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -434,7 +435,9 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   Widget _buildTopBar() {
     return Row(
       children: [
-        Image.asset('assets/images/Logo.png', height: 36),
+        Image.asset('assets/images/Logo.png',
+            height: 36,
+            cacheWidth: (MediaQuery.devicePixelRatioOf(context) * 150).round()),
         const SizedBox(width: 12),
         const Text('Ndu Project',
             style: TextStyle(
@@ -467,8 +470,8 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     final pointsTotal = _stories.fold<int>(0, (a, c) => a + c.storyPoints);
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -479,15 +482,18 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
         children: [
           Expanded(
               child: _summaryCell('Total Stories', '$total', Icons.layers)),
-          Container(width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
+          Container(
+              width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child:
                   _summaryCell('In Progress', '$inProgress', Icons.flash_on)),
-          Container(width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
+          Container(
+              width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child: _summaryCell(
                   'Points Done', '$pointsDone / $pointsTotal', Icons.stars)),
-          Container(width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
+          Container(
+              width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
               child: _summaryCell('Done', '$done', Icons.check_circle_outline)),
         ],
@@ -528,7 +534,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
     }
     return Container(
       height: 640,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -552,7 +558,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                       ? const BorderSide(color: _kBorder, width: 1)
                       : BorderSide.none),
             )
-          : BoxDecoration(
+          : const BoxDecoration(
               color: _kSurface,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: _kBorder),
@@ -650,25 +656,28 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                               color: col.accent,
                               borderRadius: BorderRadius.circular(2)),
                         ),
-                      ...stories.map((story) => Draggable<AgileTask>(
-                            data: story,
-                            feedback: SizedBox(
-                              width: 220,
-                              child: Material(
-                                elevation: 8,
-                                borderRadius: BorderRadius.circular(10),
-                                child: _buildCard(story, col),
+                      ...stories.map((story) => RepaintBoundary(
+                            key: ValueKey('kanban_card_${story.id}'),
+                            child: Draggable<AgileTask>(
+                              data: story,
+                              feedback: SizedBox(
+                                width: 220,
+                                child: Material(
+                                  elevation: 8,
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: _buildCard(story, col),
+                                ),
                               ),
+                              childWhenDragging: Opacity(
+                                  opacity: 0.4, child: _buildCard(story, col)),
+                              child: _buildCard(story, col),
                             ),
-                            childWhenDragging: Opacity(
-                                opacity: 0.4, child: _buildCard(story, col)),
-                            child: _buildCard(story, col),
                           )),
                       if (stories.isEmpty)
                         Container(
                           padding: const EdgeInsets.symmetric(
                               vertical: 24, horizontal: 12),
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                               border: Border.all(color: _kBorder),
                               borderRadius: BorderRadius.circular(8)),
                           child: const Center(
@@ -694,8 +703,8 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: _kSurface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _kBorder),
+        borderRadius: const BorderRadius.circular(10),
+        border: const Border.all(color: _kBorder),
         boxShadow: [
           BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -704,7 +713,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
         ],
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: const BorderRadius.circular(10),
         onTap: () => _showStoryDetail(story),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -722,7 +731,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                       color: _kAccentBg,
                       borderRadius: BorderRadius.circular(6)),
                   child: Text('${story.storyPoints}',
@@ -785,7 +794,7 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
                     style: const TextStyle(fontSize: 11, color: _kMuted),
                   ),
                 ),
-                const Icon(Icons.drag_indicator, size: 14, color: _kMuted),
+                Icon(Icons.drag_indicator, size: 14, color: _kMuted),
               ],
             ),
           ],
@@ -797,9 +806,8 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
   Widget _smallTag(String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-      decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(6)),
+      decoration: const BoxDecoration(
+          color: Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(6)),
       child: Text(label, style: const TextStyle(fontSize: 10, color: _kMuted)),
     );
   }
@@ -839,8 +847,8 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8)),
           ),
         ),
         const SizedBox(width: 12),
@@ -852,12 +860,12 @@ class _AgileKanbanBoardScreenState extends State<AgileKanbanBoardScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8)),
           ),
         ),
         const Spacer(),
-        const Text(
+        Text(
             'Board columns come from planning Kanban workflow configuration; cards come from the same AgileTask stories used by backlog planning and schedule import.',
             style: TextStyle(
                 fontSize: 12, color: _kMuted, fontStyle: FontStyle.italic)),
@@ -886,10 +894,10 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

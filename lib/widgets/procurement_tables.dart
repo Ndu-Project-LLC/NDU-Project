@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/theme.dart';
+
 class ContractsTable extends StatefulWidget {
   const ContractsTable({
     super.key,
@@ -56,20 +57,20 @@ class _ContractsTableState extends State<ContractsTable> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ResponsiveDataTableWrapper(
+            buildNduTableWithExpand(
+              context: context,
+              title: 'Contracts',
               minWidth: constraints.maxWidth,
               maxHeight: 560,
-              child: buildNduDataTable(
-                context: context,
-                columnSpacing: 24,
-                horizontalMargin: 16,
-                dataRowMinHeight: 56,
-                dataRowMaxHeight: 72,
-                border: TableBorder(
-                  bottom: BorderSide(color: Colors.grey[200]!),
-                  verticalInside: BorderSide.none,
-                ),
-                columns: const [
+              columnSpacing: 24,
+              horizontalMargin: 16,
+              dataRowMinHeight: 56,
+              dataRowMaxHeight: 72,
+              border: TableBorder(
+                bottom: BorderSide(color: Colors.grey[200]!),
+                verticalInside: BorderSide.none,
+              ),
+              columns: const [
                   DataColumn(
                       label: Align(
                     alignment: Alignment.centerLeft,
@@ -229,7 +230,6 @@ class _ContractsTableState extends State<ContractsTable> {
                     ],
                   );
                 }).toList(),
-              ),
             ),
             _TablePager(
               totalCount: widget.contracts.length,
@@ -303,18 +303,18 @@ class _ProcurementTableState extends State<ProcurementTable> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ResponsiveDataTableWrapper(
+            buildNduTableWithExpand(
+              context: context,
+              title: 'Procurement Items',
               minWidth: constraints.maxWidth,
               maxHeight: 560,
-              child: buildNduDataTable(
-                context: context,
-                columnSpacing: 24,
-                horizontalMargin: 12,
-                border: TableBorder.all(
-                    color: Colors.grey[300]!,
-                    width: 0.5,
-                    borderRadius: BorderRadius.circular(8)),
-                columns: [
+              columnSpacing: 24,
+              horizontalMargin: 12,
+              border: TableBorder.all(
+                  color: Colors.grey[300]!,
+                  width: 0.5,
+                  borderRadius: BorderRadius.circular(8)),
+              columns: [
                   const DataColumn(
                     label: Center(
                         child: Text('Item / Equipment',
@@ -426,7 +426,6 @@ class _ProcurementTableState extends State<ProcurementTable> {
                     ],
                   );
                 }).toList(),
-              ),
             ),
             _TablePager(
               totalCount: widget.items.length,
@@ -558,10 +557,10 @@ class _ResponsiblePickerCell extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 190),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: Color(0xFFE2E8F0)),
         ),
         child: Row(
           children: [
@@ -740,8 +739,8 @@ class _PriceCell extends StatelessWidget {
     return Text(
       NumberFormat.currency(symbol: '\$', decimalDigits: 2).format(amount),
       textAlign: TextAlign.center,
-      style:
-          const TextStyle(fontFamily: appFontFamily, fontWeight: FontWeight.w600),
+      style: const TextStyle(
+          fontFamily: appFontFamily, fontWeight: FontWeight.w600),
     );
   }
 }

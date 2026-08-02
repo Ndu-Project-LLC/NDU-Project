@@ -6,6 +6,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class RequirementsTraceabilityDashboard extends StatelessWidget {
   const RequirementsTraceabilityDashboard({
     super.key,
@@ -244,8 +245,8 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
   Widget _hero(BuildContext context, _DashboardSnapshot snapshot) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [Color(0xFF0F172A), Color(0xFF173052), Color(0xFF1E3A5F)],
         ),
         borderRadius: BorderRadius.circular(24),
@@ -327,9 +328,9 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
                 'Capture dependency notes, validation caveats, sponsor expectations, and implementation assumptions.',
             fillColor: const Color(0xFFF8FAFC),
             filled: true,
-            border: OutlineInputBorder(
+            border: const OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Color(0xFFE2E8F0)),
             ),
           ),
         ),
@@ -396,10 +397,10 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
                       width: width,
                       child: Container(
                         padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: Color(0xFFE2E8F0)),
                         ),
                         child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -478,43 +479,43 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Row(children: [
                       SizedBox(
                           width: 150,
                           child: Text('Requirement ID',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   color: Color(0xFF334155)))),
                       SizedBox(width: 16),
                       SizedBox(
                           width: 330,
                           child: Text('Description',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   color: Color(0xFF334155)))),
                       SizedBox(width: 16),
                       SizedBox(
                           width: 250,
                           child: Text('Design Artifact',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   color: Color(0xFF334155)))),
                       SizedBox(width: 16),
                       SizedBox(
                           width: 170,
                           child: Text('Validation Status',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   color: Color(0xFF334155)))),
                       SizedBox(width: 16),
                       SizedBox(
                           width: 110,
                           child: Text('Actions',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   color: Color(0xFF334155)))),
                     ]),
@@ -535,7 +536,7 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
     final zebra = index.isOdd;
     return InkWell(
       onTap: () => onSelectRequirement(index),
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: const BorderRadius.circular(18),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -747,10 +748,10 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFFBEB),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFFBEB),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFFDE68A)),
+                      border: Border.all(color: Color(0xFFFDE68A)),
                     ),
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -963,31 +964,32 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
                 ]),
                 const SizedBox(height: 16),
                 Container(
-                  decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                  decoration: const BoxDecoration(
+                      color: Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE2E8F0))),
+                      border: Border.all(color: Color(0xFFE2E8F0))),
                   child: Material(
                     type: MaterialType.transparency,
                     child: SwitchListTile.adaptive(
-                    title: const Text('Mark as out of scope',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF0F172A))),
-                    subtitle: const Text(
-                        'Keep the requirement visible in governance without consuming active design effort.',
-                        style: TextStyle(
-                            fontSize: 12.5, color: Color(0xFF64748B))),
-                    value: selected.isOutOfScope,
-                    onChanged: (v) => onUpdateSelectedRequirement((c) =>
-                        c.copyWith(
-                            isOutOfScope: v,
-                            validationStatus:
-                                v ? 'Unmapped' : c.validationStatus,
-                            designArtifactLabel: v ? '' : c.designArtifactLabel,
-                            gapStatus: v ? 'Pending Approval' : c.gapStatus)),
-                  ),
+                      title: const Text('Mark as out of scope',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0F172A))),
+                      subtitle: const Text(
+                          'Keep the requirement visible in governance without consuming active design effort.',
+                          style: TextStyle(
+                              fontSize: 12.5, color: Color(0xFF64748B))),
+                      value: selected.isOutOfScope,
+                      onChanged: (v) => onUpdateSelectedRequirement((c) =>
+                          c.copyWith(
+                              isOutOfScope: v,
+                              validationStatus:
+                                  v ? 'Unmapped' : c.validationStatus,
+                              designArtifactLabel:
+                                  v ? '' : c.designArtifactLabel,
+                              gapStatus: v ? 'Pending Approval' : c.gapStatus)),
                     ),
+                  ),
                 ),
               ]),
       );
@@ -1009,10 +1011,10 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
             ...snapshot.conflicts.take(4).map((row) => Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                      color: const Color(0xFFFEF2F2),
+                  decoration: const BoxDecoration(
+                      color: Color(0xFFFEF2F2),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFFECACA))),
+                      border: Border.all(color: Color(0xFFFECACA))),
                   child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1094,11 +1096,11 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
     final theme = context != null ? Theme.of(context) : null;
     return Container(
       padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: const [
+          border: Border.all(color: Color(0xFFE2E8F0)),
+          boxShadow: [
             BoxShadow(
                 color: Color(0x0E0F172A), blurRadius: 24, offset: Offset(0, 12))
           ]),
@@ -1107,8 +1109,8 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
           Container(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+              decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(14)),
               child: Icon(icon, color: const Color(0xFF0F172A))),
           const SizedBox(width: 12),
@@ -1232,16 +1234,15 @@ class RequirementsTraceabilityDashboard extends StatelessWidget {
               hintText: hintText,
               filled: true,
               fillColor: const Color(0xFFF8FAFC),
-              border: OutlineInputBorder(
+              border: const OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-              enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+              enabledBorder: const OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-              focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFFE2E8F0))),
+              focusedBorder: const OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide:
-                      const BorderSide(color: Color(0xFF1D4ED8), width: 1.4)),
+                  borderSide: BorderSide(color: Color(0xFF1D4ED8), width: 1.4)),
             ),
           ),
         ],

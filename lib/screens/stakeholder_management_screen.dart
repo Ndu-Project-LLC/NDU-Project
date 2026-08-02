@@ -9,6 +9,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -123,17 +124,35 @@ class _StakeholderManagementScreenState
  _EngagementSection(
  activeTabIndex: _activeTabIndex,
  onTabChanged: (idx) => setState(() => _activeTabIndex = idx),
- stakeholderTable: _StakeholdersTable(
+ stakeholderTable: FullScreenTableWrapper(
+ title: 'Stakeholders',
+ child: _StakeholdersTable(
  entries: filteredStakeholders,
  isLoading: false,
  onChanged: _updateStakeholder,
  onDelete: _deleteStakeholder,
  ),
- planTable: _EngagementPlansTable(
+ tableBuilder: (fsContext) => _StakeholdersTable(
+ entries: filteredStakeholders,
+ isLoading: false,
+ onChanged: _updateStakeholder,
+ onDelete: _deleteStakeholder,
+ ),
+ ),
+ planTable: FullScreenTableWrapper(
+ title: 'Engagement Plans',
+ child: _EngagementPlansTable(
  entries: filteredPlans,
  isLoading: false,
  onChanged: _updateEngagementPlan,
  onDelete: _deleteEngagementPlan,
+ ),
+ tableBuilder: (fsContext) => _EngagementPlansTable(
+ entries: filteredPlans,
+ isLoading: false,
+ onChanged: _updateEngagementPlan,
+ onDelete: _deleteEngagementPlan,
+ ),
  ),
  onAdd:
  _activeTabIndex == 0 ? _addStakeholder : _addEngagementPlan,

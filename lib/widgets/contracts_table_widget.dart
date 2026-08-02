@@ -13,6 +13,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 /// Custom Contracts Table with inline editing, CRUD actions, and AI capabilities
 class ContractsTableWidget extends StatelessWidget {
   const ContractsTableWidget({
@@ -43,8 +44,8 @@ class ContractsTableWidget extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: const BorderRadius.circular(16),
+        border: const Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -65,7 +66,7 @@ class ContractsTableWidget extends StatelessWidget {
                 topRight: Radius.circular(12),
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 _TableHeaderCell('Vendor/Party Name', flex: 2),
                 _TableHeaderCell('Contract Type', flex: 2),
@@ -78,12 +79,23 @@ class ContractsTableWidget extends StatelessWidget {
             ),
           ),
           // Table Rows
-          ...contracts.map((contract) => _ContractRowWidget(
-                contract: contract,
-                onUpdated: onContractUpdated,
-                onDeleted: onContractDeleted,
-                showDivider: contract != contracts.last,
-              )),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: contracts.length,
+            itemBuilder: (context, index) {
+              final contract = contracts[index];
+              return RepaintBoundary(
+                key: ValueKey('contract_row_$index'),
+                child: _ContractRowWidget(
+                  contract: contract,
+                  onUpdated: onContractUpdated,
+                  onDeleted: onContractDeleted,
+                  showDivider: contract != contracts.last,
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -435,219 +447,228 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
     DateTime? selectedStartDate = _contract.startDate;
     DateTime? selectedEndDate = _contract.endDate;
 
-    await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          final contractTypeOptions = _dropdownOptionsWithCurrent(
-            _contractTypeOptions,
-            selectedContractType,
-          );
-          final statusOptions = _dropdownOptionsWithCurrent(
-            _contractStatusOptions,
-            selectedStatus,
-          );
+    try {
+      await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialogState) {
+            final contractTypeOptions = _dropdownOptionsWithCurrent(
+              _contractTypeOptions,
+              selectedContractType,
+            );
+            final statusOptions = _dropdownOptionsWithCurrent(
+              _contractStatusOptions,
+              selectedStatus,
+            );
 
-          return AlertDialog(
-            title: const Text('Edit Contract', style: TextStyle(fontSize: 18)),
-            content: SizedBox(
-              width: 500,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    VoiceTextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Vendor/Party Name *',
-                        isDense: true,
+            return AlertDialog(
+              title:
+                  const Text('Edit Contract', style: TextStyle(fontSize: 18)),
+              content: SizedBox(
+                width: 500,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      VoiceTextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Vendor/Party Name *',
+                          isDense: true,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: _dropdownValue(
-                          contractTypeOptions, selectedContractType),
-                      decoration: const InputDecoration(
-                        labelText: 'Contract Type *',
-                        isDense: true,
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: _dropdownValue(
+                            contractTypeOptions, selectedContractType),
+                        decoration: const InputDecoration(
+                          labelText: 'Contract Type *',
+                          isDense: true,
+                        ),
+                        items: contractTypeOptions
+                            .map((type) => DropdownMenuItem(
+                                  value: type,
+                                  child: Text(type,
+                                      style: const TextStyle(fontSize: 13)),
+                                ))
+                            .toList(),
+                        onChanged: (v) {
+                          setDialogState(() => selectedContractType = v ?? '');
+                        },
                       ),
-                      items: contractTypeOptions
-                          .map((type) => DropdownMenuItem(
-                                value: type,
-                                child: Text(type,
-                                    style: const TextStyle(fontSize: 13)),
-                              ))
-                          .toList(),
-                      onChanged: (v) {
-                        setDialogState(() => selectedContractType = v ?? '');
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue:
-                          _dropdownValue(statusOptions, selectedStatus),
-                      decoration: const InputDecoration(
-                        labelText: 'Status *',
-                        isDense: true,
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: _dropdownValue(statusOptions, selectedStatus),
+                        decoration: const InputDecoration(
+                          labelText: 'Status *',
+                          isDense: true,
+                        ),
+                        items: statusOptions
+                            .map((status) => DropdownMenuItem(
+                                  value: status,
+                                  child: Text(status,
+                                      style: const TextStyle(fontSize: 13)),
+                                ))
+                            .toList(),
+                        onChanged: (v) {
+                          setDialogState(() => selectedStatus = v ?? 'Draft');
+                        },
                       ),
-                      items: statusOptions
-                          .map((status) => DropdownMenuItem(
-                                value: status,
-                                child: Text(status,
-                                    style: const TextStyle(fontSize: 13)),
-                              ))
-                          .toList(),
-                      onChanged: (v) {
-                        setDialogState(() => selectedStatus = v ?? 'Draft');
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    ListTile(
-                      title: Text(
-                          'Effective Date: ${selectedStartDate != null ? DateFormat('MMM dd, yyyy').format(selectedStartDate!) : 'Not set'}'),
-                      trailing: const Icon(Icons.calendar_today, size: 18),
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: selectedStartDate ?? DateTime.now(),
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2030),
-                        );
-                        if (date != null) {
-                          setDialogState(() => selectedStartDate = date);
-                        }
-                      },
-                    ),
-                    ListTile(
-                      title: Text(
-                          'Expiry Date: ${selectedEndDate != null ? DateFormat('MMM dd, yyyy').format(selectedEndDate!) : 'Not set'}'),
-                      trailing: const Icon(Icons.calendar_today, size: 18),
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: selectedEndDate ?? DateTime.now(),
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2030),
-                        );
-                        if (date != null) {
-                          setDialogState(() => selectedEndDate = date);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    VoiceTextField(
-                      controller: estimatedValueController,
-                      decoration: const InputDecoration(
-                        labelText: 'Total Value *',
-                        hintText: 'e.g., 1000000',
-                        isDense: true,
+                      const SizedBox(height: 12),
+                      ListTile(
+                        title: Text(
+                            'Effective Date: ${selectedStartDate != null ? DateFormat('MMM dd, yyyy').format(selectedStartDate!) : 'Not set'}'),
+                        trailing: const Icon(Icons.calendar_today, size: 18),
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: selectedStartDate ?? DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                          );
+                          if (date != null) {
+                            setDialogState(() => selectedStartDate = date);
+                          }
+                        },
                       ),
-                      keyboardType: TextInputType.number,
-                    ),
-                    const SizedBox(height: 12),
-                    VoiceTextField(
-                      controller: keyTermsController,
-                      decoration: const InputDecoration(
-                        labelText: 'Key Terms',
-                        hintText: 'Use "." bullet format',
-                        isDense: true,
+                      ListTile(
+                        title: Text(
+                            'Expiry Date: ${selectedEndDate != null ? DateFormat('MMM dd, yyyy').format(selectedEndDate!) : 'Not set'}'),
+                        trailing: const Icon(Icons.calendar_today, size: 18),
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: selectedEndDate ?? DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                          );
+                          if (date != null) {
+                            setDialogState(() => selectedEndDate = date);
+                          }
+                        },
                       ),
-                      maxLines: 5,
-                    ),
-                    const SizedBox(height: 12),
-                    const SizedBox(height: 6),
-                    VoiceTextField(
-                      controller: notesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Contract Notes',
-                        hintText: 'Prose description, no bullets',
-                        isDense: true,
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: estimatedValueController,
+                        decoration: const InputDecoration(
+                          labelText: 'Total Value *',
+                          hintText: 'e.g., 1000000',
+                          isDense: true,
+                        ),
+                        keyboardType: TextInputType.number,
                       ),
-                      maxLines: 3,
-                    ),
-                  ],
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: keyTermsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Key Terms',
+                          hintText: 'Use "." bullet format',
+                          isDense: true,
+                        ),
+                        maxLines: 5,
+                      ),
+                      const SizedBox(height: 12),
+                      const SizedBox(height: 6),
+                      VoiceTextField(
+                        controller: notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Contract Notes',
+                          hintText: 'Prose description, no bullets',
+                          isDense: true,
+                        ),
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  final estimatedValue =
-                      double.tryParse(estimatedValueController.text) ?? 0.0;
-                  final updated = ContractModel(
-                    id: _contract.id,
-                    projectId: _contract.projectId,
-                    name: nameController.text.trim(),
-                    description: descriptionController.text.trim(),
-                    contractType: selectedContractType,
-                    paymentType: _contract.paymentType,
-                    status: selectedStatus,
-                    estimatedValue: estimatedValue,
-                    startDate: selectedStartDate ?? _contract.startDate,
-                    endDate: selectedEndDate ?? _contract.endDate,
-                    scope: keyTermsController.text.trim(),
-                    discipline: disciplineController.text.trim(),
-                    notes: notesController.text.trim(),
-                    createdById: _contract.createdById,
-                    createdByEmail: _contract.createdByEmail,
-                    createdByName: _contract.createdByName,
-                    createdAt: _contract.createdAt,
-                    updatedAt: DateTime.now(),
-                  );
-
-                  // Save via ContractService
-                  await ContractService.updateContract(
-                    projectId: _contract.projectId,
-                    contractId: _contract.id,
-                    name: updated.name,
-                    description: updated.description,
-                    contractType: updated.contractType,
-                    paymentType: updated.paymentType,
-                    status: updated.status,
-                    estimatedValue: updated.estimatedValue,
-                    startDate: updated.startDate,
-                    endDate: updated.endDate,
-                    scope: updated.scope,
-                    discipline: updated.discipline,
-                    notes: updated.notes,
-                  );
-
-                  // Sync to budget if value changed
-                  if (updated.estimatedValue != _contract.estimatedValue) {
-                    // Remove old value, add new value
-                    await ExecutionPhaseService.syncContractValueToBudget(
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    final estimatedValue =
+                        double.tryParse(estimatedValueController.text) ?? 0.0;
+                    final updated = ContractModel(
+                      id: _contract.id,
                       projectId: _contract.projectId,
-                      contractValue: _contract.estimatedValue,
-                      contractName: _contract.name,
-                      isDelete: true,
-                      userId: FirebaseAuth.instance.currentUser?.uid,
+                      name: nameController.text.trim(),
+                      description: descriptionController.text.trim(),
+                      contractType: selectedContractType,
+                      paymentType: _contract.paymentType,
+                      status: selectedStatus,
+                      estimatedValue: estimatedValue,
+                      startDate: selectedStartDate ?? _contract.startDate,
+                      endDate: selectedEndDate ?? _contract.endDate,
+                      scope: keyTermsController.text.trim(),
+                      discipline: disciplineController.text.trim(),
+                      notes: notesController.text.trim(),
+                      createdById: _contract.createdById,
+                      createdByEmail: _contract.createdByEmail,
+                      createdByName: _contract.createdByName,
+                      createdAt: _contract.createdAt,
+                      updatedAt: DateTime.now(),
                     );
-                    await ExecutionPhaseService.syncContractValueToBudget(
-                      projectId: _contract.projectId,
-                      contractValue: updated.estimatedValue,
-                      contractName: updated.name,
-                      isDelete: false,
-                      userId: FirebaseAuth.instance.currentUser?.uid,
-                    );
-                  }
 
-                  _updateContract(updated);
-                  if (context.mounted) {
-                    Navigator.of(dialogContext).pop(true);
-                  }
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+                    // Save via ContractService
+                    await ContractService.updateContract(
+                      projectId: _contract.projectId,
+                      contractId: _contract.id,
+                      name: updated.name,
+                      description: updated.description,
+                      contractType: updated.contractType,
+                      paymentType: updated.paymentType,
+                      status: updated.status,
+                      estimatedValue: updated.estimatedValue,
+                      startDate: updated.startDate,
+                      endDate: updated.endDate,
+                      scope: updated.scope,
+                      discipline: updated.discipline,
+                      notes: updated.notes,
+                    );
+
+                    // Sync to budget if value changed
+                    if (updated.estimatedValue != _contract.estimatedValue) {
+                      // Remove old value, add new value
+                      await ExecutionPhaseService.syncContractValueToBudget(
+                        projectId: _contract.projectId,
+                        contractValue: _contract.estimatedValue,
+                        contractName: _contract.name,
+                        isDelete: true,
+                        userId: FirebaseAuth.instance.currentUser?.uid,
+                      );
+                      await ExecutionPhaseService.syncContractValueToBudget(
+                        projectId: _contract.projectId,
+                        contractValue: updated.estimatedValue,
+                        contractName: updated.name,
+                        isDelete: false,
+                        userId: FirebaseAuth.instance.currentUser?.uid,
+                      );
+                    }
+
+                    _updateContract(updated);
+                    if (context.mounted) {
+                      Navigator.of(dialogContext).pop(true);
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } finally {
+      nameController.dispose();
+      descriptionController.dispose();
+      keyTermsController.dispose();
+      notesController.dispose();
+      disciplineController.dispose();
+      estimatedValueController.dispose();
+    }
   }
 
   Color _getStatusColor(String status) {
@@ -779,7 +800,7 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                         decoration: BoxDecoration(
                           color: _getStatusColor(_contract.status)
                               .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.circular(12),
                         ),
                         child: Text(
                           _contract.status,
@@ -846,14 +867,16 @@ class _ContractRowWidgetState extends State<_ContractRowWidget> {
                           Tooltip(
                             message: 'KAZ AI — Regenerate Key Terms',
                             child: InkWell(
-                              onTap: _isRegenerating ? null : _regenerateKeyTerms,
-                              borderRadius: BorderRadius.circular(8),
+                              onTap:
+                                  _isRegenerating ? null : _regenerateKeyTerms,
+                              borderRadius: const BorderRadius.circular(8),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF5F3FF),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 5),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF5F3FF),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: const Color(0xFFDDD6FE)),
+                                  border: Border.all(color: Color(0xFFDDD6FE)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,

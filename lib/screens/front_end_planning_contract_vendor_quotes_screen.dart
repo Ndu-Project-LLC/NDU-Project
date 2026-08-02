@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/procurement_tables.dart';
 import 'package:ndu_project/widgets/procurement_dialogs.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // Layout Imports
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -3157,10 +3158,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  ),
- child: ResponsiveDataTableWrapper(
- minWidth: 760,
- child: buildNduDataTable(
+ child: buildNduTableWithExpand(
  context: context,
+ title: 'Scope Tracking Status',
+ minWidth: 760,
  columnSpacing: 24,
  horizontalMargin: 18,
  headingRowHeight: 48,
@@ -3215,7 +3216,6 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ],
  );
  }).toList(),
- ),
  ),
  ),
  ],
@@ -3294,10 +3294,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  ),
- child: ResponsiveDataTableWrapper(
- minWidth: 820,
- child: buildNduDataTable(
+ child: buildNduTableWithExpand(
  context: context,
+ title: 'Reports',
+ minWidth: 820,
  columnSpacing: 24,
  horizontalMargin: 18,
  headingRowHeight: 48,
@@ -3361,7 +3361,6 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  }).toList(),
  ),
  ),
- ),
  ],
  );
  }
@@ -3400,10 +3399,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  ),
- child: ResponsiveDataTableWrapper(
- minWidth: 760,
- child: buildNduDataTable(
+ child: buildNduTableWithExpand(
  context: context,
+ title: 'Approved Contractors',
+ minWidth: 760,
  columnSpacing: 24,
  horizontalMargin: 18,
  headingRowHeight: 48,
@@ -3471,7 +3470,6 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ],
  );
  }).toList(),
- ),
  ),
  );
  }
@@ -7081,7 +7079,174 @@ class _ContractingScopeTable extends StatelessWidget {
  builder: (context, constraints) {
  final minWidth =
  constraints.maxWidth > 1500 ? constraints.maxWidth : 1500.0;
- return ResponsiveDataTableWrapper(
+ return FullScreenTableWrapper(
+ title: 'Procurement Items',
+ tableBuilder: (fsContext) => ResponsiveDataTableWrapper(
+ minWidth: minWidth,
+ maxHeight: 560,
+ child: buildNduDataTable(
+ context: fsContext,
+ columnSpacing: 16,
+ horizontalMargin: 12,
+ border: TableBorder.all(
+ color: const Color(0xFFE5E7EB),
+ width: 0.7,
+ borderRadius: BorderRadius.circular(10),
+ ),
+ columns: const [
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'No',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Contract Scope',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Description',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Potential Contractors',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Contract Type',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Estimated Duration',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Estimated Value',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Bidding Required',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(label: Center(child: Text(''))),
+ ],
+ rows: items.asMap().entries.map((entry) {
+ final index = entry.key;
+ final item = entry.value;
+ final actionItems = <PopupMenuEntry<String>>[];
+ if (onEdit != null) {
+ actionItems.add(
+ const PopupMenuItem<String>(
+ value: 'edit',
+ child: Row(
+ children: [
+ Icon(Icons.edit_outlined, size: 16),
+ SizedBox(width: 8),
+ Text('Edit scope'),
+ ],
+ ),
+ ),
+ );
+ }
+ if (onDelete != null) {
+ actionItems.add(
+ const PopupMenuItem<String>(
+ value: 'delete',
+ child: Row(
+ children: [
+ Icon(Icons.delete_outline, size: 16, color: Colors.red),
+ SizedBox(width: 8),
+ Text('Delete', style: TextStyle(color: Colors.red)),
+ ],
+ ),
+ ),
+ );
+ }
+
+ return DataRow(
+ cells: [
+ DataCell(Text('${index + 1}')),
+ DataCell(_cellText(item.name, width: 170, bold: true)),
+ DataCell(_cellText(item.description, width: 220)),
+ DataCell(_cellText(item.notes, width: 190)),
+ DataCell(_cellText(item.category, width: 120)),
+ DataCell(_cellText(item.comments, width: 150)),
+ DataCell(_cellText(_formatCurrency(item.budget), width: 130)),
+ DataCell(_cellText(
+ item.responsibleMember.trim().isEmpty
+ ? 'Not Sure'
+ : item.responsibleMember.trim(),
+ width: 130,
+ )),
+ DataCell(
+ hasActions
+ ? PopupMenuButton<String>(
+ icon: const Icon(Icons.more_horiz,
+ color: Colors.grey),
+ itemBuilder: (_) => actionItems,
+ onSelected: (value) {
+ if (value == 'edit' && onEdit != null) {
+ onEdit!(item);
+ } else if (value == 'delete' &&
+ onDelete != null) {
+ onDelete!(item);
+ }
+ },
+ )
+ : const SizedBox.shrink(),
+ ),
+ ],
+ );
+ }).toList(),
+ ),
+ ),
+ child: ResponsiveDataTableWrapper(
  minWidth: minWidth,
  maxHeight: 560,
  child: buildNduDataTable(
@@ -7244,6 +7409,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ],
  );
  }).toList(),
+ ),
  ),
  );
  },

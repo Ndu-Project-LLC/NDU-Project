@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/addon_users_selector.dart';
+
 const Color _pageBackground = Color(0xFFFFFFFF);
 const Color _primaryText = Color(0xFF0F0F0F);
 const Color _secondaryText = Color(0xFF5A5C60);
@@ -217,14 +218,13 @@ class _PaymentDialogState extends State<PaymentDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
-          onTap: () =>
-              setState(() => _showAddonSelector = !_showAddonSelector),
+          onTap: () => setState(() => _showAddonSelector = !_showAddonSelector),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: Color(0xFFE2E8F0)),
             ),
             child: Row(
               children: [
@@ -425,7 +425,8 @@ class _PaymentDialogState extends State<PaymentDialog> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Payment Confirmation',
           style: TextStyle(fontWeight: FontWeight.w700),
@@ -464,7 +465,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
+              shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Yes, I paid'),
@@ -477,7 +478,8 @@ class _PaymentDialogState extends State<PaymentDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      shape:
+          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 480),
         padding: const EdgeInsets.all(32),
@@ -488,10 +490,10 @@ class _PaymentDialogState extends State<PaymentDialog> {
             children: [
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Complete Your Subscription',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         color: _primaryText,
@@ -518,7 +520,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: _accent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: const BorderRadius.circular(16),
                   border: Border.all(color: _accent.withValues(alpha: 0.3)),
                 ),
                 child: Column(
@@ -527,7 +529,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                       children: [
                         Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -624,7 +626,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                             horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           color: const Color(0xFF22C55E).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.circular(8),
                           border: Border.all(
                               color: const Color(0xFF22C55E)
                                   .withValues(alpha: 0.3)),
@@ -679,18 +681,18 @@ class _PaymentDialogState extends State<PaymentDialog> {
                               color: _secondaryText.withValues(alpha: 0.6),
                               size: 20),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.circular(12),
                             borderSide: BorderSide(
                                 color: Colors.black.withValues(alpha: 0.1)),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: const BorderRadius.circular(12),
                             borderSide: BorderSide(
                                 color: Colors.black.withValues(alpha: 0.1)),
                           ),
-                          focusedBorder: OutlineInputBorder(
+                          focusedBorder: const OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: _accent),
+                            borderSide: BorderSide(color: _accent),
                           ),
                           errorText: _couponError,
                           errorStyle: const TextStyle(fontSize: 11),
@@ -709,7 +711,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
-                        shape: RoundedRectangleBorder(
+                        shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
@@ -819,7 +821,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.circular(12),
                     border: Border.all(color: Colors.red.shade200),
                   ),
                   child: Row(
@@ -850,7 +852,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: Colors.grey.shade300,
                     padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
+                    shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
@@ -917,7 +919,7 @@ class _FreeTrialBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.circular(16),
         border:
             Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.3)),
       ),
@@ -930,7 +932,7 @@ class _FreeTrialBanner extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: const Color(0xFF22C55E).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.card_giftcard_rounded,
@@ -957,8 +959,8 @@ class _FreeTrialBanner extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF22C55E),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF22C55E),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: const Text(
@@ -995,7 +997,7 @@ class _FreeTrialBanner extends StatelessWidget {
                 backgroundColor: const Color(0xFF22C55E),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
+                shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
@@ -1044,13 +1046,13 @@ class _PaymentOption extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.circular(16),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isSelected ? _accent.withValues(alpha: 0.08) : Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.circular(16),
             border: Border.all(
               color:
                   isSelected ? _accent : Colors.black.withValues(alpha: 0.08),
@@ -1065,7 +1067,7 @@ class _PaymentOption extends StatelessWidget {
                   color: isSelected
                       ? _accent.withValues(alpha: 0.15)
                       : _pageBackground,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.circular(10),
                 ),
                 child: Icon(
                   icon,

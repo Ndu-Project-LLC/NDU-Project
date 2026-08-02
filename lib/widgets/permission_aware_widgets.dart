@@ -332,7 +332,7 @@ class RoleBadge extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: role.color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.circular(16),
             border: Border.all(
               color: role.color,
               width: 1,
@@ -396,12 +396,12 @@ class RoleDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<SiteRole>(
-      initialValue: value,
+      value: value,
       onChanged: enabled ? (v) => onChanged(v!) : null,
       decoration: InputDecoration(
         labelText: 'Role',
         prefixIcon: const Icon(Icons.badge),
-        border: OutlineInputBorder(
+        border: const OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         filled: true,
@@ -424,7 +424,7 @@ class RoleDropdown extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: role.color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.circular(8),
                 ),
                 child: Text(
                   'Level ${role.level}',
@@ -497,9 +497,9 @@ class RestrictedContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Restricted Access',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF111827),

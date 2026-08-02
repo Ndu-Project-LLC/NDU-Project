@@ -23,6 +23,7 @@ import 'package:ndu_project/screens/design_phase_screen.dart';
 import 'package:ndu_project/screens/staff_team_screen.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 
 /// Front End Planning – Project Opportunities page
@@ -524,7 +525,7 @@ Opportunity generation constraints:
       _useFallbackOpportunities();
       if (!autoTriggered && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
                 'Opportunity generation failed. Using fallback suggestions.'),
           ),
@@ -562,8 +563,8 @@ Opportunity generation constraints:
             Expanded(
               child: Stack(
                 children: [
-                  const MobileSidebarHamburger(
-                    sidebar: InitiationLikeSidebar(
+                  MobileSidebarHamburger(
+                    sidebar: const InitiationLikeSidebar(
                       activeItemLabel: 'Project Opportunities',
                     ),
                   ),
@@ -586,7 +587,7 @@ Opportunity generation constraints:
                               LayoutBuilder(
                                 builder: (context, constraints) {
                                   final isCompact = constraints.maxWidth < 1120;
-                                  const titleSection = Column(
+                                  final titleSection = const Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
@@ -1746,10 +1747,18 @@ class _OpportunityTableState extends State<_OpportunityTable> {
 
   @override
   Widget build(BuildContext context) {
-    const border = BorderSide(color: Color(0xFFE5E7EB));
-    const headerStyle = TextStyle(
+    return FullScreenTableWrapper(
+      title: 'Opportunities',
+      child: _buildTableContent(),
+      tableBuilder: (fsContext) => _buildTableContent(),
+    );
+  }
+
+  Widget _buildTableContent() {
+    final border = const BorderSide(color: Color(0xFFE5E7EB));
+    final headerStyle = const TextStyle(
         fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
-    const cellStyle = TextStyle(fontSize: 14, color: Color(0xFF111827));
+    final cellStyle = const TextStyle(fontSize: 14, color: Color(0xFF111827));
 
     Widget td(Widget child, {VoidCallback? onDoubleTap}) => Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1867,7 +1876,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                               ),
                             )),
                             // Number column
-                            td(Text('${i + 1}', style: cellStyle),
+                            td(WrappedText('${i + 1}', style: cellStyle),
                                 onDoubleTap: () => widget.onEdit(r)),
                             td(
                               _ExpandableCellText(
@@ -2149,8 +2158,8 @@ class _BottomOverlays extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFD7E5FF)),
       ),
-      child: const Row(
-        children: [
+      child: Row(
+        children: const [
           Icon(Icons.lightbulb_outline, color: Color(0xFF2563EB)),
           SizedBox(width: 8),
           Text('Hint',

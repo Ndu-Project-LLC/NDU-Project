@@ -56,6 +56,12 @@ class CurrencyService extends ChangeNotifier {
     return _currencySymbols[code] ?? code;
   }
 
+  @override
+  void dispose() {
+    // Cancel any timers, close any streams if added later.
+    super.dispose();
+  }
+
   /// All supported currencies with their codes, symbols, and names.
   static const List<CurrencyOption> supportedCurrencies = [
     CurrencyOption(code: 'USD', symbol: '\$', name: 'US Dollar'),

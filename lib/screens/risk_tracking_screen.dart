@@ -8,21 +8,24 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+
 class RiskTrackingScreen extends StatefulWidget {
- const RiskTrackingScreen({super.key});
+  const RiskTrackingScreen({super.key});
 
- static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const RiskTrackingScreen()),
- );
- }
+  static void open(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const RiskTrackingScreen()),
+    );
+  }
 
- @override
- State<RiskTrackingScreen> createState() => _RiskTrackingScreenState();
+  @override
+  State<RiskTrackingScreen> createState() => _RiskTrackingScreenState();
 }
 
 class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
@@ -568,17 +571,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  trailing: _actionButton(Icons.filter_list, 'Filter'),
  child: _risks.isEmpty
  ? _buildEmptyRiskState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 16,
  horizontalMargin: 12,
  columns: const [
@@ -643,7 +647,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Risk register',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 
@@ -719,17 +730,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _plans.isEmpty
  ? _buildEmptyMitigationState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
@@ -812,7 +824,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Mitigation coverage',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 
@@ -988,17 +1007,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _signals.isEmpty
  ? _buildEmptySignalsState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
@@ -1082,7 +1102,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Risk signals',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 
@@ -1224,17 +1251,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _escalations.isEmpty
  ? _buildEmptyEscalationState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
@@ -1334,7 +1362,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Escalation readiness',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 
@@ -2738,156 +2773,158 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 // ─── Private Helper Widgets ─────────────────────────────────────────────────
 
 class _PanelShell extends StatelessWidget {
- const _PanelShell({
- required this.title,
- required this.subtitle,
- required this.child,
- this.trailing,
- });
+  const _PanelShell({
+    required this.title,
+    required this.subtitle,
+    required this.child,
+    this.trailing,
+  });
 
- final String title;
- final String subtitle;
- final Widget child;
- final Widget? trailing;
+  final String title;
+  final String subtitle;
+  final Widget child;
+  final Widget? trailing;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(title,
- style: const TextStyle(
- fontSize: 16, fontWeight: FontWeight.w700)),
- const SizedBox(height: 4),
- Text(subtitle,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF64748B))),
- ],
- ),
- ),
- if (trailing != null) trailing!,
- ],
- ),
- const SizedBox(height: 16),
- child,
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text(subtitle,
+                        style: const TextStyle(
+                            fontSize: 12, color: Color(0xFF64748B))),
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
 }
 
 class _EscalationReadiness {
- const _EscalationReadiness({
- required this.id,
- required this.event,
- required this.level,
- required this.triggerCondition,
- required this.responsibleParty,
- required this.escalationTarget,
- required this.status,
- required this.readiness,
- required this.responseWindow,
- required this.decisionRequired,
- required this.lastReview,
- });
+  const _EscalationReadiness({
+    required this.id,
+    required this.event,
+    required this.level,
+    required this.triggerCondition,
+    required this.responsibleParty,
+    required this.escalationTarget,
+    required this.status,
+    required this.readiness,
+    required this.responseWindow,
+    required this.decisionRequired,
+    required this.lastReview,
+  });
 
- final String id;
- final String event;
- final String level; // L1-Operational | L2-Management | L3-Executive | L4-Board/C-Suite
- final String triggerCondition;
- final String responsibleParty;
- final String escalationTarget;
- final String status; // Ready | Pending | In progress | Escalated | Deferred
- final double readiness;
- final String responseWindow;
- final String decisionRequired;
- final String lastReview;
+  final String id;
+  final String event;
+  final String
+      level; // L1-Operational | L2-Management | L3-Executive | L4-Board/C-Suite
+  final String triggerCondition;
+  final String responsibleParty;
+  final String escalationTarget;
+  final String status; // Ready | Pending | In progress | Escalated | Deferred
+  final double readiness;
+  final String responseWindow;
+  final String decisionRequired;
+  final String lastReview;
 }
 
 // ─── Data Models ────────────────────────────────────────────────────────────
 
 class _RiskItem {
- const _RiskItem(this.id, this.title, this.owner, this.probability,
- this.impact, this.status, this.nextReview);
+  const _RiskItem(this.id, this.title, this.owner, this.probability,
+      this.impact, this.status, this.nextReview);
 
- final String id;
- final String title;
- final String owner;
- final String probability;
- final String impact;
- final String status;
- final String nextReview;
+  final String id;
+  final String title;
+  final String owner;
+  final String probability;
+  final String impact;
+  final String status;
+  final String nextReview;
 }
 
 class _RiskSignal {
- const _RiskSignal({
- required this.id,
- required this.title,
- required this.category,
- required this.severity,
- required this.confidence,
- required this.description,
- required this.linkedRisk,
- required this.trend,
- required this.detectedDate,
- });
+  const _RiskSignal({
+    required this.id,
+    required this.title,
+    required this.category,
+    required this.severity,
+    required this.confidence,
+    required this.description,
+    required this.linkedRisk,
+    required this.trend,
+    required this.detectedDate,
+  });
 
- final String id;
- final String title;
- final String category; // Leading | Lagging
- final String severity; // Critical | High | Medium | Low
- final String confidence; // High | Medium | Low
- final String description;
- final String linkedRisk;
- final String trend; // Increasing | Stable | Decreasing
- final String detectedDate;
+  final String id;
+  final String title;
+  final String category; // Leading | Lagging
+  final String severity; // Critical | High | Medium | Low
+  final String confidence; // High | Medium | Low
+  final String description;
+  final String linkedRisk;
+  final String trend; // Increasing | Stable | Decreasing
+  final String detectedDate;
 }
 
 class _MitigationPlan {
- const _MitigationPlan({
- required this.id,
- required this.riskId,
- required this.strategy,
- required this.owner,
- required this.category,
- required this.status,
- required this.coverage,
- required this.targetDate,
- required this.effectiveness,
- required this.residualRisk,
- });
+  const _MitigationPlan({
+    required this.id,
+    required this.riskId,
+    required this.strategy,
+    required this.owner,
+    required this.category,
+    required this.status,
+    required this.coverage,
+    required this.targetDate,
+    required this.effectiveness,
+    required this.residualRisk,
+  });
 
- final String id;
- final String riskId;
- final String strategy;
- final String owner;
- final String category;
- final String status; // Not started | In progress | On track | At risk | Completed
- final double coverage;
- final String targetDate;
- final String effectiveness; // High | Medium | Low
- final String residualRisk; // Low | Medium | High
+  final String id;
+  final String riskId;
+  final String strategy;
+  final String owner;
+  final String category;
+  final String
+      status; // Not started | In progress | On track | At risk | Completed
+  final double coverage;
+  final String targetDate;
+  final String effectiveness; // High | Medium | Low
+  final String residualRisk; // Low | Medium | High
 }
 
 class _StatCardData {
- const _StatCardData(this.label, this.value, this.supporting, this.color);
+  const _StatCardData(this.label, this.value, this.supporting, this.color);
 
- final String label;
- final String value;
- final String supporting;
- final Color color;
+  final String label;
+  final String value;
+  final String supporting;
+  final Color color;
 }

@@ -7,6 +7,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE SPRINT REVIEWS — Completed Stories, Demos, Stakeholder Feedback
@@ -78,7 +79,8 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
               .toList() ??
           [];
       final feedback = (data['feedback'] as List?)
-              ?.map((e) => _StakeholderFeedback.fromMap(e as Map<String, dynamic>))
+              ?.map((e) =>
+                  _StakeholderFeedback.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [];
       final actions = (data['actions'] as List?)
@@ -110,11 +112,13 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   }
 
   void _seedProjectData(dynamic projectData) {
-    final workItems = AgileProjectContextHelper.workItems(projectData, limit: 8);
+    final workItems =
+        AgileProjectContextHelper.workItems(projectData, limit: 8);
     final stakeholders =
         AgileProjectContextHelper.stakeholders(projectData, limit: 4);
     final issues = AgileProjectContextHelper.issues(projectData, limit: 4);
-    final sprintLabel = AgileProjectContextHelper.activeSprintLabel(projectData);
+    final sprintLabel =
+        AgileProjectContextHelper.activeSprintLabel(projectData);
 
     _currentSprint = sprintLabel;
     _stories = [
@@ -187,10 +191,10 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sprint review saved'),
+          SnackBar(
+            content: const Text('Sprint review saved'),
             backgroundColor: _kAccent,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -253,20 +257,19 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  const MobileSidebarHamburger(
-                    sidebar: InitiationLikeSidebar(
+                  MobileSidebarHamburger(
+                    sidebar: const InitiationLikeSidebar(
                       activeItemLabel: 'Agile Sprint Reviews',
                     ),
                   ),
                   SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: hp, vertical: 24),
+                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        const PlanningPhaseHeader(
+                        PlanningPhaseHeader(
                           title: 'Sprint Reviews',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -320,13 +323,13 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildTopBar() {
     return Row(
       children: [
-        Image.asset('assets/images/Logo.png', height: 36),
+        Image.asset('assets/images/Logo.png',
+            height: 36,
+            cacheWidth: (MediaQuery.devicePixelRatioOf(context) * 150).round()),
         const SizedBox(width: 12),
         const Text('Ndu Project',
             style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: _kHeadline)),
+                fontSize: 18, fontWeight: FontWeight.w800, color: _kHeadline)),
         const Spacer(),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -347,10 +350,8 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   }
 
   Widget _buildSummaryRow() {
-    final accepted =
-        _stories.where((s) => s.status == 'Accepted').length;
-    final rejected =
-        _stories.where((s) => s.status == 'Rejected').length;
+    final accepted = _stories.where((s) => s.status == 'Accepted').length;
+    final rejected = _stories.where((s) => s.status == 'Rejected').length;
     final pointsDelivered = _stories
         .where((s) => s.status == 'Accepted')
         .fold<int>(0, (a, s) => a + s.points);
@@ -360,8 +361,8 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             _feedback.length;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -371,17 +372,14 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
       child: Row(
         children: [
           Expanded(
-              child:
-                  _summaryCell('Accepted', '$accepted', Icons.check_circle)),
+              child: _summaryCell('Accepted', '$accepted', Icons.check_circle)),
+          Container(
+              width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
+          Expanded(child: _summaryCell('Rejected', '$rejected', Icons.cancel)),
           Container(
               width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
-              child: _summaryCell('Rejected', '$rejected', Icons.cancel)),
-          Container(
-              width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
-          Expanded(
-              child: _summaryCell(
-                  'Points', '$pointsDelivered', Icons.stars)),
+              child: _summaryCell('Points', '$pointsDelivered', Icons.stars)),
           Container(
               width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
@@ -413,9 +411,17 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   }
 
   Widget _buildCompletedStoriesTable() {
+    return FullScreenTableWrapper(
+      title: 'Completed Stories',
+      child: _buildCompletedStoriesTableContent(),
+      tableBuilder: (fsContext) => _buildCompletedStoriesTableContent(),
+    );
+  }
+
+  Widget _buildCompletedStoriesTableContent() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -446,9 +452,10 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildStoriesHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: const Row(
-        children: [
-          SizedBox(width: 80,
+      child: Row(
+        children: const [
+          SizedBox(
+              width: 80,
               child: Text('Story',
                   style: TextStyle(
                       fontSize: 11,
@@ -511,15 +518,13 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
         children: [
           SizedBox(
             width: 80,
-            child: Text(s.id,
+            child: WrappedText(s.id,
                 style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: _kMuted)),
+                    fontSize: 11, fontWeight: FontWeight.w700, color: _kMuted)),
           ),
           Expanded(
             flex: 4,
-            child: Text(s.title,
+            child: WrappedText(s.title,
                 style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -528,13 +533,12 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
           Expanded(
             flex: 1,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: const BoxDecoration(
                 color: _kAccentBg,
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Text('${s.points}',
+              child: WrappedText('${s.points}',
                   style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -543,7 +547,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
           ),
           Expanded(
             flex: 2,
-            child: Text(s.assignee,
+            child: WrappedText(s.assignee,
                 style:
                     const TextStyle(fontSize: 12, color: _kHeadline)),
           ),
@@ -573,7 +577,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(value,
+      child: WrappedText(value,
           style: TextStyle(
               fontSize: 10, fontWeight: FontWeight.w700, color: color)),
     );
@@ -592,7 +596,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
         color: c.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(status,
+      child: WrappedText(status,
           style: TextStyle(
               fontSize: 11, fontWeight: FontWeight.w700, color: c)),
     );
@@ -601,7 +605,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildDemoChecklist() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -611,8 +615,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.play_circle_outline,
-                  size: 20, color: _kAccent),
+              const Icon(Icons.play_circle_outline, size: 20, color: _kAccent),
               const SizedBox(width: 8),
               const Text('Demo Items Checklist',
                   style: TextStyle(
@@ -622,8 +625,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
               const Spacer(),
               Text(
                   '${_demoItems.where((d) => d.status == 'Demoed').length}/${_demoItems.length}',
-                  style: const TextStyle(
-                      fontSize: 12, color: _kMuted)),
+                  style: const TextStyle(fontSize: 12, color: _kMuted)),
             ],
           ),
           const SizedBox(height: 12),
@@ -677,15 +679,13 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      const Icon(Icons.person_outline,
-                          size: 11, color: _kMuted),
+                      Icon(Icons.person_outline, size: 11, color: _kMuted),
                       const SizedBox(width: 4),
                       Text(d.owner,
-                          style: const TextStyle(
-                              fontSize: 11, color: _kMuted)),
+                          style: const TextStyle(fontSize: 11, color: _kMuted)),
                       if (d.notes.isNotEmpty) ...[
                         const SizedBox(width: 10),
-                        const Icon(Icons.notes, size: 11, color: _kMuted),
+                        Icon(Icons.notes, size: 11, color: _kMuted),
                         const SizedBox(width: 4),
                         Expanded(
                             child: Text(d.notes,
@@ -712,7 +712,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildFeedbackSection() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -720,12 +720,11 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.feedback_outlined,
-                  size: 20, color: _kAccent),
-              SizedBox(width: 8),
-              Text('Stakeholder Feedback',
+              const Icon(Icons.feedback_outlined, size: 20, color: _kAccent),
+              const SizedBox(width: 8),
+              const Text('Stakeholder Feedback',
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -764,7 +763,11 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
                 radius: 14,
                 backgroundColor: sentimentColor.withValues(alpha: 0.15),
                 child: Text(
-                    f.stakeholder.split(' ').map((p) => p.isNotEmpty ? p[0] : '').take(2).join(),
+                    f.stakeholder
+                        .split(' ')
+                        .map((p) => p.isNotEmpty ? p[0] : '')
+                        .take(2)
+                        .join(),
                     style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -781,8 +784,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
                             fontWeight: FontWeight.w700,
                             color: _kHeadline)),
                     Text(f.role,
-                        style: const TextStyle(
-                            fontSize: 11, color: _kMuted)),
+                        style: const TextStyle(fontSize: 11, color: _kMuted)),
                   ],
                 ),
               ),
@@ -807,9 +809,17 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   }
 
   Widget _buildActionItemsTable() {
+    return FullScreenTableWrapper(
+      title: 'Action Items',
+      child: _buildActionItemsTableContent(),
+      tableBuilder: (fsContext) => _buildActionItemsTableContent(),
+    );
+  }
+
+  Widget _buildActionItemsTableContent() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -819,8 +829,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.assignment_outlined,
-                  size: 20, color: _kAccent),
+              const Icon(Icons.assignment_outlined, size: 20, color: _kAccent),
               const SizedBox(width: 8),
               const Text('Action Items',
                   style: TextStyle(
@@ -830,8 +839,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
               const Spacer(),
               Text(
                   '${_actions.where((a) => a.status == 'Done').length}/${_actions.length} done',
-                  style: const TextStyle(
-                      fontSize: 12, color: _kMuted)),
+                  style: const TextStyle(fontSize: 12, color: _kMuted)),
             ],
           ),
           const SizedBox(height: 12),
@@ -846,8 +854,8 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
   Widget _buildActionsHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: const Row(
-        children: [
+      child: Row(
+        children: const [
           SizedBox(width: 30),
           Expanded(
               flex: 5,
@@ -908,14 +916,14 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(a.description,
+                  WrappedText(a.description,
                       style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: done ? _kMuted : _kHeadline,
                           decoration:
                               done ? TextDecoration.lineThrough : null)),
-                  Text(a.id,
+                  WrappedText(a.id,
                       style: const TextStyle(
                           fontSize: 10, color: _kMuted)),
                 ],
@@ -923,20 +931,19 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(a.owner,
+              child: WrappedText(a.owner,
                   style: const TextStyle(
                       fontSize: 12, color: _kHeadline)),
             ),
             Expanded(
               flex: 2,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: const BoxDecoration(
                   color: _kAccentBg,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(a.due,
+                child: WrappedText(a.due,
                     style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -974,7 +981,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -987,7 +994,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1138,10 +1145,10 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

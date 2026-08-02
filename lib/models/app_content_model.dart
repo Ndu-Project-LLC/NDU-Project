@@ -59,4 +59,13 @@ class AppContent {
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AppContent && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

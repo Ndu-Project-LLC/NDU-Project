@@ -36,7 +36,8 @@ class SolutionCard extends StatefulWidget {
   State<SolutionCard> createState() => _SolutionCardState();
 }
 
-class _SolutionCardState extends State<SolutionCard> with SingleTickerProviderStateMixin {
+class _SolutionCardState extends State<SolutionCard>
+    with SingleTickerProviderStateMixin {
   bool _isHovering = false;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -63,12 +64,11 @@ class _SolutionCardState extends State<SolutionCard> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final baseBorderColor = widget.isSelected
-        ? const Color(0xFFFFD700).withValues(alpha: 0.9)
+        ? const Color(0xFFFFD700).withOpacity(0.9)
         : Colors.grey.shade300;
-    final hoverBorderColor = const Color(0xFFFFD700).withValues(alpha: 0.6);
-    final borderColor = _isHovering && !widget.isSelected 
-        ? hoverBorderColor 
-        : baseBorderColor;
+    final hoverBorderColor = const Color(0xFFFFD700).withOpacity(0.6);
+    final borderColor =
+        _isHovering && !widget.isSelected ? hoverBorderColor : baseBorderColor;
     final elevation = widget.isSelected ? 6 : (_isHovering ? 4 : 2);
 
     return MouseRegion(
@@ -92,67 +92,79 @@ class _SolutionCardState extends State<SolutionCard> with SingleTickerProviderSt
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(
-              color: borderColor, 
+              color: borderColor,
               width: _isHovering ? 1.5 : 1,
             ),
           ),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Solution #${widget.solution.number}',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Solution #${widget.solution.number}',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (widget.onDelete != null)
+                      IconButton(
+                        icon: const Icon(Icons.delete,
+                            color: Colors.red, size: 20),
+                        onPressed: widget.onDelete,
+                        tooltip: 'Delete solution',
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            const BoxConstraints(minWidth: 32, minHeight: 32),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                if (widget.solution.title.isNotEmpty)
+                  Text(
+                    widget.solution.title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                const SizedBox(height: 10),
+                _buildSummaryRow(
+                    Icons.description,
+                    'Scope',
+                    widget.scopeBrief.isNotEmpty
+                        ? widget.scopeBrief
+                        : 'Not specified'),
+                _buildSummaryRow(
+                    Icons.warning, 'Risks', '${widget.riskCount} identified'),
+                _buildSummaryRow(Icons.computer, 'IT',
+                    '${widget.itConsiderationsCount} items'),
+                _buildSummaryRow(Icons.construction, 'Infrastructure',
+                    widget.infrastructureStatus),
+                _buildSummaryRow(Icons.attach_money, 'Cost Benefit',
+                    widget.costBenefitSummary),
+                _buildSummaryRow(Icons.people, 'Stakeholders',
+                    '${widget.stakeholderCount} identified'),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: widget.isSaving ? null : widget.onViewDetails,
+                    icon: const Icon(Icons.visibility, size: 18),
+                    label: const Text('View Details'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(40),
+                    ),
                   ),
                 ),
-                if (widget.onDelete != null)
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                    onPressed: widget.onDelete,
-                    tooltip: 'Delete solution',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  ),
               ],
             ),
-            const SizedBox(height: 6),
-            if (widget.solution.title.isNotEmpty)
-              Text(
-                widget.solution.title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            const SizedBox(height: 10),
-            _buildSummaryRow(Icons.description, 'Scope', widget.scopeBrief.isNotEmpty ? widget.scopeBrief : 'Not specified'),
-            _buildSummaryRow(Icons.warning, 'Risks', '${widget.riskCount} identified'),
-            _buildSummaryRow(Icons.computer, 'IT', '${widget.itConsiderationsCount} items'),
-            _buildSummaryRow(Icons.construction, 'Infrastructure', widget.infrastructureStatus),
-            _buildSummaryRow(Icons.attach_money, 'Cost Benefit', widget.costBenefitSummary),
-            _buildSummaryRow(Icons.people, 'Stakeholders', '${widget.stakeholderCount} identified'),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: widget.isSaving ? null : widget.onViewDetails,
-                icon: const Icon(Icons.visibility, size: 18),
-                label: const Text('View Details'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(40),
-                ),
-              ),
-            ),
-            ],
           ),
-        ),
         ),
       ),
     );

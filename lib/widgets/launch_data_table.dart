@@ -8,6 +8,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 const double _defaultColumnWidth = 160;
 const double _tableHorizontalPadding = 20;
@@ -133,12 +134,6 @@ class LaunchDataTable extends StatefulWidget {
 class _LaunchDataTableState extends State<LaunchDataTable> {
   final TextEditingController _searchController = TextEditingController();
 
-  bool get _hasActions =>
-      widget.onAdd != null ||
-      widget.onAddValues != null ||
-      widget.onImport != null ||
-      widget.csvColumns != null;
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -166,7 +161,7 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildCardHeader(context),
-          if (widget.onSearch != null || _hasActions) _buildActionBar(context),
+          _buildActionBar(context),
           if (widget.rowCount == 0) _buildEmpty() else _buildRows(context),
         ],
       ),
@@ -201,11 +196,12 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
   }
 
   Widget _buildActionBar(BuildContext context) {
+    final hasSearch = widget.onSearch != null;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Row(
         children: [
-          if (widget.onSearch != null)
+          if (hasSearch)
             Expanded(
               child: Container(
                 height: 44,
@@ -330,6 +326,114 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                 side: const BorderSide(color: Color(0xFFD1D5DB)),
               ),
             ),
+          ],
+          const SizedBox(width: 8),
+          if (!hasSearch) const Spacer(),
+          _ExpandTableChip(onTap: () => _openFullScreen(context)),
+        ],
+      ),
+    );
+  }
+
+  void _openFullScreen(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierColor: Colors.black54,
+        transitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (ctx, anim, secAnim) {
+          return Scaffold(
+            backgroundColor:
+                isDark ? const Color(0xFF0B1220) : const Color(0xFFF1F5F9),
+            appBar: AppBar(
+              title: Text(
+                widget.title,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              leading: IconButton(
+                tooltip: 'Close',
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(ctx).maybePop(),
+              ),
+              actions: [
+                IconButton(
+                  tooltip: 'Exit full screen',
+                  icon: const Icon(Icons.fullscreen_exit),
+                  onPressed: () => Navigator.of(ctx).maybePop(),
+                ),
+              ],
+            ),
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFE5E7EB),
+                    ),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: SingleChildScrollView(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth: MediaQuery.of(ctx).size.width - 32,
+                        ),
+                        child: _buildRowsForFullScreen(ctx),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+        transitionsBuilder: (ctx, anim, secAnim, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(
+              parent: anim,
+              curve: Curves.easeOutCubic,
+            ),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRowsForFullScreen(BuildContext context) {
+    final rows =
+        List.generate(widget.rowCount, (i) => widget.cellBuilder(context, i));
+    final effectiveColumns = _resolveColumns(rows);
+    final hasRowActions = rows.any(
+      (row) =>
+          row is LaunchDataRow &&
+          (row.onDelete != null || row.onEdit != null || row.onKazAi != null),
+    );
+    // Use a wide fixed width for full-screen so all columns are visible.
+    final minTableWidth = _minTableWidth(effectiveColumns, hasRowActions);
+    final tableWidth = minTableWidth + 320; // breathing room in full-screen
+
+    return _TableLayoutInherited(
+      tableWidth: tableWidth,
+      columns: effectiveColumns,
+      hasRowActions: hasRowActions,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildColumnHeaders(tableWidth, effectiveColumns, hasRowActions),
+          for (int i = 0; i < rows.length; i++) ...[
+            rows[i],
+            if (i < rows.length - 1)
+              const Divider(
+                  height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
           ],
         ],
       ),
@@ -763,9 +867,9 @@ class _LaunchEditableCellState extends State<LaunchEditableCell> {
     if (!isEditing) {
       return Align(
         alignment: Alignment.center,
-        child:        Text(
+        child: WrappedText(
           widget.value.isEmpty ? '—' : widget.value,
-          softWrap: true,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 13,
             color: widget.value.isEmpty
@@ -1677,4 +1781,50 @@ InputDecoration _modalInputDecoration({String? hint, String? error}) {
       borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.6),
     ),
   );
+}
+
+/// Small "Expand" chip used in [LaunchDataTable]'s action bar.
+/// Tapping it opens the table in a full-screen dialog.
+class _ExpandTableChip extends StatelessWidget {
+  final VoidCallback onTap;
+  const _ExpandTableChip({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Tooltip(
+          message: 'Expand table to full screen',
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.fullscreen,
+                    size: 16, color: Color(0xFF4B5563)),
+                SizedBox(width: 6),
+                Text(
+                  'Expand',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -28,6 +28,7 @@ import 'package:ndu_project/widgets/work_package_detail.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -3205,7 +3206,9 @@ class _TimelineList extends StatelessWidget {
       for (final item in computed.items) item.id: item,
     };
 
-    return SingleChildScrollView(
+    return FullScreenTableWrapper(
+    title: 'Schedule Timeline',
+    child: SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Container(
         decoration: BoxDecoration(
@@ -3499,6 +3502,302 @@ class _TimelineList extends StatelessWidget {
           ],
         ),
       ),
+    ),
+    tableBuilder: (fsContext) => SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: AppSemanticColors.border),
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+        ),
+        child: Table(
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          columnWidths: const {
+            0: FixedColumnWidth(180),
+            1: FixedColumnWidth(100),
+            2: FixedColumnWidth(95),
+            3: FixedColumnWidth(170),
+            4: FixedColumnWidth(120),
+            5: FixedColumnWidth(110),
+            6: FixedColumnWidth(150),
+            7: FixedColumnWidth(120),
+            8: FixedColumnWidth(120),
+            9: FixedColumnWidth(120),
+            10: FixedColumnWidth(120),
+            11: FixedColumnWidth(110),
+            12: FixedColumnWidth(170),
+            13: FixedColumnWidth(48),
+          },
+          border: const TableBorder(
+            horizontalInside: BorderSide(color: AppSemanticColors.border),
+            verticalInside: BorderSide(color: AppSemanticColors.border),
+          ),
+          children: [
+            _headerRow(),
+            ...rows.map((row) {
+              final computedItem = computedById[row.id];
+              final computedStart = computedItem?.startDate;
+              final computedEnd = computedItem?.endDate;
+              final statusValue = _normalizeScheduleStatus(row.status);
+              final priorityValue = _normalizeSchedulePriority(row.priority);
+              final predecessorCandidates =
+                  rows.where((candidate) => candidate.id != row.id).toList();
+              // Deduplicate predecessor candidates by ID to prevent
+              // DropdownButton assertion failures from duplicate values.
+              final seenPredIds = <String>{};
+              final uniquePredecessorCandidates = <_ScheduleRow>[];
+              for (final c in predecessorCandidates) {
+                if (c.id.trim().isEmpty || seenPredIds.contains(c.id)) continue;
+                seenPredIds.add(c.id);
+                uniquePredecessorCandidates.add(c);
+              }
+              final predecessorIds =
+                  uniquePredecessorCandidates.map((item) => item.id).toSet();
+              final predecessorValue =
+                  predecessorIds.contains(row.predecessorId)
+                      ? row.predecessorId
+                      : null;
+
+              if (row.status != statusValue) {
+                row.status = statusValue;
+              }
+              if (row.priority != priorityValue) {
+                row.priority = priorityValue;
+              }
+
+              return TableRow(
+                children: [
+                  _cell(
+                    VoiceTextField(
+                      controller: row.titleController,
+                      onChanged: (_) => onChanged(),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    VoiceTextFormField(
+                      initialValue: row.wbsId,
+                      onChanged: (value) {
+                        row.wbsId = value.trim();
+                        onChanged();
+                      },
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    VoiceTextField(
+                      controller: row.durationController,
+                      onChanged: (_) => onChanged(),
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton<String?>(
+                        isExpanded: true,
+                        value: predecessorValue,
+                        hint: const Text('None'),
+                        items: [
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text('None'),
+                          ),
+                          ...uniquePredecessorCandidates.map((candidate) {
+                            final label =
+                                candidate.titleController.text.trim().isEmpty
+                                    ? 'Untitled task'
+                                    : candidate.titleController.text.trim();
+                            return DropdownMenuItem<String?>(
+                              value: candidate.id,
+                              child:
+                                  Text(label, overflow: TextOverflow.ellipsis),
+                            );
+                          }),
+                        ],
+                        onChanged: (value) {
+                          final previous = row.predecessorId;
+                          row.predecessorId = value;
+                          final dependencies = row.normalizedDependencyIds;
+                          if (previous != null && previous != value) {
+                            dependencies.remove(previous);
+                          }
+                          if (value == null) {
+                            dependencies.remove(previous);
+                          } else if (!dependencies.contains(value)) {
+                            dependencies.insert(0, value);
+                          }
+                          row.dependencyIds = dependencies;
+                          onChanged();
+                        },
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value:
+                            _TimelineList._statusOptions.contains(statusValue)
+                                ? statusValue
+                                : null,
+                        hint: const Text('Pending'),
+                        items: _statusOptions
+                            .map((option) => DropdownMenuItem(
+                                  value: option,
+                                  child: Text(_titleCase(option)),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          row.status = value;
+                          onChanged();
+                        },
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: _TimelineList._priorityOptions
+                                .contains(priorityValue)
+                            ? priorityValue
+                            : null,
+                        hint: const Text('Medium'),
+                        items: _priorityOptions
+                            .map((option) => DropdownMenuItem(
+                                  value: option,
+                                  child: Text(_titleCase(option)),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          row.priority = value;
+                          onChanged();
+                        },
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    VoiceTextField(
+                      controller: row.assigneeController,
+                      onChanged: (_) => onChanged(),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    VoiceTextField(
+                      controller: row.disciplineController,
+                      onChanged: (_) => onChanged(),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    Row(
+                      children: [
+                        Expanded(
+                          child: VoiceTextField(
+                            controller: row.progressController,
+                            onChanged: (_) => onChanged(),
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                        const Text('%', style: TextStyle(fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                  _cell(
+                    TextButton(
+                      onPressed: () => onPickDate(row, isDueDate: false),
+                      child: Text(
+                        row.startDateController.text.trim().isNotEmpty
+                            ? row.startDateController.text.trim()
+                            : (computedStart != null
+                                ? _formatDate(computedStart)
+                                : '-'),
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    TextButton(
+                      onPressed: () => onPickDate(row, isDueDate: true),
+                      child: Text(
+                        row.dueDateController.text.trim().isNotEmpty
+                            ? row.dueDateController.text.trim()
+                            : (computedEnd != null
+                                ? _formatDate(computedEnd)
+                                : '-'),
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    VoiceTextField(
+                      controller: row.hoursController,
+                      onChanged: (_) => onChanged(),
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    VoiceTextField(
+                      controller: row.estimatingBasisController,
+                      onChanged: (_) => onChanged(),
+                      minLines: 1,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        hintText: 'Basis',
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    VoiceTextField(
+                      controller: row.milestoneController,
+                      onChanged: (_) => onChanged(),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  _cell(
+                    IconButton(
+                      onPressed: () => onDelete(row.id),
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
+    ),
     );
   }
 

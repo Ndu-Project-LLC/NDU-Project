@@ -8,6 +8,8 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -568,17 +570,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  trailing: _actionButton(Icons.filter_list, 'Filter'),
  child: _risks.isEmpty
  ? _buildEmptyRiskState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 16,
  horizontalMargin: 12,
  columns: const [
@@ -643,7 +646,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Risk register',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 
@@ -719,17 +729,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _plans.isEmpty
  ? _buildEmptyMitigationState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
@@ -812,7 +823,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Mitigation coverage',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 
@@ -988,17 +1006,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _signals.isEmpty
  ? _buildEmptySignalsState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
@@ -1082,7 +1101,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Risk signals',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 
@@ -1224,17 +1250,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _escalations.isEmpty
  ? _buildEmptyEscalationState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
@@ -1334,7 +1361,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Escalation readiness',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 

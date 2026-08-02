@@ -19,6 +19,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 /// Front End Planning – Milestone screen
 /// Allows users to define project start date, key milestones, and end date.
 class FrontEndPlanningMilestoneScreen extends StatefulWidget {
@@ -1397,6 +1398,14 @@ Consider typical project timelines and ensure end date is after start date.''';
  }
 
  Widget _buildMilestonesTable() {
+ return FullScreenTableWrapper(
+ title: 'Milestones',
+ child: _buildMilestonesTableContent(),
+ tableBuilder: (fsContext) => _buildMilestonesTableContent(),
+ );
+ }
+
+ Widget _buildMilestonesTableContent() {
  const border = BorderSide(color: Color(0xFFE5E7EB));
  const headerStyle = TextStyle(
  fontSize: 12,
@@ -1483,7 +1492,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  children: [
  _milestoneDataCell(
  Center(
- child: Text(
+ child: WrappedText(
  '${index + 1}',
  style: const TextStyle(
  fontSize: 13,
@@ -1553,7 +1562,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  const SizedBox(width: 8),
  Expanded(
- child: Text(
+ child: WrappedText(
  milestone.dueDate.isNotEmpty
  ? milestone.dueDate
  : 'Select date',
@@ -1572,7 +1581,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  if (dateError != null) ...[
  const SizedBox(height: 4),
- Text(
+ WrappedText(
  dateError,
  style: const TextStyle(
  color: Color(0xFFDC2626),

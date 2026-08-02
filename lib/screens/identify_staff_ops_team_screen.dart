@@ -18,6 +18,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 class IdentifyStaffOpsTeamScreen extends StatefulWidget {
  const IdentifyStaffOpsTeamScreen({super.key});
 
@@ -533,7 +534,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- return SingleChildScrollView(
+ return FullScreenTableWrapper(
+ title: 'Staff & Ops Team',
+ child: SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: DataTable(
  headingRowHeight: 32,
@@ -591,6 +594,76 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  InkWell(
  onTap: () =>
  _showDeleteMemberDialog(context, member),
+ borderRadius: BorderRadius.circular(4),
+ child: const Padding(
+ padding: EdgeInsets.all(4),
+ child: Icon(Icons.delete,
+ size: 16, color: Color(0xFFEF4444)),
+ ),
+ ),
+ ],
+ ),
+ ),
+ ]);
+ }).toList(),
+ ),
+ ),
+ tableBuilder: (fsContext) => DataTable(
+ headingRowHeight: 32,
+ dataRowMinHeight: 28,
+ dataRowMaxHeight: 36,
+ columnSpacing: 14,
+ horizontalMargin: 12,
+ headingRowColor: WidgetStateProperty.all(const Color(0xFF1F2937)),
+ columns: const [
+ DataColumn(
+ label: Text('Name',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Role',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Responsibility',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Status',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Readiness',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Actions',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ ],
+ rows: members.map((member) {
+ return DataRow(cells: [
+ DataCell(
+ Text(member.name, style: const TextStyle(fontSize: 13))),
+ DataCell(
+ Text(member.role, style: const TextStyle(fontSize: 13))),
+ DataCell(Text(member.responsibility,
+ style: const TextStyle(
+ fontSize: 13, color: Color(0xFF64748B)))),
+ DataCell(_statusChip(member.status)),
+ DataCell(_capacityChip(member.readinessScore)),
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ InkWell(
+ onTap: () =>
+ _showEditMemberDialog(fsContext, member),
+ borderRadius: BorderRadius.circular(4),
+ child: const Padding(
+ padding: EdgeInsets.all(4),
+ child: Icon(Icons.edit,
+ size: 16, color: Color(0xFF64748B)),
+ ),
+ ),
+ const SizedBox(width: 4),
+ InkWell(
+ onTap: () =>
+ _showDeleteMemberDialog(fsContext, member),
  borderRadius: BorderRadius.circular(4),
  child: const Padding(
  padding: EdgeInsets.all(4),

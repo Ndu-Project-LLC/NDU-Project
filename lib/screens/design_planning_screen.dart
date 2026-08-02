@@ -31,6 +31,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 const Color _kSurface = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -816,7 +818,9 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  ),
  ),
  const SizedBox(height: 10),
- SizedBox(
+ FullScreenTableWrapper(
+ title: 'Design Specifications',
+ child: SizedBox(
  height: 420,
  child: Scrollbar(
  thumbVisibility: true,
@@ -826,7 +830,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  child: ConstrainedBox(
  constraints:
  const BoxConstraints(minWidth: 1240),
- child: DataTable(
+ child: buildNduDataTable(context: context, 
  columnSpacing: 30,
  dataRowMinHeight: 56,
  dataRowMaxHeight: 76,
@@ -959,6 +963,156 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  ),
  )
  .toList(growable: false),
+ ),
+ ),
+ ),
+ ),
+ ),
+ ),
+ tableBuilder: (fsContext) => SizedBox(
+ height: 420,
+ child: Scrollbar(
+ thumbVisibility: true,
+ child: SingleChildScrollView(
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints:
+ const BoxConstraints(minWidth: 1240),
+ child: buildNduDataTable(context: context, 
+ columnSpacing: 30,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 76,
+ columns: const [
+ DataColumn(
+ label: SizedBox(
+ width: 220,
+ child: Text('Title'))),
+ DataColumn(
+ label: SizedBox(
+ width: 120,
+ child: Text('Spec type'))),
+ DataColumn(
+ label: SizedBox(
+ width: 140,
+ child: Text('Discipline'))),
+ DataColumn(
+ label: SizedBox(
+ width: 140,
+ child: Text('Area'))),
+ DataColumn(
+ label: SizedBox(
+ width: 170,
+ child:
+ Text('WBS Work Package'))),
+ DataColumn(
+ label: SizedBox(
+ width: 120,
+ child: Text('Source type'))),
+ DataColumn(
+ label: SizedBox(
+ width: 120,
+ child: Text('Owner'))),
+ DataColumn(
+ label: SizedBox(
+ width: 90,
+ child: Text('Status'))),
+ ],
+ rows: filteredRows
+ .map(
+ (item) => DataRow(
+ cells: [
+ DataCell(SizedBox(
+ width: 220,
+ child: Text(
+ item.title,
+ maxLines: 2,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 120,
+ child: Text(
+ item.specificationType,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 140,
+ child: Text(
+ item.discipline.isEmpty
+ ? '-'
+ : item.discipline,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 140,
+ child: Text(
+ item.area.isEmpty
+ ? '-'
+ : item.area,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 170,
+ child: Text(
+ item.wbsWorkPackageTitle
+ .isEmpty
+ ? '-'
+ : item
+ .wbsWorkPackageTitle,
+ maxLines: 2,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 120,
+ child: Text(
+ item.sourceType.isEmpty
+ ? '-'
+ : item.sourceType,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 120,
+ child: Text(
+ item.owner.isEmpty
+ ? '-'
+ : item.owner,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 90,
+ child: Text(
+ item.status.isEmpty
+ ? '-'
+ : item.status,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ ],
+ ),
+ )
+ .toList(growable: false),
+ ),
  ),
  ),
  ),

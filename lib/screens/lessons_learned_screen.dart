@@ -13,6 +13,7 @@ import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -707,11 +708,12 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  const cellStyle = TextStyle(fontSize: 13, color: Colors.black87);
  const subStyle = TextStyle(fontSize: 12, color: Colors.black54);
 
+ Widget buildTable(BuildContext context) {
  return LayoutBuilder(
- builder: (context, constraints) {
+ builder: (bc, constraints) {
  final availableWidth = constraints.hasBoundedWidth
  ? constraints.maxWidth
- : MediaQuery.of(context).size.width;
+ : MediaQuery.of(bc).size.width;
  final tableWidth = math.max(960.0, availableWidth);
 
  return SingleChildScrollView(
@@ -788,10 +790,10 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  children: [
  Expanded(
  flex: 6,
- child: Text('${i + 1}', style: cellStyle)),
+ child: WrappedText('${i + 1}', style: cellStyle)),
  Expanded(
  flex: 32,
- child: Text(
+ child: WrappedText(
  entries[i].lesson,
  style: cellStyle.copyWith(
  fontWeight: FontWeight.w600),
@@ -802,15 +804,15 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  child: _statusPill(entries[i].type)),
  Expanded(
  flex: 14,
- child: Text(entries[i].category,
+ child: WrappedText(entries[i].category,
  style: cellStyle)),
  Expanded(
  flex: 14,
  child:
- Text(entries[i].phase, style: cellStyle)),
+ WrappedText(entries[i].phase, style: cellStyle)),
  Expanded(
  flex: 12,
- child: Text(
+ child: WrappedText(
  entries[i].impact,
  style: entries[i].impact == 'High'
  ? cellStyle.copyWith(
@@ -820,14 +822,14 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  ),
  Expanded(
  flex: 14,
- child: Text(entries[i].status,
+ child: WrappedText(entries[i].status,
  style: cellStyle)),
  Expanded(
  flex: 20,
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text(entries[i].submittedBy,
+ WrappedText(entries[i].submittedBy,
  style: cellStyle),
  ],
  ),
@@ -835,7 +837,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  Expanded(
  flex: 14,
  child:
- Text(entries[i].date, style: cellStyle)),
+ WrappedText(entries[i].date, style: cellStyle)),
  Expanded(
  flex: 10,
  child: Align(
@@ -889,6 +891,13 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  ),
  );
  },
+ );
+ }
+
+ return FullScreenTableWrapper(
+ title: 'Lessons Learned — Tasks',
+ child: buildTable(context),
+ tableBuilder: buildTable,
  );
  }
 

@@ -16,6 +16,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 class FinalizeProjectScreen extends StatefulWidget {
  const FinalizeProjectScreen({super.key});
 
@@ -518,12 +519,26 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  title: 'No snapshot metrics',
  message: 'Add the metrics that summarize project closeout.',
  )
- : LayoutBuilder(builder: (context, constraints) {
+ : FullScreenTableWrapper(
+ title: 'Finalization Snapshot Metrics',
+ child: LayoutBuilder(builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
+ child: _buildSnapshotMetricsDataTable(),
+ ),
+ );
+ }),
+ tableBuilder: (fsContext) => _buildSnapshotMetricsDataTable(),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildSnapshotMetricsDataTable() {
+ return DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFF0F172A)),
  headingRowHeight: 48,
  dataRowMinHeight: 56,
@@ -587,12 +602,6 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  ],
  );
  }).toList(),
- ),
- ),
- );
- }),
- ],
- ),
  );
  }
 

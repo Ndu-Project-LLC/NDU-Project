@@ -12,6 +12,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 const Color _kBackground = Color(0xFFF7F8FC);
 const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
@@ -414,7 +415,9 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  }
 
  Widget _buildDocumentsTable() {
- return Container(
+ return FullScreenTableWrapper(
+ title: 'Document Review Matrix',
+ child: Container(
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(18),
@@ -428,6 +431,23 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  else
  _buildTableRows(),
  ],
+ ),
+ ),
+ tableBuilder: (fsContext) => Container(
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ children: [
+ _buildTableHeader(),
+ if (_filteredDocuments.isEmpty)
+ _buildEmptyState()
+ else
+ _buildTableRows(),
+ ],
+ ),
  ),
  );
  }

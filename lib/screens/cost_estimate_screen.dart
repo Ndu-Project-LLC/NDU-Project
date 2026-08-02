@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -4914,34 +4916,7 @@ class _CostVsScheduleWorkspace extends StatelessWidget {
  style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
  )
  else
- SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: DataTable(
- columnSpacing: 24,
- headingRowColor: WidgetStateProperty.all(const Color(0xFF1F2937)),
- columns: const [
- DataColumn(label: Text('Month', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12))),
- DataColumn(label: Text('Planned', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
- DataColumn(label: Text('Actual', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
- DataColumn(label: Text('Variance', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
- ],
- rows: sortedMonths.map((key) {
- final parts = key.split('-');
- final month = int.parse(parts[1]);
- final year = int.parse(parts[0]);
- final label = '${_monthNames[month - 1]} $year';
- final planned = monthlyPlanned[key] ?? 0;
- final actual = monthlyActual[key] ?? 0;
- final variance = planned - actual;
- return DataRow(cells: [
- DataCell(Text(label, style: const TextStyle(fontSize: 12))),
- DataCell(Text(formatCurrency(planned), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
- DataCell(Text(actual > 0 ? formatCurrency(actual) : '-', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: actual > 0 ? const Color(0xFF047857) : const Color(0xFFCBD5E1)))),
- DataCell(Text(variance != 0 ? formatCurrency(variance) : '-', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: variance > 0 ? const Color(0xFF059669) : variance < 0 ? const Color(0xFFDC2626) : const Color(0xFFCBD5E1)))),
- ]);
- }).toList(),
- ),
- ),
+ _buildMonthlyCashFlowTable(context, sortedMonths, monthlyPlanned, monthlyActual),
  const SizedBox(height: 24),
  const Text(
  'Work Package Budgets',
@@ -5000,6 +4975,71 @@ class _CostVsScheduleWorkspace extends StatelessWidget {
  }
 
  String _monthKey(DateTime date) => '${date.year}-${date.month.toString().padLeft(2, '0')}';
+
+ Widget _buildMonthlyCashFlowTable(
+ BuildContext context,
+ List<String> sortedMonths,
+ Map<String, double> monthlyPlanned,
+ Map<String, double> monthlyActual,
+ ) {
+ final rows = sortedMonths.map((key) {
+ final parts = key.split('-');
+ final month = int.parse(parts[1]);
+ final year = int.parse(parts[0]);
+ final label = '${_monthNames[month - 1]} $year';
+ final planned = monthlyPlanned[key] ?? 0;
+ final actual = monthlyActual[key] ?? 0;
+ final variance = planned - actual;
+ return DataRow(cells: [
+ DataCell(WrappedText(label, style: const TextStyle(fontSize: 12))),
+ DataCell(WrappedText(formatCurrency(planned), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataCell(WrappedText(actual > 0 ? formatCurrency(actual) : '-', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: actual > 0 ? const Color(0xFF047857) : const Color(0xFFCBD5E1)))),
+ DataCell(WrappedText(variance != 0 ? formatCurrency(variance) : '-', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: variance > 0 ? const Color(0xFF059669) : variance < 0 ? const Color(0xFFDC2626) : const Color(0xFFCBD5E1)))),
+ ]);
+ }).toList();
+
+ return FullScreenTableWrapper(
+ title: 'Monthly Cash Flow',
+ child: ResponsiveDataTableWrapper(
+ child: buildNduDataTable(
+ context: context,
+ columns: const [
+ DataColumn(label: Text('Month', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12))),
+ DataColumn(label: Text('Planned', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(label: Text('Actual', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(label: Text('Variance', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ ],
+ rows: rows,
+ headingRowColor: const Color(0xFF1F2937),
+ headingTextStyle: const TextStyle(
+ fontWeight: FontWeight.w700,
+ fontSize: 12,
+ color: Colors.white,
+ ),
+ zebra: true,
+ columnSpacing: 24,
+ ),
+ ),
+ tableBuilder: (fsContext) => buildNduDataTable(
+ context: fsContext,
+ columns: const [
+ DataColumn(label: Text('Month', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12))),
+ DataColumn(label: Text('Planned', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(label: Text('Actual', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ DataColumn(label: Text('Variance', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)), numeric: true),
+ ],
+ rows: rows,
+ headingRowColor: const Color(0xFF1F2937),
+ headingTextStyle: const TextStyle(
+ fontWeight: FontWeight.w700,
+ fontSize: 12,
+ color: Colors.white,
+ ),
+ zebra: true,
+ columnSpacing: 32,
+ ),
+ );
+ }
 }
 
 class _EarnedValueMetricsRow extends StatelessWidget {

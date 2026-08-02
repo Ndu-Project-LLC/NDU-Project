@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart' as fp;
 import 'package:excel/excel.dart' hide Border;
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 /// World-class CSV / XLSX Import Dialog
 ///
@@ -802,7 +803,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
                                     borderRadius: BorderRadius.circular(4),
                                   )
                                 : null,
-                            child: Text(
+                            child: WrappedText(
                               val.isEmpty ? '—' : val,
                               style: TextStyle(
                                 fontSize: 12,

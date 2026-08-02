@@ -17,6 +17,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/theme.dart';
 class SalvageDisposalTeamScreen extends StatefulWidget {
  const SalvageDisposalTeamScreen({super.key});
@@ -1370,7 +1371,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  final items = snapshot.data ?? [];
 
- return LayoutBuilder(
+ return FullScreenTableWrapper(
+ title: 'Salvage Inventory Items',
+ child: LayoutBuilder(
  builder: (context, constraints) {
  return ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
@@ -1494,6 +1497,132 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
+ ),
+ tableBuilder: (fsContext) => LayoutBuilder(
+ builder: (context, constraints) {
+ return ConstrainedBox(
+ constraints: BoxConstraints(minWidth: constraints.maxWidth),
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: BoxConstraints(minWidth: constraints.maxWidth),
+ child: DataTable(
+ headingRowColor: WidgetStateProperty.all(const Color(0xFF1F2937)),
+ columnSpacing: 24,
+ horizontalMargin: 16,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 72,
+ columns: const [
+ DataColumn(
+ label: Text('Asset',
+ style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white))),
+ DataColumn(
+ label: Text('Category',
+ style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white))),
+ DataColumn(
+ label: Text('Condition',
+ style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white))),
+ DataColumn(
+ label: Text('Location',
+ style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white))),
+ DataColumn(
+ label: Text('Status',
+ style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white))),
+ DataColumn(
+ label: Text('Est. Value',
+ style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white))),
+ DataColumn(
+ label: Text('Actions',
+ style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white))),
+ ],
+ rows: items.isEmpty
+ ? [
+ const DataRow(cells: [
+ DataCell(Text('No inventory items added yet',
+ style: TextStyle(
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic))),
+ DataCell(SizedBox()),
+ DataCell(SizedBox()),
+ DataCell(SizedBox()),
+ DataCell(SizedBox()),
+ DataCell(SizedBox()),
+ DataCell(SizedBox()),
+ ]),
+ ]
+ : items.map((item) {
+ Color statusColor;
+ switch (item.status.toLowerCase()) {
+ case 'ready':
+ statusColor = Colors.green;
+ break;
+ case 'pending':
+ statusColor = Colors.orange;
+ break;
+ case 'flagged':
+ statusColor = Colors.red;
+ break;
+ default:
+ statusColor = Colors.blue;
+ }
+
+ return DataRow(
+ cells: [
+ DataCell(Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ mainAxisAlignment: MainAxisAlignment.center,
+ children: [
+ Text(item.assetId,
+ style: const TextStyle(
+ fontSize: 12,
+ color: Color(0xFF0EA5E9),
+ fontWeight: FontWeight.w600)),
+ ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 180),
+ child: Text(item.name,
+ style: const TextStyle(fontSize: 13),
+ softWrap: true,
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis)),
+ ],
+ )),
+ DataCell(ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 160),
+ child: _buildCategoryChip(item.category))),
+ DataCell(Text(item.condition,
+ style: const TextStyle(fontSize: 13))),
+ DataCell(Text(item.location,
+ style: const TextStyle(
+ fontSize: 13, color: Color(0xFF64748B)))),
+ DataCell(_buildStatusBadge(item.status, statusColor)),
+ DataCell(Text(item.estimatedValue,
+ style: const TextStyle(
+ fontSize: 13, fontWeight: FontWeight.w600))),
+ DataCell(Row(
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit, size: 16),
+ onPressed: () =>
+ _showEditInventoryDialog(context, item),
+ color: const Color(0xFF64748B),
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete, size: 16),
+ onPressed: () =>
+ _showDeleteInventoryDialog(context, item),
+ color: Colors.red,
+ ),
+ ],
+ )),
+ ],
+ );
+ }).toList(),
+ ),
+ ),
+ ),
+ );
+ },
+ ),
  );
  },
  );
@@ -2744,7 +2873,9 @@ Execution snapshot:
  ],
  ),
  const SizedBox(height: 20),
- LayoutBuilder(
+ FullScreenTableWrapper(
+ title: 'Team Allocation',
+ child: LayoutBuilder(
  builder: (context, constraints) {
  Widget buildTable(List<_AllocationItem> items) {
  return SingleChildScrollView(
@@ -2853,6 +2984,117 @@ Execution snapshot:
  },
  );
  },
+ ),
+ tableBuilder: (fsContext) => LayoutBuilder(
+ builder: (context, constraints) {
+ Widget buildTable(List<_AllocationItem> items) {
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: BoxConstraints(minWidth: constraints.maxWidth),
+ child: DataTable(
+ headingRowColor:
+ WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ columnSpacing: 24,
+ horizontalMargin: 16,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 72,
+ columns: const [
+ DataColumn(
+ label: Text('Name',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Role',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Focus Area',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Workload',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Status',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Actions',
+ style: TextStyle(fontWeight: FontWeight.w600))),
+ ],
+ rows: items.map((item) {
+ final statusColor = item.status == 'Active'
+ ? Colors.green
+ : Colors.orange;
+ return DataRow(cells: [
+ DataCell(ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 200),
+ child: Text(item.name,
+ style: const TextStyle(fontSize: 13),
+ softWrap: true,
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis))),
+ DataCell(ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 140),
+ child: Text(item.role,
+ style: const TextStyle(fontSize: 13),
+ softWrap: true,
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis))),
+ DataCell(ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 160),
+ child: Text(item.focus,
+ style: const TextStyle(
+ fontSize: 13, color: Color(0xFF64748B)),
+ softWrap: true,
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis))),
+ DataCell(_buildWorkloadChip(item.workload)),
+ DataCell(_buildStatusBadge(item.status, statusColor)),
+ DataCell(Row(
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit, size: 16),
+ onPressed: () {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Edit allocation actions are available from the Team Roster section.')),
+ );
+ },
+ color: const Color(0xFF64748B)),
+ IconButton(
+ icon: const Icon(Icons.more_horiz, size: 16),
+ onPressed: () {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'More allocation actions will be added in the next refinement pass.')),
+ );
+ },
+ color: const Color(0xFF64748B)),
+ ],
+ )),
+ ]);
+ }).toList(),
+ ),
+ ),
+ );
+ }
+
+ if (projectId == null) {
+ return buildTable(_allocationItems);
+ }
+
+ return StreamBuilder<List<SalvageTeamMemberModel>>(
+ stream: SalvageService.streamTeamMembers(projectId),
+ builder: (context, snapshot) {
+ final members = snapshot.data ?? [];
+ final items = members.isNotEmpty
+ ? _mapAllocationFromMembers(members)
+ : _allocationItems;
+ return buildTable(items);
+ },
+ );
+ },
+ ),
  ),
  ],
  ),
@@ -3073,7 +3315,9 @@ Execution snapshot:
  );
  }
 
- return LayoutBuilder(
+ return FullScreenTableWrapper(
+ title: 'Team Roster',
+ child: LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
@@ -3202,6 +3446,137 @@ Execution snapshot:
  ),
  );
  },
+ ),
+ tableBuilder: (fsContext) => LayoutBuilder(
+ builder: (context, constraints) {
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints:
+ BoxConstraints(minWidth: constraints.maxWidth),
+ child: DataTable(
+ headingRowColor:
+ WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ columnSpacing: 24,
+ horizontalMargin: 16,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 72,
+ columns: const [
+ DataColumn(
+ label: Text('Name',
+ style: TextStyle(
+ fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Role',
+ style: TextStyle(
+ fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Email',
+ style: TextStyle(
+ fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Status',
+ style: TextStyle(
+ fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Items Handled',
+ style: TextStyle(
+ fontWeight: FontWeight.w600))),
+ DataColumn(
+ label: Text('Actions',
+ style: TextStyle(
+ fontWeight: FontWeight.w600))),
+ ],
+ rows: members.map((member) {
+ final statusColor =
+ member.status.toLowerCase() == 'active'
+ ? Colors.green
+ : Colors.orange;
+ final initial = member.name.trim().isEmpty
+ ? '?'
+ : member.name.trim()[0].toUpperCase();
+ return DataRow(
+ cells: [
+ DataCell(
+ Row(
+ children: [
+ CircleAvatar(
+ radius: 14,
+ backgroundColor: const Color(0xFF0EA5E9)
+ .withOpacity(0.1),
+ child: Text(
+ initial,
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF0EA5E9),
+ ),
+ ),
+ ),
+ const SizedBox(width: 8),
+ Text(member.name,
+ style: const TextStyle(fontSize: 13)),
+ ],
+ ),
+ ),
+ DataCell(ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 140),
+ child: Text(member.role,
+ style: const TextStyle(fontSize: 13),
+ softWrap: true,
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis))),
+ DataCell(
+ Text(
+ member.email,
+ style: const TextStyle(
+ fontSize: 13, color: Color(0xFF64748B)),
+ ),
+ ),
+ DataCell(_buildStatusBadge(
+ member.status, statusColor)),
+ DataCell(Text('${member.itemsHandled}',
+ style: const TextStyle(fontSize: 13))),
+ DataCell(
+ Row(
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit, size: 16),
+ onPressed: () =>
+ _showEditTeamMemberDialog(
+ context, member),
+ color: const Color(0xFF64748B),
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete_outline,
+ size: 16),
+ onPressed: () =>
+ _showDeleteTeamMemberDialog(
+ context, member),
+ color: const Color(0xFFEF4444),
+ ),
+ IconButton(
+   onPressed: () {
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
+     );
+   },
+   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
+   tooltip: 'KAZ AI',
+   padding: EdgeInsets.zero,
+   constraints: const BoxConstraints(minWidth: 28),
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }).toList(),
+ ),
+ ),
+ );
+ },
+ ),
  );
  },
  ),
@@ -3281,7 +3656,9 @@ Execution snapshot:
  }
 
  final items = snapshot.data ?? [];
- return LayoutBuilder(
+ return FullScreenTableWrapper(
+ title: 'Disposal Queue',
+ child: LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
@@ -3405,6 +3782,132 @@ Execution snapshot:
  ),
  );
  },
+ ),
+ tableBuilder: (fsContext) => LayoutBuilder(
+ builder: (context, constraints) {
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints:
+ BoxConstraints(minWidth: constraints.maxWidth),
+ child: DataTable(
+ headingRowColor:
+ WidgetStateProperty.all(const Color(0xFFF1F5F9)),
+ headingRowHeight: 32,
+ dataRowMinHeight: 28,
+ dataRowMaxHeight: 40,
+ headingTextStyle: const TextStyle(
+ fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF475569), letterSpacing: 0.3,
+ ),
+ dataTextStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
+ columnSpacing: 10,
+ horizontalMargin: 10,
+ columns: const [
+ DataColumn(label: Text('Asset ID')),
+ DataColumn(label: Text('Description')),
+ DataColumn(label: Text('Category')),
+ DataColumn(label: Text('Condition')),
+ DataColumn(label: Text('Disposal Method')),
+ DataColumn(label: Text('Status')),
+ DataColumn(label: Text('Priority')),
+ DataColumn(label: Text('Est. Value'), numeric: true),
+ DataColumn(label: Text('Disp. Cost'), numeric: true),
+ DataColumn(label: Text('Assigned To')),
+ DataColumn(label: Text('Target Date')),
+ DataColumn(label: Text('Location')),
+ DataColumn(label: Text('Actions')),
+ ],
+ rows: items.isEmpty
+ ? [
+ DataRow(cells: [
+ DataCell(Text(
+ 'No disposal items added yet.',
+ style: TextStyle(
+ color: const Color(0xFF64748B),
+ fontStyle: FontStyle.italic))),
+ for (var i = 0; i < 12; i++) const DataCell(SizedBox()),
+ ]),
+ ]
+ : items.map((item) {
+ final priorityColor = _priorityColorFor(item.priority);
+ return DataRow(
+ cells: [
+ DataCell(Text(item.assetId,
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF0EA5E9)))),
+ DataCell(ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 160),
+ child: Text(item.name,
+ style: const TextStyle(fontSize: 12),
+ overflow: TextOverflow.ellipsis),
+ )),
+ DataCell(_buildCategoryChip(item.category)),
+ DataCell(_buildConditionChip(item.condition)),
+ DataCell(_buildDisposalMethodChip(item.disposalMethod)),
+ DataCell(_buildStatusPill(item.status)),
+ DataCell(_buildPriorityBadge(item.priority, priorityColor)),
+ DataCell(Text(item.estimatedValue,
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700))),
+ DataCell(Text(item.disposalCost.isNotEmpty ? item.disposalCost : '-',
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: item.disposalCost.isNotEmpty ? const Color(0xFFEF4444) : const Color(0xFF94A3B8)))),
+ DataCell(Text(item.assignedTo.isNotEmpty ? item.assignedTo : '-',
+ style: TextStyle(
+ fontSize: 11,
+ color: item.assignedTo.isNotEmpty ? const Color(0xFF1E293B) : const Color(0xFF94A3B8)))),
+ DataCell(Text(item.targetDate.isNotEmpty ? item.targetDate : '-',
+ style: TextStyle(
+ fontSize: 11,
+ color: item.targetDate.isNotEmpty ? const Color(0xFF1E293B) : const Color(0xFF94A3B8)))),
+ DataCell(Text(item.location.isNotEmpty ? item.location : '-',
+ style: TextStyle(
+ fontSize: 11,
+ color: item.location.isNotEmpty ? const Color(0xFF475569) : const Color(0xFF94A3B8)))),
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit_outlined, size: 16),
+ onPressed: () =>
+ _showEditDisposalDialog(context, item),
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+ color: const Color(0xFF64748B),
+ ),
+ IconButton(
+ icon: const Icon(Icons.visibility_outlined, size: 16),
+ onPressed: () =>
+ _showDisposalItemDetailDialog(context, item),
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+ color: const Color(0xFF0EA5E9),
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete_outline, size: 16),
+ onPressed: () =>
+ _showDeleteDisposalDialog(context, item),
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+ color: const Color(0xFFEF4444),
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }).toList(),
+ ),
+ ),
+ );
+ },
+ ),
  );
  },
  ),
@@ -3675,7 +4178,9 @@ Execution snapshot:
  if (_isLoadingCompliance)
  const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()))
  else
- LayoutBuilder(
+ FullScreenTableWrapper(
+ title: 'Compliance & Regulations',
+ child: LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
@@ -3823,6 +4328,156 @@ Execution snapshot:
  ),
  );
  },
+ ),
+ tableBuilder: (fsContext) => LayoutBuilder(
+ builder: (context, constraints) {
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: BoxConstraints(minWidth: constraints.maxWidth),
+ child: DataTable(
+ headingRowColor: WidgetStateProperty.all(const Color(0xFFF1F5F9)),
+ headingRowHeight: 36,
+ dataRowMinHeight: 32,
+ dataRowMaxHeight: 48,
+ headingTextStyle: const TextStyle(
+ fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF475569), letterSpacing: 0.4,
+ ),
+ dataTextStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
+ columnSpacing: 16,
+ horizontalMargin: 12,
+ columns: const [
+ DataColumn(label: Text('Regulation/Standard')),
+ DataColumn(label: Text('Category')),
+ DataColumn(label: Text('Status')),
+ DataColumn(label: Text('Score %'), numeric: true),
+ DataColumn(label: Text('Last Audit')),
+ DataColumn(label: Text('Next Audit')),
+ DataColumn(label: Text('Days to Exp.'), numeric: true),
+ DataColumn(label: Text('Responsible')),
+ DataColumn(label: Text('Risk')),
+ DataColumn(label: Text('Findings'), numeric: true),
+ DataColumn(label: Text('Corr. Actions'), numeric: true),
+ DataColumn(label: Text('Priority')),
+ DataColumn(label: Text('Workflow')),
+ DataColumn(label: Text('Updated')),
+ DataColumn(label: Text('Actions')),
+ ],
+ rows: _complianceRows.asMap().entries.map((entry) {
+ final idx = entry.key;
+ final row = entry.value;
+ return DataRow(cells: [
+ DataCell(Text(row.regulation, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
+ DataCell(_buildComplianceCategoryChip(row.category)),
+ DataCell(_buildComplianceStatusChip(row.complianceStatus)),
+ DataCell(Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ SizedBox(
+ width: 36,
+ child: ClipRRect(
+ borderRadius: BorderRadius.circular(3),
+ child: LinearProgressIndicator(
+ value: row.complianceScore / 100,
+ backgroundColor: const Color(0xFFE2E8F0),
+ valueColor: AlwaysStoppedAnimation(
+ row.complianceScore >= 90 ? const Color(0xFF22C55E) :
+ row.complianceScore >= 70 ? const Color(0xFF2563EB) :
+ row.complianceScore >= 50 ? const Color(0xFFF59E0B) :
+ const Color(0xFFEF4444),
+ ),
+ minHeight: 4,
+ ),
+ ),
+ ),
+ const SizedBox(width: 4),
+ Text('${row.complianceScore}', style: TextStyle(
+ fontWeight: FontWeight.w700, fontSize: 11,
+ color: row.complianceScore >= 90 ? const Color(0xFF22C55E) :
+ row.complianceScore >= 70 ? const Color(0xFF2563EB) :
+ row.complianceScore >= 50 ? const Color(0xFFF59E0B) :
+ const Color(0xFFEF4444),
+ )),
+ ],
+ )),
+ DataCell(Text(row.lastAuditDate, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)))),
+ DataCell(Text(row.nextAuditDue, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)))),
+ DataCell(Container(
+ padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+ decoration: BoxDecoration(
+ color: row.daysToExpiry < 0 ? const Color(0xFFFEF2F2) :
+ row.daysToExpiry <= 14 ? const Color(0xFFFFFBEB) :
+ row.daysToExpiry <= 30 ? const Color(0xFFFFFBEB) :
+ const Color(0xFFF0FDF4),
+ borderRadius: BorderRadius.circular(6),
+ ),
+ child: Text(
+ row.daysToExpiry < 0 ? '${row.daysToExpiry}d (EXPIRED)' :
+ row.daysToExpiry <= 14 ? '${row.daysToExpiry}d' :
+ '${row.daysToExpiry}d',
+ style: TextStyle(
+ fontWeight: FontWeight.w700, fontSize: 10,
+ color: row.daysToExpiry < 0 ? const Color(0xFFDC2626) :
+ row.daysToExpiry <= 14 ? const Color(0xFFD97706) :
+ row.daysToExpiry <= 30 ? const Color(0xFFF59E0B) :
+ const Color(0xFF22C55E),
+ ),
+ ),
+ )),
+ DataCell(Text(row.responsibleParty, style: const TextStyle(fontSize: 10))),
+ DataCell(_buildComplianceRiskChip(row.riskLevel)),
+ DataCell(Text('${row.findings}', style: TextStyle(
+ fontWeight: FontWeight.w700,
+ color: row.findings > 5 ? const Color(0xFFEF4444) :
+ row.findings > 0 ? const Color(0xFFF59E0B) :
+ const Color(0xFF22C55E),
+ ))),
+ DataCell(Text('${row.correctiveActions}', style: TextStyle(
+ fontWeight: FontWeight.w700,
+ color: row.correctiveActions > 3 ? const Color(0xFFEF4444) :
+ row.correctiveActions > 0 ? const Color(0xFF2563EB) :
+ const Color(0xFF22C55E),
+ ))),
+ DataCell(_buildCompliancePriorityChip(row.priority)),
+ DataCell(_buildComplianceWorkflowChip(row.status)),
+ DataCell(Text(row.lastUpdated, style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8)))),
+ DataCell(Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit_outlined, size: 14),
+ onPressed: () => _showComplianceRegulationDialog(context, editIndex: idx),
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+ color: const Color(0xFF64748B),
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete_outline, size: 14),
+ onPressed: () => _deleteComplianceRow(idx),
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+ color: const Color(0xFFEF4444),
+ ),
+ IconButton(
+   onPressed: () {
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
+     );
+   },
+   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
+   tooltip: 'KAZ AI',
+   padding: EdgeInsets.zero,
+   constraints: const BoxConstraints(minWidth: 28),
+ ),
+ ],
+ )),
+ ]);
+ }).toList(),
+ ),
+ ),
+ );
+ },
+ ),
  ),
  ],
  ),
@@ -4292,7 +4947,9 @@ Execution snapshot:
  return _buildDefaultTimelineFallback();
  }
 
- return LayoutBuilder(
+ return FullScreenTableWrapper(
+ title: 'Disposal Timeline',
+ child: LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
@@ -4421,6 +5078,137 @@ Execution snapshot:
  ),
  );
  },
+ ),
+ tableBuilder: (fsContext) => LayoutBuilder(
+ builder: (context, constraints) {
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: BoxConstraints(minWidth: constraints.maxWidth),
+ child: DataTable(
+ headingRowColor: WidgetStateProperty.all(const Color(0xFFF1F5F9)),
+ headingRowHeight: 32,
+ dataRowMinHeight: 28,
+ dataRowMaxHeight: 40,
+ headingTextStyle: const TextStyle(
+ fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF475569), letterSpacing: 0.3,
+ ),
+ dataTextStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
+ columnSpacing: 10,
+ horizontalMargin: 10,
+ columns: const [
+ DataColumn(label: Text('Milestone')),
+ DataColumn(label: Text('Description')),
+ DataColumn(label: Text('Phase')),
+ DataColumn(label: Text('Status')),
+ DataColumn(label: Text('Owner')),
+ DataColumn(label: Text('Start Date')),
+ DataColumn(label: Text('Due Date')),
+ DataColumn(label: Text('Progress'), numeric: true),
+ DataColumn(label: Text('Priority')),
+ DataColumn(label: Text('Dependencies')),
+ DataColumn(label: Text('Notes')),
+ DataColumn(label: Text('Actions')),
+ ],
+ rows: items.map((item) {
+ return DataRow(cells: [
+ DataCell(Text(item.milestone,
+ style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700))),
+ DataCell(ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 140),
+ child: Text(item.description.isNotEmpty ? item.description : '-',
+ style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+ overflow: TextOverflow.ellipsis),
+ )),
+ DataCell(_buildPhaseChip(item.phase)),
+ DataCell(_buildTimelineStatusChip(item.status)),
+ DataCell(Text(item.owner.isNotEmpty ? item.owner : '-',
+ style: TextStyle(fontSize: 11,
+ color: item.owner.isNotEmpty ? const Color(0xFF1E293B) : const Color(0xFF94A3B8)))),
+ DataCell(Text(item.startDate.isNotEmpty ? item.startDate : '-',
+ style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
+ DataCell(Text(item.dueDate.isNotEmpty ? item.dueDate : '-',
+ style: TextStyle(fontSize: 11,
+ color: _isOverdue(item.dueDate, item.status) ? const Color(0xFFEF4444) : const Color(0xFF64748B)))),
+ DataCell(Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ SizedBox(
+ width: 40,
+ child: ClipRRect(
+ borderRadius: BorderRadius.circular(3),
+ child: LinearProgressIndicator(
+ value: item.progress / 100,
+ backgroundColor: const Color(0xFFE2E8F0),
+ valueColor: AlwaysStoppedAnimation(
+ item.progress >= 100 ? const Color(0xFF22C55E) :
+ item.progress >= 50 ? const Color(0xFF2563EB) :
+ const Color(0xFFF59E0B),
+ ),
+ minHeight: 4,
+ ),
+ ),
+ ),
+ const SizedBox(width: 4),
+ Text('${item.progress}%',
+ style: TextStyle(
+ fontWeight: FontWeight.w700, fontSize: 10,
+ color: item.progress >= 100 ? const Color(0xFF22C55E) :
+ item.progress >= 50 ? const Color(0xFF2563EB) :
+ const Color(0xFFF59E0B),
+ )),
+ ],
+ )),
+ DataCell(_buildPriorityBadge(item.priority, _priorityColorFor(item.priority))),
+ DataCell(ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 100),
+ child: Text(item.dependencies.isNotEmpty ? item.dependencies : '-',
+ style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8)),
+ overflow: TextOverflow.ellipsis),
+ )),
+ DataCell(ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 100),
+ child: Text(item.notes.isNotEmpty ? item.notes : '-',
+ style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8)),
+ overflow: TextOverflow.ellipsis),
+ )),
+ DataCell(Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit_outlined, size: 14),
+ onPressed: () => _showEditTimelineDialog(context, item),
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+ color: const Color(0xFF64748B),
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete_outline, size: 14),
+ onPressed: () => _showDeleteTimelineDialog(context, item),
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+ color: const Color(0xFFEF4444),
+ ),
+ IconButton(
+   onPressed: () {
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
+     );
+   },
+   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
+   tooltip: 'KAZ AI',
+   padding: EdgeInsets.zero,
+   constraints: const BoxConstraints(minWidth: 28),
+ ),
+ ],
+ )),
+ ]);
+ }).toList(),
+ ),
+ ),
+ );
+ },
+ ),
  );
  },
  ),

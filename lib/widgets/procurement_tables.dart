@@ -56,20 +56,20 @@ class _ContractsTableState extends State<ContractsTable> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ResponsiveDataTableWrapper(
+            buildNduTableWithExpand(
+              context: context,
+              title: 'Contracts',
               minWidth: constraints.maxWidth,
               maxHeight: 560,
-              child: buildNduDataTable(
-                context: context,
-                columnSpacing: 24,
-                horizontalMargin: 16,
-                dataRowMinHeight: 56,
-                dataRowMaxHeight: 72,
-                border: TableBorder(
-                  bottom: BorderSide(color: Colors.grey[200]!),
-                  verticalInside: BorderSide.none,
-                ),
-                columns: const [
+              columnSpacing: 24,
+              horizontalMargin: 16,
+              dataRowMinHeight: 56,
+              dataRowMaxHeight: 72,
+              border: TableBorder(
+                bottom: BorderSide(color: Colors.grey[200]!),
+                verticalInside: BorderSide.none,
+              ),
+              columns: const [
                   DataColumn(
                       label: Align(
                     alignment: Alignment.centerLeft,
@@ -229,7 +229,6 @@ class _ContractsTableState extends State<ContractsTable> {
                     ],
                   );
                 }).toList(),
-              ),
             ),
             _TablePager(
               totalCount: widget.contracts.length,
@@ -303,18 +302,18 @@ class _ProcurementTableState extends State<ProcurementTable> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ResponsiveDataTableWrapper(
+            buildNduTableWithExpand(
+              context: context,
+              title: 'Procurement Items',
               minWidth: constraints.maxWidth,
               maxHeight: 560,
-              child: buildNduDataTable(
-                context: context,
-                columnSpacing: 24,
-                horizontalMargin: 12,
-                border: TableBorder.all(
-                    color: Colors.grey[300]!,
-                    width: 0.5,
-                    borderRadius: BorderRadius.circular(8)),
-                columns: [
+              columnSpacing: 24,
+              horizontalMargin: 12,
+              border: TableBorder.all(
+                  color: Colors.grey[300]!,
+                  width: 0.5,
+                  borderRadius: BorderRadius.circular(8)),
+              columns: [
                   const DataColumn(
                     label: Center(
                         child: Text('Item / Equipment',
@@ -426,7 +425,6 @@ class _ProcurementTableState extends State<ProcurementTable> {
                     ],
                   );
                 }).toList(),
-              ),
             ),
             _TablePager(
               totalCount: widget.items.length,

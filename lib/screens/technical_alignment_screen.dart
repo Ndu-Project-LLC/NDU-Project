@@ -23,6 +23,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/design_phase_stable_shell.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -2321,7 +2322,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addConstraintRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Constraint And Guardrail Register',
  columns: const [
  _TableColumn(label: 'Constraint', flex: 3, minWidth: 260),
  _TableColumn(label: 'Guardrail', flex: 5, minWidth: 400),
@@ -2333,16 +2335,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  minWidth: _technicalAlignmentActionColumnWidth,
  alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_constraints.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _constraints.isEmpty
+ ? _buildEmptyTableState(
  message: 'No constraints yet. Add the first constraint.',
  actionLabel: 'Add constraint',
  onAction: _addConstraintRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(label: 'Constraint', flex: 3, minWidth: 260),
  _TableColumn(label: 'Guardrail', flex: 5, minWidth: 400),
@@ -2360,6 +2359,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  index: i,
  isStriped: i.isOdd,
  ownerOptions: ownerOptions,
+ ),
  ),
  ),
  ],
@@ -2395,7 +2395,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addMappingRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Requirement To Solution Mapping',
  columns: const [
  _TableColumn(label: 'Requirement Area', flex: 3, minWidth: 260),
  _TableColumn(
@@ -2407,16 +2408,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  minWidth: _technicalAlignmentActionColumnWidth,
  alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_mappings.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _mappings.isEmpty
+ ? _buildEmptyTableState(
  message: 'No requirement mappings yet. Add the first mapping.',
  actionLabel: 'Add mapping',
  onAction: _addMappingRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(label: 'Requirement Area', flex: 3, minWidth: 260),
  _TableColumn(
@@ -2433,6 +2431,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _mappings[i],
  index: i,
  isStriped: i.isOdd,
+ ),
  ),
  ),
  ],
@@ -2468,7 +2467,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addDependencyRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Dependency And Decision Watchlist',
  columns: const [
  _TableColumn(
  label: 'Dependency / Decision', flex: 3, minWidth: 260),
@@ -2481,16 +2481,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  minWidth: _technicalAlignmentActionColumnWidth,
  alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_dependencies.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _dependencies.isEmpty
+ ? _buildEmptyTableState(
  message: 'No dependencies yet. Add the first dependency.',
  actionLabel: 'Add dependency',
  onAction: _addDependencyRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(
  label: 'Dependency / Decision', flex: 3, minWidth: 260),
@@ -2509,6 +2506,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  index: i,
  isStriped: i.isOdd,
  ownerOptions: ownerOptions,
+ ),
  ),
  ),
  ],
@@ -3991,7 +3989,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addConstraintRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Constraints & guardrails',
  columns: const [
  _TableColumn(label: 'Constraint', flex: 3, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Guardrail', flex: 5, minWidth: 400, alignment: Alignment.center),
@@ -4000,16 +3999,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _TableColumn(
  label: 'Actions', flex: 2, minWidth: _technicalAlignmentActionColumnWidth, alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_constraints.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _constraints.isEmpty
+ ? _buildEmptyTableState(
  message: 'No constraints captured yet. Add the first guardrail.',
  actionLabel: 'Add constraint',
  onAction: _addConstraintRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(label: 'Constraint', flex: 3, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Guardrail', flex: 5, minWidth: 400, alignment: Alignment.center),
@@ -4024,6 +4020,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  index: i,
  isStriped: i.isOdd,
  ownerOptions: ownerOptions,
+ ),
  ),
  ),
  ],
@@ -4059,7 +4056,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addMappingRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Requirements → solution mapping',
  columns: const [
  _TableColumn(label: 'Requirement', flex: 3, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Technical approach', flex: 5, minWidth: 460, alignment: Alignment.center),
@@ -4067,17 +4065,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _TableColumn(
  label: 'Actions', flex: 2, minWidth: _technicalAlignmentActionColumnWidth, alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_mappings.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _mappings.isEmpty
+ ? _buildEmptyTableState(
  message:
  'No mappings yet. Add the first requirement-to-solution entry.',
  actionLabel: 'Add mapping',
  onAction: _addMappingRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(label: 'Requirement', flex: 3, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Technical approach', flex: 5, minWidth: 460, alignment: Alignment.center),
@@ -4087,6 +4082,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  rowCount: _mappings.length,
  rowBuilder: (i) => _buildMappingRow(_mappings[i], index: i, isStriped: i.isOdd),
+ ),
  ),
  const SizedBox(height: 16),
  Text(
@@ -4126,7 +4122,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addDependencyRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Dependencies & decisions',
  columns: const [
  _TableColumn(label: 'Dependency or decision', flex: 4, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Detail', flex: 5, minWidth: 380, alignment: Alignment.center),
@@ -4135,17 +4132,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _TableColumn(
  label: 'Actions', flex: 2, minWidth: _technicalAlignmentActionColumnWidth, alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_dependencies.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _dependencies.isEmpty
+ ? _buildEmptyTableState(
  message:
  'No dependencies yet. Add the first decision or external dependency.',
  actionLabel: 'Add dependency',
  onAction: _addDependencyRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(label: 'Dependency or decision', flex: 4, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Detail', flex: 5, minWidth: 380, alignment: Alignment.center),
@@ -4160,6 +4154,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  index: i,
  isStriped: i.isOdd,
  ownerOptions: ownerOptions,
+ ),
  ),
  ),
  const SizedBox(height: 16),
@@ -4441,6 +4436,33 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
+ );
+ }
+
+ /// Wraps the scrollable table header + body in a [FullScreenTableWrapper]
+ /// so the table can be expanded to a full-screen view. Pass the same
+ /// [columns] used by both the header and the body, and a [bodyBuilder]
+ /// that returns either the body widget or the empty-state widget for the
+ /// given [BuildContext].
+ Widget _wrapScrollableTableWithExpand({
+ required String title,
+ required List<_TableColumn> columns,
+ required WidgetBuilder bodyBuilder,
+ }) {
+ Widget buildInner(BuildContext bc) {
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ _buildScrollableTableHeader(columns: columns),
+ const SizedBox(height: 10),
+ bodyBuilder(bc),
+ ],
+ );
+ }
+ return FullScreenTableWrapper(
+ title: title,
+ child: buildInner(context),
+ tableBuilder: buildInner,
  );
  }
 

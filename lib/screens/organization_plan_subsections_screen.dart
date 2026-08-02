@@ -15,6 +15,7 @@ import 'package:ndu_project/widgets/premium_edit_dialog.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 Future<void> _exportPlanningSubsectionPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -1118,6 +1119,8 @@ class _OrganizationRaciMatrixScreenState
                                 ),
                               ],
                             ),
+                            child: FullScreenTableWrapper(
+                            title: 'RACI Matrix',
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(14),
                               child: _RaciMatrixTable(
@@ -1129,6 +1132,19 @@ class _OrganizationRaciMatrixScreenState
                                     _editRow(context, index, row),
                                 onDelete: (index) => _deleteRow(context, index),
                               ),
+                            ),
+                            tableBuilder: (fsContext) => ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: _RaciMatrixTable(
+                                rows: rows,
+                                columns: _raciColumns,
+                                onView: (index, row) =>
+                                    _viewRow(context, index, row),
+                                onEdit: (index, row) =>
+                                    _editRow(context, index, row),
+                                onDelete: (index) => _deleteRow(context, index),
+                              ),
+                            ),
                             ),
                           ),
                         const SizedBox(height: 24),
@@ -2018,6 +2034,8 @@ class _OrganizationStaffingPlanScreenState
                                     offset: Offset(0, 6)),
                               ],
                             ),
+                            child: FullScreenTableWrapper(
+                            title: 'Staffing Plan',
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(14),
                               child: _StaffingPlanTable(
@@ -2027,6 +2045,17 @@ class _OrganizationStaffingPlanScreenState
                                 onDelete: (index) =>
                                     _deleteStaffing(context, index),
                               ),
+                            ),
+                            tableBuilder: (fsContext) => ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: _StaffingPlanTable(
+                                requirements: requirements,
+                                onEdit: (index, req) =>
+                                    _editStaffing(context, index, req),
+                                onDelete: (index) =>
+                                    _deleteStaffing(context, index),
+                              ),
+                            ),
                             ),
                           ),
                         const SizedBox(height: 24),

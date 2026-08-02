@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE RETROSPECTIVES — Continuous Improvement with Multiple Templates
@@ -822,6 +823,14 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
   }
 
   Widget _buildActionItemsTable() {
+    return FullScreenTableWrapper(
+      title: 'Action Items',
+      child: _buildActionItemsTableContent(),
+      tableBuilder: (fsContext) => _buildActionItemsTableContent(),
+    );
+  }
+
+  Widget _buildActionItemsTableContent() {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -923,14 +932,14 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(a.description,
+                  WrappedText(a.description,
                       style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: done ? _kMuted : _kHeadline,
                           decoration:
                               done ? TextDecoration.lineThrough : null)),
-                  Text(a.id,
+                  WrappedText(a.id,
                       style: const TextStyle(
                           fontSize: 10, color: _kMuted)),
                 ],
@@ -938,7 +947,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Text(a.owner,
+              child: WrappedText(a.owner,
                   style: const TextStyle(
                       fontSize: 12, color: _kHeadline)),
             ),
@@ -951,7 +960,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
                   color: _kAccentBg,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(a.due,
+                child: WrappedText(a.due,
                     style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -981,7 +990,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
         color: c.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(status,
+      child: WrappedText(status,
           style: TextStyle(
               fontSize: 11, fontWeight: FontWeight.w700, color: c)),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 /// Responsive wrapper for data tables with horizontal scroll support
 class ResponsiveDataTableWrapper extends StatefulWidget {
@@ -284,11 +285,17 @@ DataTable buildNduDataTable({
   bool showCheckboxColumn = false,
   TextStyle? headingTextStyle,
   TextStyle? dataTextStyle,
+  bool autoWrapCells = true,
 }) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final resolvedHeadingColor = headingRowColor ??
       (isDark ? const Color(0xFF1F2937) : const Color(0xFFF5F8FC));
-  final normalizedRows = zebra ? nduZebraRows(context, rows) : rows;
+
+  // Auto-wrap any plain Text children inside cells so long text wraps
+  // instead of overflowing the screen. This is a no-op for cells that
+  // already use WrappedText or non-text children.
+  final processedRows = autoWrapCells ? _wrapRowsCells(rows) : rows;
+  final normalizedRows = zebra ? nduZebraRows(context, processedRows) : processedRows;
 
   final resolvedHeadingTextStyle = headingTextStyle ??
       TextStyle(
@@ -318,6 +325,117 @@ DataTable buildNduDataTable({
     border: border,
     columns: columns,
     rows: normalizedRows,
+  );
+}
+
+/// Walk every [DataRow] / [DataCell] and replace plain [Text] children with
+/// [WrappedText] so the cell text wraps rather than overflows.
+///
+/// Cells that already use [WrappedText] (or non-text children) are passed
+/// through unchanged. This is what powers `buildNduDataTable(autoWrapCells: true)`.
+List<DataRow> _wrapRowsCells(List<DataRow> rows) {
+  return rows
+      .map((row) => DataRow(
+            key: row.key,
+            selected: row.selected,
+            onSelectChanged: row.onSelectChanged,
+            onLongPress: row.onLongPress,
+            color: row.color,
+            cells: row.cells.map(_wrapSingleCell).toList(growable: false),
+          ))
+      .toList(growable: false);
+}
+
+DataCell _wrapSingleCell(DataCell cell) {
+  if (cell.child is Text) {
+    final t = cell.child as Text;
+    return DataCell(
+      WrappedText(
+        t.data ?? '',
+        style: t.style,
+        textAlign: t.textAlign,
+        textDirection: t.textDirection,
+        locale: t.locale,
+        maxLines: t.maxLines,
+        strutStyle: t.strutStyle,
+      ),
+      placeholder: cell.placeholder,
+      showEditIcon: cell.showEditIcon,
+      onTap: cell.onTap,
+      onLongPress: cell.onLongPress,
+      onDoubleTap: cell.onDoubleTap,
+      onTapDown: cell.onTapDown,
+      onTapCancel: cell.onTapCancel,
+    );
+  }
+  return cell;
+}
+
+/// Convenience wrapper that combines [ResponsiveDataTableWrapper] +
+/// [buildNduDataTable] + [FullScreenTableWrapper] so every table built this
+/// way gets BOTH (a) auto-wrapped cells AND (b) a full-screen expand button.
+///
+/// Pass the same [columns] / [rows] you would pass to [buildNduDataTable].
+/// The wrapper renders the table inline with horizontal scroll indicators
+/// and a small "Expand" button in the top-right corner. Tapping Expand
+/// opens the same table in a full-screen dialog.
+Widget buildNduTableWithExpand({
+  required BuildContext context,
+  required List<DataColumn> columns,
+  required List<DataRow> rows,
+  String? title,
+  double columnSpacing = 18,
+  double horizontalMargin = 14,
+  double headingRowHeight = 52,
+  double dataRowMinHeight = 60,
+  double dataRowMaxHeight = 220,
+  TableBorder? border,
+  bool zebra = true,
+  bool showCheckboxColumn = false,
+  double? minWidth,
+  double? maxHeight,
+  bool showExpandButton = true,
+  VoidCallback? onFullscreenClose,
+}) {
+  final inlineTable = ResponsiveDataTableWrapper(
+    minWidth: minWidth,
+    maxHeight: maxHeight,
+    child: buildNduDataTable(
+      context: context,
+      columns: columns,
+      rows: rows,
+      columnSpacing: columnSpacing,
+      horizontalMargin: horizontalMargin,
+      headingRowHeight: headingRowHeight,
+      dataRowMinHeight: dataRowMinHeight,
+      dataRowMaxHeight: dataRowMaxHeight,
+      border: border,
+      zebra: zebra,
+      showCheckboxColumn: showCheckboxColumn,
+    ),
+  );
+
+  if (!showExpandButton) {
+    return inlineTable;
+  }
+
+  return FullScreenTableWrapper(
+    title: title,
+    onFullscreenClose: onFullscreenClose,
+    child: inlineTable,
+    tableBuilder: (fsContext) => buildNduDataTable(
+      context: fsContext,
+      columns: columns,
+      rows: rows,
+      columnSpacing: columnSpacing + 6,
+      horizontalMargin: horizontalMargin + 6,
+      headingRowHeight: headingRowHeight + 8,
+      dataRowMinHeight: dataRowMinHeight + 8,
+      dataRowMaxHeight: dataRowMaxHeight + 80,
+      border: border,
+      zebra: zebra,
+      showCheckboxColumn: showCheckboxColumn,
+    ),
   );
 }
 

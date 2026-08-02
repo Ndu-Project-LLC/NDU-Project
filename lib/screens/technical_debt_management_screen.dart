@@ -12,6 +12,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -448,6 +449,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAdd: _showAddRemediationTrackDialog,
  ),
  child: _GovernanceTable(
+ title: 'Remediation runway',
  columns: const [
  _GovernanceColumn('Priority lane', 1.35),
  _GovernanceColumn('Exit criteria / closure standard', 2.3),
@@ -491,6 +493,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAdd: _showAddRootCauseDialog,
  ),
  child: _GovernanceTable(
+ title: 'Root cause signals',
  columns: const [
  _GovernanceColumn('Signal cluster', 1.35),
  _GovernanceColumn('Diagnostic interpretation', 1.9),
@@ -535,6 +538,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAdd: _showAddOwnerDialog,
  ),
  child: _GovernanceTable(
+ title: 'Ownership coverage',
  columns: const [
  _GovernanceColumn('Workstream', 1.35),
  _GovernanceColumn('Accountable owner', 1.4),
@@ -2108,15 +2112,18 @@ class _GovernanceTable extends StatelessWidget {
  const _GovernanceTable({
  required this.columns,
  required this.rows,
+ this.title,
  });
 
  final List<_GovernanceColumn> columns;
  final List<List<Widget>> rows;
+ final String? title;
 
  @override
  Widget build(BuildContext context) {
+ Widget buildInner(BuildContext bc) {
  return LayoutBuilder(
- builder: (context, constraints) {
+ builder: (lbc, constraints) {
  final minWidth = columns.fold<double>(
  0,
  (sum, column) => sum + (column.flex * 142),
@@ -2154,6 +2161,13 @@ class _GovernanceTable extends StatelessWidget {
  ),
  );
  },
+ );
+ }
+
+ return FullScreenTableWrapper(
+ title: title,
+ child: buildInner(context),
+ tableBuilder: buildInner,
  );
  }
 }
@@ -2260,7 +2274,7 @@ class _PriorityCell extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text(
+ WrappedText(
  title,
  style: const TextStyle(
  fontSize: 13,
@@ -2269,7 +2283,7 @@ class _PriorityCell extends StatelessWidget {
  ),
  ),
  const SizedBox(height: 4),
- Text(
+ WrappedText(
  supporting,
  style: const TextStyle(
  fontSize: 11,
@@ -2292,7 +2306,7 @@ class _BodyCell extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Text(
+ return WrappedText(
  value,
  style: const TextStyle(
  fontSize: 12,
@@ -2405,7 +2419,7 @@ class _OwnerCoverageCell extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text(
+ WrappedText(
  owner,
  style: const TextStyle(
  fontSize: 13,
@@ -2414,7 +2428,7 @@ class _OwnerCoverageCell extends StatelessWidget {
  ),
  ),
  const SizedBox(height: 3),
- Text(
+ WrappedText(
  '$count accountable role${count == '1' ? '' : 's'}',
  style: const TextStyle(
  fontSize: 11,

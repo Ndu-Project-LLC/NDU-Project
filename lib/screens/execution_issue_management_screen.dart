@@ -16,6 +16,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/execution_phase_ai_seed.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
  final projectData = ProjectDataHelper.getData(context);
@@ -595,7 +596,7 @@ class _IssuesManagementTable extends StatelessWidget {
  return Container(
  color: isHeader ? const Color(0xFFF3F4F6) : Colors.white,
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
- child: Text(
+ child: WrappedText(
  text,
  textAlign: align,
  style: style ?? (isHeader ? headerStyle : cellStyle),
@@ -603,7 +604,9 @@ class _IssuesManagementTable extends StatelessWidget {
  );
  }
 
- return Container(
+ return FullScreenTableWrapper(
+ title: 'Issues Management',
+ child: Container(
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(18),
  border: Border.all(color: const Color(0xFFE5E7EB)),
@@ -708,6 +711,115 @@ class _IssuesManagementTable extends StatelessWidget {
  );
  }),
  ],
+ ),
+ ),
+ ),
+ tableBuilder: (fsContext) => Container(
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ clipBehavior: Clip.antiAlias,
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(70),
+ 1: FixedColumnWidth(140),
+ 2: FixedColumnWidth(160),
+ 3: FixedColumnWidth(130),
+ 4: FixedColumnWidth(130),
+ 5: FixedColumnWidth(130),
+ 6: FixedColumnWidth(130),
+ 7: FixedColumnWidth(130),
+ 8: FixedColumnWidth(150),
+ 9: FixedColumnWidth(100),
+ },
+ border: const TableBorder(
+ horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ top: BorderSide(color: Color(0xFFE5E7EB)),
+ bottom: BorderSide(color: Color(0xFFE5E7EB)),
+ left: BorderSide(color: Color(0xFFE5E7EB)),
+ right: BorderSide(color: Color(0xFFE5E7EB)),
+ ),
+ children: [
+ TableRow(
+ children: [
+ buildCell('No', isHeader: true, align: TextAlign.center),
+ buildCell('Issue Topic', isHeader: true),
+ buildCell('Description', isHeader: true),
+ buildCell('Discipline', isHeader: true),
+ buildCell('Raised by', isHeader: true),
+ buildCell('Schedule In', isHeader: true),
+ buildCell('Cost Impact', isHeader: true),
+ buildCell('Approved?', isHeader: true),
+ buildCell('Comments', isHeader: true),
+ buildCell('Actions',
+ isHeader: true, align: TextAlign.center),
+ ],
+ ),
+ if (issues.isEmpty)
+ TableRow(
+ children: [
+ buildCell('', align: TextAlign.center),
+ buildCell('No issues added yet',
+ style: const TextStyle(
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic)),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ ],
+ )
+ else
+ ...issues.asMap().entries.map((entry) {
+ final index = entry.key;
+ final issue = entry.value;
+ return TableRow(
+ children: [
+ buildCell('${index + 1}', align: TextAlign.center),
+ buildCell(issue.issueTopic),
+ buildCell(issue.description),
+ buildCell(issue.discipline),
+ buildCell(issue.raisedBy),
+ buildCell(issue.scheduleImpact),
+ buildCell(issue.costImpact),
+ buildCell(issue.approved ? 'Yes' : 'No'),
+ buildCell(issue.comments),
+ Container(
+ color: Colors.white,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 18),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit,
+ size: 18, color: Color(0xFF64748B)),
+ onPressed: () => showEditDialog(context, issue),
+ tooltip: 'Edit',
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete,
+ size: 18, color: Color(0xFFEF4444)),
+ onPressed: () =>
+ showDeleteDialog(context, issue),
+ tooltip: 'Delete',
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }),
+ ],
+ ),
  ),
  ),
  );

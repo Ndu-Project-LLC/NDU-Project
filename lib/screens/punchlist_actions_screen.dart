@@ -12,6 +12,8 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -790,14 +792,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 10),
  // Full-width table
- LayoutBuilder(
+ Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 30,
  dataRowMinHeight: 22,
  dataRowMaxHeight: 28,
@@ -897,7 +901,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Punchlist Distribution',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  ],
  ),
  );
@@ -967,14 +978,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 10),
  // Full-width table
- LayoutBuilder(
+ Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 30,
  dataRowMinHeight: 22,
  dataRowMaxHeight: 28,
@@ -1092,7 +1105,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Action Velocity',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  ],
  ),
  );
@@ -1152,14 +1172,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 10),
  // Full-width table
- LayoutBuilder(
+ Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 30,
  dataRowMinHeight: 22,
  dataRowMaxHeight: 28,
@@ -1314,7 +1336,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Capacity Health',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  ],
  ),
  );
@@ -1374,14 +1403,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 10),
  // Full-width table
- LayoutBuilder(
+ Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 30,
  dataRowMinHeight: 22,
  dataRowMaxHeight: 28,
@@ -1510,7 +1541,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Shift Coverage',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  ],
  ),
  );

@@ -39,6 +39,7 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SafeSection — Build-time error boundary that prevents a single failing child
@@ -1772,6 +1773,14 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  }
 
  Widget _buildDesktopSolutionsTable() {
+ return FullScreenTableWrapper(
+ title: 'Potential Solutions',
+ child: _buildDesktopSolutionsTableContent(),
+ tableBuilder: (fsContext) => _buildDesktopSolutionsTableContent(),
+ );
+ }
+
+ Widget _buildDesktopSolutionsTableContent() {
  final displayCount = _isAdminHost
  ? _solutions.length
  : (_solutions.length > 3 ? 3 : _solutions.length);
@@ -1987,7 +1996,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  color: const Color(0xFFE0E0E0),
  borderRadius: BorderRadius.circular(6),
  ),
- child: Text(
+ child: WrappedText(
  '${index + 1}',
  style: const TextStyle(
  fontSize: 14,

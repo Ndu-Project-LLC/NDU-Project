@@ -50,15 +50,15 @@ class ScopeTrackingTableWidget extends StatelessWidget {
               ),
             ],
           ),
-          child: ResponsiveDataTableWrapper(
+          child: buildNduTableWithExpand(
+            context: context,
+            title: 'Scope Tracking',
             minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 1000,
             maxHeight: 560,
-            child: buildNduDataTable(
-              context: context,
-              columnSpacing: 20,
-              horizontalMargin: 16,
-              headingRowHeight: 56,
-              dataRowMinHeight: 52,
+            columnSpacing: 20,
+            horizontalMargin: 16,
+            headingRowHeight: 56,
+            dataRowMinHeight: 52,
               dataRowMaxHeight: 120,
               columns: const [
                 DataColumn(
@@ -187,7 +187,6 @@ class ScopeTrackingTableWidget extends StatelessWidget {
                   ],
                 );
               }).toList(),
-            ),
           ),
         );
       },

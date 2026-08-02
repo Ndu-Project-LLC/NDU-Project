@@ -76,6 +76,8 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  if (mounted) setState(() => _carriedContext = carried);
 
  // Deterministic seed from real prior-phase data — never invents lessons.
+ // Seed pulls from FEP summary + project notes (NOT the current screen's
+ // lessonsLearned, which we already checked is empty).
  final seed = seedLessonsLearned(data);
  if (seed.isNotEmpty) {
  final newItems = seed.rows.map((r) => LessonRecord(

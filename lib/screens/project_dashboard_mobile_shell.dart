@@ -18,6 +18,8 @@ import 'initiation_phase_screen.dart';
 import 'program_dashboard_mobile_screen.dart';
 import 'portfolio_dashboard_screen.dart';
 import 'project_workspace_dashboard_screen.dart';
+import 'regular_project_dashboard_screen.dart';
+import 'project_command_center_screen.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import '../widgets/dashboard_bottom_nav_bar.dart';
@@ -164,7 +166,7 @@ class _ProjectDashboardMobileShellState
  Navigator.push(
  context,
  MaterialPageRoute(
- builder: (_) => const ProjectWorkspaceDashboardScreen(isBasicPlan: true)),
+ builder: (_) => const RegularProjectDashboardScreen()),
  );
  }
 
@@ -172,7 +174,7 @@ class _ProjectDashboardMobileShellState
  Navigator.push(
  context,
  MaterialPageRoute(
- builder: (_) => const ProjectWorkspaceDashboardScreen(isBasicPlan: false)),
+ builder: (_) => const ProjectCommandCenterScreen()),
  );
  }
 

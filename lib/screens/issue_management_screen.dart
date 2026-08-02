@@ -67,6 +67,8 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  if (mounted) setState(() => _carriedContext = carried);
 
  // Deterministic seed from real prior-phase data — never invents issues.
+ // Seed pulls from risk register + planning issue log (NOT the current
+ // screen's issueLogItems, which we already checked is empty).
  final seed = seedIssueManagement(data);
  if (seed.isNotEmpty) {
  final newItems = seed.rows.map((r) => IssueLogItem(

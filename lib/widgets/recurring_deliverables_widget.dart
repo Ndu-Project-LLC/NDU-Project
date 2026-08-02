@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/progress_quick_actions.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 /// Recurring Deliverables Tracking sub-page
 class RecurringDeliverablesWidget extends StatefulWidget {
   const RecurringDeliverablesWidget({
@@ -127,8 +128,8 @@ class _RecurringDeliverablesWidgetState
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: const BorderRadius.circular(16),
+        border: const Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -140,11 +141,11 @@ class _RecurringDeliverablesWidgetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.all(20),
+          Padding(
+            padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Expanded(
+                const Expanded(
                   child: Text(
                     'Recurring deliverables',
                     style: TextStyle(
@@ -159,15 +160,15 @@ class _RecurringDeliverablesWidgetState
           ),
           const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
           if (_recurring.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(32),
+            Padding(
+              padding: const EdgeInsets.all(32),
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.repeat_outlined,
+                    const Icon(Icons.repeat_outlined,
                         color: Color(0xFF9CA3AF), size: 32),
-                    SizedBox(height: 12),
-                    Text(
+                    const SizedBox(height: 12),
+                    const Text(
                       'No recurring deliverables yet.',
                       style: TextStyle(
                         fontSize: 13,
@@ -192,7 +193,7 @@ class _RecurringDeliverablesWidgetState
                       topRight: Radius.circular(12),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       _TableHeaderCell('Recurring Item', flex: 4),
                       _TableHeaderCell('Frequency', flex: 2),
@@ -202,16 +203,24 @@ class _RecurringDeliverablesWidgetState
                     ],
                   ),
                 ),
-                ...List.generate(_recurring.length, (index) {
-                  final item = _recurring[index];
-                  final isLast = index == _recurring.length - 1;
-                  return _RecurringRowWidget(
-                    item: item,
-                    onChanged: (updated) => _update(index, updated),
-                    onDelete: () => _delete(index),
-                    showDivider: !isLast,
-                  );
-                }),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _recurring.length,
+                  itemBuilder: (context, index) {
+                    final item = _recurring[index];
+                    final isLast = index == _recurring.length - 1;
+                    return RepaintBoundary(
+                      key: ValueKey('recurring_row_$index'),
+                      child: _RecurringRowWidget(
+                        item: item,
+                        onChanged: (updated) => _update(index, updated),
+                        onDelete: () => _delete(index),
+                        showDivider: !isLast,
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
         ],
@@ -328,7 +337,7 @@ class _RecurringRowWidgetState extends State<_RecurringRowWidget> {
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
-                          initialValue: selectedFrequency,
+                          value: selectedFrequency,
                           decoration: const InputDecoration(
                             labelText: 'Frequency',
                             border: OutlineInputBorder(),
@@ -352,7 +361,7 @@ class _RecurringRowWidgetState extends State<_RecurringRowWidget> {
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
-                          initialValue: selectedStatus,
+                          value: selectedStatus,
                           decoration: const InputDecoration(
                             labelText: 'Status',
                             border: OutlineInputBorder(),
@@ -533,7 +542,7 @@ class _RecurringRowWidgetState extends State<_RecurringRowWidget> {
                           color: _item.status == 'Active'
                               ? const Color(0xFF10B981).withValues(alpha: 0.1)
                               : const Color(0xFF9CA3AF).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: const BorderRadius.circular(8),
                         ),
                         child: Text(
                           _item.status,

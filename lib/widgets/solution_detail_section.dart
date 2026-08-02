@@ -65,7 +65,8 @@ class _SolutionDetailSectionState extends State<SolutionDetailSection> {
               ),
             ),
             onTap: () => setState(() => isExpanded = !isExpanded),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           ),
           if (isExpanded)
             Padding(

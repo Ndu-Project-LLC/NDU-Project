@@ -123,8 +123,8 @@ class DesignGovernanceDashboard extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
@@ -134,7 +134,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: Color(0x180F172A),
             blurRadius: 28,
@@ -252,8 +252,8 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       right: 18,
                       child: Container(
                         height: 6,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE2E8F0),
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
@@ -266,8 +266,8 @@ class DesignGovernanceDashboard extends StatelessWidget {
                                 (snapshot.readinessPercent / 100.0))
                             .clamp(0.0, usableWidth),
                         height: 6,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
                             colors: [
                               Color(0xFF0F172A),
                               Color(0xFFF59E0B),
@@ -364,10 +364,10 @@ class DesignGovernanceDashboard extends StatelessWidget {
                       horizontal: 12,
                       vertical: 8,
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: Color(0xFFE2E8F0)),
                     ),
                     child: Text(
                       attendee,
@@ -441,7 +441,7 @@ class DesignGovernanceDashboard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: const BorderRadius.circular(999),
                       child: LinearProgressIndicator(
                         minHeight: 10,
                         value: entry.utilization / 100,
@@ -684,10 +684,10 @@ class DesignGovernanceDashboard extends StatelessWidget {
               (entry) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -869,10 +869,10 @@ class DesignGovernanceDashboard extends StatelessWidget {
               (entry) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -949,10 +949,10 @@ class DesignGovernanceDashboard extends StatelessWidget {
               (entry) => Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -960,8 +960,8 @@ class DesignGovernanceDashboard extends StatelessWidget {
                     Container(
                       width: 34,
                       height: 34,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -1024,11 +1024,11 @@ class _GovernanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
+        border: Border.all(color: Color(0xFFE2E8F0)),
+        boxShadow: [
           BoxShadow(
             color: Color(0x120F172A),
             blurRadius: 24,
@@ -1045,8 +1045,8 @@ class _GovernanceCard extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
                     colors: [
                       Color(0xFF0F172A),
                       Color(0xFF1E293B),
@@ -1484,10 +1484,10 @@ class _TableHeaderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: List.generate(labels.length, (index) {
@@ -1527,10 +1527,10 @@ class _TableDataRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Color(0xFFE2E8F0)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

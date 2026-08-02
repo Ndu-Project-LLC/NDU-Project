@@ -87,7 +87,8 @@ class PlanningDashboardCard extends StatelessWidget {
                     if (onUndo != null)
                       IconButton(
                         onPressed: canUndo ? onUndo : null,
-                        tooltip: canUndo ? 'Undo last delete' : 'Nothing to undo',
+                        tooltip:
+                            canUndo ? 'Undo last delete' : 'Nothing to undo',
                         icon: const Icon(
                           Icons.undo_rounded,
                           color: Color(0xFF0F766E),
@@ -101,7 +102,8 @@ class PlanningDashboardCard extends StatelessWidget {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.auto_awesome,
                                 color: Color(0xFF7C3AED)), // Purple accent

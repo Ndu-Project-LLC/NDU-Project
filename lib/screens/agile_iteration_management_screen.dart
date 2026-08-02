@@ -16,8 +16,7 @@ class AgileIterationManagementScreen extends StatefulWidget {
 
   static void open(BuildContext context) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => const AgileIterationManagementScreen()),
+      MaterialPageRoute(builder: (_) => const AgileIterationManagementScreen()),
     );
   }
 
@@ -44,24 +43,56 @@ class _AgileIterationManagementScreenState
 
   // Sprint kickoff checklist
   final List<_KickoffItem> _kickoff = [
-    const _KickoffItem(id: 'K1', text: 'Sprint goal defined and communicated', owner: 'Product Owner', done: true),
-    const _KickoffItem(id: 'K2', text: 'Capacity confirmed for all team members', owner: 'Scrum Master', done: true),
-    const _KickoffItem(id: 'K3', text: 'Backlog stories meet Definition of Ready', owner: 'Team', done: true),
-    const _KickoffItem(id: 'K4', text: 'Sprint backlog committed in tool', owner: 'Scrum Master', done: true),
-    const _KickoffItem(id: 'K5', text: 'Sprint planning meeting completed', owner: 'Scrum Master', done: true),
-    const _KickoffItem(id: 'K6', text: 'Dependencies identified and tracked', owner: 'Tech Lead', done: false),
-    const _KickoffItem(id: 'K7', text: 'Risk register reviewed', owner: 'Scrum Master', done: false),
-    const _KickoffItem(id: 'K8', text: 'Definition of Done reaffirmed', owner: 'Team', done: true),
+    _KickoffItem(
+        id: 'K1',
+        text: 'Sprint goal defined and communicated',
+        owner: 'Product Owner',
+        done: true),
+    _KickoffItem(
+        id: 'K2',
+        text: 'Capacity confirmed for all team members',
+        owner: 'Scrum Master',
+        done: true),
+    _KickoffItem(
+        id: 'K3',
+        text: 'Backlog stories meet Definition of Ready',
+        owner: 'Team',
+        done: true),
+    _KickoffItem(
+        id: 'K4',
+        text: 'Sprint backlog committed in tool',
+        owner: 'Scrum Master',
+        done: true),
+    _KickoffItem(
+        id: 'K5',
+        text: 'Sprint planning meeting completed',
+        owner: 'Scrum Master',
+        done: true),
+    _KickoffItem(
+        id: 'K6',
+        text: 'Dependencies identified and tracked',
+        owner: 'Tech Lead',
+        done: false),
+    _KickoffItem(
+        id: 'K7',
+        text: 'Risk register reviewed',
+        owner: 'Scrum Master',
+        done: false),
+    _KickoffItem(
+        id: 'K8',
+        text: 'Definition of Done reaffirmed',
+        owner: 'Team',
+        done: true),
   ];
 
   // Daily progress tracker (story points burned per day)
   final List<_DailyProgress> _daily = [
-    const _DailyProgress(day: 1, planned: 8, actual: 7),
-    const _DailyProgress(day: 2, planned: 9, actual: 10),
-    const _DailyProgress(day: 3, planned: 9, actual: 8),
-    const _DailyProgress(day: 4, planned: 10, actual: 6),
-    const _DailyProgress(day: 5, planned: 9, actual: 11),
-    const _DailyProgress(day: 6, planned: 8, actual: 5),
+    _DailyProgress(day: 1, planned: 8, actual: 7),
+    _DailyProgress(day: 2, planned: 9, actual: 10),
+    _DailyProgress(day: 3, planned: 9, actual: 8),
+    _DailyProgress(day: 4, planned: 10, actual: 6),
+    _DailyProgress(day: 5, planned: 9, actual: 11),
+    _DailyProgress(day: 6, planned: 8, actual: 5),
   ];
 
   // Sprint completion metrics
@@ -73,14 +104,30 @@ class _AgileIterationManagementScreenState
 
   // Carryover identification
   final List<_CarryoverItem> _carryover = [
-    const _CarryoverItem(id: 'NDU-1048', title: 'Audit log retention policy',
-        reason: 'Blocked on infra ticket', points: 5, owner: 'Priya Nair'),
-    const _CarryoverItem(id: 'NDU-1051', title: 'Reporting module: export to PDF',
-        reason: 'Started late, not enough time', points: 3, owner: 'Lena Park'),
-    const _CarryoverItem(id: 'NDU-1052', title: 'Notification preferences UI',
-        reason: 'Velocity drift reduced capacity', points: 5, owner: 'James Okoro'),
-    const _CarryoverItem(id: 'NDU-1044', title: 'Dark mode theme tokens',
-        reason: 'Awaiting Figma tokens from Design', points: 2, owner: 'James Okoro'),
+    _CarryoverItem(
+        id: 'NDU-1048',
+        title: 'Audit log retention policy',
+        reason: 'Blocked on infra ticket',
+        points: 5,
+        owner: 'Priya Nair'),
+    _CarryoverItem(
+        id: 'NDU-1051',
+        title: 'Reporting module: export to PDF',
+        reason: 'Started late, not enough time',
+        points: 3,
+        owner: 'Lena Park'),
+    _CarryoverItem(
+        id: 'NDU-1052',
+        title: 'Notification preferences UI',
+        reason: 'Velocity drift reduced capacity',
+        points: 5,
+        owner: 'James Okoro'),
+    _CarryoverItem(
+        id: 'NDU-1044',
+        title: 'Dark mode theme tokens',
+        reason: 'Awaiting Figma tokens from Design',
+        points: 2,
+        owner: 'James Okoro'),
   ];
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
@@ -134,8 +181,8 @@ class _AgileIterationManagementScreenState
           if (daily != null) {
             _daily
               ..clear()
-              ..addAll(daily
-                  .map((e) => _DailyProgress.fromMap(e as Map<String, dynamic>)));
+              ..addAll(daily.map(
+                  (e) => _DailyProgress.fromMap(e as Map<String, dynamic>)));
           }
           final carryover = data['carryover'] as List?;
           if (carryover != null) {
@@ -155,31 +202,37 @@ class _AgileIterationManagementScreenState
   }
 
   void _seedProjectData(dynamic projectData) {
-    final workItems = AgileProjectContextHelper.workItems(projectData, limit: 12);
+    final workItems =
+        AgileProjectContextHelper.workItems(projectData, limit: 12);
     final risks = AgileProjectContextHelper.risks(projectData, limit: 4);
     final people = AgileProjectContextHelper.people(projectData, limit: 6);
 
     _currentSprint = AgileProjectContextHelper.activeSprintLabel(projectData);
     _committedPoints = workItems.fold<int>(
       0,
-      (sum, item) => sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
+      (sum, item) =>
+          sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
     );
     _completedPoints = workItems
         .where((item) => item.status == 'Done' || item.status == 'In Review')
         .fold<int>(
           0,
-          (sum, item) => sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
+          (sum, item) =>
+              sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
         );
     _carryover
       ..clear()
       ..addAll([
         for (final item in workItems
-            .where((item) => item.status == 'Backlog' || item.status == 'Blocked')
+            .where(
+                (item) => item.status == 'Backlog' || item.status == 'Blocked')
             .take(4))
           _CarryoverItem(
             id: item.id,
             title: item.title,
-            reason: item.description.isEmpty ? 'Still pending in project pipeline' : item.description,
+            reason: item.description.isEmpty
+                ? 'Still pending in project pipeline'
+                : item.description,
             points: AgileProjectContextHelper.estimateStoryPoints(item.title),
             owner: item.owner.isEmpty ? 'Project Team' : item.owner,
           ),
@@ -250,10 +303,10 @@ class _AgileIterationManagementScreenState
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Iteration management data saved'),
+          SnackBar(
+            content: const Text('Iteration management data saved'),
             backgroundColor: _kAccent,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -297,20 +350,19 @@ class _AgileIterationManagementScreenState
             Expanded(
               child: Stack(
                 children: [
-                  const MobileSidebarHamburger(
-                    sidebar: InitiationLikeSidebar(
+                  MobileSidebarHamburger(
+                    sidebar: const InitiationLikeSidebar(
                       activeItemLabel: 'Agile Iteration Management',
                     ),
                   ),
                   SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: hp, vertical: 24),
+                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        const PlanningPhaseHeader(
+                        PlanningPhaseHeader(
                           title: 'Iteration Management',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -363,13 +415,15 @@ class _AgileIterationManagementScreenState
   Widget _buildTopBar() {
     return Row(
       children: [
-        Image.asset('assets/images/Logo.png', height: 36),
+        Image.asset(
+          'assets/images/Logo.png',
+          height: 36,
+          cacheWidth: (MediaQuery.devicePixelRatioOf(context) * 150).round(),
+        ),
         const SizedBox(width: 12),
         const Text('Ndu Project',
             style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: _kHeadline)),
+                fontSize: 18, fontWeight: FontWeight.w800, color: _kHeadline)),
         const Spacer(),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -391,13 +445,13 @@ class _AgileIterationManagementScreenState
 
   Widget _buildLifecycleTabs() {
     final tabs = [
-      const _LifecycleTab('Start', Icons.play_arrow, Colors.green),
-      const _LifecycleTab('During', Icons.loop, _kAccent),
-      const _LifecycleTab('End', Icons.flag, Colors.purple),
+      _LifecycleTab('Start', Icons.play_arrow, Colors.green),
+      _LifecycleTab('During', Icons.loop, _kAccent),
+      _LifecycleTab('End', Icons.flag, Colors.purple),
     ];
     return Container(
       padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _kBorder),
@@ -411,8 +465,8 @@ class _AgileIterationManagementScreenState
             child: GestureDetector(
               onTap: () => setState(() => _activeTab = i),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 decoration: BoxDecoration(
                   color: selected ? t.color : Colors.transparent,
@@ -422,8 +476,7 @@ class _AgileIterationManagementScreenState
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(t.icon,
-                        size: 14,
-                        color: selected ? Colors.white : _kMuted),
+                        size: 14, color: selected ? Colors.white : _kMuted),
                     const SizedBox(width: 6),
                     Text(t.label,
                         style: TextStyle(
@@ -445,7 +498,7 @@ class _AgileIterationManagementScreenState
     final doneCount = _kickoff.where((k) => k.done).length;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -464,8 +517,8 @@ class _AgileIterationManagementScreenState
                       color: _kHeadline)),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: doneCount == _kickoff.length
                       ? Colors.green.withValues(alpha: 0.1)
@@ -484,7 +537,7 @@ class _AgileIterationManagementScreenState
           ),
           const SizedBox(height: 14),
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: const BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: doneCount / _kickoff.length,
               minHeight: 8,
@@ -527,18 +580,15 @@ class _AgileIterationManagementScreenState
                           decoration:
                               k.done ? TextDecoration.lineThrough : null)),
                   Text('Owner: ${k.owner}',
-                      style: const TextStyle(
-                          fontSize: 10, color: _kMuted)),
+                      style: const TextStyle(fontSize: 10, color: _kMuted)),
                 ],
               ),
             ),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: k.done
-                    ? Colors.green.withValues(alpha: 0.1)
-                    : _kAccentBg,
+                color:
+                    k.done ? Colors.green.withValues(alpha: 0.1) : _kAccentBg,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(k.done ? 'Done' : 'Open',
@@ -556,8 +606,8 @@ class _AgileIterationManagementScreenState
   Widget _buildSprintGoalCard() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -581,8 +631,7 @@ class _AgileIterationManagementScreenState
           const SizedBox(height: 12),
           const Text(
               'Ship SSO integration, refresh token rotation, notification service v1, and Kanban board UI. Establish audit log viewer scaffolding for next sprint.',
-              style: TextStyle(
-                  fontSize: 14, color: Colors.white, height: 1.5)),
+              style: TextStyle(fontSize: 14, color: Colors.white, height: 1.5)),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -629,17 +678,13 @@ class _AgileIterationManagementScreenState
 
   // ── DURING tab ─────────────────────────────────────────────────────────────
   Widget _buildDuringSummary() {
-    final totalPlanned =
-        _daily.fold<int>(0, (a, d) => a + d.planned);
-    final totalActual =
-        _daily.fold<int>(0, (a, d) => a + d.actual);
-    final burnRate = totalPlanned == 0
-        ? 0.0
-        : totalActual / totalPlanned;
+    final totalPlanned = _daily.fold<int>(0, (a, d) => a + d.planned);
+    final totalActual = _daily.fold<int>(0, (a, d) => a + d.actual);
+    final burnRate = totalPlanned == 0 ? 0.0 : totalActual / totalPlanned;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -654,8 +699,8 @@ class _AgileIterationManagementScreenState
           Container(
               width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
           Expanded(
-            child: _summaryCell(
-                'Burn Rate', '${(burnRate * 100).toInt()}%', Icons.local_fire_department),
+            child: _summaryCell('Burn Rate', '${(burnRate * 100).toInt()}%',
+                Icons.local_fire_department),
           ),
           Container(
               width: 1, height: 36, color: Colors.white.withValues(alpha: 0.3)),
@@ -695,7 +740,7 @@ class _AgileIterationManagementScreenState
   Widget _buildDailyProgressTracker() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -757,13 +802,23 @@ class _AgileIterationManagementScreenState
 
   Widget _buildActiveBlockers() {
     final blockers = [
-      ('BLK-501', 'Redis staging instance not provisioned', 'DevOps', '2 days overdue'),
+      (
+        'BLK-501',
+        'Redis staging instance not provisioned',
+        'DevOps',
+        '2 days overdue'
+      ),
       ('BLK-505', 'Velocity drift -8% on Sprint 24', 'Kaz AI', '5 days'),
-      ('BLK-506', 'Cycle time exceeding 3-day target', 'Marcus R.', 'This sprint'),
+      (
+        'BLK-506',
+        'Cycle time exceeding 3-day target',
+        'Marcus R.',
+        'This sprint'
+      ),
     ];
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -782,8 +837,7 @@ class _AgileIterationManagementScreenState
                       color: _kHeadline)),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -800,8 +854,8 @@ class _AgileIterationManagementScreenState
           ...blockers.map((b) => Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(color: _kBorder, width: 0.5)),
+                  border:
+                      Border(bottom: BorderSide(color: _kBorder, width: 0.5)),
                 ),
                 child: Row(
                   children: [
@@ -837,7 +891,7 @@ class _AgileIterationManagementScreenState
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: _kAccentBg,
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -859,8 +913,8 @@ class _AgileIterationManagementScreenState
   Widget _buildCompletionMetrics() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [_kAccent, _kAccentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -870,11 +924,11 @@ class _AgileIterationManagementScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.celebration, size: 20, color: Colors.white),
-              SizedBox(width: 8),
-              Text('Sprint Completion Metrics',
+              const Icon(Icons.celebration, size: 20, color: Colors.white),
+              const SizedBox(width: 8),
+              const Text('Sprint Completion Metrics',
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
@@ -885,16 +939,16 @@ class _AgileIterationManagementScreenState
           Row(
             children: [
               Expanded(
-                child: _summaryCell('Completed', '$_completedPoints pts',
-                    Icons.check_circle),
+                child: _summaryCell(
+                    'Completed', '$_completedPoints pts', Icons.check_circle),
               ),
               Container(
                   width: 1,
                   height: 36,
                   color: Colors.white.withValues(alpha: 0.3)),
               Expanded(
-                child: _summaryCell('Committed', '$_committedPoints pts',
-                    Icons.flag),
+                child: _summaryCell(
+                    'Committed', '$_committedPoints pts', Icons.flag),
               ),
               Container(
                   width: 1,
@@ -909,14 +963,14 @@ class _AgileIterationManagementScreenState
                   height: 36,
                   color: Colors.white.withValues(alpha: 0.3)),
               Expanded(
-                child: _summaryCell('Carryover', '$_carryoverPoints pts',
-                    Icons.forward),
+                child: _summaryCell(
+                    'Carryover', '$_carryoverPoints pts', Icons.forward),
               ),
             ],
           ),
           const SizedBox(height: 16),
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: const BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: _completionPct,
               minHeight: 12,
@@ -939,7 +993,7 @@ class _AgileIterationManagementScreenState
   Widget _buildCarryoverSection() {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -958,8 +1012,7 @@ class _AgileIterationManagementScreenState
                       color: _kHeadline)),
               const Spacer(),
               Text('${_carryover.length} stories · $_carryoverPoints pts',
-                  style: const TextStyle(
-                      fontSize: 12, color: _kMuted)),
+                  style: const TextStyle(fontSize: 12, color: _kMuted)),
             ],
           ),
           const SizedBox(height: 12),
@@ -974,9 +1027,10 @@ class _AgileIterationManagementScreenState
   Widget _buildCarryoverHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: const Row(
-        children: [
-          SizedBox(width: 70,
+      child: Row(
+        children: const [
+          SizedBox(
+              width: 70,
               child: Text('Story',
                   style: TextStyle(
                       fontSize: 11,
@@ -1024,9 +1078,7 @@ class _AgileIterationManagementScreenState
             width: 70,
             child: Text(c.id,
                 style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: _kMuted)),
+                    fontSize: 11, fontWeight: FontWeight.w700, color: _kMuted)),
           ),
           Expanded(
             flex: 4,
@@ -1041,8 +1093,7 @@ class _AgileIterationManagementScreenState
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    const Icon(Icons.warning_amber,
-                        size: 11, color: Colors.red),
+                    Icon(Icons.warning_amber, size: 11, color: Colors.red),
                     const SizedBox(width: 4),
                     Expanded(
                         child: Text(c.reason,
@@ -1058,15 +1109,13 @@ class _AgileIterationManagementScreenState
           Expanded(
             flex: 2,
             child: Text(c.owner,
-                style: const TextStyle(
-                    fontSize: 12, color: _kHeadline)),
+                style: const TextStyle(fontSize: 12, color: _kHeadline)),
           ),
           Expanded(
             flex: 1,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: const BoxDecoration(
                 color: _kAccentBg,
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -1096,7 +1145,7 @@ class _AgileIterationManagementScreenState
     final doneCount = items.where((i) => i.$3).length;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _kSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kBorder),
@@ -1106,8 +1155,7 @@ class _AgileIterationManagementScreenState
         children: [
           Row(
             children: [
-              const Icon(Icons.fact_check_outlined,
-                  size: 20, color: _kAccent),
+              const Icon(Icons.fact_check_outlined, size: 20, color: _kAccent),
               const SizedBox(width: 8),
               const Text('Sprint Closeout Checklist',
                   style: TextStyle(
@@ -1116,9 +1164,9 @@ class _AgileIterationManagementScreenState
                       color: _kHeadline)),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: const BoxDecoration(
                   color: _kAccentBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1136,9 +1184,7 @@ class _AgileIterationManagementScreenState
                 child: Row(
                   children: [
                     Icon(
-                      i.$3
-                          ? Icons.check_circle
-                          : Icons.radio_button_unchecked,
+                      i.$3 ? Icons.check_circle : Icons.radio_button_unchecked,
                       size: 18,
                       color: i.$3 ? Colors.green : _kMuted,
                     ),
@@ -1149,9 +1195,8 @@ class _AgileIterationManagementScreenState
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: i.$3 ? _kMuted : _kHeadline,
-                              decoration: i.$3
-                                  ? TextDecoration.lineThrough
-                                  : null)),
+                              decoration:
+                                  i.$3 ? TextDecoration.lineThrough : null)),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -1192,7 +1237,7 @@ class _AgileIterationManagementScreenState
             backgroundColor: _kAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1205,7 +1250,7 @@ class _AgileIterationManagementScreenState
             foregroundColor: _kAccent,
             side: const BorderSide(color: _kAccent),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -1314,7 +1359,7 @@ class _DailyProgressPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    const pad = 12.0;
+    final pad = 12.0;
     final maxVal = daily
         .map((d) => d.planned > d.actual ? d.planned : d.actual)
         .reduce((a, b) => a > b ? a : b);
@@ -1346,8 +1391,7 @@ class _DailyProgressPainter extends CustomPainter {
       // Actual bar
       final actualH = (h - 2 * pad) * (d.actual / maxVal);
       final actualRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-            x + halfBar + 2, h - pad - actualH, halfBar - 2, actualH),
+        Rect.fromLTWH(x + halfBar + 2, h - pad - actualH, halfBar - 2, actualH),
         const Radius.circular(3),
       );
       canvas.drawRRect(actualRect, Paint()..color = accent);
@@ -1365,10 +1409,10 @@ class _LoadingStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(

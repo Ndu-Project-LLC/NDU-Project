@@ -365,8 +365,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
             sectionLabel: section)
         : ProjectDataHelper.buildFepContext(data, sectionLabel: section);
     final contextText = primaryContext.trim().isEmpty
-        ? ProjectDataHelper.buildProjectContextScan(data,
-            sectionLabel: section)
+        ? ProjectDataHelper.buildProjectContextScan(data, sectionLabel: section)
         : primaryContext;
     if (contextText.trim().isEmpty) return;
 
@@ -486,8 +485,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
       setState(() {
         // Check if OpenAI is configured
         if (!OpenAiConfig.isConfigured) {
-          _error =
-              'AI service is starting up. Please try again in a moment.';
+          _error = 'AI service is starting up. Please try again in a moment.';
         } else {
           final warn = OpenAiConfig.configurationWarning();
           _error = warn ?? e.toString();
@@ -538,8 +536,8 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-              'Type some text first, then tap AI Rewrite to polish it.'),
+          content:
+              Text('Type some text first, then tap AI Rewrite to polish it.'),
           duration: Duration(seconds: 3),
         ),
       );
@@ -718,14 +716,14 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                   filled: true,
                   fillColor: Colors.white,
-                  enabledBorder: OutlineInputBorder(
+                  enabledBorder: const OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                    borderSide: BorderSide(color: Color(0xFFE5E7EB)),
                   ),
-                  focusedBorder: OutlineInputBorder(
+                  focusedBorder: const OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide:
-                        const BorderSide(color: Color(0xFFFFD700), width: 1.6),
+                        BorderSide(color: Color(0xFFFFD700), width: 1.6),
                   ),
                   suffixIcon: _aiEnabled
                       ? (_autoGenerating
@@ -840,22 +838,27 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
                                       height: 32,
                                       margin: const EdgeInsets.only(right: 4),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFFB800).withValues(alpha: 0.15),
+                                        color: const Color(0xFFFFB800)
+                                            .withValues(alpha: 0.15),
                                         shape: BoxShape.circle,
                                       ),
                                       child: IconButton(
-                                        icon: const Icon(Icons.mic, color: Color(0xFFFFB800), size: 16),
+                                        icon: const Icon(Icons.mic,
+                                            color: Color(0xFFFFB800), size: 16),
                                         padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                        constraints: const BoxConstraints(
+                                            minWidth: 32, minHeight: 32),
                                         onPressed: _toggleVoiceInput,
                                         tooltip: 'Stop voice input',
                                       ),
                                     )
                                   else
                                     IconButton(
-                                      icon: const Icon(Icons.mic_none_outlined, color: Color(0xFFFFB800), size: 16),
+                                      icon: const Icon(Icons.mic_none_outlined,
+                                          color: Color(0xFFFFB800), size: 16),
                                       padding: const EdgeInsets.only(right: 4),
-                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                      constraints: const BoxConstraints(
+                                          minWidth: 32, minHeight: 32),
                                       onPressed: _toggleVoiceInput,
                                       tooltip: 'Voice input',
                                     ),
@@ -906,7 +909,8 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
                                           ),
                                         )
                                       : IconButton(
-                                          icon: const Icon(Icons.mic_none_outlined,
+                                          icon: const Icon(
+                                              Icons.mic_none_outlined,
                                               color: Color(0xFFFFB800),
                                               size: 18),
                                           onPressed: _toggleVoiceInput,
@@ -943,12 +947,12 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
         ],
         if (_aiEnabled && _isBasicPlanProject && _aiLimitReached) ...[
           const SizedBox(height: 10),
-          const _AiLimitBanner(
+          _AiLimitBanner(
             message:
                 'AI suggestions are not available for this section on the Basic plan.',
-            background: Color(0xFFF3F4F6),
-            border: Color(0xFFE5E7EB),
-            textColor: Color(0xFF6B7280),
+            background: const Color(0xFFF3F4F6),
+            border: const Color(0xFFE5E7EB),
+            textColor: const Color(0xFF6B7280),
           ),
         ] else if (_aiEnabled && _showLastChanceNote) ...[
           const SizedBox(height: 10),
@@ -964,10 +968,10 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             margin: const EdgeInsets.only(bottom: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEF2F2),
+            decoration: const BoxDecoration(
+              color: Color(0xFFFEF2F2),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFFCA5A5)),
+              border: Border.all(color: Color(0xFFFCA5A5)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1012,7 +1016,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
             children: _suggestions
                 .map((s) => ActionChip(
                       backgroundColor: const Color(0xFFE1EEFF),
-                      shape: RoundedRectangleBorder(
+                      shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(999)),
                       label: Text(
                         s,
@@ -1035,6 +1039,7 @@ class _AiSuggestingTextFieldState extends State<AiSuggestingTextField> {
 
 class _AiLimitBanner extends StatelessWidget {
   const _AiLimitBanner({
+    super.key,
     required this.message,
     required this.background,
     required this.border,
@@ -1053,7 +1058,7 @@ class _AiLimitBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: const BorderRadius.circular(10),
         border: Border.all(color: border),
       ),
       child: Row(

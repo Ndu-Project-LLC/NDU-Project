@@ -347,8 +347,10 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     // message instead of silently failing.
     final voiceEnabled = widget.enableVoice && !widget.obscureText;
     final docxEnabled = widget.enableDocxImport && !widget.obscureText;
-    final kazAiEnabled = widget.enableKazAi && !widget.obscureText && !widget.readOnly;
-    final effectiveDecoration = _buildDecoration(voiceEnabled, docxEnabled, kazAiEnabled);
+    final kazAiEnabled =
+        widget.enableKazAi && !widget.obscureText && !widget.readOnly;
+    final effectiveDecoration =
+        _buildDecoration(voiceEnabled, docxEnabled, kazAiEnabled);
 
     // Show text formatting toolbar only for multi-line fields
     final showToolbar = widget.enableTextFormatting &&
@@ -415,14 +417,16 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     return textField;
   }
 
-  InputDecoration _buildDecoration(bool voiceEnabled, bool docxEnabled, bool kazAiEnabled) {
+  InputDecoration _buildDecoration(
+      bool voiceEnabled, bool docxEnabled, bool kazAiEnabled) {
     final base = widget.decoration ?? const InputDecoration();
 
     final icons = <Widget>[];
     if (docxEnabled) icons.add(_buildDocxImportIcon());
     if (voiceEnabled) icons.add(_buildMicIcon());
     if (kazAiEnabled) icons.add(_buildKazAiIcon());
-    if (kazAiEnabled && _controller.text.isNotEmpty) icons.add(_buildClearIcon());
+    if (kazAiEnabled && _controller.text.isNotEmpty)
+      icons.add(_buildClearIcon());
 
     if (icons.isEmpty) return base;
 
@@ -448,7 +452,10 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     if (_isGeneratingAi) {
       return const Padding(
         padding: EdgeInsets.all(8),
-        child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+        child: SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
     return IconButton(
@@ -477,8 +484,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
   }
 
   Widget _buildDocxImportIcon() {
-    final iconColor =
-        widget.docxImportIconColor ?? const Color(0xFF0EA5E9);
+    final iconColor = widget.docxImportIconColor ?? const Color(0xFF0EA5E9);
     if (_isImportingDoc) {
       return Container(
         width: 36,
@@ -566,7 +572,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
     barrierDismissible: true,
     builder: (dialogContext) {
       return AlertDialog(
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
         contentPadding: EdgeInsets.zero,
@@ -634,17 +640,20 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                   children: [
                     _buildPermissionBullet(
                       icon: Icons.record_voice_over_outlined,
-                      text: 'Speak naturally — your voice will be converted to text in this field',
+                      text:
+                          'Speak naturally — your voice will be converted to text in this field',
                     ),
                     const SizedBox(height: 12),
                     _buildPermissionBullet(
                       icon: Icons.lock_outline,
-                      text: 'Audio is processed securely and never stored or shared',
+                      text:
+                          'Audio is processed securely and never stored or shared',
                     ),
                     const SizedBox(height: 12),
                     _buildPermissionBullet(
                       icon: Icons.toggle_on_outlined,
-                      text: 'You can stop voice input at any time by tapping the mic icon again',
+                      text:
+                          'You can stop voice input at any time by tapping the mic icon again',
                     ),
                     const SizedBox(height: 16),
                     Container(
@@ -683,11 +692,10 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                   children: [
                     Expanded(
                       child: TextButton(
-                        onPressed: () =>
-                            Navigator.of(dialogContext).pop(false),
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
+                          shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
@@ -703,8 +711,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () =>
-                            Navigator.of(dialogContext).pop(true),
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
                         icon: const Icon(Icons.mic, size: 18),
                         label: const Text(
                           'Allow',
@@ -716,7 +723,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                           backgroundColor: const Color(0xFFFFB800),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
+                          shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           elevation: 0,
@@ -1106,7 +1113,8 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     // message instead of silently failing.
     final voiceEnabled = widget.enableVoice && !widget.obscureText;
     final docxEnabled = widget.enableDocxImport && !widget.obscureText;
-    final kazAiEnabled = widget.enableKazAi && !widget.obscureText && !widget.readOnly;
+    final kazAiEnabled =
+        widget.enableKazAi && !widget.obscureText && !widget.readOnly;
     final effectiveDecoration =
         _buildDecoration(voiceEnabled, docxEnabled, kazAiEnabled);
 
@@ -1181,14 +1189,16 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     return textField;
   }
 
-  InputDecoration _buildDecoration(bool voiceEnabled, bool docxEnabled, bool kazAiEnabled) {
+  InputDecoration _buildDecoration(
+      bool voiceEnabled, bool docxEnabled, bool kazAiEnabled) {
     final base = widget.decoration ?? const InputDecoration();
 
     final icons = <Widget>[];
     if (docxEnabled) icons.add(_buildDocxImportIcon());
     if (voiceEnabled) icons.add(_buildMicIcon());
     if (kazAiEnabled) icons.add(_buildKazAiIcon());
-    if (kazAiEnabled && _controller.text.isNotEmpty) icons.add(_buildClearIcon());
+    if (kazAiEnabled && _controller.text.isNotEmpty)
+      icons.add(_buildClearIcon());
 
     if (icons.isEmpty) return base;
 
@@ -1210,12 +1220,14 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     return base.copyWith(suffixIcon: suffixWidget);
   }
 
-
   Widget _buildKazAiIcon() {
     if (_isGeneratingAi) {
       return const Padding(
         padding: EdgeInsets.all(8),
-        child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+        child: SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
     return IconButton(
@@ -1243,8 +1255,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
   }
 
   Widget _buildDocxImportIcon() {
-    final iconColor =
-        widget.docxImportIconColor ?? const Color(0xFF0EA5E9);
+    final iconColor = widget.docxImportIconColor ?? const Color(0xFF0EA5E9);
     if (_isImportingDoc) {
       return Container(
         width: 36,

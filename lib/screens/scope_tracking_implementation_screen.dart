@@ -312,8 +312,8 @@ class _ScopeTrackingImplementationScreenState
                       ],
                     ),
                   ),
-                  const MobileSidebarHamburger(
-                    sidebar: InitiationLikeSidebar(
+                  MobileSidebarHamburger(
+                    sidebar: const InitiationLikeSidebar(
                       activeItemLabel: 'Scope Tracking Implementation',
                     ),
                   ),
@@ -334,8 +334,8 @@ class _ScopeTrackingImplementationScreenState
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFC812),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(4),
           ),
           child: const Text(
@@ -452,8 +452,8 @@ class _ScopeTrackingImplementationScreenState
             backgroundColor: const Color(0xFFFFC812),
             foregroundColor: Colors.black,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
           ),
         ),
         const SizedBox(width: 10),
@@ -466,8 +466,8 @@ class _ScopeTrackingImplementationScreenState
             backgroundColor: const Color(0xFF0EA5E9),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
           ),
         ),
       ],
@@ -613,10 +613,10 @@ class _ScopeTrackingImplementationScreenState
   Widget _buildStatCard(_StatCardData data) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,10 +648,10 @@ class _ScopeTrackingImplementationScreenState
 
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -697,161 +697,170 @@ class _ScopeTrackingImplementationScreenState
     String? selectedOwner;
     String? selectedVerificationMethod;
 
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            title: const Text('Add Scope Item'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    initialValue: selectedScopeItem,
-                    decoration: const InputDecoration(
-                      labelText: 'Scope Item/Deliverable',
-                      hintText: 'Select from Scope Statement or enter new',
-                    ),
-                    items: [
-                      ..._scopeStatementDeliverables.map((deliverable) {
-                        return DropdownMenuItem<String>(
-                          value: deliverable,
-                          child: Text(deliverable),
-                        );
-                      }),
-                      const DropdownMenuItem<String>(
-                        value: '__NEW__',
-                        child: Text('+ Add New Item'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value == '__NEW__') {
-                        selectedScopeItem = null;
-                        scopeItemController.clear();
-                      } else {
-                        selectedScopeItem = value;
-                        scopeItemController.text = value ?? '';
-                      }
-                      setDialogState(() {});
-                    },
-                  ),
-                  if (selectedScopeItem == null ||
-                      selectedScopeItem == '__NEW__')
-                    VoiceTextField(
-                      controller: scopeItemController,
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          return StatefulBuilder(
+            builder: (context, setDialogState) => AlertDialog(
+              title: const Text('Add Scope Item'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: selectedScopeItem,
                       decoration: const InputDecoration(
                         labelText: 'Scope Item/Deliverable',
+                        hintText: 'Select from Scope Statement or enter new',
                       ),
+                      items: [
+                        ..._scopeStatementDeliverables.map((deliverable) {
+                          return DropdownMenuItem<String>(
+                            value: deliverable,
+                            child: Text(deliverable),
+                          );
+                        }),
+                        const DropdownMenuItem<String>(
+                          value: '__NEW__',
+                          child: Text('+ Add New Item'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value == '__NEW__') {
+                          selectedScopeItem = null;
+                          scopeItemController.clear();
+                        } else {
+                          selectedScopeItem = value;
+                          scopeItemController.text = value ?? '';
+                        }
+                        setDialogState(() {});
+                      },
                     ),
-                  DropdownButtonFormField<String>(
-                    initialValue: selectedStatus,
-                    decoration: const InputDecoration(
-                        labelText: 'Implementation Status'),
-                    items: [
-                      'Not Started',
-                      'In-Progress',
-                      'Verified',
-                      'Out-of-Scope'
-                    ]
-                        .map((status) => DropdownMenuItem(
-                              value: status,
-                              child: Text(status),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setDialogState(() => selectedStatus = value);
-                      }
-                    },
-                  ),
-                  DropdownButtonFormField<String>(
-                    initialValue: selectedOwner,
-                    decoration: const InputDecoration(labelText: 'Owner'),
-                    items: _availableRoles.map((role) {
-                      return DropdownMenuItem<String>(
-                        value: role,
-                        child: Text(role),
+                    if (selectedScopeItem == null ||
+                        selectedScopeItem == '__NEW__')
+                      VoiceTextField(
+                        controller: scopeItemController,
+                        decoration: const InputDecoration(
+                          labelText: 'Scope Item/Deliverable',
+                        ),
+                      ),
+                    DropdownButtonFormField<String>(
+                      value: selectedStatus,
+                      decoration: const InputDecoration(
+                          labelText: 'Implementation Status'),
+                      items: [
+                        'Not Started',
+                        'In-Progress',
+                        'Verified',
+                        'Out-of-Scope'
+                      ]
+                          .map((status) => DropdownMenuItem(
+                                value: status,
+                                child: Text(status),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setDialogState(() => selectedStatus = value);
+                        }
+                      },
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: selectedOwner,
+                      decoration: const InputDecoration(labelText: 'Owner'),
+                      items: _availableRoles.map((role) {
+                        return DropdownMenuItem<String>(
+                          value: role,
+                          child: Text(role),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setDialogState(() => selectedOwner = value);
+                      },
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: selectedVerificationMethod,
+                      decoration: const InputDecoration(
+                          labelText: 'Verification Method'),
+                      items: ['Testing', 'UAT', 'Stakeholder Review']
+                          .map((method) => DropdownMenuItem(
+                                value: method,
+                                child: Text(method),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setDialogState(
+                            () => selectedVerificationMethod = value);
+                      },
+                    ),
+                    VoiceTextField(
+                      controller: verificationStepsController,
+                      decoration: const InputDecoration(
+                        labelText: 'Verification Steps (use "." bullets)',
+                        hintText: 'Enter verification steps...',
+                      ),
+                      maxLines: 4,
+                    ),
+                    VoiceTextField(
+                      controller: trackingNotesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Tracking Notes (prose, no bullets)',
+                        hintText: 'Enter tracking notes...',
+                      ),
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    final scopeItem = scopeItemController.text.trim();
+                    if (scopeItem.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Scope Item is required.')),
                       );
-                    }).toList(),
-                    onChanged: (value) {
-                      setDialogState(() => selectedOwner = value);
-                    },
-                  ),
-                  DropdownButtonFormField<String>(
-                    initialValue: selectedVerificationMethod,
-                    decoration:
-                        const InputDecoration(labelText: 'Verification Method'),
-                    items: ['Testing', 'UAT', 'Stakeholder Review']
-                        .map((method) => DropdownMenuItem(
-                              value: method,
-                              child: Text(method),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      setDialogState(() => selectedVerificationMethod = value);
-                    },
-                  ),
-                  VoiceTextField(
-                    controller: verificationStepsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Verification Steps (use "." bullets)',
-                      hintText: 'Enter verification steps...',
-                    ),
-                    maxLines: 4,
-                  ),
-                  VoiceTextField(
-                    controller: trackingNotesController,
-                    decoration: const InputDecoration(
-                      labelText: 'Tracking Notes (prose, no bullets)',
-                      hintText: 'Enter tracking notes...',
-                    ),
-                    maxLines: 3,
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  final scopeItem = scopeItemController.text.trim();
-                  if (scopeItem.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Scope Item is required.')),
+                      return;
+                    }
+                    final newItem = ScopeTrackingItem(
+                      scopeItem: scopeItem,
+                      implementationStatus: selectedStatus,
+                      owner: selectedOwner ?? '',
+                      verificationMethod: selectedVerificationMethod ?? '',
+                      verificationSteps:
+                          verificationStepsController.text.trim(),
+                      trackingNotes: trackingNotesController.text.trim(),
                     );
-                    return;
-                  }
-                  final newItem = ScopeTrackingItem(
-                    scopeItem: scopeItem,
-                    implementationStatus: selectedStatus,
-                    owner: selectedOwner ?? '',
-                    verificationMethod: selectedVerificationMethod ?? '',
-                    verificationSteps: verificationStepsController.text.trim(),
-                    trackingNotes: trackingNotesController.text.trim(),
-                  );
-                  setState(() {
-                    _items.add(newItem);
-                  });
-                  Navigator.of(dialogContext).pop();
-                  await _saveItems();
+                    setState(() {
+                      _items.add(newItem);
+                    });
+                    Navigator.of(dialogContext).pop();
+                    await _saveItems();
 
-                  // Auto-generate verification steps if scope item is provided
-                  if (scopeItem.isNotEmpty &&
-                      verificationStepsController.text.trim().isEmpty) {
-                    _autoGenerateVerificationSteps(newItem);
-                  }
-                },
-                child: const Text('Add'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+                    // Auto-generate verification steps if scope item is provided
+                    if (scopeItem.isNotEmpty &&
+                        verificationStepsController.text.trim().isEmpty) {
+                      _autoGenerateVerificationSteps(newItem);
+                    }
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    } finally {
+      scopeItemController.dispose();
+      verificationStepsController.dispose();
+      trackingNotesController.dispose();
+    }
   }
 
   Future<void> _saveItems() async {

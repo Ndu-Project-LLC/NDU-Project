@@ -19,10 +19,10 @@ import 'package:flutter/material.dart';
 
 class AppBreakpoints {
   // ── Breakpoints (Material 3 + Google adaptive) ──────────────────────
-  static const double compact = 360;   // Small phones
-  static const double medium = 600;    // Large phones / small tablets
-  static const double expanded = 840;  // Tablets
-  static const double large = 1200;    // Desktops
+  static const double compact = 360; // Small phones
+  static const double medium = 600; // Large phones / small tablets
+  static const double expanded = 840; // Tablets
+  static const double large = 1200; // Desktops
   static const double extraLarge = 1600; // Large desktops
 
   // Legacy compat
@@ -323,9 +323,10 @@ class MobileDesignSystem {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: (iconColor ?? info).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: iconColor ?? info, size: isMobile ? 16 : 18),
+                child: Icon(icon,
+                    color: iconColor ?? info, size: isMobile ? 16 : 18),
               ),
               if (trailing != null) trailing,
             ],
@@ -403,7 +404,8 @@ class MobileDesignSystem {
       content: Text(message, style: const TextStyle(color: Colors.white)),
       backgroundColor: backgroundColor ?? textPrimary,
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape:
+          const RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       duration: const Duration(seconds: 3),
     );
   }

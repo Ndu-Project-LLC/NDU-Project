@@ -14,6 +14,8 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/services/currency_service.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/providers/app_content_provider.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:provider/provider.dart';
@@ -384,7 +386,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           color: Colors.white,
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+          border: Border.all(color: Colors.grey.withOpacity(0.12)),
           boxShadow: const [
             BoxShadow(
                 blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -399,7 +401,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.18),
+                    color: accent.withOpacity(0.18),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: accent, size: 22),
@@ -437,10 +439,10 @@ class _SettingsScreenState extends State<SettingsScreen>
             Switch(
               value: value,
               onChanged: onChanged,
-              activeThumbColor: accent,
+              activeColor: accent,
               trackColor: WidgetStateProperty.resolveWith((states) =>
                   states.contains(WidgetState.selected)
-                      ? accent.withValues(alpha: 0.4)
+                      ? accent.withOpacity(0.4)
                       : null),
             ),
           ],
@@ -467,7 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(width: 12),
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
+                border: Border.all(color: Colors.grey.withOpacity(0.25)),
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -486,10 +488,10 @@ class _SettingsScreenState extends State<SettingsScreen>
       );
     }
 
-    Widget buildDefaultCurrencyRow() {
+    Widget _buildDefaultCurrencyRow() {
       final currencyService = CurrencyService.instance;
       final currentCode = currencyService.defaultCurrencyCode;
-      const currencies = CurrencyService.supportedCurrencies;
+      final currencies = CurrencyService.supportedCurrencies;
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
@@ -512,7 +514,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             const SizedBox(width: 12),
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
+                border: Border.all(color: Colors.grey.withOpacity(0.25)),
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -576,7 +578,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: accent.withValues(alpha: 0.18),
+                            color: accent.withOpacity(0.18),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text('Preferences',
@@ -584,7 +586,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   color: accent, fontWeight: FontWeight.w700)),
                         ),
                         const SizedBox(width: 12),
-                        const Icon(Icons.tune, color: accent, size: 20),
+                        Icon(Icons.tune, color: accent, size: 20),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -595,7 +597,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     Text(
                         'Personalize appearance, notifications, and privacy settings to match your workflow.',
                         style: theme.textTheme.bodyLarge?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.78),
+                            color: Colors.white.withOpacity(0.78),
                             height: 1.45)),
                   ],
                 ),
@@ -710,7 +712,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                             }
                           }, icon: Icons.calendar_today),
                           const SizedBox(height: 8),
-                          buildDefaultCurrencyRow(),
+                          _buildDefaultCurrencyRow(),
                         ],
                       ),
                     ),
@@ -797,7 +799,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       }
                     }, icon: Icons.calendar_today),
                     const SizedBox(height: 8),
-                    buildDefaultCurrencyRow(),
+                    _buildDefaultCurrencyRow(),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -967,8 +969,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                           height: 20,
                           decoration: BoxDecoration(
                             color: _twoFactorEnabled
-                                ? Colors.green.withValues(alpha: 0.18)
-                                : Colors.grey.withValues(alpha: 0.12),
+                                ? Colors.green.withOpacity(0.18)
+                                : Colors.grey.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Icon(
@@ -993,7 +995,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                 _twoFactorEnabled
                                     ? 'Your account is protected with email verification'
                                     : 'Add an extra layer of security to your account',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.black54,
                                 ),
@@ -1011,11 +1013,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                           Switch(
                             value: _twoFactorEnabled,
                             onChanged: _handleTwoFactorToggle,
-                            activeThumbColor: accent,
+                            activeColor: accent,
                             trackColor: WidgetStateProperty.resolveWith(
                                 (states) =>
                                     states.contains(WidgetState.selected)
-                                        ? accent.withValues(alpha: 0.4)
+                                        ? accent.withOpacity(0.4)
                                         : null),
                           ),
                       ],
@@ -1039,8 +1041,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                 title: 'About',
                 icon: Icons.info_outline,
                 children: [
-                  const _PrefInfoRow(label: 'App version', value: '1.0.0'),
-                  const _PrefInfoRow(label: 'Build', value: '2024.12'),
+                  _PrefInfoRow(label: 'App version', value: '1.0.0'),
+                  _PrefInfoRow(label: 'Build', value: '2024.12'),
                   const SizedBox(height: 8),
                   _PrefActionTile(
                     icon: Icons.description_outlined,
@@ -1225,7 +1227,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       ),
     ];
 
-    const actionItems = <_ActionItemData>[
+    final actionItems = const <_ActionItemData>[
       _ActionItemData(
         title: 'Finalize migration test plan for release 7.2',
         owner: 'Product Ops',
@@ -1339,7 +1341,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.18),
+                color: accent.withOpacity(0.18),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text('Executive Summary',
@@ -1360,7 +1362,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         Text(
           'StackOne delivery is pacing ahead of target, with stakeholder sentiment at an all-time high.\nWe are on track for the Q4 milestone with strong compliance posture and predictable burn.',
           style: theme.textTheme.bodyLarge
-              ?.copyWith(color: Colors.white.withValues(alpha: 0.78), height: 1.45),
+              ?.copyWith(color: Colors.white.withOpacity(0.78), height: 1.45),
         ),
         const SizedBox(height: 18),
         Wrap(
@@ -1376,8 +1378,8 @@ class _SettingsScreenState extends State<SettingsScreen>
     final highlightCard = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        color: Colors.white.withValues(alpha: 0.12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+        color: Colors.white.withOpacity(0.12),
+        border: Border.all(color: Colors.white.withOpacity(0.18)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -1407,7 +1409,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               child: LinearProgressIndicator(
                 value: 0.94,
                 minHeight: 10,
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                backgroundColor: Colors.white.withOpacity(0.2),
                 valueColor: AlwaysStoppedAnimation(accent),
               ),
             ),
@@ -1464,7 +1466,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
         color: Colors.white,
         boxShadow: const [
           BoxShadow(
@@ -1478,7 +1480,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.18),
+              color: accent.withOpacity(0.18),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(data.icon, color: accent, size: 24),
@@ -1517,7 +1519,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             child: LinearProgressIndicator(
               value: data.progress,
               minHeight: 10,
-              backgroundColor: Colors.grey.withValues(alpha: 0.12),
+              backgroundColor: Colors.grey.withOpacity(0.12),
               valueColor: AlwaysStoppedAnimation(accent),
             ),
           ),
@@ -1536,7 +1538,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1549,19 +1551,19 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 12),
-          const Text(
+          Text(
               'Velocity trend across the past six sprints with forecast confidence.',
-              style: TextStyle(color: Colors.black54)),
+              style: const TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           SizedBox(
             height: 160,
             child: _VelocitySparkline(accent: accent),
           ),
           const SizedBox(height: 16),
-          const Wrap(
+          Wrap(
             spacing: 16,
             runSpacing: 12,
-            children: [
+            children: const [
               _TrendStat(
                   label: 'Throughput',
                   value: '42 pts',
@@ -1591,18 +1593,18 @@ class _SettingsScreenState extends State<SettingsScreen>
     final heatMap = {
       'Delivery': {
         'High': accent,
-        'Medium': accent.withValues(alpha: 0.6),
-        'Low': accent.withValues(alpha: 0.25)
+        'Medium': accent.withOpacity(0.6),
+        'Low': accent.withOpacity(0.25)
       },
       'Security': {
         'High': Colors.redAccent,
         'Medium': Colors.orangeAccent,
-        'Low': Colors.orange.withValues(alpha: 0.4)
+        'Low': Colors.orange.withOpacity(0.4)
       },
       'People': {
         'High': Colors.blue,
-        'Medium': Colors.blueAccent.withValues(alpha: 0.6),
-        'Low': Colors.blueAccent.withValues(alpha: 0.3)
+        'Medium': Colors.blueAccent.withOpacity(0.6),
+        'Low': Colors.blueAccent.withOpacity(0.3)
       },
     };
 
@@ -1611,7 +1613,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1624,13 +1626,13 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 10),
-          const Text(
+          Text(
               'Risk posture for current delivery window, mapped by likelihood vs per-domain impact.',
-              style: TextStyle(color: Colors.black54)),
+              style: const TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           Table(
             border: TableBorder.symmetric(
-                inside: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+                inside: BorderSide(color: Colors.grey.withOpacity(0.2))),
             columnWidths: const {0: IntrinsicColumnWidth()},
             children: [
               TableRow(
@@ -1695,7 +1697,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1708,9 +1710,9 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          const Text(
+          Text(
               'Prioritized interventions to sustain momentum and de-risk the next release.',
-              style: TextStyle(color: Colors.black54)),
+              style: const TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           ...actionItems
               .map((item) => _ActionItemRow(item: item, accent: accent)),
@@ -1744,7 +1746,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -1757,9 +1759,9 @@ class _SettingsScreenState extends State<SettingsScreen>
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 10),
-          const Text(
+          Text(
               'Latest artefacts ready to distribute to project leadership and partners.',
-              style: TextStyle(color: Colors.black54)),
+              style: const TextStyle(color: Colors.black54)),
           const SizedBox(height: 16),
           ...downloads.map((item) {
             return Padding(
@@ -1769,7 +1771,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.18),
+                      color: accent.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(Icons.insert_drive_file_outlined,
@@ -1843,23 +1845,23 @@ class _SettingsScreenState extends State<SettingsScreen>
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.18),
+                        color: accent.withOpacity(0.18),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(Icons.edit_note, color: accent, size: 28),
+                      child: Icon(Icons.edit_note, color: accent, size: 28),
                     ),
                     const SizedBox(width: 16),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Inline Content Editor',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontSize: 22, fontWeight: FontWeight.w700)),
-                          SizedBox(height: 6),
+                          const SizedBox(height: 6),
                           Text(
                             'Edit text content directly on any page in your application.',
-                            style: TextStyle(
+                            style: const TextStyle(
                                 color: Colors.black54, fontSize: 15),
                           ),
                         ],
@@ -1872,13 +1874,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: isEditMode
-                        ? Colors.green.withValues(alpha: 0.08)
-                        : Colors.grey.withValues(alpha: 0.06),
+                        ? Colors.green.withOpacity(0.08)
+                        : Colors.grey.withOpacity(0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                         color: isEditMode
-                            ? Colors.green.withValues(alpha: 0.3)
-                            : Colors.grey.withValues(alpha: 0.2)),
+                            ? Colors.green.withOpacity(0.3)
+                            : Colors.grey.withOpacity(0.2)),
                   ),
                   child: Row(
                     children: [
@@ -1886,8 +1888,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isEditMode
-                              ? Colors.green.withValues(alpha: 0.18)
-                              : Colors.grey.withValues(alpha: 0.12),
+                              ? Colors.green.withOpacity(0.18)
+                              : Colors.grey.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -1984,27 +1986,27 @@ class _SettingsScreenState extends State<SettingsScreen>
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.08),
+                    color: Colors.blue.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+                    border: Border.all(color: Colors.blue.withOpacity(0.2)),
                   ),
-                  child: const Row(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(Icons.info_outline, color: Colors.blue, size: 22),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Admin Only',
                               style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: Colors.blue),
                             ),
-                            SizedBox(height: 6),
-                            Text(
+                            const SizedBox(height: 6),
+                            const Text(
                               'Only users with admin privileges can access edit mode. Regular users will see the published content without editing capabilities.',
                               style:
                                   TextStyle(color: Colors.black87, height: 1.4),
@@ -2020,13 +2022,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: contentProvider.showEditButton
-                        ? Colors.red.withValues(alpha: 0.08)
-                        : Colors.green.withValues(alpha: 0.06),
+                        ? Colors.red.withOpacity(0.08)
+                        : Colors.green.withOpacity(0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                         color: contentProvider.showEditButton
-                            ? Colors.red.withValues(alpha: 0.3)
-                            : Colors.green.withValues(alpha: 0.2)),
+                            ? Colors.red.withOpacity(0.3)
+                            : Colors.green.withOpacity(0.2)),
                   ),
                   child: Row(
                     children: [
@@ -2034,8 +2036,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: contentProvider.showEditButton
-                              ? Colors.red.withValues(alpha: 0.18)
-                              : Colors.green.withValues(alpha: 0.12),
+                              ? Colors.red.withOpacity(0.18)
+                              : Colors.green.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -2053,9 +2055,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Remove Content Modification Button',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -2147,7 +2149,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.08),
+                          color: statusColor.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Row(
@@ -2180,10 +2182,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.08),
+                        color: Colors.grey.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(12),
                         border:
-                            Border.all(color: Colors.grey.withValues(alpha: 0.25)),
+                            Border.all(color: Colors.grey.withOpacity(0.25)),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2230,7 +2232,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         label: const Text('Remove API Key'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.black,
-                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
+                          side: BorderSide(color: Colors.grey.withOpacity(0.4)),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 12),
                           shape: RoundedRectangleBorder(
@@ -2484,7 +2486,7 @@ class _AccountPlanCard extends StatelessWidget {
               BoxShadow(
                 blurRadius: 8,
                 offset: const Offset(0, 2),
-                color: Colors.black.withValues(alpha: 0.06),
+                color: Colors.black.withOpacity(0.06),
               ),
             ],
           ),
@@ -2547,7 +2549,7 @@ class _AccountPlanCard extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF005bb3).withValues(alpha: 0.1),
+                      color: const Color(0xFF005bb3).withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -2603,7 +2605,7 @@ class _BillingPaymentCard extends StatelessWidget {
               BoxShadow(
                 blurRadius: 8,
                 offset: const Offset(0, 2),
-                color: Colors.black.withValues(alpha: 0.06),
+                color: Colors.black.withOpacity(0.06),
               ),
             ],
           ),
@@ -2659,7 +2661,7 @@ class _BillingPaymentCard extends StatelessWidget {
                           'Expires 12/25',
                           style: TextStyle(
                             fontSize: 12,
-                            color: const Color(0xFF414754).withValues(alpha: 0.7),
+                            color: const Color(0xFF414754).withOpacity(0.7),
                           ),
                         ),
                       ],
@@ -2811,7 +2813,7 @@ class _LegalTermsCard extends StatelessWidget {
           BoxShadow(
             blurRadius: 8,
             offset: const Offset(0, 2),
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withOpacity(0.06),
           ),
         ],
       ),
@@ -2971,7 +2973,7 @@ class _BottomNavBar extends StatelessWidget {
           BoxShadow(
             blurRadius: 4,
             offset: const Offset(0, -1),
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withOpacity(0.06),
           ),
         ],
       ),
@@ -3131,8 +3133,8 @@ class _InsightBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.white.withValues(alpha: 0.12),
-        border: Border.all(color: accent.withValues(alpha: 0.2)),
+        color: Colors.white.withOpacity(0.12),
+        border: Border.all(color: accent.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3167,8 +3169,8 @@ class _VelocitySparkline extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: Colors.grey.withValues(alpha: 0.08),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.14)),
+        color: Colors.grey.withOpacity(0.08),
+        border: Border.all(color: Colors.grey.withOpacity(0.14)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -3226,7 +3228,7 @@ class _VelocitySparklinePainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [accent.withValues(alpha: 0.28), accent.withValues(alpha: 0.04)],
+        colors: [accent.withOpacity(0.28), accent.withOpacity(0.04)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     canvas.drawPath(fillPath, fillPaint);
@@ -3270,7 +3272,7 @@ class _TrendStat extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.grey.withValues(alpha: 0.08),
+        color: Colors.grey.withOpacity(0.08),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -3396,8 +3398,8 @@ class _ActionItemRow extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: Colors.grey.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+        color: Colors.grey.withOpacity(0.06),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3408,7 +3410,7 @@ class _ActionItemRow extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: priorityColor.withValues(alpha: 0.16),
+                  color: priorityColor.withOpacity(0.16),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text('Priority $priorityLabel',
@@ -3439,7 +3441,7 @@ class _ActionItemRow extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: accent.withValues(alpha: 0.2),
+                backgroundColor: accent.withOpacity(0.2),
                 child: const Icon(Icons.person_outline, color: Colors.black87),
               ),
               const SizedBox(width: 12),
@@ -3530,7 +3532,7 @@ class _BillingHeroBanner extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.18),
+                      color: accent.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text('Billing & Subscription',
@@ -3551,7 +3553,7 @@ class _BillingHeroBanner extends StatelessWidget {
               Text(
                 'View your current plan, manage payment methods, and access your billing history.\nUpgrade anytime to unlock premium features.',
                 style: theme.textTheme.bodyLarge?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.78), height: 1.45),
+                    color: Colors.white.withOpacity(0.78), height: 1.45),
               ),
               const SizedBox(height: 18),
               if (isLoading)
@@ -3579,8 +3581,8 @@ class _BillingHeroBanner extends StatelessWidget {
           final highlightCard = DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(22),
-              color: Colors.white.withValues(alpha: 0.12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+              color: Colors.white.withOpacity(0.12),
+              border: Border.all(color: Colors.white.withOpacity(0.18)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -3623,7 +3625,7 @@ class _BillingHeroBanner extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: billingProgress,
                       minHeight: 10,
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      backgroundColor: Colors.white.withOpacity(0.2),
                       valueColor: AlwaysStoppedAnimation(accent),
                     ),
                   ),
@@ -3675,8 +3677,8 @@ class _BillingStatBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.white.withValues(alpha: 0.12),
-        border: Border.all(color: accent.withValues(alpha: 0.2)),
+        color: Colors.white.withOpacity(0.12),
+        border: Border.all(color: accent.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3748,7 +3750,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -3768,7 +3770,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.18),
+                        color: accent.withOpacity(0.18),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(Icons.workspace_premium,
@@ -3793,7 +3795,7 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.12),
+                        color: statusColor.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Row(
@@ -3820,9 +3822,9 @@ class _CurrentSubscriptionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.06),
+                    color: Colors.grey.withOpacity(0.06),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+                    border: Border.all(color: Colors.grey.withOpacity(0.12)),
                   ),
                   child: Column(
                     children: [
@@ -3946,7 +3948,7 @@ class _PaymentMethodsCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -3959,8 +3961,8 @@ class _PaymentMethodsCard extends StatelessWidget {
               style: theme.textTheme.titleMedium
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          const Text('Connect your preferred payment provider',
-              style: TextStyle(color: Colors.black54)),
+          Text('Connect your preferred payment provider',
+              style: const TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           _PaymentProviderTile(
             name: 'Stripe',
@@ -4035,12 +4037,12 @@ class _PaymentProviderTile extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: isConnected
-            ? accent.withValues(alpha: 0.08)
-            : Colors.grey.withValues(alpha: 0.06),
+            ? accent.withOpacity(0.08)
+            : Colors.grey.withOpacity(0.06),
         border: Border.all(
             color: isConnected
-                ? accent.withValues(alpha: 0.3)
-                : Colors.grey.withValues(alpha: 0.12)),
+                ? accent.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.12)),
       ),
       child: Row(
         children: [
@@ -4048,7 +4050,7 @@ class _PaymentProviderTile extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.15),
+              color: iconColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: iconColor, size: 24),
@@ -4069,7 +4071,7 @@ class _PaymentProviderTile extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.15),
+                          color: Colors.green.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text('Connected',
@@ -4115,7 +4117,7 @@ class _InvoicesCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         color: Colors.white,
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
         boxShadow: const [
           BoxShadow(
               blurRadius: 18, offset: Offset(0, 14), color: Color(0x0F000000))
@@ -4132,7 +4134,7 @@ class _InvoicesCard extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.18),
+                    color: accent.withOpacity(0.18),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.receipt_long, color: accent, size: 24),
@@ -4146,8 +4148,8 @@ class _InvoicesCard extends StatelessWidget {
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w700)),
                       const SizedBox(height: 4),
-                      const Text('View and download past invoices',
-                          style: TextStyle(color: Colors.black54)),
+                      Text('View and download past invoices',
+                          style: const TextStyle(color: Colors.black54)),
                     ],
                   ),
                 ),
@@ -4157,7 +4159,7 @@ class _InvoicesCard extends StatelessWidget {
                   label: const Text('Export All'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.black87,
-                    side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                    side: BorderSide(color: Colors.grey.withOpacity(0.3)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                     shape: RoundedRectangleBorder(
@@ -4203,55 +4205,53 @@ class _InvoicesCard extends StatelessWidget {
                 final double tableWidth =
                     hasBoundedWidth ? constraints.maxWidth : mediaWidth;
 
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: tableWidth,
-                    child: DataTable(
-                      headingRowColor:
-                          WidgetStateProperty.all(const Color(0xFFF9FAFB)),
-                      headingTextStyle: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF6B7280)),
-                      dataTextStyle: const TextStyle(
-                          fontSize: 13, color: Color(0xFF374151)),
-                      horizontalMargin: 24,
-                      columnSpacing: 48,
-                      columns: const [
-                        DataColumn(label: Text('Invoice ID')),
-                        DataColumn(label: Text('Date')),
-                        DataColumn(label: Text('Amount')),
-                        DataColumn(label: Text('Status')),
-                        DataColumn(label: Text('Action')),
-                      ],
-                      rows: invoices
-                          .take(5)
-                          .map((invoice) => DataRow(
-                                cells: [
-                                  DataCell(Text(
-                                      invoice.id.length > 15
-                                          ? '${invoice.id.substring(0, 15)}...'
-                                          : invoice.id,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600))),
-                                  DataCell(Text(DateFormat('MMM d, yyyy')
-                                      .format(invoice.createdAt))),
-                                  DataCell(Text(invoice.formattedAmount,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600))),
-                                  DataCell(_InvoiceStatusBadge(
-                                      status: invoice.isPaid
-                                          ? 'Paid'
-                                          : invoice.status)),
-                                  DataCell(
-                                    IconButton(
-                                      onPressed: invoice.receiptUrl != null
-                                          ? () {
-                                              openUrlInNewWindow(
-                                                  invoice.receiptUrl!);
-                                            }
-                                          : null,
+                return FullScreenTableWrapper(
+                  title: 'Billing History',
+                  tableBuilder: (fsContext) => buildNduDataTable(
+                    context: fsContext,
+                    headingRowColor: const Color(0xFFF9FAFB),
+                    headingTextStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF6B7280)),
+                    dataTextStyle: const TextStyle(
+                        fontSize: 13, color: Color(0xFF374151)),
+                    horizontalMargin: 24,
+                    columnSpacing: 48,
+                    columns: const [
+                      DataColumn(label: Text('Invoice ID')),
+                      DataColumn(label: Text('Date')),
+                      DataColumn(label: Text('Amount')),
+                      DataColumn(label: Text('Status')),
+                      DataColumn(label: Text('Action')),
+                    ],
+                    rows: invoices
+                        .take(5)
+                        .map((invoice) => DataRow(
+                              cells: [
+                                DataCell(Text(
+                                    invoice.id.length > 15
+                                        ? '${invoice.id.substring(0, 15)}...'
+                                        : invoice.id,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600))),
+                                DataCell(Text(DateFormat('MMM d, yyyy')
+                                    .format(invoice.createdAt))),
+                                DataCell(Text(invoice.formattedAmount,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600))),
+                                DataCell(_InvoiceStatusBadge(
+                                    status: invoice.isPaid
+                                        ? 'Paid'
+                                        : invoice.status)),
+                                DataCell(
+                                  IconButton(
+                                    onPressed: invoice.receiptUrl != null
+                                        ? () {
+                                            openUrlInNewWindow(
+                                                invoice.receiptUrl!);
+                                          }
+                                        : null,
                                       icon: Icon(Icons.download_outlined,
                                           color: invoice.receiptUrl != null
                                               ? accent
@@ -4260,9 +4260,71 @@ class _InvoicesCard extends StatelessWidget {
                                       tooltip: 'Download',
                                     ),
                                   ),
-                                ],
-                              ))
-                          .toList(),
+                              ],
+                            ))
+                        .toList(),
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: tableWidth,
+                      child: buildNduDataTable(
+                        context: context,
+                        headingRowColor: const Color(0xFFF9FAFB),
+                        headingTextStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6B7280)),
+                        dataTextStyle: const TextStyle(
+                            fontSize: 13, color: Color(0xFF374151)),
+                        horizontalMargin: 24,
+                        columnSpacing: 48,
+                        columns: const [
+                          DataColumn(label: Text('Invoice ID')),
+                          DataColumn(label: Text('Date')),
+                          DataColumn(label: Text('Amount')),
+                          DataColumn(label: Text('Status')),
+                          DataColumn(label: Text('Action')),
+                        ],
+                        rows: invoices
+                            .take(5)
+                            .map((invoice) => DataRow(
+                                  cells: [
+                                    DataCell(Text(
+                                        invoice.id.length > 15
+                                            ? '${invoice.id.substring(0, 15)}...'
+                                            : invoice.id,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600))),
+                                    DataCell(Text(DateFormat('MMM d, yyyy')
+                                        .format(invoice.createdAt))),
+                                    DataCell(Text(invoice.formattedAmount,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600))),
+                                    DataCell(_InvoiceStatusBadge(
+                                        status: invoice.isPaid
+                                            ? 'Paid'
+                                            : invoice.status)),
+                                    DataCell(
+                                      IconButton(
+                                        onPressed: invoice.receiptUrl != null
+                                            ? () {
+                                                openUrlInNewWindow(
+                                                    invoice.receiptUrl!);
+                                              }
+                                            : null,
+                                        icon: Icon(Icons.download_outlined,
+                                            color: invoice.receiptUrl != null
+                                                ? accent
+                                                : Colors.grey,
+                                            size: 20),
+                                        tooltip: 'Download',
+                                      ),
+                                    ),
+                                  ],
+                                ))
+                            .toList(),
+                      ),
                     ),
                   ),
                 );
@@ -4351,9 +4413,9 @@ class _UpgradePlanCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [accent.withValues(alpha: 0.15), accent.withValues(alpha: 0.05)],
+          colors: [accent.withOpacity(0.15), accent.withOpacity(0.05)],
         ),
-        border: Border.all(color: accent.withValues(alpha: 0.3)),
+        border: Border.all(color: accent.withOpacity(0.3)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -4406,10 +4468,10 @@ class _UpgradePlanCard extends StatelessWidget {
                         style: theme.textTheme.headlineMedium
                             ?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(width: 4),
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 4),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
                       child: Text('/month',
-                          style: TextStyle(color: Colors.black54)),
+                          style: const TextStyle(color: Colors.black54)),
                     ),
                   ],
                 ),
@@ -4429,7 +4491,7 @@ class _UpgradePlanCard extends StatelessWidget {
                   ),
                 ),
               ] else
-                const Icon(Icons.check_circle, color: Colors.green, size: 48),
+                Icon(Icons.check_circle, color: Colors.green, size: 48),
             ],
           );
 
@@ -4709,7 +4771,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
   ResourceAccessLevel _selectedAccess = ResourceAccessLevel.editor;
   String _selectedScope = 'Current project';
   String _selectedExpiry = '30 days';
-  final bool _requireMfa = true;
+  bool _requireMfa = true;
   bool _notifyOnAccessChange = true;
   bool _passwordLoginEnabled = true;
   bool _passwordlessEmailEnabled = false;
@@ -4921,7 +4983,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _accent.withValues(alpha: 0.18),
+                  color: _accent.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.admin_panel_settings_outlined,
@@ -4937,11 +4999,11 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               Text(
                 'Invite collaborators, assign least-privilege roles, control project-level access, and review the RBAC policy before changes reach delivery data.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.72), height: 1.45),
+                    color: Colors.white.withOpacity(0.72), height: 1.45),
               ),
             ],
           );
-          const stats = Wrap(
+          final stats = Wrap(
             spacing: 12,
             runSpacing: 12,
             children: const [
@@ -5067,7 +5129,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
           ),
           const SizedBox(height: 18),
           DropdownButtonFormField<MfaRequirement>(
-            initialValue: _mfaRequirement,
+            value: _mfaRequirement,
             items: const [
               DropdownMenuItem(
                   value: MfaRequirement.everyLogin, child: Text('Every Login')),
@@ -5090,7 +5152,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
           ),
           const SizedBox(height: 18),
           DropdownButtonFormField<int>(
-            initialValue: _rememberDeviceDays,
+            value: _rememberDeviceDays,
             items: const [
               DropdownMenuItem(value: 7, child: Text('7 days')),
               DropdownMenuItem(value: 30, child: Text('30 days')),
@@ -5180,7 +5242,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<SiteRole>(
-                  initialValue: _selectedRole,
+                  value: _selectedRole,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration:
@@ -5206,7 +5268,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<ResourceAccessLevel>(
-                  initialValue: _selectedAccess,
+                  value: _selectedAccess,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration: _fieldDecoration('Resource access',
@@ -5230,7 +5292,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  initialValue: _selectedScope,
+                  value: _selectedScope,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration: _fieldDecoration('Access scope',
@@ -5253,7 +5315,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  initialValue: _selectedExpiry,
+                  value: _selectedExpiry,
                   isExpanded: true,
                   menuMaxHeight: 280,
                   decoration: _fieldDecoration('Invite expires',
@@ -5299,7 +5361,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               return FilterChip(
                 selected: selected,
                 label: Text(_permissionLabel(permission)),
-                selectedColor: _accent.withValues(alpha: 0.22),
+                selectedColor: _accent.withOpacity(0.22),
                 checkmarkColor: Colors.black,
                 onSelected: (value) {
                   setState(() {
@@ -5355,7 +5417,7 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
             return const _RbacLoadingRow(label: 'Loading collaborators...');
           }
           if (snapshot.hasError) {
-            return const _EmptyRbacState(
+            return _EmptyRbacState(
               icon: Icons.lock_outline,
               title: 'Roster unavailable',
               message:
@@ -5401,17 +5463,17 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: selected
-                    ? _accent.withValues(alpha: 0.12)
+                    ? _accent.withOpacity(0.12)
                     : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: selected ? _accent : Colors.grey.withValues(alpha: 0.14)),
+                    color: selected ? _accent : Colors.grey.withOpacity(0.14)),
               ),
               child: Row(
                 children: [
                   CircleAvatar(
                     radius: 18,
-                    backgroundColor: role.color.withValues(alpha: 0.14),
+                    backgroundColor: role.color.withOpacity(0.14),
                     child: Icon(_roleIcon(role), color: role.color, size: 18),
                   ),
                   const SizedBox(width: 12),
@@ -5545,75 +5607,87 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
                   style: const TextStyle(
                       fontWeight: FontWeight.w800, fontSize: 15)),
               const SizedBox(height: 10),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: minTableWidth),
-                  child: Table(
-                    border: TableBorder(
-                      horizontalInside:
-                          BorderSide(color: Colors.grey.withValues(alpha: 0.12)),
-                    ),
-                    columnWidths: const {
-                      0: FlexColumnWidth(2.6),
-                      1: FlexColumnWidth(),
-                      2: FlexColumnWidth(),
-                      3: FlexColumnWidth(),
-                      4: FlexColumnWidth(),
-                      5: FlexColumnWidth(),
-                    },
-                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                    children: [
-                      TableRow(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        children: [
-                          const _PermissionTableHeader('Permission',
-                              alignment: Alignment.centerLeft),
-                          ...SiteRole.values.map((role) =>
-                              _PermissionTableHeader(role.displayName)),
-                        ],
-                      ),
-                      ...permissions.map((permission) {
-                        return TableRow(
-                          children: [
-                            _PermissionTableCell(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                _permissionLabel(permission),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                            ...SiteRole.values.map((role) {
-                              final allowed =
-                                  Permission.getPermissionsForRole(role)
-                                      .contains(permission);
-                              return _PermissionTableCell(
-                                child: Icon(
-                                  allowed
-                                      ? Icons.check_circle
-                                      : Icons.remove_circle_outline,
-                                  color: allowed
-                                      ? const Color(0xFF16A34A)
-                                      : Colors.black26,
-                                  size: 20,
-                                ),
-                              );
-                            }),
-                          ],
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ),
+              _buildPermissionTable(title, permissions, minTableWidth),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildPermissionTable(
+      String title, List<Permission> permissions, double minTableWidth) {
+    Widget buildTable() {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minWidth: minTableWidth),
+          child: Table(
+            border: TableBorder(
+              horizontalInside:
+                  BorderSide(color: Colors.grey.withOpacity(0.12)),
+            ),
+            columnWidths: const {
+              0: FlexColumnWidth(2.6),
+              1: FlexColumnWidth(),
+              2: FlexColumnWidth(),
+              3: FlexColumnWidth(),
+              4: FlexColumnWidth(),
+              5: FlexColumnWidth(),
+            },
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            children: [
+              TableRow(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                children: [
+                  const _PermissionTableHeader('Permission',
+                      alignment: Alignment.centerLeft),
+                  ...SiteRole.values
+                      .map((role) => _PermissionTableHeader(role.displayName)),
+                ],
+              ),
+              ...permissions.map((permission) {
+                return TableRow(
+                  children: [
+                    _PermissionTableCell(
+                      alignment: Alignment.centerLeft,
+                      child: WrappedText(
+                        _permissionLabel(permission),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    ...SiteRole.values.map((role) {
+                      final allowed =
+                          Permission.getPermissionsForRole(role)
+                              .contains(permission);
+                      return _PermissionTableCell(
+                        child: Icon(
+                          allowed
+                              ? Icons.check_circle
+                              : Icons.remove_circle_outline,
+                          color: allowed
+                              ? const Color(0xFF16A34A)
+                              : Colors.black26,
+                          size: 20,
+                        ),
+                      );
+                    }),
+                  ],
+                );
+              }),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return FullScreenTableWrapper(
+      title: title,
+      child: buildTable(),
+      tableBuilder: (fsContext) => buildTable(),
     );
   }
 
@@ -5625,11 +5699,11 @@ class _AccessCollaboratorsPanelState extends State<_AccessCollaboratorsPanel> {
       fillColor: const Color(0xFFF8FAFC),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.18)),
+        borderSide: BorderSide(color: Colors.grey.withOpacity(0.18)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.18)),
+        borderSide: BorderSide(color: Colors.grey.withOpacity(0.18)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -5659,7 +5733,7 @@ class _RbacCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.16)),
+        border: Border.all(color: Colors.grey.withOpacity(0.16)),
         boxShadow: const [
           BoxShadow(
             blurRadius: 18,
@@ -5678,7 +5752,7 @@ class _RbacCard extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFC107).withValues(alpha: 0.16),
+                  color: const Color(0xFFFFC107).withOpacity(0.16),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: const Color(0xFFFFC107), size: 22),
@@ -5722,9 +5796,9 @@ class _AccessStat extends StatelessWidget {
       width: 118,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -5737,7 +5811,7 @@ class _AccessStat extends StatelessWidget {
           const SizedBox(height: 4),
           Text(label,
               style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.65), fontSize: 12)),
+                  color: Colors.white.withOpacity(0.65), fontSize: 12)),
         ],
       ),
     );
@@ -5767,7 +5841,7 @@ class _PolicyToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFFC107).withValues(alpha: 0.28)),
+        border: Border.all(color: const Color(0xFFFFC107).withOpacity(0.28)),
       ),
       child: Row(
         children: [
@@ -5809,7 +5883,7 @@ class _CollaboratorTile extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: user.siteRole.color.withValues(alpha: 0.16),
+            backgroundColor: user.siteRole.color.withOpacity(0.16),
             child: Text(user.initials,
                 style: TextStyle(
                     color: user.siteRole.color, fontWeight: FontWeight.w800)),
@@ -5907,7 +5981,7 @@ class _RolePill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: role.color.withValues(alpha: 0.12),
+        color: role.color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(role.displayName,
@@ -6060,7 +6134,7 @@ class _FeatureChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withValues(alpha: 0.3)),
+        border: Border.all(color: accent.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -6102,11 +6176,11 @@ class _ThemeModeOption extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
           color: selected
-              ? accent.withValues(alpha: 0.12)
-              : Colors.grey.withValues(alpha: 0.06),
+              ? accent.withOpacity(0.12)
+              : Colors.grey.withOpacity(0.06),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? accent : Colors.grey.withValues(alpha: 0.2),
+            color: selected ? accent : Colors.grey.withOpacity(0.2),
             width: selected ? 2 : 1,
           ),
         ),
@@ -6147,7 +6221,7 @@ class _PrefActionTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Material(
-        color: Colors.grey.withValues(alpha: 0.06),
+        color: Colors.grey.withOpacity(0.06),
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -6161,7 +6235,7 @@ class _PrefActionTile extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: (labelColor ?? const Color(0xFFFFC107))
-                        .withValues(alpha: 0.18),
+                        .withOpacity(0.18),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child:
@@ -6400,7 +6474,7 @@ class _InviteVerificationDialogState extends State<InviteVerificationDialog> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.15),
+                      color: accent.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.mark_email_read_outlined,
@@ -6435,9 +6509,9 @@ class _InviteVerificationDialogState extends State<InviteVerificationDialog> {
               const SizedBox(height: 20),
 
               // ── Description ───────────────────────────────────────
-              const Text(
+              Text(
                 'Enter the 6-digit code sent to',
-                style: TextStyle(fontSize: 13, color: secondaryText),
+                style: const TextStyle(fontSize: 13, color: secondaryText),
               ),
               const SizedBox(height: 2),
               Text(

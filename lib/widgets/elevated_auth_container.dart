@@ -57,8 +57,9 @@ class _ElevatedAuthContainerState extends State<ElevatedAuthContainer>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bool isMobile = MediaQuery.of(context).size.width < 600;
-    final EdgeInsetsGeometry contentPadding =
-        widget.padding ?? EdgeInsets.symmetric(horizontal: isMobile ? 16 : 28, vertical: isMobile ? 16 : 24);
+    final EdgeInsetsGeometry contentPadding = widget.padding ??
+        EdgeInsets.symmetric(
+            horizontal: isMobile ? 16 : 28, vertical: isMobile ? 16 : 24);
 
     final Color surface = theme.colorScheme.surface;
     const Color border = AppSemanticColors.border;
@@ -67,7 +68,7 @@ class _ElevatedAuthContainerState extends State<ElevatedAuthContainer>
         : LightModeColors.accent;
 
     final Widget card = ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: const BorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: DecoratedBox(
@@ -81,7 +82,7 @@ class _ElevatedAuthContainerState extends State<ElevatedAuthContainer>
               ],
             ),
             border: Border.all(color: border),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: const BorderRadius.circular(16),
             boxShadow: [
               // very subtle ambient and key shadows
               BoxShadow(

@@ -15,6 +15,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -120,7 +121,7 @@ class _ExecutionPlanSolutionsScreenState
             const SizedBox(height: 32),
             const SectionIntro(title: 'Executive Plan Strategy'),
             const SizedBox(height: 28),
-            const ExecutionPlanForm(
+            ExecutionPlanForm(
               title: 'Executive Plan Strategy',
               hintText: 'Input your notes here...',
               noteKey: 'execution_plan_strategy',
@@ -135,7 +136,7 @@ class _ExecutionPlanSolutionsScreenState
                 children: [
                   CsvTableImportButton(
                     tableTitle: 'Execution Tools',
-                    columns: const [
+                    columns: [
                       CsvColumnSpec(
                           key: 'tool',
                           label: 'Tool',
@@ -486,112 +487,199 @@ class _ExecutionPlanTable extends StatelessWidget {
             height: 1.5,
           );
 
-          Widget buildCell(String text,
-              {bool isHeader = false,
-              TextAlign align = TextAlign.left,
-              TextStyle? style}) {
-            return Container(
-              color: isHeader ? const Color(0xFFF3F4F6) : Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-              child: Text(
-                text,
-                textAlign: align,
-                style: style ?? (isHeader ? headerStyle : cellStyle),
-              ),
-            );
-          }
+ Widget buildCell(String text,
+ {bool isHeader = false,
+ TextAlign align = TextAlign.left,
+ TextStyle? style}) {
+ return Container(
+ color: isHeader ? const Color(0xFFF3F4F6) : Colors.white,
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+ child: WrappedText(
+ text,
+ textAlign: align,
+ style: style ?? (isHeader ? headerStyle : cellStyle),
+ ),
+ );
+ }
 
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Color(0xFFE5E7EB)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Table(
-              columnWidths: const {
-                0: FixedColumnWidth(70),
-                1: FlexColumnWidth(2),
-                2: FlexColumnWidth(3),
-                3: FlexColumnWidth(2),
-                4: FlexColumnWidth(2),
-                5: FixedColumnWidth(100),
-              },
-              border: const TableBorder(
-                horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
-                verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
-                top: BorderSide(color: Color(0xFFE5E7EB)),
-                bottom: BorderSide(color: Color(0xFFE5E7EB)),
-                left: BorderSide(color: Color(0xFFE5E7EB)),
-                right: BorderSide(color: Color(0xFFE5E7EB)),
-              ),
-              children: [
-                TableRow(
-                  children: [
-                    buildCell('No', isHeader: true, align: TextAlign.center),
-                    buildCell('Execution Tool', isHeader: true),
-                    buildCell('Description', isHeader: true),
-                    buildCell('Source', isHeader: true),
-                    buildCell('Comments', isHeader: true),
-                    buildCell('Actions',
-                        isHeader: true, align: TextAlign.center),
-                  ],
-                ),
-                if (tools.isEmpty)
-                  TableRow(
-                    children: [
-                      buildCell('', align: TextAlign.center),
-                      buildCell('No tools added yet',
-                          style: const TextStyle(
-                              color: Color(0xFF64748B),
-                              fontStyle: FontStyle.italic)),
-                      buildCell(''),
-                      buildCell(''),
-                      buildCell(''),
-                      buildCell(''),
-                    ],
-                  )
-                else
-                  ...tools.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final tool = entry.value;
-                    return TableRow(
-                      children: [
-                        buildCell('${index + 1}', align: TextAlign.center),
-                        buildCell(tool.tool),
-                        buildCell(tool.description),
-                        buildCell(tool.source),
-                        buildCell(tool.comments),
-                        Container(
-                          color: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 18),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit,
-                                    size: 18, color: Color(0xFF64748B)),
-                                onPressed: () => showEditDialog(context, tool),
-                                tooltip: 'Edit',
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete,
-                                    size: 18, color: Color(0xFFEF4444)),
-                                onPressed: () =>
-                                    showDeleteDialog(context, tool),
-                                tooltip: 'Delete',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
+ return FullScreenTableWrapper(
+ title: 'Execution Plan Solutions',
+ child: Container(
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ clipBehavior: Clip.antiAlias,
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(70),
+ 1: FlexColumnWidth(2),
+ 2: FlexColumnWidth(3),
+ 3: FlexColumnWidth(2),
+ 4: FlexColumnWidth(2),
+ 5: FixedColumnWidth(100),
+ },
+ border: const TableBorder(
+ horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ top: BorderSide(color: Color(0xFFE5E7EB)),
+ bottom: BorderSide(color: Color(0xFFE5E7EB)),
+ left: BorderSide(color: Color(0xFFE5E7EB)),
+ right: BorderSide(color: Color(0xFFE5E7EB)),
+ ),
+ children: [
+ TableRow(
+ children: [
+ buildCell('No', isHeader: true, align: TextAlign.center),
+ buildCell('Execution Tool', isHeader: true),
+ buildCell('Description', isHeader: true),
+ buildCell('Source', isHeader: true),
+ buildCell('Comments', isHeader: true),
+ buildCell('Actions', isHeader: true, align: TextAlign.center),
+ ],
+ ),
+ if (tools.isEmpty)
+ TableRow(
+ children: [
+ buildCell('', align: TextAlign.center),
+ buildCell('No tools added yet',
+ style: const TextStyle(
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic)),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ ],
+ )
+ else
+ ...tools.asMap().entries.map((entry) {
+ final index = entry.key;
+ final tool = entry.value;
+ return TableRow(
+ children: [
+ buildCell('${index + 1}', align: TextAlign.center),
+ buildCell(tool.tool),
+ buildCell(tool.description),
+ buildCell(tool.source),
+ buildCell(tool.comments),
+ Container(
+ color: Colors.white,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 18),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit,
+ size: 18, color: Color(0xFF64748B)),
+ onPressed: () => showEditDialog(context, tool),
+ tooltip: 'Edit',
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete,
+ size: 18, color: Color(0xFFEF4444)),
+ onPressed: () => showDeleteDialog(context, tool),
+ tooltip: 'Delete',
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }),
+ ],
+ ),
+ ),
+ tableBuilder: (fsContext) => Container(
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ clipBehavior: Clip.antiAlias,
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(70),
+ 1: FlexColumnWidth(2),
+ 2: FlexColumnWidth(3),
+ 3: FlexColumnWidth(2),
+ 4: FlexColumnWidth(2),
+ 5: FixedColumnWidth(100),
+ },
+ border: const TableBorder(
+ horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ top: BorderSide(color: Color(0xFFE5E7EB)),
+ bottom: BorderSide(color: Color(0xFFE5E7EB)),
+ left: BorderSide(color: Color(0xFFE5E7EB)),
+ right: BorderSide(color: Color(0xFFE5E7EB)),
+ ),
+ children: [
+ TableRow(
+ children: [
+ buildCell('No', isHeader: true, align: TextAlign.center),
+ buildCell('Execution Tool', isHeader: true),
+ buildCell('Description', isHeader: true),
+ buildCell('Source', isHeader: true),
+ buildCell('Comments', isHeader: true),
+ buildCell('Actions', isHeader: true, align: TextAlign.center),
+ ],
+ ),
+ if (tools.isEmpty)
+ TableRow(
+ children: [
+ buildCell('', align: TextAlign.center),
+ buildCell('No tools added yet',
+ style: const TextStyle(
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic)),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ ],
+ )
+ else
+ ...tools.asMap().entries.map((entry) {
+ final index = entry.key;
+ final tool = entry.value;
+ return TableRow(
+ children: [
+ buildCell('${index + 1}', align: TextAlign.center),
+ buildCell(tool.tool),
+ buildCell(tool.description),
+ buildCell(tool.source),
+ buildCell(tool.comments),
+ Container(
+ color: Colors.white,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 18),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit,
+ size: 18, color: Color(0xFF64748B)),
+ onPressed: () => showEditDialog(context, tool),
+ tooltip: 'Edit',
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete,
+ size: 18, color: Color(0xFFEF4444)),
+ onPressed: () => showDeleteDialog(context, tool),
+ tooltip: 'Delete',
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }),
+ ],
+ ),
+ ),
+ );
+ },
+ );
+ }
 }

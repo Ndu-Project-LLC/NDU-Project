@@ -433,13 +433,14 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
                   colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                 ),
                 borderRadius: BorderRadius.circular(8),
@@ -467,8 +468,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -746,8 +747,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEEF2FF),
+              decoration: const BoxDecoration(
+                color: Color(0xFFEEF2FF),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -762,16 +763,18 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
           ],
         ),
         const SizedBox(height: 20),
-        Column(
-          children: [
-            for (int i = 0; i < _sections.length; i++) ...[
-              SizedBox(
-                width: double.infinity,
-                child: _buildSectionCard(_sections[i]),
-              ),
-              if (i < _sections.length - 1) const SizedBox(height: 20),
-            ],
-          ],
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _sections.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 20),
+          itemBuilder: (context, i) => RepaintBoundary(
+            key: ValueKey('agile_hub_section_$i'),
+            child: SizedBox(
+              width: double.infinity,
+              child: _buildSectionCard(_sections[i]),
+            ),
+          ),
         ),
       ],
     );
@@ -782,12 +785,12 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _navigateToSection(section.number - 1),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: const BorderRadius.circular(20),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            border: const Border.all(color: Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -797,7 +800,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: const BorderRadius.circular(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -919,12 +922,12 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [Color(0xFFF0FDF4), Color(0xFFECFDF5)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFBBF7D0)),
+        border: Border.all(color: Color(0xFFBBF7D0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -25,6 +25,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 class PlanningRequirementsScreen extends StatefulWidget {
  const PlanningRequirementsScreen({super.key});
 
@@ -1620,7 +1621,9 @@ $requirementsList
       );
     }
 
-    return Container(
+    return FullScreenTableWrapper(
+    title: 'Planning Requirements',
+    child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1688,6 +1691,76 @@ $requirementsList
           ),
         ),
       ),
+    ),
+    tableBuilder: (fsContext) => Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: SizedBox(
+        height: 460,
+        child: Scrollbar(
+          controller: _requirementsHorizontalController,
+          thumbVisibility: true,
+          child: SingleChildScrollView(
+            controller: _requirementsHorizontalController,
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: totalWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header row (non-draggable)
+                  Container(
+                    key: const ValueKey('req_header'),
+                    decoration: BoxDecoration(
+                      color: bgHeader,
+                      border: Border(
+                        bottom: BorderSide(color: borderColor),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        hCell('No', colW[0]),
+                        hCell('Requirement', colW[1]),
+                        hCell('Requirement type', colW[2]),
+                        hCell('Discipline', colW[3]),
+                        hCell('Role', colW[4]),
+                        hCell('Person', colW[5]),
+                        hCell('Phase', colW[6]),
+                        hCell('Requirement source', colW[7]),
+                        hCell('Comments and Requirement Source Links', colW[8]),
+                        hCell('', colW[9]),
+                      ],
+                    ),
+                  ),
+                  // Data rows (draggable) or empty state
+                  Expanded(
+                    child: _rows.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No requirements yet. Add one or import from CSV.',
+                              style: TextStyle(color: Color(0xFF9CA3AF)),
+                            ),
+                          )
+                        : Scrollbar(
+                            controller: _requirementsVerticalController,
+                            thumbVisibility: true,
+                            child: ReorderableListView(
+                              buildDefaultDragHandles: false,
+                              onReorder: _onReorder,
+                              children: List.generate(_rows.length, (i) => buildDataRow(i)),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
     );
   }
 

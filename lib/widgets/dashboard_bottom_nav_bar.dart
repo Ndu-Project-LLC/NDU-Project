@@ -34,7 +34,8 @@ class DashboardBottomNavBar extends StatelessWidget {
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const ProgramDashboardMobileScreen()),
+          MaterialPageRoute(
+              builder: (_) => const ProgramDashboardMobileScreen()),
         );
         break;
       case 2:
@@ -98,7 +99,7 @@ class DashboardBottomNavBar extends StatelessWidget {
           decoration: isActive
               ? BoxDecoration(
                   color: _Tokens.primaryContainer.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.circular(12),
                 )
               : null,
           child: Column(

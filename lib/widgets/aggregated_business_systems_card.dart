@@ -44,8 +44,8 @@ class _AggregatedBusinessSystemsCardState
       _error = null;
     });
     try {
-      final integrations = await BusinessSystemIntegrationService.loadAll(
-          widget.programId);
+      final integrations =
+          await BusinessSystemIntegrationService.loadAll(widget.programId);
       final snapshots = await BusinessSystemIntegrationService.loadSnapshots(
           widget.programId);
       if (mounted) {
@@ -67,7 +67,7 @@ class _AggregatedBusinessSystemsCardState
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
@@ -145,13 +145,11 @@ class _AggregatedBusinessSystemsCardState
   Widget _emptyState() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: const Color(0xFFE2E8F0),
-            style: BorderStyle.solid,
-            width: 1),
+            color: Color(0xFFE2E8F0), style: BorderStyle.solid, width: 1),
       ),
       child: Column(
         children: [
@@ -185,9 +183,8 @@ class _AggregatedBusinessSystemsCardState
               backgroundColor: const Color(0xFFFFD700),
               foregroundColor: const Color(0xFF0F172A),
               elevation: 0,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
             ),
           ),
@@ -211,16 +208,18 @@ class _AggregatedBusinessSystemsCardState
         return Chip(
           label: Text('${c.label} · $count',
               style: TextStyle(
-                  color: has ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                  color:
+                      has ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
                   fontSize: 12,
                   fontWeight: FontWeight.w600)),
-          backgroundColor:
-              has ? const Color(0xFFFFD700).withValues(alpha: 0.12) : const Color(0xFFF1F5F9),
+          backgroundColor: has
+              ? const Color(0xFFFFD700).withValues(alpha: 0.12)
+              : const Color(0xFFF1F5F9),
           side: BorderSide(
               color: has
                   ? const Color(0xFFFFD700).withValues(alpha: 0.4)
                   : const Color(0xFFE2E8F0)),
-          shape: RoundedRectangleBorder(
+          shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -250,12 +249,12 @@ class _AggregatedBusinessSystemsCardState
       crossAxisSpacing: 10,
       childAspectRatio: 2.6,
       children: [
-        _statTile('Customers', '$totalCustomers',
-            Icons.people_outline, const Color(0xFF3B82F6)),
-        _statTile('Open pipeline', _money(totalPipeline),
-            Icons.trending_up, const Color(0xFF10B981)),
-        _statTile('Outstanding', _money(totalOutstanding),
-            Icons.receipt_long, const Color(0xFFF59E0B)),
+        _statTile('Customers', '$totalCustomers', Icons.people_outline,
+            const Color(0xFF3B82F6)),
+        _statTile('Open pipeline', _money(totalPipeline), Icons.trending_up,
+            const Color(0xFF10B981)),
+        _statTile('Outstanding', _money(totalOutstanding), Icons.receipt_long,
+            const Color(0xFFF59E0B)),
         _statTile('Open orders', '$totalOrders · ${_money(totalOrderValue)}',
             Icons.shopping_cart_outlined, const Color(0xFF8B5CF6)),
       ],
@@ -267,7 +266,7 @@ class _AggregatedBusinessSystemsCardState
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: const BorderRadius.circular(10),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
@@ -320,7 +319,7 @@ class _AggregatedBusinessSystemsCardState
             height: 24,
             decoration: BoxDecoration(
               color: Color(i.provider.brandColorArgb),
-              borderRadius: BorderRadius.circular(5),
+              borderRadius: const BorderRadius.circular(5),
             ),
             child: Center(
               child: Text(
@@ -342,8 +341,8 @@ class _AggregatedBusinessSystemsCardState
                         fontSize: 13, fontWeight: FontWeight.w600)),
                 Text(
                   '${i.provider.category.label} · last sync ${_formatSyncTime(i.lastSyncAt)}',
-                  style: const TextStyle(
-                      fontSize: 11, color: Color(0xFF94A3B8)),
+                  style:
+                      const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
                 ),
               ],
             ),

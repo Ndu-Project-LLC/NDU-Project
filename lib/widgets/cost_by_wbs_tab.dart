@@ -103,28 +103,36 @@ class CostByWBSTab extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
               '${allLines.length} cost lines · $currencySymbol${_fmt(totalAll)} total · ${linkedPct.toStringAsFixed(0)}% linked to WBS',
-              style:
-                  const TextStyle(color: _textSecondary, fontSize: 13)),
+              style: const TextStyle(color: _textSecondary, fontSize: 13)),
           const SizedBox(height: 24),
 
           // KPI Cards
           Row(
             children: [
               Expanded(
-                  child: _costKpi('Total Cost',
-                      '$currencySymbol${_fmt(totalAll)}', Icons.account_balance_wallet_outlined, const Color(0xFF6366F1))),
+                  child: _costKpi(
+                      'Total Cost',
+                      '$currencySymbol${_fmt(totalAll)}',
+                      Icons.account_balance_wallet_outlined,
+                      const Color(0xFF6366F1))),
               const SizedBox(width: 12),
               Expanded(
-                  child: _costKpi('Linked',
-                      '$currencySymbol${_fmt(totalLinked)}', Icons.link_outlined, const Color(0xFF10B981))),
+                  child: _costKpi(
+                      'Linked',
+                      '$currencySymbol${_fmt(totalLinked)}',
+                      Icons.link_outlined,
+                      const Color(0xFF10B981))),
               const SizedBox(width: 12),
               Expanded(
-                  child: _costKpi('Unlinked',
-                      '$currencySymbol${_fmt(unlinkedTotal)}', Icons.link_off_outlined, const Color(0xFFEF4444))),
+                  child: _costKpi(
+                      'Unlinked',
+                      '$currencySymbol${_fmt(unlinkedTotal)}',
+                      Icons.link_off_outlined,
+                      const Color(0xFFEF4444))),
               const SizedBox(width: 12),
               Expanded(
-                  child: _costKpi('L1 Deliverables',
-                      '${l1Nodes.length}', Icons.layers_outlined, const Color(0xFF8B5CF6))),
+                  child: _costKpi('L1 Deliverables', '${l1Nodes.length}',
+                      Icons.layers_outlined, const Color(0xFF8B5CF6))),
             ],
           ),
           const SizedBox(height: 24),
@@ -137,15 +145,14 @@ class CostByWBSTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.circular(8),
                     child: SizedBox(
                       height: 36,
                       child: Row(
                         children: [
                           if (totalLinked > 0)
                             Expanded(
-                              flex:
-                                  (totalLinked / totalAll * 1000).round(),
+                              flex: (totalLinked / totalAll * 1000).round(),
                               child: Container(
                                 color: const Color(0xFF10B981),
                                 child: Center(
@@ -154,14 +161,12 @@ class CostByWBSTab extends StatelessWidget {
                                         style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 10,
-                                            fontWeight:
-                                                FontWeight.bold))),
+                                            fontWeight: FontWeight.bold))),
                               ),
                             ),
                           if (unlinkedTotal > 0)
                             Expanded(
-                              flex: (unlinkedTotal / totalAll * 1000)
-                                  .round(),
+                              flex: (unlinkedTotal / totalAll * 1000).round(),
                               child: Container(
                                 color: const Color(0xFFEF4444),
                                 child: const Center(
@@ -169,8 +174,7 @@ class CostByWBSTab extends StatelessWidget {
                                         style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 10,
-                                            fontWeight:
-                                                FontWeight.bold))),
+                                            fontWeight: FontWeight.bold))),
                               ),
                             ),
                         ],
@@ -180,12 +184,10 @@ class CostByWBSTab extends StatelessWidget {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      _legendDot('Linked to WBS',
-                          const Color(0xFF10B981),
+                      _legendDot('Linked to WBS', const Color(0xFF10B981),
                           '$currencySymbol${_fmt(totalLinked)}'),
                       const SizedBox(width: 24),
-                      _legendDot('Unlinked',
-                          const Color(0xFFEF4444),
+                      _legendDot('Unlinked', const Color(0xFFEF4444),
                           '$currencySymbol${_fmt(unlinkedTotal)}'),
                     ],
                   ),
@@ -197,25 +199,19 @@ class CostByWBSTab extends StatelessWidget {
 
           // Level 1 Deliverable Costs
           _sectionCard(
-            title:
-                'Level 1 — ${wbs.framework.level1Label} Costs',
+            title: 'Level 1 — ${wbs.framework.level1Label} Costs',
             child: l1Nodes.isEmpty
                 ? const Text(
                     'No Level 1 deliverables yet. Add them in the Builder tab.',
-                    style: TextStyle(
-                        color: _textSecondary, fontSize: 13))
+                    style: TextStyle(color: _textSecondary, fontSize: 13))
                 : Column(
                     children: l1Nodes.map((node) {
-                      final cost =
-                          (l1Costs[node.id] ?? 0).toDouble();
+                      final cost = (l1Costs[node.id] ?? 0).toDouble();
                       final lines = l1Lines[node.id] ?? [];
-                      final pct = totalAll > 0
-                          ? (cost / totalAll * 100)
-                          : 0.0;
-                      final maxCost = l1Costs.values.fold(
-                          0.0, (a, b) => a > b ? a : b);
-                      final barPct =
-                          maxCost > 0 ? (cost / maxCost) : 0.0;
+                      final pct = totalAll > 0 ? (cost / totalAll * 100) : 0.0;
+                      final maxCost =
+                          l1Costs.values.fold(0.0, (a, b) => a > b ? a : b);
+                      final barPct = maxCost > 0 ? (cost / maxCost) : 0.0;
                       return _wbsCostRow(
                         code: node.code,
                         name: node.name,
@@ -227,8 +223,7 @@ class CostByWBSTab extends StatelessWidget {
                         barPct: barPct,
                         color: const Color(0xFF6366F1),
                         children: node.children.map((l2) {
-                          final l2Cost =
-                              (l2Costs[l2.id] ?? 0).toDouble();
+                          final l2Cost = (l2Costs[l2.id] ?? 0).toDouble();
                           final l2LinesList = l2Lines[l2.id] ?? [];
                           return _wbsCostRow(
                             code: l2.code,
@@ -237,9 +232,7 @@ class CostByWBSTab extends StatelessWidget {
                             cost: l2Cost,
                             currencySymbol: currencySymbol,
                             lineCount: l2LinesList.length,
-                            pct: totalAll > 0
-                                ? (l2Cost / totalAll * 100)
-                                : 0.0,
+                            pct: totalAll > 0 ? (l2Cost / totalAll * 100) : 0.0,
                             barPct: cost > 0 ? (l2Cost / cost) : 0,
                             color: const Color(0xFF8B5CF6),
                             isChild: true,
@@ -260,31 +253,28 @@ class CostByWBSTab extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                        color: const Color(0xFFFEF3C7),
+                    decoration: const BoxDecoration(
+                        color: Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(8)),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded,
+                        const Icon(Icons.warning_amber_rounded,
                             color: Color(0xFFD97706), size: 18),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                               'These cost lines have no WBS reference. Link them in the Cost Estimate Builder for full traceability.',
-                              style: TextStyle(
-                                  color: Color(0xFF92400E),
-                                  fontSize: 12)),
+                              style: const TextStyle(
+                                  color: Color(0xFF92400E), fontSize: 12)),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 12),
                   ...unlinkedLines.map((line) => Padding(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Expanded(
                                 child: Text(
@@ -292,15 +282,12 @@ class CostByWBSTab extends StatelessWidget {
                                         ? line.description
                                         : line.subCategory,
                                     style: const TextStyle(
-                                        color: _textPrimary,
-                                        fontSize: 12),
-                                    overflow:
-                                        TextOverflow.ellipsis)),
+                                        color: _textPrimary, fontSize: 12),
+                                    overflow: TextOverflow.ellipsis)),
                             const SizedBox(width: 8),
-                            Text(line.category.label,
+                            Text('${line.category.label}',
                                 style: const TextStyle(
-                                    color: _textSecondary,
-                                    fontSize: 10)),
+                                    color: _textSecondary, fontSize: 10)),
                             const SizedBox(width: 8),
                             Text(
                                 '$currencySymbol${line.total.toStringAsFixed(0)}',
@@ -328,19 +315,15 @@ class CostByWBSTab extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(colors: [
-                      LightModeColors.accent
-                          .withValues(alpha: 0.12),
-                      LightModeColors.accent
-                          .withValues(alpha: 0.04)
+                      LightModeColors.accent.withValues(alpha: 0.12),
+                      LightModeColors.accent.withValues(alpha: 0.04)
                     ]),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.circular(12),
                     border: Border.all(
-                        color: LightModeColors.accent
-                            .withValues(alpha: 0.3)),
+                        color: LightModeColors.accent.withValues(alpha: 0.3)),
                   ),
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [
                         Container(
@@ -349,34 +332,27 @@ class CostByWBSTab extends StatelessWidget {
                             decoration: BoxDecoration(
                                 color: LightModeColors.accent
                                     .withValues(alpha: 0.15),
-                                borderRadius:
-                                    BorderRadius.circular(6)),
+                                borderRadius: BorderRadius.circular(6)),
                             child: const Icon(Icons.layers,
-                                color: LightModeColors.accent,
-                                size: 16)),
+                                color: LightModeColors.accent, size: 16)),
                         const SizedBox(width: 8),
                         const Text('WBS-Linked Total',
                             style: TextStyle(
                                 color: _textPrimary,
                                 fontSize: 13,
-                                fontWeight:
-                                    FontWeight.w700)),
+                                fontWeight: FontWeight.w700)),
                       ]),
                       const SizedBox(height: 10),
-                      Text(
-                          '$currencySymbol${_fmt(totalLinked)}',
+                      Text('$currencySymbol${_fmt(totalLinked)}',
                           style: const TextStyle(
                               color: Color(0xFFD97706),
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              fontFeatures: [
-                                FontFeature.tabularFigures()
-                              ])),
+                              fontFeatures: [FontFeature.tabularFigures()])),
                       const SizedBox(height: 4),
                       Text('${linkedPct.toStringAsFixed(1)}% of total',
                           style: const TextStyle(
-                              color: _textSecondary,
-                              fontSize: 11)),
+                              color: _textSecondary, fontSize: 11)),
                     ],
                   ),
                 ),
@@ -385,13 +361,11 @@ class CostByWBSTab extends StatelessWidget {
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                      color: const Color(0xFF1A1D1F),
-                      borderRadius:
-                          BorderRadius.circular(12)),
+                  decoration: const BoxDecoration(
+                      color: Color(0xFF1A1D1F),
+                      borderRadius: BorderRadius.circular(12)),
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('GRAND TOTAL',
                           style: TextStyle(
@@ -400,20 +374,18 @@ class CostByWBSTab extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5)),
                       const SizedBox(height: 10),
-                      Text(
-                          '$currencySymbol${_fmt(totalAll)}',
-                          style: const TextStyle(
+                      Text('$currencySymbol${_fmt(totalAll)}',
+                          style: TextStyle(
                               color: LightModeColors.accent,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              fontFeatures: [
+                              fontFeatures: const [
                                 FontFeature.tabularFigures()
                               ])),
                       const SizedBox(height: 4),
                       Text('${allLines.length} cost lines',
                           style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 11)),
+                              color: Colors.white54, fontSize: 11)),
                     ],
                   ),
                 ),
@@ -426,13 +398,12 @@ class CostByWBSTab extends StatelessWidget {
     );
   }
 
-  Widget _costKpi(
-      String label, String value, IconData icon, Color color) {
+  Widget _costKpi(String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Column(
@@ -458,23 +429,20 @@ class CostByWBSTab extends StatelessWidget {
                     color: color,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    fontFeatures: const [
-                      FontFeature.tabularFigures()
-                    ])),
+                    fontFeatures: const [FontFeature.tabularFigures()])),
           ),
         ],
       ),
     );
   }
 
-  Widget _sectionCard(
-      {required String title, required Widget child}) {
+  Widget _sectionCard({required String title, required Widget child}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: _cardBg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.circular(12),
         border: Border.all(color: _border),
         boxShadow: [
           BoxShadow(
@@ -498,20 +466,17 @@ class CostByWBSTab extends StatelessWidget {
     );
   }
 
-  Widget _legendDot(
-      String label, Color color, String value) {
+  Widget _legendDot(String label, Color color, String value) {
     return Row(
       children: [
         Container(
             width: 10,
             height: 10,
             decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2))),
+                color: color, borderRadius: const BorderRadius.circular(2))),
         const SizedBox(width: 6),
         Text(label,
-            style: const TextStyle(
-                color: _textSecondary, fontSize: 11)),
+            style: const TextStyle(color: _textSecondary, fontSize: 11)),
         const SizedBox(width: 4),
         Text(value,
             style: const TextStyle(
@@ -542,12 +507,10 @@ class CostByWBSTab extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 6, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.1),
-                    borderRadius:
-                        BorderRadius.circular(4)),
+                    borderRadius: const BorderRadius.circular(4)),
                 child: Text(code,
                     style: TextStyle(
                         color: color,
@@ -558,24 +521,19 @@ class CostByWBSTab extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(name,
                         style: TextStyle(
                             color: _textPrimary,
                             fontSize: isChild ? 12 : 13,
-                            fontWeight:
-                                FontWeight.w600),
-                        overflow:
-                            TextOverflow.ellipsis),
+                            fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis),
                     if (description.isNotEmpty)
                       Text(description,
                           style: const TextStyle(
-                              color: _textSecondary,
-                              fontSize: 10),
-                          overflow:
-                              TextOverflow.ellipsis,
+                              color: _textSecondary, fontSize: 10),
+                          overflow: TextOverflow.ellipsis,
                           maxLines: 1),
                   ],
                 ),
@@ -583,12 +541,11 @@ class CostByWBSTab extends StatelessWidget {
               const SizedBox(width: 8),
               if (lineCount > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6),
-                      borderRadius:
-                          BorderRadius.circular(4)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: const BoxDecoration(
+                      color: Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(4)),
                   child: Text('$lineCount',
                       style: const TextStyle(
                           color: _textSecondary,
@@ -596,47 +553,38 @@ class CostByWBSTab extends StatelessWidget {
                           fontWeight: FontWeight.w600)),
                 ),
               const SizedBox(width: 8),
-              Text(
-                  '$currencySymbol${_fmt(cost)}',
+              Text('$currencySymbol${_fmt(cost)}',
                   style: TextStyle(
                       color: _textPrimary,
                       fontSize: isChild ? 12 : 13,
                       fontWeight: FontWeight.w600,
-                      fontFeatures: const [
-                        FontFeature.tabularFigures()
-                      ])),
+                      fontFeatures: const [FontFeature.tabularFigures()])),
               const SizedBox(width: 8),
               SizedBox(
                 width: 40,
-                child: Text(
-                    '${pct.toStringAsFixed(1)}%',
+                child: Text('${pct.toStringAsFixed(1)}%',
                     style: const TextStyle(
                         color: _textSecondary,
                         fontSize: 10,
-                        fontWeight:
-                            FontWeight.w500),
+                        fontWeight: FontWeight.w500),
                     textAlign: TextAlign.right),
               ),
             ],
           ),
           const SizedBox(height: 4),
           ClipRRect(
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: const BorderRadius.circular(3),
             child: LinearProgressIndicator(
               value: barPct.clamp(0.0, 1.0),
               minHeight: isChild ? 3 : 5,
-              backgroundColor:
-                  const Color(0xFFF3F4F6),
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(color),
+              backgroundColor: const Color(0xFFF3F4F6),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
           if (children.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(
-                  left: 24, top: 4),
-              child:
-                  Column(children: children),
+              padding: const EdgeInsets.only(left: 24, top: 4),
+              child: Column(children: children),
             ),
         ],
       ),
@@ -650,7 +598,6 @@ class CostByWBSTab extends StatelessWidget {
     if (value >= 1000) {
       return '${(value / 1000).toStringAsFixed(value % 1000 == 0 ? 0 : 1)}K';
     }
-    return value.toStringAsFixed(
-        value == value.roundToDouble() ? 0 : 2);
+    return value.toStringAsFixed(value == value.roundToDouble() ? 0 : 2);
   }
 }

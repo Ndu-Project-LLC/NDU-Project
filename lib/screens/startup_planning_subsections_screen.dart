@@ -10,6 +10,8 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/download_helper.dart' as download_helper;
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -74,11 +76,17 @@ class _StartUpPlanningDetailScreenState
  bool _legacyImported = false;
  DateTime? _lastSavedAt;
  _PlanningPageState _state = _PlanningPageState.empty();
+ bool _autoPopulated = false;
+ bool _isAutoPopulating = false;
+ String? _carriedContext;
 
  @override
  void initState() {
  super.initState();
- WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+ WidgetsBinding.instance.addPostFrameCallback((_) {
+ _load();
+ _autoPopulateIfNeeded();
+ });
  }
 
  @override
@@ -131,6 +139,27 @@ class _StartUpPlanningDetailScreenState
 
  if (importedLegacy) {
  await _save(showToast: false);
+ }
+ }
+
+ Future<void> _autoPopulateIfNeeded() async {
+ if (_autoPopulated || _isAutoPopulating) return;
+ _autoPopulated = true;
+ _isAutoPopulating = true;
+ if (mounted) setState(() {});
+
+ try {
+ final checkpoint = widget.config.checkpoint;
+ // Pull real carried context for the banner. The deterministic seeding
+ // is already handled by the _PlanningPageState.forConfig() factory
+ // (which uses _OperationsData.seed, _HypercareData.seed, etc.), so we
+ // don't need to duplicate that logic here.
+ final carried = await buildAccumulatedContext(context, checkpoint);
+ if (mounted) setState(() => _carriedContext = carried);
+ } catch (e) {
+ debugPrint('StartUpPlanning[$widget.config.checkpoint] carried-context error: $e');
+ } finally {
+ if (mounted) setState(() => _isAutoPopulating = false);
  }
  }
 
@@ -478,6 +507,16 @@ class _StartUpPlanningDetailScreenState
  widget.config.checkpoint,
  ), onExportPdf: _exportPdf),
  const SizedBox(height: 12),
+ if (_isAutoPopulating)
+ const AutoPopulatingIndicator(),
+ if (_carriedContext != null && _carriedContext!.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(bottom: 12),
+ child: CarriedContextBanner(
+ checkpoint: widget.config.checkpoint,
+ contextText: _carriedContext!,
+ ),
+ ),
  Text(
  widget.config.subtitle,
  style: const TextStyle(

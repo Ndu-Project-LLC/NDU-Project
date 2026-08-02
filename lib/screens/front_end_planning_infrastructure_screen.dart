@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 class FrontEndPlanningInfrastructureScreen extends StatefulWidget {
  const FrontEndPlanningInfrastructureScreen({super.key});
 
@@ -558,7 +559,7 @@ class _InfrastructureTable extends StatelessWidget {
  children: [
  td(const SizedBox.shrink()),
  td(
- const Text(
+ const WrappedText(
  'No structured infrastructure items added yet.',
  style: TextStyle(
  fontSize: 14,
@@ -581,20 +582,20 @@ class _InfrastructureTable extends StatelessWidget {
  rows.add(
  TableRow(
  children: [
- td(Text('${index + 1}', style: cellStyle)),
- td(Text(item.name.trim(), style: cellStyle)),
- td(Text(
+ td(WrappedText('${index + 1}', style: cellStyle)),
+ td(WrappedText(item.name.trim(), style: cellStyle)),
+ td(WrappedText(
  item.summary.trim().isEmpty ? '-' : item.summary.trim(),
  style: cellStyle,
  )),
- td(Text(
+ td(WrappedText(
  item.details.trim().isEmpty ? '-' : item.details.trim(),
  style: cellStyle,
  )),
- td(Text(_formatCurrency(item.potentialCost), style: cellStyle)),
- td(Text(item.owner.trim().isEmpty ? '-' : item.owner.trim(),
+ td(WrappedText(_formatCurrency(item.potentialCost), style: cellStyle)),
+ td(WrappedText(item.owner.trim().isEmpty ? '-' : item.owner.trim(),
  style: cellStyle)),
- td(Text(item.status.trim(), style: cellStyle)),
+ td(WrappedText(item.status.trim(), style: cellStyle)),
  td(
  Row(
  mainAxisSize: MainAxisSize.min,
@@ -616,7 +617,9 @@ class _InfrastructureTable extends StatelessWidget {
  }
  }
 
- return Container(
+ return FullScreenTableWrapper(
+ title: 'Infrastructure Items',
+ child: Container(
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
@@ -658,6 +661,51 @@ class _InfrastructureTable extends StatelessWidget {
  ),
  );
  },
+ ),
+ ),
+ tableBuilder: (fsContext) => Container(
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(12),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: LayoutBuilder(
+ builder: (context, constraints) {
+ final minTableWidth =
+ constraints.maxWidth > 1440 ? constraints.maxWidth : 1440.0;
+ return Scrollbar(
+ thumbVisibility: true,
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: BoxConstraints(minWidth: minTableWidth),
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(52),
+ 1: FlexColumnWidth(1.6),
+ 2: FlexColumnWidth(1.4),
+ 3: FlexColumnWidth(2.2),
+ 4: FixedColumnWidth(130),
+ 5: FixedColumnWidth(140),
+ 6: FixedColumnWidth(110),
+ 7: FixedColumnWidth(110),
+ },
+ border: TableBorder(
+ horizontalInside: border,
+ verticalInside: border,
+ top: border,
+ bottom: border,
+ left: border,
+ right: border,
+ ),
+ defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+ children: rows,
+ ),
+ ),
+ ),
+ );
+ },
+ ),
  ),
  );
  }

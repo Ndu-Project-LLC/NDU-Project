@@ -52,7 +52,7 @@ class RestrictedAccessScreen extends StatelessWidget {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: const BorderRadius.circular(12),
                           border: Border.all(
                               color: theme.colorScheme.outlineVariant),
                         ),

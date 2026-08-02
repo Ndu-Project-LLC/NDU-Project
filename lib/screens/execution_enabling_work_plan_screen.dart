@@ -15,6 +15,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -162,7 +163,7 @@ class _EnablingWorksPlanSection extends StatelessWidget {
             children: [
               CsvTableImportButton(
                 tableTitle: 'Enabling Works',
-                columns: const [
+                columns: [
                   CsvColumnSpec(
                       key: 'aspect',
                       label: 'Enabling Work Aspect',
@@ -231,7 +232,7 @@ class _EnablingWorksPlanSection extends StatelessWidget {
         ),
         const SizedBox(height: 44),
         if (isMobile)
-          const _MobileEnablingWorksActions()
+          _MobileEnablingWorksActions()
         else
           const _DesktopEnablingWorksActions(),
       ],
@@ -493,118 +494,209 @@ class _EnablingWorksPlanTable extends StatelessWidget {
             height: 1.5,
           );
 
-          Widget buildCell(String text,
-              {bool isHeader = false,
-              TextAlign align = TextAlign.left,
-              TextStyle? style}) {
-            return Container(
-              color: isHeader ? const Color(0xFFF3F4F6) : Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-              child: Text(
-                text,
-                textAlign: align,
-                style: style ?? (isHeader ? headerStyle : cellStyle),
-              ),
-            );
-          }
+ Widget buildCell(String text,
+ {bool isHeader = false,
+ TextAlign align = TextAlign.left,
+ TextStyle? style}) {
+ return Container(
+ color: isHeader ? const Color(0xFFF3F4F6) : Colors.white,
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+ child: WrappedText(
+ text,
+ textAlign: align,
+ style: style ?? (isHeader ? headerStyle : cellStyle),
+ ),
+ );
+ }
 
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Color(0xFFE5E7EB)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Table(
-              columnWidths: const {
-                0: FixedColumnWidth(70),
-                1: FlexColumnWidth(2),
-                2: FlexColumnWidth(2.5),
-                3: FlexColumnWidth(2),
-                4: FlexColumnWidth(2),
-                5: FlexColumnWidth(2),
-                6: FixedColumnWidth(100),
-              },
-              border: const TableBorder(
-                horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
-                verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
-                top: BorderSide(color: Color(0xFFE5E7EB)),
-                bottom: BorderSide(color: Color(0xFFE5E7EB)),
-                left: BorderSide(color: Color(0xFFE5E7EB)),
-                right: BorderSide(color: Color(0xFFE5E7EB)),
-              ),
-              children: [
-                TableRow(
-                  children: [
-                    buildCell('No', isHeader: true, align: TextAlign.center),
-                    buildCell('Enabling work Aspect', isHeader: true),
-                    buildCell('Description', isHeader: true),
-                    buildCell('Duration', isHeader: true),
-                    buildCell('Cost', isHeader: true),
-                    buildCell('Comments', isHeader: true),
-                    buildCell('Actions',
-                        isHeader: true, align: TextAlign.center),
-                  ],
-                ),
-                if (works.isEmpty)
-                  TableRow(
-                    children: [
-                      buildCell('', align: TextAlign.center),
-                      buildCell('No enabling works added yet',
-                          style: const TextStyle(
-                              color: Color(0xFF64748B),
-                              fontStyle: FontStyle.italic)),
-                      buildCell(''),
-                      buildCell(''),
-                      buildCell(''),
-                      buildCell(''),
-                      buildCell(''),
-                    ],
-                  )
-                else
-                  ...works.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final work = entry.value;
-                    return TableRow(
-                      children: [
-                        buildCell('${index + 1}', align: TextAlign.center),
-                        buildCell(work.aspect),
-                        buildCell(work.description),
-                        buildCell(work.duration),
-                        buildCell(work.cost),
-                        buildCell(work.comments),
-                        Container(
-                          color: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 18),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit,
-                                    size: 18, color: Color(0xFF64748B)),
-                                onPressed: () => showEditDialog(context, work),
-                                tooltip: 'Edit',
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete,
-                                    size: 18, color: Color(0xFFEF4444)),
-                                onPressed: () =>
-                                    showDeleteDialog(context, work),
-                                tooltip: 'Delete',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
+ return FullScreenTableWrapper(
+ title: 'Enabling Works Plan',
+ child: Container(
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ clipBehavior: Clip.antiAlias,
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(70),
+ 1: FlexColumnWidth(2),
+ 2: FlexColumnWidth(2.5),
+ 3: FlexColumnWidth(2),
+ 4: FlexColumnWidth(2),
+ 5: FlexColumnWidth(2),
+ 6: FixedColumnWidth(100),
+ },
+ border: const TableBorder(
+ horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ top: BorderSide(color: Color(0xFFE5E7EB)),
+ bottom: BorderSide(color: Color(0xFFE5E7EB)),
+ left: BorderSide(color: Color(0xFFE5E7EB)),
+ right: BorderSide(color: Color(0xFFE5E7EB)),
+ ),
+ children: [
+ TableRow(
+ children: [
+ buildCell('No', isHeader: true, align: TextAlign.center),
+ buildCell('Enabling work Aspect', isHeader: true),
+ buildCell('Description', isHeader: true),
+ buildCell('Duration', isHeader: true),
+ buildCell('Cost', isHeader: true),
+ buildCell('Comments', isHeader: true),
+ buildCell('Actions', isHeader: true, align: TextAlign.center),
+ ],
+ ),
+ if (works.isEmpty)
+ TableRow(
+ children: [
+ buildCell('', align: TextAlign.center),
+ buildCell('No enabling works added yet',
+ style: const TextStyle(
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic)),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ ],
+ )
+ else
+ ...works.asMap().entries.map((entry) {
+ final index = entry.key;
+ final work = entry.value;
+ return TableRow(
+ children: [
+ buildCell('${index + 1}', align: TextAlign.center),
+ buildCell(work.aspect),
+ buildCell(work.description),
+ buildCell(work.duration),
+ buildCell(work.cost),
+ buildCell(work.comments),
+ Container(
+ color: Colors.white,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 18),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit,
+ size: 18, color: Color(0xFF64748B)),
+ onPressed: () => showEditDialog(context, work),
+ tooltip: 'Edit',
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete,
+ size: 18, color: Color(0xFFEF4444)),
+ onPressed: () => showDeleteDialog(context, work),
+ tooltip: 'Delete',
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }),
+ ],
+ ),
+ ),
+ tableBuilder: (fsContext) => Container(
+ decoration: BoxDecoration(
+ borderRadius: BorderRadius.circular(18),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ clipBehavior: Clip.antiAlias,
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(70),
+ 1: FlexColumnWidth(2),
+ 2: FlexColumnWidth(2.5),
+ 3: FlexColumnWidth(2),
+ 4: FlexColumnWidth(2),
+ 5: FlexColumnWidth(2),
+ 6: FixedColumnWidth(100),
+ },
+ border: const TableBorder(
+ horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
+ top: BorderSide(color: Color(0xFFE5E7EB)),
+ bottom: BorderSide(color: Color(0xFFE5E7EB)),
+ left: BorderSide(color: Color(0xFFE5E7EB)),
+ right: BorderSide(color: Color(0xFFE5E7EB)),
+ ),
+ children: [
+ TableRow(
+ children: [
+ buildCell('No', isHeader: true, align: TextAlign.center),
+ buildCell('Enabling work Aspect', isHeader: true),
+ buildCell('Description', isHeader: true),
+ buildCell('Duration', isHeader: true),
+ buildCell('Cost', isHeader: true),
+ buildCell('Comments', isHeader: true),
+ buildCell('Actions', isHeader: true, align: TextAlign.center),
+ ],
+ ),
+ if (works.isEmpty)
+ TableRow(
+ children: [
+ buildCell('', align: TextAlign.center),
+ buildCell('No enabling works added yet',
+ style: const TextStyle(
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic)),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ buildCell(''),
+ ],
+ )
+ else
+ ...works.asMap().entries.map((entry) {
+ final index = entry.key;
+ final work = entry.value;
+ return TableRow(
+ children: [
+ buildCell('${index + 1}', align: TextAlign.center),
+ buildCell(work.aspect),
+ buildCell(work.description),
+ buildCell(work.duration),
+ buildCell(work.cost),
+ buildCell(work.comments),
+ Container(
+ color: Colors.white,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 18),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ icon: const Icon(Icons.edit,
+ size: 18, color: Color(0xFF64748B)),
+ onPressed: () => showEditDialog(context, work),
+ tooltip: 'Edit',
+ ),
+ IconButton(
+ icon: const Icon(Icons.delete,
+ size: 18, color: Color(0xFFEF4444)),
+ onPressed: () => showDeleteDialog(context, work),
+ tooltip: 'Delete',
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }),
+ ],
+ ),
+ ),
+ );
+ },
+ );
+ }
 }
 
 class _DesktopEnablingWorksActions extends StatelessWidget {

@@ -37,12 +37,14 @@ class AcConfidenceScore extends StatelessWidget {
     final color = _scoreColor(score);
     final suggestions = template.improvementSuggestions;
     final requiredCount = template.criteria.where((c) => c.isRequired).length;
-    final filledCount =
-        template.criteria.where((c) => c.description.trim().length >= 10).length;
+    final filledCount = template.criteria
+        .where((c) => c.description.trim().length >= 10)
+        .length;
 
     if (compact) {
       return Tooltip(
-        message: 'AC Confidence: ${score.toStringAsFixed(0)}% — ${_scoreLabel(score)}',
+        message:
+            'AC Confidence: ${score.toStringAsFixed(0)}% — ${_scoreLabel(score)}',
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
@@ -96,7 +98,8 @@ class AcConfidenceScore extends StatelessWidget {
                     ),
                     Text(
                       _scoreLabel(score),
-                      style: TextStyle(fontSize: 13, color: color.withValues(alpha: 0.8)),
+                      style: TextStyle(
+                          fontSize: 13, color: color.withValues(alpha: 0.8)),
                     ),
                   ],
                 ),
@@ -105,7 +108,7 @@ class AcConfidenceScore extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: const BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: score / 100,
               backgroundColor: color.withValues(alpha: 0.12),

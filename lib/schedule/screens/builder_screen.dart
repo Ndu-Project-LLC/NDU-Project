@@ -41,6 +41,8 @@ import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart'
     hide ScheduleActivity;
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 class BuilderScreen extends StatefulWidget {
   const BuilderScreen({super.key});
@@ -1631,11 +1633,12 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
           ),
           const Divider(color: Color(0xFFE4E7EC), height: 1),
           // Data table
-          SingleChildScrollView(
+          FullScreenTableWrapper(
+          title: 'Schedule Builder Activities',
+          child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(const Color(0xFFF9FAFB)),
-              dataRowColor: WidgetStateProperty.all(Colors.transparent),
+            child: buildNduDataTable(context: context, zebra: false, 
+              headingRowColor: const Color(0xFFF9FAFB),
               columnSpacing: 24,
               horizontalMargin: 16,
               columns: const [
@@ -1886,6 +1889,262 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
                 ),
               ],
             ),
+          ),
+          tableBuilder: (fsContext) => SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: buildNduDataTable(context: context, zebra: false, 
+              headingRowColor: const Color(0xFFF9FAFB),
+              columnSpacing: 24,
+              horizontalMargin: 16,
+              columns: const [
+                DataColumn(
+                    label: Text('ID',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Name',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Duration',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Start',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Finish',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Predecessors',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Resources',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(label: SizedBox(width: 32)),
+              ],
+              rows: [
+                // Data rows
+                ..._rows.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final r = entry.value;
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(r.id,
+                          style: const TextStyle(
+                              color: Color(0xFF495057),
+                              fontSize: 11,
+                              fontFamily: appFontFamily,
+                              fontWeight: FontWeight.bold))),
+                      DataCell(Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                                color: Color(r.domainColor),
+                                shape: BoxShape.circle),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(r.name,
+                              style: const TextStyle(
+                                  color: Color(0xFF1A1D1F),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500)),
+                        ],
+                      )),
+                      DataCell(Text(r.duration,
+                          style: const TextStyle(
+                              color: Color(0xFF495057), fontSize: 12))),
+                      DataCell(Text(r.start,
+                          style: const TextStyle(
+                              color: Color(0xFF495057), fontSize: 12))),
+                      DataCell(Text(r.finish,
+                          style: const TextStyle(
+                              color: Color(0xFF495057), fontSize: 12))),
+                      DataCell(Text(r.predecessors,
+                          style: const TextStyle(
+                              color: Color(0xFF495057),
+                              fontSize: 11,
+                              fontFamily: appFontFamily))),
+                      DataCell(Text(r.resources,
+                          style: const TextStyle(
+                              color: Color(0xFF495057), fontSize: 12))),
+                      DataCell(
+                        IconButton(
+                          icon: const Icon(Icons.remove_circle_outline,
+                              size: 16, color: Color(0xFF9CA3AF)),
+                          onPressed: () => _removeRow(i),
+                          tooltip: 'Remove activity',
+                          padding: EdgeInsets.zero,
+                          constraints:
+                              const BoxConstraints(minWidth: 28, minHeight: 28),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+                // ── New-row edit fields ──
+                DataRow(
+                  color: WidgetStateProperty.all(const Color(0xFFFAFFFB)),
+                  cells: [
+                    DataCell(
+                      SizedBox(
+                        width: 40,
+                        child: Text(
+                          _nextId.toString(),
+                          style: const TextStyle(
+                              color: Color(0xFF9CA3AF),
+                              fontSize: 11,
+                              fontFamily: appFontFamily,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 200,
+                        child: VoiceTextField(
+                          controller: _nameCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'New activity name...',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                          onChanged: (_) => setState(() {}),
+                          onSubmitted: (_) => _addRow(),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 80,
+                        child: VoiceTextField(
+                          controller: _durationCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'e.g. 10 d',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 80,
+                        child: VoiceTextField(
+                          controller: _startCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'MM/DD/YY',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 80,
+                        child: VoiceTextField(
+                          controller: _finishCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'MM/DD/YY',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 100,
+                        child: VoiceTextField(
+                          controller: _predecessorsCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'e.g. 6FS',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 130,
+                        child: VoiceTextField(
+                          controller: _resourcesCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'e.g. Crew (4)',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      IconButton(
+                        icon: Icon(
+                          Icons.add_circle_outline,
+                          size: 20,
+                          color: _nameCtrl.text.trim().isNotEmpty
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF9CA3AF),
+                        ),
+                        onPressed:
+                            _nameCtrl.text.trim().isNotEmpty ? _addRow : null,
+                        tooltip: 'Add activity',
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            const BoxConstraints(minWidth: 28, minHeight: 28),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
           ),
           // Footnote
           if (_rows.length <= 7)

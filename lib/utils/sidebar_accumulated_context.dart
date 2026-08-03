@@ -347,9 +347,11 @@ SidebarSeedResult seedIssueManagement(ProjectDataModel data) {
 
   // 2. Risk register items that are typed as "Issue" or have materialized.
   for (final r in data.frontEndPlanning.riskRegisterItems) {
+    final typeLower = r.riskType.toLowerCase();
     final catLower = r.category.toLowerCase();
-    final isIssue = catLower.contains('issue') ||
-        catLower.contains('problem') ||
+    final isIssue = typeLower.contains('issue') ||
+        catLower.contains('issue') ||
+        typeLower.contains('problem') ||
         r.status.toLowerCase().contains('materialized') ||
         r.status.toLowerCase().contains('occurred');
     if (!isIssue) continue;

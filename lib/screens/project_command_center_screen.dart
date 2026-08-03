@@ -820,7 +820,7 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
                 ),
               ),
               const Spacer(),
-              Icon(Icons.donut_chart_outlined, size: 14, color: _muted),
+              const Icon(Icons.donut_small_outlined, size: 14, color: _muted),
             ],
           ),
           const SizedBox(height: 16),

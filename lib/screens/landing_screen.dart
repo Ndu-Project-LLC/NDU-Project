@@ -746,25 +746,27 @@ class _LandingScreenState extends State<LandingScreen>
  return Column(
  crossAxisAlignment:
  isDesktop ? CrossAxisAlignment.start : CrossAxisAlignment.center,
- children: [
- // NSF badge
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
- decoration: BoxDecoration(
- color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
- borderRadius: BorderRadius.circular(24),
- border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
- ),
- child: const Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.verified, color: Color(0xFF60A5FA), size: 16),
- SizedBox(width: 8),
- Text('Built from real-world delivery experience across global enterprises and high-growth organizations',
- style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF93C5FD))),
- ],
- ),
- ),
+ children: [  // NSF badge
+  Container(
+  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+  decoration: BoxDecoration(
+  color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+  borderRadius: BorderRadius.circular(24),
+  border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
+  ),
+  child: Row(
+  mainAxisSize: MainAxisSize.min,
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+  const Icon(Icons.verified, color: Color(0xFF60A5FA), size: 16),
+  const SizedBox(width: 8),
+  const Flexible(
+  child: Text('Built from real-world delivery experience across global enterprises and high-growth organizations',
+  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF93C5FD))),
+  ),
+  ],
+  ),
+  ),
  const SizedBox(height: 10),
  // NSF I-Corps button
  Container(

@@ -42,11 +42,8 @@ class _Tokens {
  static const onSurfaceVariant = Color(0xFF414754);
  static const onSecondaryFixed = Color(0xFF1C1B1B);
  static const outline = Color(0xFF717786);
- static const outlineVariant = Color(0xFFC0C6D6);
-
- // Brand / Accent
- static const tertiaryFixedDim = Color(0xFFFABD00);
- static const error = Color(0xFFBA1A1A);
+ static const outlineVariant = Color(0xFFC0C6D6);  // Brand / Accent
+  static const error = Color(0xFFBA1A1A);
 
  // Spacing
  static const containerMargin = 16.0;
@@ -131,11 +128,11 @@ class _ProjectDashboardMobileShellState
  final screen = NavigationRouteResolver.resolveCheckpointToScreen(
  checkpoint.isEmpty ? 'initiation' : checkpoint,
  context,
- );
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => screen ?? const InitiationPhaseScreen()),
- );
+ );  context.push(
+  NavigationRouteResolver.resolveCheckpointToUrl(
+      checkpoint.isEmpty ? 'initiation' : checkpoint),
+  extra: screen ?? const InitiationPhaseScreen(),
+  );
  } on TimeoutException {
  if (!mounted) return;
  Navigator.of(context, rootNavigator: true).pop();
@@ -155,33 +152,19 @@ class _ProjectDashboardMobileShellState
  }
 
  void _navigateToProgram() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const ProgramDashboardMobileScreen()),
- );
+ context.push('/program-dashboard-mobile');
  }
 
  void _navigateToRegularProjects() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const RegularProjectDashboardScreen()),
- );
+ context.push('/regular-project-dashboard');
  }
 
  void _navigateToProjects() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const ProjectCommandCenterScreen()),
- );
+ context.push('/project-command-center');
  }
 
  void _navigateToPortfolio() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
- );
+ context.push('/portfolio-dashboard');
  }
 
  Future<void> _handleLogout() async {
@@ -612,28 +595,41 @@ class _ProjectDashboardMobileShellState
  // Placeholder for notification action
  },
  ),
- const SizedBox(width: 4),
- // Right: Yellow chat "C" button
- GestureDetector(
- onTap: () => KazAiChatBubble.openChat(context),
- child: Container(
- width: 32,
- height: 32,
- decoration: const BoxDecoration(
- color: _Tokens.tertiaryFixedDim,
- shape: BoxShape.circle,
- ),
- alignment: Alignment.center,
- child: const Text(
- 'C',
- style: TextStyle(
- fontSize: 15,
- fontWeight: FontWeight.w800,
- color: Colors.white,
- ),
- ),
- ),
- ),
+ const SizedBox(width: 4),            // Right: KAZ AI copilot pill
+            GestureDetector(
+              onTap: () => KazAiChatBubble.openChat(context),
+              child: Container(
+                height: 32,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFFFC812), Color(0xFFFF9800)],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.6)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome_rounded,
+                        size: 13, color: Color(0xFF1C1C1C)),
+                    SizedBox(width: 4),
+                    Text(
+                      'KAZ AI',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.2,
+                        color: Color(0xFF1C1C1C),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
  ],
  ),
  ),
@@ -679,7 +675,7 @@ class _ProjectDashboardMobileShellState
   style: TextStyle(
   fontSize: 13,
   fontWeight: FontWeight.w700,
-  color: _palette.primary,
+  color: _palette.primaryDeep,
   ),
  ),
  ],
@@ -792,15 +788,15 @@ class _ProjectDashboardMobileShellState
  label: 'Regular Projects',
  value: user == null
  ? 'Sign in to view'
- : basicCount.toString(),  // 'Regular Projects' keeps its teal identity on both plans so it
+ : basicCount.toString(),  // 'Regular Projects' keeps its gold identity on both plans so it
   // stays visually distinct from the standard 'Projects' card.
   icon: Icons.folder_special,
   iconBg: _palette.isBasicPlan
-      ? const Color(0xFFCCFBF1)
-      : const Color(0xFFF0FDFA),
+      ? const Color(0xFFFFF4CC)
+      : const Color(0xFFFEF3C7),
   iconColor: _palette.isBasicPlan
-      ? const Color(0xFF0D9488)
-      : const Color(0xFF0F766E),
+      ? const Color(0xFFD97706)
+      : const Color(0xFFB45309),
   filled: true,
   onTap: _navigateToRegularProjects,
  ),
@@ -875,12 +871,12 @@ class _ProjectDashboardMobileShellState
  ),
  TextButton(
  onPressed: () {},  style: TextButton.styleFrom(
-  foregroundColor: _palette.primary,
+  foregroundColor: _palette.primaryDeep,
   padding: EdgeInsets.zero,
- minimumSize: Size.zero,
- tapTargetSize:
- MaterialTapTargetSize
- .shrinkWrap,
+  minimumSize: Size.zero,
+  tapTargetSize:
+  MaterialTapTargetSize
+  .shrinkWrap,
  ),  child: const Text('See All',
   style: TextStyle(
   fontWeight: FontWeight.w600,
@@ -1123,15 +1119,16 @@ class _ProjectDashboardMobileShellState
  Positioned(
  right: 24,
  bottom: 88,  child: FloatingActionButton(
-  onPressed: widget.onAddProject,
-  backgroundColor: _palette.primary,
- elevation: 6,
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(16),
- ),
- child: const Icon(Icons.add,
- color: Colors.white, size: 28),
- ),
+    onPressed: widget.onAddProject,
+    backgroundColor: _palette.primary,
+    foregroundColor: const Color(0xFF1C1C1C),
+    elevation: 6,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: const Icon(Icons.add,
+        color: Color(0xFF1C1C1C), size: 28),
+  ),
  ),
 
  // ── Bottom Navigation Bar ────────────────────────────
@@ -1241,18 +1238,17 @@ class _PremiumUserGreeting extends StatelessWidget {
  decoration: BoxDecoration(
  gradient: LinearGradient(
  begin: Alignment.topLeft,
- end: Alignment.bottomRight,
- colors: isBasicPlan
- ? const [
- Color(0xFF14B8A6),
- Color(0xFF2DD4BF),
- Color(0xFF0F766E),
- ]
- : const [
- Color(0xFF3B82F6),
- Color(0xFF60A5FA),
- Color(0xFF1D4ED8),
- ],
+ end: Alignment.bottomRight,                  colors: isBasicPlan
+                      ? const [
+                          Color(0xFFFFC812),
+                          Color(0xFFFABD00),
+                          Color(0xFFF59E0B),
+                        ]
+                      : const [
+                          Color(0xFFF4B400),
+                          Color(0xFFE8A000),
+                          Color(0xFFD97706),
+                        ],
  ),
  borderRadius: BorderRadius.circular(14),
  boxShadow: [

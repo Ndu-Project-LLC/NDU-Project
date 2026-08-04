@@ -7,6 +7,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// TEAM STATUS CHECK
@@ -20,9 +21,7 @@ class TeamStatusCheckScreen extends StatefulWidget {
   const TeamStatusCheckScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const TeamStatusCheckScreen()),
-    );
+    context.push('/team-status-check');
   }
 
   @override

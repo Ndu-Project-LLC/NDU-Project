@@ -22,10 +22,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 class ToolsIntegrationScreen extends StatefulWidget {
  const ToolsIntegrationScreen({super.key});
 
- static void open(BuildContext context) => Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const ToolsIntegrationScreen()),
- );
+ static void open(BuildContext context) => context.push('/tools-integration');
 
  @override
  State<ToolsIntegrationScreen> createState() => _ToolsIntegrationScreenState();

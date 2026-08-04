@@ -9,10 +9,11 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:go_router/go_router.dart';
 class AiRecommendationsScreen extends StatefulWidget {
  const AiRecommendationsScreen({super.key});
  static void open(BuildContext context) =>
- Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AiRecommendationsScreen()));
+ context.push('/ai-recommendations');
 
  @override
  State<AiRecommendationsScreen> createState() => _AiRecommendationsScreenState();

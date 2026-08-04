@@ -31,6 +31,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -40,9 +41,7 @@ class AgileProjectBaselineScreen extends StatefulWidget {
  const AgileProjectBaselineScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const AgileProjectBaselineScreen()),
- );
+ context.push('/agile-project-baseline');
  }
 
  @override

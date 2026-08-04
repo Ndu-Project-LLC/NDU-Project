@@ -126,10 +126,7 @@ class _LandingScreenState extends State<LandingScreen>
  }
 
  void _handleStartProject() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PricingScreen()),
- );
+ context.push('/pricing');
  }
 
  void _showComingSoonDialog() {
@@ -382,10 +379,7 @@ class _LandingScreenState extends State<LandingScreen>
  Widget buildSignInButton({bool fullWidth = false}) {
  final button = TextButton(
  onPressed: () {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const SignInScreen()),
- );
+ context.push('/sign-in');
  },
  style: TextButton.styleFrom(
  foregroundColor: Colors.white,
@@ -1064,39 +1058,39 @@ class _LandingScreenState extends State<LandingScreen>
  _buildDiagramNode('Launch', Icons.rocket_launch_rounded, const Color(0xFF10B981)),
  ],
  ),
- const SizedBox(height: 24),
- // Bottom row: Continuous Delivery Loop + Unified platform
- Row(
- mainAxisAlignment: MainAxisAlignment.center,
- children: [
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
- decoration: BoxDecoration(
- borderRadius: BorderRadius.circular(12),
- color: Colors.white.withValues(alpha: 0.06),
- border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
- ),
- child: const Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.sync_rounded, color: Color(0xFF10B981), size: 16),
- SizedBox(width: 8),
- Text('Continuous Delivery Loop', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
- ],
- ),
- ),
- const SizedBox(width: 12),
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
- decoration: BoxDecoration(
- borderRadius: BorderRadius.circular(12),
- color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
- border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.25)),
- ),
- child: Text('Unified platform', style: TextStyle(color: const Color(0xFF93C5FD).withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13)),
- ),
- ],
- ),
+ const SizedBox(height: 24),  // Bottom row: Continuous Delivery Loop + Unified platform
+  Wrap(
+  alignment: WrapAlignment.center,
+  spacing: 12,
+  runSpacing: 8,
+  children: [
+  Container(
+  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+  decoration: BoxDecoration(
+  borderRadius: BorderRadius.circular(12),
+  color: Colors.white.withValues(alpha: 0.06),
+  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+  ),
+  child: const Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+  Icon(Icons.sync_rounded, color: Color(0xFF10B981), size: 16),
+  SizedBox(width: 8),
+  Text('Continuous Delivery Loop', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+  ],
+  ),
+  ),
+  Container(
+  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+  decoration: BoxDecoration(
+  borderRadius: BorderRadius.circular(12),
+  color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+  border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.25)),
+  ),
+  child: Text('Unified platform', style: TextStyle(color: const Color(0xFF93C5FD).withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13)),
+  ),
+  ],
+  ),
  const SizedBox(height: 20),
  // AI + Analytics + Human Decision Making
  Container(

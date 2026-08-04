@@ -29,14 +29,13 @@ import 'package:ndu_project/widgets/work_package_detail.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ScheduleScreen()),
-    );
+    context.push('/schedule-screen');
   }
 
   @override

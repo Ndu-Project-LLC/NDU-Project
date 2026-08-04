@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 
 Future<void> _exportInfrastructurePlanPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -36,10 +37,7 @@ class ExecutionPlanInfrastructurePlanScreen extends StatelessWidget {
   const ExecutionPlanInfrastructurePlanScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => const ExecutionPlanInfrastructurePlanScreen()),
-    );
+    context.push('/execution-plan-infrastructure-plan');
   }
 
   @override

@@ -31,13 +31,13 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
+import 'package:go_router/go_router.dart';
 
 class CostEstimateScreen extends StatefulWidget {
   const CostEstimateScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => const CostEstimateScreen()));
+    context.push('/cost-estimate-screen');
   }
 
   @override

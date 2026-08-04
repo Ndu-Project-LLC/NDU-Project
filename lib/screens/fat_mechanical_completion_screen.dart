@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:go_router/go_router.dart';
 
 /// Section 3 — FAT, Mechanical Completion & Commission Solution
 ///
@@ -24,9 +25,7 @@ class FatMechanicalCompletionScreen extends StatefulWidget {
   const FatMechanicalCompletionScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const FatMechanicalCompletionScreen()),
-    );
+    context.push('/fat-mechanical-completion');
   }
 
   @override

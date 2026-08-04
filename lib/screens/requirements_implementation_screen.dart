@@ -26,6 +26,8 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ndu_project/routing/app_router.dart';
 
 class RequirementsImplementationScreen extends StatefulWidget {
  const RequirementsImplementationScreen({super.key});
@@ -324,17 +326,11 @@ class _RequirementsImplementationScreenState
  }
 
  void _navigateToDesignOverview() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const DesignPhaseScreen()),
- );
+ context.push('/design-phase');
  }
 
  void _navigateToTechnicalAlignment() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const TechnicalAlignmentScreen()),
- );
+ context.push('/technical-alignment');
  }
 
  List<String> _ownerOptions(ProjectDataModel projectData) {
@@ -3369,35 +3365,21 @@ class _RequirementsImplementationScreenState
  }
 
  // -------------------------------------------------------------------------
- // Navigation helper for stable shell sidebar
- // -------------------------------------------------------------------------
- void _openStableDesignItem(String label) {
- Widget? destination;
- switch (label) {
- case 'Design Management':
- destination =
- const DesignPhaseScreen(activeItemLabel: 'Design Management');
- break;
- case 'Design Specifications':
- destination = const RequirementsImplementationScreen();
- break;
- case 'Technical Alignment':
- destination = const TechnicalAlignmentScreen();
- break;
- case 'Development Set Up':
- destination = const DevelopmentSetUpScreen();
- break;
- case 'UI/UX Design':
- destination = const UiUxDesignScreen();
- break;
- }
+ // Navigation helper for stable shell sidebar  // -------------------------------------------------------------------------
+  void _openStableDesignItem(String label) {
+  final destination = switch (label) {
+  'Design Management' => '/${AppRoutes.designPhase}',
+  'Design Specifications' => '/${AppRoutes.requirementsImplementation}',
+  'Technical Alignment' => '/${AppRoutes.technicalAlignment}',
+  'Development Set Up' => '/${AppRoutes.developmentSetUp}',
+  'UI/UX Design' => '/${AppRoutes.uiUxDesign}',
+  _ => null,
+  };
 
- if (destination == null) return;
+  if (destination == null) return;
 
- Navigator.of(context).pushReplacement(
- MaterialPageRoute(builder: (_) => destination!),
- );
- }
+  context.pushReplacement(destination);
+  }
 
  Future<bool> _confirmDelete(String label) async {
  final result = await showDialog<bool>(

@@ -49,6 +49,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 class CostAnalysisScreen extends StatefulWidget {
   final String notes;
@@ -1807,23 +1808,13 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             if (title == 'Home') {
               HomeScreen.open(context);
             } else if (title == 'SSHER') {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const SsherStackedScreen()));
+              context.push('/ssher-stacked');
             } else if (title == 'LogOut') {
               AuthNav.signOutAndExit(context);
             } else if (title == 'Team Management') {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const TeamManagementScreen()));
+              context.push('/team-management');
             } else if (title == 'Change Management') {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const ChangeManagementModuleScreen()));
+              context.push('/change-management-module');
             } else if (title == 'Lessons Learned') {
               LessonsLearnedScreen.open(context);
             }
@@ -2026,86 +2017,51 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   void _openBusinessCase() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const InitiationPhaseScreen(scrollToBusinessCase: true),
-      ),
-    );
+    context.push('/initiation-phase', extra: const InitiationPhaseScreen(scrollToBusinessCase: true));
   }
 
   void _openPotentialSolutions() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const PotentialSolutionsScreen(),
-      ),
-    );
+    context.push('/potential-solutions');
   }
 
   void _openRiskIdentification() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => RiskIdentificationScreen(
+    context.push('/risk-identification', extra: RiskIdentificationScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openITConsiderations() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ITConsiderationsScreen(
+    context.push('/it-considerations', extra: ITConsiderationsScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openInfrastructureConsiderations() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => InfrastructureConsiderationsScreen(
+    context.push('/infrastructure-considerations', extra: InfrastructureConsiderationsScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openCoreStakeholders() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CoreStakeholdersScreen(
+    context.push('/core-stakeholders', extra: CoreStakeholdersScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openPreferredSolutionAnalysis() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PreferredSolutionAnalysisScreen(
+    context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   Widget _buildMainContent() {
@@ -2644,16 +2600,11 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     Navigator.of(context).pop(); // Close loading dialog
 
     // Navigate to Preferred Solution Analysis
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PreferredSolutionAnalysisScreen(
+    context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
           notes: widget.notes,
           solutions: widget.solutions,
           businessCase: projectData.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   Future<void> _saveCostAnalysisData() async {

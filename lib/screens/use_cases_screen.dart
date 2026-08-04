@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class UseCasesScreen extends StatelessWidget {
   const UseCasesScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const UseCasesScreen()),
-    );
+    context.push('/use-cases');
   }
 
   @override

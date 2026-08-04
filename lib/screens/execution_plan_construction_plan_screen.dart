@@ -8,6 +8,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 
 
 Future<void> _exportPdf(BuildContext context) async {
@@ -28,10 +29,7 @@ class ExecutionPlanConstructionPlanScreen extends StatelessWidget {
  const ExecutionPlanConstructionPlanScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const ExecutionPlanConstructionPlanScreen()),
- );
+ context.push('/execution-plan-construction-plan');
  }
 
  @override

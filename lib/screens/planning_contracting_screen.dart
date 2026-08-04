@@ -24,6 +24,7 @@ import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 const Color _kBrandYellow = Color(0xFFFFC812);
 const Color _kFabYellow = Color(0xFFFBBF24);
@@ -99,9 +100,7 @@ class PlanningContractingScreen extends StatefulWidget {
  const PlanningContractingScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const PlanningContractingScreen()),
- );
+ context.push('/fep-contracts');
  }
 
  @override
@@ -232,10 +231,7 @@ class _PlanningContractingScreenState extends State<PlanningContractingScreen> {
  }
 
  void _openProcurement() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PlanningProcurementScreen()),
- );
+ context.push('/planning-procurement');
  }
 
  Future<void> _exportPdf() async {

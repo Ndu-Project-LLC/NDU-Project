@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 const Color _kBackground = Color(0xFFF7F8FC);
 const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
@@ -23,9 +24,7 @@ class DocumentReviewMatrixScreen extends StatefulWidget {
   const DocumentReviewMatrixScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const DocumentReviewMatrixScreen()),
-    );
+    context.push('/document-review-matrix');
   }
 
   @override

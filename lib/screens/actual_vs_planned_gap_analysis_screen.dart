@@ -22,15 +22,13 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:go_router/go_router.dart';
 
 class ActualVsPlannedGapAnalysisScreen extends StatefulWidget {
   const ActualVsPlannedGapAnalysisScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => const ActualVsPlannedGapAnalysisScreen()),
-    );
+    context.push('/actual-vs-planned-gap-analysis');
   }
 
   @override

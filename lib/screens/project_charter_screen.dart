@@ -11,6 +11,8 @@ import 'package:ndu_project/screens/core_stakeholders_screen.dart';
 import 'package:ndu_project/screens/cost_analysis_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
+import 'package:ndu_project/utils/charter_lock_helper.dart';
+import 'package:ndu_project/services/charter_approval_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
@@ -52,12 +54,44 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  _projectData = provider.projectData;
  });
 
+ // Auto-carry stakeholders from the preferred solution into the
+ // planning-phase stakeholder register (`stakeholderEntries`).
+ // Idempotent — only adds stakeholders that aren't already present.
+ if (_projectData != null) {
+ _carryStakeholdersFromPreferredSolution(_projectData!);
+ }
+
  // Auto-generate charter content if needed
  if (_projectData != null) {
  await _ensureCharterContent();
  }
  }
  });
+ }
+
+ /// Pulls internal + external stakeholders from the preferred
+ /// solution's `coreStakeholdersData` into the planning-phase
+ /// `stakeholderEntries` list. This makes them visible on the
+ /// charter (via CharterStakeholdersShort) AND auto-feeds the
+ /// Planning phase stakeholder register.
+ void _carryStakeholdersFromPreferredSolution(ProjectDataModel data) {
+ try {
+ final merged = CharterApprovalService
+ .carryStakeholdersFromPreferredSolution(data);
+ // Only write back if something actually changed (avoid spurious
+ // provider updates that would trigger cloud sync).
+ if (merged.length != data.stakeholderEntries.length) {
+ final provider = ProjectDataInherited.read(context);
+ provider.updateField((d) =>
+ d.copyWith(stakeholderEntries: merged));
+ setState(() {
+ _projectData = provider.projectData;
+ });
+ }
+ } catch (e) {
+ debugPrint(
+ 'Charter: could not carry stakeholders from preferred solution: $e');
+ }
  }
 
  Future<void> _exportPdf() async {
@@ -346,6 +380,9 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  children: [
  FrontEndPlanningHeader(title: 'Project Charter', onExportPdf: _exportPdf),
  const SizedBox(height: 16),
+ // Lock banner — shows when charter is approved. FEP becomes
+ // read-only and the Planning phase is unlocked.
+ CharterLockHelper.lockBanner(_projectData, screenLabel: 'Charter'),
 
  // ─── 1. Hero Header ───
  CharterHeroHeader(

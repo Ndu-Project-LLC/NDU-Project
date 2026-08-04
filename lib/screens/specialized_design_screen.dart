@@ -21,14 +21,13 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:go_router/go_router.dart';
 
 class SpecializedDesignScreen extends StatefulWidget {
  const SpecializedDesignScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const SpecializedDesignScreen()),
- );
+ context.push('/specialized-design');
  }
 
  @override
@@ -328,9 +327,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  LaunchPhaseNavigation(
  backLabel: 'Back: Technical Development',
  nextLabel: 'Next: Long Lead Equipment Ordering',
- onBack: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TechnicalDevelopmentScreen())),
- onNext: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LongLeadEquipmentOrderingScreen())),
- ),
+ onBack: () => context.push('/technical-development'),onNext: () => context.push('/long-lead-equipment-ordering')),
  ],
  ),
  ),

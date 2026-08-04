@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE PROJECT HUB — World-Class Landing Screen
@@ -29,9 +30,7 @@ class AgileProjectHubScreen extends StatefulWidget {
   const AgileProjectHubScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AgileProjectHubScreen()),
-    );
+    context.push('/agile-project-hub');
   }
 
   @override
@@ -380,12 +379,10 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
         AgileDashboardScreen.open(context);
         break;
       case 1:
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const AgileBacklogGovernanceScreen()));
+        context.push('/agile-backlog-governance');
         break;
       case 2:
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const AgileSprintCalendarScreen()));
+        context.push('/agile-sprint-calendar');
         break;
       case 3:
         AgileIterationManagementScreen.open(context);
@@ -403,22 +400,19 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
         AgileRetrospectivesScreen.open(context);
         break;
       case 8:
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const AgileBacklogGovernanceScreen()));
+        context.push('/agile-backlog-governance');
         break;
       case 9:
         AgileMetricsScreen.open(context);
         break;
       case 10:
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AgileReleasePlanScreen()));
+        context.push('/agile-release-plan');
         break;
       case 11:
         AgileRisksScreen.open(context);
         break;
       case 12:
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const AgileTeamStructureScreen()));
+        context.push('/agile-team-structure');
         break;
       case 13:
         AgileAiCoachScreen.open(context);

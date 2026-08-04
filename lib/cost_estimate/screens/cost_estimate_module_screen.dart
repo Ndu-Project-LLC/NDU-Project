@@ -38,14 +38,13 @@ import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
+import 'package:go_router/go_router.dart';
 
 class CostEstimateModuleScreen extends StatefulWidget {
   const CostEstimateModuleScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CostEstimateModuleScreen()),
-    );
+    context.push('/cost-estimate');
   }
 
   @override

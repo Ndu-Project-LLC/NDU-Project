@@ -14,6 +14,7 @@
 //   - Brand yellow accent (#FFC812) + info blue primary (#2563EB)
 //     aligned with the overall NDU app theme (theme.dart)
 //   - Sand/clay neutrals for surfaces
+
 //   - Generous 28-32px radii, soft shadows
 //   - Inter-style typography with tight tracking on display headings
 //   - Bento-style asymmetric grid (not the typical 3-column exec layout)
@@ -48,11 +49,7 @@ class RegularProjectDashboardScreen extends StatefulWidget {
   const RegularProjectDashboardScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const RegularProjectDashboardScreen(),
-      ),
-    );
+    context.push('/regular-project-dashboard');
   }
 
   @override
@@ -87,6 +84,7 @@ class _RegularProjectDashboardScreenState
   static const _teal = Color(0xFF2563EB); // App secondary (info blue)
   static const _tealDeep = Color(0xFF1E40AF);
   static const _tealSoft = Color(0xFFDBEAFE);
+
   static const _coral = Color(0xFFFB7185);
   static const _amber = Color(0xFFF59E0B);
   static const _emerald = Color(0xFF10B981);
@@ -202,9 +200,11 @@ class _RegularProjectDashboardScreenState
       if (!mounted) return;
       final screen = NavigationRouteResolver.resolveCheckpointToScreen(
           checkpoint.isEmpty ? 'initiation' : checkpoint, context);
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => screen ?? const InitiationPhaseScreen(),
-      ));
+      context.push(
+        NavigationRouteResolver.resolveCheckpointToUrl(
+            checkpoint.isEmpty ? 'initiation' : checkpoint),
+        extra: screen ?? const InitiationPhaseScreen(),
+      );
     } on TimeoutException {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
@@ -221,9 +221,7 @@ class _RegularProjectDashboardScreenState
   }
 
   void _createNewProject() {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => const InitiationPhaseScreen(),
-    ));
+    context.push('/initiation-phase');
   }
 
   @override
@@ -340,7 +338,7 @@ class _RegularProjectDashboardScreenState
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createNewProject,
         backgroundColor: _teal,
-        foregroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1C1C1C),
         icon: const Icon(Icons.add_rounded, size: 22),
         label: const Text(
           'New Project',
@@ -389,6 +387,8 @@ class _RegularProjectDashboardScreenState
               ],
             ),
           ),
+          _kazAiPill(),
+          const SizedBox(width: 8),
           _IconActionButton(
             icon: Icons.fact_check_outlined,
             label: 'Activity',
@@ -432,6 +432,49 @@ class _RegularProjectDashboardScreenState
     );
   }
 
+  /// KAZ AI copilot pill — opens the KAZ AI chat.
+  Widget _kazAiPill() {
+    return InkWell(
+      onTap: () => KazAiChatBubble.openChat(context),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFFC812), Color(0xFFFF9800)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: _tealDeep.withAlpha(35),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.auto_awesome_rounded,
+                size: 13, color: Color(0xFF1C1C1C)),
+            SizedBox(width: 5),
+            Text(
+              'KAZ AI',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.3,
+                color: Color(0xFF1C1C1C),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ── Hero ───────────────────────────────────────────────────────────────────
   Widget _buildHero(int projectCount, String displayName) {
     final hour = DateTime.now().hour;
@@ -450,14 +493,14 @@ class _RegularProjectDashboardScreenState
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF0D9488),
-              Color(0xFF0F766E),
-              Color(0xFF115E59),
+              Color(0xFFFFC812),
+              Color(0xFFFABD00),
+              Color(0xFFF59E0B),
             ],
           ),
           boxShadow: [
             BoxShadow(
-              color: _teal.withAlpha(40),
+              color: _tealDeep.withAlpha(50),
               blurRadius: 24,
               offset: const Offset(0, 12),
               spreadRadius: 0,
@@ -475,7 +518,7 @@ class _RegularProjectDashboardScreenState
                 height: 180,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withAlpha(15),
+                  color: Color(0xFF3D2E00).withAlpha(16),
                 ),
               ),
             ),
@@ -487,7 +530,7 @@ class _RegularProjectDashboardScreenState
                 height: 100,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withAlpha(10),
+                  color: Color(0xFF3D2E00).withAlpha(12),
                 ),
               ),
             ),
@@ -500,8 +543,8 @@ class _RegularProjectDashboardScreenState
                     '$greeting, $displayName',
                     style: const TextStyle(
                       fontSize: 13,
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF5B4300),
+                      fontWeight: FontWeight.w600,
                       letterSpacing: 0.3,
                     ),
                   ),
@@ -510,7 +553,7 @@ class _RegularProjectDashboardScreenState
                     'Your project runway awaits.',
                     style: TextStyle(
                       fontSize: 26,
-                      color: Colors.white,
+                      color: Color(0xFF2B1F00),
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                       height: 1.15,
@@ -523,7 +566,7 @@ class _RegularProjectDashboardScreenState
                     'through initiation, planning, and launch.',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white70,
+                      color: Color(0xFF4A3A00),
                       height: 1.55,
                     ),
                   ),
@@ -685,7 +728,7 @@ class _RegularProjectDashboardScreenState
                   : _createNewProject,
               style: FilledButton.styleFrom(
                 backgroundColor: _teal,
-                foregroundColor: Colors.white,
+                foregroundColor: const Color(0xFF1C1C1C),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 shape: RoundedRectangleBorder(
@@ -853,13 +896,13 @@ class _HeroStat extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(25),
+          color: const Color(0xFF3D2E00).withAlpha(22),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withAlpha(30)),
+          border: Border.all(color: const Color(0xFF3D2E00).withAlpha(40)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: Colors.white),
+            Icon(icon, size: 16, color: const Color(0xFF2B1F00)),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -871,15 +914,15 @@ class _HeroStat extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                      color: Color(0xFF2B1F00),
                     ),
                   ),
                   Text(
                     label,
                     style: const TextStyle(
                       fontSize: 10,
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF5B4300),
+                      fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1056,12 +1099,12 @@ class _RegularProjectCard extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFCCFBF1),
+                      color: const Color(0xFFFFF4CC),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
                       Icons.folder_special_rounded,
-                      color: Color(0xFF0F766E),
+                      color: Color(0xFFD97706),
                       size: 22,
                     ),
                   ),
@@ -1191,7 +1234,7 @@ class _RegularProjectCard extends StatelessWidget {
                   const Icon(
                     Icons.arrow_forward_rounded,
                     size: 16,
-                    color: Color(0xFF0D9488),
+                    color: Color(0xFFD97706),
                   ),
                 ],
               ),
@@ -1298,7 +1341,7 @@ class _BottomMiniNav extends StatelessWidget {
             icon: Icons.home_rounded,
             label: 'Runway',
             isActive: activeIndex == 0,
-            color: const Color(0xFF0D9488),
+            color: const Color(0xFFD97706),
           ),
           _NavItem(
             icon: Icons.explore_rounded,

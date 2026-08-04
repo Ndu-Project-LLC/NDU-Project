@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/screens/basic_plan_dashboard_screen.dart';
 import 'program_dashboard_screen.dart';
 import '../widgets/app_logo.dart';
@@ -85,12 +86,7 @@ class _ManagementLevelScreenState extends State<ManagementLevelScreen> {
  imageUrl: 'assets/images/project-management.png',
  title: 'Basic',
  onTap: () {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (context) => const BasicPlanDashboardScreen(),
- ),
- );
+ context.push('/basic-plan-dashboard');
  },
  ),
  _buildManagementCardWithImage(
@@ -98,12 +94,7 @@ class _ManagementLevelScreenState extends State<ManagementLevelScreen> {
  imageUrl: 'assets/images/project-management.png',
  title: 'Project',
  onTap: () {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (context) => const ProjectDashboardScreen(),
- ),
- );
+ context.push('/dashboard');
  },
  ),
  _buildManagementCardWithImage(
@@ -111,12 +102,7 @@ class _ManagementLevelScreenState extends State<ManagementLevelScreen> {
  imageUrl: 'assets/images/monitoring.png',
  title: 'Program',
  onTap: () {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (context) => const ProgramDashboardScreen(),
- ),
- );
+ context.push('/program-dashboard');
  },
  ),
  _buildManagementCardWithImage(
@@ -124,12 +110,7 @@ class _ManagementLevelScreenState extends State<ManagementLevelScreen> {
  imageUrl: 'assets/images/professional-portfolio.png',
  title: 'Portfolio',
  onTap: () {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (context) => const PortfolioDashboardScreen(),
- ),
- );
+ context.push('/portfolio-dashboard');
  },
  ),
  ],

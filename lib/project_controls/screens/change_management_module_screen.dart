@@ -35,14 +35,13 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:go_router/go_router.dart';
 
 class ChangeManagementModuleScreen extends StatefulWidget {
   const ChangeManagementModuleScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ChangeManagementModuleScreen()),
-    );
+    context.push('/change-management-module');
   }
 
   @override

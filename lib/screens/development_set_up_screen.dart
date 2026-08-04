@@ -19,6 +19,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Development Set Up — CRUD-Enabled Overhaul
@@ -483,17 +484,11 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  // ── Navigation ─────────────────────────────────────────────────────────
 
  void _navigateToTechnicalAlignment() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const TechnicalAlignmentScreen()),
- );
+ context.push('/technical-alignment');
  }
 
  void _navigateToUiUxDesign() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const UiUxDesignScreen()),
- );
+ context.push('/ui-ux-design');
  }
 
  // ── Build ──────────────────────────────────────────────────────────────

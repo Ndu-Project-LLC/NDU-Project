@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/front_end_planning_summary.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -685,17 +686,13 @@ class _ProjectDecisionSummaryScreenState
  AiSolutionItem(title: item.title, description: item.description))
  .toList(growable: false);
 
- Navigator.of(context).pushReplacement(
- MaterialPageRoute(
- builder: (_) => ProjectDecisionSummaryScreen(
+ context.pushReplacement('/project-decision-summary', extra: ProjectDecisionSummaryScreen(
  projectName: projectName,
  selectedSolution: selected,
  allSolutions: allSolutions,
  businessCase: widget.businessCase,
  notes: widget.notes,
- ),
- ),
- );
+ ));
 
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(content: Text('New project created: $projectName')),

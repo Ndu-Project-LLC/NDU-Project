@@ -38,6 +38,8 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/page_hint_dialog.dart';
 import 'package:ndu_project/widgets/scroll_indicator_overlay.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ndu_project/utils/navigation_route_resolver.dart';
 
 class InitiationPhaseScreen extends StatefulWidget {
  final bool scrollToBusinessCase;
@@ -119,16 +121,11 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
 
  void _openRiskIdentification() {
  _requireBusinessCaseBefore('Risk Identification', () {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => RiskIdentificationScreen(
+ context.push('/risk-identification', extra: RiskIdentificationScreen(
  notes: _notesController.text.trim(),
  solutions: const [],
  businessCase: _businessCaseController.text.trim(),
- ),
- ),
- );
+ ));
  });
  }
 
@@ -548,11 +545,7 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  );
 
  if (!mounted) return;
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const PotentialSolutionsScreen(),
- ),
- );
+ context.push('/potential-solutions');
  }
 
  bool _isGeneratingAI = false;
@@ -1005,11 +998,12 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
   businessCase: projectData.businessCase,
  );
  break;
- }
-
- if (screen != null) {
- Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen!));
- }
+ }  if (screen != null) {
+  context.push(
+  NavigationRouteResolver.resolveCheckpointToUrl(checkpoint),
+  extra: screen!,
+  );
+  }
  }
 
  Future<void> _exportPdf() async {
@@ -2218,76 +2212,51 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  }
  }  void _openITConsiderations() {
     _requireBusinessCaseBefore('IT Considerations', () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ITConsiderationsScreen(
+      context.push('/it-considerations', extra: ITConsiderationsScreen(
             notes: _notesController.text.trim(),
             solutions: const [],
             businessCase: _businessCaseController.text.trim(),
-          ),
-        ),
-      );
+          ));
     });
   }
 
   void _openInfrastructureConsiderations() {
     _requireBusinessCaseBefore('Infrastructure Considerations', () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => InfrastructureConsiderationsScreen(
+      context.push('/infrastructure-considerations', extra: InfrastructureConsiderationsScreen(
             notes: _notesController.text.trim(),
             solutions: const [],
             businessCase: _businessCaseController.text.trim(),
-          ),
-        ),
-      );
+          ));
     });
   }
 
   void _openCoreStakeholders() {
     _requireBusinessCaseBefore('Core Stakeholders', () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CoreStakeholdersScreen(
+      context.push('/core-stakeholders', extra: CoreStakeholdersScreen(
             notes: _notesController.text.trim(),
             solutions: const [],
             businessCase: _businessCaseController.text.trim(),
-          ),
-        ),
-      );
+          ));
     });
   }
 
   void _openCostAnalysis() {
     _requireBusinessCaseBefore('Initial Cost Estimate', () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CostAnalysisScreen(
+      context.push('/cost-analysis', extra: CostAnalysisScreen(
             notes: _notesController.text.trim(),
             solutions: const [],
             businessCase: _businessCaseController.text.trim(),
-          ),
-        ),
-      );
+          ));
     });
   }
 
  void _openPreferredSolutionAnalysis() {
  _requireBusinessCaseBefore('Preferred Solution Analysis', () {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => PreferredSolutionAnalysisScreen(
+ context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
  notes: _notesController.text.trim(),
  solutions: const [],
  businessCase: _businessCaseController.text.trim(),
- ),
- ),
- );
+ ));
  });
  }
 }

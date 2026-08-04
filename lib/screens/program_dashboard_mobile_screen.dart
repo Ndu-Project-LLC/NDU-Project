@@ -477,13 +477,11 @@ class _ProgramDashboardMobileScreenState
  final screen = NavigationRouteResolver.resolveCheckpointToScreen(
  checkpointRoute.isEmpty ? 'initiation' : checkpointRoute,
  context,
- );
-
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => screen ?? const InitiationPhaseScreen()),
- );
+ );  context.push(
+  NavigationRouteResolver.resolveCheckpointToUrl(
+      checkpointRoute.isEmpty ? 'initiation' : checkpointRoute),
+  extra: screen ?? const InitiationPhaseScreen(),
+  );
  } else {
  debugPrint('Failed to load project: ${provider.lastError}');
  if (context.mounted) {
@@ -602,10 +600,7 @@ class _ProgramDashboardMobileScreenState
  width: double.infinity,
  child: ElevatedButton(
  onPressed: () {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
- );
+ context.push('/portfolio-dashboard');
  },
  style: ElevatedButton.styleFrom(
  backgroundColor: const Color(0xFFFFC800),
@@ -646,10 +641,7 @@ class _ProgramDashboardMobileScreenState
  if (index == 0) {
  Navigator.pop(context);
  } else if (index == 2) {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
- );
+ context.push('/portfolio-dashboard');
  } else if (index == 3) {
  context.go('/${AppRoutes.settings}?from=${AppRoutes.dashboard}');
  }

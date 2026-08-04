@@ -10,6 +10,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/bullet_point_editor.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:go_router/go_router.dart';
 const Color _kAccentColor = Color(0xFFFFC812);
 const Color _kTextPrimary = Color(0xFF1A1D1F);
 const Color _kTextSecondary = Color(0xFF6B7280);
@@ -20,9 +21,7 @@ class ProgramBasicsScreen extends StatelessWidget {
  const ProgramBasicsScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const ProgramBasicsScreen()),
- );
+ context.push('/program-basics');
  }
 
  @override
@@ -374,9 +373,7 @@ class ProjectDetailsScreen extends StatelessWidget {
  const ProjectDetailsScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const ProjectDetailsScreen()),
- );
+ context.push('/project-details');
  }
 
  @override

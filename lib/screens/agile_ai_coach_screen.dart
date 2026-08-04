@@ -7,6 +7,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE AI COACH — AI Capability Cards, Chat, Maturity Scorecard
@@ -15,9 +16,7 @@ class AgileAiCoachScreen extends StatefulWidget {
   const AgileAiCoachScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AgileAiCoachScreen()),
-    );
+    context.push('/agile-ai-coach');
   }
 
   @override

@@ -34,6 +34,8 @@ import 'package:ndu_project/widgets/design_phase_stable_shell.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ndu_project/routing/app_router.dart';
 class DesignPhaseScreen extends StatefulWidget {
  const DesignPhaseScreen(
  {super.key, this.activeItemLabel = 'Design Management'});
@@ -439,11 +441,7 @@ Future<void> _loadProgress(String projectId) async {
  backLabel: 'Back: Design overview',
  nextLabel: 'Next: Requirements Implementation',
  onBack: () => Navigator.of(context).maybePop(),
- onNext: () => Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const RequirementsImplementationScreen()),
- ),
- ),
+ onNext: () => context.push('/requirements-implementation')),
  ],
  ),
  );
@@ -520,13 +518,7 @@ Future<void> _loadProgress(String projectId) async {
  child: const Text('Back: Design overview'),
  ),
  ElevatedButton(
- onPressed: () => Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) =>
- const RequirementsImplementationScreen(),
- ),
- ),
- child: const Text('Next: Requirements Implementation'),
+ onPressed: () => context.push('/requirements-implementation'),child: const Text('Next: Requirements Implementation'),
  ),
  ],
  ),
@@ -534,36 +526,22 @@ Future<void> _loadProgress(String projectId) async {
  ],
  ),
  ),
- );
- }
+ );  }
 
- void _openStableDesignItem(String label) {
- Widget? destination;
- switch (label) {
- case 'Design Management':
- destination =
- const DesignPhaseScreen(activeItemLabel: 'Design Management');
- break;
- case 'Design Specifications':
- destination = const RequirementsImplementationScreen();
- break;
- case 'Technical Alignment':
- destination = const TechnicalAlignmentScreen();
- break;
- case 'Development Set Up':
- destination = const DevelopmentSetUpScreen();
- break;
- case 'UI/UX Design':
- destination = const UiUxDesignScreen();
- break;
- }
+  void _openStableDesignItem(String label) {
+  final destination = switch (label) {
+  'Design Management' => '/${AppRoutes.designPhase}',
+  'Design Specifications' => '/${AppRoutes.requirementsImplementation}',
+  'Technical Alignment' => '/${AppRoutes.technicalAlignment}',
+  'Development Set Up' => '/${AppRoutes.developmentSetUp}',
+  'UI/UX Design' => '/${AppRoutes.uiUxDesign}',
+  _ => null,
+  };
 
- if (destination == null) return;
+  if (destination == null) return;
 
- Navigator.of(context).pushReplacement(
- MaterialPageRoute(builder: (_) => destination!),
- );
- }
+  context.pushReplacement(destination);
+  }
 
  // ── 1. Design Readiness Progress Card ──────────────────────────────────
  Widget _buildReadinessProgressCard() {
@@ -2260,12 +2238,7 @@ Future<void> _loadProgress(String projectId) async {
  child: const Text('Back'),
  ),
  ElevatedButton(
- onPressed: () => Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const RequirementsImplementationScreen(),
- ),
- ),
- child: const Text('Requirements Implementation'),
+ onPressed: () => context.push('/requirements-implementation'),child: const Text('Requirements Implementation'),
  ),
  ],
  ),

@@ -16,14 +16,13 @@ import 'package:ndu_project/models/project_data_model.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 
 class StakeholderManagementScreen extends StatefulWidget {
  const StakeholderManagementScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const StakeholderManagementScreen()),
- );
+ context.push('/stakeholder-management');
  }
 
  @override

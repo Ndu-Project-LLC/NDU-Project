@@ -41,6 +41,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 class PreferredSolutionAnalysisScreen extends StatefulWidget {
   final String notes;
@@ -1021,101 +1022,61 @@ class _PreferredSolutionAnalysisScreenState
   }
 
   void _openBusinessCase() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const InitiationPhaseScreen(scrollToBusinessCase: true),
-      ),
-    );
+    context.push('/initiation-phase', extra: const InitiationPhaseScreen(scrollToBusinessCase: true));
   }
 
   void _openPotentialSolutions() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const PotentialSolutionsScreen(),
-      ),
-    );
+    context.push('/potential-solutions');
   }
 
   void _openRiskIdentification() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => RiskIdentificationScreen(
+    context.push('/risk-identification', extra: RiskIdentificationScreen(
           notes: _notesController.text,
           solutions: _solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openITConsiderations() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ITConsiderationsScreen(
+    context.push('/it-considerations', extra: ITConsiderationsScreen(
           notes: _notesController.text,
           solutions: _solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openInfrastructureConsiderations() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => InfrastructureConsiderationsScreen(
+    context.push('/infrastructure-considerations', extra: InfrastructureConsiderationsScreen(
           notes: _notesController.text,
           solutions: _solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openCoreStakeholders() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CoreStakeholdersScreen(
+    context.push('/core-stakeholders', extra: CoreStakeholdersScreen(
           notes: _notesController.text,
           solutions: _solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openCostAnalysis() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CostAnalysisScreen(
+    context.push('/cost-analysis', extra: CostAnalysisScreen(
           notes: _notesController.text,
           solutions: _solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openCostAnalysisForSolution(int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CostAnalysisScreen(
+    context.push('/cost-analysis', extra: CostAnalysisScreen(
           notes: _notesController.text,
           solutions: _solutions,
           businessCase: widget.businessCase,
           initialStepIndex: 1,
           initialSolutionIndex: index,
-        ),
-      ),
-    );
+        ));
   }
 
   Widget _buildMainContent() {
@@ -1462,17 +1423,13 @@ class _PreferredSolutionAnalysisScreenState
         : widget.businessCase.trim();
 
     if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProjectDecisionSummaryScreen(
+    context.push('/project-decision-summary', extra: ProjectDecisionSummaryScreen(
           projectName: projectName.isEmpty ? 'Untitled Project' : projectName,
           selectedSolution: selectedSolution,
           allSolutions: allSolutions,
           businessCase: businessCase,
           notes: _notesController.text.trim(),
-        ),
-      ),
-    );
+        ));
   }
 
   // ignore: unused_element
@@ -6226,11 +6183,7 @@ class _PreferredSolutionComparisonScreen extends StatelessWidget {
     }
 
     if (context.mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => const FrontEndPlanningSummaryScreen(),
-        ),
-      );
+      context.push('/fep-summary');
     }
   }
 }

@@ -166,12 +166,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
       // Navigate to Sign In so the user can log in after verifying
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const SignInScreen(),
-        ),
-      );
+      context.pushReplacement('/sign-in');
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         String errorMessage;
@@ -761,11 +756,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   const SizedBox(height: 24),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const SignInScreen()),
-                      );
+                      context.pushReplacement('/sign-in');
                     },
                     child: RichText(
                       text: TextSpan(

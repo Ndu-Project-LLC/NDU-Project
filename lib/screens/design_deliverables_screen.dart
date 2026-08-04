@@ -19,6 +19,7 @@ import 'package:ndu_project/services/design_phase_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 // firebase_auth removed - unused
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -31,9 +32,7 @@ class DesignDeliverablesScreen extends StatefulWidget {
  const DesignDeliverablesScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const DesignDeliverablesScreen()),
- );
+ context.push('/design-deliverables');
  }
 
  @override
@@ -771,10 +770,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  LaunchPhaseNavigation(
  backLabel: 'Back: Specialized Design',
  nextLabel: 'Next: Staff Team',
- onBack: () => Navigator.of(context).pushReplacement(
- MaterialPageRoute(
- builder: (_) => const SpecializedDesignScreen()),
- ),
+ onBack: () => context.pushReplacement('/specialized-design'),
  onNext: () => StaffTeamScreen.open(context),
  ),
  const SizedBox(height: 40),

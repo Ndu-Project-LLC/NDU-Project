@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart' as loader;
+import 'package:ndu_project/utils/csv_import_helper.dart';
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -15,9 +16,22 @@ import 'package:ndu_project/theme.dart';
 /// 2. **Upload & Import** — opens a file picker for .csv/.xlsx/.txt files,
 ///    reads the content, and returns parsed rows as a List<Map>.
 ///
-/// Usage:
+/// Usage (rich CsvColumnSpec — preferred for new code):
 /// ```dart
-/// // Download a template
+/// TableImportHelper.downloadTemplateSpec(
+///   filename: 'coverage_matrix_template.csv',
+///   columns: [
+///     CsvColumnSpec(key: 'area', label: 'Role/Area', required: true,
+///         hint: 'e.g. Product, Engineering', sampleValue: 'Product'),
+///     CsvColumnSpec(key: 'status', label: 'Status',
+///         allowedValues: ['On track','At risk','In review','Blocked'],
+///         defaultValue: 'On track'),
+///   ],
+/// );
+/// ```
+///
+/// Usage (legacy simple headers — still supported):
+/// ```dart
 /// TableImportHelper.downloadTemplate(
 ///   filename: 'staffing_template.csv',
 ///   headers: ['Role', 'Qty', 'Type', 'Start Date', 'Duration', 'Monthly Rate', 'Status'],
@@ -26,9 +40,6 @@ import 'package:ndu_project/theme.dart';
 ///     ['Technical Lead', '2', 'Internal', 'Jan 2024', '8', '5000', 'Active'],
 ///   ],
 /// );
-///
-/// // Upload and parse
-/// final rows = await TableImportHelper.pickAndParseFile();
 /// ```
 class TableImportHelper {
   TableImportHelper._();
@@ -58,6 +69,54 @@ class TableImportHelper {
     final bytes = utf8.encode(csv);
     loader.downloadFile(bytes, filename, mimeType: 'text/csv');
     debugPrint('[TableImportHelper] Template downloaded: $filename');
+  }
+
+  // ─── Rich CsvColumnSpec-based variants (preferred) ──────────────────────
+
+  /// Generates a rich CSV template string from [CsvColumnSpec] columns.
+  /// The template includes:
+  /// - A leading comment row with hints (required flag, allowed values, hint)
+  /// - A header row matching each column's [CsvColumnSpec.label]
+  /// - A sample data row using [CsvColumnSpec.sampleValue] (or the first
+  ///   allowed value, or '(required)' if required)
+  /// - A second sample row showing an alternative allowed value (if any)
+  ///
+  /// The generated template mirrors the on-page table column structure
+  /// exactly, so users can fill it in and re-upload with confidence.
+  static String generateCsvFromSpec(List<CsvColumnSpec> columns) {
+    return CsvImportHelper.generateTemplate(columns);
+  }
+
+  /// Generates a filename-safe template name from a table title.
+  static String templateFilenameFromTitle(String tableTitle) {
+    return CsvImportHelper.templateFilename(tableTitle);
+  }
+
+  /// Triggers a browser download of a CSV template built from rich
+  /// [CsvColumnSpec] columns. This is the preferred download method for
+  /// new code because it produces a template with hints, allowed values,
+  /// and required-field markers — fully mirroring the on-page table.
+  static void downloadTemplateSpec({
+    required String filename,
+    required List<CsvColumnSpec> columns,
+  }) {
+    final csv = generateCsvFromSpec(columns);
+    final bytes = utf8.encode(csv);
+    loader.downloadFile(bytes, filename, mimeType: 'text/csv');
+    debugPrint(
+        '[TableImportHelper] Spec template downloaded: $filename (${columns.length} columns)');
+  }
+
+  /// Convenience wrapper that derives the filename from [tableTitle] and
+  /// downloads the template using [CsvColumnSpec] columns.
+  static void downloadTemplateForTable({
+    required String tableTitle,
+    required List<CsvColumnSpec> columns,
+  }) {
+    downloadTemplateSpec(
+      filename: templateFilenameFromTitle(tableTitle),
+      columns: columns,
+    );
   }
 
   /// Opens a file picker for .csv/.xlsx/.txt files, reads the content,
@@ -324,6 +383,50 @@ class TableImportHelper {
           ],
         ),
       ),
+    );
+  }
+
+  /// Rich-spec variant of [showImportDialog]. Builds the dialog from
+  /// [CsvColumnSpec] columns so the template includes hints, allowed
+  /// values, and required-field markers. The returned rows are positioned
+  /// in the same order as [columns] — i.e. row[i] corresponds to
+  /// columns[i].
+  ///
+  /// This is the preferred entry point for new code because it mirrors
+  /// the on-page table's column structure exactly.
+  static Future<List<List<String>>?> showImportDialogSpec(
+    BuildContext context, {
+    required String tableTitle,
+    required List<CsvColumnSpec> columns,
+  }) {
+    final headers = columns.map((c) => c.label).toList();
+    final sampleRows = <List<String>>[
+      columns.map((c) {
+        if (c.sampleValue != null && c.sampleValue!.isNotEmpty) {
+          return c.sampleValue!;
+        }
+        if (c.allowedValues != null && c.allowedValues!.isNotEmpty) {
+          return c.allowedValues!.first;
+        }
+        if (c.required) return '(required)';
+        return '';
+      }).toList(),
+    ];
+    // Second sample row with alternative allowed value (if any).
+    final altRow = columns.map((c) {
+      if (c.allowedValues != null && c.allowedValues!.length > 1) {
+        return c.allowedValues![1];
+      }
+      return '';
+    }).toList();
+    if (altRow.any((v) => v.isNotEmpty)) {
+      sampleRows.add(altRow);
+    }
+    return showImportDialog(
+      context,
+      tableTitle: tableTitle,
+      headers: headers,
+      sampleRows: sampleRows,
     );
   }
 }

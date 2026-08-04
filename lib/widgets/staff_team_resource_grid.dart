@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
 import 'dart:async';
 
@@ -535,46 +536,68 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     }
   }
 
-  /// Shows a world-class import dialog with Download Template, Upload File,
-  /// and Paste CSV options. Uses the shared TableImportHelper.
-  void _showImportDialog() async {
-    final headers = [
-      'Role',
-      'Qty',
-      'Type',
-      'Start Date',
-      'Duration (months)',
-      'Monthly Rate',
-      'Status'
-    ];
-    final sampleRows = [
-      ['Project Manager', '1', 'Internal', 'Jan 2024', '6', '4000', 'Active'],
-      ['Technical Lead', '2', 'Internal', 'Jan 2024', '8', '5000', 'Active'],
-      [
-        'Business Analyst',
-        '1',
-        'External',
-        'Feb 2024',
-        '4',
-        '3500',
-        'Not Started'
-      ],
-      [
-        'Quality Assurance',
-        '2',
-        'Internal',
-        'Mar 2024',
-        '6',
-        '3000',
-        'Not Started'
-      ],
-    ];
+  /// CSV column specs for the Staffing Needs table. These mirror the
+  /// on-page table columns exactly (Role | Qty | Type | Start Date |
+  /// Duration | Monthly Rate | Status) so the downloaded template
+  /// matches what users see on screen.
+  static const String _staffingTableTitle = 'Staffing Needs';
+  static const List<CsvColumnSpec> _staffingColumns = [
+    CsvColumnSpec(
+      key: 'role',
+      label: 'Role',
+      required: true,
+      hint: 'e.g. Project Manager, Technical Lead',
+      sampleValue: 'Project Manager',
+    ),
+    CsvColumnSpec(
+      key: 'qty',
+      label: 'Qty',
+      required: true,
+      hint: 'Numeric headcount for this role',
+      sampleValue: '1',
+    ),
+    CsvColumnSpec(
+      key: 'type',
+      label: 'Type',
+      allowedValues: ['Internal', 'External'],
+      defaultValue: 'Internal',
+      sampleValue: 'Internal',
+    ),
+    CsvColumnSpec(
+      key: 'startDate',
+      label: 'Start Date',
+      hint: 'e.g. Jan 2024 or 2024-01-15',
+      sampleValue: 'Jan 2024',
+    ),
+    CsvColumnSpec(
+      key: 'duration',
+      label: 'Duration (months)',
+      hint: 'Numeric months',
+      sampleValue: '6',
+    ),
+    CsvColumnSpec(
+      key: 'monthlyRate',
+      label: 'Monthly Rate',
+      hint: 'Numeric monthly rate per person',
+      sampleValue: '4000',
+    ),
+    CsvColumnSpec(
+      key: 'status',
+      label: 'Status',
+      allowedValues: ['Not Started', 'In Progress', 'Active', 'Completed'],
+      defaultValue: 'Not Started',
+      sampleValue: 'Active',
+    ),
+  ];
 
-    final rows = await TableImportHelper.showImportDialog(
+  /// Shows a world-class import dialog with Download Template, Upload File,
+  /// and Paste CSV options. Uses the shared TableImportHelper with rich
+  /// CsvColumnSpec so the template mirrors the on-page table columns.
+  void _showImportDialog() async {
+    final rows = await TableImportHelper.showImportDialogSpec(
       context,
-      tableTitle: 'Staffing Needs',
-      headers: headers,
-      sampleRows: sampleRows,
+      tableTitle: _staffingTableTitle,
+      columns: _staffingColumns,
     );
 
     if (rows == null || rows.isEmpty || !mounted) return;
@@ -606,41 +629,13 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     }
   }
 
-  /// Downloads a CSV template file via the browser.
+  /// Downloads a CSV template file via the browser. Uses the rich
+  /// CsvColumnSpec so the template includes hints, allowed values, and
+  /// required-field markers — fully mirroring the on-page table.
   void _downloadTemplate() {
-    TableImportHelper.downloadTemplate(
-      filename: 'staffing_needs_template.csv',
-      headers: [
-        'Role',
-        'Qty',
-        'Type',
-        'Start Date',
-        'Duration (months)',
-        'Monthly Rate',
-        'Status'
-      ],
-      sampleRows: [
-        ['Project Manager', '1', 'Internal', 'Jan 2024', '6', '4000', 'Active'],
-        ['Technical Lead', '2', 'Internal', 'Jan 2024', '8', '5000', 'Active'],
-        [
-          'Business Analyst',
-          '1',
-          'External',
-          'Feb 2024',
-          '4',
-          '3500',
-          'Not Started'
-        ],
-        [
-          'Quality Assurance',
-          '2',
-          'Internal',
-          'Mar 2024',
-          '6',
-          '3000',
-          'Not Started'
-        ],
-      ],
+    TableImportHelper.downloadTemplateForTable(
+      tableTitle: _staffingTableTitle,
+      columns: _staffingColumns,
     );
   }
 

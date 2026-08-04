@@ -9,16 +9,13 @@ import 'package:ndu_project/widgets/execution_plan_shared.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:go_router/go_router.dart';
 
 class ExecutionPlanInterfaceManagementOverviewScreen extends StatelessWidget {
   const ExecutionPlanInterfaceManagementOverviewScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) =>
-              const ExecutionPlanInterfaceManagementOverviewScreen()),
-    );
+    context.push('/execution-plan-interface-management');
   }
 
   @override

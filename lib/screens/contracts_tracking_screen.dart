@@ -23,14 +23,13 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 
 class ContractsTrackingScreen extends StatefulWidget {
   const ContractsTrackingScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ContractsTrackingScreen()),
-    );
+    context.push('/contracts-tracking');
   }
 
   @override

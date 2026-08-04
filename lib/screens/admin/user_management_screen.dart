@@ -4,6 +4,7 @@ import 'package:ndu_project/services/permission_service.dart';
 import 'package:ndu_project/widgets/permission_aware_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:go_router/go_router.dart';
 
 /// World-class User Management Screen for admins and owners
 /// Comprehensive user and role management interface
@@ -11,9 +12,7 @@ class UserManagementScreen extends StatefulWidget {
   const UserManagementScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const UserManagementScreen()),
-    );
+    context.push('/user-management');
   }
 
   @override

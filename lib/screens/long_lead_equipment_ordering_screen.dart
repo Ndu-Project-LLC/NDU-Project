@@ -13,6 +13,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 class LongLeadEquipmentOrderingScreen extends StatefulWidget {
  const LongLeadEquipmentOrderingScreen({super.key});
 
@@ -302,12 +303,7 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  const SizedBox(height: 12),
  ElevatedButton.icon(
- onPressed: () => Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const SpecializedDesignScreen(),
- ),
- ),
- icon: const Icon(Icons.arrow_forward, size: 18),
+ onPressed: () => context.push('/specialized-design'),icon: const Icon(Icons.arrow_forward, size: 18),
  label: const Text('Next: Specialized design'),
  style: ElevatedButton.styleFrom(
  backgroundColor: Colors.black87,
@@ -341,12 +337,7 @@ class _LongLeadEquipmentOrderingScreenState
  style: TextStyle(fontSize: 13, color: Colors.grey[500])),
  const Spacer(),
  ElevatedButton.icon(
- onPressed: () => Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const SpecializedDesignScreen(),
- ),
- ),
- icon: const Icon(Icons.arrow_forward, size: 18),
+ onPressed: () => context.push('/specialized-design'),icon: const Icon(Icons.arrow_forward, size: 18),
  label: const Text('Next: Specialized design'),
  style: ElevatedButton.styleFrom(
  backgroundColor: Colors.black87,

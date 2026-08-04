@@ -1692,18 +1692,13 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         selectedSolution = solutions.first;
       }
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProjectDecisionSummaryScreen(
+      context.push('/project-decision-summary', extra: ProjectDecisionSummaryScreen(
             projectName: projectData?.projectName ?? 'Untitled Project',
             selectedSolution: selectedSolution,
             allSolutions: solutions,
             businessCase: projectData?.businessCase ?? '',
             notes: preferredAnalysis?.workingNotes ?? '',
-          ),
-        ),
-      );
+          ));
     }
   }
 
@@ -1717,16 +1712,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               (s) => AiSolutionItem(title: s.title, description: s.description))
           .toList();
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PreferredSolutionAnalysisScreen(
+      context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
             notes: projectData?.preferredSolutionAnalysis?.workingNotes ?? '',
             solutions: solutions,
             businessCase: projectData?.businessCase ?? '',
-          ),
-        ),
-      );
+          ));
     } catch (e) {
       debugPrint('Navigation error (Preferred Solution Analysis): $e');
     }
@@ -1758,18 +1748,13 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                 )
               : safeSolutions.first;
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProjectDecisionSummaryScreen(
+      context.push('/project-decision-summary', extra: ProjectDecisionSummaryScreen(
             projectName: projectData?.projectName ?? 'Untitled Project',
             selectedSolution: selectedSolution,
             allSolutions: safeSolutions,
             businessCase: projectData?.businessCase ?? '',
             notes: preferredAnalysis?.workingNotes ?? '',
-          ),
-        ),
-      );
+          ));
     } catch (e) {
       debugPrint('Navigation error (Preferred Solution): $e');
     }

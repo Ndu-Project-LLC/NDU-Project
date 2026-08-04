@@ -10,14 +10,13 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:go_router/go_router.dart';
 
 class AgileKanbanBoardScreen extends StatefulWidget {
   const AgileKanbanBoardScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AgileKanbanBoardScreen()),
-    );
+    context.push('/agile-kanban-board');
   }
 
   @override

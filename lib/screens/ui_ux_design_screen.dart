@@ -24,14 +24,13 @@ import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:go_router/go_router.dart';
 
 class UiUxDesignScreen extends StatefulWidget {
  const UiUxDesignScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const UiUxDesignScreen()),
- );
+ context.push('/ui-ux-design');
  }
 
  @override
@@ -811,9 +810,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  LaunchPhaseNavigation(
  backLabel: 'Back: Development Set Up',
  nextLabel: 'Next: Backend Design',
- onBack: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DevelopmentSetUpScreen())),
- onNext: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BackendDesignScreen())),
- ),
+ onBack: () => context.push('/development-set-up'),onNext: () => context.push('/backend-design')),
  ],
  ),
  ),

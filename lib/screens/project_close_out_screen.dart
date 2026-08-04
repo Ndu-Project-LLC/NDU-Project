@@ -2,6 +2,7 @@ import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/models/launch_phase_models.dart';
 import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
@@ -38,14 +39,10 @@ class ProjectCloseOutScreen extends StatefulWidget {
     bool summarized = false,
     String activeItemLabel = '11. Project Closeout',
   }) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProjectCloseOutScreen(
+    context.push('/project-close-out', extra: ProjectCloseOutScreen(
           summarized: summarized,
           activeItemLabel: activeItemLabel,
-        ),
-      ),
-    );
+        ));
   }
 
   @override

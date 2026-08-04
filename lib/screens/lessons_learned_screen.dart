@@ -19,14 +19,12 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 class LessonsLearnedScreen extends StatefulWidget {
  const LessonsLearnedScreen({super.key});
 
  static Future<void> open(BuildContext context) {
- return Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const LessonsLearnedScreen()),
- );
+ return context.push('/lessons-learned');
  }
 
  @override

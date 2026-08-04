@@ -19,14 +19,13 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:go_router/go_router.dart';
 
 class LaunchChecklistScreen extends StatefulWidget {
   const LaunchChecklistScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const LaunchChecklistScreen()),
-    );
+    context.push('/launch-checklist');
   }
 
   @override

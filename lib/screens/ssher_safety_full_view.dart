@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/screens/ssher_components.dart';
 import 'package:ndu_project/screens/ssher_add_safety_item_dialog.dart';
 
@@ -25,16 +26,12 @@ class SafetyFullViewScreen extends StatefulWidget {
  // Start with no default rows in full view as well.
  final rows = <List<Widget>>[];
 
- return Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => SafetyFullViewScreen(
+ return context.push('/safety-full-view', extra: SafetyFullViewScreen(
  columns: columns,
  initialRows: rows,
  accentColor: accent,
  detailsText: '',
- ),
- ),
- );
+ ));
  }
 
  @override

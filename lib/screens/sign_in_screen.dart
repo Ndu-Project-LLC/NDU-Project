@@ -114,14 +114,10 @@ class _SignInScreenState extends State<SignInScreen> {
           if (!mounted) return;
           // Navigate to 2FA verification screen with credentials stored
           // so the app can re-authenticate after successful verification
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => TwoFactorVerificationScreen(
+          context.push('/two-factor-verification', extra: TwoFactorVerificationScreen(
                 email: userEmail,
                 password: _passwordController.text,
-              ),
-            ),
-          );
+              ));
           return;
         }
         _navigateAfterSignIn();
@@ -511,11 +507,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   Center(
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const CreateAccountScreen()),
-                        );
+                        context.pushReplacement('/create-account');
                       },
                       child: RichText(
                         text: const TextSpan(

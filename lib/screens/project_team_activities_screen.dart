@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// PROJECT TEAM ACTIVITIES — World-Class Hub Landing Screen
@@ -27,9 +28,7 @@ class ProjectTeamActivitiesScreen extends StatefulWidget {
   const ProjectTeamActivitiesScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProjectTeamActivitiesScreen()),
-    );
+    context.push('/project-team-activities');
   }
 
   @override
@@ -367,32 +366,25 @@ class _ProjectTeamActivitiesScreenState
   void _navigateToSection(int index) {
     switch (index) {
       case 0:
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (_) => const StaffTeamScreen()));
+        context.push('/staff-team');
         break;
       case 1:
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const TeamMeetingsScreen()));
+        context.push('/team-meetings');
         break;
       case 2:
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const TeamTrainingAndBuildingScreen()));
+        context.push('/team-training');
         break;
       case 3:
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const RecognitionAwardsScreen()));
+        context.push('/recognition-awards');
         break;
       case 4:
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const TeamStatusCheckScreen()));
+        context.push('/team-status-check');
         break;
       case 5:
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const TeamHandoverScreen()));
+        context.push('/team-handover');
         break;
       case 6:
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const LessonsLearnedScreen()));
+        context.push('/lessons-learned');
         break;
     }
   }

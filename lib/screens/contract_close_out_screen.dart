@@ -24,14 +24,13 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:go_router/go_router.dart';
 
 class ContractCloseOutScreen extends StatefulWidget {
   const ContractCloseOutScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ContractCloseOutScreen()),
-    );
+    context.push('/contract-close-out');
   }
 
   @override

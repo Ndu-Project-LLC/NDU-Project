@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/screens/business_system_integrations_screen.dart';
 import 'package:ndu_project/services/business_system_integration_service.dart';
 
@@ -125,15 +126,10 @@ class _AggregatedBusinessSystemsCardState
           tooltip: 'Refresh',
         ),
         TextButton.icon(
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => BusinessSystemIntegrationsScreen(
+          onPressed: () => context.push('/business-system-integrations', extra: BusinessSystemIntegrationsScreen(
                 programId: widget.programId,
                 programName: widget.programName,
-              ),
-            ),
-          ),
+              )),
           icon: const Icon(Icons.settings, size: 16),
           label: const Text('Manage',
               style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
@@ -168,15 +164,10 @@ class _AggregatedBusinessSystemsCardState
           ),
           const SizedBox(height: 12),
           ElevatedButton.icon(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => BusinessSystemIntegrationsScreen(
+            onPressed: () => context.push('/business-system-integrations', extra: BusinessSystemIntegrationsScreen(
                   programId: widget.programId,
                   programName: widget.programName,
-                ),
-              ),
-            ),
+                )),
             icon: const Icon(Icons.add, size: 16),
             label: const Text('Connect a system'),
             style: ElevatedButton.styleFrom(

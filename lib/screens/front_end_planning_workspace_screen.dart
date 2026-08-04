@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/screens/front_end_planning_requirements_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -48,14 +49,10 @@ class FrontEndPlanningWorkspaceScreen extends StatefulWidget {
     String initialNotes = '',
     String initialSummary = '',
   }) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => FrontEndPlanningWorkspaceScreen(
+    context.push('/fep-workspace', extra: FrontEndPlanningWorkspaceScreen(
           initialNotes: initialNotes,
           initialSummary: initialSummary,
-        ),
-      ),
-    );
+        ));
   }
 
   @override

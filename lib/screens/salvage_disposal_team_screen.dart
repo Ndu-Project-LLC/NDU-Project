@@ -19,14 +19,12 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:go_router/go_router.dart';
 
 class SalvageDisposalTeamScreen extends StatefulWidget {
   const SalvageDisposalTeamScreen({super.key});
 
-  static void open(BuildContext context) => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const SalvageDisposalTeamScreen()),
-      );
+  static void open(BuildContext context) => context.push('/salvage-disposal-team');
 
   @override
   State<SalvageDisposalTeamScreen> createState() =>

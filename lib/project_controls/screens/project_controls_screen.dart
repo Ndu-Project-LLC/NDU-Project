@@ -23,14 +23,13 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/project_intelligence_service.dart';
 import 'package:ndu_project/widgets/shimmer_loading.dart';
+import 'package:go_router/go_router.dart';
 
 class ProjectControlsScreen extends StatefulWidget {
   const ProjectControlsScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProjectControlsScreen()),
-    );
+    context.push('/project-controls');
   }
 
   @override

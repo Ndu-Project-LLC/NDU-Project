@@ -6330,6 +6330,7 @@ class RoleDefinition {
   String description;
   String workstream;
   bool isPredefined;
+  int headcount;
 
   RoleDefinition({
     String? id,
@@ -6337,7 +6338,26 @@ class RoleDefinition {
     this.description = '',
     this.workstream = '',
     this.isPredefined = false,
+    this.headcount = 1,
   }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+
+  RoleDefinition copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? workstream,
+    bool? isPredefined,
+    int? headcount,
+  }) {
+    return RoleDefinition(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      workstream: workstream ?? this.workstream,
+      isPredefined: isPredefined ?? this.isPredefined,
+      headcount: headcount ?? this.headcount,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -6345,6 +6365,7 @@ class RoleDefinition {
         'description': description,
         'workstream': workstream,
         'isPredefined': isPredefined,
+        'headcount': headcount,
       };
 
   factory RoleDefinition.fromJson(Map<String, dynamic> json) {
@@ -6354,6 +6375,9 @@ class RoleDefinition {
       description: json['description']?.toString() ?? '',
       workstream: json['workstream']?.toString() ?? '',
       isPredefined: json['isPredefined'] == true,
+      headcount: (json['headcount'] is num)
+          ? (json['headcount'] as num).toInt()
+          : int.tryParse(json['headcount']?.toString() ?? '') ?? 1,
     );
   }
 

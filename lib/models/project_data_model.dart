@@ -3858,12 +3858,32 @@ class TeamMember {
   String email;
   String responsibilities;
 
+  /// Phone number including country + area code. Optional but recommended
+  /// for "Manage Closely" stakeholders (especially Project Team members
+  /// who do not have site access and must be reachable out-of-band).
+  /// Free-text so users can store any format, e.g. +260 97 123 4567.
+  String phone;
+
+  /// Physical location (city, country) of the team member. Used by the
+  /// Engagement Plan / Communication Roster to surface timezone and
+  /// travel considerations for stakeholder engagement.
+  String location;
+
+  /// Whether this team member has access to the NDU Project site/app.
+  /// When false, they must be engaged via email/phone only — their email
+  /// address becomes the primary communication channel. Defaults to true
+  /// since most PT members are internal users provisioned in the app.
+  bool hasSiteAccess;
+
   TeamMember({
     String? id,
     this.name = '',
     this.role = '',
     this.email = '',
     this.responsibilities = '',
+    this.phone = '',
+    this.location = '',
+    this.hasSiteAccess = true,
   }) : id = id ?? _generateId();
 
   Map<String, dynamic> toJson() => {
@@ -3872,6 +3892,9 @@ class TeamMember {
         'role': role,
         'email': email,
         'responsibilities': responsibilities,
+        'phone': phone,
+        'location': location,
+        'hasSiteAccess': hasSiteAccess,
       };
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
@@ -3881,6 +3904,30 @@ class TeamMember {
       role: json['role'] ?? '',
       email: json['email'] ?? '',
       responsibilities: json['responsibilities'] ?? '',
+      phone: json['phone']?.toString() ?? '',
+      location: json['location']?.toString() ?? '',
+      hasSiteAccess: json['hasSiteAccess'] != false,
+    );
+  }
+
+  TeamMember copyWith({
+    String? name,
+    String? role,
+    String? email,
+    String? responsibilities,
+    String? phone,
+    String? location,
+    bool? hasSiteAccess,
+  }) {
+    return TeamMember(
+      id: id,
+      name: name ?? this.name,
+      role: role ?? this.role,
+      email: email ?? this.email,
+      responsibilities: responsibilities ?? this.responsibilities,
+      phone: phone ?? this.phone,
+      location: location ?? this.location,
+      hasSiteAccess: hasSiteAccess ?? this.hasSiteAccess,
     );
   }
 
@@ -6729,6 +6776,41 @@ class EngagementPlanEntry {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// Which stakeholder group this engagement plan targets.
+  /// Examples: 'Project Team', 'Sponsor', 'Steering Committee', 'External',
+  /// 'Customer', 'Vendor', 'Regulator'. Used to segment communication plans
+  /// so each group has its own cadence and channels.
+  final String stakeholderGroup;
+
+  /// Whether this stakeholder is in the "Manage Closely" segment
+  /// (high influence + high interest, per the Influence/Interest matrix).
+  /// Project Team members default to true — they require the most frequent
+  /// engagement and the richest communication channels.
+  final bool manageClosely;
+
+  /// Where shared data/artefacts will be published for this stakeholder
+  /// group. Free-text so users can paste URLs, SharePoint paths, Google
+  /// Drive folders, email distribution lists, etc. One item per line.
+  /// Example:
+  ///   https://drive.google.com/...
+  ///   SharePoint: /PMO/Project Alpha/Reports
+  ///   Email DL: project-alpha-team@nduproject.com
+  final String dataShareLinks;
+
+  /// Per-quarter engagement description. Each value is a short plan for
+  /// how this stakeholder group will be engaged in that quarter.
+  /// Example Q1: 'Kickoff workshop + weekly status email'
+  /// Example Q2: 'Bi-weekly demo + sprint review attendance'
+  final String q1Plan;
+  final String q2Plan;
+  final String q3Plan;
+  final String q4Plan;
+
+  /// Optional link back to a [TeamMember.id] when this row was
+  /// auto-generated from the staffing plan / team members list. Allows
+  /// the UI to keep the row in sync with PT member edits (name, email).
+  final String teamMemberId;
+
   EngagementPlanEntry({
     required this.id,
     required this.stakeholder,
@@ -6741,6 +6823,14 @@ class EngagementPlanEntry {
     required this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.stakeholderGroup = '',
+    this.manageClosely = false,
+    this.dataShareLinks = '',
+    this.q1Plan = '',
+    this.q2Plan = '',
+    this.q3Plan = '',
+    this.q4Plan = '',
+    this.teamMemberId = '',
   });
 
   factory EngagementPlanEntry.empty() {
@@ -6769,6 +6859,14 @@ class EngagementPlanEntry {
     String? status,
     String? nextTouchpoint,
     String? notes,
+    String? stakeholderGroup,
+    bool? manageClosely,
+    String? dataShareLinks,
+    String? q1Plan,
+    String? q2Plan,
+    String? q3Plan,
+    String? q4Plan,
+    String? teamMemberId,
     DateTime? updatedAt,
   }) {
     return EngagementPlanEntry(
@@ -6781,6 +6879,14 @@ class EngagementPlanEntry {
       status: status ?? this.status,
       nextTouchpoint: nextTouchpoint ?? this.nextTouchpoint,
       notes: notes ?? this.notes,
+      stakeholderGroup: stakeholderGroup ?? this.stakeholderGroup,
+      manageClosely: manageClosely ?? this.manageClosely,
+      dataShareLinks: dataShareLinks ?? this.dataShareLinks,
+      q1Plan: q1Plan ?? this.q1Plan,
+      q2Plan: q2Plan ?? this.q2Plan,
+      q3Plan: q3Plan ?? this.q3Plan,
+      q4Plan: q4Plan ?? this.q4Plan,
+      teamMemberId: teamMemberId ?? this.teamMemberId,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -6796,6 +6902,14 @@ class EngagementPlanEntry {
         'status': status,
         'nextTouchpoint': nextTouchpoint,
         'notes': notes,
+        'stakeholderGroup': stakeholderGroup,
+        'manageClosely': manageClosely,
+        'dataShareLinks': dataShareLinks,
+        'q1Plan': q1Plan,
+        'q2Plan': q2Plan,
+        'q3Plan': q3Plan,
+        'q4Plan': q4Plan,
+        'teamMemberId': teamMemberId,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
       };
@@ -6811,6 +6925,14 @@ class EngagementPlanEntry {
       status: json['status']?.toString() ?? 'Planned',
       nextTouchpoint: json['nextTouchpoint']?.toString() ?? '',
       notes: json['notes']?.toString() ?? '',
+      stakeholderGroup: json['stakeholderGroup']?.toString() ?? '',
+      manageClosely: json['manageClosely'] == true,
+      dataShareLinks: json['dataShareLinks']?.toString() ?? '',
+      q1Plan: json['q1Plan']?.toString() ?? '',
+      q2Plan: json['q2Plan']?.toString() ?? '',
+      q3Plan: json['q3Plan']?.toString() ?? '',
+      q4Plan: json['q4Plan']?.toString() ?? '',
+      teamMemberId: json['teamMemberId']?.toString() ?? '',
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
     );

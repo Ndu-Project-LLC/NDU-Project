@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 /// Front End Planning – Security screen
 /// Mirrors the provided layout with shared workspace chrome,
 /// large notes area, security text panel, and AI hint + Next controls.
@@ -27,9 +28,7 @@ class FrontEndPlanningSecurityScreen extends StatefulWidget {
  const FrontEndPlanningSecurityScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const FrontEndPlanningSecurityScreen()),
- );
+ context.push('/fep-security');
  }
 
  @override

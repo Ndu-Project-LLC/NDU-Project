@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE SPRINT REVIEWS — Completed Stories, Demos, Stakeholder Feedback
@@ -16,9 +17,7 @@ class AgileSprintReviewsScreen extends StatefulWidget {
   const AgileSprintReviewsScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AgileSprintReviewsScreen()),
-    );
+    context.push('/agile-sprint-reviews');
   }
 
   @override

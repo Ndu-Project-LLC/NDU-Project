@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 const String _contractingCollection = 'contracting';
 const String _contractPlanNoteKey = 'planning_contract_plan';
 const String _contractPlanMarketKey = 'planning_contract_market';
@@ -95,10 +96,7 @@ class FrontEndPlanningContractsScreen extends StatefulWidget {
  const FrontEndPlanningContractsScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const FrontEndPlanningContractsScreen()),
- );
+ context.push('/fep-contracts');
  }
 
  @override
@@ -113,16 +111,11 @@ class _FrontEndPlanningContractsScreenState
  bool _isSeedingContracts = false;
 
  void _openCreateContract() {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const CreateContractScreen()),
- );
+ context.push('/create-contract');
  }
 
  void _openEditContract(ContractModel contract) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => CreateContractScreen(contract: contract)),
- );
+ context.push('/create-contract', extra: CreateContractScreen(contract: contract));
  }
 
  @override
@@ -160,10 +153,7 @@ class _FrontEndPlanningContractsScreenState
  }
 
  void _navigateToProcurement() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PlanningProcurementScreen()),
- );
+ context.push('/planning-procurement');
  }
 
  Future<void> _seedContractsFromInitiationIfNeeded() async {
@@ -1307,21 +1297,11 @@ class _ContractingStrategyScreenState extends State<ContractingStrategyScreen> {
  }
 
  void _openContractDetails() {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractDetailsScreen'),
- builder: (_) => const ContractDetailsScreen(),
- ),
- );
+ context.push('/contract-details');
  }
 
  void _openContractingStatus() {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractingStatusScreen'),
- builder: (_) => const ContractingStatusScreen(),
- ),
- );
+ context.push('/contracting-status');
  }
 
  Future<void> _loadStrategyData() async {
@@ -4305,12 +4285,7 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
  }
 
  void _openContractingStatus() {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractingStatusScreen'),
- builder: (_) => const ContractingStatusScreen(),
- ),
- );
+ context.push('/contracting-status');
  }
 
  @override
@@ -4939,12 +4914,7 @@ class ContractingSummaryScreen extends StatefulWidget {
  const ContractingSummaryScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractingSummaryScreen'),
- builder: (_) => const ContractingSummaryScreen(),
- ),
- );
+ context.push('/contracting-summary');
  }
 
  @override
@@ -4987,21 +4957,11 @@ class _ContractingSummaryScreenState extends State<ContractingSummaryScreen> {
  }
 
  void _openContractDetails() {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractDetailsScreen'),
- builder: (_) => const ContractDetailsScreen(),
- ),
- );
+ context.push('/contract-details');
  }
 
  void _openContractingStatus() {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractingStatusScreen'),
- builder: (_) => const ContractingStatusScreen(),
- ),
- );
+ context.push('/contracting-status');
  }
 
  Future<void> _loadSummaryData() async {

@@ -19,6 +19,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 // ─── Tab definitions ────────────────────────────────────────────────────────
 
 enum _ImTab {
@@ -71,9 +72,7 @@ class InterfaceManagementScreen extends StatefulWidget {
   const InterfaceManagementScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const InterfaceManagementScreen()),
-    );
+    context.push('/interface-management');
   }
 
   @override

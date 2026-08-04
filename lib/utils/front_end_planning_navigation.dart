@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/utils/navigation_route_resolver.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -119,12 +120,9 @@ class FrontEndPlanningNavigation {
       return;
     }
 
-    final route = PhaseTransitionHelper.buildRoute(
-      context: context,
-      builder: (_) => screen,
-      sourceCheckpoint: sourceCheckpoint,
-      destinationCheckpoint: destinationCheckpoint,
+    context.pushReplacement(
+      NavigationRouteResolver.resolveCheckpointToUrl(destinationCheckpoint),
+      extra: screen,
     );
-    Navigator.of(context).pushReplacement(route);
   }
 }

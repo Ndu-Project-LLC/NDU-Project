@@ -31,6 +31,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
+import 'package:go_router/go_router.dart';
 
 /// Front End Planning - Project Requirements page
 /// Implements the layout from the provided screenshot exactly:
@@ -43,10 +44,7 @@ class FrontEndPlanningRequirementsScreen extends StatefulWidget {
   const FrontEndPlanningRequirementsScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => const FrontEndPlanningRequirementsScreen()),
-    );
+    context.push('/fep-requirements');
   }
 
   @override

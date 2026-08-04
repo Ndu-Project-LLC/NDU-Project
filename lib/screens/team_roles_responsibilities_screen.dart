@@ -14,15 +14,12 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 class TeamRolesResponsibilitiesScreen extends StatefulWidget {
  const TeamRolesResponsibilitiesScreen({super.key});
 
  static Future<void> open(BuildContext context) {
- return Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const TeamRolesResponsibilitiesScreen()),
- );
+ return context.push('/team-roles');
  }
 
  @override

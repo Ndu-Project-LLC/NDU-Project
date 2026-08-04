@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE ROADMAP — Strategic Visual Roadmap
@@ -21,9 +22,7 @@ class AgileRoadmapScreen extends StatefulWidget {
   const AgileRoadmapScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AgileRoadmapScreen()),
-    );
+    context.push('/agile-roadmap');
   }
 
   @override

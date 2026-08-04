@@ -13,6 +13,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 class ContractDetailsDashboardScreen extends StatefulWidget {
  const ContractDetailsDashboardScreen({super.key});
 
@@ -59,10 +60,7 @@ class _ContractDetailsDashboardScreenState extends State<ContractDetailsDashboar
  _Header(
  isMobile: isMobile,
  onAddContract: () {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const CreateContractScreen()),
- );
+ context.push('/create-contract');
  },
  ),
  const SizedBox(height: 32),

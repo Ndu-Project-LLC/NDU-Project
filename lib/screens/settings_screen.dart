@@ -46,8 +46,7 @@ class SettingsScreen extends StatefulWidget {
       // ignore: invalid_use_of_visible_for_testing_member
       context.pushNamed(AppRoutes.settings);
     } catch (e) {
-      Navigator.of(context)
-          .push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+      context.push('/settings');
     }
   }
 
@@ -4720,11 +4719,7 @@ class _SecuritySettingsTabState extends State<_SecuritySettingsTab> {
             alignment: Alignment.centerRight,
             child: OutlinedButton.icon(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const MfaEnrollmentScreen(),
-                  ),
-                );
+                context.push('/mfa-enrollment');
               },
               icon: const Icon(Icons.verified_user_outlined),
               label: const Text('Enroll MFA'),
@@ -4735,11 +4730,7 @@ class _SecuritySettingsTabState extends State<_SecuritySettingsTab> {
             alignment: Alignment.centerRight,
             child: OutlinedButton.icon(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const RecoveryCodesScreen(),
-                  ),
-                );
+                context.push('/recovery-codes');
               },
               icon: const Icon(Icons.confirmation_number_outlined),
               label: const Text('Recovery Codes'),

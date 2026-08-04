@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 
 enum _SecurityTab { dashboard, roles, permissions, settings, accessLogs }
 
@@ -25,9 +26,7 @@ class SecurityManagementScreen extends StatefulWidget {
   const SecurityManagementScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SecurityManagementScreen()),
-    );
+    context.push('/security-management');
   }
 
   @override

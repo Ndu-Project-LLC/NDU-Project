@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:ndu_project/screens/execution_enabling_work_plan_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/execution_plan_shared.dart';
@@ -47,27 +48,19 @@ class ExecutionPlanDetailsScreen extends StatefulWidget {
   final bool showEarlyWorks;
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const ExecutionPlanDetailsScreen(
+    context.push('/execution-plan-details', extra: const ExecutionPlanDetailsScreen(
           activeItemLabel: 'Execution Plan Details',
           showPlanDetails: true,
           showEarlyWorks: false,
-        ),
-      ),
-    );
+        ));
   }
 
   static void openEarlyWorks(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const ExecutionPlanDetailsScreen(
+    context.push('/execution-plan-details', extra: const ExecutionPlanDetailsScreen(
           activeItemLabel: 'Execution Early Works',
           showPlanDetails: false,
           showEarlyWorks: true,
-        ),
-      ),
-    );
+        ));
   }
 
   @override

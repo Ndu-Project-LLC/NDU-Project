@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// HOW IT WORKS — World-Class Standalone Page
@@ -11,9 +12,7 @@ class HowItWorksScreen extends StatelessWidget {
   const HowItWorksScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const HowItWorksScreen()),
-    );
+    context.push('/how-it-works');
   }
 
   @override

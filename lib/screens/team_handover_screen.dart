@@ -7,6 +7,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// TEAM HANDOVER CHECKLIST
@@ -19,9 +20,7 @@ class TeamHandoverScreen extends StatefulWidget {
   const TeamHandoverScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const TeamHandoverScreen()),
-    );
+    context.push('/team-handover');
   }
 
   @override

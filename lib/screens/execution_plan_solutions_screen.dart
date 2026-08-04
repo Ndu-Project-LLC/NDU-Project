@@ -16,6 +16,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 Future<void> _exportPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -38,9 +39,7 @@ class ExecutionPlanSolutionsScreen extends StatefulWidget {
   const ExecutionPlanSolutionsScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ExecutionPlanSolutionsScreen()),
-    );
+    context.push('/execution-plan-solutions');
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/openai/openai_config.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
@@ -1343,12 +1344,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
 
  // ignore: unused_element
  void _openBusinessCase() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const InitiationPhaseScreen(scrollToBusinessCase: true),
- ),
- );
+ context.push('/initiation-phase', extra: const InitiationPhaseScreen(scrollToBusinessCase: true));
  }
 
  List<AiSolutionItem> _collectSolutions() {
@@ -1364,90 +1360,60 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  void _openRiskIdentification() {
  final notes = _notesController.text.trim();
  final solutions = _collectSolutions();
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => RiskIdentificationScreen(
+ context.push('/risk-identification', extra: RiskIdentificationScreen(
  notes: notes,
  solutions: solutions,
  businessCase: _incomingBusinessCase,
- ),
- ),
- );
+ ));
  }  void _openITConsiderations() {
     final notes = _notesController.text.trim();
     final solutions = _collectSolutions();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ITConsiderationsScreen(
+    context.push('/it-considerations', extra: ITConsiderationsScreen(
           notes: notes,
           solutions: solutions,
           businessCase: _incomingBusinessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openInfrastructureConsiderations() {
     final notes = _notesController.text.trim();
     final solutions = _collectSolutions();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => InfrastructureConsiderationsScreen(
+    context.push('/infrastructure-considerations', extra: InfrastructureConsiderationsScreen(
           notes: notes,
           solutions: solutions,
           businessCase: _incomingBusinessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openCoreStakeholders() {
     final notes = _notesController.text.trim();
     final solutions = _collectSolutions();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CoreStakeholdersScreen(
+    context.push('/core-stakeholders', extra: CoreStakeholdersScreen(
           notes: notes,
           solutions: solutions,
           businessCase: _incomingBusinessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openCostAnalysis() {
     final notes = _notesController.text.trim();
     final solutions = _collectSolutions();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CostAnalysisScreen(
+    context.push('/cost-analysis', extra: CostAnalysisScreen(
           notes: notes,
           solutions: solutions,
           businessCase: _incomingBusinessCase,
-        ),
-      ),
-    );
+        ));
   }
 
  void _openPreferredSolutionAnalysis() {
  final notes = _notesController.text.trim();
  final solutions = _collectSolutions();
  final businessCase = _incomingBusinessCase.trim();
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => PreferredSolutionAnalysisScreen(
+ context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
  notes: notes,
  solutions: solutions,
  businessCase: businessCase,
- ),
- ),
- );
+ ));
  }
 
  void _scrollToSolutions() {
@@ -2249,15 +2215,11 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  if (!mounted) return;
 
  // Navigate to Risk Identification
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => RiskIdentificationScreen(
+ context.push('/risk-identification', extra: RiskIdentificationScreen(
  notes: trimmedNotes,
  solutions: solutions,
  businessCase: _incomingBusinessCase,
- ),
- ),
- );
+ ));
  }
 
  @override

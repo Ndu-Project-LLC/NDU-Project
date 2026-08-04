@@ -32,17 +32,10 @@ class DashboardBottomNavBar extends StatelessWidget {
         context.go('/${AppRoutes.dashboard}');
         break;
       case 1:
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (_) => const ProgramDashboardMobileScreen()),
-        );
+        context.push('/program-dashboard-mobile');
         break;
       case 2:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
-        );
+        context.push('/portfolio-dashboard');
         break;
       case 3:
         context.go('/${AppRoutes.settings}?from=${AppRoutes.dashboard}');

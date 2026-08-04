@@ -16,6 +16,7 @@ import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 enum _TechnologyTab {
  inventory('Technology Inventory'),
  aiIntegrations('AI Integrations'),
@@ -31,9 +32,7 @@ class PlanningTechnologyScreen extends StatefulWidget {
  const PlanningTechnologyScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const PlanningTechnologyScreen()),
- );
+ context.push('/fep-technology');
  }
 
  @override

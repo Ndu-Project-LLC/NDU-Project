@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 /// Front End Planning – Allowance screen
 /// Refactored to support structured "Program-Aware Financial Inputs".
 ///
@@ -33,10 +34,7 @@ class FrontEndPlanningAllowanceScreen extends StatefulWidget {
  const FrontEndPlanningAllowanceScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const FrontEndPlanningAllowanceScreen()),
- );
+ context.push('/fep-allowance');
  }
 
  @override

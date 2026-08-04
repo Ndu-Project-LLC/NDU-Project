@@ -18,14 +18,13 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 
 class RiskTrackingWorkspaceScreen extends StatefulWidget {
   const RiskTrackingWorkspaceScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const RiskTrackingWorkspaceScreen()),
-    );
+    context.push('/risk-tracking');
   }
 
   @override

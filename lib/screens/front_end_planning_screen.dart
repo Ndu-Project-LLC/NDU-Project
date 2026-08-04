@@ -10,6 +10,7 @@ import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 
 class FrontEndPlanningScreen extends StatefulWidget {
  const FrontEndPlanningScreen({super.key});
@@ -50,9 +51,7 @@ class _FrontEndPlanningScreenState extends State<FrontEndPlanningScreen> {
  }
 // ignore: unused_element
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const FrontEndPlanningScreen()),
- );
+ context.push('/front-end-planning');
  }
 
  @override

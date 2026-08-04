@@ -10,11 +10,12 @@ import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:go_router/go_router.dart';
 class TechnologyInventoryScreen extends StatefulWidget {
  const TechnologyInventoryScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TechnologyInventoryScreen()));
+ context.push('/technology-inventory');
  }
 
  @override

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/routing/app_router.dart';
+import 'package:ndu_project/services/firebase_auth_service.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 /// Mobile-optimized Login screen
@@ -46,35 +47,34 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
-    // Temporarily disabled due to Google Sign-In API compatibility issues
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Google Sign-In temporarily unavailable')),
-    );
-    return;
-
-    /* Original implementation - to be fixed
     setState(() => _isLoading = true);
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn.standard();
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        setState(() => _isLoading = false);
+      final cred = await FirebaseAuthService.signInWithGoogle();
+      if (!mounted) return;
+
+      final user = cred.user;
+      if (user == null) {
+        // User cancelled the popup — no error snack needed.
         return;
       }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      await FirebaseAuth.instance.signInWithCredential(credential);
-
-      if (!mounted) return;
       context.go('/${AppRoutes.dashboard}');
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      final msg = _friendlyAuthErrorMessage(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg)),
+      );
     } catch (e) {
+      final msg = e.toString();
+      // User-cancellation is expected and should NOT show an error snack.
+      if (msg.contains('popup-closed-by-user') ||
+          msg.contains('cancelled') ||
+          msg.contains('Sign in aborted')) {
+        debugPrint('Google sign-in cancelled: $e');
+        return;
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Google sign-in failed: $e')),
@@ -82,7 +82,34 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-    */
+  }
+
+  /// Maps Firebase Auth error codes to user-friendly messages.
+  String _friendlyAuthErrorMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-email':
+        return 'The email address is not valid.';
+      case 'user-disabled':
+        return 'This account has been disabled. Contact support.';
+      case 'user-not-found':
+      case 'invalid-credential':
+      case 'wrong-password':
+        return 'Incorrect email or password.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please wait a few minutes and try again.';
+      case 'operation-not-allowed':
+        return 'Email/password sign-in is not enabled for this project.';
+      case 'network-request-failed':
+        return 'Network error. Check your connection and try again.';
+      case 'popup-closed-by-user':
+        return 'Sign-in cancelled.';
+      case 'popup-blocked':
+        return 'Sign-in popup was blocked by the browser.';
+      case 'unauthorized-domain':
+        return 'This domain is not authorized for sign-in.';
+      default:
+        return e.message ?? 'Sign in failed. Please try again.';
+    }
   }
 
   Future<void> _signIn() async {
@@ -108,50 +135,23 @@ class _MobileLoginScreenState extends State<MobileLoginScreen> {
 
       final user = FirebaseAuth.instance.currentUser;
       if (user != null && !user.emailVerified) {
-        await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Email Not Verified'),
-            content: const Text(
-                'Please verify your email address to continue. Check your inbox for the verification link.'),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  await user.sendEmailVerification();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Verification email resent!')),
-                    );
-                    context.pop();
-                  }
-                },
-                child: const Text('Resend Email'),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Sign out if not verified
-                  FirebaseAuth.instance.signOut();
-                  context.pop();
-                },
-                child: const Text('Close'),
-              ),
-            ],
+        // Soft warning instead of hard block — verification emails are often
+        // delayed or filtered as spam, so blocking login entirely leaves
+        // users unable to enter the app. They can verify later from Settings.
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Please verify your email. You can resend the link from Settings.'),
+            backgroundColor: Colors.orange,
           ),
         );
-        setState(() => _isLoading = false);
-        return;
       }
 
       context.go('/${AppRoutes.dashboard}');
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
-      String message = 'Sign in failed';
-      if (e.code == 'user-not-found') {
-        message = 'No account found with this email';
-      } else if (e.code == 'wrong-password') {
-        message = 'Incorrect password';
-      }
+      String message = _friendlyAuthErrorMessage(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );

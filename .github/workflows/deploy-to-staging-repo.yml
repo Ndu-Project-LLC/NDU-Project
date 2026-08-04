@@ -15,8 +15,8 @@ name: Deploy to Staging Repo
 #       → GitHub Pages on ndu-staging serves staging.nduproject.com
 #
 # Required secret:
-#   STAGING_REPO_DEPLOY_TOKEN  — PAT with `repo` scope, or fine-grained PAT
-#                                with `Contents: Write` on Ndu-Project-LLC/ndu-staging
+#   ACCESS_TOKEN  — PAT with `repo` scope, or fine-grained PAT
+#                   with `Contents: Write` on Ndu-Project-LLC/ndu-staging
 # ─────────────────────────────────────────────────────────────────────────────
 
 on:
@@ -133,7 +133,7 @@ jobs:
       - name: Push build to Ndu-Project-LLC/ndu-staging:main
         uses: peaceiris/actions-gh-pages@v4
         with:
-          personal_token: ${{ secrets.STAGING_REPO_DEPLOY_TOKEN }}
+          personal_token: ${{ secrets.ACCESS_TOKEN }}
           external_repository: Ndu-Project-LLC/ndu-staging
           publish_branch: main
           publish_dir: build/web

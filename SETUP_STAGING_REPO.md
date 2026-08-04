@@ -27,7 +27,7 @@ push to main (Ndu-Project-LLC/NDU-Project)
 └────────────┬─────────────────────┘
              │
              │ git push --force
-             │ (using STAGING_REPO_DEPLOY_TOKEN)
+             │ (using ACCESS_TOKEN)
              ▼
 ┌──────────────────────────────────┐
 │ Ndu-Project-LLC/ndu-staging      │   ← NEW separate repo
@@ -123,7 +123,7 @@ You need a Personal Access Token that the main repo's CI can use to push to the 
 
 1. Go to https://github.com/Ndu-Project-LLC/NDU-Project/settings/secrets/actions
 2. Click **New repository secret**
-3. **Name:** `STAGING_REPO_DEPLOY_TOKEN`
+3. **Name:** `ACCESS_TOKEN`
 4. **Secret:** paste the token value from Step 5
 5. Click **Add secret**
 
@@ -175,7 +175,7 @@ After the first manual test, the workflow will auto-fire whenever `auto-deploy-s
 
 ### "Bad credentials" or 403 on push
 
-→ The `STAGING_REPO_DEPLOY_TOKEN` secret is missing, expired, or doesn't have write access to `ndu-staging`. Regenerate the token (Step 5) and update the secret (Step 6).
+→ The `ACCESS_TOKEN` secret is missing, expired, or doesn't have write access to `ndu-staging`. Regenerate the token (Step 5) and update the secret (Step 6).
 
 ### Pages shows 404
 

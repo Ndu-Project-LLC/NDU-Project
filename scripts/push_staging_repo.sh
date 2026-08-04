@@ -88,5 +88,5 @@ echo "  1. Enable GitHub Pages: https://github.com/${STAGING_REPO_GITHUB}/settin
 echo "     Source: Deploy from a branch → main / (root)"
 echo "  2. Set custom domain: staging.nduproject.com"
 echo "  3. Configure DNS CNAME: staging → ndu-project-llc.github.io."
-echo "  4. Add STAGING_REPO_DEPLOY_TOKEN secret to Ndu-Project-LLC/NDU-Project"
+echo "  4. Add ACCESS_TOKEN secret to Ndu-Project-LLC/NDU-Project"
 echo "  5. Verify: https://staging.nduproject.com"

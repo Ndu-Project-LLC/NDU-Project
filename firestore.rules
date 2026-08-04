@@ -82,7 +82,32 @@ service cloud.firestore {
         isAdmin()
       );
       allow delete: if isAuthenticated() && (request.auth.uid == resource.data.ownerId || isAdmin());
-      
+
+      // ─── Team Management plan ───────────────────────────────────────
+      // The Team Management plan document (projects/{projectId}/team_management/plan)
+      // holds the mobilization process, per-member mobilization checklists,
+      // role onboarding requirements, recognition process, handover records,
+      // and the team activities feed. It is authored during the Planning
+      // phase and consumed (read + checklist updates) during the Execution
+      // phase by the "Mobilize team" screen.
+      //
+      // Read:  project owner + team members (so the Execution-phase
+      //        mobilization board can display every member's checklist).
+      // Write: project owner + team members (members check off their own
+      //        mobilization items during Execution; the owner authors the
+      //        plan during Planning).
+      match /team_management/plan {
+        allow read: if isProjectOwner() || isProjectMember();
+        allow write: if isProjectOwner() || isProjectMember();
+      }
+
+      // Other team management documents (e.g. per-member onboarding docs)
+      // follow the same owner/member access policy.
+      match /team_management/{document=**} {
+        allow read: if isProjectOwner() || isProjectMember();
+        allow write: if isProjectOwner() || isProjectMember();
+      }
+
       // All project subcollections — owner has full access, members have read access
       match /{document=**} {
         allow read: if isProjectOwner() || isProjectMember();

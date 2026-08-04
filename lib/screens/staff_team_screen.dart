@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/staffing_row.dart';
+import 'package:ndu_project/models/team_management_plan.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/services/team_management_service.dart';
 import 'package:ndu_project/screens/design_deliverables_screen.dart';
 import 'package:ndu_project/screens/team_meetings_screen.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
@@ -42,6 +46,11 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
   bool _autoGenerationTriggered = false;
   bool _isAutoGenerating = false;
   Timer? _autoSaveDebounce;
+
+  // ── Mobilization plan (consumed from the Planning-phase Team Management
+  // screen). Stored at projects/{projectId}/team_management/plan.
+  TeamManagementPlan _mobilizationPlan = TeamManagementPlan.empty();
+  bool _loadingMobilization = true;
 
   String? get _projectId {
     try {
@@ -114,10 +123,81 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
         });
       }
       await _autoGenerateIfNeeded();
+      await _loadMobilizationPlan();
     } catch (e) {
       debugPrint('Error loading staff team data: $e');
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  // ── Mobilization plan persistence (Firestore) ─────────────────────
+  // Loads the plan authored on the Planning-phase Team Management screen
+  // so the Execution-phase Staff Team screen can display and advance each
+  // member's mobilization checklist.
+  Future<void> _loadMobilizationPlan() async {
+    final projectId = _projectId;
+    if (projectId == null || projectId.isEmpty) {
+      if (mounted) setState(() => _loadingMobilization = false);
+      return;
+    }
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(projectId)
+          .collection('team_management')
+          .doc('plan')
+          .get();
+      if (doc.exists && doc.data() != null) {
+        if (!mounted) return;
+        setState(() {
+          _mobilizationPlan = TeamManagementPlan.fromJson(doc.data()!);
+          _loadingMobilization = false;
+        });
+      } else {
+        if (mounted) setState(() => _loadingMobilization = false);
+      }
+    } catch (e) {
+      debugPrint('StaffTeam: failed to load mobilization plan: $e');
+      if (mounted) setState(() => _loadingMobilization = false);
+    }
+  }
+
+  Future<void> _saveMobilizationPlan() async {
+    final projectId = _projectId;
+    if (projectId == null || projectId.isEmpty) return;
+    try {
+      await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(projectId)
+          .collection('team_management')
+          .doc('plan')
+          .set(_mobilizationPlan.toJson(), SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('StaffTeam: failed to save mobilization plan: $e');
+    }
+  }
+
+  void _toggleChecklistItem(String memberId, int index) {
+    setState(() {
+      final mobIndex = _mobilizationPlan.memberMobilizations
+          .indexWhere((m) => m.memberId == memberId);
+      if (mobIndex == -1) return;
+      final mob = _mobilizationPlan.memberMobilizations[mobIndex];
+      if (index < 0 || index >= mob.checklist.length) return;
+      final item = mob.checklist[index];
+      final now = DateTime.now().toIso8601String();
+      final user = FirebaseAuth.instance.currentUser;
+      final newlyChecked = !item.isChecked;
+      mob.checklist[index] = item.copyWith(
+        isChecked: newlyChecked,
+        completedAt: newlyChecked ? now : null,
+        completedBy: newlyChecked ? user?.uid : null,
+      );
+      // Stamp mobilizedAt when every item is checked; clear it otherwise.
+      _mobilizationPlan.memberMobilizations[mobIndex].mobilizedAt =
+          mob.checklist.every((i) => i.isChecked) ? now : null;
+    });
+    _saveMobilizationPlan();
   }
 
   Future<void> _autoGenerateIfNeeded() async {
@@ -337,6 +417,8 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
               onRowsChanged: _onStaffingRowsChanged,
             ),
             const SizedBox(height: 28),
+            _buildMobilizationBoard(),
+            const SizedBox(height: 28),
             launch.LaunchEditableSection(
               title: 'Onboarding actions',
               description:
@@ -366,6 +448,363 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
           _buildBottomActionBar(context),
           const SizedBox(height: 56),
         ],
+      ),
+    );
+  }
+
+  // ── Mobilization Board ────────────────────────────────────────────
+  // Consumes the Team Management plan authored during the Planning phase
+  // (projects/{projectId}/team_management/plan) and surfaces each team
+  // member's mobilization checklist so the Execution phase can track and
+  // advance mobilization. Checking off all items marks the member as
+  // "mobilized" for Execution.
+  Widget _buildMobilizationBoard() {
+    if (_loadingMobilization) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final projectData = ProjectDataHelper.getData(context);
+    final members = projectData.teamMembers;
+
+    if (members.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.rocket_launch_outlined,
+                    size: 20, color: Color(0xFFD97706)),
+              ),
+              const SizedBox(width: 12),
+              const Text('Team Mobilization',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827))),
+            ]),
+            const SizedBox(height: 16),
+            const Text(
+              'No team members found. Add team members on the Team Management '
+              'screen (Planning phase) to track their mobilization checklists here.',
+              style: TextStyle(
+                  fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Seed any missing member mobilization records from the default
+    // checklist template so the board is immediately actionable.
+    bool planChanged = false;
+    for (final member in members) {
+      final exists = _mobilizationPlan.memberMobilizations
+          .any((m) => m.memberId == member.id);
+      if (!exists) {
+        _mobilizationPlan.memberMobilizations.add(
+          TeamManagementService.getOrCreateMemberMobilization(
+            plan: _mobilizationPlan,
+            memberId: member.id,
+          ),
+        );
+        planChanged = true;
+      }
+    }
+    if (planChanged) _saveMobilizationPlan();
+
+    final overallProgress =
+        TeamManagementService.overallMobilizationProgress(_mobilizationPlan);
+    final mobilizedCount = _mobilizationPlan.memberMobilizations
+        .where((m) => m.isFullyMobilized)
+        .length;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header + overall progress
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.rocket_launch_outlined,
+                    size: 20, color: Color(0xFFD97706)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Team Mobilization',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF111827))),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Per-member onboarding checklists from the Team Management '
+                      'plan. Complete all items to mobilize each member for Execution.',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B7280),
+                          height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '$mobilizedCount/${members.length} mobilized',
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF92400E)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: overallProgress,
+              minHeight: 8,
+              backgroundColor: const Color(0xFFE5E7EB),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(Color(0xFFD97706)),
+            ),
+          ),
+          // Mobilization process text (authored on the Planning screen)
+          if (_mobilizationPlan.mobilizationProcess.trim().isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(children: [
+                    Icon(Icons.description_outlined,
+                        size: 16, color: Color(0xFF6B7280)),
+                    SizedBox(width: 6),
+                    Text('Mobilization Process',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF374151))),
+                  ]),
+                  const SizedBox(height: 8),
+                  Text(
+                    _mobilizationPlan.mobilizationProcess,
+                    style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF4B5563),
+                        height: 1.5),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          // Per-member checklists
+          ...members.map((member) => _buildMemberChecklist(member)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMemberChecklist(TeamMember member) {
+    MemberMobilization mob;
+    final idx = _mobilizationPlan.memberMobilizations
+        .indexWhere((m) => m.memberId == member.id);
+    if (idx == -1) {
+      mob = TeamManagementService.getOrCreateMemberMobilization(
+        plan: _mobilizationPlan,
+        memberId: member.id,
+      );
+    } else {
+      mob = _mobilizationPlan.memberMobilizations[idx];
+    }
+
+    final progress = mob.progress;
+    final isMobilized = mob.isFullyMobilized;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+            color: isMobilized
+                ? const Color(0xFF86EFAC)
+                : const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Row(children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: isMobilized
+                        ? const Color(0xFFDCFCE7)
+                        : const Color(0xFFEEF2FF),
+                    child: Text(
+                      (member.name.isNotEmpty ? member.name : '?')[0]
+                          .toUpperCase(),
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: isMobilized
+                              ? const Color(0xFF16A34A)
+                              : const Color(0xFF4338CA)),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            member.name.isNotEmpty
+                                ? member.name
+                                : 'Unknown member',
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF111827))),
+                        if (member.role.isNotEmpty)
+                          Text(member.role,
+                              style: const TextStyle(
+                                  fontSize: 11, color: Color(0xFF6B7280))),
+                      ],
+                    ),
+                  ),
+                ]),
+              ),
+              if (isMobilized)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(children: [
+                    Icon(Icons.check_circle,
+                        size: 12, color: Color(0xFF16A34A)),
+                    SizedBox(width: 3),
+                    Text('MOBILIZED',
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF16A34A))),
+                  ]),
+                )
+              else
+                Text('${(progress * 100).round()}%',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFD97706))),
+            ],
+          ),
+          if (mob.checklist.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 10),
+              child: Text(
+                  'No checklist items. Add items on the Team Management screen.',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF9CA3AF),
+                      fontStyle: FontStyle.italic)),
+            )
+          else ...[
+            const SizedBox(height: 10),
+            ...mob.checklist.asMap().entries.map((entry) {
+              return _buildChecklistItem(member.id, entry.key, entry.value);
+            }),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChecklistItem(
+      String memberId, int index, MobilizationChecklistItem item) {
+    return InkWell(
+      onTap: () => _toggleChecklistItem(memberId, index),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: Checkbox(
+                value: item.isChecked,
+                onChanged: (_) => _toggleChecklistItem(memberId, index),
+                activeColor: const Color(0xFF16A34A),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                item.label,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: item.isChecked
+                      ? const Color(0xFF6B7280)
+                      : const Color(0xFF374151),
+                  decoration: item.isChecked
+                      ? TextDecoration.lineThrough
+                      : TextDecoration.none,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

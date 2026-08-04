@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/routing/app_router.dart';
+import 'package:ndu_project/services/firebase_auth_service.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 /// Mobile-optimized Create Account screen
@@ -41,39 +42,38 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
-    // Temporarily disabled due to Google Sign-In API compatibility issues
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Google Sign-In temporarily unavailable')),
-    );
-    return;
-
-    /* Original implementation - to be fixed
     setState(() => _isLoading = true);
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn.standard();
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        setState(() => _isLoading = false);
+      final cred = await FirebaseAuthService.signInWithGoogle();
+      if (!mounted) return;
+
+      final user = cred.user;
+      if (user == null) {
+        // User cancelled the popup — no error snack needed.
         return;
       }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
-
-      // Create user document in Firestore
-      await _createUserDocument(userCredential.user!);
+      // Create user document
+      await _createUserDocument(user);
 
       if (!mounted) return;
       context.go('/${AppRoutes.dashboard}');
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      final msg = _friendlyAuthErrorMessage(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg)),
+      );
     } catch (e) {
+      final msg = e.toString();
+      // User-cancellation is expected and should NOT show an error snack.
+      if (msg.contains('popup-closed-by-user') ||
+          msg.contains('cancelled') ||
+          msg.contains('Sign in aborted')) {
+        debugPrint('Google sign-in cancelled: $e');
+        return;
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Google sign-in failed: $e')),
@@ -81,7 +81,32 @@ class _MobileCreateAccountScreenState extends State<MobileCreateAccountScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-    */
+  }
+
+  /// Maps Firebase Auth error codes to user-friendly messages.
+  String _friendlyAuthErrorMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-email':
+        return 'The email address is not valid.';
+      case 'user-disabled':
+        return 'This account has been disabled. Contact support.';
+      case 'email-already-in-use':
+        return 'An account already exists with this email address.';
+      case 'weak-password':
+        return 'Password is too weak. Please use a stronger password.';
+      case 'operation-not-allowed':
+        return 'Email/password sign-in is not enabled for this project.';
+      case 'network-request-failed':
+        return 'Network error. Check your connection and try again.';
+      case 'popup-closed-by-user':
+        return 'Sign-in cancelled.';
+      case 'popup-blocked':
+        return 'Sign-in popup was blocked by the browser.';
+      case 'unauthorized-domain':
+        return 'This domain is not authorized for sign-in.';
+      default:
+        return e.message ?? 'Sign up failed. Please try again.';
+    }
   }
 
   Future<void> _createAccount() async {

@@ -998,6 +998,8 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  context, 'withinScopeItems', item, data.withinScopeItems),
  onDelete: (item) => _handleDeleteItem(
  context, 'withinScopeItems', item, data.withinScopeItems),
+ onReorder: (oldIndex, newIndex) => _handleReorder(
+ context, 'withinScopeItems', data.withinScopeItems, oldIndex, newIndex),
  onGenerateAI: () => _handleGenerateAI(context, 'Within Scope',
  'withinScope', data.withinScopeItems,
  listKey: 'withinScopeItems', showNotice: true),
@@ -1020,6 +1022,8 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  context, 'outOfScopeItems', item, data.outOfScopeItems),
  onDelete: (item) => _handleDeleteItem(
  context, 'outOfScopeItems', item, data.outOfScopeItems),
+ onReorder: (oldIndex, newIndex) => _handleReorder(
+ context, 'outOfScopeItems', data.outOfScopeItems, oldIndex, newIndex),
  onGenerateAI: () => _handleGenerateAI(
  context, 'Out of Scope', 'outOfScope', data.outOfScopeItems,
  listKey: 'outOfScopeItems', showNotice: true),
@@ -1144,6 +1148,39 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  if (context.mounted) {
  await _updateList(context, canonicalListKey, updatedList);
  }
+ }
+ }
+
+ /// Handles drag-and-drop reordering of items within a list.
+ /// Uses the standard ReorderableListView convention: if
+ /// `oldIndex < newIndex`, decrement `newIndex` by 1 (because the
+ /// item is removed from `oldIndex` before being inserted at
+ /// `newIndex`).
+ Future<void> _handleReorder(
+ BuildContext context,
+ String listKey,
+ List<PlanningDashboardItem> currentList,
+ int oldIndex,
+ int newIndex,
+ ) async {
+ if (oldIndex == newIndex) return;
+ final canonicalListKey = _canonicalListKey(listKey);
+ _pushUndoSnapshot(canonicalListKey, currentList);
+
+ final updatedList = List<PlanningDashboardItem>.from(currentList);
+ // ReorderableListView convention: when moving down, newIndex
+ // is one past the target slot.
+ if (oldIndex < newIndex) newIndex -= 1;
+ if (newIndex < 0 || newIndex >= updatedList.length) {
+ // Clamp to valid range — should never happen, but guard
+ // against index errors that would corrupt the list.
+ newIndex = updatedList.length - 1;
+ }
+ final item = updatedList.removeAt(oldIndex);
+ updatedList.insert(newIndex, item);
+
+ if (context.mounted) {
+ await _updateList(context, canonicalListKey, updatedList);
  }
  }
 

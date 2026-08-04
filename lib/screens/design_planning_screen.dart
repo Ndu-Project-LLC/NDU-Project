@@ -33,6 +33,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 const Color _kSurface = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -58,9 +59,7 @@ class DesignPlanningScreen extends StatefulWidget {
   const DesignPlanningScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const DesignPlanningScreen()),
-    );
+    context.push('/design-planning');
   }
 
   @override
@@ -2512,11 +2511,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  label: 'Open Design Phase Workspace',
  icon: Icons.open_in_new,
  onPressed: () {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const DesignPhaseScreen(),
- ),
- );
+ context.push('/design-phase');
  },
  ),
  ],

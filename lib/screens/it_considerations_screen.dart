@@ -37,6 +37,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 
 enum _MissingItConsiderationsAction { manual, autoFill, skip }
 
@@ -1048,34 +1049,19 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
 
   // ignore: unused_element
   void _openBusinessCase() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const InitiationPhaseScreen(scrollToBusinessCase: true),
-      ),
-    );
+    context.push('/initiation-phase', extra: const InitiationPhaseScreen(scrollToBusinessCase: true));
   }
 
   void _openPotentialSolutions() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const PotentialSolutionsScreen(),
-      ),
-    );
+    context.push('/potential-solutions');
   }
 
   void _openRiskIdentification() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => RiskIdentificationScreen(
+    context.push('/risk-identification', extra: RiskIdentificationScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   bool _hasRequiredItData(ProjectDataModel projectData) {
@@ -1404,16 +1390,11 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
     if (!mounted) return;
     Navigator.of(context).pop(); // Close loading dialog
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => InfrastructureConsiderationsScreen(
+    context.push('/infrastructure-considerations', extra: InfrastructureConsiderationsScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   Future<void> _saveITConsiderationsData() async {
@@ -1455,42 +1436,27 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
   }
 
   void _openCoreStakeholders() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CoreStakeholdersScreen(
+    context.push('/core-stakeholders', extra: CoreStakeholdersScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openCostAnalysis() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CostAnalysisScreen(
+    context.push('/cost-analysis', extra: CostAnalysisScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openPreferredSolutionAnalysis() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PreferredSolutionAnalysisScreen(
+    context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   Widget _buildMainContent() {

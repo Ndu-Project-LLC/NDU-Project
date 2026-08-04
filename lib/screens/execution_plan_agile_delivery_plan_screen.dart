@@ -11,15 +11,13 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 
 class ExecutionPlanAgileDeliveryPlanScreen extends StatelessWidget {
   const ExecutionPlanAgileDeliveryPlanScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => const ExecutionPlanAgileDeliveryPlanScreen()),
-    );
+    context.push('/execution-plan-agile-delivery-plan');
   }
 
   @override

@@ -9,6 +9,7 @@ library;
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/services/portfolio_service.dart';
 import 'package:ndu_project/services/project_service.dart';
 import 'package:ndu_project/theme.dart';
@@ -26,11 +27,7 @@ class GroupIntoPortfolioScreen extends StatefulWidget {
 
   /// Push this screen onto the navigator.
   static void open(BuildContext context, List<ProjectRecord> projects) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => GroupIntoPortfolioScreen(projects: projects),
-      ),
-    );
+    context.push('/group-into-portfolio', extra: GroupIntoPortfolioScreen(projects: projects));
   }
 
   @override

@@ -5,14 +5,13 @@ import 'package:ndu_project/services/hint_service.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:go_router/go_router.dart';
 
 class AdminHintsScreen extends StatefulWidget {
   const AdminHintsScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AdminHintsScreen()),
-    );
+    context.push('/admin-hints');
   }
 
   @override

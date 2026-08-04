@@ -24,14 +24,13 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:go_router/go_router.dart';
 
 class SummarizeAccountRisksScreen extends StatefulWidget {
   const SummarizeAccountRisksScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SummarizeAccountRisksScreen()),
-    );
+    context.push('/summarize-account-risks');
   }
 
   @override

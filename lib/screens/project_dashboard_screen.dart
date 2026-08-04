@@ -449,14 +449,9 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  Navigator.of(context).pop();
 
  if (success) {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const InitiationPhaseScreen(
+ context.push('/initiation-phase', extra: const InitiationPhaseScreen(
  scrollToBusinessCase: true,
- ),
- ),
- );
+ ));
  } else {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
@@ -561,7 +556,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                                   subtitle:
                                       'Select up to 3 projects to combine',
                                   icon: Icons.layers_outlined,
-                                  accent: palette.accent,
+                                  accent: palette.primaryDeep,
                                   onTap: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
@@ -587,7 +582,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                                   label: 'Project Logs',
                                   subtitle: 'Activity across all projects',
                                   icon: Icons.fact_check_outlined,
-                                  accent: palette.primary,
+                                  accent: palette.primaryDeep,
                                   onTap: () =>
                                       ProjectActivitiesLogScreen.open(context),
                                 ),
@@ -601,7 +596,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                             child: _SectionEyebrow(
                               title: 'LIVE ACTIVITY',
                               icon: Icons.monitor_heart_outlined,
-                              tint: palette.primary,
+                              tint: palette.primaryDeep,
                             ),
                           ),
                         if (_isLoadingMetrics)
@@ -642,7 +637,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                                 ? 'YOUR WORKSPACES'
                                 : 'WORKSPACES',
                             icon: Icons.view_headline_rounded,
-                            tint: palette.primary,
+                            tint: palette.primaryDeep,
                           ),
                         ),
                         if (user == null)
@@ -904,8 +899,8 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    palette.primary.withValues(alpha: 0.45),
-                    palette.primary.withValues(alpha: 0),
+                    Colors.white.withValues(alpha: 0.35),
+                    Colors.white.withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -937,24 +932,27 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
                       onTap: () => ProjectActivitiesLogScreen.open(context),
                     ),
                     const SizedBox(width: 8),
+                    _kazAiBandPill(),
+                    const SizedBox(width: 8),
                     InkWell(
                       onTap: _handleLogout,
                       borderRadius: BorderRadius.circular(40),
                       child: Container(
                         padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
+                          color: palette.ink.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(40),
                           border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.25)),
+                              color: palette.ink.withValues(alpha: 0.18)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             _avatar(initials, photoUrl),
                             const SizedBox(width: 8),
-                            const Icon(Icons.logout_rounded,
-                                size: 14, color: Colors.white70),
+                            Icon(Icons.logout_rounded,
+                                size: 14,
+                                color: palette.ink.withValues(alpha: 0.7)),
                           ],
                         ),
                       ),
@@ -973,10 +971,10 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
                           children: [
                             Text(
                               '$greeting, $firstName',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.white,
+                                color: palette.ink,
                                 letterSpacing: -0.5,
                                 height: 1.1,
                               ),
@@ -990,7 +988,7 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
                           modeTitle,
                           style: TextStyle(
                             fontSize: 12.5,
-                            color: Colors.white.withValues(alpha: 0.75),
+                            color: palette.ink.withValues(alpha: 0.7),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -1016,7 +1014,7 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
                         ElevatedButton(
                           onPressed: widget.onAddProject,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: palette.primary,
+                            backgroundColor: palette.ink,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(
@@ -1029,7 +1027,8 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.add_rounded, size: 18),
+                              Icon(Icons.add_rounded,
+                                  size: 18, color: palette.primary),
                               const SizedBox(width: 6),
                               Text(widget.isBasicPlan
                                   ? 'Create Regular Project'
@@ -1038,18 +1037,18 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
                           ),
                         ),
                         if (!widget.isBasicPlan)
-                          _whiteOutlineCta(
+                          _bandOutlineCta(
                             label: 'Create Program',
                             onPressed: _navigateToProgram,
                             icon: Icons.layers_outlined,
                           ),
                         if (!widget.isBasicPlan)
-                          _whiteOutlineCta(
+                          _bandOutlineCta(
                             label: 'Create Portfolio',
                             onPressed: _navigateToPortfolio,
                             icon: Icons.account_tree_outlined,
                           ),
-                        _whiteOutlineCta(
+                        _bandOutlineCta(
                           label: 'Billing',
                           onPressed: _navigateToBilling,
                           icon: Icons.account_balance_wallet_outlined,
@@ -1085,28 +1084,83 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
   }
 
   Widget _crumb() {
+    final palette = DashboardPaletteScope.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
+        color: palette.ink.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+        border: Border.all(color: palette.ink.withValues(alpha: 0.18)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.view_quilt_outlined,
-              size: 14, color: Colors.white.withValues(alpha: 0.8)),
+              size: 14, color: palette.ink.withValues(alpha: 0.75)),
           const SizedBox(width: 6),
-          const Text(
+          Text(
             'Project workspace overview',
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: palette.ink,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// KAZ AI brand pill on the header band — opens the KAZ AI copilot chat.
+  Widget _kazAiBandPill() {
+    final palette = DashboardPaletteScope.of(context);
+    return InkWell(
+      onTap: () => KazAiChatBubble.openChat(context),
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(6, 5, 12, 5),
+        decoration: BoxDecoration(
+          color: palette.ink,
+          borderRadius: BorderRadius.circular(40),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+          boxShadow: [
+            BoxShadow(
+              color: palette.ink.withValues(alpha: 0.25),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFFC812), Color(0xFFFF9800)],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.auto_awesome_rounded,
+                  size: 12, color: Color(0xFF1C1C1C)),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'KAZ AI',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+                color: palette.primary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1163,24 +1217,14 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
   }
 
   Widget _planBadge(DashboardPalette palette) {
-    // Use the palette's primary accent for a filled badge — more
-    // prominent than the previous translucent outline.
-    final badgeColor = widget.isBasicPlan
-        ? palette.primary.withValues(alpha: 0.85)
-        : palette.primary;
+    // Subtle translucent outline badge — sits quietly on the dark
+    // header band without competing with the greeting for prominence.
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: badgeColor,
+        color: Colors.white.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
-        boxShadow: [
-          BoxShadow(
-            color: badgeColor.withValues(alpha: 0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1190,7 +1234,7 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
             size: 13,
             color: Colors.white,
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
           Text(
             widget.isBasicPlan ? 'BASIC PLAN' : 'PRO PLAN',
             style: const TextStyle(
@@ -1205,17 +1249,18 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
     );
   }
 
-  Widget _whiteOutlineCta({
+  Widget _bandOutlineCta({
     required String label,
     VoidCallback? onPressed,
     IconData? icon,
   }) {
+    final palette = DashboardPaletteScope.of(context);
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        backgroundColor: Colors.white.withValues(alpha: 0.08),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
+        foregroundColor: palette.ink,
+        backgroundColor: palette.ink.withValues(alpha: 0.08),
+        side: BorderSide(color: palette.ink.withValues(alpha: 0.28)),
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1250,32 +1295,19 @@ class _StatusStrip extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     void openRegularProjects() {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (_) => const RegularProjectDashboardScreen()),
-      );
+      context.push('/regular-project-dashboard');
     }
 
     void openProjects() {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ProjectCommandCenterScreen()),
-      );
+      context.push('/project-command-center');
     }
 
     void openPrograms() {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ProgramDashboardScreen()),
-      );
+      context.push('/program-dashboard');
     }
 
     void openPortfolios() {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
-      );
+      context.push('/portfolio-dashboard');
     }
 
     if (user == null) {
@@ -1483,7 +1515,7 @@ class _SingleProjectsCardState extends State<_SingleProjectsCard> {
                   : TextButton(
                       onPressed: _openExpandedView,
                       style: TextButton.styleFrom(
-                        foregroundColor: palette.primary,
+                        foregroundColor: palette.primaryDeep,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         textStyle: const TextStyle(fontWeight: FontWeight.w700),
@@ -1501,7 +1533,7 @@ class _SingleProjectsCardState extends State<_SingleProjectsCard> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.merge_type_rounded,
-                        size: 16, color: palette.primary),
+                        size: 16, color: palette.primaryDeep),
                     const SizedBox(width: 7),
                     Flexible(
                       child: Text(
@@ -1766,7 +1798,7 @@ class _SingleProjectsCardState extends State<_SingleProjectsCard> {
                                   onPressed: () =>
                                       setState(() => _showAll = !_showAll),
                                   style: TextButton.styleFrom(
-                                    foregroundColor: palette.primary,
+                                    foregroundColor: palette.primaryDeep,
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 14, vertical: 10),
                                     shape: RoundedRectangleBorder(
@@ -2048,7 +2080,7 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
                   : TextButton(
                       onPressed: _openExpandedView,
                       style: TextButton.styleFrom(
-                        foregroundColor: palette.primary,
+                        foregroundColor: palette.primaryDeep,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         textStyle: const TextStyle(fontWeight: FontWeight.w700),
@@ -2319,7 +2351,7 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
                               onPressed: () =>
                                   setState(() => _showAll = !_showAll),
                               style: TextButton.styleFrom(
-                                foregroundColor: palette.primary,
+                                foregroundColor: palette.primaryDeep,
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 14, vertical: 10),
                                 shape: RoundedRectangleBorder(
@@ -2385,7 +2417,8 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
             style: ElevatedButton.styleFrom(
               backgroundColor:
                   count == 3 ? palette.primary : palette.mutedSoft,
-              foregroundColor: Colors.white,
+              foregroundColor:
+                  count == 3 ? const Color(0xFF1C1C1C) : Colors.white,
               elevation: count == 3 ? 6 : 0,
               disabledBackgroundColor: palette.outline,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -2845,18 +2878,16 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  : await ProjectNavigationService.instance.getLastPage(project.id);
  if (!context.mounted) return;
  debugPrint(
- 'Project loaded successfully, navigating to checkpoint: $checkpointRoute');
+ 'Project loaded successfully, navigating to checkpoint: $checkpointRoute');  final screen = NavigationRouteResolver.resolveCheckpointToScreen(
+  checkpointRoute.isEmpty ? 'initiation' : checkpointRoute,
+  context,
+  );
 
- final screen = NavigationRouteResolver.resolveCheckpointToScreen(
- checkpointRoute.isEmpty ? 'initiation' : checkpointRoute,
- context,
- );
-
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => screen ?? const InitiationPhaseScreen(),
- ),
- );
+  context.push(
+  NavigationRouteResolver.resolveCheckpointToUrl(
+      checkpointRoute.isEmpty ? 'initiation' : checkpointRoute),
+  extra: screen ?? const InitiationPhaseScreen(),
+  );
  } else {
  debugPrint('Failed to load project: ${provider.lastError}');
  showDialog(
@@ -3322,7 +3353,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 15.5,
-                      color: palette.primary,
+                      color: palette.primaryDeep,
                       letterSpacing: -0.1,
                     ),
                     maxLines: 2,
@@ -3497,7 +3528,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
                       icon: const Icon(Icons.launch_rounded, size: 17),
                       label: const Text('Open'),
                       style: TextButton.styleFrom(
-                        foregroundColor: palette.primary,
+                        foregroundColor: palette.primaryDeep,
                         backgroundColor: palette.primarySoft,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 9),
@@ -3523,7 +3554,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
                         child: Row(
                           children: [
                             Icon(Icons.edit_outlined,
-                                size: 20, color: palette.primary),
+                                size: 20, color: palette.primaryDeep),
                             const SizedBox(width: 12),
                             const Text('Rename',
                                 style: TextStyle(
@@ -4095,7 +4126,7 @@ class _HeaderGridPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// ── Small pill action used on the dark header band ────────────────────────
+// ── Small pill action used on the yellow header band ───────────────────────
 class _HeaderBandAction extends StatelessWidget {
   const _HeaderBandAction({required this.icon, this.label, required this.onTap});
 
@@ -4105,27 +4136,28 @@ class _HeaderBandAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: palette.ink.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+          border: Border.all(color: palette.ink.withValues(alpha: 0.16)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: Colors.white70),
+            Icon(icon, size: 14, color: palette.ink.withValues(alpha: 0.75)),
             if (label != null) ...[
               const SizedBox(width: 6),
               Text(label!,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white)),
+                      color: palette.ink)),
             ],
           ],
         ),

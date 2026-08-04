@@ -46,9 +46,7 @@ class LandingPageScreen extends StatelessWidget {
   const LandingPageScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const LandingPageScreen()),
-    );
+    context.push('/landing-page-screen');
   }
 
   @override

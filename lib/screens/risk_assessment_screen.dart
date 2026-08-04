@@ -20,14 +20,13 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
+import 'package:go_router/go_router.dart';
 
 class RiskAssessmentScreen extends StatefulWidget {
  const RiskAssessmentScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const RiskAssessmentScreen()),
- );
+ context.push('/risk-assessment');
  }
 
  @override

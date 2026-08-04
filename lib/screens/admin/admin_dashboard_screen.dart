@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/models/user_role.dart';
 import 'package:ndu_project/services/permission_service.dart';
 import 'user_management_screen.dart';
+import 'package:go_router/go_router.dart';
 
 /// World-class Admin Dashboard for platform management
 /// Provides comprehensive overview and management capabilities
@@ -9,9 +10,7 @@ class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
-    );
+    context.push('/admin-dashboard');
   }
 
   @override

@@ -29,12 +29,7 @@ class ProjectWorkspaceDashboardScreen extends StatefulWidget {
   final bool isBasicPlan;
 
   static void open(BuildContext context, {bool isBasicPlan = false}) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            ProjectWorkspaceDashboardScreen(isBasicPlan: isBasicPlan),
-      ),
-    );
+    context.push('/project-workspace-dashboard', extra: ProjectWorkspaceDashboardScreen(isBasicPlan: isBasicPlan));
   }
 
   @override
@@ -187,9 +182,11 @@ class _ProjectWorkspaceDashboardScreenState
       if (!mounted) return;
       final screen = NavigationRouteResolver.resolveCheckpointToScreen(
         checkpoint.isEmpty ? 'initiation' : checkpoint, context);
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => screen ?? const InitiationPhaseScreen(),
-      ));
+      context.push(
+        NavigationRouteResolver.resolveCheckpointToUrl(
+            checkpoint.isEmpty ? 'initiation' : checkpoint),
+        extra: screen ?? const InitiationPhaseScreen(),
+      );
     } on TimeoutException {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();

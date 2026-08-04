@@ -11,6 +11,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 
 const Color _kBackground = Color(0xFFF7F8FC);
 const Color _kAccent = Color(0xFFFFC812);
@@ -22,10 +23,7 @@ class DeliverablesRoadmapOverviewScreen extends StatefulWidget {
   const DeliverablesRoadmapOverviewScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => const DeliverablesRoadmapOverviewScreen()),
-    );
+    context.push('/deliverables-roadmap');
   }
 
   @override

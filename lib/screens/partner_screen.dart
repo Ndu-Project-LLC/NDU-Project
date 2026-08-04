@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:go_router/go_router.dart';
 
 class PartnerScreen extends StatelessWidget {
   const PartnerScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const PartnerScreen()),
-    );
+    context.push('/partner');
   }
 
   @override

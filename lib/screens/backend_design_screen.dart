@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 class BackendDesignScreen extends StatefulWidget {
  const BackendDesignScreen({super.key});
 
@@ -342,14 +343,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  LaunchPhaseNavigation(
  backLabel: 'Back: UI/UX Design',
  nextLabel: 'Next: Engineering',
- onBack: () => Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const UiUxDesignScreen())),
- onNext: () => Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const EngineeringDesignScreen())),
+ onBack: () => context.push('/ui-ux-design'),onNext: () => context.push('/engineering-design'),
  ),
  ],
  ),

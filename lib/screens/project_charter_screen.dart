@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
@@ -27,11 +28,7 @@ class ProjectCharterScreen extends StatefulWidget {
  const ProjectCharterScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute<void>(
- builder: (_) => const ProjectCharterScreen(),
- ),
- );
+ context.push('/project-charter');
  }
 
  @override
@@ -267,12 +264,7 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  /// scope is actually edited). The charter merely reflects that page.
  void _navigateToProjectDetails() {
  try {
- Navigator.of(context).push(
- MaterialPageRoute<void>(
- builder: (_) =>
- const ProjectDetailsScreen(),
- ),
- );
+ context.push('/project-details');
  } catch (e) {
  debugPrint('Could not navigate to Project Details: $e');
  ScaffoldMessenger.of(context).showSnackBar(
@@ -290,15 +282,11 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  void _navigateToCoreStakeholders() {
    try {
      final data = _projectData;
-     Navigator.of(context).push(
-       MaterialPageRoute<void>(
-         builder: (_) => CoreStakeholdersScreen(
+     context.push('/core-stakeholders', extra: CoreStakeholdersScreen(
            notes: data?.coreStakeholdersData?.notes ?? data?.notes ?? '',
            solutions: const [],
            businessCase: data?.businessCase ?? '',
-         ),
-       ),
-     );
+         ));
    } catch (e) {
      debugPrint('Could not navigate to Core Stakeholders: $e');
      ScaffoldMessenger.of(context).showSnackBar(
@@ -317,15 +305,11 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
   void _navigateToBusinessCase() {
     try {
      final data = _projectData;
-     Navigator.of(context).push(
-       MaterialPageRoute<void>(
-         builder: (_) => CostAnalysisScreen(
+     context.push('/cost-analysis', extra: CostAnalysisScreen(
            notes: data?.notes ?? '',
            solutions: const [],
            businessCase: data?.businessCase ?? '',
-         ),
-       ),
-     );
+         ));
    } catch (e) {
      debugPrint('Could not navigate to Business Case: $e');
      ScaffoldMessenger.of(context).showSnackBar(

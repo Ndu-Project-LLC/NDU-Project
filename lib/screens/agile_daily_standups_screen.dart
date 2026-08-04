@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE DAILY STANDUPS — Yesterday / Today / Blockers Screen
@@ -16,9 +17,7 @@ class AgileDailyStandupsScreen extends StatefulWidget {
   const AgileDailyStandupsScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AgileDailyStandupsScreen()),
-    );
+    context.push('/agile-daily-standups');
   }
 
   @override

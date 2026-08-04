@@ -25,14 +25,13 @@ import 'package:ndu_project/widgets/launch_data_table.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:go_router/go_router.dart';
 
 class TransitionToProdTeamScreen extends StatefulWidget {
   const TransitionToProdTeamScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const TransitionToProdTeamScreen()),
-    );
+    context.push('/transition-to-prod-team');
   }
 
   @override

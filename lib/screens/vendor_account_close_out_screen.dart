@@ -22,14 +22,13 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:go_router/go_router.dart';
 
 class VendorAccountCloseOutScreen extends StatefulWidget {
   const VendorAccountCloseOutScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const VendorAccountCloseOutScreen()),
-    );
+    context.push('/vendor-account-close-out');
   }
 
   @override

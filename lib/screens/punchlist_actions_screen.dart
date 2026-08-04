@@ -17,14 +17,13 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 
 class PunchlistActionsScreen extends StatefulWidget {
   const PunchlistActionsScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const PunchlistActionsScreen()),
-    );
+    context.push('/punchlist-actions');
   }
 
   @override

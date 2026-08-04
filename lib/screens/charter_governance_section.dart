@@ -163,16 +163,51 @@ class CharterStakeholdersShort extends StatelessWidget {
  data!.coreStakeholdersData?.solutionStakeholderData ?? [];
  final matchedStakeholderData = solutionStakeholderRows.where((row) {
  if (preferredSolution == null) return false;
- return row.solutionTitle.trim().toLowerCase() ==
- preferredSolution.title.trim().toLowerCase();
+ final a = row.solutionTitle.trim().toLowerCase();
+ final b = preferredSolution.title.trim().toLowerCase();
+ // Exact match first.
+ if (a == b) return true;
+ // Substring match (handles "Solution A — v2" vs "Solution A").
+ if (a.isNotEmpty && b.isNotEmpty && (a.contains(b) || b.contains(a))) {
+ return true;
+}
+ return false;
  }).toList();
  // Fallback: if no exact match, use the first row (single-solution
  // projects often have only one row).
- final stakeholderData = matchedStakeholderData.isNotEmpty
+ var stakeholderData = matchedStakeholderData.isNotEmpty
  ? matchedStakeholderData.first
  : (solutionStakeholderRows.isNotEmpty
  ? solutionStakeholderRows.first
  : null);
+
+ // If still no stakeholder data, derive from the preferred solution's
+ // SolutionAnalysisItem.stakeholders list (which is a List<String> of
+ // names entered on the Preferred Solution Analysis screen).
+ if (stakeholderData == null && preferredSolution != null) {
+ final analysisItems =
+ data!.preferredSolutionAnalysis?.solutionAnalyses ?? [];
+ SolutionAnalysisItem? matchedAnalysis;
+ try {
+ matchedAnalysis = analysisItems.firstWhere(
+ (a) => a.solutionTitle.trim().toLowerCase() ==
+ preferredSolution.title.trim().toLowerCase(),
+ );
+ } catch (_) {
+ matchedAnalysis = analysisItems.isNotEmpty
+ ? analysisItems.first
+ : null;
+ }
+ if (matchedAnalysis != null &&
+ matchedAnalysis.stakeholders.isNotEmpty) {
+ stakeholderData = SolutionStakeholderData(
+ solutionTitle: matchedAnalysis.solutionTitle,
+ notableStakeholders: '',
+ internalStakeholders: matchedAnalysis.stakeholders.join(', '),
+ externalStakeholders: '',
+ );
+ }
+ }
 
  final internalStakeholders = (stakeholderData?.internalStakeholders ?? '')
  .split(RegExp(r'[\n,;]'))

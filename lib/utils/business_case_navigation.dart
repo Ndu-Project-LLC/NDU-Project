@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/navigation_route_resolver.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
@@ -32,13 +33,9 @@ class BusinessCaseNavigation {
     );
     if (screen == null) return;
 
-    Navigator.of(context).pushReplacement(
-      PhaseTransitionHelper.buildRoute(
-        context: context,
-        builder: (_) => screen,
-        destinationCheckpoint: previous.checkpoint,
-        sourceCheckpoint: currentCheckpoint,
-      ),
+    context.pushReplacement(
+      NavigationRouteResolver.resolveCheckpointToUrl(previous.checkpoint),
+      extra: screen,
     );
   }
 
@@ -55,13 +52,9 @@ class BusinessCaseNavigation {
     );
     if (screen == null) return;
 
-    Navigator.of(context).pushReplacement(
-      PhaseTransitionHelper.buildRoute(
-        context: context,
-        builder: (_) => screen,
-        destinationCheckpoint: next.checkpoint,
-        sourceCheckpoint: currentCheckpoint,
-      ),
+    context.pushReplacement(
+      NavigationRouteResolver.resolveCheckpointToUrl(next.checkpoint),
+      extra: screen,
     );
   }
 

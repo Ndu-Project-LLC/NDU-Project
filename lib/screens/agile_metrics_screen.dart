@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE METRICS — Velocity, Predictability, Lead/Cycle Time, Defects
@@ -16,9 +17,7 @@ class AgileMetricsScreen extends StatefulWidget {
   const AgileMetricsScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AgileMetricsScreen()),
-    );
+    context.push('/agile-metrics');
   }
 
   @override

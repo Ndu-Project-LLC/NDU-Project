@@ -22,15 +22,13 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 class ProjectPlanLevel1ScheduleScreen extends StatefulWidget {
  const ProjectPlanLevel1ScheduleScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const ProjectPlanLevel1ScheduleScreen()),
- );
+ context.push('/project-plan-level-1-schedule');
  }
 
  @override

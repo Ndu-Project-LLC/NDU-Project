@@ -28,6 +28,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/responsive.dart'; // Added for AppBreakpoints
+import 'package:go_router/go_router.dart';
 
 /// Front End Planning – Contracting screen (formerly Contract & Vendor Quotes).
 /// Updated to use the standard FEP layout with DraggableSidebar and FrontEndPlanningHeader.
@@ -35,10 +36,7 @@ class FrontEndPlanningContractVendorQuotesScreen extends StatefulWidget {
  const FrontEndPlanningContractVendorQuotesScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const FrontEndPlanningContractVendorQuotesScreen()),
- );
+ context.push('/fep-vendor-quotes');
  }
 
  @override

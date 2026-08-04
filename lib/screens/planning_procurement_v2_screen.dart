@@ -34,14 +34,13 @@ import 'package:ndu_project/widgets/procurement/procurement_workflow_builder.dar
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 
 class PlanningProcurementV2Screen extends StatefulWidget {
  const PlanningProcurementV2Screen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const PlanningProcurementV2Screen()),
- );
+ context.push('/planning-procurement');
  }
 
  @override

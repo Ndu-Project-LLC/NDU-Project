@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:go_router/go_router.dart';
 
 /// Section 9 — Benefits Realization
 ///
@@ -23,9 +24,7 @@ class BenefitsRealizationScreen extends StatefulWidget {
   const BenefitsRealizationScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const BenefitsRealizationScreen()),
-    );
+    context.push('/benefits-realization');
   }
 
   @override

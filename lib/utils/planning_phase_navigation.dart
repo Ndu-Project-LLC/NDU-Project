@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/screens/project_framework_screen.dart';
 import 'package:ndu_project/screens/project_framework_next_screen.dart';
 import 'package:ndu_project/wbs/screens/wbs_module_screen.dart';
@@ -506,13 +507,9 @@ class PlanningPhaseNavigation {
       if (prev != null) {
         final screen = resolvePreviousScreen(context, currentId);
         if (screen != null) {
-          Navigator.of(context).push(
-            PhaseTransitionHelper.buildRoute(
-              context: context,
-              builder: (_) => screen,
-              destinationCheckpoint: prev.checkpoint,
-              sourceCheckpoint: currentId,
-            ),
+          context.push(
+            NavigationRouteResolver.resolveCheckpointToUrl(prev.checkpoint),
+            extra: screen,
           );
           return;
         }
@@ -523,7 +520,10 @@ class PlanningPhaseNavigation {
 
     final prev = previousPage(currentId);
     if (prev != null) {
-      Navigator.of(context).push(MaterialPageRoute(builder: prev.builder));
+      context.push(
+        NavigationRouteResolver.resolveCheckpointToUrl(prev.id),
+        extra: prev.builder(context),
+      );
     } else {
       Navigator.of(context).maybePop();
     }
@@ -541,13 +541,9 @@ class PlanningPhaseNavigation {
       if (next != null) {
         final screen = resolveNextScreen(context, currentId);
         if (screen != null) {
-          Navigator.of(context).push(
-            PhaseTransitionHelper.buildRoute(
-              context: context,
-              builder: (_) => screen,
-              destinationCheckpoint: next.checkpoint,
-              sourceCheckpoint: currentId,
-            ),
+          context.push(
+            NavigationRouteResolver.resolveCheckpointToUrl(next.checkpoint),
+            extra: screen,
           );
           return;
         }
@@ -560,7 +556,10 @@ class PlanningPhaseNavigation {
 
     final next = nextPage(currentId);
     if (next != null) {
-      Navigator.of(context).push(MaterialPageRoute(builder: next.builder));
+      context.push(
+        NavigationRouteResolver.resolveCheckpointToUrl(next.id),
+        extra: next.builder(context),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('End of Planning Phase navigation path.')),
@@ -582,8 +581,9 @@ class PlanningPhaseNavigation {
     int index = getPageIndex(currentId);
     if (index != -1 && index < pages.length - 1) {
       final nextPage = pages[index + 1];
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: nextPage.builder),
+      context.push(
+        NavigationRouteResolver.resolveCheckpointToUrl(nextPage.id),
+        extra: nextPage.builder(context),
       );
     } else {
       // If last page, maybe go to home or show completion?

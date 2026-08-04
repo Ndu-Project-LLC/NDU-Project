@@ -29,9 +29,7 @@ class PortfolioDashboardScreen extends StatefulWidget {
  const PortfolioDashboardScreen({super.key, this.portfolioId});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
- );
+ context.push('/portfolio-dashboard');
  }
 
  @override
@@ -993,11 +991,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
                icon: Icons.fact_check_outlined,
                accent: const Color(0xFFFCD34D),
                onTap: () {
-                 Navigator.of(context).push(
-                   MaterialPageRoute(
-                     builder: (_) => const ProjectActivitiesLogScreen(),
-                   ),
-                 );
+                 context.push('/project-activities-log');
                },
              ),
            ];

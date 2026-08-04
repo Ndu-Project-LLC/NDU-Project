@@ -34,8 +34,7 @@ class ProgramDashboardScreen extends StatefulWidget {
  const ProgramDashboardScreen({super.key, this.programId});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const ProgramDashboardScreen()));
+ context.push('/program-dashboard');
  }
 
  @override
@@ -775,11 +774,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  icon: Icons.fact_check_outlined,
  accent: const Color(0xFFFCD34D),
  onTap: () {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const ProjectActivitiesLogScreen(),
- ),
- );
+ context.push('/project-activities-log');
  },
  ),
  ];

@@ -9,15 +9,12 @@ import 'package:ndu_project/widgets/program_workspace_scaffold.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 class FrontEndPlanningTechnologyPersonnelScreen extends StatefulWidget {
  const FrontEndPlanningTechnologyPersonnelScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const FrontEndPlanningTechnologyPersonnelScreen(),
- ),
- );
+ context.push('/fep-technology-personnel');
  }
 
  @override

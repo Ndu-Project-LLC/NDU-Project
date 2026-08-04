@@ -8,13 +8,13 @@ import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:provider/provider.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:go_router/go_router.dart';
 
 class AdminContentScreen extends StatefulWidget {
  const AdminContentScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context)
- .push(MaterialPageRoute(builder: (_) => const AdminContentScreen()));
+ context.push('/admin-content');
  }
 
  @override

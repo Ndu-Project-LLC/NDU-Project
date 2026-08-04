@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:ndu_project/screens/punchlist_actions_screen.dart';
@@ -31,11 +32,8 @@ class GapAnalysisScopeReconcillationScreen extends StatefulWidget {
 
   static void open(BuildContext context,
       {String activeItemLabel = 'Gap Analysis And Scope Reconcillation'}) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => GapAnalysisScopeReconcillationScreen(
-              activeItemLabel: activeItemLabel)),
-    );
+    context.push('/gap-analysis-scope-reconciliation', extra: GapAnalysisScopeReconcillationScreen(
+              activeItemLabel: activeItemLabel));
   }
 
   @override

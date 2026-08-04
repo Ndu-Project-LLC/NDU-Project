@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/widgets/carried_context_banner.dart';
+import 'package:go_router/go_router.dart';
 const Color _kBackground = Colors.white;
 const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
@@ -31,9 +32,7 @@ class DeliverablesRoadmapScreen extends StatelessWidget {
  const DeliverablesRoadmapScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const DeliverablesRoadmapScreen()),
- );
+ context.push('/deliverables-roadmap');
  }
 
  @override

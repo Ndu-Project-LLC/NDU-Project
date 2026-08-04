@@ -18,15 +18,13 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 
 class UpdateOpsMaintenancePlansScreen extends StatefulWidget {
   const UpdateOpsMaintenancePlansScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => const UpdateOpsMaintenancePlansScreen()),
-    );
+    context.push('/update-ops-maintenance-plans');
   }
 
   @override

@@ -9,6 +9,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE DASHBOARD — World-Class Delivery Performance Screen
@@ -17,9 +18,7 @@ class AgileDashboardScreen extends StatefulWidget {
   const AgileDashboardScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AgileDashboardScreen()),
-    );
+    context.push('/agile-dashboard');
   }
 
   @override

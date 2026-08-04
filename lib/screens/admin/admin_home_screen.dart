@@ -14,6 +14,7 @@ import 'package:ndu_project/screens/admin/admin_coupons_screen.dart';
 import 'package:ndu_project/screens/admin/admin_subscription_lookup_screen.dart';
 import 'package:ndu_project/screens/admin/admin_pricing_config_screen.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
+import 'package:go_router/go_router.dart';
 
 const Color _adminBackgroundColor = Color(0xFFFFFFFF);
 const Color _adminSurfaceColor = Colors.white;
@@ -325,30 +326,21 @@ class AdminHomeScreen extends StatelessWidget {
               description: 'View and manage all users, roles, and permissions',
               icon: Icons.people,
               color: _adminAccentColor,
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const AdminUsersScreen())),
-              width: cardWidth,
+              onTap: () => context.push('/admin-users'),width: cardWidth,
             ),
             _ActionCard(
               title: 'Content Management',
               description: 'Edit app content, labels, and system messages',
               icon: Icons.edit_document,
               color: _adminAccentColor,
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AdminContentScreen())),
-              width: cardWidth,
+              onTap: () => context.push('/admin-content'),width: cardWidth,
             ),
             _ActionCard(
               title: 'Project Overview',
               description: 'View all projects across the platform',
               icon: Icons.folder_open,
               color: _adminAccentColor,
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AdminProjectsScreen())),
+              onTap: () => context.push('/admin-projects'),
               width: cardWidth,
             ),
             _ActionCard(
@@ -357,10 +349,7 @@ class AdminHomeScreen extends StatelessWidget {
                   'Create and manage discount coupons for Stripe, PayPal, and Paystack',
               icon: Icons.local_offer,
               color: _adminAccentColor,
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AdminCouponsScreen())),
+              onTap: () => context.push('/admin-coupons'),
               width: cardWidth,
             ),
             _ActionCard(
@@ -369,10 +358,7 @@ class AdminHomeScreen extends StatelessWidget {
                   'Edit base prices, max users, and per-role add-on pricing for all 4 tiers',
               icon: Icons.attach_money,
               color: _adminAccentColor,
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AdminPricingConfigScreen())),
+              onTap: () => context.push('/admin-pricing-config'),
               width: cardWidth,
             ),
             _ActionCard(
@@ -381,10 +367,7 @@ class AdminHomeScreen extends StatelessWidget {
                   'Search users and manage their subscriptions, trials, and access',
               icon: Icons.search,
               color: _adminAccentColor,
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const AdminSubscriptionLookupScreen())),
+              onTap: () => context.push('/admin-subscription-lookup'),
               width: cardWidth,
             ),
             _ActionCard(
@@ -393,9 +376,7 @@ class AdminHomeScreen extends StatelessWidget {
                   'Control per-screen hint visibility, rewrite onboarding copy, and replay guidance flows',
               icon: Icons.tips_and_updates_outlined,
               color: _adminAccentColor,
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const AdminHintsScreen())),
-              width: cardWidth,
+              onTap: () => context.push('/admin-hints'),width: cardWidth,
             ),
           ],
         );

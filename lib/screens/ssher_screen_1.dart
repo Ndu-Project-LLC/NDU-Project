@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/screens/ssher_components.dart';
 import 'package:ndu_project/screens/ssher_screen_2.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -185,10 +186,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  Align(
  alignment: Alignment.centerRight,
  child: ElevatedButton(
- onPressed: () => Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const SsherScreen2())),
+ onPressed: () => context.push('/ssher-2'),
  style: ElevatedButton.styleFrom(
  backgroundColor: const Color(0xFFFFD700),
  foregroundColor: Colors.black,
@@ -374,10 +372,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  Align(
  alignment: Alignment.centerRight,
  child: ElevatedButton(
- onPressed: () => Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const SsherScreen2())),
+ onPressed: () => context.push('/ssher-2'),
  style: ElevatedButton.styleFrom(
  backgroundColor: const Color(0xFFFFD700),
  foregroundColor: Colors.black,

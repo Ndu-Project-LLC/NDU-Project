@@ -177,18 +177,18 @@ class _PricingScreenState extends State<PricingScreen> {
       {bool isBasicPlan = false, _PlanTier? tier}) {
     // Navigate directly to the appropriate dashboard based on the plan tier,
     // skipping the Management Level selection screen.
-    Widget screen;
+    final String url;
     if (isBasicPlan || tier == _PlanTier.basicProject) {
-      screen = const BasicPlanDashboardScreen();
+      url = '/${AppRoutes.basicPlanDashboard}';
     } else if (tier == _PlanTier.program) {
-      screen = const ProgramDashboardScreen();
+      url = '/${AppRoutes.programDashboard}';
     } else if (tier == _PlanTier.portfolio) {
-      screen = const PortfolioDashboardScreen();
+      url = '/${AppRoutes.portfolioDashboard}';
     } else {
       // Default: Project dashboard
-      screen = const ProjectDashboardScreen();
+      url = '/${AppRoutes.dashboard}';
     }
-    navigator.push(MaterialPageRoute(builder: (_) => screen));
+    navigator.context.push(url);
   }
 
   _PlanPrice _priceForPlan(_PricingPlan plan) {

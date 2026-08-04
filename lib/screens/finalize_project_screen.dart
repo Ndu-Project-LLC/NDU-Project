@@ -17,13 +17,12 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 class FinalizeProjectScreen extends StatefulWidget {
   const FinalizeProjectScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const FinalizeProjectScreen()),
-    );
+    context.push('/finalize-project');
   }
 
   @override

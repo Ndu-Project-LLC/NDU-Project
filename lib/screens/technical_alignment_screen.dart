@@ -29,6 +29,8 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ndu_project/routing/app_router.dart';
 
 const double _technicalAlignmentActionColumnWidth = 112;
 const double _technicalAlignmentActionButtonSize = 32;
@@ -444,19 +446,11 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
  }
 
  void _navigateToRequirementsImplementation() {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const RequirementsImplementationScreen(),
- ),
- );
+ context.push('/requirements-implementation');
  }
 
  void _navigateToDevelopmentSetUp() {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const DevelopmentSetUpScreen(),
- ),
- );
+ context.push('/development-set-up');
  }
 
  Future<void> _generateAllAlignment() async {
@@ -2512,36 +2506,22 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  ],
  ),
- );
- }
+ );  }
 
- void _openStableDesignItem(String label) {
- Widget? destination;
- switch (label) {
- case 'Design Management':
- destination =
- const DesignPhaseScreen(activeItemLabel: 'Design Management');
- break;
- case 'Design Specifications':
- destination = const RequirementsImplementationScreen();
- break;
- case 'Technical Alignment':
- destination = const TechnicalAlignmentScreen();
- break;
- case 'Development Set Up':
- destination = const DevelopmentSetUpScreen();
- break;
- case 'UI/UX Design':
- destination = const UiUxDesignScreen();
- break;
- }
+  void _openStableDesignItem(String label) {
+  final destination = switch (label) {
+  'Design Management' => '/${AppRoutes.designPhase}',
+  'Design Specifications' => '/${AppRoutes.requirementsImplementation}',
+  'Technical Alignment' => '/${AppRoutes.technicalAlignment}',
+  'Development Set Up' => '/${AppRoutes.developmentSetUp}',
+  'UI/UX Design' => '/${AppRoutes.uiUxDesign}',
+  _ => null,
+  };
 
- if (destination == null) return;
+  if (destination == null) return;
 
- Navigator.of(context).pushReplacement(
- MaterialPageRoute(builder: (_) => destination!),
- );
- }
+  context.pushReplacement(destination);
+  }
 
  Widget _buildEngineeringHubHeader({
  required bool isMobile,

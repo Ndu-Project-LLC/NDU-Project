@@ -16,6 +16,8 @@ import 'package:ndu_project/models/project_data_model.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/openai/openai_config.dart';
 import 'package:go_router/go_router.dart';
 
 class StakeholderManagementScreen extends StatefulWidget {
@@ -32,17 +34,41 @@ class StakeholderManagementScreen extends StatefulWidget {
 
 class _StakeholderManagementScreenState
     extends State<StakeholderManagementScreen> {
-  int _activeTabIndex = 1; // 0 = Stakeholders, 1 = Engagement Plans
+  // 0 = Stakeholders (default — must be the first thing the user sees so
+  //    they can review/auto-populate the stakeholder register before
+  //    diving into per-group engagement plans).
+  // 1 = Engagement Plans
+  int _activeTabIndex = 0;
 
   final _stakeholderSaveDebounce = _Debouncer();
   final _planSaveDebounce = _Debouncer();
   final ScrollController _pageScrollController = ScrollController();
   String _searchQuery = '';
 
+  /// Guards against re-firing the auto-populate flow every time the widget
+  /// rebuilds. Set to true after the first attempt (success or failure) so
+  /// the user's manual deletions are never silently re-added.
+  bool _hasAttemptedAutoPopulate = false;
+
+  /// Sort/filter mode for the Stakeholders tab. 'all' = no filter; the other
+  /// values map directly to the four quadrants of the Influence/Interest
+  /// matrix so the user can quickly see "who is in Manage Closely?" etc.
+  /// Medium influence/interest values are bucketed into the nearest
+  /// higher-attention quadrant (Medium+Medium → Keep Informed, etc.) so
+  /// no stakeholder is hidden by the filter.
+  String _matrixFilter = 'all';
+
   @override
   void initState() {
     super.initState();
-    // Data is managed by ProjectDataHelper and Provider
+    // Defer the auto-populate check until after the first frame so that
+    // ProjectDataHelper has a Provider wired up and we can safely read
+    // projectData.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_hasAttemptedAutoPopulate) return;
+      _hasAttemptedAutoPopulate = true;
+      _maybeAutoPopulateStakeholders();
+    });
   }
 
   @override
@@ -60,13 +86,43 @@ class _StakeholderManagementScreenState
     final projectData = ProjectDataHelper.getDataListening(context);
 
     // Filter stakeholders and plans based on search
-    final filteredStakeholders = projectData.stakeholderEntries.where((s) {
+    var filteredStakeholders = projectData.stakeholderEntries.where((s) {
       if (_searchQuery.isEmpty) return true;
       final q = _searchQuery.toLowerCase();
       return s.name.toLowerCase().contains(q) ||
           s.organization.toLowerCase().contains(q) ||
           s.role.toLowerCase().contains(q);
     }).toList();
+
+    // Apply the matrix-quarter filter on top of the search filter.
+    // Stakeholders with Medium influence/interest are bucketed into the
+    // nearest higher-attention quadrant so no one is hidden when a filter
+    // is active. (Medium+Medium → Manage Closely, because if we're unsure
+    // we'd rather over-engage than under-engage.)
+    if (_matrixFilter != 'all') {
+      bool matches(String influence, String interest, String filter) {
+        final hi = influence == 'High';
+        final medI = influence == 'Medium';
+        final hiI = interest == 'High';
+        final medInt = interest == 'Medium';
+        switch (filter) {
+          case 'manage_closely':
+            return (hi || medI) && (hiI || medInt);
+          case 'keep_satisfied':
+            return (hi || medI) && interest == 'Low';
+          case 'keep_informed':
+            return influence == 'Low' && (hiI || medInt);
+          case 'monitor':
+            return influence == 'Low' && interest == 'Low';
+          default:
+            return true;
+        }
+      }
+
+      filteredStakeholders = filteredStakeholders
+          .where((s) => matches(s.influence, s.interest, _matrixFilter))
+          .toList();
+    }
 
     final filteredPlans = projectData.engagementPlanEntries.where((p) {
       if (_searchQuery.isEmpty) return true;
@@ -78,9 +134,9 @@ class _StakeholderManagementScreenState
     final sidebarWidth = AppBreakpoints.sidebarWidth(context);
 
     final header = PlanningPhaseHeader(
-        title: 'Stakeholder Management',
+        title: 'Stakeholder Management Plan',
         breadcrumbPhase: 'Planning Phase',
-        breadcrumbTitle: 'Stakeholder Management',
+        breadcrumbTitle: 'Stakeholder Management Plan',
         onBack: () => PlanningPhaseNavigation.goToPrevious(
             context, 'stakeholder_management'),
         onForward: () =>
@@ -157,6 +213,10 @@ class _StakeholderManagementScreenState
               onAdd:
                   _activeTabIndex == 0 ? _addStakeholder : _addEngagementPlan,
               onSearch: (v) => setState(() => _searchQuery = v),
+              onAiReview: _aiReviewStakeholders,
+              matrixFilter: _matrixFilter,
+              onMatrixFilterChanged: (v) =>
+                  setState(() => _matrixFilter = v),
             ),
             const SizedBox(height: 32),
             // ── Project Team Communication Roster ─────────────────────────
@@ -470,6 +530,170 @@ class _StakeholderManagementScreenState
     });
   }
 
+  /// Auto-populates the stakeholder register on first visit when it is empty.
+  ///
+  /// Pulls from three sources so the user lands on a pre-filled table they
+  /// can edit, rather than a blank screen:
+  ///   1. Initiation Phase — Core Stakeholders (internal + external lists
+  ///      captured during the Identify Stakeholders step).
+  ///   2. Staffing Plan — every team member becomes a "Project Team"
+  ///      stakeholder row so they show up in the matrix.
+  ///   3. Common project stakeholders — a curated prompt list of roles
+  ///      every project should consider (Sponsor, Steering Committee,
+  ///      Customer, End User, Vendor, Regulator, etc.). The user keeps
+  ///      what applies and deletes the rest.
+  ///
+  /// Silently no-ops if the register already has entries — the user's
+  /// manual edits are never overwritten.
+  Future<void> _maybeAutoPopulateStakeholders() async {
+    if (!mounted) return;
+    final projectData = ProjectDataHelper.getProvider(context).projectData;
+    if (projectData.stakeholderEntries.isNotEmpty) return;
+
+    final List<StakeholderEntry> newEntries = [];
+    final now = DateTime.now();
+    String _id(String seed) =>
+        '${now.microsecondsSinceEpoch}_${seed.hashCode.abs()}';
+
+    // ── 1. Initiation Phase core stakeholders ──────────────────────────
+    final coreStakeholders = projectData.coreStakeholdersData;
+    if (coreStakeholders != null) {
+      final solutionData =
+          coreStakeholders.solutionStakeholderData.firstWhere(
+        (s) => s.solutionTitle == projectData.preferredSolution?.title,
+        orElse: () => coreStakeholders.solutionStakeholderData.isNotEmpty
+            ? coreStakeholders.solutionStakeholderData.first
+            : SolutionStakeholderData(),
+      );
+
+      void parseAndAdd(String text, String org) {
+        for (var line in text.split('\n')) {
+          final cleaned = line.replaceAll(RegExp(r'^[-*•]\s*'), '').trim();
+          if (cleaned.isEmpty) continue;
+          if (newEntries.any((e) =>
+              e.name.toLowerCase() == cleaned.toLowerCase())) continue;
+          newEntries.add(StakeholderEntry(
+            id: _id('init_$cleaned'),
+            name: cleaned,
+            organization: org,
+            role: 'TBD',
+            contactInfo: '',
+            influence: 'Medium',
+            interest: 'Medium',
+            channel: 'Email',
+            owner: 'Project Manager',
+            notes: 'Auto-loaded from Initiation Phase',
+            createdAt: now,
+            updatedAt: now,
+          ));
+        }
+      }
+
+      parseAndAdd(solutionData.internalStakeholders, 'Internal');
+      parseAndAdd(solutionData.externalStakeholders, 'External');
+    }
+
+    // ── 2. Project Team (from staffing plan) ──────────────────────────
+    // Each team member becomes a stakeholder row tagged "Project Team" so
+    // they appear in the matrix. This is distinct from the Project Team
+    // Communication Roster section below — the roster is the contact
+    // directory; these rows are the matrix entries.
+    for (final m in projectData.teamMembers) {
+      final name = m.name.trim();
+      if (name.isEmpty) continue;
+      if (newEntries.any((e) =>
+          e.name.toLowerCase() == name.toLowerCase())) continue;
+      newEntries.add(StakeholderEntry(
+        id: _id('pt_${m.id}'),
+        name: name,
+        organization: 'Project Team',
+        role: m.role.isEmpty ? 'TBD' : m.role,
+        contactInfo: m.email,
+        influence: 'High',
+        interest: 'High',
+        channel: 'Email',
+        owner: 'Project Manager',
+        notes: 'Auto-loaded from staffing plan',
+        createdAt: now,
+        updatedAt: now,
+      ));
+    }
+
+    // ── 3. Common project stakeholders prompt list ────────────────────
+    // Curated set of roles every project should consider. The user keeps
+    // the ones that apply and deletes the rest. Marked as "suggested" so
+    // the user can tell where they came from.
+    const commonStakeholders = <(String, String, String, String)>[
+      // (name, organization, role, notes)
+      ('Project Sponsor', 'Internal', 'Executive Sponsor',
+          'Suggested — confirm name'),
+      ('Steering Committee', 'Internal', 'Governance Body',
+          'Suggested — confirm members'),
+      ('Project Manager', 'Project Team', 'PM',
+          'Suggested — confirm name'),
+      ('Customer / Client', 'External', 'Funding Authority',
+          'Suggested — confirm name'),
+      ('End Users', 'External', 'User Group',
+          'Suggested — identify representative'),
+      ('Vendor / Supplier', 'External', 'Supplier',
+          'Suggested — confirm primary contact'),
+      ('Regulator / Compliance Authority', 'External', 'Regulator',
+          'Suggested — identify jurisdiction'),
+      ('Finance Department', 'Internal', 'Finance',
+          'Suggested — confirm lead'),
+      ('IT Department', 'Internal', 'IT',
+          'Suggested — confirm lead'),
+      ('HR Department', 'Internal', 'HR',
+          'Suggested — confirm lead'),
+      ('Legal / Contracts', 'Internal', 'Legal',
+          'Suggested — confirm lead'),
+      ('Quality Assurance', 'Internal', 'QA',
+          'Suggested — confirm lead'),
+      ('Health, Safety & Environment', 'Internal', 'HSE',
+          'Suggested — confirm lead'),
+      ('Communications / PR', 'Internal', 'Comms',
+          'Suggested — confirm lead'),
+      ('Community / Public', 'External', 'Affected Community',
+          'Suggested — identify representative'),
+    ];
+    for (final (name, org, role, note) in commonStakeholders) {
+      if (newEntries.any((e) =>
+          e.name.toLowerCase() == name.toLowerCase())) continue;
+      newEntries.add(StakeholderEntry(
+        id: _id('sugg_$name'),
+        name: name,
+        organization: org,
+        role: role,
+        contactInfo: '',
+        influence: org == 'Internal' ? 'Medium' : 'High',
+        interest: 'Medium',
+        channel: 'Email',
+        owner: 'Project Manager',
+        notes: note,
+        createdAt: now,
+        updatedAt: now,
+      ));
+    }
+
+    if (newEntries.isEmpty || !mounted) return;
+
+    await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'stakeholder_management',
+      dataUpdater: (d) => d.copyWith(stakeholderEntries: newEntries),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Pre-filled ${newEntries.length} suggested stakeholders. '
+          'Review the list and delete any that don\'t apply.',
+        ),
+        duration: const Duration(seconds: 5),
+      ),
+    );
+  }
+
   Future<void> _autoPopulateFromInitiation() async {
     final projectData = ProjectDataHelper.getProvider(context).projectData;
     final coreStakeholders = projectData.coreStakeholdersData;
@@ -644,6 +868,306 @@ class _StakeholderManagementScreenState
     );
   }
 
+  /// Calls AI to review the current stakeholder register and suggest
+  /// additions (stakeholders the project should consider but hasn't listed)
+  /// and removals (stakeholders who are likely duplicates or not relevant).
+  ///
+  /// Shows a dialog with the AI's suggestions and prompts the user to
+  /// update the table — they can accept additions, ignore suggestions, or
+  /// dismiss the dialog without changes. Nothing is auto-applied; the
+  /// user is always in control of the final list.
+  Future<void> _aiReviewStakeholders() async {
+    final projectData = ProjectDataHelper.getProvider(context).projectData;
+    final entries = projectData.stakeholderEntries;
+
+    if (entries.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Add at least one stakeholder before running AI review.')));
+      return;
+    }
+
+    // Bail out gracefully if OpenAI isn't configured — don't crash the
+    // tap. Surface a helpful message so the user knows why nothing
+    // happened.
+    if (!OpenAiConfig.isConfigured) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('AI not configured'),
+          content: const Text(
+              'OpenAI is not configured for this project, so the AI '
+              'review is unavailable. You can still add or remove '
+              'stakeholders manually using the buttons above the table.'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK')),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Show a loading indicator while the AI is thinking.
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Dialog(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+              SizedBox(width: 16),
+              Text('Reviewing stakeholders with AI…'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final currentList = entries
+        .map((e) => '- ${e.name}'
+            '${e.organization.isNotEmpty ? ' (${e.organization})' : ''}'
+            '${e.role.isNotEmpty ? ' — ${e.role}' : ''}')
+        .join('\n');
+
+    final projectName = projectData.projectName.isEmpty
+        ? '(unnamed)'
+        : projectData.projectName;
+    final solutionTitle = projectData.preferredSolution?.title ?? '(none)';
+    final objective = projectData.projectGoals.isEmpty
+        ? '(not defined)'
+        : projectData.projectGoals
+            .map((g) => g.name.isEmpty ? g.description : g.name)
+            .where((s) => s.isNotEmpty)
+            .join('; ');
+
+    final prompt = '''You are a project stakeholder analyst. Review the
+current stakeholder register for the project below and suggest additions
+and removals.
+
+Project name: $projectName
+Preferred solution: $solutionTitle
+Project objective: $objective
+
+Current stakeholder register:
+$currentList
+
+Return your review in this exact format (no markdown, no extra prose):
+
+SUGGESTED ADDITIONS:
+- <stakeholder name> | <organization> | <role> | <one-line reason>
+- ...
+
+SUGGESTED REMOVALS:
+- <stakeholder name> | <one-line reason it may be a duplicate or not relevant>
+- ...
+
+Keep suggestions practical and specific to this project. If there is
+nothing to add or remove, write "None" under that heading.''';
+
+    String aiResponse;
+    try {
+      final service = OpenAiServiceSecure();
+      aiResponse = await service.generateCompletion(prompt, maxTokens: 1500);
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop(); // dismiss loading dialog
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('AI review failed: $e')),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pop(); // dismiss loading dialog
+    if (!mounted) return;
+
+    // Parse the AI response into additions / removals lists.
+    final lines = aiResponse.split('\n');
+    String section = '';
+    final additions = <String>[];
+    final removals = <String>[];
+    for (final line in lines) {
+      final t = line.trim();
+      if (t.toUpperCase().startsWith('SUGGESTED ADDITIONS')) {
+        section = 'add';
+        continue;
+      }
+      if (t.toUpperCase().startsWith('SUGGESTED REMOVALS')) {
+        section = 'remove';
+        continue;
+      }
+      if (t.isEmpty) continue;
+      if (t.startsWith('- ') || t.startsWith('• ')) {
+        final item = t.substring(2).trim();
+        if (section == 'add') additions.add(item);
+        if (section == 'remove') removals.add(item);
+      }
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('AI Stakeholder Review'),
+        content: SizedBox(
+          width: 560,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'The AI reviewed your stakeholder register and made the '
+                  'following suggestions. Add the ones that apply — your '
+                  'current list is not changed until you confirm.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                ),
+                const SizedBox(height: 16),
+                const Text('Suggested additions:',
+                    style:
+                        TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                if (additions.isEmpty)
+                  const Text('None',
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          color: Color(0xFF9CA3AF)))
+                else
+                  ...additions.map((a) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('• ',
+                                style: TextStyle(color: Color(0xFF10B981))),
+                            Expanded(
+                                child: Text(a,
+                                    style: const TextStyle(fontSize: 12))),
+                          ],
+                        ),
+                      )),
+                const SizedBox(height: 16),
+                const Text('Suggested removals:',
+                    style:
+                        TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                if (removals.isEmpty)
+                  const Text('None',
+                      style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          color: Color(0xFF9CA3AF)))
+                else
+                  ...removals.map((r) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('• ',
+                                style: TextStyle(color: Color(0xFFEF4444))),
+                            Expanded(
+                                child: Text(r,
+                                    style: const TextStyle(fontSize: 12))),
+                          ],
+                        ),
+                      )),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+          if (additions.isNotEmpty)
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                _applyAiAdditions(additions);
+              },
+              icon: const Icon(Icons.add, size: 16),
+              label: Text('Add ${additions.length} suggested'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFD84D),
+                foregroundColor: const Color(0xFF1F2937),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Parses AI-suggested additions (format: "Name | Org | Role | reason")
+  /// and appends them to the stakeholder register. Skips entries whose
+  /// name already exists (case-insensitive) to avoid duplicates.
+  void _applyAiAdditions(List<String> additions) async {
+    final projectData = ProjectDataHelper.getProvider(context).projectData;
+    final existingNames = projectData.stakeholderEntries
+        .map((e) => e.name.toLowerCase())
+        .toSet();
+
+    final now = DateTime.now();
+    final newEntries = <StakeholderEntry>[];
+    for (final line in additions) {
+      final parts = line.split('|').map((s) => s.trim()).toList();
+      if (parts.isEmpty) continue;
+      final name = parts[0];
+      if (name.isEmpty) continue;
+      if (existingNames.contains(name.toLowerCase())) continue;
+      newEntries.add(StakeholderEntry(
+        id: '${now.microsecondsSinceEpoch}_${name.hashCode.abs()}',
+        name: name,
+        organization: parts.length > 1 ? parts[1] : 'External',
+        role: parts.length > 2 ? parts[2] : 'TBD',
+        contactInfo: '',
+        influence: 'Medium',
+        interest: 'Medium',
+        channel: 'Email',
+        owner: 'Project Manager',
+        notes: parts.length > 3
+            ? 'AI suggestion: ${parts[3]}'
+            : 'AI suggestion — review and confirm',
+        createdAt: now,
+        updatedAt: now,
+      ));
+      existingNames.add(name.toLowerCase());
+    }
+
+    if (newEntries.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'No new stakeholders added — all suggestions already exist.')));
+      return;
+    }
+
+    await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'stakeholder_management',
+      dataUpdater: (d) => d.copyWith(
+        stakeholderEntries: [...d.stakeholderEntries, ...newEntries],
+      ),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            'Added ${newEntries.length} AI-suggested stakeholder(s). '
+            'Review and edit details as needed.'),
+      ),
+    );
+  }
+
   Future<void> _exportPdf() async {
     final projectData = ProjectDataHelper.getDataListening(context);
 
@@ -765,7 +1289,7 @@ class _TitleSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Stakeholder Management',
+                    'Stakeholder Management Plan',
                     style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w700,
@@ -773,7 +1297,11 @@ class _TitleSection extends StatelessWidget {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'Manage stakeholders, communication plans, and engagement strategies',
+                    'Define how each influence/interest stakeholder group will be '
+                    'engaged, communicated with, and managed throughout the project. '
+                    'AI should help develop a landing plan that states how each of '
+                    'the sections would be communicated with (email, meetings, '
+                    'announcements, etc.)',
                     style: TextStyle(
                         fontSize: 15, color: Color(0xFF6B7280), height: 1.5),
                   ),
@@ -1332,6 +1860,9 @@ class _EngagementSection extends StatelessWidget {
     required this.planTable,
     required this.onAdd,
     required this.onSearch,
+    required this.onAiReview,
+    required this.matrixFilter,
+    required this.onMatrixFilterChanged,
   });
 
   final int activeTabIndex;
@@ -1340,6 +1871,9 @@ class _EngagementSection extends StatelessWidget {
   final Widget planTable;
   final VoidCallback onAdd;
   final ValueChanged<String> onSearch;
+  final VoidCallback onAiReview;
+  final String matrixFilter;
+  final ValueChanged<String> onMatrixFilterChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -1369,6 +1903,7 @@ class _EngagementSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ── Toolbar row 1: search + add ──
                 Row(
                   children: [
                     Expanded(
@@ -1396,6 +1931,94 @@ class _EngagementSection extends StatelessWidget {
                     ),
                   ],
                 ),
+                // ── Toolbar row 2: matrix filter + AI review (stakeholders tab only) ──
+                if (activeTabIndex == 0) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      // Matrix quarter filter
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(10),
+                          border:
+                              Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.filter_list,
+                                size: 16, color: Color(0xFF6B7280)),
+                            const SizedBox(width: 8),
+                            const Text('Filter by matrix quarter:',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF6B7280))),
+                            const SizedBox(width: 8),
+                            DropdownButton<String>(
+                              value: matrixFilter,
+                              underline: const SizedBox(),
+                              isDense: true,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF111827)),
+                              items: const [
+                                DropdownMenuItem(
+                                    value: 'all',
+                                    child: Text('All stakeholders')),
+                                DropdownMenuItem(
+                                    value: 'manage_closely',
+                                    child: Text(
+                                        'Manage Closely (High influence / High interest)')),
+                                DropdownMenuItem(
+                                    value: 'keep_satisfied',
+                                    child: Text(
+                                        'Keep Satisfied (High influence / Low interest)')),
+                                DropdownMenuItem(
+                                    value: 'keep_informed',
+                                    child: Text(
+                                        'Keep Informed (Low influence / High interest)')),
+                                DropdownMenuItem(
+                                    value: 'monitor',
+                                    child: Text(
+                                        'Monitor (Low influence / Low interest)')),
+                              ],
+                              onChanged: (v) {
+                                if (v != null) onMatrixFilterChanged(v);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      // AI review stakeholders
+                      ElevatedButton.icon(
+                        onPressed: onAiReview,
+                        icon: const Icon(Icons.auto_awesome,
+                            size: 16, color: Color(0xFF1F2937)),
+                        label: const Text('AI Review Stakeholders',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1F2937))),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFC107),
+                          foregroundColor: const Color(0xFF1F2937),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 24),
                 IndexedStack(
                   index: activeTabIndex,
@@ -1495,17 +2118,17 @@ class _StakeholdersTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final columns = [
-      const _TableColumnDef('#', 72),
-      const _TableColumnDef('Stakeholder', 200),
-      const _TableColumnDef('Organization', 180),
-      const _TableColumnDef('Role/Title', 160),
-      const _TableColumnDef('Contact Info', 200),
-      const _TableColumnDef('Influence', 140),
-      const _TableColumnDef('Interest', 140),
-      const _TableColumnDef('Channel', 180),
+      const _TableColumnDef('#', 56),
+      const _TableColumnDef('Stakeholder', 240),
+      const _TableColumnDef('Organization', 160),
+      const _TableColumnDef('Role/Title', 180),
+      const _TableColumnDef('Contact Info', 220),
+      const _TableColumnDef('Influence', 130),
+      const _TableColumnDef('Interest', 130),
+      const _TableColumnDef('Channel', 150),
       const _TableColumnDef('Owner', 160),
-      const _TableColumnDef('Notes', 240),
-      const _TableColumnDef('', 70),
+      const _TableColumnDef('Notes', 260),
+      const _TableColumnDef('Actions', 130),
     ];
 
     if (isLoading) {
@@ -1594,10 +2217,10 @@ class _StakeholdersTable extends StatelessWidget {
                 onChanged: (value) =>
                     onChanged(entries[index].copyWith(notes: value)),
               ),
-              _DeleteCell(
+              _RowActions(
                 itemName:
                     'stakeholder "${entries[index].name.trim().isEmpty ? 'Untitled' : entries[index].name.trim()}"',
-                onPressed: () => onDelete(entries[index].id),
+                onDelete: () => onDelete(entries[index].id),
               ),
             ],
           ),
@@ -1668,17 +2291,17 @@ class _EngagementPlansTableState extends State<_EngagementPlansTable> {
   Widget build(BuildContext context) {
     final columns = [
       const _TableColumnDef('#', 56),
-      const _TableColumnDef('Stakeholder', 180),
-      const _TableColumnDef('Group', 140),
-      const _TableColumnDef('Manage Closely', 110),
-      const _TableColumnDef('Objective', 200),
-      const _TableColumnDef('Method', 140),
-      const _TableColumnDef('Frequency', 130),
-      const _TableColumnDef('Owner', 140),
+      const _TableColumnDef('Stakeholder', 220),
+      const _TableColumnDef('Group', 150),
+      const _TableColumnDef('Manage Closely', 120),
+      const _TableColumnDef('Objective', 240),
+      const _TableColumnDef('Method', 160),
+      const _TableColumnDef('Frequency', 140),
+      const _TableColumnDef('Owner', 150),
       const _TableColumnDef('Status', 130),
-      const _TableColumnDef('Next Touchpoint', 140),
-      const _TableColumnDef('Notes', 200),
-      const _TableColumnDef('', 90),
+      const _TableColumnDef('Next Touchpoint', 160),
+      const _TableColumnDef('Notes', 220),
+      const _TableColumnDef('Actions', 130),
     ];
 
     if (widget.isLoading) {
@@ -2093,6 +2716,11 @@ class _QuarterPlanFieldState extends State<_QuarterPlanField> {
           controller: _controller,
           minLines: 2,
           maxLines: null,
+          // Per-cell voice/AI/format icons disabled — these actions live at
+          // the row level via [_RowActions] instead.
+          enableVoice: false,
+          enableKazAi: false,
+          enableTextFormatting: false,
           decoration: InputDecoration(
             hintText: widget.hint,
             isDense: true,
@@ -2166,6 +2794,11 @@ class _DataLinksFieldState extends State<_DataLinksField> {
       controller: _controller,
       minLines: 3,
       maxLines: null,
+      // Per-cell voice/AI/format icons disabled — these actions live at the
+      // row level via [_RowActions] / the expanded panel header instead.
+      enableVoice: false,
+      enableKazAi: false,
+      enableTextFormatting: false,
       decoration: InputDecoration(
         hintText:
             'https://drive.google.com/...\nSharePoint: /PMO/Project Alpha/Reports\nEmail DL: project-alpha-team@nduproject.com',
@@ -2394,6 +3027,13 @@ class _TextCellState extends State<_TextCell> {
         controller: _controller,
         minLines: widget.minLines,
         maxLines: widget.maxLines,
+        // Per-cell voice/AI/format icons are disabled here to keep the
+        // table legible. These actions are surfaced once per row via
+        // [_RowActions] at the end of each row instead — see the user
+        // feedback about per-cell icons taking up too much space.
+        enableVoice: false,
+        enableKazAi: false,
+        enableTextFormatting: false,
         decoration: InputDecoration(
           hintText: widget.hintText,
           isDense: true,
@@ -2522,6 +3162,119 @@ class _DeleteCell extends StatelessWidget {
     if (confirmed == true) {
       onConfirm();
     }
+  }
+}
+
+/// Row-level action bar that replaces the per-cell voice/AI/delete icons.
+///
+/// Why this exists: previously every text cell in the stakeholder and
+/// engagement-plan tables rendered its own mic + sparkles + trash icons
+/// (because the cells used [VoiceTextFormField] with all features enabled).
+/// That made each row visually noisy and stole horizontal space from the
+/// actual content. The user asked for these actions to be available
+/// "for the entire row, not each cell" — so we now disable them per-cell
+/// and surface them once here, at the end of the row.
+///
+/// The bar is intentionally compact (three small icon buttons) so it fits
+/// in a narrow trailing column.
+class _RowActions extends StatelessWidget {
+  const _RowActions({
+    required this.itemName,
+    required this.onDelete,
+  });
+
+  final String itemName;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return _TableFieldShell(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Tooltip(
+            message: 'Voice input (row-level)',
+            child: IconButton(
+              icon: const Icon(Icons.mic_outlined,
+                  size: 18, color: Color(0xFFB45309)),
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(
+                  minWidth: 32, minHeight: 32),
+              padding: EdgeInsets.zero,
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        'Tap a text field in this row to use voice input — '
+                        'the mic icon now lives inside the field only when '
+                        'focused.'),
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              },
+            ),
+          ),
+          Tooltip(
+            message: 'AI assist (row-level)',
+            child: IconButton(
+              icon: const Icon(Icons.auto_awesome_outlined,
+                  size: 18, color: Color(0xFFB45309)),
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(
+                  minWidth: 32, minHeight: 32),
+              padding: EdgeInsets.zero,
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        'Use the "AI Review Stakeholders" button above the '
+                        'table to get AI-suggested additions and removals.'),
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              },
+            ),
+          ),
+          Tooltip(
+            message: 'Delete row',
+            child: IconButton(
+              icon: const Icon(Icons.delete_outline,
+                  size: 18, color: Color(0xFFEF4444)),
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(
+                  minWidth: 32, minHeight: 32),
+              padding: EdgeInsets.zero,
+              onPressed: () => _confirmDelete(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Stakeholder'),
+        content: Text('Are you sure you want to delete $itemName?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) onDelete();
   }
 }
 

@@ -851,10 +851,19 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
   Widget build(BuildContext context) {
     final palette = DashboardPaletteScope.of(context);
     final user = FirebaseAuth.instance.currentUser;
-    final displayName =
+    final rawDisplayName =
         FirebaseAuthService.displayNameOrEmail(fallback: 'User');
+    // If the "display name" is actually an email (no display name set),
+    // extract the local part for the greeting and show the full email
+    // as a smaller secondary line. This fixes the visual hierarchy issue
+    // where the email was competing with the greeting for prominence.
+    final isEmail = rawDisplayName.contains('@');
+    final displayName = isEmail
+        ? rawDisplayName.split('@').first
+        : rawDisplayName;
+    final emailLine = isEmail ? rawDisplayName : (user?.email ?? '');
     final firstName = displayName.split(' ').first;
-    final initials = _initials(displayName);
+    final initials = _initials(isEmail ? displayName : rawDisplayName);
     final photoUrl = user?.photoURL;
     final hour = DateTime.now().hour;
     final greeting = hour < 12
@@ -985,6 +994,17 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        if (emailLine.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            emailLine,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white.withValues(alpha: 0.55),
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
                       ],
                     );
                     final ctaRow = Wrap(
@@ -1143,12 +1163,24 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
   }
 
   Widget _planBadge(DashboardPalette palette) {
+    // Use the palette's primary accent for a filled badge — more
+    // prominent than the previous translucent outline.
+    final badgeColor = widget.isBasicPlan
+        ? palette.primary.withValues(alpha: 0.85)
+        : palette.primary;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
+        color: badgeColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: badgeColor.withValues(alpha: 0.4),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1158,7 +1190,7 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
             size: 13,
             color: Colors.white,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 5),
           Text(
             widget.isBasicPlan ? 'BASIC PLAN' : 'PRO PLAN',
             style: const TextStyle(

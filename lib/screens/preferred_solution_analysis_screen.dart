@@ -79,7 +79,7 @@ class _PreferredSolutionAnalysisScreenState
   bool _businessCaseExpanded = true;
   List<_SolutionAnalysisData> _analysis = const [];
   int? _selectedSolutionIndex;
-  final bool _showTableView = true; // Default to table view
+  bool _showTableView = true; // Default to table view (Task 10)
   late final TextEditingController _projectNameController;
   String? _projectNameError;
   Timer? _notesSaveTimer;
@@ -1145,6 +1145,8 @@ class _PreferredSolutionAnalysisScreenState
               const SizedBox(height: 16),
             ],
             if (!_isLoading) ...[
+              _buildViewToggle(),
+              const SizedBox(height: 12),
               _showTableView ? _buildTabSection() : _buildCardBasedView(),
               const SizedBox(height: 16),
               // Selection summary
@@ -2076,6 +2078,95 @@ class _PreferredSolutionAnalysisScreenState
             onPressed: _isLoading ? null : _loadAnalysis,
             child: const Text('Retry')),
       ]),
+    );
+  }
+
+  /// View-mode toggle (Table / Cards). Defaults to Table per Task 10.
+  Widget _buildViewToggle() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _viewToggleChip(
+                label: 'Table',
+                icon: Icons.table_chart_outlined,
+                selected: _showTableView,
+                onTap: () {
+                  if (!_showTableView) {
+                    setState(() => _showTableView = true);
+                  }
+                },
+              ),
+              const SizedBox(width: 4),
+              _viewToggleChip(
+                label: 'Cards',
+                icon: Icons.view_agenda_outlined,
+                selected: !_showTableView,
+                onTap: () {
+                  if (_showTableView) {
+                    setState(() => _showTableView = false);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _viewToggleChip({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: selected ? const Color(0xFF111827) : const Color(0xFF6B7280),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected ? const Color(0xFF111827) : const Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

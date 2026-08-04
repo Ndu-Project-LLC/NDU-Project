@@ -5,13 +5,14 @@
 //
 // Design philosophy:
 //   "The Runway" — a calm, focused launchpad for teams starting their
-//   project journey. Warm teal palette, generous whitespace, card-first
+//   project journey. Brand-aligned palette (yellow + blue), generous whitespace, card-first
 //   composition, and a clear "what to do next" flow. Every element is
 //   designed to reduce cognitive load for first-time project owners.
 //
 // Visual language:
-//   - Warm off-white canvas (#FBFAF7)
-//   - Teal primary (#0D9488) matching the source card's mint icon
+//   - White canvas (#FFFFFF) matching the app surface
+//   - Brand yellow accent (#FFC812) + info blue primary (#2563EB)
+//     aligned with the overall NDU app theme (theme.dart)
 //   - Sand/clay neutrals for surfaces
 //   - Generous 28-32px radii, soft shadows
 //   - Inter-style typography with tight tracking on display headings
@@ -69,20 +70,23 @@ class _RegularProjectDashboardScreenState
   late final Animation<double> _heroFade;
   late final Animation<Offset> _heroSlide;
 
-  // Design tokens — warm, calm, onboarding-friendly.
-  static const _canvas = Color(0xFFFBFAF7);
+  // Design tokens — aligned with the NDU app theme (theme.dart):
+  //   primary = #FFC812 (brand yellow), secondary = #2563EB (info blue),
+  //   tertiary = #16A34A (success green), surface = white.
+  static const _canvas = Color(0xFFFFFFFF);
   static const _surface = Color(0xFFFFFFFF);
   static const _surfaceWarm = Color(0xFFFFFBF3);
-  static const _surfaceMint = Color(0xFFECFDF5);
+  static const _surfaceMint = Color(0xFFFEFCE8); // Soft brand-yellow tint
   static const _outline = Color(0xFFE7E5E0);
   static const _outlineSoft = Color(0xFFF1EFE9);
   static const _ink = Color(0xFF1A1D1F);
   static const _inkSoft = Color(0xFF3D4046);
   static const _muted = Color(0xFF6B7280);
   static const _mutedSoft = Color(0xFF9CA3AF);
-  static const _teal = Color(0xFF0D9488);
-  static const _tealDeep = Color(0xFF0F766E);
-  static const _tealSoft = Color(0xFFCCFBF1);
+  static const _brand = Color(0xFFFFC812); // App primary (brand yellow)
+  static const _teal = Color(0xFF2563EB); // App secondary (info blue)
+  static const _tealDeep = Color(0xFF1E40AF);
+  static const _tealSoft = Color(0xFFDBEAFE);
   static const _coral = Color(0xFFFB7185);
   static const _amber = Color(0xFFF59E0B);
   static const _emerald = Color(0xFF10B981);

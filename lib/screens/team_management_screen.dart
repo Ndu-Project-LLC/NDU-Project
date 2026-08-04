@@ -9,6 +9,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/team_management_plan.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/team_management_service.dart';
+import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:provider/provider.dart';
@@ -531,6 +532,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  initialText: _plan.mobilizationProcess,
  hint:
  'Describe the mobilization process: notification, access provisioning, kickoff scheduling, etc.',
+ aiSectionLabel: 'Team Mobilization Process',
  onChanged: (text) => _updatePlan((p) =>
  p.copyWith(mobilizationProcess: text)),
  ),
@@ -844,6 +846,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  initialText: _plan.recognitionProcess,
  hint:
  'Describe the recognition process: milestones, awards, shout-outs, performance bonuses, etc.',
+ aiSectionLabel: 'Team Member Recognition Process',
  onChanged: (text) => _updatePlan((p) =>
  p.copyWith(recognitionProcess: text)),
  ),
@@ -1580,11 +1583,20 @@ class _EditableTextBlock extends StatefulWidget {
  required this.initialText,
  required this.hint,
  required this.onChanged,
+ this.aiSectionLabel,
+ this.enableAi = true,
  });
 
  final String initialText;
  final String hint;
  final ValueChanged<String> onChanged;
+
+ /// When provided, an "Generate with AI" button is shown beneath the
+ /// field. The label is sent to the AI service as the section name so
+ /// the generated text is tailored to the field's purpose (e.g.
+ /// "Team Mobilization Process" vs "Team Member Recognition Process").
+ final String? aiSectionLabel;
+ final bool enableAi;
 
  @override
  State<_EditableTextBlock> createState() => _EditableTextBlockState();
@@ -1592,6 +1604,8 @@ class _EditableTextBlock extends StatefulWidget {
 
 class _EditableTextBlockState extends State<_EditableTextBlock> {
  late final TextEditingController _controller;
+ bool _isGenerating = false;
+
  @override
  void initState() {
  super.initState();
@@ -1613,9 +1627,59 @@ class _EditableTextBlockState extends State<_EditableTextBlock> {
  super.dispose();
  }
 
+ Future<void> _generateWithAi() async {
+ if (_isGenerating) return;
+ setState(() => _isGenerating = true);
+ try {
+ final data = ProjectDataHelper.getData(context);
+ var contextText = ProjectDataHelper.buildProjectContextScan(
+ data,
+ sectionLabel: widget.aiSectionLabel ?? 'Team Management',
+ );
+ if (contextText.trim().isEmpty) {
+ contextText =
+ 'Project: ${data.projectName}\nDescription: ${data.projectDescription}';
+ }
+ final ai = OpenAiServiceSecure();
+ final generated = await ai.generateFepSectionText(
+ section: widget.aiSectionLabel ?? 'Team Management',
+ context: contextText,
+ );
+ if (generated.trim().isNotEmpty) {
+ _controller.text = generated.trim();
+ widget.onChanged(_controller.text);
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'AI-generated content inserted. Review and edit as needed.'),
+ backgroundColor: Color(0xFF16A34A),
+ duration: Duration(seconds: 3),
+ ),
+ );
+ }
+ }
+ } catch (e) {
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text('AI generation failed: $e'),
+ backgroundColor: const Color(0xFFDC2626),
+ duration: const Duration(seconds: 4),
+ ),
+ );
+ }
+ } finally {
+ if (mounted) setState(() => _isGenerating = false);
+ }
+ }
+
  @override
  Widget build(BuildContext context) {
- return TextField(
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ TextField(
  controller: _controller,
  maxLines: 6,
  onChanged: widget.onChanged,
@@ -1623,14 +1687,41 @@ class _EditableTextBlockState extends State<_EditableTextBlock> {
  hintText: widget.hint,
  filled: true,
  fillColor: const Color(0xFFF9FAFB),
- border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+ border: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(12)),
  enabledBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(12),
  borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(12),
- borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.6)),
+ borderSide:
+ const BorderSide(color: Color(0xFFFFD700), width: 1.6)),
  ),
+ ),
+ if (widget.enableAi && widget.aiSectionLabel != null) ...[
+ const SizedBox(height: 8),
+ Align(
+ alignment: Alignment.centerLeft,
+ child: TextButton.icon(
+ onPressed: _isGenerating ? null : _generateWithAi,
+ icon: _isGenerating
+ ? const SizedBox(
+ width: 14,
+ height: 14,
+ child: CircularProgressIndicator(strokeWidth: 2),
+ )
+ : const Icon(Icons.auto_awesome, size: 16),
+ label: Text(
+ _isGenerating ? 'Generating…' : 'Generate with AI'),
+ style: TextButton.styleFrom(
+ foregroundColor: const Color(0xFF7C3AED),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 12, vertical: 8),
+ ),
+ ),
+ ),
+ ],
+ ],
  );
  }
 }

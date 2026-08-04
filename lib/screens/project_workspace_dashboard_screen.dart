@@ -16,7 +16,6 @@ import 'package:ndu_project/utils/navigation_route_resolver.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/compact_action_button.dart';
 import 'package:ndu_project/widgets/dashboard_metrics_cards.dart';
-import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 // The dashboard_metrics_cards import is retained intentionally so the
 // workspace keeps a stable import surface even though the executive
@@ -281,7 +280,6 @@ class _ProjectWorkspaceDashboardScreenState
           },
         ),
       ),
-      floatingActionButton: const KazAiChatBubble(),
     );
   }
 

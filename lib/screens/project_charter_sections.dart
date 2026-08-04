@@ -715,7 +715,7 @@ class CharterProjectDefinition extends StatelessWidget {
  const SizedBox(height: 8),
  ExpandableText(
  text: data!.businessCase.trim().isEmpty
- ? 'Provide the financial and strategic rationale (ROI/NPV context) for this project.'
+ ? 'Provide the financial and strategic rationale for this project.'
  : data!.businessCase,
  style: TextStyle(
  fontSize: 14,
@@ -760,8 +760,6 @@ class CharterFinancialOverview extends StatelessWidget {
  children: [
  sectionTitleWithIcon(
  Icons.payments_outlined, 'Financial Overview'),
- // "ROI Analysis" badge removed per user request — the
- // charter no longer displays an ROI Analysis pill.
  ],
  ),
  const SizedBox(height: 20),
@@ -2047,7 +2045,7 @@ class _CharterFloatingApprovalBarState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-              'Assign a sponsor or project owner before approval. Use the sponsor suggestion banner in the Governance section.'),
+              'Charter to be approved by sponsor, owner or applicable lead'),
           backgroundColor: const Color(0xFFD97706),
           behavior: SnackBarBehavior.floating,
           action: SnackBarAction(

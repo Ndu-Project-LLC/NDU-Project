@@ -225,22 +225,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
 
  return Scaffold(
  backgroundColor: _bg,
- floatingActionButton: Column(
- mainAxisAlignment: MainAxisAlignment.end,
- crossAxisAlignment: CrossAxisAlignment.end,
- children: [
- const KazAiChatBubble(positioned: false),
- const SizedBox(height: 12),
- FloatingActionButton(
- onPressed: () {},
- backgroundColor: _tertiary,
- foregroundColor: _onTertiary,
- elevation: 4,
- shape: const CircleBorder(),
- child: const Icon(Icons.add, size: 28),
- ),
- ],
- ),
+ floatingActionButton: const KazAiChatBubble(positioned: false),
  body: SafeArea(
  child: StreamBuilder<List<ProgramModel>>(
  stream: user == null

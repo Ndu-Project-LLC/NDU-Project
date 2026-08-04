@@ -157,11 +157,18 @@ class _OrganizationRolesResponsibilitiesScreenState
     final projectData = ProjectDataHelper.getData(context);
     final roles = projectData.projectRoles;
 
+    final totalPersonnel = roles.fold<int>(
+        0, (sum, role) => sum + (role.headcount > 0 ? role.headcount : 1));
+
     final List<_MetricData> metrics = [
       _MetricData(
           'Total Roles', roles.length.toString(), const Color(0xFF3B82F6)),
       _MetricData(
-          'Deciplines',
+          'Total Personnel',
+          totalPersonnel.toString(),
+          const Color(0xFF8B5CF6)),
+      _MetricData(
+          'Disciplines',
           roles.map<String>((r) => r.workstream).toSet().length.toString(),
           const Color(0xFF10B981)),
     ];
@@ -176,6 +183,7 @@ class _OrganizationRolesResponsibilitiesScreenState
         bullets: [
           _BulletData(role.description, false),
         ],
+        headcount: role.headcount > 0 ? role.headcount : 1,
         onEdit: () => _editRole(context, index, role),
         onDelete: () => _deleteRole(context, index),
       );
@@ -190,10 +198,36 @@ class _OrganizationRolesResponsibilitiesScreenState
         activeItemLabel: 'Organization Plan - Roles & Responsibilities',
         metrics: metrics,
         sections: sections,
+        roles: roles,
+        showTableView: true,
       ),
       onAdd: () => _addRole(context),
       onAddPredefined: () => _showPredefinedRolesDialog(context),
+      onEditRole: (index, role) => _editRole(context, index, role),
+      onDeleteRole: (index) => _deleteRole(context, index),
+      onUpdateRoleHeadcount: (index, headcount) =>
+          _updateRoleHeadcount(context, index, headcount),
     );
+  }
+
+  Future<void> _updateRoleHeadcount(
+      BuildContext context, int index, int headcount) async {
+    final rootContext = context;
+    if (headcount < 1) return;
+    final updatedRoles = List<RoleDefinition>.from(
+        ProjectDataHelper.getProvider(rootContext).projectData.projectRoles);
+    if (index < 0 || index >= updatedRoles.length) return;
+    updatedRoles[index] =
+        updatedRoles[index].copyWith(headcount: headcount);
+    await ProjectDataHelper.saveAndNavigate(
+      context: rootContext,
+      checkpoint: 'organization_roles_responsibilities',
+      saveInBackground: true,
+      nextScreenBuilder: () =>
+          const OrganizationRolesResponsibilitiesScreen(),
+      dataUpdater: (d) => d.copyWith(projectRoles: updatedRoles),
+    );
+    if (mounted) setState(() {});
   }
 
   void _showPredefinedRolesDialog(BuildContext context) {
@@ -477,6 +511,7 @@ class _OrganizationRolesResponsibilitiesScreenState
     final currentRoles =
         ProjectDataHelper.getProvider(context).projectData.projectRoles;
     final selectedIndices = <int>{};
+    final headcounts = <int, int>{};
 
     showDialog(
       context: rootContext,
@@ -484,32 +519,61 @@ class _OrganizationRolesResponsibilitiesScreenState
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('Add Standard Roles'),
           content: SizedBox(
-            width: 400,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: predefined.length,
-              itemBuilder: (context, index) {
-                final role = predefined[index];
-                final alreadyAdded =
-                    currentRoles.any((r) => r.title == role.title);
-                return CheckboxListTile(
-                  title: Text(role.title),
-                  subtitle: Text(role.workstream),
-                  value: selectedIndices.contains(index) || alreadyAdded,
-                  enabled: !alreadyAdded,
-                  onChanged: alreadyAdded
-                      ? null
-                      : (val) {
-                          setDialogState(() {
-                            if (val == true) {
-                              selectedIndices.add(index);
-                            } else {
-                              selectedIndices.remove(index);
-                            }
-                          });
-                        },
-                );
-              },
+            width: 520,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Tick the roles you want to add, then set the number of personnel for each in one pass.',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                  ),
+                ),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 460),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: predefined.length,
+                    itemBuilder: (context, index) {
+                      final role = predefined[index];
+                      final alreadyAdded =
+                          currentRoles.any((r) => r.title == role.title);
+                      final isSelected =
+                          selectedIndices.contains(index) || alreadyAdded;
+                      final headcount = headcounts[index] ?? 1;
+                      return _PredefinedRoleRow(
+                        title: role.title,
+                        workstream: role.workstream,
+                        isSelected: isSelected,
+                        enabled: !alreadyAdded,
+                        headcount: headcount,
+                        onToggle: alreadyAdded
+                            ? null
+                            : (val) {
+                                setDialogState(() {
+                                  if (val == true) {
+                                    selectedIndices.add(index);
+                                    headcounts[index] = 1;
+                                  } else {
+                                    selectedIndices.remove(index);
+                                    headcounts.remove(index);
+                                  }
+                                });
+                              },
+                        onHeadcountChanged: alreadyAdded || !isSelected
+                            ? null
+                            : (value) {
+                                setDialogState(() {
+                                  headcounts[index] = value;
+                                });
+                              },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
           actions: [
@@ -520,8 +584,12 @@ class _OrganizationRolesResponsibilitiesScreenState
               onPressed: selectedIndices.isEmpty
                   ? null
                   : () async {
-                      final newRoles =
-                          selectedIndices.map((i) => predefined[i]).toList();
+                      final newRoles = selectedIndices.map((i) {
+                        final base = predefined[i];
+                        final hc = headcounts[i] ?? 1;
+                        return base.copyWith(
+                            headcount: hc < 1 ? 1 : hc, isPredefined: true);
+                      }).toList();
                       Navigator.pop(dialogContext);
                       await ProjectDataHelper.saveAndNavigate(
                         context: rootContext,
@@ -554,6 +622,7 @@ class _OrganizationRolesResponsibilitiesScreenState
     );
     final workstreamController = TextEditingController(text: role.workstream);
     final descController = TextEditingController(text: role.description);
+    int headcount = role.headcount > 0 ? role.headcount : 1;
 
     showDialog(
       context: rootContext,
@@ -569,10 +638,11 @@ class _OrganizationRolesResponsibilitiesScreenState
             final titleValue = selectedTitle == _customRoleOption
                 ? customTitleController.text.trim()
                 : selectedTitle;
-            updatedRoles[index] = RoleDefinition(
+            updatedRoles[index] = updatedRoles[index].copyWith(
               title: titleValue,
               workstream: workstreamController.text.trim(),
               description: descController.text.trim(),
+              headcount: headcount,
             );
             Navigator.pop(dialogContext);
             await ProjectDataHelper.saveAndNavigate(
@@ -621,9 +691,16 @@ class _OrganizationRolesResponsibilitiesScreenState
               ),
             ],
             const SizedBox(height: 16),
-            PremiumEditDialog.fieldLabel('Decipline'),
+            PremiumEditDialog.fieldLabel('Discipline'),
             PremiumEditDialog.textField(
                 controller: workstreamController, hint: 'e.g. Management'),
+            const SizedBox(height: 16),
+            PremiumEditDialog.fieldLabel('Number of personnel'),
+            _DialogHeadcountStepper(
+              headcount: headcount,
+              onChanged: (value) =>
+                  setDialogState(() => headcount = value),
+            ),
             const SizedBox(height: 16),
             PremiumEditDialog.fieldLabel('Description'),
             PremiumEditDialog.textField(
@@ -642,6 +719,7 @@ class _OrganizationRolesResponsibilitiesScreenState
     final customTitleController = TextEditingController();
     final workstreamController = TextEditingController();
     final descController = TextEditingController();
+    int headcount = 1;
 
     showDialog(
       context: rootContext,
@@ -660,6 +738,7 @@ class _OrganizationRolesResponsibilitiesScreenState
               workstream: workstream.isNotEmpty ? workstream : 'Default',
               description:
                   description.isNotEmpty ? description : 'Role description',
+              headcount: headcount,
             );
             Navigator.pop(dialogContext);
             await ProjectDataHelper.saveAndNavigate(
@@ -709,9 +788,16 @@ class _OrganizationRolesResponsibilitiesScreenState
               ),
             ],
             const SizedBox(height: 16),
-            PremiumEditDialog.fieldLabel('Decipline'),
+            PremiumEditDialog.fieldLabel('Discipline'),
             PremiumEditDialog.textField(
                 controller: workstreamController, hint: 'e.g. Management'),
+            const SizedBox(height: 16),
+            PremiumEditDialog.fieldLabel('Number of personnel'),
+            _DialogHeadcountStepper(
+              headcount: headcount,
+              onChanged: (value) =>
+                  setDialogState(() => headcount = value),
+            ),
             const SizedBox(height: 16),
             PremiumEditDialog.fieldLabel('Description'),
             PremiumEditDialog.textField(
@@ -2674,16 +2760,33 @@ class _RaciColumnDef {
   final double width;
 }
 
-class _PlanningSubsectionScreen extends StatelessWidget {
+class _PlanningSubsectionScreen extends StatefulWidget {
   const _PlanningSubsectionScreen(
-      {required this.config, this.onAdd, this.onAddPredefined});
+      {required this.config,
+      this.onAdd,
+      this.onAddPredefined,
+      this.onEditRole,
+      this.onDeleteRole,
+      this.onUpdateRoleHeadcount});
 
   final _PlanningSubsectionConfig config;
   final VoidCallback? onAdd;
   final VoidCallback? onAddPredefined;
+  final void Function(int index, RoleDefinition role)? onEditRole;
+  final void Function(int index)? onDeleteRole;
+  final void Function(int index, int headcount)? onUpdateRoleHeadcount;
+
+  @override
+  State<_PlanningSubsectionScreen> createState() =>
+      _PlanningSubsectionScreenState();
+}
+
+class _PlanningSubsectionScreenState extends State<_PlanningSubsectionScreen> {
+  bool _isTableView = false;
 
   @override
   Widget build(BuildContext context) {
+    final config = widget.config;
     final isMobile = AppBreakpoints.isMobile(context);
     final horizontalPadding = isMobile ? 20.0 : 32.0;
 
@@ -2717,6 +2820,8 @@ class _PlanningSubsectionScreen extends StatelessWidget {
                         final halfWidth = twoCol ? (width - gap) / 2 : width;
                         final hasContent = config.metrics.isNotEmpty ||
                             config.sections.isNotEmpty;
+                        final showViewToggle =
+                            config.showTableView && config.roles.isNotEmpty;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -2732,8 +2837,8 @@ class _PlanningSubsectionScreen extends StatelessWidget {
                                       context, config.checkpoint),
                               onNext: () => PlanningPhaseNavigation.goToNext(
                                   context, config.checkpoint),
-                              onAdd: onAdd,
-                              onAddPredefined: onAddPredefined,
+                              onAdd: widget.onAdd,
+                              onAddPredefined: widget.onAddPredefined,
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -2754,15 +2859,36 @@ class _PlanningSubsectionScreen extends StatelessWidget {
                             if (hasContent) ...[
                               _MetricsRow(metrics: config.metrics),
                               const SizedBox(height: 24),
-                              Wrap(
-                                spacing: gap,
-                                runSpacing: gap,
-                                children: config.sections
-                                    .map((section) => SizedBox(
-                                        width: halfWidth,
-                                        child: _SectionCard(data: section)))
-                                    .toList(),
-                              ),
+                              if (showViewToggle) ...[
+                                Row(
+                                  children: [
+                                    _ViewToggle(
+                                      isTableView: _isTableView,
+                                      onChanged: (value) => setState(
+                                          () => _isTableView = value),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                              if (_isTableView && config.roles.isNotEmpty)
+                                _RolesTable(
+                                  roles: config.roles,
+                                  onEdit: widget.onEditRole,
+                                  onDelete: widget.onDeleteRole,
+                                  onUpdateHeadcount:
+                                      widget.onUpdateRoleHeadcount,
+                                )
+                              else
+                                Wrap(
+                                  spacing: gap,
+                                  runSpacing: gap,
+                                  children: config.sections
+                                      .map((section) => SizedBox(
+                                          width: halfWidth,
+                                          child: _SectionCard(data: section)))
+                                      .toList(),
+                                ),
                             ] else
                               const _SectionEmptyState(
                                 title: 'No staffing details yet',
@@ -2802,6 +2928,523 @@ class _PlanningSubsectionScreen extends StatelessWidget {
   }
 }
 
+class _ViewToggle extends StatelessWidget {
+  const _ViewToggle({required this.isTableView, required this.onChanged});
+
+  final bool isTableView;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _toggleItem(
+            label: 'Cards',
+            icon: Icons.dashboard_view_outlined,
+            selected: !isTableView,
+            onTap: () => onChanged(false),
+          ),
+          _toggleItem(
+            label: 'Table',
+            icon: Icons.table_rows_outlined,
+            selected: isTableView,
+            onTap: () => onChanged(true),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _toggleItem({
+    required String label,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: selected
+              ? [
+                  const BoxShadow(
+                    color: Color(0x14000000),
+                    blurRadius: 4,
+                    offset: Offset(0, 1),
+                  ),
+                ]
+              : const [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: selected
+                  ? const Color(0xFF111827)
+                  : const Color(0xFF6B7280),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: selected
+                    ? const Color(0xFF111827)
+                    : const Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Roles table view with inline headcount editing.
+class _RolesTable extends StatelessWidget {
+  const _RolesTable({
+    required this.roles,
+    this.onEdit,
+    this.onDelete,
+    this.onUpdateHeadcount,
+  });
+
+  final List<RoleDefinition> roles;
+  final void Function(int index, RoleDefinition role)? onEdit;
+  final void Function(int index)? onDelete;
+  final void Function(int index, int headcount)? onUpdateHeadcount;
+
+  @override
+  Widget build(BuildContext context) {
+    const rowPadding =
+        EdgeInsets.symmetric(horizontal: 12, vertical: 12);
+    const columns = <_RoleColumnDef>[
+      _RoleColumnDef('#', 56),
+      _RoleColumnDef('Position', 220),
+      _RoleColumnDef('Discipline', 150),
+      _RoleColumnDef('Description', 320),
+      _RoleColumnDef('Headcount', 140),
+      _RoleColumnDef('Actions', 110),
+    ];
+
+    final contentWidth =
+        columns.fold<double>(0, (sum, column) => sum + column.width);
+    final minTableWidth = contentWidth + 24;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tableWidth = constraints.maxWidth > minTableWidth
+            ? constraints.maxWidth
+            : minTableWidth;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: tableWidth,
+              child: Column(
+                children: [
+                  // Header row
+                  Container(
+                    width: tableWidth,
+                    padding: rowPadding,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF9FAFB),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(14),
+                        topRight: Radius.circular(14),
+                      ),
+                    ),
+                    child: Row(
+                      children: columns
+                          .map(
+                            (column) => SizedBox(
+                              width: column.width,
+                              child: Text(
+                                column.label.toUpperCase(),
+                                textAlign: column.label == '#'
+                                    ? TextAlign.center
+                                    : column.label == 'Headcount' ||
+                                            column.label == 'Actions'
+                                        ? TextAlign.center
+                                        : TextAlign.left,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.8,
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                  // Body rows
+                  if (roles.isEmpty)
+                    Container(
+                      width: tableWidth,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 32),
+                      child: const Center(
+                        child: Text(
+                          'No roles yet. Use "Add Role" or "Standard Roles" to begin.',
+                          style: TextStyle(
+                              fontSize: 13, color: Color(0xFF6B7280)),
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: roles.length,
+                      itemBuilder: (context, i) {
+                        final role = roles[i];
+                        return Container(
+                          width: tableWidth,
+                          padding: rowPadding,
+                          decoration: BoxDecoration(
+                            color: i.isEven
+                                ? Colors.white
+                                : const Color(0xFFF9FAFB),
+                            border: const Border(
+                              top: BorderSide(
+                                color: Color(0xFFE5E7EB),
+                                width: 0.5,
+                              ),
+                            ),
+                          ),
+                          child: _RolesTableRow(
+                            index: i,
+                            role: role,
+                            columns: columns,
+                            onEdit: onEdit != null
+                                ? () => onEdit!(i, role)
+                                : null,
+                            onDelete: onDelete != null
+                                ? () => onDelete!(i)
+                                : null,
+                            onUpdateHeadcount: onUpdateHeadcount != null
+                                ? (value) =>
+                                    onUpdateHeadcount!(i, value)
+                                : null,
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RolesTableRow extends StatelessWidget {
+  const _RolesTableRow({
+    required this.index,
+    required this.role,
+    required this.columns,
+    this.onEdit,
+    this.onDelete,
+    this.onUpdateHeadcount,
+  });
+
+  final int index;
+  final RoleDefinition role;
+  final List<_RoleColumnDef> columns;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final ValueChanged<int>? onUpdateHeadcount;
+
+  @override
+  Widget build(BuildContext context) {
+    final cells = <Widget>[
+      Center(
+        child: Text(
+          '${index + 1}',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF4B5563),
+          ),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Text(
+          role.title.trim().isEmpty ? 'Untitled Role' : role.title,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF111827),
+          ),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE0E7FF),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            role.workstream.trim().isEmpty
+                ? 'Uncategorized'
+                : role.workstream,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF4338CA),
+            ),
+          ),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Text(
+          role.description.trim().isEmpty
+              ? '—'
+              : role.description,
+          style: const TextStyle(
+            fontSize: 12,
+            height: 1.4,
+            color: Color(0xFF374151),
+          ),
+        ),
+      ),
+      _HeadcountCell(
+        headcount: role.headcount,
+        onChanged: onUpdateHeadcount,
+      ),
+      Align(
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icons.edit_outlined,
+                size: 18,
+                color: Color(0xFF6B7280),
+              ),
+              tooltip: 'Edit role',
+              onPressed: onEdit,
+            ),
+            IconButton(
+              icon: const Icon(
+                Icons.delete_outline,
+                size: 18,
+                color: Color(0xFFEF4444),
+              ),
+              tooltip: 'Delete role',
+              onPressed: onDelete,
+            ),
+          ],
+        ),
+      ),
+    ];
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: List.generate(
+        cells.length,
+        (cellIndex) => SizedBox(
+            width: columns[cellIndex].width, child: cells[cellIndex]),
+      ),
+    );
+  }
+}
+
+class _HeadcountCell extends StatefulWidget {
+  const _HeadcountCell({
+    required this.headcount,
+    required this.onChanged,
+  });
+
+  final int headcount;
+  final ValueChanged<int>? onChanged;
+
+  @override
+  State<_HeadcountCell> createState() => _HeadcountCellState();
+}
+
+class _HeadcountCellState extends State<_HeadcountCell> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller =
+        TextEditingController(text: widget.headcount.toString());
+  }
+
+  @override
+  void didUpdateWidget(covariant _HeadcountCell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final currentText = _controller.text.trim();
+    final currentValue = int.tryParse(currentText) ?? 0;
+    if (currentValue != widget.headcount) {
+      _controller.text = widget.headcount.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasCallback = widget.onChanged != null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _HeadcountStepButton(
+            icon: Icons.remove,
+            onTap: hasCallback
+                ? () {
+                    final current =
+                        int.tryParse(_controller.text.trim()) ?? 1;
+                    final next = current > 1 ? current - 1 : 1;
+                    _controller.text = next.toString();
+                    widget.onChanged!(next);
+                  }
+                : null,
+          ),
+          const SizedBox(width: 6),
+          SizedBox(
+            width: 54,
+            child: TextFormField(
+              controller: _controller,
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827),
+              ),
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 6, vertical: 8),
+                filled: true,
+                fillColor: const Color(0xFFF9FAFB),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide:
+                      const BorderSide(color: Color(0xFFE5E7EB)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                      color: Color(0xFF111827), width: 1.4),
+                ),
+              ),
+              onChanged: (value) {
+                final parsed = int.tryParse(value.trim());
+                if (parsed == null) return;
+                if (parsed < 1) return;
+                widget.onChanged?.call(parsed);
+              },
+            ),
+          ),
+          const SizedBox(width: 6),
+          _HeadcountStepButton(
+            icon: Icons.add,
+            onTap: hasCallback
+                ? () {
+                    final current =
+                        int.tryParse(_controller.text.trim()) ?? 1;
+                    final next = current + 1;
+                    _controller.text = next.toString();
+                    widget.onChanged!(next);
+                  }
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeadcountStepButton extends StatelessWidget {
+  const _HeadcountStepButton({required this.icon, this.onTap});
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: enabled
+              ? const Color(0xFFFEF3C7)
+              : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: enabled
+                ? const Color(0xFFFCD34D)
+                : const Color(0xFFE5E7EB),
+          ),
+        ),
+        child: Icon(
+          icon,
+          size: 16,
+          color: enabled
+              ? const Color(0xFF92400E)
+              : const Color(0xFF9CA3AF),
+        ),
+      ),
+    );
+  }
+}
+
+class _RoleColumnDef {
+  const _RoleColumnDef(this.label, this.width);
+
+  final String label;
+  final double width;
+}
+
 class _PlanningSubsectionConfig {
   _PlanningSubsectionConfig({
     required this.title,
@@ -2811,6 +3454,8 @@ class _PlanningSubsectionConfig {
     required this.activeItemLabel,
     required this.metrics,
     required this.sections,
+    this.roles = const [],
+    this.showTableView = false,
   });
 
   final String title;
@@ -2820,6 +3465,8 @@ class _PlanningSubsectionConfig {
   final String activeItemLabel;
   final List<_MetricData> metrics;
   final List<_SectionData> sections;
+  final List<RoleDefinition> roles;
+  final bool showTableView;
 }
 
 class _StaffingPlanTable extends StatelessWidget {
@@ -3336,6 +3983,7 @@ class _SectionData {
     this.bullets = const [],
     // ignore: unused_element_parameter
     this.statusRows = const [],
+    this.headcount = 0,
     this.onEdit,
     this.onDelete,
   });
@@ -3344,6 +3992,7 @@ class _SectionData {
   final String subtitle;
   final List<_BulletData> bullets;
   final List<_StatusRowData> statusRows;
+  final int headcount;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 }
@@ -3372,6 +4021,7 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final showBullets = data.bullets.isNotEmpty;
     final showStatus = data.statusRows.isNotEmpty;
+    final showHeadcount = data.headcount > 0;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -3397,6 +4047,32 @@ class _SectionCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF111827))),
               ),
+              if (showHeadcount)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: const Color(0xFFFCD34D)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.groups_2,
+                          size: 13, color: Color(0xFF92400E)),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${data.headcount} ${data.headcount == 1 ? 'person' : 'people'}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF92400E),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               if (data.onEdit != null || data.onDelete != null)
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -3567,4 +4243,322 @@ class _RoleBankEntry {
     required this.description,
     required this.workstream,
   });
+}
+
+/// A single row in the Standard Roles picker dialog.
+/// Shows a checkbox + role name on the left, and a headcount stepper on the right
+/// that is enabled only when the checkbox is ticked.
+class _PredefinedRoleRow extends StatelessWidget {
+  const _PredefinedRoleRow({
+    required this.title,
+    required this.workstream,
+    required this.isSelected,
+    required this.enabled,
+    required this.headcount,
+    required this.onToggle,
+    required this.onHeadcountChanged,
+  });
+
+  final String title;
+  final String workstream;
+  final bool isSelected;
+  final bool enabled;
+  final int headcount;
+  final ValueChanged<bool?>? onToggle;
+  final ValueChanged<int>? onHeadcountChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final alreadyAdded = !enabled && isSelected;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? const Color(0xFFFFFBEB)
+            : const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isSelected
+              ? const Color(0xFFFCD34D)
+              : const Color(0xFFE5E7EB),
+        ),
+      ),
+      child: Row(
+        children: [
+          Checkbox(
+            value: isSelected,
+            onChanged: onToggle,
+            activeColor: const Color(0xFFF59E0B),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: alreadyAdded
+                        ? const Color(0xFF9CA3AF)
+                        : const Color(0xFF111827),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  alreadyAdded ? 'Already added' : workstream,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          _CompactHeadcountStepper(
+            headcount: headcount,
+            enabled: isSelected && enabled,
+            onChanged: onHeadcountChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Compact headcount stepper used inside the Standard Roles dialog rows.
+class _CompactHeadcountStepper extends StatelessWidget {
+  const _CompactHeadcountStepper({
+    required this.headcount,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final int headcount;
+  final bool enabled;
+  final ValueChanged<int>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _stepButton(
+          icon: Icons.remove,
+          onTap: enabled
+              ? () {
+                  final next = headcount > 1 ? headcount - 1 : 1;
+                  onChanged?.call(next);
+                }
+              : null,
+        ),
+        const SizedBox(width: 4),
+        Container(
+          width: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          decoration: BoxDecoration(
+            color: enabled ? Colors.white : const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: enabled
+                  ? const Color(0xFFE5E7EB)
+                  : const Color(0xFFE5E7EB),
+            ),
+          ),
+          child: Text(
+            '$headcount',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: enabled
+                  ? const Color(0xFF111827)
+                  : const Color(0xFF9CA3AF),
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        _stepButton(
+          icon: Icons.add,
+          onTap: enabled
+              ? () {
+                  final next = headcount + 1;
+                  onChanged?.call(next);
+                }
+              : null,
+        ),
+      ],
+    );
+  }
+
+  Widget _stepButton({required IconData icon, required VoidCallback? onTap}) {
+    final active = onTap != null;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: active
+              ? const Color(0xFFFEF3C7)
+              : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: active
+                ? const Color(0xFFFCD34D)
+                : const Color(0xFFE5E7EB),
+          ),
+        ),
+        child: Icon(
+          icon,
+          size: 14,
+          color: active
+              ? const Color(0xFF92400E)
+              : const Color(0xFF9CA3AF),
+        ),
+      ),
+    );
+  }
+}
+
+/// Headcount stepper used inside the Add/Edit Role dialogs (larger variant).
+class _DialogHeadcountStepper extends StatefulWidget {
+  const _DialogHeadcountStepper({
+    required this.headcount,
+    required this.onChanged,
+  });
+
+  final int headcount;
+  final ValueChanged<int> onChanged;
+
+  @override
+  State<_DialogHeadcountStepper> createState() =>
+      _DialogHeadcountStepperState();
+}
+
+class _DialogHeadcountStepperState extends State<_DialogHeadcountStepper> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: '${widget.headcount}');
+  }
+
+  @override
+  void didUpdateWidget(covariant _DialogHeadcountStepper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final current = int.tryParse(_controller.text.trim()) ?? 1;
+    if (current != widget.headcount) {
+      _controller.text = '${widget.headcount}';
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFCD34D)),
+      ),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () {
+              final current =
+                  int.tryParse(_controller.text.trim()) ?? 1;
+              final next = current > 1 ? current - 1 : 1;
+              _controller.text = '$next';
+              widget.onChanged(next);
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFCD34D),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.remove,
+                size: 18,
+                color: Color(0xFF1F2933),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              controller: _controller,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827),
+              ),
+              decoration: const InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 8),
+              ),
+              onChanged: (value) {
+                final parsed = int.tryParse(value.trim());
+                if (parsed == null || parsed < 1) return;
+                widget.onChanged(parsed);
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            widget.headcount == 1 ? 'person' : 'people',
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF6B7280),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 12),
+          InkWell(
+            onTap: () {
+              final current =
+                  int.tryParse(_controller.text.trim()) ?? 1;
+              final next = current + 1;
+              _controller.text = '$next';
+              widget.onChanged(next);
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFCD34D),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.add,
+                size: 18,
+                color: Color(0xFF1F2933),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

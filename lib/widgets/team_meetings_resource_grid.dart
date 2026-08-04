@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/models/meeting_row.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
@@ -77,45 +78,62 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
     widget.onMeetingsChanged(updated);
   }
 
-  /// Shows the world-class import dialog for Meeting Cadence data.
+  /// CSV column specs for the Meeting Cadence table. These mirror the
+  /// on-page table columns (Meeting Type | Frequency | Key Participants |
+  /// Duration | Meeting Objective | Status) so the downloaded template
+  /// matches what users see on screen.
+  static const String _meetingTableTitle = 'Meeting Cadence';
+  static const List<CsvColumnSpec> _meetingColumns = [
+    CsvColumnSpec(
+      key: 'meetingType',
+      label: 'Meeting Type',
+      required: true,
+      hint: 'e.g. Weekly Sync, Stakeholder Update',
+      sampleValue: 'Weekly Sync',
+    ),
+    CsvColumnSpec(
+      key: 'frequency',
+      label: 'Frequency',
+      required: true,
+      allowedValues: ['Daily', 'Weekly', 'Bi-Weekly', 'Monthly'],
+      defaultValue: 'Weekly',
+      sampleValue: 'Weekly',
+    ),
+    CsvColumnSpec(
+      key: 'keyParticipants',
+      label: 'Key Participants',
+      hint: 'Semicolon-separated list of roles (e.g. PM; Tech Lead)',
+      sampleValue: 'PM; Tech Lead',
+    ),
+    CsvColumnSpec(
+      key: 'durationHours',
+      label: 'Duration (hrs)',
+      hint: 'Numeric hours',
+      sampleValue: '1',
+    ),
+    CsvColumnSpec(
+      key: 'meetingObjective',
+      label: 'Meeting Objective',
+      hint: 'One-sentence purpose of the meeting',
+      sampleValue: 'Align on weekly priorities and blockers',
+    ),
+    CsvColumnSpec(
+      key: 'status',
+      label: 'Status',
+      allowedValues: ['Scheduled', 'In Progress', 'Completed', 'Cancelled'],
+      defaultValue: 'Scheduled',
+      sampleValue: 'Scheduled',
+    ),
+  ];
+
+  /// Shows the world-class import dialog for Meeting Cadence data. Uses
+  /// the rich CsvColumnSpec so the template mirrors the on-page table
+  /// columns exactly.
   void _showImportDialog() async {
-    final rows = await TableImportHelper.showImportDialog(
+    final rows = await TableImportHelper.showImportDialogSpec(
       context,
-      tableTitle: 'Meeting Cadence',
-      headers: [
-        'Meeting Type',
-        'Frequency',
-        'Key Participants',
-        'Duration (hrs)',
-        'Meeting Objective',
-        'Status'
-      ],
-      sampleRows: [
-        [
-          'Weekly Sync',
-          'Weekly',
-          'PM; Tech Lead',
-          '1',
-          'Align on weekly priorities and blockers',
-          'Scheduled'
-        ],
-        [
-          'Stakeholder Update',
-          'Bi-Weekly',
-          'PM; Sponsor',
-          '1',
-          'Provide sponsors with progress and risk updates',
-          'Scheduled'
-        ],
-        [
-          'Sprint Retrospective',
-          'Monthly',
-          'Dev Team',
-          '2',
-          'Review what went well and what to improve',
-          'Completed'
-        ],
-      ],
+      tableTitle: _meetingTableTitle,
+      columns: _meetingColumns,
     );
 
     if (rows == null || rows.isEmpty || !mounted) return;
@@ -147,44 +165,13 @@ class _TeamMeetingsResourceGridState extends State<TeamMeetingsResourceGrid> {
     }
   }
 
-  /// Downloads a CSV template for Meeting Cadence.
+  /// Downloads a CSV template for Meeting Cadence. Uses the rich
+  /// CsvColumnSpec so the template includes hints, allowed values, and
+  /// required-field markers — fully mirroring the on-page table.
   void _downloadTemplate() {
-    TableImportHelper.downloadTemplate(
-      filename: 'meeting_cadence_template.csv',
-      headers: [
-        'Meeting Type',
-        'Frequency',
-        'Key Participants',
-        'Duration (hrs)',
-        'Meeting Objective',
-        'Status'
-      ],
-      sampleRows: [
-        [
-          'Weekly Sync',
-          'Weekly',
-          'PM; Tech Lead',
-          '1',
-          'Align on weekly priorities and blockers',
-          'Scheduled'
-        ],
-        [
-          'Stakeholder Update',
-          'Bi-Weekly',
-          'PM; Sponsor',
-          '1',
-          'Provide sponsors with progress and risk updates',
-          'Scheduled'
-        ],
-        [
-          'Sprint Retrospective',
-          'Monthly',
-          'Dev Team',
-          '2',
-          'Review what went well and what to improve',
-          'Completed'
-        ],
-      ],
+    TableImportHelper.downloadTemplateForTable(
+      tableTitle: _meetingTableTitle,
+      columns: _meetingColumns,
     );
   }
 

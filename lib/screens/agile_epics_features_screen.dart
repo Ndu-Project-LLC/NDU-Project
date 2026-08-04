@@ -45,6 +45,11 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
   bool _isLoading = true;
   bool _isGenerating = false;
   bool _isSyncing = false;
+  // Guards against infinite _loadData → _syncFromWbs → _loadData recursion
+  // when the auto-sync-on-empty-list fires on first visit. Without this flag,
+  // a sync that produces 0 new items (e.g. WBS exists but all nodes are
+  // already synced) would loop indefinitely.
+  bool _hasAttemptedAutoSync = false;
 
   // ── Managed controllers to prevent memory leaks ──
   final Map<String, TextEditingController> _epicControllers = {};
@@ -102,12 +107,32 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
         }
       });
       if (_selectedEpicId != null) _loadFeatures();
-      // ── Auto-populate from AI when no epics exist ──────────────────
-      if (_epics.isEmpty && !_isGenerating) {
-        _generateEpics();
+      // ── Auto-sync from WBS when no epics exist ──────────────────────
+      // Replaces the previous auto-AI-generation behaviour, which fired
+      // an OpenAI completion call on every page visit whenever the epics
+      // list was empty. That call surfaced confusing "AI generation
+      // failed" errors when the AI service was unavailable (network,
+      // quota, missing key) — even though the user had already built a
+      // WBS whose Level-1 nodes should have become Epics directly.
+      //
+      // The expected user flow is now: land on the page → if a WBS
+      // exists and epics are empty, automatically pull Epics/Features/
+      // Stories from the WBS tree. The user can still click "AI
+      // Generate" manually to suggest epics from project context.
+      if (_epics.isEmpty &&
+          !_isSyncing &&
+          !_isGenerating &&
+          !_hasAttemptedAutoSync) {
+        _hasAttemptedAutoSync = true;
+        await _syncFromWbs(silentIfNoWbs: true);
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load epics: $e')),
+        );
+      }
     }
   }
 
@@ -119,7 +144,15 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
     if (mounted) setState(() => _features = features);
   }
 
-  Future<void> _syncFromWbs() async {
+  /// Pull Epics/Features/Stories from the WBS tree into Firestore.
+  ///
+  /// [silentIfNoWbs] suppresses the "No WBS found" and "All WBS items already
+  /// synced" SnackBars — used by the auto-sync-on-first-visit path in
+  /// [_loadData] so that landing on the page with no WBS (or with an
+  /// already-synced WBS) doesn't spam the user with notifications they
+  /// didn't ask for. Success ("Synced N items…") and failure ("Sync
+  /// failed: …") messages are always shown so the user knows what happened.
+  Future<void> _syncFromWbs({bool silentIfNoWbs = false}) async {
     final pid = _projectId;
     if (pid == null) return;
     setState(() => _isSyncing = true);
@@ -127,7 +160,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       final wbsProvider = context.read<WBSProvider>();
       final wbs = wbsProvider.wbs;
       if (wbs == null) {
-        if (mounted) {
+        if (mounted && !silentIfNoWbs) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No WBS found. Create a WBS first.')),
           );
@@ -135,7 +168,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
         return;
       }
       if (wbs.methodology == ProjectMethodology.waterfall) {
-        if (mounted) {
+        if (mounted && !silentIfNoWbs) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text(
@@ -150,6 +183,9 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       );
       if (!mounted) return;
       if (result.total > 0) {
+        // Always announce successful creation — even when auto-triggered,
+        // the user benefits from seeing "Synced 3 items from WBS" so they
+        // understand where the suddenly-appearing epics came from.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -158,7 +194,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
             backgroundColor: const Color(0xFF059669),
           ),
         );
-      } else {
+      } else if (!silentIfNoWbs) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content:
@@ -167,7 +203,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
           ),
         );
       }
-      _loadData();
+      await _loadData();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -518,8 +554,9 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
                             ],
                           ),
                           if (_epics.isEmpty)
-                            _buildEmptyState(
-                                'No epics defined. Add one or use AI Generate.')
+                            _buildEmptyState(_isSyncing
+                                ? 'Syncing epics from WBS…'
+                                : 'No epics yet. Click "Sync from WBS" to pull them from your WBS, or "AI Generate" to let AI suggest some.')
                           else
                             ListView.builder(
                               shrinkWrap: true,

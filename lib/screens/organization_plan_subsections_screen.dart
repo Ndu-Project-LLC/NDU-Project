@@ -1214,7 +1214,7 @@ class _ViewToggle extends StatelessWidget {
         children: [
           _toggleItem(
             label: 'Cards',
-            icon: Icons.dashboard_view_outlined,
+            icon: Icons.dashboard_outlined,
             selected: !isTableView,
             onTap: () => onChanged(false),
           ),

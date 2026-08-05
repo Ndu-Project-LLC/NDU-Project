@@ -2834,7 +2834,7 @@ class _EditableTable extends StatelessWidget {
   const _EditableTable({required this.columns, required this.rows});
 
   final List<_TableColumnDef> columns;
-  final List<_EditableRow> rows;
+  final List<Widget> rows;
 
   @override
   Widget build(BuildContext context) {

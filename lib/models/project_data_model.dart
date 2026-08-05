@@ -156,6 +156,8 @@ class ProjectDataModel {
   // Organisation Plan Data
   List<RoleDefinition> projectRoles;
   List<RaciMatrixRow> raciMatrixRows;
+  List<RaciDeliverableRow> raciDeliverableRows;
+  RaciApprovalStatus raciApprovalStatus;
   List<StaffingRequirement> staffingRequirements;
   List<InfrastructurePlanningItem> planningInfrastructureItems;
   List<TrainingActivity> trainingActivities;
@@ -328,6 +330,8 @@ class ProjectDataModel {
     this.coreStakeholdersData,
     List<RoleDefinition>? projectRoles,
     List<RaciMatrixRow>? raciMatrixRows,
+    List<RaciDeliverableRow>? raciDeliverableRows,
+    RaciApprovalStatus? raciApprovalStatus,
     List<StaffingRequirement>? staffingRequirements,
     List<InfrastructurePlanningItem>? planningInfrastructureItems,
     List<TrainingActivity>? trainingActivities,
@@ -417,6 +421,8 @@ class ProjectDataModel {
             designDeliverablesData ?? const DesignDeliverablesData(),
         projectRoles = projectRoles ?? [],
         raciMatrixRows = raciMatrixRows ?? [],
+        raciDeliverableRows = raciDeliverableRows ?? [],
+        raciApprovalStatus = raciApprovalStatus ?? RaciApprovalStatus(),
         staffingRequirements = staffingRequirements ?? [],
         planningInfrastructureItems = planningInfrastructureItems ?? [],
         trainingActivities = trainingActivities ?? [],
@@ -514,6 +520,8 @@ class ProjectDataModel {
     CoreStakeholdersData? coreStakeholdersData,
     List<RoleDefinition>? projectRoles,
     List<RaciMatrixRow>? raciMatrixRows,
+    List<RaciDeliverableRow>? raciDeliverableRows,
+    RaciApprovalStatus? raciApprovalStatus,
     List<StaffingRequirement>? staffingRequirements,
     List<InfrastructurePlanningItem>? planningInfrastructureItems,
     List<TrainingActivity>? trainingActivities,
@@ -670,6 +678,8 @@ class ProjectDataModel {
       coreStakeholdersData: coreStakeholdersData ?? this.coreStakeholdersData,
       projectRoles: projectRoles ?? this.projectRoles,
       raciMatrixRows: raciMatrixRows ?? this.raciMatrixRows,
+      raciDeliverableRows: raciDeliverableRows ?? this.raciDeliverableRows,
+      raciApprovalStatus: raciApprovalStatus ?? this.raciApprovalStatus,
       staffingRequirements: staffingRequirements ?? this.staffingRequirements,
       planningInfrastructureItems:
           planningInfrastructureItems ?? this.planningInfrastructureItems,
@@ -844,6 +854,9 @@ class ProjectDataModel {
         'coreStakeholdersData': coreStakeholdersData!.toJson(),
       'projectRoles': projectRoles.map((r) => r.toJson()).toList(),
       'raciMatrixRows': raciMatrixRows.map((r) => r.toJson()).toList(),
+      'raciDeliverableRows':
+          raciDeliverableRows.map((r) => r.toJson()).toList(),
+      'raciApprovalStatus': raciApprovalStatus.toJson(),
       'staffingRequirements':
           staffingRequirements.map((s) => s.toJson()).toList(),
       'planningInfrastructureItems':
@@ -1129,6 +1142,11 @@ class ProjectDataModel {
           'coreStakeholdersData', CoreStakeholdersData.fromJson),
       projectRoles: safeParseList('projectRoles', RoleDefinition.fromJson),
       raciMatrixRows: safeParseList('raciMatrixRows', RaciMatrixRow.fromJson),
+      raciDeliverableRows: safeParseList(
+          'raciDeliverableRows', RaciDeliverableRow.fromJson),
+      raciApprovalStatus: safeParseSingle(
+              'raciApprovalStatus', RaciApprovalStatus.fromJson) ??
+          RaciApprovalStatus(),
       staffingRequirements:
           safeParseList('staffingRequirements', StaffingRequirement.fromJson),
       planningInfrastructureItems: safeParseList(
@@ -6451,6 +6469,229 @@ class RaciMatrixRow {
 
   @override
   int get hashCode => id.hashCode;
+}
+
+/// Designations supported by the new RACI Deliverable Matrix.
+/// R  = Responsible (does the work)
+/// A  = Approver / Accountable (final sign-off)
+/// C  = Consulted (two-way input)
+/// RV = Reviewer (verifies output before approval)
+/// I  = Informed (one-way update)
+/// V  = Viewer (read-only access to the deliverable)
+class RaciDesignation {
+  RaciDesignation._();
+
+  static const String responsible = 'R';
+  static const String approver = 'A';
+  static const String consulted = 'C';
+  static const String reviewer = 'RV';
+  static const String informed = 'I';
+  static const String viewer = 'V';
+
+  static const List<String> all = [
+    responsible,
+    approver,
+    consulted,
+    reviewer,
+    informed,
+    viewer,
+  ];
+
+  static String label(String code) {
+    switch (code.toUpperCase()) {
+      case 'R':
+        return 'Responsible';
+      case 'A':
+        return 'Approver';
+      case 'C':
+        return 'Consulted';
+      case 'RV':
+        return 'Reviewer';
+      case 'I':
+        return 'Informed';
+      case 'V':
+        return 'Viewer';
+      default:
+        return '—';
+    }
+  }
+
+  static String description(String code) {
+    switch (code.toUpperCase()) {
+      case 'R':
+        return 'Does the work to produce the deliverable.';
+      case 'A':
+        return 'Final accountability — signs off the deliverable.';
+      case 'C':
+        return 'Two-way input — expertise solicited before action.';
+      case 'RV':
+        return 'Reviews the output before final approval.';
+      case 'I':
+        return 'Kept informed of progress and outcome (one-way).';
+      case 'V':
+        return 'Read-only visibility on the deliverable.';
+      default:
+        return '';
+    }
+  }
+
+  /// ARGB int values for the designation's background and foreground
+  /// colors. UI layer wraps these with `Color(...)`. Keeping the model
+  /// free of `dart:ui` avoids import conflicts.
+  static ({int bg, int fg}) color(String code) {
+    switch (code.toUpperCase()) {
+      case 'R':
+        return (bg: 0xFFDBEAFE, fg: 0xFF1D4ED8);
+      case 'A':
+        return (bg: 0xFFFEE2E2, fg: 0xFFB91C1C);
+      case 'C':
+        return (bg: 0xFFDCFCE7, fg: 0xFF15803D);
+      case 'RV':
+        return (bg: 0xFFFFEDD5, fg: 0xFFC2410C);
+      case 'I':
+        return (bg: 0xFFF3E8FF, fg: 0xFF7E22CE);
+      case 'V':
+        return (bg: 0xFFE0E7FF, fg: 0xFF4338CA);
+      default:
+        return (bg: 0xFFF3F4F6, fg: 0xFF6B7280);
+    }
+  }
+
+  static bool isValid(String code) =>
+      all.contains(code.toUpperCase());
+}
+
+/// One row of the new RACI Deliverable Matrix.
+///
+/// Unlike the legacy [RaciMatrixRow] (which stores role metadata + a map of
+/// deliverable-type -> designation), this row is keyed by sidebar checkpoint
+/// (the deliverable on the left side of the matrix) and stores a map of
+/// roleTitle -> designation. Assignments are keyed by role title (lower-cased)
+/// so that when a person is replaced in the Staffing Plan, the new hire
+/// automatically inherits the prior person's assignments.
+class RaciDeliverableRow {
+  String id;
+  String checkpoint;
+  String label;
+  String phase;
+  /// roleKey (lowercase role title) -> designation (R/A/C/RV/I/V).
+  Map<String, String> assignments;
+
+  RaciDeliverableRow({
+    String? id,
+    this.checkpoint = '',
+    this.label = '',
+    this.phase = '',
+    Map<String, String>? assignments,
+  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+        assignments = assignments ?? <String, String>{};
+
+  RaciDeliverableRow copyWith({
+    String? id,
+    String? checkpoint,
+    String? label,
+    String? phase,
+    Map<String, String>? assignments,
+  }) {
+    return RaciDeliverableRow(
+      id: id ?? this.id,
+      checkpoint: checkpoint ?? this.checkpoint,
+      label: label ?? this.label,
+      phase: phase ?? this.phase,
+      assignments: assignments ?? Map<String, String>.from(this.assignments),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'checkpoint': checkpoint,
+        'label': label,
+        'phase': phase,
+        'assignments': assignments,
+      };
+
+  factory RaciDeliverableRow.fromJson(Map<String, dynamic> json) {
+    return RaciDeliverableRow(
+      id: json['id']?.toString(),
+      checkpoint: json['checkpoint']?.toString() ?? '',
+      label: json['label']?.toString() ?? '',
+      phase: json['phase']?.toString() ?? '',
+      assignments: (json['assignments'] as Map?)?.map((key, value) =>
+              MapEntry(key.toString(), value?.toString() ?? '')) ??
+          <String, String>{},
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RaciDeliverableRow && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+/// Approval state for the RACI Deliverable Matrix.
+///
+/// Once approved, the matrix is considered the basis for project execution
+/// and feeds the project activities log + personal dashboards. Edits after
+/// approval require re-approval (the [isApproved] flag is reset to false
+/// whenever a cell changes).
+class RaciApprovalStatus {
+  bool isApproved;
+  String approverName;
+  String approverRole;
+  DateTime? approvedAt;
+  String confirmationText;
+
+  RaciApprovalStatus({
+    this.isApproved = false,
+    this.approverName = '',
+    this.approverRole = '',
+    this.approvedAt,
+    this.confirmationText =
+        'I confirm stakeholder alignment on all deliverable responsibility '
+        'assignments, forming the basis for project execution.',
+  });
+
+  RaciApprovalStatus copyWith({
+    bool? isApproved,
+    String? approverName,
+    String? approverRole,
+    DateTime? approvedAt,
+    String? confirmationText,
+  }) {
+    return RaciApprovalStatus(
+      isApproved: isApproved ?? this.isApproved,
+      approverName: approverName ?? this.approverName,
+      approverRole: approverRole ?? this.approverRole,
+      approvedAt: approvedAt ?? this.approvedAt,
+      confirmationText: confirmationText ?? this.confirmationText,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'isApproved': isApproved,
+        'approverName': approverName,
+        'approverRole': approverRole,
+        'approvedAt': approvedAt?.toIso8601String(),
+        'confirmationText': confirmationText,
+      };
+
+  factory RaciApprovalStatus.fromJson(Map<String, dynamic> json) {
+    return RaciApprovalStatus(
+      isApproved: json['isApproved'] == true,
+      approverName: json['approverName']?.toString() ?? '',
+      approverRole: json['approverRole']?.toString() ?? '',
+      approvedAt: json['approvedAt'] is String
+          ? DateTime.tryParse(json['approvedAt'] as String)
+          : null,
+      confirmationText: json['confirmationText']?.toString() ??
+          'I confirm stakeholder alignment on all deliverable responsibility '
+              'assignments, forming the basis for project execution.',
+    );
+  }
 }
 
 class StaffingRequirement {

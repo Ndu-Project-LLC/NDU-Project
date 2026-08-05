@@ -1,9 +1,24 @@
-name: Build and (optionally) deploy Flutter Web
+name: Build Flutter Web
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Build check for PRs and pushes to main/ci-pipeline.
+# Builds the Flutter web app to verify compilation. Uploads the build artifact
+# for downstream deploy workflows to consume.
+# ─────────────────────────────────────────────────────────────────────────────
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, ci-pipeline, staging]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-web-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -23,21 +38,21 @@ jobs:
       - name: Flutter Pub Get
         run: flutter pub get
 
+      - name: Flutter Analyze (info-level)
+        run: flutter analyze --no-pub --preamble --no-fatal-infos --no-fatal-warnings || true
+        continue-on-error: true
+
       - name: Build Web (release)
         env:
-          # Secrets are optional; only needed if your app reads these at build time
           OPENAI_PROXY_API_KEY: ${{ secrets.OPENAI_PROXY_API_KEY }}
           OPENAI_PROXY_ENDPOINT: ${{ secrets.OPENAI_PROXY_ENDPOINT }}
         run: |
           flutter --version
-          # Build the Flutter web app. Pass through any build-time env defines your app expects.
-          # --no-tree-shake-icons is required because icons are loaded dynamically from JSON data
-          # HTML renderer is configured in web/index.html to avoid canvaskit CDN timeout errors
           flutter build web --release --no-tree-shake-icons \
             --dart-define=OPENAI_PROXY_API_KEY=${OPENAI_PROXY_API_KEY} \
             --dart-define=OPENAI_PROXY_ENDPOINT=${OPENAI_PROXY_ENDPOINT}
 
-      - name: Add Azure SWA config into build output (for SPA routing)
+      - name: Add SPA routing config (if present)
         run: |
           if [ -f staticwebapp.config.json ]; then
             cp staticwebapp.config.json build/web/staticwebapp.config.json
@@ -48,25 +63,12 @@ jobs:
         with:
           name: flutter-web-build
           path: build/web
+          retention-days: 7
 
-  deploy_swa:
-    name: Deploy to Azure Static Web Apps
-    needs: build
-    if: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN != '' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: flutter-web-build
-          path: build/web
-
-      - name: Deploy
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          # We deploy the prebuilt static output
-          app_location: build/web
-          api_location: ''
-          output_location: ''
-          skip_app_build: true
+      - name: Build summary
+        run: |
+          echo "### Flutter Web Build ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Ref:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**SHA:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Bundle:** $(du -sh build/web/main.dart.js | cut -f1)" >> $GITHUB_STEP_SUMMARY

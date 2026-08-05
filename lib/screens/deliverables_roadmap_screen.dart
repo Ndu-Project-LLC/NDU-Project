@@ -294,6 +294,7 @@ class _DeliverablesRoadmapBodyState extends State<_DeliverablesRoadmapBody> {
  void _handleDeleteDeliverable(int index) async {
  final item = _deliverables[index];
  final confirmed = await _showConfirmDialog(
+ context,
  'Delete Deliverable',
  'Delete "${item.title}"?',
  );
@@ -330,6 +331,7 @@ class _DeliverablesRoadmapBodyState extends State<_DeliverablesRoadmapBody> {
  final sprint = _sprints[index];
  final hasItems = _deliverables.any((d) => d.sprintId == sprint.id);
  final confirmed = await _showConfirmDialog(
+ context,
  'Delete Sprint',
  hasItems
  ? '${sprint.name} has deliverables. Deleting will unassign them. Continue?'
@@ -1565,9 +1567,13 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
  );
 }
 
-Future<bool?> _showConfirmDialog(String title, String message) {
+Future<bool?> _showConfirmDialog(
+  BuildContext context,
+  String title,
+  String message,
+) {
  return showDialog<bool>(
- context: GlobalKey<NavigatorState>().currentContext!,
+ context: context,
  builder: (ctx) => AlertDialog(
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
  title: Text(title,

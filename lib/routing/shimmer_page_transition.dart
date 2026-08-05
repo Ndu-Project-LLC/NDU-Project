@@ -21,15 +21,10 @@ CustomTransitionPage<void> shimmerTransitionPage({
     reverseTransitionDuration: reverseDuration,
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      // ── Outgoing page: fade out quickly ──
-      final outgoingFade = Tween<double>(begin: 1.0, end: 0.0).animate(
-        CurvedAnimation(
-          parent: secondaryAnimation,
-          curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
-        ),
-      );
-
       // ── Incoming page: fade in after shimmer phase ──
+      // The outgoing page is rendered by the Navigator itself (driven by
+      // secondaryAnimation on the previous route's page); we don't render it
+      // here. See the NOTE below for why.
       final incomingFade = Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
           parent: animation,
@@ -69,18 +64,25 @@ CustomTransitionPage<void> shimmerTransitionPage({
         ),
       ]).animate(animation);
 
+      // ─── NOTE ────────────────────────────────────────────────────────────
+      // We intentionally render `child` (the incoming page) exactly ONCE.
+      //
+      // A prior version of this transition placed `child` in the Stack twice
+      // (once for the "outgoing fade" using secondaryAnimation, once for the
+      // "incoming fade" using animation). That duplicated the SAME widget
+      // instance in two slots of the same frame. When the page contained any
+      // GlobalKey (e.g. Scaffold(key: _scaffoldKey), Form(key: _formKey)),
+      // Flutter's _debugVerifyGlobalKeyReservation assertion fired during
+      // finalizeTree because the same key was mounted in two locations.
+      //
+      // The outgoing page is rendered by the Navigator itself (driven by
+      // secondaryAnimation on the previous route's page); we don't need to
+      // (and cannot) render it from inside this transitionsBuilder.
+      // ────────────────────────────────────────────────────────────────────
+
       return Stack(
         children: [
-          // Outgoing page (fading out)
-          if (!secondaryAnimation.isDismissed)
-            FadeTransition(
-              opacity: outgoingFade,
-              child: secondaryAnimation.isAnimating
-                  ? child
-                  : const SizedBox.shrink(),
-            ),
-
-          // Incoming page (fading in)
+          // Incoming page (fading in over the Navigator-rendered outgoing page)
           FadeTransition(
             opacity: incomingFade,
             child: child,

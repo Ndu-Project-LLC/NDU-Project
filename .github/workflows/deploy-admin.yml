@@ -117,7 +117,11 @@ jobs:
       - name: Deploy to gh-pages (admin.nduproject.com)
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Use ACCESS_TOKEN (PAT with repo scope) instead of the default GITHUB_TOKEN,
+          # because the repo's default workflow permissions may be read-only and
+          # github-actions[bot] would otherwise be denied push access to gh-pages.
+          personal_token: ${{ secrets.ACCESS_TOKEN }}
+          external_repository: Ndu-Project-LLC/admin.nduproject.com
           publish_dir: build/web
           publish_branch: gh-pages
           keep_files: false

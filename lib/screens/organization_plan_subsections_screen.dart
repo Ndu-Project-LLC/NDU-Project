@@ -55,6 +55,14 @@ class OrganizationRolesResponsibilitiesScreen extends StatefulWidget {
       _OrganizationRolesResponsibilitiesScreenState();
 }
 
+/// Alias used by sidebar / router entries that refer to the "Staffing Plan"
+/// subsection. The Staffing Plan is rendered as the table view inside
+/// [OrganizationRolesResponsibilitiesScreen], so both route keys resolve to
+/// the same widget.
+class OrganizationStaffingPlanScreen extends OrganizationRolesResponsibilitiesScreen {
+  const OrganizationStaffingPlanScreen({super.key});
+}
+
 class _OrganizationRolesResponsibilitiesScreenState
     extends State<OrganizationRolesResponsibilitiesScreen> {
   static const List<String> _roleTitleOptions = [

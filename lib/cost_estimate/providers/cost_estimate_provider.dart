@@ -407,7 +407,7 @@ class CostEstimateProvider extends ChangeNotifier {
   void setAcceptanceStep1(bool confirmed) {
     if (_estimate == null) return;
     final review = _estimate!.review ??
-        ReviewApproval(
+        const ReviewApproval(
           requiredApprovers: [],
           acceptanceStep1: (confirmed: false, by: null, at: null),
           acceptanceStep2: (confirmed: false, by: null, at: null),
@@ -429,7 +429,7 @@ class CostEstimateProvider extends ChangeNotifier {
   void setAcceptanceStep2(bool confirmed) {
     if (_estimate == null) return;
     final review = _estimate!.review ??
-        ReviewApproval(
+        const ReviewApproval(
           requiredApprovers: [],
           acceptanceStep1: (confirmed: false, by: null, at: null),
           acceptanceStep2: (confirmed: false, by: null, at: null),

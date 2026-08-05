@@ -27,7 +27,9 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
     super.initState();
     final data = ProjectDataHelper.getData(context, listen: false);
     final methodology = data.planningNotes['planning_schedule_methodology'];
-    if (methodology != null && methodology is String && methodology.isNotEmpty) {
+    if (methodology != null &&
+        methodology is String &&
+        methodology.isNotEmpty) {
       _selectedMethodology = methodology;
     }
   }
@@ -86,10 +88,12 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
       designSpecifications: designSpecs,
     );
 
-    generated = IntegratedWorkPackageService
-        .deriveProcurementScopeFromEwpDeliverables(generated);
+    generated =
+        IntegratedWorkPackageService.deriveProcurementScopeFromEwpDeliverables(
+            generated);
 
-    generated = IntegratedWorkPackageService.rollUpChildCostsAndDates(generated);
+    generated =
+        IntegratedWorkPackageService.rollUpChildCostsAndDates(generated);
 
     generated = IntegratedWorkPackageService.enforceEstimateBasis(
       generated,
@@ -261,7 +265,8 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
     );
 
     if (result != null && mounted) {
-      final updated = data.workPackages.map((p) => p.id == wp.id ? result : p).toList();
+      final updated =
+          data.workPackages.map((p) => p.id == wp.id ? result : p).toList();
       await ProjectDataHelper.updateAndSave(
         context: context,
         checkpoint: 'schedule',
@@ -369,7 +374,8 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
   }
 
   Widget _buildResourceConflictBanner(List<WorkPackage> packages) {
-    final conflicts = IntegratedWorkPackageService.detectResourceConflicts(packages);
+    final conflicts =
+        IntegratedWorkPackageService.detectResourceConflicts(packages);
     if (conflicts.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -382,7 +388,8 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, size: 18, color: Color(0xFFD97706)),
+            const Icon(Icons.warning_amber_rounded,
+                size: 18, color: Color(0xFFD97706)),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -514,17 +521,15 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
                         : null,
                     filled: true,
                     fillColor: const Color(0xFFF9FAFB),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 0),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide:
-                          BorderSide(color: AppSemanticColors.border),
+                      borderSide: BorderSide(color: AppSemanticColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide:
-                          BorderSide(color: AppSemanticColors.border),
+                      borderSide: BorderSide(color: AppSemanticColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -536,8 +541,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
               ),
               const SizedBox(width: 12),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(8),
@@ -546,8 +550,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.sort,
-                        size: 14, color: Color(0xFF6B7280)),
+                    const Icon(Icons.sort, size: 14, color: Color(0xFF6B7280)),
                     const SizedBox(width: 4),
                     DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -590,11 +593,10 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
                           _sortAscending = !_sortAscending;
                         });
                       },
-                      tooltip: _sortAscending
-                          ? 'Sort ascending'
-                          : 'Sort descending',
-                      constraints: const BoxConstraints(
-                          minWidth: 28, minHeight: 28),
+                      tooltip:
+                          _sortAscending ? 'Sort ascending' : 'Sort descending',
+                      constraints:
+                          const BoxConstraints(minWidth: 28, minHeight: 28),
                       padding: EdgeInsets.zero,
                     ),
                   ],
@@ -603,8 +605,7 @@ class _PlanningWorkPackagesTabState extends State<PlanningWorkPackagesTab> {
               const SizedBox(width: 8),
               FilledButton.icon(
                 onPressed: _generatePackageChains,
-                icon:
-                    const Icon(Icons.account_tree_outlined, size: 16),
+                icon: const Icon(Icons.account_tree_outlined, size: 16),
                 label: const Text('Generate Package Chains'),
               ),
               const SizedBox(width: 8),
@@ -711,9 +712,7 @@ class _PlanningWorkPackageCardState extends State<PlanningWorkPackageCard> {
               children: [
                 Expanded(
                   child: Text(
-                    wp.title.isNotEmpty
-                        ? wp.title
-                        : 'Untitled Work Package',
+                    wp.title.isNotEmpty ? wp.title : 'Untitled Work Package',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -722,8 +721,8 @@ class _PlanningWorkPackageCardState extends State<PlanningWorkPackageCard> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _statusColor(wp.status),
                     borderRadius: BorderRadius.circular(999),
@@ -747,8 +746,7 @@ class _PlanningWorkPackageCardState extends State<PlanningWorkPackageCard> {
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFF7ED),
                         borderRadius: BorderRadius.circular(999),
-                        border:
-                            Border.all(color: const Color(0xFFF97316)),
+                        border: Border.all(color: const Color(0xFFF97316)),
                       ),
                       child: Text(
                         '${readinessWarnings.length} WARN',
@@ -798,8 +796,8 @@ class _PlanningWorkPackageCardState extends State<PlanningWorkPackageCard> {
                 const SizedBox(width: 4),
                 Text(
                   wp.owner.isNotEmpty ? wp.owner : 'Unassigned',
-                  style: const TextStyle(
-                      fontSize: 12, color: Color(0xFF6B7280)),
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                 ),
                 const SizedBox(width: 16),
                 const Icon(Icons.category_outlined,
@@ -838,13 +836,12 @@ class _PlanningWorkPackageCardState extends State<PlanningWorkPackageCard> {
               ...displayedActivities.map((activity) {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border:
-                        Border.all(color: AppSemanticColors.border),
+                    border: Border.all(color: AppSemanticColors.border),
                   ),
                   child: Row(
                     children: [
@@ -902,8 +899,8 @@ class _PlanningWorkPackageCardState extends State<PlanningWorkPackageCard> {
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF3F4F6),
                       borderRadius: BorderRadius.circular(6),
@@ -929,8 +926,8 @@ class _PlanningWorkPackageCardState extends State<PlanningWorkPackageCard> {
                 value: progress,
                 minHeight: 6,
                 backgroundColor: const Color(0xFFE5E7EB),
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                    Color(0xFF3B82F6)),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
               ),
             ),
           ],

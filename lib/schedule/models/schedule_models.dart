@@ -387,6 +387,13 @@ class ScheduleActivity {
       children: children ?? this.children,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ScheduleActivity && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class ActivityDependency {
@@ -479,6 +486,13 @@ class SMEReviewer {
     required this.approved,
     this.approvedAt,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is SMEReviewer && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Schedule review state (2-stage).
@@ -625,6 +639,13 @@ class Schedule {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is Schedule && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Recursive WBS node for importing into the schedule.
@@ -643,6 +664,13 @@ class WbsImportNode {
     this.description,
     required this.children,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is WbsImportNode && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

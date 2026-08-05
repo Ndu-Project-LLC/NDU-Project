@@ -123,7 +123,7 @@ class FontSizes {
 ThemeData get lightTheme => ThemeData(
       useMaterial3: true,
       fontFamily: _appFontFamily,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: LightModeColors.lightPrimary,
         onPrimary: LightModeColors.lightOnPrimary,
         primaryContainer: LightModeColors.lightPrimaryContainer,
@@ -144,7 +144,7 @@ ThemeData get lightTheme => ThemeData(
       brightness: Brightness.light,
       scaffoldBackgroundColor: LightModeColors.lightSurface,
       visualDensity: VisualDensity.standard,
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: LightModeColors.lightAppBarBackground,
         foregroundColor: LightModeColors.lightOnPrimaryContainer,
         elevation: 0,
@@ -226,11 +226,11 @@ ThemeData get lightTheme => ThemeData(
           foregroundColor: const WidgetStatePropertyAll(Color(0xFF0F172A)),
         ),
       ),
-      textButtonTheme: TextButtonThemeData(
+      textButtonTheme: const TextButtonThemeData(
         style: ButtonStyle(
           foregroundColor:
-              const WidgetStatePropertyAll(LightModeColors.lightSecondary),
-          textStyle: const WidgetStatePropertyAll(TextStyle(
+              WidgetStatePropertyAll(LightModeColors.lightSecondary),
+          textStyle: WidgetStatePropertyAll(TextStyle(
               fontFamily: _appFontFamily, fontWeight: FontWeight.w600)),
         ),
       ),
@@ -262,78 +262,78 @@ ThemeData get lightTheme => ThemeData(
         dataRowMinHeight: 60,
         dataRowMaxHeight: 220,
       ),
-      textTheme: TextTheme(
-        displayLarge: const TextStyle(
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.displayLarge,
           fontWeight: FontWeight.w400,
         ),
-        displayMedium: const TextStyle(
+        displayMedium: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.displayMedium,
           fontWeight: FontWeight.w400,
         ),
-        displaySmall: const TextStyle(
+        displaySmall: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.displaySmall,
           fontWeight: FontWeight.w600,
         ),
-        headlineLarge: const TextStyle(
+        headlineLarge: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.headlineLarge,
           fontWeight: FontWeight.w400,
         ),
-        headlineMedium: const TextStyle(
+        headlineMedium: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.headlineMedium,
           fontWeight: FontWeight.w500,
         ),
-        headlineSmall: const TextStyle(
+        headlineSmall: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.headlineSmall,
           fontWeight: FontWeight.bold,
         ),
-        titleLarge: const TextStyle(
+        titleLarge: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.titleLarge,
           fontWeight: FontWeight.w500,
         ),
-        titleMedium: const TextStyle(
+        titleMedium: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.titleMedium,
           fontWeight: FontWeight.w500,
         ),
-        titleSmall: const TextStyle(
+        titleSmall: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.titleSmall,
           fontWeight: FontWeight.w500,
         ),
-        labelLarge: const TextStyle(
+        labelLarge: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.labelLarge,
           fontWeight: FontWeight.w500,
         ),
-        labelMedium: const TextStyle(
+        labelMedium: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.labelMedium,
           fontWeight: FontWeight.w500,
         ),
-        labelSmall: const TextStyle(
+        labelSmall: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.labelSmall,
           fontWeight: FontWeight.w500,
         ),
-        bodyLarge: const TextStyle(
+        bodyLarge: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.bodyLarge,
           fontWeight: FontWeight.w400,
         ),
-        bodyMedium: const TextStyle(
+        bodyMedium: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.bodyMedium,
           fontWeight: FontWeight.w400,
         ),
-        bodySmall: const TextStyle(
+        bodySmall: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.bodySmall,
           fontWeight: FontWeight.w400,
@@ -344,7 +344,7 @@ ThemeData get lightTheme => ThemeData(
 ThemeData get darkTheme => ThemeData(
       useMaterial3: true,
       fontFamily: _appFontFamily,
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: DarkModeColors.darkPrimary,
         onPrimary: DarkModeColors.darkOnPrimary,
         primaryContainer: DarkModeColors.darkPrimaryContainer,
@@ -365,7 +365,7 @@ ThemeData get darkTheme => ThemeData(
       brightness: Brightness.dark,
       scaffoldBackgroundColor: DarkModeColors.darkSurface,
       visualDensity: VisualDensity.standard,
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: DarkModeColors.darkAppBarBackground,
         foregroundColor: DarkModeColors.darkOnPrimaryContainer,
         elevation: 0,
@@ -376,12 +376,12 @@ ThemeData get darkTheme => ThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.white.withOpacity(0.06)),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
         ),
         margin: EdgeInsets.zero,
       ),
       dividerTheme: DividerThemeData(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         thickness: 1,
         space: 0,
       ),
@@ -397,21 +397,21 @@ ThemeData get darkTheme => ThemeData(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
-            side: BorderSide(color: Colors.white.withOpacity(0.08))),
-        iconTheme: IconThemeData(color: Colors.white.withOpacity(0.6)),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+        iconTheme: IconThemeData(color: Colors.white.withValues(alpha: 0.6)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF0B0D11),
         hintStyle: TextStyle(
             fontFamily: _appFontFamily,
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 14),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -441,7 +441,7 @@ ThemeData get darkTheme => ThemeData(
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: ButtonStyle(
           side: WidgetStatePropertyAll(
-              BorderSide(color: Colors.white.withOpacity(0.12))),
+              BorderSide(color: Colors.white.withValues(alpha: 0.12))),
           shape: WidgetStatePropertyAll(
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
           padding: const WidgetStatePropertyAll(
@@ -449,22 +449,22 @@ ThemeData get darkTheme => ThemeData(
           foregroundColor: const WidgetStatePropertyAll(Colors.white),
         ),
       ),
-      textButtonTheme: TextButtonThemeData(
+      textButtonTheme: const TextButtonThemeData(
         style: ButtonStyle(
           foregroundColor:
-              const WidgetStatePropertyAll(DarkModeColors.darkSecondary),
-          textStyle: const WidgetStatePropertyAll(TextStyle(
+              WidgetStatePropertyAll(DarkModeColors.darkSecondary),
+          textStyle: WidgetStatePropertyAll(TextStyle(
               fontFamily: _appFontFamily, fontWeight: FontWeight.w600)),
         ),
       ),
       listTileTheme: ListTileThemeData(
         shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(12))),
-        iconColor: Colors.white.withOpacity(0.7),
+        iconColor: Colors.white.withValues(alpha: 0.7),
       ),
       dataTableTheme: DataTableThemeData(
         headingRowColor:
-            WidgetStatePropertyAll(Colors.white.withOpacity(0.06)),
+            WidgetStatePropertyAll(Colors.white.withValues(alpha: 0.06)),
         dataRowColor: const WidgetStatePropertyAll(Color(0xFF111318)),
         headingTextStyle: const TextStyle(
           fontFamily: _appFontFamily,
@@ -486,78 +486,78 @@ ThemeData get darkTheme => ThemeData(
         dataRowMinHeight: 60,
         dataRowMaxHeight: 220,
       ),
-      textTheme: TextTheme(
-        displayLarge: const TextStyle(
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.displayLarge,
           fontWeight: FontWeight.w400,
         ),
-        displayMedium: const TextStyle(
+        displayMedium: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.displayMedium,
           fontWeight: FontWeight.w400,
         ),
-        displaySmall: const TextStyle(
+        displaySmall: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.displaySmall,
           fontWeight: FontWeight.w600,
         ),
-        headlineLarge: const TextStyle(
+        headlineLarge: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.headlineLarge,
           fontWeight: FontWeight.w400,
         ),
-        headlineMedium: const TextStyle(
+        headlineMedium: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.headlineMedium,
           fontWeight: FontWeight.w500,
         ),
-        headlineSmall: const TextStyle(
+        headlineSmall: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.headlineSmall,
           fontWeight: FontWeight.bold,
         ),
-        titleLarge: const TextStyle(
+        titleLarge: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.titleLarge,
           fontWeight: FontWeight.w500,
         ),
-        titleMedium: const TextStyle(
+        titleMedium: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.titleMedium,
           fontWeight: FontWeight.w500,
         ),
-        titleSmall: const TextStyle(
+        titleSmall: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.titleSmall,
           fontWeight: FontWeight.w500,
         ),
-        labelLarge: const TextStyle(
+        labelLarge: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.labelLarge,
           fontWeight: FontWeight.w500,
         ),
-        labelMedium: const TextStyle(
+        labelMedium: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.labelMedium,
           fontWeight: FontWeight.w500,
         ),
-        labelSmall: const TextStyle(
+        labelSmall: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.labelSmall,
           fontWeight: FontWeight.w500,
         ),
-        bodyLarge: const TextStyle(
+        bodyLarge: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.bodyLarge,
           fontWeight: FontWeight.w400,
         ),
-        bodyMedium: const TextStyle(
+        bodyMedium: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.bodyMedium,
           fontWeight: FontWeight.w400,
         ),
-        bodySmall: const TextStyle(
+        bodySmall: TextStyle(
           fontFamily: _appFontFamily,
           fontSize: FontSizes.bodySmall,
           fontWeight: FontWeight.w400,

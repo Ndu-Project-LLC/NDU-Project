@@ -28,12 +28,12 @@ class FieldRegenerateUndoButtons extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withOpacity(0.98),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.98),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.grey.shade300),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -55,7 +55,7 @@ class FieldRegenerateUndoButtons extends StatelessWidget {
                 : Icon(Icons.refresh, size: size, color: Colors.grey.shade700),
             tooltip: 'Regenerate this field',
             onPressed: isLoading ? null : onRegenerate,
-            hoverColor: primary.withOpacity(0.08),
+            hoverColor: primary.withValues(alpha: 0.08),
           ),
           _verticalDivider(),
           _ToolbarActionIcon(
@@ -66,7 +66,7 @@ class FieldRegenerateUndoButtons extends StatelessWidget {
             ),
             tooltip: 'Undo last change',
             onPressed: canUndo ? onUndo : null,
-            hoverColor: primary.withOpacity(0.08),
+            hoverColor: primary.withValues(alpha: 0.08),
           ),
           _verticalDivider(),
           _ToolbarActionIcon(
@@ -77,7 +77,7 @@ class FieldRegenerateUndoButtons extends StatelessWidget {
             ),
             tooltip: 'Redo last change',
             onPressed: canRedo ? onRedo : null,
-            hoverColor: primary.withOpacity(0.08),
+            hoverColor: primary.withValues(alpha: 0.08),
           ),
         ],
       ),

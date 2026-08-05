@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/elevated_auth_container.dart';
 import 'package:ndu_project/screens/sign_in_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/services/security_services.dart';
+import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/screens/home_screen.dart';
 import 'package:ndu_project/routing/app_router.dart';
 
@@ -48,6 +49,77 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   bool _isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  /// Cross-platform Google Sign-In for the create-account screen.
+  ///
+  /// Creates a Firestore user document on success so the user lands on the
+  /// dashboard with a fully provisioned account.
+  Future<void> _handleGoogleSignUp() async {
+    setState(() => _isLoading = true);
+    try {
+      final cred = await FirebaseAuthService.signInWithGoogle();
+      if (!mounted) return;
+      final user = cred.user;
+      if (user == null) {
+        // User cancelled — no error snack needed.
+        return;
+      }
+      await SecurityAuditLogger.logAccountCreation(email: user.email ?? '');
+      // Initialize user security profile for MFA enrollment flow.
+      await TwoFactorAuthService.saveUserSecurity(
+        uid: user.uid,
+        email: user.email ?? '',
+        method: MfaMethod.none,
+      );
+      if (!mounted) return;
+      _navigateAfterSignUp();
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      _showErrorSnackBar(_friendlyAuthErrorMessage(e));
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('popup-closed-by-user') ||
+          msg.contains('cancelled') ||
+          msg.contains('Sign in aborted')) {
+        debugPrint('Google sign-up cancelled: $e');
+      } else if (mounted) {
+        _showErrorSnackBar('Google sign-up failed: $e');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _navigateAfterSignUp() {
+    if (!mounted) return;
+    // Authenticated Google users skip email verification — Google has
+    // already verified the email. Route them to the dashboard.
+    context.go('/${AppRoutes.dashboard}');
+  }
+
+  /// Maps Firebase Auth error codes to user-friendly messages.
+  String _friendlyAuthErrorMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-email':
+        return 'The email address is not valid.';
+      case 'email-already-in-use':
+        return 'An account already exists with this email address.';
+      case 'weak-password':
+        return 'Password is too weak. Please use a stronger password.';
+      case 'operation-not-allowed':
+        return 'Email/password sign-in is not enabled for this project.';
+      case 'network-request-failed':
+        return 'Network error. Check your connection and try again.';
+      case 'popup-closed-by-user':
+        return 'Sign-in cancelled.';
+      case 'popup-blocked':
+        return 'Sign-in popup was blocked by the browser.';
+      case 'unauthorized-domain':
+        return 'This domain is not authorized for sign-in.';
+      default:
+        return e.message ?? 'Sign up failed. Please try again.';
+    }
   }
 
   Future<void> _handleEmailSignUp() async {
@@ -166,12 +238,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
       // Navigate to Sign In so the user can log in after verifying
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const SignInScreen(),
-        ),
-      );
+      context.pushReplacement('/sign-in');
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         String errorMessage;
@@ -425,7 +492,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 16),
-                  Center(child: AppLogo(height: 120)),
+                  const Center(child: AppLogo(height: 120)),
                   const SizedBox(height: 24),
                   Center(
                     child: Text(
@@ -450,6 +517,64 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                             fontWeight: FontWeight.w500,
                             color: Colors.grey[600],
                           ),
+                        ),
+                        const SizedBox(height: 18),
+                        // ── Google Sign-Up ──────────────────────────────────
+                        // One-click registration via Google. Skips the form
+                        // and email verification step entirely.
+                        SizedBox(
+                          width: double.infinity,
+                          height: 54,
+                          child: OutlinedButton.icon(
+                            onPressed:
+                                _isLoading ? null : _handleGoogleSignUp,
+                            icon: _isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.g_mobiledata,
+                                    size: 24, color: Color(0xFF4285F4)),
+                            label: const Text(
+                              'Continue with Google',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1F2933),
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                  color: Colors.grey.shade300, width: 1.5),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              backgroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        // OR divider
+                        Row(
+                          children: [
+                            Expanded(
+                                child: Divider(
+                                    color: Colors.grey.shade300, height: 1)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12),
+                              child: Text('OR',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  )),
+                            ),
+                            Expanded(
+                                child: Divider(
+                                    color: Colors.grey.shade300, height: 1)),
+                          ],
                         ),
                         const SizedBox(height: 18),
                         if (isMobile)
@@ -761,11 +886,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   const SizedBox(height: 24),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const SignInScreen()),
-                      );
+                      context.pushReplacement('/sign-in');
                     },
                     child: RichText(
                       text: TextSpan(

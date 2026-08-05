@@ -13,15 +13,13 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 class FrontEndPlanningInfrastructureScreen extends StatefulWidget {
  const FrontEndPlanningInfrastructureScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const FrontEndPlanningInfrastructureScreen(),
- ),
- );
+ context.push('/fep-infrastructure');
  }
 
  @override
@@ -229,7 +227,7 @@ class _FrontEndPlanningInfrastructureScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(
  labelText: 'Status',
  border: OutlineInputBorder(),
@@ -523,13 +521,13 @@ class _InfrastructureTable extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final border = const BorderSide(color: Color(0xFFE5E7EB));
- final headerStyle = const TextStyle(
+ const border = BorderSide(color: Color(0xFFE5E7EB));
+ const headerStyle = TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w700,
  color: Color(0xFF4B5563),
  );
- final cellStyle = const TextStyle(fontSize: 14, color: Color(0xFF111827));
+ const cellStyle = TextStyle(fontSize: 14, color: Color(0xFF111827));
 
  Widget td(Widget child) => Padding(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -558,7 +556,7 @@ class _InfrastructureTable extends StatelessWidget {
  children: [
  td(const SizedBox.shrink()),
  td(
- const Text(
+ const WrappedText(
  'No structured infrastructure items added yet.',
  style: TextStyle(
  fontSize: 14,
@@ -581,20 +579,20 @@ class _InfrastructureTable extends StatelessWidget {
  rows.add(
  TableRow(
  children: [
- td(Text('${index + 1}', style: cellStyle)),
- td(Text(item.name.trim(), style: cellStyle)),
- td(Text(
+ td(WrappedText('${index + 1}', style: cellStyle)),
+ td(WrappedText(item.name.trim(), style: cellStyle)),
+ td(WrappedText(
  item.summary.trim().isEmpty ? '-' : item.summary.trim(),
  style: cellStyle,
  )),
- td(Text(
+ td(WrappedText(
  item.details.trim().isEmpty ? '-' : item.details.trim(),
  style: cellStyle,
  )),
- td(Text(_formatCurrency(item.potentialCost), style: cellStyle)),
- td(Text(item.owner.trim().isEmpty ? '-' : item.owner.trim(),
+ td(WrappedText(_formatCurrency(item.potentialCost), style: cellStyle)),
+ td(WrappedText(item.owner.trim().isEmpty ? '-' : item.owner.trim(),
  style: cellStyle)),
- td(Text(item.status.trim(), style: cellStyle)),
+ td(WrappedText(item.status.trim(), style: cellStyle)),
  td(
  Row(
  mainAxisSize: MainAxisSize.min,
@@ -616,7 +614,9 @@ class _InfrastructureTable extends StatelessWidget {
  }
  }
 
- return Container(
+ return FullScreenTableWrapper(
+ title: 'Infrastructure Items',
+ child: Container(
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
@@ -658,6 +658,51 @@ class _InfrastructureTable extends StatelessWidget {
  ),
  );
  },
+ ),
+ ),
+ tableBuilder: (fsContext) => Container(
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(12),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: LayoutBuilder(
+ builder: (context, constraints) {
+ final minTableWidth =
+ constraints.maxWidth > 1440 ? constraints.maxWidth : 1440.0;
+ return Scrollbar(
+ thumbVisibility: true,
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: BoxConstraints(minWidth: minTableWidth),
+ child: Table(
+ columnWidths: const {
+ 0: FixedColumnWidth(52),
+ 1: FlexColumnWidth(1.6),
+ 2: FlexColumnWidth(1.4),
+ 3: FlexColumnWidth(2.2),
+ 4: FixedColumnWidth(130),
+ 5: FixedColumnWidth(140),
+ 6: FixedColumnWidth(110),
+ 7: FixedColumnWidth(110),
+ },
+ border: TableBorder(
+ horizontalInside: border,
+ verticalInside: border,
+ top: border,
+ bottom: border,
+ left: border,
+ right: border,
+ ),
+ defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+ children: rows,
+ ),
+ ),
+ ),
+ );
+ },
+ ),
  ),
  );
  }
@@ -779,8 +824,8 @@ class _BottomOverlays extends StatelessWidget {
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFD7E5FF)),
  ),
- child: Row(
- children: const [
+ child: const Row(
+ children: [
  Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
  SizedBox(width: 8),
  Text(

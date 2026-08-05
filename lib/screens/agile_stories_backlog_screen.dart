@@ -152,7 +152,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     final story = AgileTask(
       epicId: feature.epicId,
       featureId: feature.id,
-      userStory: 'New story ${nextOrder}',
+      userStory: 'New story $nextOrder',
       storyPoints: 3,
       priority: 'Medium',
       status: 'To-Do',
@@ -226,7 +226,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 16),
-                        Text(
+                        const Text(
                           'Break features into backlog stories, size them, set sprint/release targets, and prepare the same AgileTask items that execution Kanban and schedule import will use.',
                           style: TextStyle(fontSize: 15, color: _kMuted),
                         ),
@@ -253,7 +253,13 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                             _buildEmptyState(
                                 'No features found for this epic. Define features first in Epics & Features.')
                           else
-                            ..._visibleFeatures.map(_buildFeatureSection),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _visibleFeatures.length,
+                              itemBuilder: (context, i) =>
+                                  _buildFeatureSection(_visibleFeatures[i]),
+                            ),
                           const SizedBox(height: 24),
                           LaunchPhaseNavigation(
                             backLabel: PlanningPhaseNavigation.backLabel(
@@ -270,8 +276,8 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel:
                           'Agile Delivery Model - Stories & Backlog Breakdown',
                     ),
@@ -344,7 +350,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
           label: Text(epic.title.isNotEmpty ? epic.title : 'Untitled Epic'),
           selected: selected,
           onSelected: (_) => setState(() => _selectedEpicId = epic.id),
-          selectedColor: _kAccent.withOpacity(0.12),
+          selectedColor: _kAccent.withValues(alpha: 0.12),
           labelStyle: TextStyle(
             color: selected ? _kAccent : _kHeadline,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
@@ -413,7 +419,13 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                 style: const TextStyle(color: _kMuted),
               )
             else
-              ...stories.map((story) => _buildStoryCard(story, feature)),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: stories.length,
+                itemBuilder: (context, i) =>
+                    _buildStoryCard(stories[i], feature),
+              ),
           ],
         ),
       ),
@@ -431,7 +443,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: Color(0xFFF9FAFB),
         border: Border.all(color: _kBorder),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -451,7 +463,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.08),
+                    color: Colors.blue.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text('WBS linked',
@@ -659,7 +671,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
     return SizedBox(
       width: 220,
       child: DropdownButtonFormField<T>(
-        value: items.contains(value) ? value : null,
+        initialValue: items.contains(value) ? value : null,
         decoration: InputDecoration(
             labelText: label, border: const OutlineInputBorder()),
         items: items

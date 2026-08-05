@@ -31,6 +31,9 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 const Color _kSurface = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -53,120 +56,118 @@ const String _kSectionProgressNotesKey = 'planning_design_section_progress';
 enum _SectionProgressState { pending, complete, notApplicable }
 
 class DesignPlanningScreen extends StatefulWidget {
- const DesignPlanningScreen({super.key});
+  const DesignPlanningScreen({super.key});
 
- static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const DesignPlanningScreen()),
- );
- }
+  static void open(BuildContext context) {
+    context.push('/design-planning');
+  }
 
- @override
- State<DesignPlanningScreen> createState() => _DesignPlanningScreenState();
+  @override
+  State<DesignPlanningScreen> createState() => _DesignPlanningScreenState();
 }
 
 class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
- static const _mappingStatusOptions = [
- 'Draft',
- 'Planned',
- 'Active',
- 'Blocked'
- ];
- static const _workStatusOptions = ['Draft', 'Planned', 'In Review', 'Ready'];
- static const _riskStatusOptions = ['Open', 'Monitoring', 'Closed'];
- static const _approvalStatusOptions = ['Pending', 'In Review', 'Approved'];
- static const _specRuleTypeOptions = ['Internal', 'External'];
- static const _specSourceTypeOptions = [
- 'Contracts',
- 'Vendors',
- 'Regulatory',
- 'Standards',
- ];
- static const _specificationTypeOptions = [
- 'Code',
- 'Law',
- 'Standard',
- 'Criteria',
- 'Guideline',
- 'Contract',
- 'Other',
- ];
- static const _specDisciplineOptions = [
- 'Architecture',
- 'Civil',
- 'Structural',
- 'Geotechnical',
- 'Mechanical (HVAC)',
- 'Electrical',
- 'Plumbing',
- 'Fire Protection',
- 'Survey / Geomatics',
- 'Landscape',
- 'Environmental',
- 'Telecommunications / ICT',
- 'Frontend',
- 'Backend',
- 'Full-Stack',
- 'Data / Analytics',
- 'Integration / APIs',
- 'DevOps / Platform / SRE',
- 'QA / Testing',
- 'Cybersecurity',
- 'IT / Infrastructure',
- 'Operations',
- 'Procurement',
- 'Commercial / Contracts',
- 'Quality / QA-QC',
- 'Regulatory / Compliance',
- 'Program / Project Management',
- 'Safety / HSE',
- ];
- static const _specAreaOptions = [
- 'General',
- 'Design',
- 'Construction',
- 'Operations',
- 'Security',
- 'Compliance',
- 'Testing',
- 'Data',
- 'Integration',
- 'Quality',
- 'Safety',
- 'Environmental',
- 'UI/UX',
- 'Frontend',
- 'Backend',
- 'Infrastructure',
- 'Procurement',
- 'Commercial',
- ];
- static const _specRowStatusOptions = ['Draft', 'Planned', 'In Review'];
- static const _designAreaOptions = [
- 'Architecture',
- 'UI/UX',
- 'Technical',
- 'Data',
- 'Security',
- 'Validation',
- ];
- static const _dependencyTypeOptions = [
- 'System',
- 'Team',
- 'Vendor',
- 'Approval',
- 'Tooling',
- 'Data',
- 'Interface',
- ];
+  static const _mappingStatusOptions = [
+    'Draft',
+    'Planned',
+    'Active',
+    'Blocked'
+  ];
+  static const _workStatusOptions = ['Draft', 'Planned', 'In Review', 'Ready'];
+  static const _riskStatusOptions = ['Open', 'Monitoring', 'Closed'];
+  static const _approvalStatusOptions = ['Pending', 'In Review', 'Approved'];
+  static const _specRuleTypeOptions = ['Internal', 'External'];
+  static const _specSourceTypeOptions = [
+    'Contracts',
+    'Vendors',
+    'Regulatory',
+    'Standards',
+  ];
+  static const _specificationTypeOptions = [
+    'Code',
+    'Law',
+    'Standard',
+    'Criteria',
+    'Guideline',
+    'Contract',
+    'Other',
+  ];
+  static const _specDisciplineOptions = [
+    'Architecture',
+    'Civil',
+    'Structural',
+    'Geotechnical',
+    'Mechanical (HVAC)',
+    'Electrical',
+    'Plumbing',
+    'Fire Protection',
+    'Survey / Geomatics',
+    'Landscape',
+    'Environmental',
+    'Telecommunications / ICT',
+    'Frontend',
+    'Backend',
+    'Full-Stack',
+    'Data / Analytics',
+    'Integration / APIs',
+    'DevOps / Platform / SRE',
+    'QA / Testing',
+    'Cybersecurity',
+    'IT / Infrastructure',
+    'Operations',
+    'Procurement',
+    'Commercial / Contracts',
+    'Quality / QA-QC',
+    'Regulatory / Compliance',
+    'Program / Project Management',
+    'Safety / HSE',
+  ];
+  static const _specAreaOptions = [
+    'General',
+    'Design',
+    'Construction',
+    'Operations',
+    'Security',
+    'Compliance',
+    'Testing',
+    'Data',
+    'Integration',
+    'Quality',
+    'Safety',
+    'Environmental',
+    'UI/UX',
+    'Frontend',
+    'Backend',
+    'Infrastructure',
+    'Procurement',
+    'Commercial',
+  ];
+  static const _specRowStatusOptions = ['Draft', 'Planned', 'In Review'];
+  static const _designAreaOptions = [
+    'Architecture',
+    'UI/UX',
+    'Technical',
+    'Data',
+    'Security',
+    'Validation',
+  ];
+  static const _dependencyTypeOptions = [
+    'System',
+    'Team',
+    'Vendor',
+    'Approval',
+    'Tooling',
+    'Data',
+    'Interface',
+  ];
 
- final ScrollController _scrollController = ScrollController();
- final Map<String, GlobalKey> _sectionKeys = {
- for (final section in _sectionOrder) section.id: GlobalKey(),
- };
- final Map<String, GlobalKey> _specificationRowKeys = {};
- Timer? _saveDebounce;
- bool _didInit = false;
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _sectionKeys = {
+    for (final section in _sectionOrder) section.id: GlobalKey(),
+  };
+  final Map<String, GlobalKey> _specificationRowKeys = {};
+  Timer? _saveDebounce;
+  bool _didInit = false;
   bool _saving = false;
   bool _pendingSave = false;
   bool _generatingPackages = false;
@@ -816,7 +817,9 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  ),
  ),
  const SizedBox(height: 10),
- SizedBox(
+ FullScreenTableWrapper(
+ title: 'Design Specifications',
+ child: SizedBox(
  height: 420,
  child: Scrollbar(
  thumbVisibility: true,
@@ -826,7 +829,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  child: ConstrainedBox(
  constraints:
  const BoxConstraints(minWidth: 1240),
- child: DataTable(
+ child: buildNduDataTable(context: context, 
  columnSpacing: 30,
  dataRowMinHeight: 56,
  dataRowMaxHeight: 76,
@@ -959,6 +962,156 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  ),
  )
  .toList(growable: false),
+ ),
+ ),
+ ),
+ ),
+ ),
+ ),
+ tableBuilder: (fsContext) => SizedBox(
+ height: 420,
+ child: Scrollbar(
+ thumbVisibility: true,
+ child: SingleChildScrollView(
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints:
+ const BoxConstraints(minWidth: 1240),
+ child: buildNduDataTable(context: context, 
+ columnSpacing: 30,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 76,
+ columns: const [
+ DataColumn(
+ label: SizedBox(
+ width: 220,
+ child: Text('Title'))),
+ DataColumn(
+ label: SizedBox(
+ width: 120,
+ child: Text('Spec type'))),
+ DataColumn(
+ label: SizedBox(
+ width: 140,
+ child: Text('Discipline'))),
+ DataColumn(
+ label: SizedBox(
+ width: 140,
+ child: Text('Area'))),
+ DataColumn(
+ label: SizedBox(
+ width: 170,
+ child:
+ Text('WBS Work Package'))),
+ DataColumn(
+ label: SizedBox(
+ width: 120,
+ child: Text('Source type'))),
+ DataColumn(
+ label: SizedBox(
+ width: 120,
+ child: Text('Owner'))),
+ DataColumn(
+ label: SizedBox(
+ width: 90,
+ child: Text('Status'))),
+ ],
+ rows: filteredRows
+ .map(
+ (item) => DataRow(
+ cells: [
+ DataCell(SizedBox(
+ width: 220,
+ child: Text(
+ item.title,
+ maxLines: 2,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 120,
+ child: Text(
+ item.specificationType,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 140,
+ child: Text(
+ item.discipline.isEmpty
+ ? '-'
+ : item.discipline,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 140,
+ child: Text(
+ item.area.isEmpty
+ ? '-'
+ : item.area,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 170,
+ child: Text(
+ item.wbsWorkPackageTitle
+ .isEmpty
+ ? '-'
+ : item
+ .wbsWorkPackageTitle,
+ maxLines: 2,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 120,
+ child: Text(
+ item.sourceType.isEmpty
+ ? '-'
+ : item.sourceType,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 120,
+ child: Text(
+ item.owner.isEmpty
+ ? '-'
+ : item.owner,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ DataCell(SizedBox(
+ width: 90,
+ child: Text(
+ item.status.isEmpty
+ ? '-'
+ : item.status,
+ maxLines: 1,
+ overflow:
+ TextOverflow.ellipsis,
+ ),
+ )),
+ ],
+ ),
+ )
+ .toList(growable: false),
+ ),
  ),
  ),
  ),
@@ -2358,11 +2511,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  label: 'Open Design Phase Workspace',
  icon: Icons.open_in_new,
  onPressed: () {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const DesignPhaseScreen(),
- ),
- );
+ context.push('/design-phase');
  },
  ),
  ],
@@ -3039,10 +3188,9 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed:
-                  _selectedWbsNodeIds.isEmpty || _generatingPackages
-                      ? null
-                      : _generateWorkPackages,
+              onPressed: _selectedWbsNodeIds.isEmpty || _generatingPackages
+                  ? null
+                  : _generateWorkPackages,
               icon: _generatingPackages
                   ? const SizedBox(
                       width: 18,
@@ -3061,7 +3209,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0D9488),
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: const Color(0xFF0D9488).withValues(alpha: 0.4),
+                disabledBackgroundColor:
+                    const Color(0xFF0D9488).withValues(alpha: 0.4),
                 disabledForegroundColor: Colors.white70,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -3103,7 +3252,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                 ),
               Expanded(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(
                     item.title.isEmpty ? '(untitled)' : item.title,
                     style: TextStyle(
@@ -3196,6 +3345,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
         collectTitles(item.children);
       }
     }
+
     collectTitles(selectedTree);
 
     final confirmed = await showDialog<bool>(
@@ -3224,8 +3374,8 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
     setState(() => _generatingPackages = true);
 
     try {
-      final packages = IntegratedWorkPackageService
-          .generatePackageChainsFromWbs(
+      final packages =
+          IntegratedWorkPackageService.generatePackageChainsFromWbs(
         wbsTree: selectedTree,
         methodology: 'waterfall',
         designSpecifications: _document.specifications,
@@ -3254,2331 +3404,2331 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   }
 
   static List<String> _splitLines(String raw) {
- return raw
- .split('\n')
- .map((line) => line.trim())
- .where((line) => line.isNotEmpty)
- .toList();
- }
+    return raw
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+  }
 }
 
 class _SectionMeta {
- const _SectionMeta(this.id, this.label, this.accent);
+  const _SectionMeta(this.id, this.label, this.accent);
 
- final String id;
- final String label;
- final Color accent;
+  final String id;
+  final String label;
+  final Color accent;
 }
 
 const List<_SectionMeta> _sectionOrder = [
- _SectionMeta('overview', 'Project Overview', _kPrimary),
- _SectionMeta('design_overview', 'Design Overview', Color(0xFF1D4ED8)),
- _SectionMeta('design_specifications_workspace', 'Design Specifications',
- Color(0xFF0F766E)),
- _SectionMeta('deviations', 'Deviations', Color(0xFF0EA5E9)),
- _SectionMeta('requirements', 'Requirements Mapping', Color(0xFF0F9D58)),
- _SectionMeta('architecture', 'Architecture Basis', Color(0xFF7C3AED)),
- _SectionMeta('uiux', 'UI/UX Basis', Color(0xFFDB2777)),
- _SectionMeta('technical', 'Technical Basis', Color(0xFF0F766E)),
- _SectionMeta('constraints', 'Constraints & Assumptions', Color(0xFFF59E0B)),
- _SectionMeta('risks', 'Risks & Mitigation', Color(0xFFDC2626)),
- _SectionMeta('dependencies', 'Dependencies', Color(0xFF0891B2)),
- _SectionMeta('decisions', 'Decision Log', Color(0xFF4F46E5)),
- _SectionMeta('validation', 'Validation', Color(0xFF15803D)),
+  _SectionMeta('overview', 'Project Overview', _kPrimary),
+  _SectionMeta('design_overview', 'Design Overview', Color(0xFF1D4ED8)),
+  _SectionMeta('design_specifications_workspace', 'Design Specifications',
+      Color(0xFF0F766E)),
+  _SectionMeta('deviations', 'Deviations', Color(0xFF0EA5E9)),
+  _SectionMeta('requirements', 'Requirements Mapping', Color(0xFF0F9D58)),
+  _SectionMeta('architecture', 'Architecture Basis', Color(0xFF7C3AED)),
+  _SectionMeta('uiux', 'UI/UX Basis', Color(0xFFDB2777)),
+  _SectionMeta('technical', 'Technical Basis', Color(0xFF0F766E)),
+  _SectionMeta('constraints', 'Constraints & Assumptions', Color(0xFFF59E0B)),
+  _SectionMeta('risks', 'Risks & Mitigation', Color(0xFFDC2626)),
+  _SectionMeta('dependencies', 'Dependencies', Color(0xFF0891B2)),
+  _SectionMeta('decisions', 'Decision Log', Color(0xFF4F46E5)),
+  _SectionMeta('validation', 'Validation', Color(0xFF15803D)),
   _SectionMeta('approvals', 'Approvals', Color(0xFF7C2D12)),
   _SectionMeta('work_packages', 'Work Packages', Color(0xFF0D9488)),
 ];
 
 class _SectionCard extends StatelessWidget {
- const _SectionCard({
- this.expansionKey,
- required this.title,
- required this.subtitle,
- required this.accent,
- required this.child,
- required this.expanded,
- required this.enabled,
- this.progressState = _SectionProgressState.pending,
- required this.onExpansionChanged,
- });
+  const _SectionCard({
+    this.expansionKey,
+    required this.title,
+    required this.subtitle,
+    required this.accent,
+    required this.child,
+    required this.expanded,
+    required this.enabled,
+    this.progressState = _SectionProgressState.pending,
+    required this.onExpansionChanged,
+  });
 
- final Key? expansionKey;
- final String title;
- final String subtitle;
- final Color accent;
- final Widget child;
- final bool expanded;
- final bool enabled;
- final _SectionProgressState progressState;
- final ValueChanged<bool> onExpansionChanged;
+  final Key? expansionKey;
+  final String title;
+  final String subtitle;
+  final Color accent;
+  final Widget child;
+  final bool expanded;
+  final bool enabled;
+  final _SectionProgressState progressState;
+  final ValueChanged<bool> onExpansionChanged;
 
- @override
- Widget build(BuildContext context) {
- if (expanded) {
- // Expanded section: border-y, blue-tinted header, content area
- return Container(
- key: expansionKey,
- decoration: const BoxDecoration(
- color: Colors.white,
- border: Border(
- top: BorderSide(color: _kBorder),
- bottom: BorderSide(color: _kBorder),
- ),
- ),
- margin: const EdgeInsets.only(bottom: 8),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- // Blue-tinted header
- Container(
- color: _kBlue50.withValues(alpha: 0.3),
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
- child: Row(
- children: [
- Container(
- width: 10,
- height: 10,
- decoration:
- BoxDecoration(color: accent, shape: BoxShape.circle),
- ),
- const SizedBox(width: 10),
- Expanded(
- child: Text(
- title,
- style: const TextStyle(
- fontSize: 15,
- fontWeight: FontWeight.w700,
- color: _kGray900,
- ),
- ),
- ),
- GestureDetector(
- onTap: () => onExpansionChanged(false),
- child: const Icon(Icons.expand_less,
- size: 20, color: _kGray500),
- ),
- ],
- ),
- ),
- // Content area
- Padding(
- padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- subtitle,
- style: const TextStyle(
- fontSize: 13, color: _kGray500, height: 1.5),
- ),
- child,
- ],
- ),
- ),
- ],
- ),
- );
- } else {
- // Collapsed section: dot + title + truncated subtitle + chevron
- return InkWell(
- key: expansionKey,
- onTap: () => onExpansionChanged(true),
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
- decoration: const BoxDecoration(
- color: Colors.white,
- border: Border(bottom: BorderSide(color: Color(0xFFF3F4F6))),
- ),
- child: Row(
- children: [
- Container(
- width: 10,
- height: 10,
- decoration:
- BoxDecoration(color: accent, shape: BoxShape.circle),
- ),
- const SizedBox(width: 10),
- Expanded(
- child: Text(
- title,
- style: const TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: _kGray900,
- ),
- ),
- ),
- ConstrainedBox(
- constraints: const BoxConstraints(maxWidth: 200),
- child: Text(
- subtitle,
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- style: const TextStyle(fontSize: 12, color: _kGray500),
- ),
- ),
- const SizedBox(width: 8),
- if (progressState == _SectionProgressState.complete)
- const Padding(
- padding: EdgeInsets.only(right: 4),
- child: Icon(Icons.check_circle, size: 16, color: _kSuccess),
- ),
- if (progressState == _SectionProgressState.notApplicable)
- const Padding(
- padding: EdgeInsets.only(right: 4),
- child: Icon(Icons.remove_circle, size: 16, color: _kWarning),
- ),
- const Icon(Icons.expand_more, size: 18, color: _kGray400),
- ],
- ),
- ),
- );
- }
- }
+  @override
+  Widget build(BuildContext context) {
+    if (expanded) {
+      // Expanded section: border-y, blue-tinted header, content area
+      return Container(
+        key: expansionKey,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(color: _kBorder),
+            bottom: BorderSide(color: _kBorder),
+          ),
+        ),
+        margin: const EdgeInsets.only(bottom: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Blue-tinted header
+            Container(
+              color: _kBlue50.withValues(alpha: 0.3),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration:
+                        BoxDecoration(color: accent, shape: BoxShape.circle),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: _kGray900,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => onExpansionChanged(false),
+                    child: const Icon(Icons.expand_less,
+                        size: 20, color: _kGray500),
+                  ),
+                ],
+              ),
+            ),
+            // Content area
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                        fontSize: 13, color: _kGray500, height: 1.5),
+                  ),
+                  child,
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Collapsed section: dot + title + truncated subtitle + chevron
+      return InkWell(
+        key: expansionKey,
+        onTap: () => onExpansionChanged(true),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: Color(0xFFF3F4F6))),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration:
+                    BoxDecoration(color: accent, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _kGray900,
+                  ),
+                ),
+              ),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 200),
+                child: Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12, color: _kGray500),
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (progressState == _SectionProgressState.complete)
+                const Padding(
+                  padding: EdgeInsets.only(right: 4),
+                  child: Icon(Icons.check_circle, size: 16, color: _kSuccess),
+                ),
+              if (progressState == _SectionProgressState.notApplicable)
+                const Padding(
+                  padding: EdgeInsets.only(right: 4),
+                  child: Icon(Icons.remove_circle, size: 16, color: _kWarning),
+                ),
+              const Icon(Icons.expand_more, size: 18, color: _kGray400),
+            ],
+          ),
+        ),
+      );
+    }
+  }
 }
 
 class _ResponsivePair extends StatelessWidget {
- const _ResponsivePair({required this.left, required this.right});
+  const _ResponsivePair({required this.left, required this.right});
 
- final Widget left;
- final Widget right;
+  final Widget left;
+  final Widget right;
 
- @override
- Widget build(BuildContext context) {
- if (AppBreakpoints.isMobile(context)) {
- return Column(
- children: [
- left,
- const SizedBox(height: 14),
- right,
- ],
- );
- }
- return Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(child: left),
- const SizedBox(width: 14),
- Expanded(child: right),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    if (AppBreakpoints.isMobile(context)) {
+      return Column(
+        children: [
+          left,
+          const SizedBox(height: 14),
+          right,
+        ],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: left),
+        const SizedBox(width: 14),
+        Expanded(child: right),
+      ],
+    );
+  }
 }
 
 class _TextField extends StatelessWidget {
- const _TextField({
- required this.controller,
- required this.label,
- required this.hintText,
- required this.onChanged,
- });
+  const _TextField({
+    required this.controller,
+    required this.label,
+    required this.hintText,
+    required this.onChanged,
+  });
 
- final TextEditingController controller;
- final String label;
- final String hintText;
- final ValueChanged<String> onChanged;
+  final TextEditingController controller;
+  final String label;
+  final String hintText;
+  final ValueChanged<String> onChanged;
 
- @override
- Widget build(BuildContext context) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- label.toUpperCase(),
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- color: _kGray500,
- letterSpacing: 0.5,
- ),
- ),
- const SizedBox(height: 6),
- VoiceTextField(
- controller: controller,
- onChanged: onChanged,
- decoration: _inputDecoration(hintText),
- ),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: _kGray500,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 6),
+        VoiceTextField(
+          controller: controller,
+          onChanged: onChanged,
+          decoration: _inputDecoration(hintText),
+        ),
+      ],
+    );
+  }
 }
 
 class _TextAreaField extends StatelessWidget {
- const _TextAreaField({
- required this.controller,
- required this.label,
- required this.hintText,
- required this.minLines,
- required this.onChanged,
- });
+  const _TextAreaField({
+    required this.controller,
+    required this.label,
+    required this.hintText,
+    required this.minLines,
+    required this.onChanged,
+  });
 
- final TextEditingController controller;
- final String label;
- final String hintText;
- final int minLines;
- final ValueChanged<String> onChanged;
+  final TextEditingController controller;
+  final String label;
+  final String hintText;
+  final int minLines;
+  final ValueChanged<String> onChanged;
 
- @override
- Widget build(BuildContext context) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- label.toUpperCase(),
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- color: _kGray500,
- letterSpacing: 0.5,
- ),
- ),
- const SizedBox(height: 6),
- VoiceTextField(
- controller: controller,
- minLines: minLines,
- maxLines: minLines + 2,
- onChanged: onChanged,
- decoration: _inputDecoration(hintText),
- ),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: _kGray500,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 6),
+        VoiceTextField(
+          controller: controller,
+          minLines: minLines,
+          maxLines: minLines + 2,
+          onChanged: onChanged,
+          decoration: _inputDecoration(hintText),
+        ),
+      ],
+    );
+  }
 }
 
 class _MappingCard extends StatelessWidget {
- const _MappingCard({
- required this.data,
- required this.availableSpecifications,
- required this.owners,
- required this.onChanged,
- required this.onRemove,
- });
+  const _MappingCard({
+    required this.data,
+    required this.availableSpecifications,
+    required this.owners,
+    required this.onChanged,
+    required this.onRemove,
+  });
 
- final DesignRequirementMapping data;
- final List<_SpecificationOption> availableSpecifications;
- final List<String> owners;
- final VoidCallback onChanged;
- final VoidCallback onRemove;
+  final DesignRequirementMapping data;
+  final List<_SpecificationOption> availableSpecifications;
+  final List<String> owners;
+  final VoidCallback onChanged;
+  final VoidCallback onRemove;
 
- @override
- Widget build(BuildContext context) {
- final specificationOptions = <_SpecificationOption>[
- ...availableSpecifications.where(
- (item) => item.title.trim().isNotEmpty || item.id.trim().isNotEmpty,
- ),
- ];
- final selectedId = specificationOptions.any(
- (item) => item.id == data.requirementId,
- )
- ? data.requirementId
- : null;
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: _kBorder),
- ),
- child: Column(
- children: [
- Row(
- children: [
- const Text(
- 'Mapping Row',
- style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
- ),
- const Spacer(),
- IconButton(
- onPressed: onRemove,
- icon: const Icon(Icons.delete_outline, size: 18),
- ),
- ],
- ),
- if (specificationOptions.isNotEmpty)
- DropdownButtonFormField<String>(
- value: selectedId,
- isExpanded: true,
- decoration: _inputDecoration('Select specification item'),
- items: specificationOptions
- .map(
- (item) => DropdownMenuItem<String>(
- value: item.id,
- child: Text(
- item.title,
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- ),
- )
- .toList(),
- selectedItemBuilder: (context) {
- return specificationOptions
- .map(
- (item) => Align(
- alignment: Alignment.centerLeft,
- child: Text(
- item.title,
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- ),
- )
- .toList();
- },
- onChanged: (value) {
- if (value == null) return;
- final selected = specificationOptions.firstWhere(
- (item) => item.id == value,
- orElse: () => _SpecificationOption(id: value, title: ''),
- );
- data.requirementId = selected.id;
- data.requirementText =
- selected.title.isEmpty ? selected.details : selected.title;
- if (selected.details.isNotEmpty) {
- data.designResponse = selected.details;
- }
- final mappedArea = selected.area.isNotEmpty
- ? selected.area
- : selected.discipline;
- if (mappedArea.isNotEmpty) {
- data.designArea = mappedArea;
- }
- if (selected.owner.isNotEmpty) {
- data.owner = selected.owner;
- }
- if (selected.referenceLink.isNotEmpty) {
- data.linkedArtifact = selected.referenceLink;
- data.verificationMethod = selected.referenceLink;
- }
- onChanged();
- },
- ),
- if (specificationOptions.isNotEmpty) const SizedBox(height: 12),
- VoiceTextFormField(
- initialValue: data.requirementText,
- minLines: 2,
- maxLines: 4,
- decoration: _inputDecoration('Specification item'),
- onChanged: (value) {
- data.requirementText = value;
- onChanged();
- },
- ),
- const SizedBox(height: 12),
- VoiceTextFormField(
- initialValue: data.designResponse,
- minLines: 2,
- maxLines: 4,
- decoration: _inputDecoration('Details'),
- onChanged: (value) {
- data.designResponse = value;
- onChanged();
- },
- ),
- const SizedBox(height: 12),
- _FourColumnGrid(
- children: [
- _TextFormField(
- initialValue: data.designArea,
- label: 'Design area',
- suggestions: _DesignPlanningScreenState._designAreaOptions,
- onChanged: (value) {
- data.designArea = value;
- onChanged();
- },
- ),
- _DropdownField(
- value: data.owner,
- label: 'Owner',
- options: owners,
- onChanged: (value) {
- data.owner = value;
- onChanged();
- },
- ),
- _DropdownField(
- value: data.status,
- label: 'Status',
- options: _DesignPlanningScreenState._mappingStatusOptions,
- onChanged: (value) {
- data.status = value;
- onChanged();
- },
- ),
- _TextFormField(
- initialValue: data.linkedArtifact,
- label: 'Linked artifacts',
- onChanged: (value) {
- data.linkedArtifact = value;
- onChanged();
- },
- ),
- ],
- ),
- const SizedBox(height: 12),
- _ResponsivePair(
- left: _TextFormField(
- initialValue: data.acceptanceCriteria,
- label: 'Acceptance criteria',
- maxLines: 3,
- onChanged: (value) {
- data.acceptanceCriteria = value;
- onChanged();
- },
- ),
- right: _TextFormField(
- initialValue: data.verificationMethod,
- label: 'Verification method',
- maxLines: 3,
- onChanged: (value) {
- data.verificationMethod = value;
- onChanged();
- },
- ),
- ),
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final specificationOptions = <_SpecificationOption>[
+      ...availableSpecifications.where(
+        (item) => item.title.trim().isNotEmpty || item.id.trim().isNotEmpty,
+      ),
+    ];
+    final selectedId = specificationOptions.any(
+      (item) => item.id == data.requirementId,
+    )
+        ? data.requirementId
+        : null;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kBorder),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Text(
+                'Mapping Row',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline, size: 18),
+              ),
+            ],
+          ),
+          if (specificationOptions.isNotEmpty)
+            DropdownButtonFormField<String>(
+              value: selectedId,
+              isExpanded: true,
+              decoration: _inputDecoration('Select specification item'),
+              items: specificationOptions
+                  .map(
+                    (item) => DropdownMenuItem<String>(
+                      value: item.id,
+                      child: Text(
+                        item.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              selectedItemBuilder: (context) {
+                return specificationOptions
+                    .map(
+                      (item) => Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          item.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
+                    .toList();
+              },
+              onChanged: (value) {
+                if (value == null) return;
+                final selected = specificationOptions.firstWhere(
+                  (item) => item.id == value,
+                  orElse: () => _SpecificationOption(id: value, title: ''),
+                );
+                data.requirementId = selected.id;
+                data.requirementText =
+                    selected.title.isEmpty ? selected.details : selected.title;
+                if (selected.details.isNotEmpty) {
+                  data.designResponse = selected.details;
+                }
+                final mappedArea = selected.area.isNotEmpty
+                    ? selected.area
+                    : selected.discipline;
+                if (mappedArea.isNotEmpty) {
+                  data.designArea = mappedArea;
+                }
+                if (selected.owner.isNotEmpty) {
+                  data.owner = selected.owner;
+                }
+                if (selected.referenceLink.isNotEmpty) {
+                  data.linkedArtifact = selected.referenceLink;
+                  data.verificationMethod = selected.referenceLink;
+                }
+                onChanged();
+              },
+            ),
+          if (specificationOptions.isNotEmpty) const SizedBox(height: 12),
+          VoiceTextFormField(
+            initialValue: data.requirementText,
+            minLines: 2,
+            maxLines: 4,
+            decoration: _inputDecoration('Specification item'),
+            onChanged: (value) {
+              data.requirementText = value;
+              onChanged();
+            },
+          ),
+          const SizedBox(height: 12),
+          VoiceTextFormField(
+            initialValue: data.designResponse,
+            minLines: 2,
+            maxLines: 4,
+            decoration: _inputDecoration('Details'),
+            onChanged: (value) {
+              data.designResponse = value;
+              onChanged();
+            },
+          ),
+          const SizedBox(height: 12),
+          _FourColumnGrid(
+            children: [
+              _TextFormField(
+                initialValue: data.designArea,
+                label: 'Design area',
+                suggestions: _DesignPlanningScreenState._designAreaOptions,
+                onChanged: (value) {
+                  data.designArea = value;
+                  onChanged();
+                },
+              ),
+              _DropdownField(
+                value: data.owner,
+                label: 'Owner',
+                options: owners,
+                onChanged: (value) {
+                  data.owner = value;
+                  onChanged();
+                },
+              ),
+              _DropdownField(
+                value: data.status,
+                label: 'Status',
+                options: _DesignPlanningScreenState._mappingStatusOptions,
+                onChanged: (value) {
+                  data.status = value;
+                  onChanged();
+                },
+              ),
+              _TextFormField(
+                initialValue: data.linkedArtifact,
+                label: 'Linked artifacts',
+                onChanged: (value) {
+                  data.linkedArtifact = value;
+                  onChanged();
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _ResponsivePair(
+            left: _TextFormField(
+              initialValue: data.acceptanceCriteria,
+              label: 'Acceptance criteria',
+              maxLines: 3,
+              onChanged: (value) {
+                data.acceptanceCriteria = value;
+                onChanged();
+              },
+            ),
+            right: _TextFormField(
+              initialValue: data.verificationMethod,
+              label: 'Verification method',
+              maxLines: 3,
+              onChanged: (value) {
+                data.verificationMethod = value;
+                onChanged();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _WorkItemCard extends StatelessWidget {
- const _WorkItemCard({
- required this.title,
- required this.data,
- required this.owners,
- required this.onChanged,
- required this.onRemove,
- });
+  const _WorkItemCard({
+    required this.title,
+    required this.data,
+    required this.owners,
+    required this.onChanged,
+    required this.onRemove,
+  });
 
- final String title;
- final DesignPlanningWorkItem data;
- final List<String> owners;
- final VoidCallback onChanged;
- final VoidCallback onRemove;
+  final String title;
+  final DesignPlanningWorkItem data;
+  final List<String> owners;
+  final VoidCallback onChanged;
+  final VoidCallback onRemove;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: _kBorder),
- ),
- child: Column(
- children: [
- Row(
- children: [
- Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
- const Spacer(),
- IconButton(
- onPressed: onRemove,
- icon: const Icon(Icons.delete_outline, size: 18),
- ),
- ],
- ),
- _ResponsivePair(
- left: _TextFormField(
- initialValue: data.name,
- label: 'Name',
- onChanged: (value) {
- data.name = value;
- onChanged();
- },
- ),
- right: _TextFormField(
- initialValue: data.purpose,
- label: 'Purpose / notes',
- maxLines: 3,
- onChanged: (value) {
- data.purpose = value;
- onChanged();
- },
- ),
- ),
- const SizedBox(height: 12),
- _ResponsivePair(
- left: _DropdownField(
- value: data.owner,
- label: 'Owner',
- options: owners,
- onChanged: (value) {
- data.owner = value;
- onChanged();
- },
- ),
- right: _DropdownField(
- value: data.status,
- label: 'Status',
- options: _DesignPlanningScreenState._workStatusOptions,
- onChanged: (value) {
- data.status = value;
- onChanged();
- },
- ),
- ),
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kBorder),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+              const Spacer(),
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline, size: 18),
+              ),
+            ],
+          ),
+          _ResponsivePair(
+            left: _TextFormField(
+              initialValue: data.name,
+              label: 'Name',
+              onChanged: (value) {
+                data.name = value;
+                onChanged();
+              },
+            ),
+            right: _TextFormField(
+              initialValue: data.purpose,
+              label: 'Purpose / notes',
+              maxLines: 3,
+              onChanged: (value) {
+                data.purpose = value;
+                onChanged();
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          _ResponsivePair(
+            left: _DropdownField(
+              value: data.owner,
+              label: 'Owner',
+              options: owners,
+              onChanged: (value) {
+                data.owner = value;
+                onChanged();
+              },
+            ),
+            right: _DropdownField(
+              value: data.status,
+              label: 'Status',
+              options: _DesignPlanningScreenState._workStatusOptions,
+              onChanged: (value) {
+                data.status = value;
+                onChanged();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SpecificationPlanRowCard extends StatelessWidget {
- const _SpecificationPlanRowCard({
- super.key,
- required this.index,
- required this.data,
- required this.owners,
- required this.requirementOptions,
- required this.specificationTypeOptions,
- required this.disciplineOptions,
- required this.areaOptions,
- required this.wbsWorkPackages,
- required this.sourceTypeOptions,
- required this.ruleTypeOptions,
- required this.statusOptions,
- required this.uploadsEnabled,
- required this.onChanged,
- required this.onUpload,
- required this.onRemove,
- });
+  const _SpecificationPlanRowCard({
+    super.key,
+    required this.index,
+    required this.data,
+    required this.owners,
+    required this.requirementOptions,
+    required this.specificationTypeOptions,
+    required this.disciplineOptions,
+    required this.areaOptions,
+    required this.wbsWorkPackages,
+    required this.sourceTypeOptions,
+    required this.ruleTypeOptions,
+    required this.statusOptions,
+    required this.uploadsEnabled,
+    required this.onChanged,
+    required this.onUpload,
+    required this.onRemove,
+  });
 
- final int index;
- final DesignSpecificationPlanRow data;
- final List<String> owners;
- final List<_RequirementAttachmentOption> requirementOptions;
- final List<String> specificationTypeOptions;
- final List<String> disciplineOptions;
- final List<String> areaOptions;
- final List<_WbsWorkPackageOption> wbsWorkPackages;
- final List<String> sourceTypeOptions;
- final List<String> ruleTypeOptions;
- final List<String> statusOptions;
- final bool uploadsEnabled;
- final VoidCallback onChanged;
- final VoidCallback onUpload;
- final VoidCallback onRemove;
+  final int index;
+  final DesignSpecificationPlanRow data;
+  final List<String> owners;
+  final List<_RequirementAttachmentOption> requirementOptions;
+  final List<String> specificationTypeOptions;
+  final List<String> disciplineOptions;
+  final List<String> areaOptions;
+  final List<_WbsWorkPackageOption> wbsWorkPackages;
+  final List<String> sourceTypeOptions;
+  final List<String> ruleTypeOptions;
+  final List<String> statusOptions;
+  final bool uploadsEnabled;
+  final VoidCallback onChanged;
+  final VoidCallback onUpload;
+  final VoidCallback onRemove;
 
- @override
- Widget build(BuildContext context) {
- final wbsPackageLabels = wbsWorkPackages
- .map((item) => item.displayLabel)
- .toList(growable: false);
- String selectedWbsPackageLabel = '';
- if (data.wbsWorkPackageTitle.trim().isNotEmpty) {
- for (final item in wbsWorkPackages) {
- if (item.displayLabel == data.wbsWorkPackageTitle.trim()) {
- selectedWbsPackageLabel = item.displayLabel;
- break;
- }
- }
- }
- if (selectedWbsPackageLabel.isEmpty) {
- for (final item in wbsWorkPackages) {
- if (item.id == data.wbsWorkPackageId) {
- selectedWbsPackageLabel = item.displayLabel;
- break;
- }
- }
- }
- if (selectedWbsPackageLabel.isEmpty &&
- data.wbsWorkPackageTitle.trim().isNotEmpty) {
- selectedWbsPackageLabel = data.wbsWorkPackageTitle.trim();
- }
- final wbsValue = selectedWbsPackageLabel.isEmpty
- ? 'Not mapped'
- : selectedWbsPackageLabel;
+  @override
+  Widget build(BuildContext context) {
+    final wbsPackageLabels = wbsWorkPackages
+        .map((item) => item.displayLabel)
+        .toList(growable: false);
+    String selectedWbsPackageLabel = '';
+    if (data.wbsWorkPackageTitle.trim().isNotEmpty) {
+      for (final item in wbsWorkPackages) {
+        if (item.displayLabel == data.wbsWorkPackageTitle.trim()) {
+          selectedWbsPackageLabel = item.displayLabel;
+          break;
+        }
+      }
+    }
+    if (selectedWbsPackageLabel.isEmpty) {
+      for (final item in wbsWorkPackages) {
+        if (item.id == data.wbsWorkPackageId) {
+          selectedWbsPackageLabel = item.displayLabel;
+          break;
+        }
+      }
+    }
+    if (selectedWbsPackageLabel.isEmpty &&
+        data.wbsWorkPackageTitle.trim().isNotEmpty) {
+      selectedWbsPackageLabel = data.wbsWorkPackageTitle.trim();
+    }
+    final wbsValue = selectedWbsPackageLabel.isEmpty
+        ? 'Not mapped'
+        : selectedWbsPackageLabel;
 
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: _kBorder),
- ),
- child: Column(
- children: [
- Row(
- children: [
- Text(
- 'Spec Row $index',
- style:
- const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
- ),
- const Spacer(),
- if (uploadsEnabled)
- TextButton.icon(
- onPressed: onUpload,
- icon: const Icon(Icons.upload_file, size: 16),
- label: const Text('Upload'),
- ),
- IconButton(
- onPressed: onRemove,
- icon: const Icon(Icons.delete_outline, size: 18),
- ),
- ],
- ),
- _ResponsivePair(
- left: _TextFormField(
- initialValue: data.title,
- label: 'Title',
- onChanged: (value) {
- data.title = value;
- onChanged();
- },
- ),
- right: _TextFormField(
- initialValue: data.referenceLink,
- label: 'Reference link',
- onChanged: (value) {
- data.referenceLink = value;
- onChanged();
- },
- ),
- ),
- const SizedBox(height: 12),
- _TextFormField(
- initialValue: data.details,
- label: 'Details',
- maxLines: 3,
- onChanged: (value) {
- data.details = value;
- onChanged();
- },
- ),
- const SizedBox(height: 12),
- _RequirementMultiSelectField(
- label: 'Attached requirements',
- options: requirementOptions,
- selectedIds: data.attachedRequirementIds,
- onChanged: (ids) {
- data.attachedRequirementIds = ids;
- onChanged();
- },
- ),
- const SizedBox(height: 12),
- _FourColumnGrid(
- children: [
- _DropdownField(
- value: data.specificationType,
- label: 'Specification type',
- options: specificationTypeOptions,
- onChanged: (value) {
- data.specificationType = value;
- onChanged();
- },
- ),
- _DropdownField(
- value: data.ruleType,
- label: 'Source',
- options: ruleTypeOptions,
- onChanged: (value) {
- data.ruleType = value;
- onChanged();
- },
- ),
- _FilterableCreatableDropdownField(
- value: data.discipline,
- label: 'Discipline',
- options: disciplineOptions,
- onChanged: (value) {
- data.discipline = value.trim();
- onChanged();
- },
- ),
- _FilterableCreatableDropdownField(
- value: data.area,
- label: 'Area',
- options: areaOptions,
- onChanged: (value) {
- data.area = value.trim();
- onChanged();
- },
- ),
- _DropdownField(
- value: data.sourceType,
- label: 'Source type',
- options: sourceTypeOptions,
- onChanged: (value) {
- data.sourceType = value;
- onChanged();
- },
- ),
- _DropdownField(
- value: data.owner,
- label: 'Owner',
- options: owners,
- onChanged: (value) {
- data.owner = value;
- onChanged();
- },
- ),
- _DropdownField(
- value: data.status,
- label: 'Status',
- options: statusOptions,
- onChanged: (value) {
- data.status = value;
- onChanged();
- },
- ),
- ],
- ),
- const SizedBox(height: 12),
- _DropdownField(
- value: wbsValue,
- label: 'WBS work package',
- options: ['Not mapped', ...wbsPackageLabels],
- onChanged: (value) {
- if (value.trim() == 'Not mapped') {
- data.wbsWorkPackageId = '';
- data.wbsWorkPackageTitle = '';
- onChanged();
- return;
- }
- _WbsWorkPackageOption? selected;
- for (final item in wbsWorkPackages) {
- if (item.displayLabel == value) {
- selected = item;
- break;
- }
- }
- if (selected == null || value.trim().isEmpty) {
- data.wbsWorkPackageId = '';
- data.wbsWorkPackageTitle = '';
- onChanged();
- return;
- }
- data.wbsWorkPackageId = selected.id;
- data.wbsWorkPackageTitle = selected.displayLabel;
- if (data.discipline.trim().isEmpty &&
- selected.disciplineSeed.trim().isNotEmpty) {
- data.discipline = selected.disciplineSeed.trim();
- }
- if (data.area.trim().isEmpty &&
- selected.areaSeed.trim().isNotEmpty) {
- data.area = selected.areaSeed.trim();
- }
- onChanged();
- },
- ),
- if (data.uploadedFileName.trim().isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(top: 10),
- child: Align(
- alignment: Alignment.centerLeft,
- child: Text(
- 'Uploaded file: ${data.uploadedFileName}',
- style: const TextStyle(
- fontSize: 12,
- color: _kMuted,
- fontWeight: FontWeight.w600,
- ),
- ),
- ),
- ),
- ],
- ),
- );
- }
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kBorder),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(
+                'Spec Row $index',
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              if (uploadsEnabled)
+                TextButton.icon(
+                  onPressed: onUpload,
+                  icon: const Icon(Icons.upload_file, size: 16),
+                  label: const Text('Upload'),
+                ),
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline, size: 18),
+              ),
+            ],
+          ),
+          _ResponsivePair(
+            left: _TextFormField(
+              initialValue: data.title,
+              label: 'Title',
+              onChanged: (value) {
+                data.title = value;
+                onChanged();
+              },
+            ),
+            right: _TextFormField(
+              initialValue: data.referenceLink,
+              label: 'Reference link',
+              onChanged: (value) {
+                data.referenceLink = value;
+                onChanged();
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          _TextFormField(
+            initialValue: data.details,
+            label: 'Details',
+            maxLines: 3,
+            onChanged: (value) {
+              data.details = value;
+              onChanged();
+            },
+          ),
+          const SizedBox(height: 12),
+          _RequirementMultiSelectField(
+            label: 'Attached requirements',
+            options: requirementOptions,
+            selectedIds: data.attachedRequirementIds,
+            onChanged: (ids) {
+              data.attachedRequirementIds = ids;
+              onChanged();
+            },
+          ),
+          const SizedBox(height: 12),
+          _FourColumnGrid(
+            children: [
+              _DropdownField(
+                value: data.specificationType,
+                label: 'Specification type',
+                options: specificationTypeOptions,
+                onChanged: (value) {
+                  data.specificationType = value;
+                  onChanged();
+                },
+              ),
+              _DropdownField(
+                value: data.ruleType,
+                label: 'Source',
+                options: ruleTypeOptions,
+                onChanged: (value) {
+                  data.ruleType = value;
+                  onChanged();
+                },
+              ),
+              _FilterableCreatableDropdownField(
+                value: data.discipline,
+                label: 'Discipline',
+                options: disciplineOptions,
+                onChanged: (value) {
+                  data.discipline = value.trim();
+                  onChanged();
+                },
+              ),
+              _FilterableCreatableDropdownField(
+                value: data.area,
+                label: 'Area',
+                options: areaOptions,
+                onChanged: (value) {
+                  data.area = value.trim();
+                  onChanged();
+                },
+              ),
+              _DropdownField(
+                value: data.sourceType,
+                label: 'Source type',
+                options: sourceTypeOptions,
+                onChanged: (value) {
+                  data.sourceType = value;
+                  onChanged();
+                },
+              ),
+              _DropdownField(
+                value: data.owner,
+                label: 'Owner',
+                options: owners,
+                onChanged: (value) {
+                  data.owner = value;
+                  onChanged();
+                },
+              ),
+              _DropdownField(
+                value: data.status,
+                label: 'Status',
+                options: statusOptions,
+                onChanged: (value) {
+                  data.status = value;
+                  onChanged();
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _DropdownField(
+            value: wbsValue,
+            label: 'WBS work package',
+            options: ['Not mapped', ...wbsPackageLabels],
+            onChanged: (value) {
+              if (value.trim() == 'Not mapped') {
+                data.wbsWorkPackageId = '';
+                data.wbsWorkPackageTitle = '';
+                onChanged();
+                return;
+              }
+              _WbsWorkPackageOption? selected;
+              for (final item in wbsWorkPackages) {
+                if (item.displayLabel == value) {
+                  selected = item;
+                  break;
+                }
+              }
+              if (selected == null || value.trim().isEmpty) {
+                data.wbsWorkPackageId = '';
+                data.wbsWorkPackageTitle = '';
+                onChanged();
+                return;
+              }
+              data.wbsWorkPackageId = selected.id;
+              data.wbsWorkPackageTitle = selected.displayLabel;
+              if (data.discipline.trim().isEmpty &&
+                  selected.disciplineSeed.trim().isNotEmpty) {
+                data.discipline = selected.disciplineSeed.trim();
+              }
+              if (data.area.trim().isEmpty &&
+                  selected.areaSeed.trim().isNotEmpty) {
+                data.area = selected.areaSeed.trim();
+              }
+              onChanged();
+            },
+          ),
+          if (data.uploadedFileName.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Uploaded file: ${data.uploadedFileName}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: _kMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SpecificationDeviationCard extends StatelessWidget {
- const _SpecificationDeviationCard({
- super.key,
- required this.index,
- required this.data,
- required this.specificationOptions,
- required this.onChanged,
- required this.onRemove,
- });
+  const _SpecificationDeviationCard({
+    super.key,
+    required this.index,
+    required this.data,
+    required this.specificationOptions,
+    required this.onChanged,
+    required this.onRemove,
+  });
 
- final int index;
- final DesignSpecificationDeviation data;
- final List<_SpecificationOption> specificationOptions;
- final VoidCallback onChanged;
- final VoidCallback onRemove;
+  final int index;
+  final DesignSpecificationDeviation data;
+  final List<_SpecificationOption> specificationOptions;
+  final VoidCallback onChanged;
+  final VoidCallback onRemove;
 
- @override
- Widget build(BuildContext context) {
- final selectedId = specificationOptions.any(
- (item) => item.id == data.specificationId,
- )
- ? data.specificationId
- : null;
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: _kBorder),
- ),
- child: Column(
- children: [
- Row(
- children: [
- Text(
- 'Deviation $index',
- style:
- const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
- ),
- const Spacer(),
- IconButton(
- onPressed: onRemove,
- icon: const Icon(Icons.delete_outline, size: 18),
- ),
- ],
- ),
- if (specificationOptions.isNotEmpty)
- DropdownButtonFormField<String>(
- value: selectedId,
- isExpanded: true,
- decoration: _inputDecoration('Select specification item'),
- items: specificationOptions
- .map(
- (item) => DropdownMenuItem<String>(
- value: item.id,
- child: Text(
- item.title,
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- ),
- )
- .toList(growable: false),
- onChanged: (value) {
- if (value == null) return;
- data.specificationId = value;
- onChanged();
- },
- )
- else
- const Align(
- alignment: Alignment.centerLeft,
- child: Text(
- 'Add specification rows before selecting a specification item.',
- style: TextStyle(fontSize: 12, color: _kMuted),
- ),
- ),
- const SizedBox(height: 12),
- VoiceTextFormField(
- initialValue: data.description,
- minLines: 2,
- maxLines: 4,
- decoration: _inputDecoration('Deviation description'),
- onChanged: (value) {
- data.description = value;
- onChanged();
- },
- ),
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final selectedId = specificationOptions.any(
+      (item) => item.id == data.specificationId,
+    )
+        ? data.specificationId
+        : null;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kBorder),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(
+                'Deviation $index',
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline, size: 18),
+              ),
+            ],
+          ),
+          if (specificationOptions.isNotEmpty)
+            DropdownButtonFormField<String>(
+              value: selectedId,
+              isExpanded: true,
+              decoration: _inputDecoration('Select specification item'),
+              items: specificationOptions
+                  .map(
+                    (item) => DropdownMenuItem<String>(
+                      value: item.id,
+                      child: Text(
+                        item.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
+              onChanged: (value) {
+                if (value == null) return;
+                data.specificationId = value;
+                onChanged();
+              },
+            )
+          else
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Add specification rows before selecting a specification item.',
+                style: TextStyle(fontSize: 12, color: _kMuted),
+              ),
+            ),
+          const SizedBox(height: 12),
+          VoiceTextFormField(
+            initialValue: data.description,
+            minLines: 2,
+            maxLines: 4,
+            decoration: _inputDecoration('Deviation description'),
+            onChanged: (value) {
+              data.description = value;
+              onChanged();
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SpecificationDocumentCard extends StatelessWidget {
- const _SpecificationDocumentCard({
- super.key,
- required this.index,
- required this.data,
- required this.requirementOptions,
- required this.sourceTypeOptions,
- required this.uploadsEnabled,
- required this.onChanged,
- required this.onUpload,
- required this.onRemove,
- });
+  const _SpecificationDocumentCard({
+    super.key,
+    required this.index,
+    required this.data,
+    required this.requirementOptions,
+    required this.sourceTypeOptions,
+    required this.uploadsEnabled,
+    required this.onChanged,
+    required this.onUpload,
+    required this.onRemove,
+  });
 
- final int index;
- final DesignPlanningReferenceDoc data;
- final List<_RequirementAttachmentOption> requirementOptions;
- final List<String> sourceTypeOptions;
- final bool uploadsEnabled;
- final VoidCallback onChanged;
- final VoidCallback onUpload;
- final VoidCallback onRemove;
+  final int index;
+  final DesignPlanningReferenceDoc data;
+  final List<_RequirementAttachmentOption> requirementOptions;
+  final List<String> sourceTypeOptions;
+  final bool uploadsEnabled;
+  final VoidCallback onChanged;
+  final VoidCallback onUpload;
+  final VoidCallback onRemove;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: _kBorder),
- ),
- child: Column(
- children: [
- Row(
- children: [
- Text(
- 'Document $index',
- style:
- const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
- ),
- const Spacer(),
- if (uploadsEnabled)
- TextButton.icon(
- onPressed: onUpload,
- icon: const Icon(Icons.upload_file, size: 16),
- label: const Text('Upload'),
- ),
- IconButton(
- onPressed: onRemove,
- icon: const Icon(Icons.delete_outline, size: 18),
- ),
- ],
- ),
- _ResponsivePair(
- left: _TextFormField(
- initialValue: data.title,
- label: 'Title',
- onChanged: (value) {
- data.title = value;
- onChanged();
- },
- ),
- right: _DropdownField(
- value: data.category,
- label: 'Category',
- options: sourceTypeOptions,
- onChanged: (value) {
- data.category = value;
- onChanged();
- },
- ),
- ),
- const SizedBox(height: 12),
- _RequirementMultiSelectField(
- label: 'Attached requirements',
- options: requirementOptions,
- selectedIds: data.attachedRequirementIds,
- onChanged: (ids) {
- data.attachedRequirementIds = ids;
- onChanged();
- },
- ),
- const SizedBox(height: 12),
- _ResponsivePair(
- left: _TextFormField(
- initialValue: data.link,
- label: 'Link',
- onChanged: (value) {
- data.link = value;
- onChanged();
- },
- ),
- right: _TextFormField(
- initialValue: data.notes,
- label: 'Notes',
- maxLines: 2,
- onChanged: (value) {
- data.notes = value;
- onChanged();
- },
- ),
- ),
- if (data.fileName.trim().isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(top: 10),
- child: Align(
- alignment: Alignment.centerLeft,
- child: Text(
- 'Uploaded file: ${data.fileName}',
- style: const TextStyle(
- fontSize: 12,
- color: _kMuted,
- fontWeight: FontWeight.w600,
- ),
- ),
- ),
- ),
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kBorder),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(
+                'Document $index',
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              if (uploadsEnabled)
+                TextButton.icon(
+                  onPressed: onUpload,
+                  icon: const Icon(Icons.upload_file, size: 16),
+                  label: const Text('Upload'),
+                ),
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline, size: 18),
+              ),
+            ],
+          ),
+          _ResponsivePair(
+            left: _TextFormField(
+              initialValue: data.title,
+              label: 'Title',
+              onChanged: (value) {
+                data.title = value;
+                onChanged();
+              },
+            ),
+            right: _DropdownField(
+              value: data.category,
+              label: 'Category',
+              options: sourceTypeOptions,
+              onChanged: (value) {
+                data.category = value;
+                onChanged();
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          _RequirementMultiSelectField(
+            label: 'Attached requirements',
+            options: requirementOptions,
+            selectedIds: data.attachedRequirementIds,
+            onChanged: (ids) {
+              data.attachedRequirementIds = ids;
+              onChanged();
+            },
+          ),
+          const SizedBox(height: 12),
+          _ResponsivePair(
+            left: _TextFormField(
+              initialValue: data.link,
+              label: 'Link',
+              onChanged: (value) {
+                data.link = value;
+                onChanged();
+              },
+            ),
+            right: _TextFormField(
+              initialValue: data.notes,
+              label: 'Notes',
+              maxLines: 2,
+              onChanged: (value) {
+                data.notes = value;
+                onChanged();
+              },
+            ),
+          ),
+          if (data.fileName.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Uploaded file: ${data.fileName}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: _kMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _RiskCard extends StatelessWidget {
- const _RiskCard({
- required this.data,
- required this.owners,
- required this.onChanged,
- required this.onRemove,
- });
+  const _RiskCard({
+    required this.data,
+    required this.owners,
+    required this.onChanged,
+    required this.onRemove,
+  });
 
- final DesignRiskEntry data;
- final List<String> owners;
- final VoidCallback onChanged;
- final VoidCallback onRemove;
+  final DesignRiskEntry data;
+  final List<String> owners;
+  final VoidCallback onChanged;
+  final VoidCallback onRemove;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFFFFBEB),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFFDE68A)),
- ),
- child: Column(
- children: [
- Row(
- children: [
- const Text('Risk', style: TextStyle(fontWeight: FontWeight.w700)),
- const Spacer(),
- IconButton(
- onPressed: onRemove,
- icon: const Icon(Icons.delete_outline, size: 18),
- ),
- ],
- ),
- _TextFormField(
- initialValue: data.risk,
- label: 'Risk',
- onChanged: (value) {
- data.risk = value;
- onChanged();
- },
- ),
- const SizedBox(height: 12),
- _FourColumnGrid(
- children: [
- _TextFormField(
- initialValue: data.impact,
- label: 'Impact',
- onChanged: (value) {
- data.impact = value;
- onChanged();
- },
- ),
- _TextFormField(
- initialValue: data.likelihood,
- label: 'Likelihood',
- onChanged: (value) {
- data.likelihood = value;
- onChanged();
- },
- ),
- _DropdownField(
- value: data.owner,
- label: 'Owner',
- options: owners,
- onChanged: (value) {
- data.owner = value;
- onChanged();
- },
- ),
- _DropdownField(
- value: data.status,
- label: 'Status',
- options: _DesignPlanningScreenState._riskStatusOptions,
- onChanged: (value) {
- data.status = value;
- onChanged();
- },
- ),
- ],
- ),
- const SizedBox(height: 12),
- _TextFormField(
- initialValue: data.mitigation,
- label: 'Mitigation',
- maxLines: 3,
- onChanged: (value) {
- data.mitigation = value;
- onChanged();
- },
- ),
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFFDE68A)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Text('Risk', style: TextStyle(fontWeight: FontWeight.w700)),
+              const Spacer(),
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline, size: 18),
+              ),
+            ],
+          ),
+          _TextFormField(
+            initialValue: data.risk,
+            label: 'Risk',
+            onChanged: (value) {
+              data.risk = value;
+              onChanged();
+            },
+          ),
+          const SizedBox(height: 12),
+          _FourColumnGrid(
+            children: [
+              _TextFormField(
+                initialValue: data.impact,
+                label: 'Impact',
+                onChanged: (value) {
+                  data.impact = value;
+                  onChanged();
+                },
+              ),
+              _TextFormField(
+                initialValue: data.likelihood,
+                label: 'Likelihood',
+                onChanged: (value) {
+                  data.likelihood = value;
+                  onChanged();
+                },
+              ),
+              _DropdownField(
+                value: data.owner,
+                label: 'Owner',
+                options: owners,
+                onChanged: (value) {
+                  data.owner = value;
+                  onChanged();
+                },
+              ),
+              _DropdownField(
+                value: data.status,
+                label: 'Status',
+                options: _DesignPlanningScreenState._riskStatusOptions,
+                onChanged: (value) {
+                  data.status = value;
+                  onChanged();
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _TextFormField(
+            initialValue: data.mitigation,
+            label: 'Mitigation',
+            maxLines: 3,
+            onChanged: (value) {
+              data.mitigation = value;
+              onChanged();
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _DependencyCard extends StatelessWidget {
- const _DependencyCard({
- required this.data,
- required this.owners,
- required this.onChanged,
- required this.onRemove,
- });
+  const _DependencyCard({
+    required this.data,
+    required this.owners,
+    required this.onChanged,
+    required this.onRemove,
+  });
 
- final DesignDependencyEntry data;
- final List<String> owners;
- final VoidCallback onChanged;
- final VoidCallback onRemove;
+  final DesignDependencyEntry data;
+  final List<String> owners;
+  final VoidCallback onChanged;
+  final VoidCallback onRemove;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: _kBorder),
- ),
- child: Column(
- children: [
- Row(
- children: [
- const Text('Dependency',
- style: TextStyle(fontWeight: FontWeight.w700)),
- const Spacer(),
- IconButton(
- onPressed: onRemove,
- icon: const Icon(Icons.delete_outline, size: 18),
- ),
- ],
- ),
- _ResponsivePair(
- left: _TextFormField(
- initialValue: data.name,
- label: 'Dependency',
- onChanged: (value) {
- data.name = value;
- onChanged();
- },
- ),
- right: _TextFormField(
- initialValue: data.source,
- label: 'Source',
- onChanged: (value) {
- data.source = value;
- onChanged();
- },
- ),
- ),
- const SizedBox(height: 12),
- _FourColumnGrid(
- children: [
- _DropdownField(
- value: data.type,
- label: 'Type',
- options: _DesignPlanningScreenState._dependencyTypeOptions,
- onChanged: (value) {
- data.type = value;
- onChanged();
- },
- ),
- _TextFormField(
- initialValue: data.neededBy,
- label: 'Needed by',
- onChanged: (value) {
- data.neededBy = value;
- onChanged();
- },
- ),
- _DropdownField(
- value: data.owner,
- label: 'Owner',
- options: owners,
- onChanged: (value) {
- data.owner = value;
- onChanged();
- },
- ),
- _DropdownField(
- value: data.status,
- label: 'Status',
- options: _DesignPlanningScreenState._workStatusOptions,
- onChanged: (value) {
- data.status = value;
- onChanged();
- },
- ),
- ],
- ),
- const SizedBox(height: 12),
- _TextFormField(
- initialValue: data.notes,
- label: 'Notes',
- maxLines: 3,
- onChanged: (value) {
- data.notes = value;
- onChanged();
- },
- ),
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kBorder),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Text('Dependency',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const Spacer(),
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline, size: 18),
+              ),
+            ],
+          ),
+          _ResponsivePair(
+            left: _TextFormField(
+              initialValue: data.name,
+              label: 'Dependency',
+              onChanged: (value) {
+                data.name = value;
+                onChanged();
+              },
+            ),
+            right: _TextFormField(
+              initialValue: data.source,
+              label: 'Source',
+              onChanged: (value) {
+                data.source = value;
+                onChanged();
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          _FourColumnGrid(
+            children: [
+              _DropdownField(
+                value: data.type,
+                label: 'Type',
+                options: _DesignPlanningScreenState._dependencyTypeOptions,
+                onChanged: (value) {
+                  data.type = value;
+                  onChanged();
+                },
+              ),
+              _TextFormField(
+                initialValue: data.neededBy,
+                label: 'Needed by',
+                onChanged: (value) {
+                  data.neededBy = value;
+                  onChanged();
+                },
+              ),
+              _DropdownField(
+                value: data.owner,
+                label: 'Owner',
+                options: owners,
+                onChanged: (value) {
+                  data.owner = value;
+                  onChanged();
+                },
+              ),
+              _DropdownField(
+                value: data.status,
+                label: 'Status',
+                options: _DesignPlanningScreenState._workStatusOptions,
+                onChanged: (value) {
+                  data.status = value;
+                  onChanged();
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _TextFormField(
+            initialValue: data.notes,
+            label: 'Notes',
+            maxLines: 3,
+            onChanged: (value) {
+              data.notes = value;
+              onChanged();
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _DecisionCard extends StatelessWidget {
- const _DecisionCard({
- required this.data,
- required this.owners,
- required this.onChanged,
- required this.onRemove,
- });
+  const _DecisionCard({
+    required this.data,
+    required this.owners,
+    required this.onChanged,
+    required this.onRemove,
+  });
 
- final DesignDecisionEntry data;
- final List<String> owners;
- final VoidCallback onChanged;
- final VoidCallback onRemove;
+  final DesignDecisionEntry data;
+  final List<String> owners;
+  final VoidCallback onChanged;
+  final VoidCallback onRemove;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: _kBorder),
- ),
- child: Column(
- children: [
- Row(
- children: [
- const Text('Decision',
- style: TextStyle(fontWeight: FontWeight.w700)),
- const Spacer(),
- IconButton(
- onPressed: onRemove,
- icon: const Icon(Icons.delete_outline, size: 18),
- ),
- ],
- ),
- _TextFormField(
- initialValue: data.decision,
- label: 'Decision',
- onChanged: (value) {
- data.decision = value;
- onChanged();
- },
- ),
- const SizedBox(height: 12),
- _ResponsivePair(
- left: _TextFormField(
- initialValue: data.rationale,
- label: 'Rationale',
- maxLines: 3,
- onChanged: (value) {
- data.rationale = value;
- onChanged();
- },
- ),
- right: _TextFormField(
- initialValue: data.alternatives,
- label: 'Alternatives considered',
- maxLines: 3,
- onChanged: (value) {
- data.alternatives = value;
- onChanged();
- },
- ),
- ),
- const SizedBox(height: 12),
- _FourColumnGrid(
- children: [
- _DropdownField(
- value: data.owner,
- label: 'Owner',
- options: owners,
- onChanged: (value) {
- data.owner = value;
- onChanged();
- },
- ),
- _TextFormField(
- initialValue: data.date,
- label: 'Date',
- onChanged: (value) {
- data.date = value;
- onChanged();
- },
- ),
- _DropdownField(
- value: data.status,
- label: 'Status',
- options: _DesignPlanningScreenState._mappingStatusOptions,
- onChanged: (value) {
- data.status = value;
- onChanged();
- },
- ),
- ],
- ),
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kBorder),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Text('Decision',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const Spacer(),
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline, size: 18),
+              ),
+            ],
+          ),
+          _TextFormField(
+            initialValue: data.decision,
+            label: 'Decision',
+            onChanged: (value) {
+              data.decision = value;
+              onChanged();
+            },
+          ),
+          const SizedBox(height: 12),
+          _ResponsivePair(
+            left: _TextFormField(
+              initialValue: data.rationale,
+              label: 'Rationale',
+              maxLines: 3,
+              onChanged: (value) {
+                data.rationale = value;
+                onChanged();
+              },
+            ),
+            right: _TextFormField(
+              initialValue: data.alternatives,
+              label: 'Alternatives considered',
+              maxLines: 3,
+              onChanged: (value) {
+                data.alternatives = value;
+                onChanged();
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          _FourColumnGrid(
+            children: [
+              _DropdownField(
+                value: data.owner,
+                label: 'Owner',
+                options: owners,
+                onChanged: (value) {
+                  data.owner = value;
+                  onChanged();
+                },
+              ),
+              _TextFormField(
+                initialValue: data.date,
+                label: 'Date',
+                onChanged: (value) {
+                  data.date = value;
+                  onChanged();
+                },
+              ),
+              _DropdownField(
+                value: data.status,
+                label: 'Status',
+                options: _DesignPlanningScreenState._mappingStatusOptions,
+                onChanged: (value) {
+                  data.status = value;
+                  onChanged();
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ApprovalCard extends StatelessWidget {
- const _ApprovalCard({
- super.key,
- required this.data,
- required this.owners,
- required this.onChanged,
- required this.onRemove,
- });
+  const _ApprovalCard({
+    super.key,
+    required this.data,
+    required this.owners,
+    required this.onChanged,
+    required this.onRemove,
+  });
 
- final DesignApprovalEntry data;
- final List<String> owners;
- final VoidCallback onChanged;
- final VoidCallback onRemove;
+  final DesignApprovalEntry data;
+  final List<String> owners;
+  final VoidCallback onChanged;
+  final VoidCallback onRemove;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: _kBorder),
- ),
- child: Column(
- children: [
- Row(
- children: [
- const Text('Reviewer',
- style: TextStyle(fontWeight: FontWeight.w700)),
- const Spacer(),
- IconButton(
- onPressed: onRemove,
- icon: const Icon(Icons.delete_outline, size: 18),
- ),
- ],
- ),
- _ResponsivePair(
- left: _DropdownField(
- value: data.reviewer,
- label: 'Reviewer',
- options: owners,
- onChanged: (value) {
- data.reviewer = value;
- onChanged();
- },
- ),
- right: _TextFormField(
- initialValue: data.role,
- label: 'Role',
- onChanged: (value) {
- data.role = value;
- onChanged();
- },
- ),
- ),
- const SizedBox(height: 12),
- _ResponsivePair(
- left: _DropdownField(
- value: data.status,
- label: 'Status',
- options: _DesignPlanningScreenState._approvalStatusOptions,
- onChanged: (value) {
- data.status = value;
- onChanged();
- },
- ),
- right: _TextFormField(
- initialValue: data.comment,
- label: 'Comments',
- maxLines: 3,
- onChanged: (value) {
- data.comment = value;
- onChanged();
- },
- ),
- ),
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kBorder),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Text('Reviewer',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const Spacer(),
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline, size: 18),
+              ),
+            ],
+          ),
+          _ResponsivePair(
+            left: _DropdownField(
+              value: data.reviewer,
+              label: 'Reviewer',
+              options: owners,
+              onChanged: (value) {
+                data.reviewer = value;
+                onChanged();
+              },
+            ),
+            right: _TextFormField(
+              initialValue: data.role,
+              label: 'Role',
+              onChanged: (value) {
+                data.role = value;
+                onChanged();
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          _ResponsivePair(
+            left: _DropdownField(
+              value: data.status,
+              label: 'Status',
+              options: _DesignPlanningScreenState._approvalStatusOptions,
+              onChanged: (value) {
+                data.status = value;
+                onChanged();
+              },
+            ),
+            right: _TextFormField(
+              initialValue: data.comment,
+              label: 'Comments',
+              maxLines: 3,
+              onChanged: (value) {
+                data.comment = value;
+                onChanged();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _DropdownField extends StatelessWidget {
- const _DropdownField({
- required this.value,
- required this.label,
- required this.options,
- required this.onChanged,
- });
+  const _DropdownField({
+    required this.value,
+    required this.label,
+    required this.options,
+    required this.onChanged,
+  });
 
- final String value;
- final String label;
- final List<String> options;
- final ValueChanged<String> onChanged;
+  final String value;
+  final String label;
+  final List<String> options;
+  final ValueChanged<String> onChanged;
 
- @override
- Widget build(BuildContext context) {
- final normalized = value.trim();
- final items =
- options.toSet().where((item) => item.trim().isNotEmpty).toList();
- if (normalized.isNotEmpty && !items.contains(normalized)) {
- items.insert(0, normalized);
- }
- if (items.isEmpty) {
- items.add('Select');
- }
- final selected = items.contains(normalized) ? normalized : items.first;
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- label,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: _kMuted,
- ),
- ),
- const SizedBox(height: 6),
- DropdownButtonFormField<String>(
- value: selected,
- isExpanded: true,
- decoration: _inputDecoration(''),
- items: items
- .map((item) => DropdownMenuItem<String>(
- value: item,
- child: Text(
- item,
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- ))
- .toList(),
- selectedItemBuilder: (context) {
- return items
- .map(
- (item) => Align(
- alignment: Alignment.centerLeft,
- child: Text(
- item,
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- ),
- )
- .toList();
- },
- onChanged: (value) {
- if (value == null) return;
- onChanged(value);
- },
- ),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final normalized = value.trim();
+    final items =
+        options.toSet().where((item) => item.trim().isNotEmpty).toList();
+    if (normalized.isNotEmpty && !items.contains(normalized)) {
+      items.insert(0, normalized);
+    }
+    if (items.isEmpty) {
+      items.add('Select');
+    }
+    final selected = items.contains(normalized) ? normalized : items.first;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _kMuted,
+          ),
+        ),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          value: selected,
+          isExpanded: true,
+          decoration: _inputDecoration(''),
+          items: items
+              .map((item) => DropdownMenuItem<String>(
+                    value: item,
+                    child: Text(
+                      item,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ))
+              .toList(),
+          selectedItemBuilder: (context) {
+            return items
+                .map(
+                  (item) => Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      item,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
+                .toList();
+          },
+          onChanged: (value) {
+            if (value == null) return;
+            onChanged(value);
+          },
+        ),
+      ],
+    );
+  }
 }
 
 class _FilterableCreatableDropdownField extends StatefulWidget {
- const _FilterableCreatableDropdownField({
- required this.value,
- required this.label,
- required this.options,
- required this.onChanged,
- });
+  const _FilterableCreatableDropdownField({
+    required this.value,
+    required this.label,
+    required this.options,
+    required this.onChanged,
+  });
 
- final String value;
- final String label;
- final List<String> options;
- final ValueChanged<String> onChanged;
+  final String value;
+  final String label;
+  final List<String> options;
+  final ValueChanged<String> onChanged;
 
- @override
- State<_FilterableCreatableDropdownField> createState() =>
- _FilterableCreatableDropdownFieldState();
+  @override
+  State<_FilterableCreatableDropdownField> createState() =>
+      _FilterableCreatableDropdownFieldState();
 }
 
 class _FilterableCreatableDropdownFieldState
- extends State<_FilterableCreatableDropdownField> {
- static const _createTokenPrefix = '__create__:';
+    extends State<_FilterableCreatableDropdownField> {
+  static const _createTokenPrefix = '__create__:';
 
- late final TextEditingController _controller;
- late final FocusNode _focusNode;
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
 
- @override
- void initState() {
- super.initState();
- _controller = TextEditingController(text: widget.value.trim());
- _focusNode = FocusNode();
- }
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value.trim());
+    _focusNode = FocusNode();
+  }
 
-@override
- void didUpdateWidget(covariant _FilterableCreatableDropdownField oldWidget) {
- super.didUpdateWidget(oldWidget);
- if (oldWidget.value != widget.value) {
- final next = widget.value.trim();
- if (_controller.text.trim() != next) {
- _controller.text = next;
- }
- }
- }
+  @override
+  void didUpdateWidget(covariant _FilterableCreatableDropdownField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      final next = widget.value.trim();
+      if (_controller.text.trim() != next) {
+        _controller.text = next;
+      }
+    }
+  }
 
- @override
- void dispose() {
- _controller.dispose();
- _focusNode.dispose();
- super.dispose();
- }
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
 
- List<String> _normalizedOptions() {
- final deduped = <String>[];
- final seen = <String>{};
- for (final option in widget.options) {
- final normalized = option.trim();
- if (normalized.isEmpty) continue;
- final key = normalized.toLowerCase();
- if (seen.contains(key)) continue;
- seen.add(key);
- deduped.add(normalized);
- }
- return deduped;
- }
+  List<String> _normalizedOptions() {
+    final deduped = <String>[];
+    final seen = <String>{};
+    for (final option in widget.options) {
+      final normalized = option.trim();
+      if (normalized.isEmpty) continue;
+      final key = normalized.toLowerCase();
+      if (seen.contains(key)) continue;
+      seen.add(key);
+      deduped.add(normalized);
+    }
+    return deduped;
+  }
 
- Iterable<String> _buildOptions(String query) {
- final trimmed = query.trim();
- final all = _normalizedOptions();
- if (trimmed.isEmpty) return all;
+  Iterable<String> _buildOptions(String query) {
+    final trimmed = query.trim();
+    final all = _normalizedOptions();
+    if (trimmed.isEmpty) return all;
 
- final needle = trimmed.toLowerCase();
- final matches = all
- .where((option) => option.toLowerCase().contains(needle))
- .toList(growable: false);
- if (matches.isNotEmpty) return matches;
- return ['$_createTokenPrefix$trimmed'];
- }
+    final needle = trimmed.toLowerCase();
+    final matches = all
+        .where((option) => option.toLowerCase().contains(needle))
+        .toList(growable: false);
+    if (matches.isNotEmpty) return matches;
+    return ['$_createTokenPrefix$trimmed'];
+  }
 
- String _displayLabel(String option) {
- if (option.startsWith(_createTokenPrefix)) {
- final custom = option.substring(_createTokenPrefix.length);
- return 'Create "$custom"';
- }
- return option;
- }
+  String _displayLabel(String option) {
+    if (option.startsWith(_createTokenPrefix)) {
+      final custom = option.substring(_createTokenPrefix.length);
+      return 'Create "$custom"';
+    }
+    return option;
+  }
 
- String _resolvedValue(String option) {
- if (!option.startsWith(_createTokenPrefix)) return option;
- return option.substring(_createTokenPrefix.length);
- }
+  String _resolvedValue(String option) {
+    if (!option.startsWith(_createTokenPrefix)) return option;
+    return option.substring(_createTokenPrefix.length);
+  }
 
- @override
- Widget build(BuildContext context) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- widget.label,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: _kMuted,
- ),
- ),
- const SizedBox(height: 6),
- RawAutocomplete<String>(
- textEditingController: _controller,
- focusNode: _focusNode,
- optionsBuilder: (textEditingValue) {
- return _buildOptions(textEditingValue.text);
- },
- displayStringForOption: _displayLabel,
- onSelected: (selected) {
- final value = _resolvedValue(selected).trim();
- _controller.text = value;
- widget.onChanged(value);
- },
- fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
- return VoiceTextFormField(
- controller: controller,
- focusNode: focusNode,
- decoration: _inputDecoration(
- 'Type to filter options. If no match, create custom.',
- ),
- onFieldSubmitted: (raw) {
- final value = raw.trim();
- if (value.isEmpty) return;
- widget.onChanged(value);
- onSubmitted();
- },
- );
- },
- optionsViewBuilder: (context, onSelected, options) {
- final list = options.toList(growable: false);
- if (list.isEmpty) return const SizedBox.shrink();
- return Align(
- alignment: Alignment.topLeft,
- child: Material(
- elevation: 8,
- color: _kSurface,
- borderRadius: BorderRadius.circular(12),
- child: ConstrainedBox(
- constraints: const BoxConstraints(
- maxHeight: 240,
- minWidth: 260,
- maxWidth: 440,
- ),
- child: ListView.separated(
- padding: const EdgeInsets.symmetric(vertical: 6),
- shrinkWrap: true,
- itemCount: list.length,
- separatorBuilder: (_, __) =>
- const Divider(height: 1, color: _kBorder),
- itemBuilder: (context, index) {
- final option = list[index];
- final isCreate = option.startsWith(_createTokenPrefix);
- return InkWell(
- onTap: () => onSelected(option),
- child: Padding(
- padding: const EdgeInsets.symmetric(
- horizontal: 12,
- vertical: 10,
- ),
- child: Row(
- children: [
- Icon(
- isCreate ? Icons.add_circle : Icons.list_alt,
- size: 16,
- color: isCreate ? _kPrimary : _kMuted,
- ),
- const SizedBox(width: 8),
- Expanded(
- child: Text(
- _displayLabel(option),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- style: TextStyle(
- fontSize: 13,
- color: isCreate ? _kPrimary : _kText,
- fontWeight: isCreate
- ? FontWeight.w700
- : FontWeight.w500,
- ),
- ),
- ),
- ],
- ),
- ),
- );
- },
- ),
- ),
- ),
- );
- },
- ),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _kMuted,
+          ),
+        ),
+        const SizedBox(height: 6),
+        RawAutocomplete<String>(
+          textEditingController: _controller,
+          focusNode: _focusNode,
+          optionsBuilder: (textEditingValue) {
+            return _buildOptions(textEditingValue.text);
+          },
+          displayStringForOption: _displayLabel,
+          onSelected: (selected) {
+            final value = _resolvedValue(selected).trim();
+            _controller.text = value;
+            widget.onChanged(value);
+          },
+          fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+            return VoiceTextFormField(
+              controller: controller,
+              focusNode: focusNode,
+              decoration: _inputDecoration(
+                'Type to filter options. If no match, create custom.',
+              ),
+              onFieldSubmitted: (raw) {
+                final value = raw.trim();
+                if (value.isEmpty) return;
+                widget.onChanged(value);
+                onSubmitted();
+              },
+            );
+          },
+          optionsViewBuilder: (context, onSelected, options) {
+            final list = options.toList(growable: false);
+            if (list.isEmpty) return const SizedBox.shrink();
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                elevation: 8,
+                color: _kSurface,
+                borderRadius: BorderRadius.circular(12),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxHeight: 240,
+                    minWidth: 260,
+                    maxWidth: 440,
+                  ),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    shrinkWrap: true,
+                    itemCount: list.length,
+                    separatorBuilder: (_, __) =>
+                        const Divider(height: 1, color: _kBorder),
+                    itemBuilder: (context, index) {
+                      final option = list[index];
+                      final isCreate = option.startsWith(_createTokenPrefix);
+                      return InkWell(
+                        onTap: () => onSelected(option),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isCreate ? Icons.add_circle : Icons.list_alt,
+                                size: 16,
+                                color: isCreate ? _kPrimary : _kMuted,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _displayLabel(option),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: isCreate ? _kPrimary : _kText,
+                                    fontWeight: isCreate
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
 }
 
 class _RequirementAttachmentOption {
- const _RequirementAttachmentOption({required this.id, required this.label});
+  const _RequirementAttachmentOption({required this.id, required this.label});
 
- final String id;
- final String label;
+  final String id;
+  final String label;
 }
 
 class _SpecificationOption {
- const _SpecificationOption({
- required this.id,
- required this.title,
- this.details = '',
- this.specificationType = '',
- this.discipline = '',
- this.area = '',
- this.sourceType = '',
- this.owner = '',
- this.status = '',
- this.referenceLink = '',
- this.wbsWorkPackageId = '',
- this.wbsWorkPackageTitle = '',
- });
+  const _SpecificationOption({
+    required this.id,
+    required this.title,
+    this.details = '',
+    this.specificationType = '',
+    this.discipline = '',
+    this.area = '',
+    this.sourceType = '',
+    this.owner = '',
+    this.status = '',
+    this.referenceLink = '',
+    this.wbsWorkPackageId = '',
+    this.wbsWorkPackageTitle = '',
+  });
 
- final String id;
- final String title;
- final String details;
- final String specificationType;
- final String discipline;
- final String area;
- final String sourceType;
- final String owner;
- final String status;
- final String referenceLink;
- final String wbsWorkPackageId;
- final String wbsWorkPackageTitle;
+  final String id;
+  final String title;
+  final String details;
+  final String specificationType;
+  final String discipline;
+  final String area;
+  final String sourceType;
+  final String owner;
+  final String status;
+  final String referenceLink;
+  final String wbsWorkPackageId;
+  final String wbsWorkPackageTitle;
 }
 
 class _WbsWorkPackageOption {
- const _WbsWorkPackageOption({
- required this.id,
- required this.title,
- required this.parentTitle,
- required this.level,
- required this.disciplineSeed,
- required this.areaSeed,
- });
+  const _WbsWorkPackageOption({
+    required this.id,
+    required this.title,
+    required this.parentTitle,
+    required this.level,
+    required this.disciplineSeed,
+    required this.areaSeed,
+  });
 
- final String id;
- final String title;
- final String parentTitle;
- final int level;
- final String disciplineSeed;
- final String areaSeed;
+  final String id;
+  final String title;
+  final String parentTitle;
+  final int level;
+  final String disciplineSeed;
+  final String areaSeed;
 
- String get displayLabel {
- if (parentTitle.trim().isEmpty) return title;
- return '$parentTitle > $title';
- }
+  String get displayLabel {
+    if (parentTitle.trim().isEmpty) return title;
+    return '$parentTitle > $title';
+  }
 }
 
 class _RequirementMultiSelectField extends StatefulWidget {
- const _RequirementMultiSelectField({
- required this.label,
- required this.options,
- required this.selectedIds,
- required this.onChanged,
- });
+  const _RequirementMultiSelectField({
+    required this.label,
+    required this.options,
+    required this.selectedIds,
+    required this.onChanged,
+  });
 
- final String label;
- final List<_RequirementAttachmentOption> options;
- final List<String> selectedIds;
- final ValueChanged<List<String>> onChanged;
+  final String label;
+  final List<_RequirementAttachmentOption> options;
+  final List<String> selectedIds;
+  final ValueChanged<List<String>> onChanged;
 
- @override
- State<_RequirementMultiSelectField> createState() =>
- _RequirementMultiSelectFieldState();
+  @override
+  State<_RequirementMultiSelectField> createState() =>
+      _RequirementMultiSelectFieldState();
 }
 
 class _RequirementMultiSelectFieldState
- extends State<_RequirementMultiSelectField> {
- late List<String> _localSelection;
+    extends State<_RequirementMultiSelectField> {
+  late List<String> _localSelection;
 
- @override
- void initState() {
- super.initState();
- _localSelection = List.of(widget.selectedIds);
- }
+  @override
+  void initState() {
+    super.initState();
+    _localSelection = List.of(widget.selectedIds);
+  }
 
- @override
- void didUpdateWidget(_RequirementMultiSelectField oldWidget) {
- super.didUpdateWidget(oldWidget);
- _localSelection = List.of(widget.selectedIds);
- }
+  @override
+  void didUpdateWidget(_RequirementMultiSelectField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _localSelection = List.of(widget.selectedIds);
+  }
 
- Future<void> _openSelector() async {
- final selected = {..._localSelection};
- final searchController = TextEditingController();
- String query = '';
+  Future<void> _openSelector() async {
+    final selected = {..._localSelection};
+    final searchController = TextEditingController();
+    String query = '';
 
- await showModalBottomSheet<void>(
- context: context,
- isScrollControlled: true,
- backgroundColor: _kSurface,
- shape: const RoundedRectangleBorder(
- borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
- ),
- builder: (context) {
- return StatefulBuilder(
- builder: (context, setModalState) {
- final filtered = widget.options.where((option) {
- return option.label.toLowerCase().contains(query.toLowerCase());
- }).toList(growable: false);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: _kSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final filtered = widget.options.where((option) {
+              return option.label.toLowerCase().contains(query.toLowerCase());
+            }).toList(growable: false);
 
- return SafeArea(
- child: Padding(
- padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
- child: Column(
- mainAxisSize: MainAxisSize.min,
- children: [
- Row(
- children: [
- Text(
- widget.label,
- style: const TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w700,
- color: _kText,
- ),
- ),
- const Spacer(),
- TextButton(
- onPressed: () {
- selected.clear();
- setModalState(() {});
- },
- child: const Text('Clear'),
- ),
- ],
- ),
- const SizedBox(height: 8),
- VoiceTextField(
- controller: searchController,
- decoration: _inputDecoration(
- 'Filter requirements by text',
- ),
- onChanged: (value) {
- setModalState(() => query = value.trim());
- },
- ),
- const SizedBox(height: 10),
- Flexible(
- child: filtered.isEmpty
- ? const Padding(
- padding: EdgeInsets.symmetric(vertical: 20),
- child: Text(
- 'No matching requirements.',
- style: TextStyle(color: _kMuted),
- ),
- )
- : ListView.builder(
- shrinkWrap: true,
- itemCount: filtered.length,
- itemBuilder: (context, index) {
- final option = filtered[index];
- final checked = selected.contains(option.id);
- return CheckboxListTile(
- dense: true,
- contentPadding: EdgeInsets.zero,
- value: checked,
- title: Text(
- option.label,
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
- ),
- onChanged: (value) {
- setModalState(() {
- if (value == true) {
- selected.add(option.id);
- } else {
- selected.remove(option.id);
- }
- });
- },
- );
- },
- ),
- ),
- const SizedBox(height: 8),
- SizedBox(
- width: double.infinity,
- child: FilledButton(
- onPressed: () {
- final newSelection =
- selected.toList(growable: false);
- widget.onChanged(newSelection);
- setState(() => _localSelection = newSelection);
- Navigator.of(context).pop();
- },
- child: const Text('Apply selection'),
- ),
- ),
- ],
- ),
- ),
- );
- },
- );
- },
- );
- searchController.dispose();
- }
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          widget.label,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: _kText,
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () {
+                            selected.clear();
+                            setModalState(() {});
+                          },
+                          child: const Text('Clear'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    VoiceTextField(
+                      controller: searchController,
+                      decoration: _inputDecoration(
+                        'Filter requirements by text',
+                      ),
+                      onChanged: (value) {
+                        setModalState(() => query = value.trim());
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    Flexible(
+                      child: filtered.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Text(
+                                'No matching requirements.',
+                                style: TextStyle(color: _kMuted),
+                              ),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: filtered.length,
+                              itemBuilder: (context, index) {
+                                final option = filtered[index];
+                                final checked = selected.contains(option.id);
+                                return CheckboxListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  value: checked,
+                                  title: Text(
+                                    option.label,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  onChanged: (value) {
+                                    setModalState(() {
+                                      if (value == true) {
+                                        selected.add(option.id);
+                                      } else {
+                                        selected.remove(option.id);
+                                      }
+                                    });
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          final newSelection = selected.toList(growable: false);
+                          widget.onChanged(newSelection);
+                          setState(() => _localSelection = newSelection);
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Apply selection'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    searchController.dispose();
+  }
 
- @override
- Widget build(BuildContext context) {
- final labelsById = {
- for (final option in widget.options) option.id: option.label,
- };
- final selectedLabels = _localSelection
- .where((id) => id.trim().isNotEmpty)
- .map((id) => labelsById[id] ?? 'Requirement (unavailable)')
- .toList(growable: false);
- final summary =
- selectedLabels.isEmpty ? 'None' : '${selectedLabels.length} selected';
+  @override
+  Widget build(BuildContext context) {
+    final labelsById = {
+      for (final option in widget.options) option.id: option.label,
+    };
+    final selectedLabels = _localSelection
+        .where((id) => id.trim().isNotEmpty)
+        .map((id) => labelsById[id] ?? 'Requirement (unavailable)')
+        .toList(growable: false);
+    final summary =
+        selectedLabels.isEmpty ? 'None' : '${selectedLabels.length} selected';
 
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- widget.label,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: _kMuted,
- ),
- ),
- const SizedBox(height: 6),
- InkWell(
- onTap: widget.options.isEmpty ? null : _openSelector,
- borderRadius: BorderRadius.circular(12),
- child: InputDecorator(
- decoration: _inputDecoration(
- widget.options.isEmpty ? 'No requirements available' : '',
- ),
- child: Row(
- children: [
- Expanded(
- child: Text(
- summary,
- style: const TextStyle(color: _kText),
- ),
- ),
- const Icon(
- Icons.keyboard_arrow_down_rounded,
- color: _kMuted,
- ),
- ],
- ),
- ),
- ),
- if (selectedLabels.isNotEmpty) ...[
- const SizedBox(height: 8),
- Wrap(
- spacing: 6,
- runSpacing: 6,
- children: selectedLabels
- .take(6)
- .map(
- (label) => Chip(
- label: Text(
- label,
- overflow: TextOverflow.ellipsis,
- ),
- visualDensity: VisualDensity.compact,
- materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
- ),
- )
- .toList(),
- ),
- ],
- ],
- );
- }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _kMuted,
+          ),
+        ),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: widget.options.isEmpty ? null : _openSelector,
+          borderRadius: BorderRadius.circular(12),
+          child: InputDecorator(
+            decoration: _inputDecoration(
+              widget.options.isEmpty ? 'No requirements available' : '',
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    summary,
+                    style: const TextStyle(color: _kText),
+                  ),
+                ),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: _kMuted,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (selectedLabels.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: selectedLabels
+                .take(6)
+                .map(
+                  (label) => Chip(
+                    label: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 class _TextFormField extends StatelessWidget {
- const _TextFormField({
- required this.initialValue,
- required this.label,
- required this.onChanged,
- this.maxLines = 1,
- this.suggestions = const [],
- });
+  const _TextFormField({
+    required this.initialValue,
+    required this.label,
+    required this.onChanged,
+    this.maxLines = 1,
+    this.suggestions = const [],
+  });
 
- final String initialValue;
- final String label;
- final ValueChanged<String> onChanged;
- final int maxLines;
- final List<String> suggestions;
+  final String initialValue;
+  final String label;
+  final ValueChanged<String> onChanged;
+  final int maxLines;
+  final List<String> suggestions;
 
- @override
- Widget build(BuildContext context) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- label,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: _kMuted,
- ),
- ),
- const SizedBox(height: 6),
- VoiceTextFormField(
- initialValue: initialValue,
- maxLines: maxLines,
- decoration: _inputDecoration(
- suggestions.isEmpty ? '' : suggestions.join(', ')),
- onChanged: onChanged,
- ),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _kMuted,
+          ),
+        ),
+        const SizedBox(height: 6),
+        VoiceTextFormField(
+          initialValue: initialValue,
+          maxLines: maxLines,
+          decoration: _inputDecoration(
+              suggestions.isEmpty ? '' : suggestions.join(', ')),
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
 }
 
 class _FourColumnGrid extends StatelessWidget {
- const _FourColumnGrid({required this.children});
+  const _FourColumnGrid({required this.children});
 
- final List<Widget> children;
+  final List<Widget> children;
 
- @override
- Widget build(BuildContext context) {
- final isMobile = AppBreakpoints.isMobile(context);
- final isTablet = AppBreakpoints.isTablet(context);
- final preferredColumns = isMobile ? 1 : (isTablet ? 2 : 4);
- return LayoutBuilder(
- builder: (context, constraints) {
- final spacing = 12.0;
- final maxWidth = constraints.maxWidth.isFinite
- ? constraints.maxWidth
- : MediaQuery.sizeOf(context).width;
- var columns = preferredColumns;
- var available = maxWidth - (spacing * (columns - 1));
- while (columns > 1 && available <= 0) {
- columns -= 1;
- available = maxWidth - (spacing * (columns - 1));
- }
- final width = columns == 1
- ? maxWidth
- : (available <= 0 ? maxWidth : available / columns);
- return Wrap(
- spacing: spacing,
- runSpacing: spacing,
- children: children
- .map((child) => SizedBox(
- width: width.clamp(0, double.infinity), child: child))
- .toList(),
- );
- },
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = AppBreakpoints.isMobile(context);
+    final isTablet = AppBreakpoints.isTablet(context);
+    final preferredColumns = isMobile ? 1 : (isTablet ? 2 : 4);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final spacing = 12.0;
+        final maxWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        var columns = preferredColumns;
+        var available = maxWidth - (spacing * (columns - 1));
+        while (columns > 1 && available <= 0) {
+          columns -= 1;
+          available = maxWidth - (spacing * (columns - 1));
+        }
+        final width = columns == 1
+            ? maxWidth
+            : (available <= 0 ? maxWidth : available / columns);
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: children
+              .map((child) => SizedBox(
+                  width: width.clamp(0, double.infinity), child: child))
+              .toList(),
+        );
+      },
+    );
+  }
 }
 
 class _ActionButton extends StatelessWidget {
- const _ActionButton({
- required this.label,
- required this.icon,
- this.onPressed,
- });
+  const _ActionButton({
+    required this.label,
+    required this.icon,
+    this.onPressed,
+  });
 
- final String label;
- final IconData icon;
- final VoidCallback? onPressed;
+  final String label;
+  final IconData icon;
+  final VoidCallback? onPressed;
 
- @override
- Widget build(BuildContext context) {
- return OutlinedButton.icon(
- onPressed: onPressed,
- icon: Icon(icon, size: 18),
- label: Text(label),
- style: OutlinedButton.styleFrom(
- foregroundColor: _kText,
- side: const BorderSide(color: _kBorder),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: _kText,
+        side: const BorderSide(color: _kBorder),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
 }
 
 /// Lightweight state object for the auto-save indicator, used with
 /// [ValueNotifier] so that save-status updates do NOT trigger a full
 /// `setState` rebuild of the entire page.
 class _SaveIndicatorState {
- const _SaveIndicatorState({
- required this.saving,
- required this.pending,
- required this.lastSavedAt,
- });
- final bool saving;
- final bool pending;
- final DateTime? lastSavedAt;
+  const _SaveIndicatorState({
+    required this.saving,
+    required this.pending,
+    required this.lastSavedAt,
+  });
+  final bool saving;
+  final bool pending;
+  final DateTime? lastSavedAt;
 }
 
 class _AutoSaveIndicator extends StatelessWidget {
- const _AutoSaveIndicator({
- required this.saving,
- required this.pending,
- required this.lastSavedAt,
- });
+  const _AutoSaveIndicator({
+    required this.saving,
+    required this.pending,
+    required this.lastSavedAt,
+  });
 
- final bool saving;
- final bool pending;
- final DateTime? lastSavedAt;
+  final bool saving;
+  final bool pending;
+  final DateTime? lastSavedAt;
 
- @override
- Widget build(BuildContext context) {
- late final String label;
- late final Color color;
- late final IconData icon;
- if (saving) {
- label = 'Auto-save: saving...';
- color = const Color(0xFF0F62FE);
- icon = Icons.sync;
- } else if (pending) {
- label = 'Auto-save: unsaved changes';
- color = const Color(0xFFB45309);
- icon = Icons.schedule;
- } else if (lastSavedAt != null) {
- label =
- 'Auto-save: saved ${TimeOfDay.fromDateTime(lastSavedAt!).format(context)}';
- color = const Color(0xFF15803D);
- icon = Icons.check_circle_outline;
- } else {
- label = 'Auto-save: waiting for first change';
- color = _kGray500;
- icon = Icons.info_outline;
- }
+  @override
+  Widget build(BuildContext context) {
+    late final String label;
+    late final Color color;
+    late final IconData icon;
+    if (saving) {
+      label = 'Auto-save: saving...';
+      color = const Color(0xFF0F62FE);
+      icon = Icons.sync;
+    } else if (pending) {
+      label = 'Auto-save: unsaved changes';
+      color = const Color(0xFFB45309);
+      icon = Icons.schedule;
+    } else if (lastSavedAt != null) {
+      label =
+          'Auto-save: saved ${TimeOfDay.fromDateTime(lastSavedAt!).format(context)}';
+      color = const Color(0xFF15803D);
+      icon = Icons.check_circle_outline;
+    } else {
+      label = 'Auto-save: waiting for first change';
+      color = _kGray500;
+      icon = Icons.info_outline;
+    }
 
- return Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(icon, size: 14, color: color),
- const SizedBox(width: 4),
- Text(
- label,
- style: TextStyle(
- fontSize: 11,
- color: color,
- ),
- ),
- ],
- );
- }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _AssistActions extends StatelessWidget {
- const _AssistActions({
- required this.onAutofill,
- required this.onGenerate,
- required this.generating,
- });
+  const _AssistActions({
+    required this.onAutofill,
+    required this.onGenerate,
+    required this.generating,
+  });
 
- final VoidCallback onAutofill;
- final VoidCallback onGenerate;
- final bool generating;
+  final VoidCallback onAutofill;
+  final VoidCallback onGenerate;
+  final bool generating;
 
- @override
- Widget build(BuildContext context) {
- return Row(
- children: [
- OutlinedButton.icon(
- onPressed: onAutofill,
- icon: const Icon(Icons.bolt, size: 16),
- label: const Text('Autofill From Context'),
- style: OutlinedButton.styleFrom(
- foregroundColor: _kGray700,
- side: const BorderSide(color: _kBorder),
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
- textStyle: const TextStyle(fontSize: 12),
- ),
- ),
- const SizedBox(width: 8),
- ElevatedButton.icon(
- onPressed: generating ? null : onGenerate,
- icon: generating
- ? const SizedBox(
- width: 14,
- height: 14,
- child: CircularProgressIndicator(
- strokeWidth: 2, color: _kBrandYellow),
- )
- : const Icon(Icons.star, size: 16, color: _kBrandYellow),
- label: Text(generating ? 'Generating...' : 'Generate With AI'),
- style: ElevatedButton.styleFrom(
- backgroundColor: _kGray900,
- foregroundColor: Colors.white,
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
- textStyle: const TextStyle(fontSize: 12),
- ),
- ),
- const Spacer(),
- TextButton.icon(
- onPressed: generating ? null : onGenerate,
- icon: const Icon(Icons.refresh, size: 16),
- label: const Text('Regenerate'),
- style: TextButton.styleFrom(
- foregroundColor: _kGray500,
- padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
- textStyle: const TextStyle(fontSize: 12),
- ),
- ),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        OutlinedButton.icon(
+          onPressed: onAutofill,
+          icon: const Icon(Icons.bolt, size: 16),
+          label: const Text('Autofill From Context'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _kGray700,
+            side: const BorderSide(color: _kBorder),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            textStyle: const TextStyle(fontSize: 12),
+          ),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton.icon(
+          onPressed: generating ? null : onGenerate,
+          icon: generating
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: _kBrandYellow),
+                )
+              : const Icon(Icons.star, size: 16, color: _kBrandYellow),
+          label: Text(generating ? 'Generating...' : 'Generate With AI'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _kGray900,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            textStyle: const TextStyle(fontSize: 12),
+          ),
+        ),
+        const Spacer(),
+        TextButton.icon(
+          onPressed: generating ? null : onGenerate,
+          icon: const Icon(Icons.refresh, size: 16),
+          label: const Text('Regenerate'),
+          style: TextButton.styleFrom(
+            foregroundColor: _kGray500,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            textStyle: const TextStyle(fontSize: 12),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _SubHeader extends StatelessWidget {
- const _SubHeader({
- required this.title,
- required this.actionLabel,
- required this.onAction,
- });
+  const _SubHeader({
+    required this.title,
+    required this.actionLabel,
+    required this.onAction,
+  });
 
- final String title;
- final String actionLabel;
- final VoidCallback onAction;
+  final String title;
+  final String actionLabel;
+  final VoidCallback onAction;
 
- @override
- Widget build(BuildContext context) {
- return Row(
- children: [
- Text(
- title,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: _kText,
- ),
- ),
- const Spacer(),
- _InlineAddButton(label: actionLabel, onPressed: onAction),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: _kText,
+          ),
+        ),
+        const Spacer(),
+        _InlineAddButton(label: actionLabel, onPressed: onAction),
+      ],
+    );
+  }
 }
 
 class _InlineAddButton extends StatelessWidget {
- const _InlineAddButton({required this.label, required this.onPressed});
+  const _InlineAddButton({required this.label, required this.onPressed});
 
- final String label;
- final VoidCallback onPressed;
+  final String label;
+  final VoidCallback onPressed;
 
- @override
- Widget build(BuildContext context) {
- return TextButton.icon(
- onPressed: onPressed,
- icon: const Icon(Icons.add, size: 16),
- label: Text(label),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.add, size: 16),
+      label: Text(label),
+    );
+  }
 }
 
 class _EmptyState extends StatelessWidget {
- const _EmptyState({required this.message});
+  const _EmptyState({required this.message});
 
- final String message;
+  final String message;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- width: double.infinity,
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(14),
- border: Border.all(color: _kBorder),
- ),
- child: Text(
- message,
- style: const TextStyle(fontSize: 12, color: _kMuted, height: 1.45),
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _kBorder),
+      ),
+      child: Text(
+        message,
+        style: const TextStyle(fontSize: 12, color: _kMuted, height: 1.45),
+      ),
+    );
+  }
 }
 
 class _UploadedDoc {
- const _UploadedDoc({
- required this.name,
- required this.url,
- required this.storagePath,
- });
+  const _UploadedDoc({
+    required this.name,
+    required this.url,
+    required this.storagePath,
+  });
 
- final String name;
- final String url;
- final String storagePath;
+  final String name;
+  final String url;
+  final String storagePath;
 }
 
 InputDecoration _inputDecoration(String hintText) {
- return InputDecoration(
- hintText: hintText.isEmpty ? null : hintText,
- filled: true,
- fillColor: const Color(0xFFF9FAFB).withValues(alpha: 0.5),
- contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
- border: OutlineInputBorder(
- borderRadius: BorderRadius.circular(6),
- borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
- ),
- enabledBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(6),
- borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
- ),
- focusedBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(6),
- borderSide: const BorderSide(color: _kBrandYellow, width: 1.5),
- ),
- );
+  return InputDecoration(
+    hintText: hintText.isEmpty ? null : hintText,
+    filled: true,
+    fillColor: const Color(0xFFF9FAFB).withValues(alpha: 0.5),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(6),
+      borderSide: BorderSide(color: Color(0xFFD1D5DB)),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(6),
+      borderSide: BorderSide(color: Color(0xFFD1D5DB)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(6),
+      borderSide: BorderSide(color: _kBrandYellow, width: 1.5),
+    ),
+  );
 }

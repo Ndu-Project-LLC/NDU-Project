@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/procurement/procurement_common_widgets.dart'
 import 'package:ndu_project/widgets/responsive.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class ProcurementItemsListView extends StatelessWidget {
   const ProcurementItemsListView({
     super.key,
@@ -161,10 +162,10 @@ class _ItemsToolbar extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SearchField(),
+          const _SearchField(),
           const SizedBox(height: 12),
-          Row(
-            children: const [
+          const Row(
+            children: [
               Expanded(child: _DropdownField(label: 'All Categories')),
               SizedBox(width: 12),
               Expanded(child: _DropdownField(label: 'All Statuses')),
@@ -204,7 +205,7 @@ class _SearchField extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Color(0xFFE2E8F0)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: const VoiceTextField(
@@ -241,7 +242,7 @@ class _DropdownField extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Color(0xFFE2E8F0)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: DropdownButtonHideUnderline(
@@ -279,7 +280,8 @@ class _AddItemButton extends StatelessWidget {
         backgroundColor: const Color(0xFF2563EB),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12)),
         elevation: 0,
       ),
       icon: const Icon(Icons.add_rounded),
@@ -371,7 +373,7 @@ class _ProcurementItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -496,7 +498,7 @@ class _BadgePill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -587,7 +589,7 @@ class _TrackableItemsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -613,16 +615,22 @@ class _TrackableItemsCard extends StatelessWidget {
               ),
             )
           else
-            Column(
-              children: List.generate(trackableItems.length, (index) {
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: trackableItems.length,
+              itemBuilder: (context, index) {
                 final item = trackableItems[index];
-                return _TrackableRow(
-                  item: item,
-                  index: index,
-                  isSelected: index == selectedIndex,
-                  onTap: () => onSelectTrackable(index),
+                return RepaintBoundary(
+                  key: ValueKey('trackable_item_$index'),
+                  child: _TrackableRow(
+                    item: item,
+                    index: index,
+                    isSelected: index == selectedIndex,
+                    onTap: () => onSelectTrackable(index),
+                  ),
                 );
-              }),
+              },
             ),
         ],
       ),
@@ -651,9 +659,7 @@ class _TrackableRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFFEFF6FF)
-              : Colors.transparent,
+          color: isSelected ? const Color(0xFFEFF6FF) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -673,9 +679,7 @@ class _TrackableRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: isSelected
-                        ? Colors.white
-                        : const Color(0xFF64748B),
+                    color: isSelected ? Colors.white : const Color(0xFF64748B),
                   ),
                 ),
               ),
@@ -707,7 +711,7 @@ class _TrackableRow extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -740,7 +744,7 @@ class _TrackingTimelineCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -765,11 +769,18 @@ class _TrackingTimelineCard extends StatelessWidget {
               ),
             )
           else
-            Column(
-              children: List.generate(events.length, (index) {
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: events.length,
+              itemBuilder: (context, index) {
                 final event = events[index];
-                return _TimelineEntry(event: event, isLast: index == events.length - 1);
-              }),
+                return RepaintBoundary(
+                  key: ValueKey('timeline_event_$index'),
+                  child: _TimelineEntry(
+                      event: event, isLast: index == events.length - 1),
+                );
+              },
             ),
         ],
       ),

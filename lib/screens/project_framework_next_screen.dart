@@ -19,6 +19,9 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 const Color _kAccentColor = Color(0xFFFFC107);
 const Color _kPrimaryText = Color(0xFF1E293B);
@@ -63,9 +66,7 @@ class ProjectFrameworkNextScreen extends StatefulWidget {
   const ProjectFrameworkNextScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProjectFrameworkNextScreen()),
-    );
+    context.push('/project-framework-next');
   }
 
   @override
@@ -386,7 +387,7 @@ class _ProjectFrameworkNextScreenState
       drawer: isMobile
           ? Drawer(
               width: AppBreakpoints.sidebarWidth(context),
-              child: SafeArea(
+              child: const SafeArea(
                 child: InitiationLikeSidebar(
                   activeItemLabel: 'Project Goals & Milestones',
                   showHeader: true,
@@ -418,8 +419,8 @@ class _ProjectFrameworkNextScreenState
                   Expanded(
                     child: Stack(
                       children: [
-                        MobileSidebarHamburger(
-                          sidebar: const InitiationLikeSidebar(
+                        const MobileSidebarHamburger(
+                          sidebar: InitiationLikeSidebar(
                             activeItemLabel: 'Project Goals & Milestones',
                           ),
                         ),
@@ -535,7 +536,7 @@ class _ProjectFrameworkNextScreenState
                 Container(
                   width: 32,
                   height: 32,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: _kLightYellow,
                     shape: BoxShape.circle,
                   ),
@@ -557,15 +558,15 @@ class _ProjectFrameworkNextScreenState
               color: _kLightGray,
               border: Border(top: BorderSide(color: _kBorderColor)),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                const Text('Planning Phase',
+                Text('Planning Phase',
                     style: TextStyle(fontSize: 12, color: _kSecondaryText)),
-                const SizedBox(width: 4),
-                const Icon(Icons.chevron_right,
+                SizedBox(width: 4),
+                Icon(Icons.chevron_right,
                     size: 14, color: _kSecondaryText),
-                const SizedBox(width: 4),
-                const Text('Project Goals & Milestones',
+                SizedBox(width: 4),
+                Text('Project Goals & Milestones',
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -593,12 +594,12 @@ class _ProjectFrameworkNextScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.description_outlined,
+              Icon(Icons.description_outlined,
                   size: 20, color: _kAccentColor),
-              const SizedBox(width: 8),
-              const Text('Notes',
+              SizedBox(width: 8),
+              Text('Notes',
                   style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1075,13 +1076,14 @@ Rules:
       child: milestones.isEmpty
           ? const Text('No milestones available yet.',
               style: TextStyle(fontSize: 13, color: _kSecondaryText))
-          : SingleChildScrollView(
+          : FullScreenTableWrapper(
+          title: 'Milestones Table',
+          child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: DataTable(
+              child: buildNduDataTable(context: context, 
                 columnSpacing: 20,
                 horizontalMargin: 12,
-                headingRowColor:
-                    WidgetStateProperty.all(const Color(0xFFF5F7FB)),
+                headingRowColor: const Color(0xFFF5F7FB),
                 columns: const [
                   DataColumn(
                       label: Text('Milestone',
@@ -1152,6 +1154,83 @@ Rules:
                 }).toList(),
               ),
             ),
+          tableBuilder: (fsContext) => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: buildNduDataTable(context: context, 
+                columnSpacing: 20,
+                horizontalMargin: 12,
+                headingRowColor: const Color(0xFFF5F7FB),
+                columns: const [
+                  DataColumn(
+                      label: Text('Milestone',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              color: _kPrimaryText))),
+                  DataColumn(
+                      label: Text('Date',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              color: _kPrimaryText))),
+                  DataColumn(
+                      label: Text('Discipline',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              color: _kPrimaryText))),
+                  DataColumn(
+                      label: Text('Mapped Goals',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              color: _kPrimaryText))),
+                  DataColumn(
+                      label: Text('References',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              color: _kPrimaryText))),
+                  DataColumn(
+                      label: Text('Comments',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              color: _kPrimaryText))),
+                ],
+                rows: milestones.map((milestone) {
+                  final goalLabels = _goalLabelsForMilestone(milestone.id);
+                  return DataRow(cells: [
+                    DataCell(Text(milestone.name.trim().isEmpty
+                        ? 'Untitled milestone'
+                        : milestone.name.trim())),
+                    DataCell(Text(_formatDateString(milestone.dueDate))),
+                    DataCell(Text(milestone.discipline.trim().isEmpty
+                        ? '—'
+                        : milestone.discipline.trim())),
+                    DataCell(SizedBox(
+                      width: 220,
+                      child: Text(goalLabels.isEmpty
+                          ? 'Unmapped'
+                          : goalLabels.join(', ')),
+                    )),
+                    DataCell(SizedBox(
+                      width: 160,
+                      child: Text(milestone.references.trim().isEmpty
+                          ? '—'
+                          : milestone.references.trim()),
+                    )),
+                    DataCell(SizedBox(
+                      width: 220,
+                      child: Text(milestone.comments.trim().isEmpty
+                          ? '—'
+                          : milestone.comments.trim()),
+                    )),
+                  ]);
+                }).toList(),
+              ),
+            ),
+          ),
     );
   }
 
@@ -1445,10 +1524,10 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
           // ── Gray header bar ──
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF9FAFB),
               borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
+                  BorderRadius.vertical(top: Radius.circular(12)),
               border: Border(bottom: BorderSide(color: _kBorderColor)),
             ),
             child: Row(
@@ -1708,7 +1787,7 @@ class _GoalCardWidgetState extends State<_GoalCardWidget> {
                               ),
                             ),
                           );
-                        }).toList(),
+                        }),
                       const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerRight,

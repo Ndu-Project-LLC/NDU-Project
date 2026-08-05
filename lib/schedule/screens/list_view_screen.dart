@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 class ListViewScreen extends StatefulWidget {
   const ListViewScreen({super.key});
@@ -178,7 +179,9 @@ class _ListViewScreenState extends State<ListViewScreen> {
                 ),
                 child: filtered.isEmpty
                     ? _EmptyState(query: _search)
-                    : SingleChildScrollView(
+                    : FullScreenTableWrapper(
+                    title: 'Schedule Activities',
+                    child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
                           headingRowColor:
@@ -314,6 +317,143 @@ class _ListViewScreenState extends State<ListViewScreen> {
                               .toList(),
                         ),
                       ),
+                    tableBuilder: (fsContext) => SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          headingRowColor:
+                              WidgetStateProperty.all(const Color(0xFFF9FAFB)),
+                          dataRowColor:
+                              WidgetStateProperty.all(Colors.transparent),
+                          columnSpacing: 24,
+                          horizontalMargin: 16,
+                          sortColumnIndex: _sortBy.index,
+                          sortAscending: _sortAsc,
+                          columns: [
+                            DataColumn(
+                              label: const Text('Code',
+                                  style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                              onSort: (c, asc) => _onSort(_SortBy.code, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Name',
+                                  style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                              onSort: (c, asc) => _onSort(_SortBy.name, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Domain',
+                                  style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                              onSort: (c, asc) => _onSort(_SortBy.domain, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Duration',
+                                  style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                              onSort: (c, asc) =>
+                                  _onSort(_SortBy.duration, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Start',
+                                  style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                              onSort: (c, asc) => _onSort(_SortBy.start, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Finish',
+                                  style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                              onSort: (c, asc) => _onSort(_SortBy.finish, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Owner',
+                                  style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                              onSort: (c, asc) => _onSort(_SortBy.owner, asc),
+                            ),
+                            DataColumn(
+                              label: const Text('Status',
+                                  style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                              onSort: (c, asc) => _onSort(_SortBy.status, asc),
+                            ),
+                            const DataColumn(
+                              label: Text('Traceability',
+                                  style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                            ),
+                          ],
+                          rows: filtered
+                              .map((r) => DataRow(cells: [
+                                    DataCell(Text(r.code,
+                                        style: const TextStyle(
+                                            color: Color(0xFF495057),
+                                            fontSize: 11,
+                                            fontFamily: appFontFamily,
+                                            fontWeight: FontWeight.bold))),
+                                    DataCell(Row(
+                                      children: [
+                                        Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(
+                                              color: Color(r.domainColor),
+                                              shape: BoxShape.circle),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(r.name,
+                                            style: const TextStyle(
+                                                color: Color(0xFF1A1D1F),
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500)),
+                                      ],
+                                    )),
+                                    DataCell(Text(r.domainLabel,
+                                        style: const TextStyle(
+                                            color: Color(0xFF495057),
+                                            fontSize: 12))),
+                                    DataCell(Text(r.duration,
+                                        style: const TextStyle(
+                                            color: Color(0xFF495057),
+                                            fontSize: 12))),
+                                    DataCell(Text(r.start,
+                                        style: const TextStyle(
+                                            color: Color(0xFF495057),
+                                            fontSize: 12))),
+                                    DataCell(Text(r.finish,
+                                        style: const TextStyle(
+                                            color: Color(0xFF495057),
+                                            fontSize: 12))),
+                                    DataCell(Text(r.owner,
+                                        style: const TextStyle(
+                                            color: Color(0xFF495057),
+                                            fontSize: 12))),
+                                    DataCell(_StatusBadge(status: r.status)),
+                                    DataCell(_TraceabilityCell(row: r)),
+                                  ]))
+                              .toList(),
+                        ),
+                      ),
+                    ),
               ),
               const SizedBox(height: 12),
               // Footer note

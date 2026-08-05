@@ -67,8 +67,7 @@ class LaunchKpiRow extends StatelessWidget {
           runSpacing: 12,
           children: tiles
               .map((t) => SizedBox(
-                    width: (constraints.maxWidth -
-                            12 * (crossAxisCount - 1)) /
+                    width: (constraints.maxWidth - 12 * (crossAxisCount - 1)) /
                         crossAxisCount,
                     child: _LaunchKpiTileView(tile: t),
                   ))
@@ -100,7 +99,7 @@ class _LaunchKpiTileView extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -113,7 +112,7 @@ class _LaunchKpiTileView extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: tile.color.withOpacity(0.12),
+              color: tile.color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(tile.icon, color: tile.color, size: 20),
@@ -245,7 +244,7 @@ class LaunchProgressDonut extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -375,7 +374,7 @@ class LaunchStatusMixBar extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -423,9 +422,7 @@ class LaunchStatusMixBar extends StatelessWidget {
               child: SizedBox(
                 height: 18,
                 child: Row(
-                  children: counts.entries
-                      .where((e) => e.value > 0)
-                      .map((e) {
+                  children: counts.entries.where((e) => e.value > 0).map((e) {
                     final color = colorMap[e.key] ?? _kSlate;
                     final flex = (e.value * 1000) ~/ total;
                     return Expanded(
@@ -469,7 +466,9 @@ class LaunchStatusMixBar extends StatelessWidget {
                   Text(
                     '${e.key}: ${e.value} ($pct%)',
                     style: const TextStyle(
-                        fontSize: 11, fontWeight: FontWeight.w600, color: _kInk2),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _kInk2),
                   ),
                 ],
               );
@@ -507,7 +506,7 @@ class LaunchPlannedVsActualBarChart extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -527,8 +526,8 @@ class LaunchPlannedVsActualBarChart extends StatelessWidget {
                       fontSize: 12, fontWeight: FontWeight.w700, color: _kInk),
                 ),
               ),
-              Row(
-                children: const [
+              const Row(
+                children: [
                   _LegendDot(color: _kSlate, label: 'Planned'),
                   SizedBox(width: 10),
                   _LegendDot(color: _kAmber, label: 'Actual'),
@@ -564,7 +563,7 @@ class LaunchPlannedVsActualBarChart extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${unit}${b.actual.toStringAsFixed(0)}',
+                            '$unit${b.actual.toStringAsFixed(0)}',
                             style: const TextStyle(
                                 fontSize: 10, color: _kAmberDark),
                           ),
@@ -629,7 +628,8 @@ class _BarGroupPainter extends CustomPainter {
       );
       canvas.drawRRect(
         RRect.fromRectAndCorners(plannedRect,
-            topLeft: const Radius.circular(3), topRight: const Radius.circular(3)),
+            topLeft: const Radius.circular(3),
+            topRight: const Radius.circular(3)),
         Paint()..color = _kSlate,
       );
       // Actual
@@ -642,7 +642,8 @@ class _BarGroupPainter extends CustomPainter {
       );
       canvas.drawRRect(
         RRect.fromRectAndCorners(actualRect,
-            topLeft: const Radius.circular(3), topRight: const Radius.circular(3)),
+            topLeft: const Radius.circular(3),
+            topRight: const Radius.circular(3)),
         Paint()..color = _kAmber,
       );
     }
@@ -650,7 +651,9 @@ class _BarGroupPainter extends CustomPainter {
     canvas.drawLine(
       Offset(0, chartHeight + 2),
       Offset(size.width, chartHeight + 2),
-      Paint()..color = const Color(0xFFE5E7EB)..strokeWidth = 1,
+      Paint()
+        ..color = const Color(0xFFE5E7EB)
+        ..strokeWidth = 1,
     );
   }
 
@@ -685,7 +688,7 @@ class LaunchRadarChart extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -786,7 +789,7 @@ class _RadarPainter extends CustomPainter {
       canvas.drawPath(
           targetPath,
           Paint()
-            ..color = _kPurple.withOpacity(0.7)
+            ..color = _kPurple.withValues(alpha: 0.7)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.5
             ..strokeJoin = StrokeJoin.round);
@@ -810,7 +813,7 @@ class _RadarPainter extends CustomPainter {
     canvas.drawPath(
         valuePath,
         Paint()
-          ..color = _kAmber.withOpacity(0.25)
+          ..color = _kAmber.withValues(alpha: 0.25)
           ..style = PaintingStyle.fill);
     canvas.drawPath(
         valuePath,
@@ -873,7 +876,7 @@ class LaunchTrendLineChart extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -936,7 +939,7 @@ class _LineTrendPainter extends CustomPainter {
           ..lineTo(0, size.height)
           ..close();
         canvas.drawPath(
-            fillPath, Paint()..color = color.withOpacity(0.18));
+            fillPath, Paint()..color = color.withValues(alpha: 0.18));
       }
       canvas.drawPath(
           path,
@@ -1001,7 +1004,7 @@ class LaunchKanbanBoard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -1035,11 +1038,19 @@ class LaunchKanbanBoard extends StatelessWidget {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: _KanbanColumn(label: 'To Do', color: _kSlate, cards: todo)),
+                    Expanded(
+                        child: _KanbanColumn(
+                            label: 'To Do', color: _kSlate, cards: todo)),
                     const SizedBox(width: 8),
-                    Expanded(child: _KanbanColumn(label: 'In Progress', color: _kAmber, cards: inProgress)),
+                    Expanded(
+                        child: _KanbanColumn(
+                            label: 'In Progress',
+                            color: _kAmber,
+                            cards: inProgress)),
                     const SizedBox(width: 8),
-                    Expanded(child: _KanbanColumn(label: 'Done', color: _kGreen, cards: done)),
+                    Expanded(
+                        child: _KanbanColumn(
+                            label: 'Done', color: _kGreen, cards: done)),
                   ],
                 );
               }
@@ -1047,7 +1058,8 @@ class LaunchKanbanBoard extends StatelessWidget {
                 children: [
                   _KanbanColumn(label: 'To Do', color: _kSlate, cards: todo),
                   const SizedBox(height: 8),
-                  _KanbanColumn(label: 'In Progress', color: _kAmber, cards: inProgress),
+                  _KanbanColumn(
+                      label: 'In Progress', color: _kAmber, cards: inProgress),
                   const SizedBox(height: 8),
                   _KanbanColumn(label: 'Done', color: _kGreen, cards: done),
                 ],
@@ -1080,7 +1092,8 @@ class _KanbanColumn extends StatelessWidget {
   final String label;
   final Color color;
   final List<LaunchKanbanCard> cards;
-  const _KanbanColumn({required this.label, required this.color, required this.cards});
+  const _KanbanColumn(
+      {required this.label, required this.color, required this.cards});
 
   @override
   Widget build(BuildContext context) {
@@ -1101,7 +1114,8 @@ class _KanbanColumn extends StatelessWidget {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                  decoration:
+                      BoxDecoration(color: color, shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -1129,12 +1143,11 @@ class _KanbanColumn extends StatelessWidget {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                       border: Border(
-                        left: BorderSide(
-                            color: c.accent ?? color, width: 3),
+                        left: BorderSide(color: c.accent ?? color, width: 3),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color: Colors.black.withValues(alpha: 0.03),
                           blurRadius: 4,
                           offset: const Offset(0, 1),
                         ),
@@ -1166,8 +1179,7 @@ class _KanbanColumn extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             c.subtitle,
-                            style: const TextStyle(
-                                fontSize: 10, color: _kInk2),
+                            style: const TextStyle(fontSize: 10, color: _kInk2),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1202,8 +1214,7 @@ class LaunchDonutBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total =
-        segments.fold<double>(0, (s, e) => s + e.value);
+    final total = segments.fold<double>(0, (s, e) => s + e.value);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1212,7 +1223,7 @@ class LaunchDonutBreakdown extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -1236,7 +1247,7 @@ class LaunchDonutBreakdown extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final isWide = constraints.maxWidth >= 420;
-              final donutSize = 130.0;
+              const donutSize = 130.0;
               return isWide
                   ? Row(
                       children: [
@@ -1449,16 +1460,16 @@ class LaunchInsightsHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            sectionColor.withOpacity(0.08),
-            Colors.white,
-          ],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: sectionColor.withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1469,7 +1480,7 @@ class LaunchInsightsHeader extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: sectionColor.withOpacity(0.18),
+                  color: sectionColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(sectionIcon, color: sectionColor, size: 20),

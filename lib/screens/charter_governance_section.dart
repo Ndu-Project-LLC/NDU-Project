@@ -32,7 +32,7 @@ class CharterGovernanceSection extends StatelessWidget {
  border: Border.all(color: Colors.grey.shade300),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  offset: const Offset(0, 4),
  blurRadius: 12,
  )
@@ -163,16 +163,51 @@ class CharterStakeholdersShort extends StatelessWidget {
  data!.coreStakeholdersData?.solutionStakeholderData ?? [];
  final matchedStakeholderData = solutionStakeholderRows.where((row) {
  if (preferredSolution == null) return false;
- return row.solutionTitle.trim().toLowerCase() ==
- preferredSolution.title.trim().toLowerCase();
+ final a = row.solutionTitle.trim().toLowerCase();
+ final b = preferredSolution.title.trim().toLowerCase();
+ // Exact match first.
+ if (a == b) return true;
+ // Substring match (handles "Solution A — v2" vs "Solution A").
+ if (a.isNotEmpty && b.isNotEmpty && (a.contains(b) || b.contains(a))) {
+ return true;
+}
+ return false;
  }).toList();
  // Fallback: if no exact match, use the first row (single-solution
  // projects often have only one row).
- final stakeholderData = matchedStakeholderData.isNotEmpty
+ var stakeholderData = matchedStakeholderData.isNotEmpty
  ? matchedStakeholderData.first
  : (solutionStakeholderRows.isNotEmpty
  ? solutionStakeholderRows.first
  : null);
+
+ // If still no stakeholder data, derive from the preferred solution's
+ // SolutionAnalysisItem.stakeholders list (which is a List<String> of
+ // names entered on the Preferred Solution Analysis screen).
+ if (stakeholderData == null && preferredSolution != null) {
+ final analysisItems =
+ data!.preferredSolutionAnalysis?.solutionAnalyses ?? [];
+ SolutionAnalysisItem? matchedAnalysis;
+ try {
+ matchedAnalysis = analysisItems.firstWhere(
+ (a) => a.solutionTitle.trim().toLowerCase() ==
+ preferredSolution.title.trim().toLowerCase(),
+ );
+ } catch (_) {
+ matchedAnalysis = analysisItems.isNotEmpty
+ ? analysisItems.first
+ : null;
+ }
+ if (matchedAnalysis != null &&
+ matchedAnalysis.stakeholders.isNotEmpty) {
+ stakeholderData = SolutionStakeholderData(
+ solutionTitle: matchedAnalysis.solutionTitle,
+ notableStakeholders: '',
+ internalStakeholders: matchedAnalysis.stakeholders.join(', '),
+ externalStakeholders: '',
+ );
+ }
+ }
 
  final internalStakeholders = (stakeholderData?.internalStakeholders ?? '')
  .split(RegExp(r'[\n,;]'))
@@ -458,12 +493,12 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  children: [
- const Icon(Icons.person_pin_outlined,
+ Icon(Icons.person_pin_outlined,
  size: 18, color: Color(0xFFD97706)),
- const SizedBox(width: 8),
- const Expanded(
+ SizedBox(width: 8),
+ Expanded(
  child: Text(
  'Charter to be approved by sponsor, owner or applicable lead',
  style: TextStyle(
@@ -560,12 +595,12 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  builder: (dialogContext) => AlertDialog(
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(16)),
- title: Row(
+ title: const Row(
  children: [
- const Icon(Icons.person_add_outlined,
+ Icon(Icons.person_add_outlined,
  color: Color(0xFFD97706), size: 22),
- const SizedBox(width: 10),
- const Text('Invite Sponsor'),
+ SizedBox(width: 10),
+ Text('Invite Sponsor'),
  ],
  ),
  content: ConstrainedBox(
@@ -728,12 +763,12 @@ class _CharterApprovalsState extends State<CharterApprovals> {
  builder: (dialogContext, setDialogState) => AlertDialog(
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(16)),
- title: Row(
+ title: const Row(
  children: [
- const Icon(Icons.gavel_outlined,
+ Icon(Icons.gavel_outlined,
  color: Color(0xFF2563EB), size: 22),
- const SizedBox(width: 10),
- const Text('Confirm Charter Approval'),
+ SizedBox(width: 10),
+ Text('Confirm Charter Approval'),
  ],
  ),
  content: ConstrainedBox(

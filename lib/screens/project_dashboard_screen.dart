@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/utils/dashboard_palette.dart';
 
 import '../models/program_model.dart';
 import '../models/portfolio_model.dart';
@@ -23,14 +24,13 @@ import '../services/project_service.dart';
 import '../services/user_service.dart';
 import '../services/project_navigation_service.dart';
 import '../utils/navigation_route_resolver.dart';
-import '../widgets/app_logo.dart';
-import '../widgets/dashboard_stat_card.dart';
 import '../widgets/kaz_ai_chat_bubble.dart';
 import 'initiation_phase_screen.dart';
 import 'portfolio_dashboard_screen.dart';
 import 'program_dashboard_screen.dart';
 import 'project_dashboard_mobile_shell.dart';
-import 'project_workspace_dashboard_screen.dart';
+import 'regular_project_dashboard_screen.dart';
+import 'project_command_center_screen.dart';
 import 'project_activities_log_screen.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -146,7 +146,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  borderRadius: BorderRadius.circular(18),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.14),
+ color: Colors.black.withValues(alpha: 0.14),
  blurRadius: 24,
  offset: const Offset(0, 12),
  ),
@@ -301,7 +301,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: scheme.primary.withOpacity(0.1),
+ color: scheme.primary.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(Icons.create_new_folder,
@@ -334,7 +334,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  ),
  filled: true,
  fillColor:
- scheme.surfaceContainerHighest.withOpacity(0.3),
+ scheme.surfaceContainerHighest.withValues(alpha: 0.3),
  ),
  validator: (value) {
  if (value == null || value.trim().isEmpty) {
@@ -401,7 +401,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  borderRadius: BorderRadius.circular(12),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.15),
+ color: Colors.black.withValues(alpha: 0.15),
  blurRadius: 18,
  offset: const Offset(0, 12),
  ),
@@ -449,14 +449,9 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  Navigator.of(context).pop();
 
  if (success) {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const InitiationPhaseScreen(
+ context.push('/initiation-phase', extra: const InitiationPhaseScreen(
  scrollToBusinessCase: true,
- ),
- ),
- );
+ ));
  } else {
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
@@ -488,209 +483,215 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
  Navigator.of(dialogContext).pop(trimmed);
  }
 
- @override
- Widget build(BuildContext context) {
- // Record this dashboard so the logo knows where to return on tap
- NavigationContextService.instance
- .setLastClientDashboard(AppRoutes.dashboard);
- final user = FirebaseAuth.instance.currentUser;
- if (MediaQuery.sizeOf(context).width < 700) {
- return ProjectDashboardMobileShell(
- isBasicPlan: widget.isBasicPlan,
- onAddProject: _handleAddProject,
- );
- }
- return Scaffold(
- backgroundColor: Colors.white,
- body: Stack(
- children: [
- SafeArea(
- child: LayoutBuilder(
- builder: (context, constraints) {
- final isCompact = constraints.maxWidth < 1180;
- final horizontalPadding =
- constraints.maxWidth < 600 ? 20.0 : 40.0;
+  @override
+  Widget build(BuildContext context) {
+    // Record this dashboard so the logo knows where to return on tap
+    NavigationContextService.instance
+        .setLastClientDashboard(AppRoutes.dashboard);
+    final user = FirebaseAuth.instance.currentUser;
+    if (MediaQuery.sizeOf(context).width < 700) {
+      return ProjectDashboardMobileShell(
+        isBasicPlan: widget.isBasicPlan,
+        onAddProject: _handleAddProject,
+      );
+    }
 
- Widget buildProjectColumns({
- required List<ProjectRecord> projects,
- required bool isLoading,
- String? error,
- }) {
- if (isCompact) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _SingleProjectsCard(
- projects: projects,
- isLoading: isLoading,
- error: error,
- isBasicPlan: widget.isBasicPlan,
- ),
- const SizedBox(height: 24),
- const _ProgramsSummaryCard(),
- ],
- );
- }
+    final palette = DashboardPalette.forPlan(widget.isBasicPlan);
 
- // Single Projects at full width, Programs & Portfolios below
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _SingleProjectsCard(
- projects: projects,
- isLoading: isLoading,
- error: error,
- isBasicPlan: widget.isBasicPlan,
- ),
- if (!widget.isBasicPlan) ...[
- const SizedBox(height: 24),
- const _ProgramsSummaryCard(),
- ],
- ],
- );
- }
+    return DashboardPaletteScope(
+      palette: palette,
+      child: Scaffold(
+        backgroundColor: palette.canvas,
+        body: Stack(
+          children: [
+            SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final horizontalPadding =
+                      constraints.maxWidth < 640 ? 20.0 : 28.0;
 
- return SingleChildScrollView(
- padding: EdgeInsets.symmetric(
- horizontal: horizontalPadding, vertical: 36),
- child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-            _ProjectHeader(
-              onAddProject: _handleAddProject,
-              isBasicPlan: widget.isBasicPlan,
-            ),
-            const SizedBox(height: 26),
-            const _StatusStrip(),
-            // ── GAP only when action buttons or metrics follow ──
-            if (!widget.isBasicPlan || _isLoadingMetrics || _metrics != null)
-              const SizedBox(height: 28),
-            // ── Compact action button row ──
-            if (!widget.isBasicPlan)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _CompactActionButton(
-                        label: 'Group Into A Program',
-                        subtitle:
-                            'Select up to 3 projects to combine',
-                        icon: Icons.layers_outlined,
-                        accent: const Color(0xFF8B5CF6),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  _GroupProjectsExpandedScreen(
-                                projects: const [],
-                                isLoading: false,
-                                selectedIdsListenable:
-                                    _selectedProjectIds,
-                                selectedIds: _selectedProjectIds.value,
-                                onToggle: _toggleSelection,
-                                onClear: _clearSelection,
+                  Widget buildProjectColumns({
+                    required List<ProjectRecord> projects,
+                    required bool isLoading,
+                    String? error,
+                  }) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _SingleProjectsCard(
+                          projects: projects,
+                          isLoading: isLoading,
+                          error: error,
+                          isBasicPlan: widget.isBasicPlan,
+                        ),
+                        if (!widget.isBasicPlan) ...[
+                          const SizedBox(height: 22),
+                          const _ProgramsSummaryCard(),
+                        ],
+                      ],
+                    );
+                  }
+
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                        horizontalPadding, 20, horizontalPadding, 28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── Hero command band ──
+                        _ProjectHeader(
+                          onAddProject: _handleAddProject,
+                          isBasicPlan: widget.isBasicPlan,
+                        ),
+                        const SizedBox(height: 20),
+                        const _StatusStrip(),
+                        const SizedBox(height: 20),
+                        // ── Quick actions (standard plan) ──
+                        if (!widget.isBasicPlan)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _CompactActionButton(
+                                  label: 'Group Into A Program',
+                                  subtitle:
+                                      'Select up to 3 projects to combine',
+                                  icon: Icons.layers_outlined,
+                                  accent: palette.primaryDeep,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            _GroupProjectsExpandedScreen(
+                                          projects: const [],
+                                          isLoading: false,
+                                          selectedIdsListenable:
+                                              _selectedProjectIds,
+                                          selectedIds:
+                                              _selectedProjectIds.value,
+                                          onToggle: _toggleSelection,
+                                          onClear: _clearSelection,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _CompactActionButton(
+                                  label: 'Project Logs',
+                                  subtitle: 'Activity across all projects',
+                                  icon: Icons.fact_check_outlined,
+                                  accent: palette.primaryDeep,
+                                  onTap: () =>
+                                      ProjectActivitiesLogScreen.open(context),
+                                ),
+                              ),
+                            ],
+                          ),
+                        // ── Live activity metrics ──
+                        if (_isLoadingMetrics || _metrics != null)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(2, 22, 2, 12),
+                            child: _SectionEyebrow(
+                              title: 'LIVE ACTIVITY',
+                              icon: Icons.monitor_heart_outlined,
+                              tint: palette.primaryDeep,
+                            ),
+                          ),
+                        if (_isLoadingMetrics)
+                          _buildMetricsSkeleton()
+                        else if (_metrics != null) ...[
+                          if (_metrics!.totalPastDue > 0) ...[
+                            PastDueActivitiesCard(
+                                activities: _metrics!.pastDue),
+                            const SizedBox(height: 14),
+                          ],
+                          AssignedActivitiesCard(
+                              activities: _metrics!.assignedToMe),
+                          const SizedBox(height: 14),
+                          if (_metrics!.projectStatuses.isNotEmpty) ...[
+                            CollapsibleSection(
+                              title: 'Project status',
+                              itemCount: _metrics!.projectStatuses.length,
+                              initiallyExpanded: false,
+                              child: Wrap(
+                                spacing: 16,
+                                runSpacing: 16,
+                                children: _metrics!.projectStatuses
+                                    .map((r) => ProjectMetricsCard(
+                                          rollup: r,
+                                          level: 'Project',
+                                        ))
+                                    .toList(),
                               ),
                             ),
-                          );
-                        },
-                      ),
+                            const SizedBox(height: 14),
+                          ],
+                        ],
+                        // ── Workspaces table ──
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(2, 24, 2, 12),
+                          child: _SectionEyebrow(
+                            title: widget.isBasicPlan
+                                ? 'YOUR WORKSPACES'
+                                : 'WORKSPACES',
+                            icon: Icons.view_headline_rounded,
+                            tint: palette.primaryDeep,
+                          ),
+                        ),
+                        if (user == null)
+                          buildProjectColumns(
+                              projects: const [], isLoading: false)
+                        else
+                          StreamBuilder<List<ProjectRecord>>(
+                            stream: ProjectService.streamProjects(
+                              ownerId: user.uid,
+                              filterByOwner: true,
+                              limit: 200,
+                            ),
+                            builder: (context, snapshot) {
+                              final projects =
+                                  snapshot.data ?? const <ProjectRecord>[];
+                              final isLoading = snapshot.connectionState ==
+                                  ConnectionState.waiting;
+                              final error = snapshot.hasError
+                                  ? snapshot.error.toString()
+                                  : null;
+                              return buildProjectColumns(
+                                projects: projects,
+                                isLoading: isLoading,
+                                error: error,
+                              );
+                            },
+                          ),
+                        const SizedBox(height: 96),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _CompactActionButton(
-                        label: 'Project Logs',
-                        subtitle: 'Activity across all projects',
-                        icon: Icons.fact_check_outlined,
-                        accent: const Color(0xFFFCD34D),
-                        onTap: () => ProjectActivitiesLogScreen.open(
-                            context),
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
-            // ── Past-due + Assigned-to-me + Project metrics ──
-            if (_isLoadingMetrics)
-              _buildMetricsSkeleton()
-            else if (_metrics != null) ...[
-              if (_metrics!.totalPastDue > 0) ...[
-                PastDueActivitiesCard(
-                  activities: _metrics!.pastDue),
-                const SizedBox(height: 18),
-              ],
-              AssignedActivitiesCard(
-                activities: _metrics!.assignedToMe),
-              const SizedBox(height: 18),
-              if (_metrics!.projectStatuses.isNotEmpty) ...[
-                CollapsibleSection(
-                  title: 'Project status',
-                  itemCount: _metrics!.projectStatuses.length,
-                  initiallyExpanded: false,
-                  child: Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: _metrics!.projectStatuses
-                        .map((r) => ProjectMetricsCard(
-                              rollup: r,
-                              level: 'Project',
-                            ))
-                        .toList(),
-                  ),
-                ),
-                const SizedBox(height: 18),
-              ],
-            ],
- if (user == null)
-  buildProjectColumns(
-    projects: const [], isLoading: false)
-else
-  StreamBuilder<List<ProjectRecord>>(
-    stream: ProjectService.streamProjects(
-      ownerId: user.uid,
-      filterByOwner: true,
-      limit: 200,
-    ),
-    builder: (context, snapshot) {
-      final projects =
-          snapshot.data ?? const <ProjectRecord>[];
-      final isLoading = snapshot.connectionState ==
-          ConnectionState.waiting;
-      final error = snapshot.hasError
-          ? snapshot.error.toString()
-          : null;
-      return buildProjectColumns(
-        projects: projects,
-        isLoading: isLoading,
-        error: error,
-      );
-    },
-  ),
-  // ── Bottom spacing only when content exists above ──
-  if (user != null || _metrics != null || !widget.isBasicPlan)
-    const SizedBox(height: 96),
-],
+            ),
+            const KazAiChatBubble(),
+          ],
+        ),
       ),
-    ); },
-   ),
- ),
- const KazAiChatBubble(),
-],
-  ),
-);
+    );
   }
-
+  /// World-class metrics loading skeleton — fills space so the dashboard
+  /// never has empty gaps during data fetch.
   /// World-class metrics loading skeleton — fills space so the dashboard
   /// never has empty gaps during data fetch.
   Widget _buildMetricsSkeleton() {
+    final palette = DashboardPalette.forPlan(widget.isBasicPlan);
     return Column(
       children: [
         Container(
           height: 100,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
+            color: palette.surface,
+            borderRadius: BorderRadius.circular(palette.cardRadius),
+            border: Border.all(color: palette.outline),
           ),
           child: Row(
             children: List.generate(3, (i) => Expanded(
@@ -713,9 +714,9 @@ else
         Container(
           height: 76,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200),
+            color: palette.surface,
+            borderRadius: BorderRadius.circular(palette.cardRadius),
+            border: Border.all(color: palette.outline),
           ),
           child: Row(
             children: List.generate(4, (i) => Expanded(
@@ -841,364 +842,600 @@ class _ProjectHeaderState extends State<_ProjectHeader> {
  }
  }
 
- @override
- Widget build(BuildContext context) {
- final textTheme = Theme.of(context).textTheme;
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    final user = FirebaseAuth.instance.currentUser;
+    final rawDisplayName =
+        FirebaseAuthService.displayNameOrEmail(fallback: 'User');
+    // If the "display name" is actually an email (no display name set),
+    // extract the local part for the greeting and show the full email
+    // as a smaller secondary line. This fixes the visual hierarchy issue
+    // where the email was competing with the greeting for prominence.
+    final isEmail = rawDisplayName.contains('@');
+    final displayName = isEmail
+        ? rawDisplayName.split('@').first
+        : rawDisplayName;
+    final emailLine = isEmail ? rawDisplayName : (user?.email ?? '');
+    final firstName = displayName.split(' ').first;
+    final initials = _initials(isEmail ? displayName : rawDisplayName);
+    final photoUrl = user?.photoURL;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning'
+        : hour < 17
+            ? 'Good afternoon'
+            : 'Good evening';
+    final modeTitle = widget.isBasicPlan
+        ? 'Regular Projects · Basic plan workspace'
+        : 'Project workspace overview · Standard plan';
 
- return LayoutBuilder(
- builder: (context, constraints) {
- final compact = constraints.maxWidth < 960;
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: palette.deepBand,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: palette.primaryDeep.withValues(alpha: 0.35),
+            blurRadius: 30,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(child: CustomPaint(painter: _HeaderGridPainter())),
+          Positioned(
+            right: -70,
+            top: -70,
+            child: Container(
+              width: 240,
+              height: 240,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.white.withValues(alpha: 0.35),
+                    Colors.white.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 18, 24, 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _HeaderBandAction(
+                      icon: Icons.arrow_back_rounded,
+                      onTap: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go('/');
+                        }
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _crumb(),
+                    const Spacer(),
+                    _HeaderBandAction(
+                      icon: Icons.fact_check_outlined,
+                      label: 'Activity',
+                      onTap: () => ProjectActivitiesLogScreen.open(context),
+                    ),
+                    const SizedBox(width: 8),
+                    _kazAiBandPill(),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: _handleLogout,
+                      borderRadius: BorderRadius.circular(40),
+                      child: Container(
+                        padding: const EdgeInsets.fromLTRB(6, 6, 10, 6),
+                        decoration: BoxDecoration(
+                          color: palette.ink.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(40),
+                          border: Border.all(
+                              color: palette.ink.withValues(alpha: 0.18)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _avatar(initials, photoUrl),
+                            const SizedBox(width: 8),
+                            Icon(Icons.logout_rounded,
+                                size: 14,
+                                color: palette.ink.withValues(alpha: 0.7)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 22),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compactHeader = constraints.maxWidth < 900;
+                    final greetingBlock = Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '$greeting, $firstName',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                color: palette.ink,
+                                letterSpacing: -0.5,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            _planBadge(palette),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          modeTitle,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: palette.ink.withValues(alpha: 0.7),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (emailLine.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            emailLine,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white.withValues(alpha: 0.55),
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                    final ctaRow = Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      alignment: WrapAlignment.end,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          onPressed: widget.onAddProject,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: palette.ink,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            textStyle: const TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 13),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.add_rounded,
+                                  size: 18, color: palette.primary),
+                              const SizedBox(width: 6),
+                              Text(widget.isBasicPlan
+                                  ? 'Create Regular Project'
+                                  : 'Create Project'),
+                            ],
+                          ),
+                        ),
+                        if (!widget.isBasicPlan)
+                          _bandOutlineCta(
+                            label: 'Create Program',
+                            onPressed: _navigateToProgram,
+                            icon: Icons.layers_outlined,
+                          ),
+                        if (!widget.isBasicPlan)
+                          _bandOutlineCta(
+                            label: 'Create Portfolio',
+                            onPressed: _navigateToPortfolio,
+                            icon: Icons.account_tree_outlined,
+                          ),
+                        _bandOutlineCta(
+                          label: 'Billing',
+                          onPressed: _navigateToBilling,
+                          icon: Icons.account_balance_wallet_outlined,
+                        ),
+                      ],
+                    );
+                    if (compactHeader) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          greetingBlock,
+                          const SizedBox(height: 16),
+                          ctaRow,
+                        ],
+                      );
+                    }
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(child: greetingBlock),
+                        const SizedBox(width: 20),
+                        Flexible(child: ctaRow),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
- final crumb = Container(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(28),
- border: Border.all(color: Colors.grey.shade300),
- boxShadow: [
- BoxShadow(
- color: Colors.black.withOpacity(0.05),
- blurRadius: 8,
- offset: const Offset(0, 2),
- ),
- ],
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.view_quilt_outlined,
- size: 18, color: Colors.grey.shade700),
- const SizedBox(width: 8),
- Flexible(
- child: Text(
- 'Project workspace overview',
- style: TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w700,
- color: Colors.grey.shade700,
- ),
- overflow: TextOverflow.ellipsis,
- ),
- ),
- ],
- ),
- );
+  Widget _crumb() {
+    final palette = DashboardPaletteScope.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: palette.ink.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: palette.ink.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.view_quilt_outlined,
+              size: 14, color: palette.ink.withValues(alpha: 0.75)),
+          const SizedBox(width: 6),
+          Text(
+            'Project workspace overview',
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: palette.ink,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(
- child: Padding(
- padding: EdgeInsets.only(bottom: compact ? 16 : 20),
- child: Align(
- alignment:
- compact ? Alignment.center : Alignment.centerLeft,
- child: AppLogo(
- height: compact ? 72 : 104,
- semanticLabel: 'NDU Project Platform',
- ),
- ),
- ),
- ),
- Wrap(
- spacing: 12,
- runSpacing: 12,
- alignment: WrapAlignment.end,
- crossAxisAlignment: WrapCrossAlignment.start,
- children: [
- ElevatedButton(
- onPressed: widget.onAddProject,
- style: ElevatedButton.styleFrom(
- backgroundColor: Colors.blue.shade600,
- foregroundColor: Colors.white,
- elevation: 2,
- shadowColor: Colors.black.withOpacity(0.1),
- padding: const EdgeInsets.symmetric(
- horizontal: 26, vertical: 18),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- textStyle: const TextStyle(fontWeight: FontWeight.w700),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- const Icon(Icons.add_circle_outline, size: 22),
- const SizedBox(width: 10),
- Text(widget.isBasicPlan
- ? 'Create Regular Project'
- : 'Create Project'),
- const SizedBox(width: 6),
- const Icon(Icons.arrow_forward, size: 20),
- ],
- ),
- ),
- if (!widget.isBasicPlan)
- _secondaryCta(
- label: 'Create Program',
- onPressed: _navigateToProgram,
- ),
- if (!widget.isBasicPlan)
- _secondaryCta(
- label: 'Create Portfolio',
- onPressed: _navigateToPortfolio,
- ),
- _secondaryCta(
- label: 'Billing',
- onPressed: _navigateToBilling,
- icon: Icons.account_balance_wallet_outlined,
- ),
- _secondaryCta(
- label: 'Log Out',
- onPressed: _handleLogout,
- icon: Icons.logout,
- ),
- ],
- ),
- ],
- ),
- if (!compact)
- Row(
- crossAxisAlignment: CrossAxisAlignment.center,
- children: [
- IconButton(
- icon: const Icon(Icons.arrow_back),
- onPressed: () {
- if (context.canPop()) {
- context.pop();
- } else {
- context.go('/');
- }
- },
- color: const Color(0xFF2D3A4B),
- tooltip: 'Back',
- ),
- const SizedBox(width: 10),
- Flexible(child: crumb),
- ],
- )
- else
- Row(
- children: [
- IconButton(
- icon: const Icon(Icons.arrow_back),
- onPressed: () {
- if (context.canPop()) {
- context.pop();
- } else {
- context.go('/');
- }
- },
- color: const Color(0xFF2D3A4B),
- tooltip: 'Back',
- ),
- const SizedBox(width: 10),
- Expanded(child: crumb),
- ],
- ),
- const SizedBox(height: 26),
- // ── Premium Personalized Greeting ─────────────────────────
- _DesktopPremiumGreeting(isBasicPlan: widget.isBasicPlan),
- const SizedBox(height: 14),
- // ── Description (web only – hidden on Android/iOS) ────────
- if (kIsWeb)
- Text(
- widget.isBasicPlan
- ? 'Manage your basic plan project workspace. Build the core initiation details and upgrade when you are ready to unlock more sections.'
- : 'Manage all single projects before they are linked into programs or portfolios. Add new work, track status, and quickly roll three projects into a program when you are ready.',
- style: textTheme.bodyMedium?.copyWith(
- color: Colors.grey.shade700,
- height: 1.55,
- ),
- ),
- ],
- );
- },
- );
- }
+  /// KAZ AI brand pill on the header band — opens the KAZ AI copilot chat.
+  Widget _kazAiBandPill() {
+    final palette = DashboardPaletteScope.of(context);
+    return InkWell(
+      onTap: () => KazAiChatBubble.openChat(context),
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(6, 5, 12, 5),
+        decoration: BoxDecoration(
+          color: palette.ink,
+          borderRadius: BorderRadius.circular(40),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+          boxShadow: [
+            BoxShadow(
+              color: palette.ink.withValues(alpha: 0.25),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFFC812), Color(0xFFFF9800)],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.auto_awesome_rounded,
+                  size: 12, color: Color(0xFF1C1C1C)),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'KAZ AI',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+                color: palette.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
- Widget _secondaryCta({
- required String label,
- VoidCallback? onPressed,
- IconData? icon,
- }) {
- return OutlinedButton(
- onPressed: onPressed,
- style: OutlinedButton.styleFrom(
- foregroundColor: Colors.black87,
- backgroundColor: Colors.white,
- side: BorderSide(color: Colors.grey.shade300),
- elevation: 0,
- padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
- shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
- textStyle: const TextStyle(fontWeight: FontWeight.w600),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Text(label),
- const SizedBox(width: 8),
- Icon(icon ?? Icons.keyboard_arrow_right, size: 20),
- ],
- ),
- );
- }
+  Widget _avatar(String initials, String? photoUrl) {
+    const size = 28.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: palettePrimarySoft(),
+        shape: BoxShape.circle,
+      ),
+      child: ClipOval(
+        child: photoUrl != null && photoUrl.isNotEmpty
+            ? Image.network(
+                photoUrl,
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Center(
+                  child: Text(
+                    initials,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: palettePrimaryDeep(),
+                    ),
+                  ),
+                ),
+              )
+            : Center(
+                child: Text(
+                  initials,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: palettePrimaryDeep(),
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+  Color palettePrimarySoft() {
+    final p = DashboardPaletteScope.of(context);
+    return p.primarySoft;
+  }
+
+  Color palettePrimaryDeep() {
+    final p = DashboardPaletteScope.of(context);
+    return p.primaryDeep;
+  }
+
+  Widget _planBadge(DashboardPalette palette) {
+    // Subtle translucent outline badge — sits quietly on the dark
+    // header band without competing with the greeting for prominence.
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            widget.isBasicPlan ? Icons.star_outline : Icons.workspace_premium,
+            size: 13,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            widget.isBasicPlan ? 'BASIC PLAN' : 'PRO PLAN',
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bandOutlineCta({
+    required String label,
+    VoidCallback? onPressed,
+    IconData? icon,
+  }) {
+    final palette = DashboardPaletteScope.of(context);
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: palette.ink,
+        backgroundColor: palette.ink.withValues(alpha: 0.08),
+        side: BorderSide(color: palette.ink.withValues(alpha: 0.28)),
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label),
+          const SizedBox(width: 6),
+          Icon(icon ?? Icons.keyboard_arrow_right_rounded, size: 18),
+        ],
+      ),
+    );
+  }
+
+  static String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return name.isNotEmpty ? name[0].toUpperCase() : 'U';
+  }
 }
 
 class _StatusStrip extends StatelessWidget {
- const _StatusStrip();
+  const _StatusStrip();
 
- @override
- Widget build(BuildContext context) {
- final user = FirebaseAuth.instance.currentUser;
- void openProjectDashboard() {
- Navigator.push(
- context,
- MaterialPageRoute(
-     builder: (_) => const ProjectWorkspaceDashboardScreen(isBasicPlan: false)),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    final user = FirebaseAuth.instance.currentUser;
 
- void openBasicDashboard() {
- Navigator.push(
- context,
- MaterialPageRoute(
-     builder: (_) => const ProjectWorkspaceDashboardScreen(isBasicPlan: true)),
- );
- }
+    void openRegularProjects() {
+      context.push('/regular-project-dashboard');
+    }
 
- void openProgramDashboard() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const ProgramDashboardScreen()),
- );
- }
+    void openProjects() {
+      context.push('/project-command-center');
+    }
 
- void openPortfolioDashboard() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
- );
- }
+    void openPrograms() {
+      context.push('/program-dashboard');
+    }
 
- return LayoutBuilder(
- builder: (context, constraints) {
- final isStacked = constraints.maxWidth < 920;
+    void openPortfolios() {
+      context.push('/portfolio-dashboard');
+    }
 
- if (user == null) {
- final metrics = [
- DashboardStatCard( label: 'Regular Projects',
- value: '—',
- subLabel: 'Sign in to view',
- icon: Icons.folder_special_rounded,
- color: Colors.teal.shade600,
- onTap: openBasicDashboard,
- ),
- DashboardStatCard(
- label: 'Projects',
- value: '—',
- subLabel: 'Sign in to view',
- icon: Icons.folder_open_rounded,
- color: Colors.blue.shade600,
- onTap: openProjectDashboard,
- ),
- DashboardStatCard(
- label: 'Programs',
- value: '—',
- subLabel: 'Sign in to view',
- icon: Icons.layers_outlined,
- color: Colors.purple.shade600,
- onTap: openProgramDashboard,
- ),
- DashboardStatCard(
- label: 'Portfolios',
- value: '—',
- subLabel: 'Sign in to view',
- icon: Icons.pie_chart_outline_rounded,
- color: Colors.green.shade600,
- onTap: openPortfolioDashboard,
- ),
- ];
+    if (user == null) {
+      return _statGrid([
+        _WorldClassStatCard(
+          label: 'Regular Projects',
+          value: '—',
+          subLabel: 'Sign in to view',
+          icon: Icons.folder_special_rounded,
+          color: palette.primary,
+          onTap: openRegularProjects,
+        ),
+        _WorldClassStatCard(
+          label: 'Projects',
+          value: '—',
+          subLabel: 'Sign in to view',
+          icon: Icons.folder_open_rounded,
+          color: palette.primaryDeep,
+          onTap: openProjects,
+        ),
+        _WorldClassStatCard(
+          label: 'Programs',
+          value: '—',
+          subLabel: 'Sign in to view',
+          icon: Icons.layers_rounded,
+          color: palette.accent,
+          onTap: openPrograms,
+        ),
+        _WorldClassStatCard(
+          label: 'Portfolios',
+          value: '—',
+          subLabel: 'Sign in to view',
+          icon: Icons.pie_chart_rounded,
+          color: palette.onTrack,
+          onTap: openPortfolios,
+        ),
+      ]);
+    }
 
- return DashboardStatLayout(
- cards: metrics,
- isStacked: isStacked,
- );
- }
+    return StreamBuilder<List<ProjectRecord>>(
+      stream: ProjectService.streamProjects(ownerId: user.uid, limit: 100),
+      builder: (context, projectSnapshot) {
+        final projects = projectSnapshot.data ?? const <ProjectRecord>[];
+        final projectCount =
+            projects.where((p) => !p.isBasicPlanProject).length;
+        final basicProjectCount =
+            projects.where((p) => p.isBasicPlanProject).length;
 
- return StreamBuilder<List<ProjectRecord>>(
- stream: ProjectService.streamProjects(ownerId: user.uid, limit: 100),
- builder: (context, projectSnapshot) {
- final projects = projectSnapshot.data ?? const <ProjectRecord>[];
- final projectCount =
- projects.where((project) => !project.isBasicPlanProject).length;
- final basicProjectCount =
- projects.where((project) => project.isBasicPlanProject).length;
+        return StreamBuilder<List<ProgramModel>>(
+          stream: ProgramService.streamPrograms(ownerId: user.uid),
+          builder: (context, programSnapshot) {
+            final programCount =
+                programSnapshot.hasData ? programSnapshot.data!.length : 0;
+            return StreamBuilder<List<PortfolioModel>>(
+              stream: PortfolioService.streamPortfolios(ownerId: user.uid),
+              builder: (context, portfolioSnapshot) {
+                final portfolioCount = portfolioSnapshot.hasData
+                    ? portfolioSnapshot.data!.length
+                    : 0;
 
- return StreamBuilder<List<ProgramModel>>(
- stream: ProgramService.streamPrograms(ownerId: user.uid),
- builder: (context, programSnapshot) {
- final programCount =
- programSnapshot.hasData ? programSnapshot.data!.length : 0;
- return StreamBuilder<List<PortfolioModel>>(
- stream: PortfolioService.streamPortfolios(ownerId: user.uid),
- builder: (context, portfolioSnapshot) {
- final portfolioCount = portfolioSnapshot.hasData
- ? portfolioSnapshot.data!.length
- : 0;
+                return _statGrid([
+                  _WorldClassStatCard(
+                    label: 'Regular Projects',
+                    value: '$basicProjectCount',
+                    subLabel: 'Basic plan workspaces',
+                    icon: Icons.folder_special_rounded,
+                    color: palette.primary,
+                    onTap: openRegularProjects,
+                  ),
+                  _WorldClassStatCard(
+                    label: 'Projects',
+                    value: '$projectCount',
+                    subLabel: 'Active workspaces',
+                    icon: Icons.folder_open_rounded,
+                    color: palette.primaryDeep,
+                    onTap: openProjects,
+                  ),
+                  _WorldClassStatCard(
+                    label: 'Programs',
+                    value: '$programCount',
+                    subLabel: 'Grouped projects',
+                    icon: Icons.layers_rounded,
+                    color: palette.accent,
+                    onTap: openPrograms,
+                  ),
+                  _WorldClassStatCard(
+                    label: 'Portfolios',
+                    value: '$portfolioCount',
+                    subLabel: 'Executive views',
+                    icon: Icons.pie_chart_rounded,
+                    color: palette.onTrack,
+                    onTap: openPortfolios,
+                  ),
+                ]);
+              },
+            );
+          },
+        );
+      },
+    );
+  }
 
- final metrics = [
- DashboardStatCard(
- label: 'Regular Projects',
- value: '$basicProjectCount',
- subLabel: 'Basic plan workspaces',
- icon: Icons.folder_special_rounded,
- color: Colors.teal.shade600,
- onTap: openBasicDashboard,
- ),
- DashboardStatCard(
- label: 'Projects',
- value: '$projectCount',
- subLabel: 'Active workspaces',
- icon: Icons.folder_open_rounded,
- color: Colors.blue.shade600,
- onTap: openProjectDashboard,
- ),
- DashboardStatCard(
- label: 'Programs',
- value: '$programCount',
- subLabel: 'Grouped projects',
- icon: Icons.layers_outlined,
- color: Colors.purple.shade600,
- onTap: openProgramDashboard,
- ),
- DashboardStatCard(
- label: 'Portfolios',
- value: '$portfolioCount',
- subLabel: 'Executive views',
- icon: Icons.pie_chart_outline_rounded,
- color: Colors.green.shade600,
- onTap: openPortfolioDashboard,
- ),
- ];
-
- return DashboardStatLayout(
- cards: metrics,
- isStacked: isStacked,
- );
- },
- );
- },
- );
- },
- );
- },
- );
- }
+  Widget _statGrid(List<Widget> cards) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 980;
+        if (!wide) {
+          return Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (final c in cards)
+                SizedBox(width: (constraints.maxWidth - 12) / 2, child: c),
+            ],
+          );
+        }
+        return Row(
+          children: [
+            for (int i = 0; i < cards.length; i++) ...[
+              Expanded(child: cards[i]),
+              if (i < cards.length - 1) const SizedBox(width: 12),
+            ],
+          ],
+        );
+      },
+    );
+  }
 }
-
 class _SingleProjectsCard extends StatefulWidget {
  const _SingleProjectsCard({
  required this.projects,
@@ -1250,471 +1487,396 @@ class _SingleProjectsCardState extends State<_SingleProjectsCard> {
  );
  }
 
- @override
- Widget build(BuildContext context) {
- final textTheme = Theme.of(context).textTheme;
- final user = FirebaseAuth.instance.currentUser;
- final titleText = widget.isBasicPlan ? 'Regular Projects' : 'Projects';
- final subtitleText = widget.isBasicPlan
- ? 'Review all basic plan projects before upgrading to unlock more sections.'
- : 'Review all standalone projects before they are linked into programs or portfolios.';
- final searchHint =
- widget.isBasicPlan ? 'Search regular projects...' : 'Search projects...';
- final tipText = widget.isBasicPlan
- ? 'Basic plan workspaces focus on initiation essentials'
- : 'If more than 3 projects, group up to 3 into a program';
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final user = FirebaseAuth.instance.currentUser;
+    final titleText = widget.isBasicPlan ? 'Regular Projects' : 'Projects';
+    final subtitleText = widget.isBasicPlan
+        ? 'Review all basic plan projects before upgrading to unlock more sections.'
+        : 'Review all standalone projects before they are linked into programs or portfolios.';
+    final searchHint =
+        widget.isBasicPlan ? 'Search regular projects...' : 'Search projects...';
+    final tipText = widget.isBasicPlan
+        ? 'Basic plan workspaces focus on initiation essentials'
+        : 'If more than 3 projects, group up to 3 into a program';
 
- return _FrostedSurface(
- padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- LayoutBuilder(
- builder: (context, constraints) {
- final narrow = constraints.maxWidth < 840;
- final seeAllButton = widget.expandedView
- ? const SizedBox.shrink()
- : TextButton(
- onPressed: _openExpandedView,
- style: TextButton.styleFrom(
- foregroundColor: const Color(0xFFFF4D6D),
- padding: const EdgeInsets.symmetric(
- horizontal: 12, vertical: 6),
- textStyle: const TextStyle(fontWeight: FontWeight.w700),
- ),
- child: const Text('See All'),
- );
- final tip = Container(
- padding:
- const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
- decoration: BoxDecoration(
- color: Colors.grey.shade50,
- borderRadius: BorderRadius.circular(30),
- border: Border.all(color: Colors.grey.shade200),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.merge_type,
- size: 18, color: Colors.grey.shade600),
- const SizedBox(width: 8),
- Flexible(
- child: Text(
- tipText,
- style: TextStyle(
- fontWeight: FontWeight.w600,
- fontSize: 13,
- color: Colors.grey.shade600,
- ),
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
- softWrap: true,
- ),
- ),
- ],
- ),
- );
+    return _FrostedSurface(
+      padding: const EdgeInsets.fromLTRB(26, 26, 26, 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final narrow = constraints.maxWidth < 840;
+              final seeAllButton = widget.expandedView
+                  ? const SizedBox.shrink()
+                  : TextButton(
+                      onPressed: _openExpandedView,
+                      style: TextButton.styleFrom(
+                        foregroundColor: palette.primaryDeep,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      child: const Text('See All'),
+                    );
+              final tip = Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                decoration: BoxDecoration(
+                  color: palette.primarySoft,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.merge_type_rounded,
+                        size: 16, color: palette.primaryDeep),
+                    const SizedBox(width: 7),
+                    Flexible(
+                      child: Text(
+                        tipText,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          color: palette.primaryDeep,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              );
 
- if (!narrow) {
- return Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- titleText,
- style: textTheme.titleLarge?.copyWith(
- fontWeight: FontWeight.w700,
- fontSize: 24,
- ),
- ),
- const SizedBox(height: 10),
- Text(
- subtitleText,
- style: textTheme.bodyMedium?.copyWith(
- color: Colors.grey.shade600,
- fontSize: 16,
- height: 1.5,
- ),
- ),
- ],
- ),
- ),
- const SizedBox(width: 16),
- Column(
- crossAxisAlignment: CrossAxisAlignment.end,
- children: [
- seeAllButton,
- const SizedBox(height: 8),
- SizedBox(width: 260, child: tip),
- ],
- ),
- ],
- );
- }
+              final titleStyle = textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                fontSize: 22,
+                color: palette.ink,
+                letterSpacing: -0.3,
+              );
+              final subtitleStyle = textTheme.bodyMedium?.copyWith(
+                color: palette.muted,
+                fontSize: 14.5,
+                height: 1.5,
+              );
 
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Expanded(
- child: Text(
- titleText,
- style: textTheme.titleLarge?.copyWith(
- fontWeight: FontWeight.w700,
- fontSize: 24,
- ),
- ),
- ),
- seeAllButton,
- ],
- ),
- const SizedBox(height: 10),
- Text(
- subtitleText,
- style: textTheme.bodyMedium?.copyWith(
- color: Colors.grey.shade600,
- fontSize: 16,
- height: 1.5,
- ),
- ),
- const SizedBox(height: 12),
- tip,
- ],
- );
- },
- ),
- const SizedBox(height: 20),
- VoiceTextField(
- controller: _searchController,
- style: const TextStyle(fontSize: 16),
- decoration: InputDecoration(
- hintText: searchHint,
- hintStyle: const TextStyle(fontSize: 16),
- prefixIcon:
- Icon(Icons.search, color: Colors.grey.shade600, size: 24),
- suffixIcon: _searchQuery.isNotEmpty
- ? IconButton(
- icon: const Icon(Icons.clear, size: 22),
- onPressed: () {
- setState(() {
- _searchController.clear();
- _searchQuery = '';
- });
- },
- )
- : null,
- filled: true,
- fillColor: Colors.grey.shade50,
- border: OutlineInputBorder(
- borderRadius: BorderRadius.circular(14),
- borderSide: BorderSide(color: Colors.grey.shade300),
- ),
- enabledBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(14),
- borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
- ),
- focusedBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(14),
- borderSide: BorderSide(
- color: Theme.of(context).primaryColor, width: 2.5),
- ),
- contentPadding:
- const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
- ),
- onChanged: (value) {
- setState(() => _searchQuery = value.toLowerCase().trim());
- },
- ),
- const SizedBox(height: 26),
- if (user == null)
- Container(
- padding: const EdgeInsets.all(40),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: Colors.grey.shade200),
- ),
- child: Center(
- child: Column(
- children: [
- Icon(Icons.person_off_outlined,
- size: 48, color: Colors.grey.shade400),
- const SizedBox(height: 16),
- Text(
- 'Please sign in to view your projects',
- style: textTheme.bodyLarge?.copyWith(
- color: Colors.grey.shade600,
- fontWeight: FontWeight.w600,
- ),
- ),
- ],
- ),
- ),
- )
- else if (widget.isLoading)
- Container(
- padding: const EdgeInsets.all(60),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(24),
- border: Border.all(color: Colors.grey.shade200),
- ),
- child: const Center(child: CircularProgressIndicator()),
- )
- else if (widget.error != null)
- Container(
- padding: const EdgeInsets.all(40),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(24),
- border: Border.all(color: Colors.grey.shade200),
- ),
- child: Center(
- child: Column(
- children: [
- Icon(Icons.error_outline,
- size: 48, color: Colors.red.shade400),
- const SizedBox(height: 16),
- Text(
- 'Error loading projects',
- style: textTheme.bodyLarge?.copyWith(
- color: Colors.red.shade700,
- fontWeight: FontWeight.w600,
- ),
- ),
- const SizedBox(height: 8),
- Text(
- widget.error!,
- style: textTheme.bodySmall
- ?.copyWith(color: Colors.grey.shade600),
- textAlign: TextAlign.center,
- ),
- ],
- ),
- ),
- )
- else
- Builder(
- builder: (context) {
- final allProjects = widget.isBasicPlan
- ? widget.projects
- .where((project) => project.isBasicPlanProject)
- .toList()
- : List<ProjectRecord>.from(widget.projects);
+              if (!narrow) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(titleText, style: titleStyle),
+                          const SizedBox(height: 8),
+                          Text(subtitleText, style: subtitleStyle),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        seeAllButton,
+                        const SizedBox(height: 8),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 280),
+                          child: tip,
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              }
 
- // Apply search filter
- final firebaseProjects = _searchQuery.isEmpty
- ? allProjects
- : allProjects.where((project) {
- final name = project.name.toLowerCase();
- final status = project.status.toLowerCase();
- final milestone = project.milestone.toLowerCase();
- return name.contains(_searchQuery) ||
- status.contains(_searchQuery) ||
- milestone.contains(_searchQuery);
- }).toList();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                          child: Text(titleText, style: titleStyle)),
+                      seeAllButton,
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(subtitleText, style: subtitleStyle),
+                  const SizedBox(height: 12),
+                  tip,
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 18),
+          VoiceTextField(
+            controller: _searchController,
+            style: TextStyle(fontSize: 14, color: palette.ink),
+            decoration: InputDecoration(
+              hintText: searchHint,
+              hintStyle: TextStyle(fontSize: 14, color: palette.mutedSoft),
+              prefixIcon:
+                  Icon(Icons.search_rounded, color: palette.muted, size: 20),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 20),
+                      onPressed: () {
+                        setState(() {
+                          _searchController.clear();
+                          _searchQuery = '';
+                        });
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: palette.canvas,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: palette.outline),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: palette.outline, width: 1.2),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: palette.primary, width: 2),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+            ),
+            onChanged: (value) {
+              setState(() => _searchQuery = value.toLowerCase().trim());
+            },
+          ),
+          const SizedBox(height: 20),
+          if (user == null)
+            _messageState(
+              icon: Icons.person_off_outlined,
+              title: 'Please sign in to view your projects',
+              palette: palette,
+            )
+          else if (widget.isLoading)
+            Container(
+              padding: const EdgeInsets.all(60),
+              decoration: BoxDecoration(
+                color: palette.surface,
+                borderRadius: BorderRadius.circular(palette.cardRadius),
+                border: Border.all(color: palette.outline),
+              ),
+              child: const Center(child: CircularProgressIndicator()),
+            )
+          else if (widget.error != null)
+            _messageState(
+              icon: Icons.error_outline_rounded,
+              title: 'Error loading projects',
+              subtitle: widget.error,
+              palette: palette,
+            )
+          else
+            Builder(
+              builder: (context) {
+                final allProjects = widget.isBasicPlan
+                    ? widget.projects
+                        .where((p) => p.isBasicPlanProject)
+                        .toList()
+                    : List<ProjectRecord>.from(widget.projects);
 
- if (allProjects.isEmpty) {
- return Container(
- padding: const EdgeInsets.all(40),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(24),
- border: Border.all(color: Colors.grey.shade200),
- ),
- child: Center(
- child: Column(
- children: [
- Icon(Icons.folder_off_outlined,
- size: 48, color: Colors.grey.shade400),
- const SizedBox(height: 16),
- Text(
- widget.isBasicPlan
- ? 'No regular projects yet'
- : 'No projects yet',
- style: textTheme.bodyLarge?.copyWith(
- color: Colors.grey.shade600,
- fontWeight: FontWeight.w600,
- ),
- ),
- const SizedBox(height: 8),
- Text(
- widget.isBasicPlan
- ? 'Create your first regular project using the "Create Project" button above'
- : 'Create your first project using the "Create Project" button above',
- style: textTheme.bodySmall
- ?.copyWith(color: Colors.grey.shade600),
- textAlign: TextAlign.center,
- ),
- ],
- ),
- ),
- );
- }
+                final firebaseProjects = _searchQuery.isEmpty
+                    ? allProjects
+                    : allProjects.where((project) {
+                        final name = project.name.toLowerCase();
+                        final status = project.status.toLowerCase();
+                        final milestone = project.milestone.toLowerCase();
+                        return name.contains(_searchQuery) ||
+                            status.contains(_searchQuery) ||
+                            milestone.contains(_searchQuery);
+                      }).toList();
 
- if (firebaseProjects.isEmpty) {
- return Container(
- padding: const EdgeInsets.all(40),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(24),
- border: Border.all(color: Colors.grey.shade200),
- ),
- child: Center(
- child: Column(
- children: [
- Icon(Icons.search_off,
- size: 48, color: Colors.grey.shade400),
- const SizedBox(height: 16),
- Text(
- 'No matching projects',
- style: textTheme.bodyLarge?.copyWith(
- color: Colors.grey.shade600,
- fontWeight: FontWeight.w600,
- ),
- ),
- const SizedBox(height: 8),
- Text(
- 'Try adjusting your search criteria',
- style: textTheme.bodySmall
- ?.copyWith(color: Colors.grey.shade600),
- textAlign: TextAlign.center,
- ),
- ],
- ),
- ),
- );
- }
+                if (allProjects.isEmpty) {
+                  return _messageState(
+                    icon: Icons.folder_off_outlined,
+                    title: widget.isBasicPlan
+                        ? 'No regular projects yet'
+                        : 'No projects yet',
+                    subtitle:
+                        'Create your first project with the button above to populate this workspace.',
+                    palette: palette,
+                  );
+                }
 
- return LayoutBuilder(
- builder: (context, constraints) {
- // Provide horizontal scroll for narrow screens
- final totalCount = firebaseProjects.length;
- final visibleCount = _showAll
- ? totalCount
- : (totalCount > 10 ? 10 : totalCount);
- final table = DecoratedBox(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: Colors.grey.shade200),
- ),
- child: Column(
- children: [
- Padding(
- padding: const EdgeInsets.fromLTRB(28, 20, 28, 18),
- child: Row(
- children: const [
- Expanded(
- flex: 32,
- child: _TableHeaderLabel('Project'),
- ),
- Expanded(
- flex: 16,
- child: _TableHeaderLabel(
- 'Current Phase',
- alignment: Alignment.center,
- ),
- ),
- Expanded(
- flex: 20,
- child: _TableHeaderLabel(
- 'Progress',
- alignment: Alignment.center,
- ),
- ),
- Expanded(
- flex: 12,
- child: _TableHeaderLabel(
- 'Owner',
- alignment: Alignment.center,
- ),
- ),
- Expanded(
- flex: 10,
- child: _TableHeaderLabel(
- 'Investment',
- alignment: Alignment.center,
- ),
- ),
- Expanded(
- flex: 18,
- child: _TableHeaderLabel(
- 'Actions',
- alignment: Alignment.center,
- ),
- ),
- ],
- ),
- ),
- const Divider(
- height: 1,
- thickness: 1,
- color: Color(0xFFE8E9F2)),
- for (int i = 0; i < visibleCount; i++) ...[
- _ProjectTableRowFromFirebase(
- project: firebaseProjects[i]),
- if (i < visibleCount - 1)
- const Divider(
- height: 1,
- thickness: 1,
- color: Color(0xFFE8E9F2)),
- ],
- if (totalCount > 10 && !widget.expandedView)
- Padding(
- padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
- child: Align(
- alignment: Alignment.centerRight,
- child: TextButton.icon(
- onPressed: () {
- setState(() => _showAll = !_showAll);
- },
- style: TextButton.styleFrom(
- foregroundColor: Colors.black87,
- padding: const EdgeInsets.symmetric(
- horizontal: 14, vertical: 10),
- shape: RoundedRectangleBorder(
- borderRadius:
- BorderRadius.circular(24)),
- ),
- icon: Icon(
- _showAll
- ? Icons.expand_less
- : Icons.expand_more,
- size: 18),
- label: Text(_showAll
- ? 'Show 10'
- : 'View All ($totalCount)'),
- ),
- ),
- ),
- ],
- ),
- );
+                if (firebaseProjects.isEmpty) {
+                  return _messageState(
+                    icon: Icons.search_off_rounded,
+                    title: 'No matching projects',
+                    subtitle: 'Try adjusting your search criteria.',
+                    palette: palette,
+                  );
+                }
 
- if (constraints.maxWidth < 1180) {
- return SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: SizedBox(
- width: 1180,
- child: table,
- ),
- );
- }
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final totalCount = firebaseProjects.length;
+                    final visibleCount = _showAll
+                        ? totalCount
+                        : (totalCount > 10 ? 10 : totalCount);
+                    final table = DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: palette.surface,
+                        borderRadius: BorderRadius.circular(palette.cardRadius),
+                        border: Border.all(color: palette.outline),
+                      ),
+                      child: Column(
+                        children: [
+                          const Padding(
+                            padding:
+                                EdgeInsets.fromLTRB(28, 18, 28, 14),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 32,
+                                  child: _TableHeaderLabel('Project'),
+                                ),
+                                Expanded(
+                                  flex: 16,
+                                  child: _TableHeaderLabel(
+                                    'Current Phase',
+                                    alignment: Alignment.center,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 20,
+                                  child: _TableHeaderLabel(
+                                    'Progress',
+                                    alignment: Alignment.center,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 12,
+                                  child: _TableHeaderLabel(
+                                    'Owner',
+                                    alignment: Alignment.center,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 10,
+                                  child: _TableHeaderLabel(
+                                    'Investment',
+                                    alignment: Alignment.center,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 18,
+                                  child: _TableHeaderLabel(
+                                    'Actions',
+                                    alignment: Alignment.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Divider(
+                              height: 1, thickness: 1, color: Color(0xFFE8E9F2)),
+                          for (int i = 0; i < visibleCount; i++) ...[
+                            _ProjectTableRowFromFirebase(
+                                project: firebaseProjects[i]),
+                            if (i < visibleCount - 1)
+                              const Divider(
+                                  height: 1,
+                                  thickness: 1,
+                                  color: Color(0xFFE8E9F2)),
+                          ],
+                          if (totalCount > 10 && !widget.expandedView)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 6, 16, 14),
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: () =>
+                                      setState(() => _showAll = !_showAll),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: palette.primaryDeep,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 10),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(24)),
+                                  ),
+                                  icon: Icon(
+                                      _showAll
+                                          ? Icons.expand_less
+                                          : Icons.expand_more,
+                                      size: 18),
+                                  label: Text(
+                                      _showAll
+                                          ? 'Show 10'
+                                          : 'View All ($totalCount)'),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
 
- return table;
- },
- );
- },
- ),
- ],
- ),
- );
- }
+                    if (constraints.maxWidth < 1180) {
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(width: 1180, child: table),
+                      );
+                    }
+                    return table;
+                  },
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _messageState({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required DashboardPalette palette,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(36),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(palette.cardRadius),
+        border: Border.all(color: palette.outline),
+      ),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(icon, size: 44, color: palette.mutedSoft),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: palette.inkSoft,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 12.5, color: palette.muted),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _GroupProjectsCard extends StatefulWidget {
@@ -1796,7 +1958,7 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: scheme.primary.withOpacity(0.1),
+ color: scheme.primary.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(Icons.layers, color: scheme.primary, size: 24),
@@ -1826,7 +1988,7 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
  borderRadius: BorderRadius.circular(12)),
  filled: true,
  fillColor:
- scheme.surfaceContainerHighest.withOpacity(0.3),
+ scheme.surfaceContainerHighest.withValues(alpha: 0.3),
  ),
  validator: (value) {
  if (value == null || value.trim().isEmpty) {
@@ -1898,711 +2060,633 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
  }
  }
 
- @override
- Widget build(BuildContext context) {
- final textTheme = Theme.of(context).textTheme;
- final selectedCount = widget.selectedIds.length;
- final user = FirebaseAuth.instance.currentUser;
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final selectedCount = widget.selectedIds.length;
+    final user = FirebaseAuth.instance.currentUser;
 
- return _FrostedSurface(
- padding: const EdgeInsets.fromLTRB(26, 26, 26, 22),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- LayoutBuilder(
- builder: (context, constraints) {
- final isColumn = constraints.maxWidth < 720;
- final seeAllButton = widget.expandedView
- ? const SizedBox.shrink()
- : TextButton(
- onPressed: _openExpandedView,
- style: TextButton.styleFrom(
- foregroundColor: const Color(0xFFFF4D6D),
- padding: const EdgeInsets.symmetric(
- horizontal: 12, vertical: 6),
- textStyle: const TextStyle(fontWeight: FontWeight.w700),
- ),
- child: const Text('See All'),
- );
+    return _FrostedSurface(
+      padding: const EdgeInsets.fromLTRB(26, 26, 26, 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isColumn = constraints.maxWidth < 720;
+              final seeAllButton = widget.expandedView
+                  ? const SizedBox.shrink()
+                  : TextButton(
+                      onPressed: _openExpandedView,
+                      style: TextButton.styleFrom(
+                        foregroundColor: palette.primaryDeep,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      child: const Text('See All'),
+                    );
 
- final guidance = Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Group Projects Into A Program',
- style: textTheme.titleLarge?.copyWith(
- fontWeight: FontWeight.w700,
- fontSize: 24,
- ),
- ),
- const SizedBox(height: 10),
- Text(
- 'When you have more than three single projects, select up to three that share an outcome to create a new program.',
- style: textTheme.bodyMedium?.copyWith(
- color: Colors.grey.shade600,
- fontSize: 16,
- height: 1.5,
- ),
- ),
- ],
- );
+              final guidance = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Group Projects Into A Program',
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 22,
+                      color: palette.ink,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'When you have more than three single projects, select up to three that share an outcome to create a new program.',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: palette.muted,
+                      fontSize: 14.5,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              );
 
- final capChip = Align(
- alignment:
- isColumn ? Alignment.centerLeft : Alignment.topCenter,
- child: Container(
- padding:
- const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
- decoration: BoxDecoration(
- color: Colors.grey.shade50,
- borderRadius: BorderRadius.circular(30),
- border: Border.all(color: Colors.grey.shade200),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.filter_alt_outlined,
- size: 18, color: Colors.grey.shade600),
- const SizedBox(width: 8),
- Text(
- 'Up to 3 projects',
- style: TextStyle(
- fontWeight: FontWeight.w600,
- fontSize: 13,
- color: Colors.grey.shade600,
- ),
- ),
- ],
- ),
- ),
- );
+              final capChip = Align(
+                alignment:
+                    isColumn ? Alignment.centerLeft : Alignment.topCenter,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: palette.surfaceAlt,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: palette.outline),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.filter_alt_rounded,
+                          size: 16, color: palette.muted),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Up to 3 projects',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          color: palette.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
 
- if (isColumn) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Expanded(child: guidance),
- seeAllButton,
- ],
- ),
- const SizedBox(height: 16),
- capChip,
- ],
- );
- }
+              if (isColumn) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [Expanded(child: guidance), seeAllButton]),
+                    const SizedBox(height: 14),
+                    capChip,
+                  ],
+                );
+              }
 
- return Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(child: guidance),
- const SizedBox(width: 16),
- Column(
- crossAxisAlignment: CrossAxisAlignment.end,
- children: [
- seeAllButton,
- const SizedBox(height: 8),
- capChip,
- ],
- ),
- ],
- );
- },
- ),
- const SizedBox(height: 20),
- VoiceTextField(
- controller: _searchController,
- style: const TextStyle(fontSize: 16),
- decoration: InputDecoration(
- hintText: 'Search projects to group...',
- hintStyle: const TextStyle(fontSize: 16),
- prefixIcon:
- Icon(Icons.search, color: Colors.grey.shade600, size: 24),
- suffixIcon: _searchQuery.isNotEmpty
- ? IconButton(
- icon: const Icon(Icons.clear, size: 22),
- onPressed: () {
- setState(() {
- _searchController.clear();
- _searchQuery = '';
- });
- },
- )
- : null,
- filled: true,
- fillColor: Colors.grey.shade50,
- border: OutlineInputBorder(
- borderRadius: BorderRadius.circular(14),
- borderSide: BorderSide(color: Colors.grey.shade300),
- ),
- enabledBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(14),
- borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
- ),
- focusedBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(14),
- borderSide: BorderSide(
- color: Theme.of(context).primaryColor, width: 2.5),
- ),
- contentPadding:
- const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
- ),
- onChanged: (value) {
- setState(() => _searchQuery = value.toLowerCase().trim());
- },
- ),
- const SizedBox(height: 24),
- if (user == null)
- Container(
- padding: const EdgeInsets.all(32),
- decoration: BoxDecoration(
- color: const Color(0xFFF7F8FD),
- borderRadius: BorderRadius.circular(22),
- border: Border.all(color: const Color(0xFFE3E6F2)),
- ),
- child: Center(
- child: Text(
- 'Sign in to group projects',
- style: textTheme.bodyMedium?.copyWith(
- color: Colors.grey.shade600,
- fontWeight: FontWeight.w600,
- ),
- ),
- ),
- )
- else if (widget.isLoading)
- Container(
- padding: const EdgeInsets.all(40),
- child: const Center(child: CircularProgressIndicator()),
- )
- else if (widget.error != null)
- Container(
- padding: const EdgeInsets.all(32),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(22),
- border: Border.all(color: Colors.grey.shade200),
- ),
- child: Center(
- child: Column(
- children: [
- Icon(Icons.error_outline,
- size: 40, color: Colors.red.shade400),
- const SizedBox(height: 12),
- Text(
- 'Error loading projects',
- style: textTheme.bodyMedium?.copyWith(
- color: Colors.red.shade700,
- fontWeight: FontWeight.w600,
- ),
- ),
- const SizedBox(height: 8),
- Text(
- widget.error!,
- style: textTheme.bodySmall
- ?.copyWith(color: Colors.grey.shade600),
- textAlign: TextAlign.center,
- ),
- ],
- ),
- ),
- )
- else
- Builder(
- builder: (context) {
- final allProjects = widget.projects;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: guidance),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      seeAllButton,
+                      const SizedBox(height: 8),
+                      capChip,
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 18),
+          VoiceTextField(
+            controller: _searchController,
+            style: TextStyle(fontSize: 14, color: palette.ink),
+            decoration: InputDecoration(
+              hintText: 'Search projects to group...',
+              hintStyle: TextStyle(fontSize: 14, color: palette.mutedSoft),
+              prefixIcon: Icon(Icons.search_rounded,
+                  color: palette.muted, size: 20),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 20),
+                      onPressed: () {
+                        setState(() {
+                          _searchController.clear();
+                          _searchQuery = '';
+                        });
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: palette.canvas,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: palette.outline),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: palette.outline, width: 1.2),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: palette.primary, width: 2),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+            ),
+            onChanged: (value) =>
+                setState(() => _searchQuery = value.toLowerCase().trim()),
+          ),
+          const SizedBox(height: 22),
+          if (user == null)
+            Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: palette.surface,
+                borderRadius: BorderRadius.circular(palette.cardRadius),
+                border: Border.all(color: palette.outline),
+              ),
+              child: Center(
+                child: Text(
+                  'Sign in to group projects',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: palette.muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            )
+          else if (widget.isLoading)
+            Container(
+              padding: const EdgeInsets.all(40),
+              child: const Center(child: CircularProgressIndicator()),
+            )
+          else if (widget.error != null)
+            Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: palette.surface,
+                borderRadius: BorderRadius.circular(palette.cardRadius),
+                border: Border.all(color: palette.outline),
+              ),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.error_outline_rounded,
+                        size: 36, color: palette.offTrack),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Error loading projects',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: palette.offTrack,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      widget.error!,
+                      style: textTheme.bodySmall?.copyWith(color: palette.muted),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Builder(
+              builder: (context) {
+                final allProjects = widget.projects;
+                final firebaseProjects = _searchQuery.isEmpty
+                    ? allProjects
+                    : allProjects.where((project) {
+                        final name = project.name.toLowerCase();
+                        final status = project.status.toLowerCase();
+                        return name.contains(_searchQuery) ||
+                            status.contains(_searchQuery);
+                      }).toList();
 
- // Apply search filter
- final firebaseProjects = _searchQuery.isEmpty
- ? allProjects
- : allProjects.where((project) {
- final name = project.name.toLowerCase();
- final status = project.status.toLowerCase();
- return name.contains(_searchQuery) ||
- status.contains(_searchQuery);
- }).toList();
+                if (allProjects.isEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      color: palette.surface,
+                      borderRadius: BorderRadius.circular(palette.cardRadius),
+                      border: Border.all(color: palette.outline),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'No projects available to group',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: palette.muted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                }
 
- if (allProjects.isEmpty) {
- return Container(
- padding: const EdgeInsets.all(32),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(22),
- border: Border.all(color: Colors.grey.shade200),
- ),
- child: Center(
- child: Text(
- 'No projects available to group',
- style: textTheme.bodyMedium?.copyWith(
- color: Colors.grey.shade600,
- fontWeight: FontWeight.w600,
- ),
- ),
- ),
- );
- }
+                if (firebaseProjects.isEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      color: palette.surface,
+                      borderRadius: BorderRadius.circular(palette.cardRadius),
+                      border: Border.all(color: palette.outline),
+                    ),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(Icons.search_off_rounded,
+                              size: 36, color: palette.mutedSoft),
+                          const SizedBox(height: 10),
+                          Text(
+                            'No matching projects',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: palette.muted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
 
- if (firebaseProjects.isEmpty) {
- return Container(
- padding: const EdgeInsets.all(32),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(22),
- border: Border.all(color: Colors.grey.shade200),
- ),
- child: Center(
- child: Column(
- children: [
- Icon(Icons.search_off,
- size: 40, color: Colors.grey.shade400),
- const SizedBox(height: 12),
- Text(
- 'No matching projects',
- style: textTheme.bodyMedium?.copyWith(
- color: Colors.grey.shade600,
- fontWeight: FontWeight.w600,
- ),
- ),
- ],
- ),
- ),
- );
- }
+                final visibleCount = _showAll
+                    ? firebaseProjects.length
+                    : (firebaseProjects.length > 10
+                        ? 10
+                        : firebaseProjects.length);
 
- // Show only 10 by default
- final visibleCount = _showAll
- ? firebaseProjects.length
- : (firebaseProjects.length > 10
- ? 10
- : firebaseProjects.length);
+                Widget rowList(Set<String> ids) {
+                  return Column(
+                    children: [
+                      for (int i = 0; i < visibleCount; i++) ...[
+                        _SelectableProjectRowFromFirebase(
+                          project: firebaseProjects[i],
+                          selected: ids.contains(firebaseProjects[i].id),
+                          onTap: () => widget.onToggle(firebaseProjects[i].id),
+                        ),
+                        if (i < visibleCount - 1) const SizedBox(height: 10),
+                      ],
+                      if (firebaseProjects.length > 10 && !widget.expandedView)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 14),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: () =>
+                                  setState(() => _showAll = !_showAll),
+                              style: TextButton.styleFrom(
+                                foregroundColor: palette.primaryDeep,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(24)),
+                              ),
+                              icon: Icon(
+                                  _showAll
+                                      ? Icons.expand_less
+                                      : Icons.expand_more,
+                                  size: 18),
+                              label: Text(
+                                  _showAll
+                                      ? 'Show 10'
+                                      : 'View All (${firebaseProjects.length})'),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                }
 
- // Use ValueListenableBuilder to react to selection changes
- if (widget.selectedIdsListenable != null) {
- return ValueListenableBuilder<Set<String>>(
- valueListenable: widget.selectedIdsListenable!,
- builder: (context, selectedIds, _) {
- return Column(
- children: [
- for (int i = 0; i < visibleCount; i++) ...[
- _SelectableProjectRowFromFirebase(
- project: firebaseProjects[i],
- selected:
- selectedIds.contains(firebaseProjects[i].id),
- onTap: () =>
- widget.onToggle(firebaseProjects[i].id),
- ),
- if (i < visibleCount - 1)
- const SizedBox(height: 12),
- ],
- if (firebaseProjects.length > 10 &&
- !widget.expandedView)
- Padding(
- padding: const EdgeInsets.only(top: 16),
- child: Align(
- alignment: Alignment.centerRight,
- child: TextButton.icon(
- onPressed: () {
- setState(() => _showAll = !_showAll);
- },
- style: TextButton.styleFrom(
- foregroundColor: Colors.black87,
- padding: const EdgeInsets.symmetric(
- horizontal: 14, vertical: 10),
- shape: RoundedRectangleBorder(
- borderRadius:
- BorderRadius.circular(24)),
- ),
- icon: Icon(
- _showAll
- ? Icons.expand_less
- : Icons.expand_more,
- size: 18),
- label: Text(_showAll
- ? 'Show 10'
- : 'View All (${firebaseProjects.length})'),
- ),
- ),
- ),
- ],
- );
- },
- );
- }
+                if (widget.selectedIdsListenable != null) {
+                  return ValueListenableBuilder<Set<String>>(
+                    valueListenable: widget.selectedIdsListenable!,
+                    builder: (context, ids, _) => rowList(ids),
+                  );
+                }
+                return rowList(widget.selectedIds);
+              },
+            ),
+          const SizedBox(height: 24),
+          widget.selectedIdsListenable != null
+              ? ValueListenableBuilder<Set<String>>(
+                  valueListenable: widget.selectedIdsListenable!,
+                  builder: (context, ids, _) =>
+                      _selectionFooter(ids.length, textTheme, palette),
+                )
+              : _selectionFooter(selectedCount, textTheme, palette),
+        ],
+      ),
+    );
+  }
 
- // Fallback if no ValueListenable provided
- return Column(
- children: [
- for (int i = 0; i < visibleCount; i++) ...[
- _SelectableProjectRowFromFirebase(
- project: firebaseProjects[i],
- selected:
- widget.selectedIds.contains(firebaseProjects[i].id),
- onTap: () => widget.onToggle(firebaseProjects[i].id),
- ),
- if (i < visibleCount - 1) const SizedBox(height: 12),
- ],
- if (firebaseProjects.length > 10 && !widget.expandedView)
- Padding(
- padding: const EdgeInsets.only(top: 16),
- child: Align(
- alignment: Alignment.centerRight,
- child: TextButton.icon(
- onPressed: () {
- setState(() => _showAll = !_showAll);
- },
- style: TextButton.styleFrom(
- foregroundColor: Colors.black87,
- padding: const EdgeInsets.symmetric(
- horizontal: 14, vertical: 10),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(24)),
- ),
- icon: Icon(
- _showAll
- ? Icons.expand_less
- : Icons.expand_more,
- size: 18),
- label: Text(_showAll
- ? 'Show 10'
- : 'View All (${firebaseProjects.length})'),
- ),
- ),
- ),
- ],
- );
- },
- ),
- const SizedBox(height: 24),
- // Use ValueListenableBuilder for selection count if available
- widget.selectedIdsListenable != null
- ? ValueListenableBuilder<Set<String>>(
- valueListenable: widget.selectedIdsListenable!,
- builder: (context, selectedIds, _) {
- final count = selectedIds.length;
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- '$count/3 projects selected. Select exactly three to create a program.',
- style: textTheme.bodySmall?.copyWith(
- color: Colors.grey.shade700,
- fontWeight: FontWeight.w700,
- fontSize: 15,
- ),
- ),
- const SizedBox(height: 20),
- SizedBox(
- width: double.infinity,
- child: ElevatedButton(
- onPressed: count == 3 ? _handleCreateProgram : null,
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF111111),
- foregroundColor: Colors.white,
- elevation: count == 3 ? 10 : 0,
- padding: const EdgeInsets.symmetric(vertical: 18),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(16)),
- ),
- child: Text(
- count == 3
- ? 'Create Program'
- : 'Select ${3 - count} more',
- style: const TextStyle(
- fontSize: 16, fontWeight: FontWeight.w700),
- ),
- ),
- ),
- ],
- );
- },
- )
- : Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- '$selectedCount/3 projects selected. Select exactly three to create a program.',
- style: textTheme.bodySmall?.copyWith(
- color: Colors.grey.shade700,
- fontWeight: FontWeight.w700,
- fontSize: 15,
- ),
- ),
- const SizedBox(height: 20),
- SizedBox(
- width: double.infinity,
- child: ElevatedButton(
- onPressed:
- selectedCount == 3 ? _handleCreateProgram : null,
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF111111),
- foregroundColor: Colors.white,
- elevation: selectedCount == 3 ? 10 : 0,
- shadowColor: Colors.black.withOpacity(0.3),
- padding: const EdgeInsets.symmetric(
- horizontal: 28, vertical: 22),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(32)),
- textStyle: const TextStyle(
- fontWeight: FontWeight.w700,
- fontSize: 17,
- letterSpacing: 0.3,
- ),
- ),
- child: const Text('Create program from selected'),
- ),
- ),
- ],
- ),
- ],
- ),
- );
- }
+  Widget _selectionFooter(
+      int count, TextTheme textTheme, DashboardPalette palette) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$count/3 projects selected. Select exactly three to create a program.',
+          style: textTheme.bodySmall?.copyWith(
+            color: palette.inkSoft,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: count == 3 ? _handleCreateProgram : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  count == 3 ? palette.primary : palette.mutedSoft,
+              foregroundColor:
+                  count == 3 ? const Color(0xFF1C1C1C) : Colors.white,
+              elevation: count == 3 ? 6 : 0,
+              disabledBackgroundColor: palette.outline,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: Text(
+              count == 3 ? 'Create Program' : 'Select ${3 - count} more',
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _ProgramsSummaryCard extends StatelessWidget {
- const _ProgramsSummaryCard();
+  const _ProgramsSummaryCard();
 
- @override
- Widget build(BuildContext context) {
- final textTheme = Theme.of(context).textTheme;
- final user = FirebaseAuth.instance.currentUser;
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    final user = FirebaseAuth.instance.currentUser;
 
- return _FrostedSurface(
- padding: const EdgeInsets.fromLTRB(26, 26, 26, 22),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Programs and portfolios',
- style: textTheme.titleLarge?.copyWith(
- fontWeight: FontWeight.w700,
- fontSize: 24,
- ),
- ),
- const SizedBox(height: 10),
- Text(
- 'High-level containers for your grouped work.',
- style: textTheme.bodyMedium?.copyWith(
- color: Colors.grey.shade600,
- fontSize: 16,
- height: 1.5,
- ),
- ),
- const SizedBox(height: 20),
- if (user == null)
- LayoutBuilder(
- builder: (context, constraints) {
- final stats = [
- const _SummaryStat(
- label: 'Programs',
- value: '—',
- caption: 'Sign in to view your programs.',
- ),
- const _SummaryStat(
- label: 'Portfolios',
- value: '—',
- caption: 'Sign in to view your portfolios.',
- ),
- const _SummaryStat(
- label: 'Projects per program',
- value: 'Max 3',
- caption: 'Keep scope focused and interfaces manageable.',
- ),
- ];
+    return _FrostedSurface(
+      padding: const EdgeInsets.fromLTRB(26, 26, 26, 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Programs and portfolios',
+            style: textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              fontSize: 22,
+              color: palette.ink,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'High-level containers for your grouped work.',
+            style: textTheme.bodyMedium?.copyWith(
+              color: palette.muted,
+              fontSize: 14.5,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 18),
+          if (user == null)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final stats = [
+                  const _SummaryStat(
+                    label: 'Programs',
+                    value: '—',
+                    caption: 'Sign in to view your programs.',
+                  ),
+                  const _SummaryStat(
+                    label: 'Portfolios',
+                    value: '—',
+                    caption: 'Sign in to view your portfolios.',
+                  ),
+                  const _SummaryStat(
+                    label: 'Projects per program',
+                    value: 'Max 3',
+                    caption:
+                        'Keep scope focused and interfaces manageable.',
+                  ),
+                ];
+                return _buildStatsLayout(constraints, stats);
+              },
+            )
+          else
+            StreamBuilder<List<ProgramModel>>(
+              stream: ProgramService.streamPrograms(ownerId: user.uid),
+              builder: (context, programSnapshot) {
+                final programCount =
+                    programSnapshot.hasData ? programSnapshot.data!.length : 0;
+                return StreamBuilder<List<PortfolioModel>>(
+                  stream: PortfolioService.streamPortfolios(ownerId: user.uid),
+                  builder: (context, portfolioSnapshot) {
+                    final portfolioCount = portfolioSnapshot.hasData
+                        ? portfolioSnapshot.data!.length
+                        : 0;
 
- return _buildStatsLayout(constraints, stats);
- },
- )
- else
- StreamBuilder<List<ProgramModel>>(
- stream: ProgramService.streamPrograms(ownerId: user.uid),
- builder: (context, programSnapshot) {
- final programCount =
- programSnapshot.hasData ? programSnapshot.data!.length : 0;
- return StreamBuilder<List<PortfolioModel>>(
- stream: PortfolioService.streamPortfolios(ownerId: user.uid),
- builder: (context, portfolioSnapshot) {
- final portfolioCount = portfolioSnapshot.hasData
- ? portfolioSnapshot.data!.length
- : 0;
+                    final stats = [
+                      _SummaryStat(
+                        label: 'Programs',
+                        value: '$programCount',
+                        caption: programCount == 0
+                            ? 'Add three projects to unlock a program dashboard.'
+                            : 'Grouped projects',
+                      ),
+                      _SummaryStat(
+                        label: 'Portfolios',
+                        value: '$portfolioCount',
+                        caption:
+                            'Roll multiple programs into an executive view.',
+                      ),
+                      const _SummaryStat(
+                        label: 'Projects per program',
+                        value: 'Max 3',
+                        caption:
+                            'Keep scope focused and interfaces manageable.',
+                      ),
+                    ];
 
- final stats = [
- _SummaryStat(
- label: 'Programs',
- value: '$programCount',
- caption: programCount == 0
- ? 'Add three projects to unlock a program dashboard.'
- : 'Grouped projects',
- ),
- _SummaryStat(
- label: 'Portfolios',
- value: '$portfolioCount',
- caption:
- 'Roll multiple programs into an executive view.',
- ),
- const _SummaryStat(
- label: 'Projects per program',
- value: 'Max 3',
- caption:
- 'Keep scope focused and interfaces manageable.',
- ),
- ];
+                    return LayoutBuilder(
+                      builder: (context, constraints) =>
+                          _buildStatsLayout(constraints, stats),
+                    );
+                  },
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
 
- return LayoutBuilder(
- builder: (context, constraints) =>
- _buildStatsLayout(constraints, stats),
- );
- },
- );
- },
- ),
- ],
- ),
- );
- }
+  Widget _buildStatsLayout(
+      BoxConstraints constraints, List<_SummaryStat> stats) {
+    if (constraints.maxWidth < 620) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (int i = 0; i < stats.length; i++) ...[
+            stats[i],
+            if (i < stats.length - 1) const SizedBox(height: 14),
+          ],
+        ],
+      );
+    }
 
- Widget _buildStatsLayout(
- BoxConstraints constraints, List<_SummaryStat> stats) {
- if (constraints.maxWidth < 620) {
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- for (int i = 0; i < stats.length; i++) ...[
- stats[i],
- if (i < stats.length - 1) const SizedBox(height: 16),
- ],
- ],
- );
- }
+    if (constraints.maxWidth < 1024) {
+      final double cardWidth =
+          ((constraints.maxWidth - 18) / 2).clamp(260.0, constraints.maxWidth);
+      return Wrap(
+        spacing: 18,
+        runSpacing: 18,
+        children: [
+          for (final stat in stats) SizedBox(width: cardWidth, child: stat),
+        ],
+      );
+    }
 
- if (constraints.maxWidth < 1024) {
- final double cardWidth =
- ((constraints.maxWidth - 18) / 2).clamp(260.0, constraints.maxWidth);
- return Wrap(
- spacing: 18,
- runSpacing: 18,
- children: [
- for (final stat in stats)
- SizedBox(
- width: cardWidth,
- child: stat,
- ),
- ],
- );
- }
-
- return Row(
- children: [
- for (int i = 0; i < stats.length; i++) ...[
- Expanded(child: stats[i]),
- if (i < stats.length - 1) const SizedBox(width: 18),
- ],
- ],
- );
- }
+    return Row(
+      children: [
+        for (int i = 0; i < stats.length; i++) ...[
+          Expanded(child: stats[i]),
+          if (i < stats.length - 1) const SizedBox(width: 18),
+        ],
+      ],
+    );
+  }
 }
 
 class _SingleProjectsExpandedScreen extends StatelessWidget {
- const _SingleProjectsExpandedScreen({
- required this.projects,
- required this.isLoading,
- this.error,
- this.isBasicPlan = false,
- });
+  const _SingleProjectsExpandedScreen({
+    required this.projects,
+    required this.isLoading,
+    this.error,
+    this.isBasicPlan = false,
+  });
 
- final List<ProjectRecord> projects;
- final bool isLoading;
- final String? error;
- final bool isBasicPlan;
+  final List<ProjectRecord> projects;
+  final bool isLoading;
+  final String? error;
+  final bool isBasicPlan;
 
- @override
- Widget build(BuildContext context) {
- return Scaffold(
- backgroundColor: Colors.white,
- appBar: AppBar(
- title: Text(isBasicPlan ? 'Regular Projects' : 'Projects'),
- backgroundColor: Colors.white,
- elevation: 0,
- foregroundColor: Colors.black87,
- ),
- body: SafeArea(
- child: SingleChildScrollView(
- padding: const EdgeInsets.all(24),
- child: _SingleProjectsCard(
- projects: projects,
- isLoading: isLoading,
- error: error,
- expandedView: true,
- isBasicPlan: isBasicPlan,
- ),
- ),
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPalette.forPlan(isBasicPlan);
+    return DashboardPaletteScope(
+      palette: palette,
+      child: Scaffold(
+        backgroundColor: palette.canvas,
+        appBar: AppBar(
+          title: Text(isBasicPlan ? 'Regular Projects' : 'Projects'),
+          backgroundColor: palette.canvas,
+          elevation: 0,
+          foregroundColor: palette.ink,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: _SingleProjectsCard(
+              projects: projects,
+              isLoading: isLoading,
+              error: error,
+              expandedView: true,
+              isBasicPlan: isBasicPlan,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _GroupProjectsExpandedScreen extends StatelessWidget {
- const _GroupProjectsExpandedScreen({
- required this.projects,
- required this.isLoading,
- this.error,
- required this.selectedIds,
- required this.onToggle,
- required this.onClear,
- this.selectedIdsListenable,
- });
+  const _GroupProjectsExpandedScreen({
+    required this.projects,
+    required this.isLoading,
+    this.error,
+    required this.selectedIds,
+    required this.onToggle,
+    required this.onClear,
+    this.selectedIdsListenable,
+  });
 
- final List<ProjectRecord> projects;
- final bool isLoading;
- final String? error;
- final Set<String> selectedIds;
- final ValueChanged<String> onToggle;
- final VoidCallback onClear;
- final ValueListenable<Set<String>>? selectedIdsListenable;
+  final List<ProjectRecord> projects;
+  final bool isLoading;
+  final String? error;
+  final Set<String> selectedIds;
+  final ValueChanged<String> onToggle;
+  final VoidCallback onClear;
+  final ValueListenable<Set<String>>? selectedIdsListenable;
 
- @override
- Widget build(BuildContext context) {
- return Scaffold(
- backgroundColor: Colors.white,
- appBar: AppBar(
- title: const Text('Group Projects Into A Program'),
- backgroundColor: Colors.white,
- elevation: 0,
- foregroundColor: Colors.black87,
- ),
- body: SafeArea(
- child: SingleChildScrollView(
- padding: const EdgeInsets.all(24),
- child: selectedIdsListenable == null
- ? _GroupProjectsCard(
- projects: projects,
- isLoading: isLoading,
- error: error,
- selectedIds: selectedIds,
- onToggle: onToggle,
- onClear: onClear,
- expandedView: true,
- )
- : ValueListenableBuilder<Set<String>>(
- valueListenable: selectedIdsListenable!,
- builder: (context, ids, _) {
- return _GroupProjectsCard(
- projects: projects,
- isLoading: isLoading,
- error: error,
- selectedIds: ids,
- onToggle: onToggle,
- onClear: onClear,
- expandedView: true,
- selectedIdsListenable: selectedIdsListenable,
- );
- },
- ),
- ),
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPalette.forPlan(false);
+    return DashboardPaletteScope(
+      palette: palette,
+      child: Scaffold(
+        backgroundColor: palette.canvas,
+        appBar: AppBar(
+          title: const Text('Group Projects Into A Program'),
+          backgroundColor: palette.canvas,
+          elevation: 0,
+          foregroundColor: palette.ink,
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: selectedIdsListenable == null
+                ? _GroupProjectsCard(
+                    projects: projects,
+                    isLoading: isLoading,
+                    error: error,
+                    selectedIds: selectedIds,
+                    onToggle: onToggle,
+                    onClear: onClear,
+                    expandedView: true,
+                  )
+                : ValueListenableBuilder<Set<String>>(
+                    valueListenable: selectedIdsListenable!,
+                    builder: (context, ids, _) {
+                      return _GroupProjectsCard(
+                        projects: projects,
+                        isLoading: isLoading,
+                        error: error,
+                        selectedIds: ids,
+                        onToggle: onToggle,
+                        onClear: onClear,
+                        expandedView: true,
+                        selectedIdsListenable: selectedIdsListenable,
+                      );
+                    },
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _ProjectTableRowFromFirebase extends StatelessWidget {
@@ -2750,15 +2834,15 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  borderRadius: BorderRadius.circular(16),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.15),
+ color: Colors.black.withValues(alpha: 0.15),
  blurRadius: 24,
  offset: const Offset(0, 12),
  ),
  ],
  ),
- child: Column(
+ child: const Column(
  mainAxisAlignment: MainAxisAlignment.center,
- children: const [
+ children: [
  CircularProgressIndicator(strokeWidth: 3),
  SizedBox(height: 16),
  Text(
@@ -2794,18 +2878,16 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  : await ProjectNavigationService.instance.getLastPage(project.id);
  if (!context.mounted) return;
  debugPrint(
- 'Project loaded successfully, navigating to checkpoint: $checkpointRoute');
+ 'Project loaded successfully, navigating to checkpoint: $checkpointRoute');  final screen = NavigationRouteResolver.resolveCheckpointToScreen(
+  checkpointRoute.isEmpty ? 'initiation' : checkpointRoute,
+  context,
+  );
 
- final screen = NavigationRouteResolver.resolveCheckpointToScreen(
- checkpointRoute.isEmpty ? 'initiation' : checkpointRoute,
- context,
- );
-
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => screen ?? const InitiationPhaseScreen(),
- ),
- );
+  context.push(
+  NavigationRouteResolver.resolveCheckpointToUrl(
+      checkpointRoute.isEmpty ? 'initiation' : checkpointRoute),
+  extra: screen ?? const InitiationPhaseScreen(),
+  );
  } else {
  debugPrint('Failed to load project: ${provider.lastError}');
  showDialog(
@@ -3010,7 +3092,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  Container(
  padding: const EdgeInsets.all(8),
  decoration: BoxDecoration(
- color: scheme.primary.withOpacity(0.1),
+ color: scheme.primary.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(10),
  ),
  child:
@@ -3042,7 +3124,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  ),
  filled: true,
  fillColor:
- scheme.surfaceContainerHighest.withOpacity(0.3),
+ scheme.surfaceContainerHighest.withValues(alpha: 0.3),
  ),
  validator: (value) {
  if (value == null || value.trim().isEmpty) {
@@ -3232,312 +3314,292 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  }
 
  @override
- Widget build(BuildContext context) {
- final displayName =
- project.name.isNotEmpty ? project.name : 'Untitled Project';
- final phaseLabel = project.progressSnapshot.currentPhase.trim().isEmpty
- ? (project.status.isNotEmpty ? project.status : 'Initiation')
- : project.progressSnapshot.currentPhase.trim();
- final milestoneLabel =
- project.milestone.isNotEmpty ? project.milestone : 'Starting up';
- final progressValue = project.progressSnapshot.completion.clamp(0.0, 1.0);
- final progressPercent = project.progressSnapshot.completionPercent;
- final progressDetail = project.progressSnapshot.totalActivities > 0
- ? '${project.progressSnapshot.implementedActivities}/${project.progressSnapshot.totalActivities} implemented'
- : project.progressSnapshot.totalMilestones > 0
- ? '${project.progressSnapshot.achievedMilestones}/${project.progressSnapshot.totalMilestones} milestones'
- : 'Awaiting activity data';
- final investment = project.investmentMillions > 0
- ? '\$${project.investmentMillions.toStringAsFixed(1)}M'
- : 'Not set';
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    final displayName =
+        project.name.isNotEmpty ? project.name : 'Untitled Project';
+    final phaseLabel = project.progressSnapshot.currentPhase.trim().isEmpty
+        ? (project.status.isNotEmpty ? project.status : 'Initiation')
+        : project.progressSnapshot.currentPhase.trim();
+    final milestoneLabel =
+        project.milestone.isNotEmpty ? project.milestone : 'Starting up';
+    final progressValue = project.progressSnapshot.completion.clamp(0.0, 1.0);
+    final progressPercent = project.progressSnapshot.completionPercent;
+    final progressDetail = project.progressSnapshot.totalActivities > 0
+        ? '${project.progressSnapshot.implementedActivities}/${project.progressSnapshot.totalActivities} implemented'
+        : project.progressSnapshot.totalMilestones > 0
+            ? '${project.progressSnapshot.achievedMilestones}/${project.progressSnapshot.totalMilestones} milestones'
+            : 'Awaiting activity data';
+    final investment = project.investmentMillions > 0
+        ? '\$${project.investmentMillions.toStringAsFixed(1)}M'
+        : 'Not set';
 
- return Padding(
- padding: const EdgeInsets.fromLTRB(28, 24, 28, 24),
- child: Row(
- crossAxisAlignment: CrossAxisAlignment.center,
- children: [
- Expanded(
- flex: 32,
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- InkWell(
- onTap: () => _openProject(context),
- child: Text(
- displayName,
- style: const TextStyle(
- fontWeight: FontWeight.w700,
- fontSize: 18,
- color: Color(0xFF1A4DB3),
- decoration: TextDecoration.underline,
- ),
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
- ),
- ),
- const SizedBox(height: 8),
- Text(
- milestoneLabel,
- style: TextStyle(
- fontSize: 14,
- color: Colors.grey.shade600,
- letterSpacing: 0.2,
- ),
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
- ),
- const SizedBox(height: 6),
- Text(
- 'Last edited by ${_lastEditorName()} - ${_relativeTimeString(project.updatedAt)}',
- style: TextStyle(
- fontSize: 12,
- color: Colors.grey.shade500,
- ),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- ],
- ),
- ),
- Expanded(
- flex: 16,
- child: Padding(
- padding: const EdgeInsets.only(right: 8),
- child: Center(
- child: Container(
- padding:
- const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
- decoration: BoxDecoration(
- color: _stageBackgroundColor(phaseLabel),
- borderRadius: BorderRadius.circular(24),
- ),
- child: Text(
- phaseLabel,
- style: TextStyle(
- fontWeight: FontWeight.w700,
- fontSize: 13,
- color: _stageForegroundColor(phaseLabel),
- ),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- textAlign: TextAlign.center,
- ),
- ),
- ),
- ),
- ),
- Expanded(
- flex: 20,
- child: Padding(
- padding: const EdgeInsets.symmetric(horizontal: 8),
- child: Column(
- mainAxisSize: MainAxisSize.min,
- crossAxisAlignment: CrossAxisAlignment.stretch,
- children: [
- Row(
- children: [
- Text(
- '$progressPercent%',
- style: const TextStyle(
- fontSize: 15,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827),
- ),
- ),
- const SizedBox(width: 8),
- Expanded(
- child: Text(
- progressDetail,
- style: TextStyle(
- fontSize: 11,
- color: Colors.grey.shade600,
- fontWeight: FontWeight.w600,
- ),
- textAlign: TextAlign.right,
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- ),
- ],
- ),
- const SizedBox(height: 6),
- ClipRRect(
- borderRadius: BorderRadius.circular(999),
- child: LinearProgressIndicator(
- value: progressValue,
- minHeight: 8,
- backgroundColor: const Color(0xFFF3F4F6),
- valueColor: AlwaysStoppedAnimation<Color>(
- _progressStatusForeground(
- project.progressSnapshot.health),
- ),
- ),
- ),
- const SizedBox(height: 8),
- Align(
- alignment: Alignment.center,
- child: Container(
- padding: const EdgeInsets.symmetric(
- horizontal: 10,
- vertical: 5,
- ),
- decoration: BoxDecoration(
- color: _progressStatusBackground(
- project.progressSnapshot.health,
- ),
- borderRadius: BorderRadius.circular(999),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Container(
- width: 7,
- height: 7,
- decoration: BoxDecoration(
- color: _progressStatusForeground(
- project.progressSnapshot.health,
- ),
- shape: BoxShape.circle,
- ),
- ),
- const SizedBox(width: 6),
- Text(
- _progressStatusLabel(
- project.progressSnapshot.health),
- style: TextStyle(
- color: _progressStatusForeground(
- project.progressSnapshot.health,
- ),
- fontSize: 11,
- fontWeight: FontWeight.w700,
- ),
- ),
- ],
- ),
- ),
- ),
- ],
- ),
- ),
- ),
- Expanded(
- flex: 12,
- child: Padding(
- padding: const EdgeInsets.only(right: 8),
- child: Center(child: _OwnerNameCell(project: project)),
- ),
- ),
- Expanded(
- flex: 10,
- child: Padding(
- padding: const EdgeInsets.only(right: 8),
- child: Center(
- child: Text(
- investment,
- style: TextStyle(
- color: Colors.grey.shade700,
- fontWeight: FontWeight.w700,
- fontSize: 14,
- ),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- textAlign: TextAlign.center,
- ),
- ),
- ),
- ),
- Expanded(
- flex: 18,
- child: Center(
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Flexible(
- child: TextButton.icon(
- onPressed: () => _openProject(context),
- icon: const Icon(Icons.launch, size: 18),
- label: const Text('Open'),
- style: TextButton.styleFrom(
- foregroundColor: const Color(0xFF1A4DB3),
- padding: const EdgeInsets.symmetric(
- horizontal: 10,
- vertical: 10,
- ),
- textStyle: const TextStyle(
- fontWeight: FontWeight.w700,
- fontSize: 13,
- ),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(10),
- ),
- ),
- ),
- ),
- const SizedBox(width: 6),
- PopupMenuButton<String>(
- onSelected: (value) {
- if (value == 'rename') {
- _renameProject(context);
- } else if (value == 'delete') {
- _deleteProject(context);
- }
- },
- itemBuilder: (context) => [
- const PopupMenuItem(
- value: 'rename',
- child: Row(
- children: [
- Icon(Icons.edit_outlined,
- size: 20, color: Color(0xFF1A4DB3)),
- SizedBox(width: 12),
- Text('Rename',
- style: TextStyle(
- fontWeight: FontWeight.w600, fontSize: 15)),
- ],
- ),
- ),
- const PopupMenuItem(
- value: 'delete',
- child: Row(
- children: [
- Icon(Icons.delete_outline,
- size: 20, color: Colors.red),
- SizedBox(width: 12),
- Text('Delete',
- style: TextStyle(
- fontWeight: FontWeight.w600,
- color: Colors.red,
- fontSize: 15)),
- ],
- ),
- ),
- ],
- child: Container(
- padding: const EdgeInsets.symmetric(
- horizontal: 12, vertical: 10),
- decoration: BoxDecoration(
- color: Colors.grey.shade50,
- borderRadius: BorderRadius.circular(10),
- border:
- Border.all(color: Colors.grey.shade300, width: 1.5),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(Icons.more_horiz,
- size: 20, color: Colors.grey.shade700),
- ],
- ),
- ),
- ),
- ],
- ),
- ),
- ),
- ],
- ),
- );
- }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 22, 28, 22),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: 32,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InkWell(
+                  onTap: () => _openProject(context),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Text(
+                    displayName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15.5,
+                      color: palette.primaryDeep,
+                      letterSpacing: -0.1,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  milestoneLabel,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: palette.muted,
+                    letterSpacing: 0.2,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'Last edited by ${_lastEditorName()} · ${_relativeTimeString(project.updatedAt)}',
+                  style: TextStyle(fontSize: 11, color: palette.mutedSoft),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 16,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _stageBackgroundColor(phaseLabel),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    phaseLabel,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: _stageForegroundColor(phaseLabel),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 20,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        '$progressPercent%',
+                        style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w800,
+                            color: palette.ink),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          progressDetail,
+                          style: TextStyle(
+                              fontSize: 10.5,
+                              color: palette.muted,
+                              fontWeight: FontWeight.w600),
+                          textAlign: TextAlign.right,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: progressValue,
+                      minHeight: 7,
+                      backgroundColor: palette.outlineSoft,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _progressStatusForeground(project.progressSnapshot.health),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _progressStatusBackground(
+                            project.progressSnapshot.health),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: _progressStatusForeground(
+                                  project.progressSnapshot.health),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            _progressStatusLabel(project.progressSnapshot.health),
+                            style: TextStyle(
+                              color: _progressStatusForeground(
+                                  project.progressSnapshot.health),
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 12,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Center(child: _OwnerNameCell(project: project)),
+            ),
+          ),
+          Expanded(
+            flex: 10,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Center(
+                child: Text(
+                  investment,
+                  style: TextStyle(
+                      color: palette.inkSoft,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 18,
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: TextButton.icon(
+                      onPressed: () => _openProject(context),
+                      icon: const Icon(Icons.launch_rounded, size: 17),
+                      label: const Text('Open'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: palette.primaryDeep,
+                        backgroundColor: palette.primarySoft,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 9),
+                        textStyle: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 12.5),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'rename') {
+                        _renameProject(context);
+                      } else if (value == 'delete') {
+                        _deleteProject(context);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'rename',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined,
+                                size: 20, color: palette.primaryDeep),
+                            const SizedBox(width: 12),
+                            const Text('Rename',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline,
+                                size: 20, color: Colors.red),
+                            SizedBox(width: 12),
+                            Text('Delete',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.red,
+                                    fontSize: 15)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: palette.canvas,
+                        borderRadius: BorderRadius.circular(10),
+                        border:
+                            Border.all(color: palette.outline, width: 1.2),
+                      ),
+                      child: const Icon(Icons.more_horiz,
+                          size: 19, color: Color(0xFF64748B)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _OwnerNameCell extends StatefulWidget {
@@ -3648,516 +3710,259 @@ class _OwnerNameCellState extends State<_OwnerNameCell> {
  }
 
  @override
- Widget build(BuildContext context) {
- return AnimatedSwitcher(
- duration: const Duration(milliseconds: 200),
- switchInCurve: Curves.easeOut,
- switchOutCurve: Curves.easeIn,
- child: Text(
- _resolved,
- key: ValueKey(_resolved),
- style: const TextStyle(
- fontWeight: FontWeight.w700,
- fontSize: 15,
- color: Color(0xFF1E1F23),
- ),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- textAlign: TextAlign.center,
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: Text(
+        _resolved,
+        key: ValueKey(_resolved),
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+          color: DashboardPaletteScope.of(context).ink,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
 }
 
 class _SelectableProjectRowFromFirebase extends StatelessWidget {
- const _SelectableProjectRowFromFirebase({
- required this.project,
- required this.selected,
- required this.onTap,
- });
+  const _SelectableProjectRowFromFirebase({
+    required this.project,
+    required this.selected,
+    required this.onTap,
+  });
 
- final ProjectRecord project;
- final bool selected;
- final VoidCallback onTap;
+  final ProjectRecord project;
+  final bool selected;
+  final VoidCallback onTap;
 
- Color _dotColor(String status) {
- final normalized = status.toLowerCase();
- if (normalized.contains('execution')) return const Color(0xFF1EB980);
- if (normalized.contains('planning')) return const Color(0xFFFFB300);
- if (normalized.contains('design')) return const Color(0xFF6A4DE9);
- return const Color(0xFF8A92A6);
- }
+  Color _dotColor(String status) {
+    final normalized = status.toLowerCase();
+    if (normalized.contains('execution')) return const Color(0xFF1EB980);
+    if (normalized.contains('planning')) return const Color(0xFFFFB300);
+    if (normalized.contains('design')) return const Color(0xFF6A4DE9);
+    return const Color(0xFF8A92A6);
+  }
 
- @override
- Widget build(BuildContext context) {
- final displayName =
- project.name.isNotEmpty ? project.name : 'Untitled Project';
- final statusLabel =
- project.status.isNotEmpty ? project.status : 'Initiation';
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    final displayName =
+        project.name.isNotEmpty ? project.name : 'Untitled Project';
+    final statusLabel =
+        project.status.isNotEmpty ? project.status : 'Initiation';
 
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(24),
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
- decoration: BoxDecoration(
- color: selected ? const Color(0xFFFFF7E6) : const Color(0xFFF7F8FD),
- borderRadius: BorderRadius.circular(24),
- border: Border.all(
- color: selected ? const Color(0xFFFFCF6B) : const Color(0xFFE3E6F2),
- width: 2,
- ),
- boxShadow: selected
- ? [
- BoxShadow(
- color: const Color(0xFFFFC14A).withOpacity(0.4),
- blurRadius: 28,
- offset: const Offset(0, 14),
- ),
- ]
- : [
- BoxShadow(
- color: Colors.black.withOpacity(0.05),
- blurRadius: 22,
- offset: const Offset(0, 12),
- ),
- ],
- ),
- child: Row(
- children: [
- Container(
- width: 18,
- height: 18,
- decoration: BoxDecoration(
- color: _dotColor(statusLabel),
- shape: BoxShape.circle,
- ),
- ),
- const SizedBox(width: 18),
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- displayName,
- style: const TextStyle(
- fontWeight: FontWeight.w700,
- fontSize: 17,
- color: Color(0xFF101218),
- ),
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
- ),
- const SizedBox(height: 6),
- Text(
- statusLabel,
- style: TextStyle(
- color: Colors.grey.shade600,
- fontSize: 15,
- fontWeight: FontWeight.w500,
- ),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- ],
- ),
- ),
- const SizedBox(width: 20),
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
- decoration: BoxDecoration(
- color: selected ? const Color(0xFF111111) : Colors.white,
- borderRadius: BorderRadius.circular(20),
- border: Border.all(
- color: selected ? Colors.black : const Color(0xFFE1E4ED),
- width: 1.5,
- ),
- ),
- child: Text(
- selected ? 'Selected' : 'Tap to include',
- style: TextStyle(
- fontWeight: FontWeight.w700,
- fontSize: 14,
- color: selected ? Colors.white : const Color(0xFF4A4D57),
- ),
- ),
- ),
- ],
- ),
- ),
- );
- }
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: selected ? palette.primarySoft : palette.canvas,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: selected ? palette.primary : palette.outline,
+            width: selected ? 2 : 1.2,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: palette.primary.withValues(alpha: 0.2),
+                    blurRadius: 22,
+                    offset: const Offset(0, 10),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                color: _dotColor(statusLabel),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.5,
+                        color: palette.ink),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    statusLabel,
+                    style: TextStyle(
+                        color: palette.muted,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: selected ? palette.primary : palette.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: selected ? palette.primary : palette.outline,
+                  width: 1.2,
+                ),
+              ),
+              child: Text(
+                selected ? 'Selected' : 'Tap to include',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                  color: selected ? Colors.white : palette.muted,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _SummaryStat extends StatelessWidget {
- const _SummaryStat({
- required this.label,
- required this.value,
- required this.caption,
- });
+  const _SummaryStat({
+    required this.label,
+    required this.value,
+    required this.caption,
+  });
 
- final String label;
- final String value;
- final String caption;
+  final String label;
+  final String value;
+  final String caption;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(24),
- decoration: BoxDecoration(
- color: const Color(0xFFF7F8FD),
- borderRadius: BorderRadius.circular(24),
- border: Border.all(color: const Color(0xFFE4E6F1), width: 1.5),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- label,
- style: const TextStyle(
- fontWeight: FontWeight.w700,
- color: Color(0xFF5B5D7A),
- fontSize: 15,
- ),
- ),
- const SizedBox(height: 12),
- Text(
- value,
- style: const TextStyle(
- fontWeight: FontWeight.w800,
- fontSize: 28,
- color: Color(0xFF14161D),
- ),
- ),
- const SizedBox(height: 10),
- Text(
- caption,
- style: TextStyle(
- color: Colors.grey.shade600,
- fontSize: 15,
- height: 1.5,
- ),
- ),
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: palette.canvas,
+        borderRadius: BorderRadius.circular(palette.cardRadius),
+        border: Border.all(color: palette.outline, width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: palette.muted,
+              fontSize: 13,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 28,
+              color: palette.ink,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            caption,
+            style: TextStyle(color: palette.muted, fontSize: 13.5, height: 1.45),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _TableHeaderLabel extends StatelessWidget {
- const _TableHeaderLabel(this.label, {this.alignment = Alignment.centerLeft});
+  const _TableHeaderLabel(this.label, {this.alignment = Alignment.centerLeft});
 
- final String label;
- final Alignment alignment;
+  final String label;
+  final Alignment alignment;
 
- @override
- Widget build(BuildContext context) {
- return Align(
- alignment: alignment,
- child: Text(
- label,
- style: const TextStyle(
- fontWeight: FontWeight.w700,
- fontSize: 15,
- color: Color(0xFF53556B),
- letterSpacing: 0.3,
- ),
- textAlign: TextAlign.center,
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    return Align(
+      alignment: alignment,
+      child: Text(
+        label,
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          color: palette.muted,
+          letterSpacing: 0.8,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
 }
 
 class _FrostedSurface extends StatelessWidget {
- const _FrostedSurface({required this.child, this.padding});
+  const _FrostedSurface({required this.child, this.padding});
 
- final Widget child;
- final EdgeInsetsGeometry? padding;
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
 
- @override
- Widget build(BuildContext context) {
- final media = MediaQuery.of(context);
- final isCompact = media.size.width < 600;
- final resolvedPadding = padding ?? EdgeInsets.all(isCompact ? 20 : 24);
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    final media = MediaQuery.of(context);
+    final isCompact = media.size.width < 600;
+    final resolvedPadding = padding ?? EdgeInsets.all(isCompact ? 20 : 24);
 
- return Container(
- padding: resolvedPadding,
- decoration: BoxDecoration(
- color: Colors.white.withOpacity(0.92),
- borderRadius: BorderRadius.circular(isCompact ? 22 : 28),
- border: Border.all(color: const Color(0xFFE4E7F3)),
- boxShadow: [
- BoxShadow(
- color: Colors.black.withOpacity(0.05),
- blurRadius: 28,
- offset: const Offset(0, 18),
- ),
- ],
- ),
- child: child,
- );
- }
+    return Container(
+      padding: resolvedPadding,
+      decoration: BoxDecoration(
+        color: palette.surface.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(palette.sectionRadius),
+        border: Border.all(color: palette.outline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 26,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Desktop Premium User Greeting Widget – world‑class personalised greeting
-// ─────────────────────────────────────────────────────────────────────────────
-class _DesktopPremiumGreeting extends StatelessWidget {
- const _DesktopPremiumGreeting({required this.isBasicPlan});
-
- final bool isBasicPlan;
-
- /// Time‑aware greeting prefix
- static String _timePrefix() {
- final hour = DateTime.now().hour;
- if (hour < 12) return 'Good morning';
- if (hour < 17) return 'Good afternoon';
- return 'Good evening';
- }
-
- /// Extract initials (up to 2 chars) from display name
- static String _initials(String name) {
- final parts = name.trim().split(RegExp(r'\s+'));
- if (parts.length >= 2) {
- return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
- }
- return name.isNotEmpty ? name[0].toUpperCase() : 'U';
- }
-
- @override
- Widget build(BuildContext context) {
- final textTheme = Theme.of(context).textTheme;
- final displayName = FirebaseAuthService.displayNameOrEmail(fallback: 'User');
- final firstName = displayName.split(' ').first;
- final initials = _initials(displayName);
- final greeting = '${_timePrefix()}, $firstName';
-
- // Photo URL from Firebase Auth
- final photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
-
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
- decoration: BoxDecoration(
- gradient: const LinearGradient(
- begin: Alignment.topLeft,
- end: Alignment.bottomRight,
- colors: [
- Color(0xFFFFFFFF),
- Color(0xFFF7F9FB),
- ],
- ),
- borderRadius: BorderRadius.circular(20),
- border: Border.all(
- color: const Color(0xFFE0E3E5).withOpacity(0.6),
- ),
- boxShadow: [
- BoxShadow(
- color: Colors.black.withOpacity(0.03),
- blurRadius: 20,
- offset: const Offset(0, 4),
- ),
- BoxShadow(
- color: const Color(0xFFFFCC00).withOpacity(0.06),
- blurRadius: 32,
- offset: const Offset(0, 12),
- ),
- ],
- ),
- child: Row(
- children: [
- // ── Avatar ───────────────────────────────────────────────────
- Container(
- width: 56,
- height: 56,
- decoration: BoxDecoration(
- gradient: const LinearGradient(
- begin: Alignment.topLeft,
- end: Alignment.bottomRight,
- colors: [
- Color(0xFFFFCC00),
- Color(0xFFFFE066),
- Color(0xFFFFD633),
- ],
- ),
- borderRadius: BorderRadius.circular(16),
- boxShadow: [
- BoxShadow(
- color: const Color(0xFFFFCC00).withOpacity(0.35),
- blurRadius: 14,
- offset: const Offset(0, 5),
- ),
- ],
- ),
- child: Center(
- child: photoUrl != null && photoUrl.isNotEmpty
- ? ClipRRect(
- borderRadius: BorderRadius.circular(14),
- child: Image.network(
- photoUrl,
- width: 46,
- height: 46,
- fit: BoxFit.cover,
- errorBuilder: (_, __, ___) => _buildInitialsText(initials, 24),
- ),
- )
- : _buildInitialsText(initials, 24),
- ),
- ),
- const SizedBox(width: 20),
-
- // ── Greeting text ────────────────────────────────────────────
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- greeting,
- style: textTheme.headlineSmall?.copyWith(
- fontWeight: FontWeight.w800,
- color: const Color(0xFF0F1117),
- letterSpacing: -0.02,
- height: 1.2,
- ),
- ),
- const SizedBox(height: 6),
- Row(
- children: [
- // Plan badge
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
- decoration: BoxDecoration(
- color: isBasicPlan
- ? const Color(0xFFEFF6FF)
- : const Color(0xFFFFF8E1),
- borderRadius: BorderRadius.circular(8),
- border: Border.all(
- color: isBasicPlan
- ? const Color(0xFFBFDBFE)
- : const Color(0xFFFFE082),
- width: 0.5,
- ),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(
- isBasicPlan ? Icons.star_outline : Icons.workspace_premium_outlined,
- size: 14,
- color: isBasicPlan
- ? const Color(0xFF2563EB)
- : const Color(0xFFF59E0B),
- ),
- const SizedBox(width: 4),
- Text(
- isBasicPlan ? 'Basic Plan' : 'Pro Plan',
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- letterSpacing: 0.04,
- color: isBasicPlan
- ? const Color(0xFF2563EB)
- : const Color(0xFFB45309),
- ),
- ),
- ],
- ),
- ),
- const SizedBox(width: 12),
- Flexible(
- child: Text(
- isBasicPlan ? 'Basic plan dashboard' : 'Project dashboard',
- style: textTheme.titleMedium?.copyWith(
- fontWeight: FontWeight.w600,
- color: const Color(0xFF414754),
- letterSpacing: 0.01,
- ),
- overflow: TextOverflow.ellipsis,
- ),
- ),
- ],
- ),
- ],
- ),
- ),
-
- // ── Online indicator + date ──────────────────────────────────
- Column(
- crossAxisAlignment: CrossAxisAlignment.end,
- children: [
- Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Container(
- width: 8,
- height: 8,
- decoration: BoxDecoration(
- color: const Color(0xFF22C55E),
- shape: BoxShape.circle,
- border: Border.all(color: Colors.white, width: 1.5),
- boxShadow: [
- BoxShadow(
- color: const Color(0xFF22C55E).withOpacity(0.4),
- blurRadius: 4,
- offset: const Offset(0, 1),
- ),
- ],
- ),
- ),
- const SizedBox(width: 6),
- Text(
- 'Online',
- style: TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- color: const Color(0xFF22C55E),
- letterSpacing: 0.04,
- ),
- ),
- ],
- ),
- const SizedBox(height: 4),
- Text(
- _formatDate(),
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w500,
- color: Colors.grey.shade500,
- ),
- ),
- ],
- ),
- ],
- ),
- );
- }
-
- Widget _buildInitialsText(String initials, double fontSize) {
- return Text(
- initials,
- style: TextStyle(
- fontSize: fontSize,
- fontWeight: FontWeight.w800,
- color: const Color(0xFF191C1D),
- height: 1,
- ),
- );
- }
-
- static String _formatDate() {
- final now = DateTime.now();
- const months = [
- '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
- 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
- ];
- return '${months[now.month]} ${now.day}, ${now.year}';
- }
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Compact Action Button — horizontal button used for "Group Into A Program"
-// and "Project Logs" on the project dashboard.
-// ═══════════════════════════════════════════════════════════════════════════
 
 class _CompactActionButton extends StatefulWidget {
  const _CompactActionButton({
@@ -4182,91 +3987,277 @@ class _CompactActionButtonState extends State<_CompactActionButton> {
  bool _isHovered = false;
 
  @override
- Widget build(BuildContext context) {
- return MouseRegion(
- onEnter: (_) {
- if (!mounted || _isHovered) return;
- setState(() => _isHovered = true);
- },
- onExit: (_) {
- if (!mounted || !_isHovered) return;
- setState(() => _isHovered = false);
- },
- child: GestureDetector(
- onTap: widget.onTap,
- child: AnimatedContainer(
- duration: const Duration(milliseconds: 180),
- curve: Curves.easeOut,
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
- decoration: BoxDecoration(
- color: _isHovered
- ? widget.accent.withOpacity(0.08)
- : Colors.white,
- borderRadius: BorderRadius.circular(14),
- border: Border.all(
- color: _isHovered
- ? widget.accent.withOpacity(0.4)
- : const Color(0xFFE2E8F0),
- width: 1.5,
- ),
- boxShadow: [
- BoxShadow(
- color: Colors.black.withOpacity(_isHovered ? 0.06 : 0.03),
- blurRadius: _isHovered ? 12 : 8,
- offset: const Offset(0, 4),
- ),
- ],
- ),
- child: Row(
- children: [
- Container(
- width: 40,
- height: 40,
- decoration: BoxDecoration(
- color: widget.accent.withOpacity(0.12),
- borderRadius: BorderRadius.circular(10),
- ),
- child: Icon(widget.icon, size: 20, color: widget.accent),
- ),
- const SizedBox(width: 12),
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- widget.label,
- style: TextStyle(
- decoration: TextDecoration.none,
- fontSize: 14,
- fontWeight: FontWeight.w700,
- color: const Color(0xFF0F172A),
- ),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- const SizedBox(height: 2),
- Text(
- widget.subtitle,
- style: const TextStyle(
- decoration: TextDecoration.none,
- fontSize: 11.5,
- color: Color(0xFF64748B),
- ),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- ],
- ),
- ),
- Icon(Icons.arrow_forward_ios_rounded,
- size: 14,
- color: _isHovered
- ? widget.accent
- : const Color(0xFF94A3B8)),
- ],
- ),
- ),
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    return MouseRegion(
+      onEnter: (_) {
+        if (!mounted || _isHovered) return;
+        setState(() => _isHovered = true);
+      },
+      onExit: (_) {
+        if (!mounted || !_isHovered) return;
+        setState(() => _isHovered = false);
+      },
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? widget.accent.withValues(alpha: 0.08)
+                : palette.surface,
+            borderRadius: BorderRadius.circular(palette.cardRadius),
+            border: Border.all(
+              color: _isHovered
+                  ? widget.accent.withValues(alpha: 0.45)
+                  : palette.outline,
+              width: 1.4,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: _isHovered ? 0.06 : 0.03),
+                blurRadius: _isHovered ? 12 : 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: widget.accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(widget.icon, size: 20, color: widget.accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: palette.ink,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.subtitle,
+                      style: TextStyle(fontSize: 11.5, color: palette.muted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: _isHovered ? widget.accent : palette.mutedSoft,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+// ── Section eyebrow (world-class section headers) ─────────────────────────
+class _SectionEyebrow extends StatelessWidget {
+  const _SectionEyebrow({required this.title, this.icon, this.tint});
+
+  final String title;
+  final IconData? icon;
+  final Color? tint;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    final color = tint ?? palette.primary;
+    return Row(
+      children: [
+        if (icon != null) ...[
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+        ],
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w800,
+            color: palette.muted,
+            letterSpacing: 1.3,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(child: Container(height: 1, color: palette.outline)),
+      ],
+    );
+  }
+}
+
+// ── Decorative grid for the dark command band ─────────────────────────────
+class _HeaderGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.08)
+      ..strokeWidth = 0.6;
+    const spacing = 30.0;
+    for (var x = 0.0; x < size.width; x += spacing) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (var y = 0.0; y < size.height; y += spacing) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ── Small pill action used on the yellow header band ───────────────────────
+class _HeaderBandAction extends StatelessWidget {
+  const _HeaderBandAction({required this.icon, this.label, required this.onTap});
+
+  final IconData icon;
+  final String? label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: palette.ink.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: palette.ink.withValues(alpha: 0.16)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: palette.ink.withValues(alpha: 0.75)),
+            if (label != null) ...[
+              const SizedBox(width: 6),
+              Text(label!,
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: palette.ink)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Premium stat card used in the dashboard status strip ──────────────────
+class _WorldClassStatCard extends StatelessWidget {
+  const _WorldClassStatCard({
+    required this.label,
+    required this.value,
+    required this.subLabel,
+    required this.icon,
+    required this.color,
+    this.onTap,
+  });
+
+  final String label;
+  final String value;
+  final String subLabel;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardPaletteScope.of(context);
+    final card = Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(palette.cardRadius),
+        border: Border.all(color: palette.outline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: palette.ink,
+                    height: 1.05,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(label,
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: palette.ink)),
+                const SizedBox(height: 2),
+                Text(subLabel,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: palette.muted)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Icon(Icons.chevron_right_rounded, size: 18, color: palette.mutedSoft),
+        ],
+      ),
+    );
+
+    if (onTap == null) return card;
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(palette.cardRadius),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(palette.cardRadius),
+        child: card,
+      ),
+    );
+  }
 }

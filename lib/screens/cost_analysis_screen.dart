@@ -48,6 +48,8 @@ import 'package:ndu_project/widgets/expandable_text.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 class CostAnalysisScreen extends StatefulWidget {
   final String notes;
@@ -1806,23 +1808,13 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             if (title == 'Home') {
               HomeScreen.open(context);
             } else if (title == 'SSHER') {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const SsherStackedScreen()));
+              context.push('/ssher-stacked');
             } else if (title == 'LogOut') {
               AuthNav.signOutAndExit(context);
             } else if (title == 'Team Management') {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const TeamManagementScreen()));
+              context.push('/team-management');
             } else if (title == 'Change Management') {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const ChangeManagementModuleScreen()));
+              context.push('/change-management-module');
             } else if (title == 'Lessons Learned') {
               LessonsLearnedScreen.open(context);
             }
@@ -2025,86 +2017,51 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   void _openBusinessCase() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const InitiationPhaseScreen(scrollToBusinessCase: true),
-      ),
-    );
+    context.push('/initiation-phase', extra: const InitiationPhaseScreen(scrollToBusinessCase: true));
   }
 
   void _openPotentialSolutions() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const PotentialSolutionsScreen(),
-      ),
-    );
+    context.push('/potential-solutions');
   }
 
   void _openRiskIdentification() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => RiskIdentificationScreen(
+    context.push('/risk-identification', extra: RiskIdentificationScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openITConsiderations() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ITConsiderationsScreen(
+    context.push('/it-considerations', extra: ITConsiderationsScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openInfrastructureConsiderations() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => InfrastructureConsiderationsScreen(
+    context.push('/infrastructure-considerations', extra: InfrastructureConsiderationsScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openCoreStakeholders() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CoreStakeholdersScreen(
+    context.push('/core-stakeholders', extra: CoreStakeholdersScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openPreferredSolutionAnalysis() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PreferredSolutionAnalysisScreen(
+    context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   Widget _buildMainContent() {
@@ -2643,16 +2600,11 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     Navigator.of(context).pop(); // Close loading dialog
 
     // Navigate to Preferred Solution Analysis
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PreferredSolutionAnalysisScreen(
+    context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
           notes: widget.notes,
           solutions: widget.solutions,
           businessCase: projectData.businessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   Future<void> _saveCostAnalysisData() async {
@@ -3550,6 +3502,14 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   Widget _buildMultiYearBenefitTable() {
+    return FullScreenTableWrapper(
+      title: 'Projected Benefit Horizons',
+      child: _buildMultiYearBenefitTableContent(),
+      tableBuilder: (fsContext) => _buildMultiYearBenefitTableContent(),
+    );
+  }
+
+  Widget _buildMultiYearBenefitTableContent() {
     final amountText = _projectValueAmountController.text.trim();
     final explicitValue = _parseCurrencyInput(amountText);
 
@@ -3666,12 +3626,14 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       ),
       child: Row(children: [
         Expanded(
-            flex: 2, child: Text(label, style: const TextStyle(fontSize: 13))),
+            flex: 2,
+            child:
+                WrappedText(label, style: const TextStyle(fontSize: 13))),
         Expanded(
           flex: 3,
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text(
+            child: WrappedText(
               _formatCurrencyValue(value),
               style: TextStyle(
                   fontSize: 13,
@@ -5442,7 +5404,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           flex: 2,
           child: Align(
             alignment: Alignment.center,
-            child: Text(
+            child: WrappedText(
               _formatCurrencyValue(row.currentCost()),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
@@ -6017,11 +5979,39 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   Widget _buildInitialCostTable(int solutionIndex) {
-    final rows = _rowsPerSolution[solutionIndex];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LayoutBuilder(
+        FullScreenTableWrapper(
+          title: 'Initial Cost Estimate',
+          child: _buildInitialCostTableContent(solutionIndex),
+          tableBuilder: (fsContext) =>
+              _buildInitialCostTableContent(solutionIndex),
+        ),
+        const SizedBox(height: 10),
+        _buildContingencyButtons(solutionIndex),
+        const SizedBox(height: 10),
+        Row(children: [
+          CsvTableImportButton(
+            tableTitle: 'Initial Cost Estimate',
+            columns: _costCsvColumns,
+            onImport: (rows) => _handleCostCsvImport(solutionIndex, rows),
+            compact: true,
+          ),
+          const Spacer(),
+          OutlinedButton.icon(
+            onPressed: () => _addInitialCostRow(solutionIndex),
+            icon: const Icon(Icons.add),
+            label: const Text('Add row'),
+          ),
+        ]),
+      ],
+    );
+  }
+
+  Widget _buildInitialCostTableContent(int solutionIndex) {
+    final rows = _rowsPerSolution[solutionIndex];
+    return LayoutBuilder(
           builder: (context, constraints) {
             const minTableWidth = 920.0;
             final tableWidth = constraints.maxWidth < minTableWidth
@@ -6130,7 +6120,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                                 Expanded(
                                   flex: 3,
                                   child: Center(
-                                    child: Text('Total',
+                                    child: WrappedText('Total',
                                         style: const TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700)),
@@ -6141,7 +6131,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                                   flex: 2,
                                   child: Align(
                                     alignment: Alignment.center,
-                                    child: Text(
+                                    child: WrappedText(
                                       _formatCurrencyValue(
                                           _solutionTotalCost(solutionIndex)),
                                       style: const TextStyle(
@@ -6168,26 +6158,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
               ),
             );
           },
-        ),
-        const SizedBox(height: 10),
-        _buildContingencyButtons(solutionIndex),
-        const SizedBox(height: 10),
-        Row(children: [
-          CsvTableImportButton(
-            tableTitle: 'Initial Cost Estimate',
-            columns: _costCsvColumns,
-            onImport: (rows) => _handleCostCsvImport(solutionIndex, rows),
-            compact: true,
-          ),
-          const Spacer(),
-          OutlinedButton.icon(
-            onPressed: () => _addInitialCostRow(solutionIndex),
-            icon: const Icon(Icons.add),
-            label: const Text('Add row'),
-          ),
-        ]),
-      ],
-    );
+        );
   }
 
   void _applyContingency(int solutionIndex, int percent) {
@@ -6581,6 +6552,15 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             'Add one or more solutions to see ROI, NPV, and IRR results.'),
       );
     }
+    return FullScreenTableWrapper(
+      title: 'Profitability Analysis',
+      child: _buildProfitabilitySummaryTableContent(),
+      tableBuilder: (fsContext) => _buildProfitabilitySummaryTableContent(),
+    );
+  }
+
+  Widget _buildProfitabilitySummaryTableContent() {
+    final count = _rowsPerSolution.length;
     final horizon = _npvHorizon;
     return Container(
       width: double.infinity,
@@ -6679,25 +6659,25 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
             flex: 4,
             child: Center(
                 child:
-                    Text(solutionLabel, style: const TextStyle(fontSize: 13)))),
+                    WrappedText(solutionLabel, style: const TextStyle(fontSize: 13)))),
         Expanded(
             flex: 2,
             child: Align(
                 alignment: Alignment.center,
-                child: Text(_formatPercentValue(roiPct),
+                child: WrappedText(_formatPercentValue(roiPct),
                     textAlign: TextAlign.center))),
         const SizedBox(width: 16),
         Expanded(
             flex: 2,
             child: Align(
                 alignment: Alignment.center,
-                child: Text(_formatCurrencyValue(npv)))),
+                child: WrappedText(_formatCurrencyValue(npv)))),
         const SizedBox(width: 16),
         Expanded(
             flex: 2,
             child: Align(
                 alignment: Alignment.center,
-                child: Text(_formatPercentValue(irrPercent),
+                child: WrappedText(_formatPercentValue(irrPercent),
                     textAlign: TextAlign.center))),
       ]),
     );

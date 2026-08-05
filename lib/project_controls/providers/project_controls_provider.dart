@@ -2,6 +2,7 @@
 ///
 /// Serves as the single source of truth for project controls.
 /// Persists all data to Firestore via ProjectControlsFirestoreService.
+library;
 
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,7 +13,7 @@ import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart' as c
 String get _currentUser => FirebaseAuth.instance.currentUser?.email ?? 'you@ndu.project';
 
 class ProjectControlsProvider extends ChangeNotifier {
-  ProjectControlsState _state = ProjectControlsState(
+  ProjectControlsState _state = const ProjectControlsState(
     deliveryModel: DeliveryModel.waterfall,
     isBaselined: false,
     isExecutionActive: false,

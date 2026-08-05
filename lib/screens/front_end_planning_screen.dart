@@ -10,6 +10,7 @@ import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 
 class FrontEndPlanningScreen extends StatefulWidget {
  const FrontEndPlanningScreen({super.key});
@@ -50,9 +51,7 @@ class _FrontEndPlanningScreenState extends State<FrontEndPlanningScreen> {
  }
 // ignore: unused_element
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const FrontEndPlanningScreen()),
- );
+ context.push('/front-end-planning');
  }
 
  @override
@@ -76,7 +75,7 @@ class _FrontEndPlanningScreenState extends State<FrontEndPlanningScreen> {
  child: SingleChildScrollView(
  padding: EdgeInsets.symmetric(
  vertical: isMobile ? 32 : 64, horizontal: padding),
- child: Column(
+ child: const Column(
  mainAxisSize: MainAxisSize.min,
  children: [
  _TitleBlock(),
@@ -120,7 +119,7 @@ class _StripedBackdrop extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Stack(
+ return const Stack(
  fit: StackFit.expand,
  children: [
  ColoredBox(color: Color(0xFFF3F5F9)),
@@ -155,7 +154,7 @@ class _TitleBlock extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return EditableContentText(
+ return const EditableContentText(
  contentKey: 'fep_charter_title',
  fallback: 'The components of a project charter',
  category: 'front_end_planning',
@@ -206,7 +205,7 @@ class _ProjectCharterTable extends StatelessWidget {
  ),
  child: ClipRRect(
  borderRadius: BorderRadius.circular(18),
- child: Column(
+ child: const Column(
  mainAxisSize: MainAxisSize.min,
  children: [
  _TableRowCells(

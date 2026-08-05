@@ -110,4 +110,12 @@ class RecurringDeliverableRow {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecurringDeliverableRow && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

@@ -32,16 +32,10 @@ class DashboardBottomNavBar extends StatelessWidget {
         context.go('/${AppRoutes.dashboard}');
         break;
       case 1:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ProgramDashboardMobileScreen()),
-        );
+        context.push('/program-dashboard-mobile');
         break;
       case 2:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
-        );
+        context.push('/portfolio-dashboard');
         break;
       case 3:
         context.go('/${AppRoutes.settings}?from=${AppRoutes.dashboard}');
@@ -58,7 +52,7 @@ class DashboardBottomNavBar extends StatelessWidget {
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
         ),
-        border: Border(
+        border: const Border(
           top: BorderSide(color: _Tokens.outlineVariant, width: 1),
         ),
         boxShadow: [

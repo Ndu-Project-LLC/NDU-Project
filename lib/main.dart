@@ -4,10 +4,11 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/app_strings.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:ndu_project/firebase_options.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
-import 'package:ndu_project/services/api_config_secure.dart' show SecureAPIConfig;
+import 'package:ndu_project/services/api_config_secure.dart'
+    show SecureAPIConfig;
 import 'package:ndu_project/services/env_config_loader.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
@@ -155,9 +156,12 @@ void main() async {
         },
       );
     }
-    firestore.settings = Settings(
+    firestore.settings = const Settings(
       persistenceEnabled: !kIsWeb,
-      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      // Cap Firestore cache size to prevent unbounded IndexedDB growth on web.
+      // CACHE_SIZE_UNLIMITED caused multi-hundred-MB IndexedDB bloat in long
+      // sessions. 40 MB is the SDK default and comfortably holds ~1k documents.
+      cacheSizeBytes: kIsWeb ? 40 * 1024 * 1024 : Settings.CACHE_SIZE_UNLIMITED,
     );
   } catch (error, stack) {
     debugPrint('Firebase init error: $error');
@@ -182,6 +186,14 @@ void main() async {
       'using server-side proxy.',
     );
   }
+  // Tune image raster cache for web — default 100 MB / 1000 images is
+  // excessive for a project-management app where most images are small
+  // avatars, icons, and section banners. 50 MB / 500 images is plenty and
+  // frees ~50 MB of memory for the actual app state.
+  // (No-op on mobile — these only have effect on web.)
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024;
+  PaintingBinding.instance.imageCache.maximumSize = 500;
+
   // Warm common local stores in background to reduce first-navigation latency.
   unawaited(UserPreferencesService.warmUp());
   unawaited(UserPreferencesService.loadCountryCurrency());
@@ -235,37 +247,41 @@ class MyApp extends StatelessWidget {
               onPointerDown: (_) => SessionManager.instance.resetTimer(),
               onPointerMove: (_) => SessionManager.instance.resetTimer(),
               onPointerUp: (_) => SessionManager.instance.resetTimer(),
-              child:
-                MaterialApp.router(
-                  title: AppStrings.appName,
-                  debugShowCheckedModeBanner: false,
-                  theme: lightTheme,
-                  darkTheme: darkTheme,
-                  themeMode: themeProvider.themeMode,
-                  routerConfig: AppRouter.main,
-                  // Smooth cross-fade when toggling themes
-                  themeAnimationDuration: const Duration(milliseconds: 300),
-                  themeAnimationCurve: Curves.easeInOut,
-                  // Performance optimizations
-                  builder: (context, child) {
-                    final media = MediaQuery.of(context).copyWith(boldText: false);
-                    return MediaQuery(
-                      // Disable unnecessary animations and transitions on slow devices
-                      data: media,
-                      // Provide a transparent Material ancestor so that all
-                      // ListTile widgets in the app have a Material ancestor,
-                      // preventing the "background color or ink splashes may
-                      // be invisible" warning from DecoratedBox wrappers.
-                      child: Material(
-                        type: MaterialType.transparency,
-                        child: child ?? const SizedBox.shrink(),
-                      ),
-                    );
-                  },
-                  // Reduce checkerboard opacity for better performance
-                  checkerboardRasterCacheImages: false,
-                  checkerboardOffscreenLayers: false,
-                ),
+              child: MaterialApp.router(
+                title: AppStrings.appName,
+                debugShowCheckedModeBanner: false,
+                theme: lightTheme,
+                darkTheme: darkTheme,
+                themeMode: themeProvider.themeMode,
+                routerConfig: AppRouter.main,
+                // Smooth cross-fade when toggling themes
+                themeAnimationDuration: const Duration(milliseconds: 300),
+                themeAnimationCurve: Curves.easeInOut,
+                // Performance optimizations
+                builder: (context, child) {
+                  final media =
+                      MediaQuery.of(context).copyWith(boldText: false);
+                  return MediaQuery(
+                    // Disable unnecessary animations and transitions on slow devices
+                    data: media,
+                    // Provide a transparent Material ancestor so that all
+                    // ListTile widgets in the app have a Material ancestor,
+                    // preventing the "background color or ink splashes may
+                    // be invisible" warning from DecoratedBox wrappers.
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: child ?? const SizedBox.shrink(),
+                    ),
+                  );
+                },
+                // Reduce checkerboard opacity for better performance
+                checkerboardRasterCacheImages: false,
+                checkerboardOffscreenLayers: false,
+                // Show the Flutter performance overlay in profile/debug mode
+                // so frame jank is visible during manual QA. Hidden in
+                // release builds automatically.
+                showPerformanceOverlay: kDebugMode,
+              ),
             ),
           );
         },

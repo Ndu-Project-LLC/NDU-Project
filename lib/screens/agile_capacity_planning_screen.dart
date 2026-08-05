@@ -320,8 +320,8 @@ class _AgileCapacityPlanningScreenState
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                         activeItemLabel:
                             'Agile Delivery Model - Capacity Planning'),
                   ),
@@ -386,10 +386,13 @@ class _AgileCapacityPlanningScreenState
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_kAccent.withOpacity(0.1), _kAccent.withOpacity(0.02)],
+          colors: [
+            _kAccent.withValues(alpha: 0.1),
+            _kAccent.withValues(alpha: 0.02)
+          ],
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _kAccent.withOpacity(0.3)),
+        border: Border.all(color: _kAccent.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -540,10 +543,12 @@ class _AgileCapacityPlanningScreenState
               ),
             )
           else
-            ..._leaveEntries
-                .asMap()
-                .entries
-                .map((e) => _buildLeaveRow(e.key, e.value)),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _leaveEntries.length,
+              itemBuilder: (context, i) => _buildLeaveRow(i, _leaveEntries[i]),
+            ),
         ],
       ),
     );
@@ -554,7 +559,7 @@ class _AgileCapacityPlanningScreenState
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: _kBorder),
       ),
@@ -656,10 +661,12 @@ class _AgileCapacityPlanningScreenState
               ),
             )
           else
-            ..._holidays
-                .asMap()
-                .entries
-                .map((e) => _buildHolidayRow(e.key, e.value)),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _holidays.length,
+              itemBuilder: (context, i) => _buildHolidayRow(i, _holidays[i]),
+            ),
         ],
       ),
     );
@@ -670,7 +677,7 @@ class _AgileCapacityPlanningScreenState
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: _kBorder),
       ),

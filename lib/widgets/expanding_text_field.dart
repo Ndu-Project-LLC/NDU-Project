@@ -140,7 +140,8 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Speech recognition is not available on this device.'),
+              content:
+                  Text('Speech recognition is not available on this device.'),
               duration: Duration(seconds: 2),
             ),
           );
@@ -194,10 +195,11 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
   Widget build(BuildContext context) {
     final voiceEnabled = widget.enableVoice && _voiceAvailable;
     final docxEnabled = widget.enableDocxImport;
-    final InputDecoration baseDecoration = widget.decoration ?? const InputDecoration(
-      border: OutlineInputBorder(),
-      isDense: true,
-    );
+    final InputDecoration baseDecoration = widget.decoration ??
+        const InputDecoration(
+          border: OutlineInputBorder(),
+          isDense: true,
+        );
 
     final effectiveDecoration =
         _buildDecoration(baseDecoration, voiceEnabled, docxEnabled);
@@ -258,15 +260,16 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
+        child: const Padding(
+          padding: EdgeInsets.all(8),
           child: SizedBox(
             width: 18,
             height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2, color: iconColor),
+            child: const CircularProgressIndicator(
+                strokeWidth: 2, color: iconColor),
           ),
         ),
       );
@@ -289,7 +292,7 @@ class _ExpandingTextFieldState extends State<ExpandingTextField> {
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: IconButton(
@@ -450,7 +453,8 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Speech recognition is not available on this device.'),
+              content:
+                  Text('Speech recognition is not available on this device.'),
               duration: Duration(seconds: 2),
             ),
           );
@@ -504,10 +508,11 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
   Widget build(BuildContext context) {
     final voiceEnabled = widget.enableVoice && _voiceAvailable;
     final docxEnabled = widget.enableDocxImport;
-    final InputDecoration baseDecoration = widget.decoration ?? const InputDecoration(
-      border: OutlineInputBorder(),
-      isDense: true,
-    );
+    final InputDecoration baseDecoration = widget.decoration ??
+        const InputDecoration(
+          border: OutlineInputBorder(),
+          isDense: true,
+        );
 
     final effectiveDecoration =
         _buildDecoration(baseDecoration, voiceEnabled, docxEnabled);
@@ -571,15 +576,16 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
+        child: const Padding(
+          padding: EdgeInsets.all(8),
           child: SizedBox(
             width: 18,
             height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2, color: iconColor),
+            child: const CircularProgressIndicator(
+                strokeWidth: 2, color: iconColor),
           ),
         ),
       );
@@ -602,7 +608,7 @@ class _ExpandingTextFormFieldState extends State<ExpandingTextFormField> {
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: IconButton(

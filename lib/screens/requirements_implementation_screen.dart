@@ -26,6 +26,8 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ndu_project/routing/app_router.dart';
 
 class RequirementsImplementationScreen extends StatefulWidget {
  const RequirementsImplementationScreen({super.key});
@@ -324,17 +326,11 @@ class _RequirementsImplementationScreenState
  }
 
  void _navigateToDesignOverview() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const DesignPhaseScreen()),
- );
+ context.push('/design-phase');
  }
 
  void _navigateToTechnicalAlignment() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const TechnicalAlignmentScreen()),
- );
+ context.push('/technical-alignment');
  }
 
  List<String> _ownerOptions(ProjectDataModel projectData) {
@@ -813,7 +809,7 @@ class _RequirementsImplementationScreenState
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: _sectionApprovalStatus,
+ initialValue: _sectionApprovalStatus,
  decoration: const InputDecoration(
  labelText: 'Approval Status',
  border: OutlineInputBorder(),
@@ -835,7 +831,7 @@ class _RequirementsImplementationScreenState
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value:
+ initialValue:
  effectiveApprover.isEmpty ? null : effectiveApprover,
  decoration: const InputDecoration(
  labelText: 'Approved By',
@@ -990,7 +986,7 @@ class _RequirementsImplementationScreenState
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: options.contains(row.owner) ? row.owner : null,
+ initialValue: options.contains(row.owner) ? row.owner : null,
  decoration: const InputDecoration(
  labelText: 'Owner',
  border: OutlineInputBorder(),
@@ -1165,7 +1161,7 @@ class _RequirementsImplementationScreenState
  LayoutBuilder(
  builder: (context, constraints) {
  final compact = constraints.maxWidth < 1040;
- final titleBlock = Column(
+ const titleBlock = Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: const [
  Text(
@@ -1276,8 +1272,8 @@ class _RequirementsImplementationScreenState
  selected: selected,
  selectedColor: const Color(0xFF111827),
  backgroundColor: Colors.white,
- shape: StadiumBorder(
- side: BorderSide(color: const Color(0xFFE5E7EB)),
+ shape: const StadiumBorder(
+ side: BorderSide(color: Color(0xFFE5E7EB)),
  ),
  onSelected: (value) {
  setState(() {
@@ -1431,7 +1427,7 @@ class _RequirementsImplementationScreenState
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -1463,10 +1459,10 @@ class _RequirementsImplementationScreenState
  AnimatedRotation(
  turns: _frameworkGuideExpanded ? 0.5 : 0,
  duration: const Duration(milliseconds: 200),
- child: Icon(
+ child: const Icon(
  Icons.keyboard_arrow_down,
  size: 22,
- color: const Color(0xFF6B7280),
+ color: Color(0xFF6B7280),
  ),
  ),
  ],
@@ -1556,9 +1552,9 @@ class _RequirementsImplementationScreenState
  width: double.infinity,
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
- color: color.withOpacity(0.04),
+ color: color.withValues(alpha: 0.04),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.12)),
+ border: Border.all(color: color.withValues(alpha: 0.12)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1568,7 +1564,7 @@ class _RequirementsImplementationScreenState
  Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(icon, size: 16, color: color),
@@ -1614,7 +1610,7 @@ class _RequirementsImplementationScreenState
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -1681,15 +1677,15 @@ class _RequirementsImplementationScreenState
 
  // Empty state
  if (filteredRows.isEmpty)
- Padding(
- padding: const EdgeInsets.all(32),
+ const Padding(
+ padding: EdgeInsets.all(32),
  child: Center(
  child: Column(
  children: [
- const Icon(Icons.assignment_outlined,
+ Icon(Icons.assignment_outlined,
  color: Color(0xFF9CA3AF), size: 32),
- const SizedBox(height: 12),
- const Text(
+ SizedBox(height: 12),
+ Text(
  'No requirements found. Add requirements or adjust filters.',
  style: TextStyle(
  fontSize: 13,
@@ -1879,7 +1875,7 @@ class _RequirementsImplementationScreenState
  horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
  color: _validationColor(row.validationStatus)
- .withOpacity(0.1),
+ .withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Text(
@@ -1901,7 +1897,7 @@ class _RequirementsImplementationScreenState
  padding: const EdgeInsets.symmetric(
  horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: _gapStatusColor(row.gapStatus).withOpacity(0.1),
+ color: _gapStatusColor(row.gapStatus).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Text(
@@ -2031,7 +2027,7 @@ class _RequirementsImplementationScreenState
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -2331,7 +2327,7 @@ class _RequirementsImplementationScreenState
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -2349,10 +2345,10 @@ class _RequirementsImplementationScreenState
  ),
  ),
  const SizedBox(height: 6),
- Text(
+ const Text(
  'Requirements with unresolved gaps or pending approval status. '
  'Resolve all gaps before proceeding to Technical Alignment.',
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w500,
  color: Color(0xFF6B7280),
@@ -2418,7 +2414,7 @@ class _RequirementsImplementationScreenState
  horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
  color: _gapStatusColor(row.gapStatus)
- .withOpacity(0.1),
+ .withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Text(
@@ -2552,7 +2548,7 @@ class _RequirementsImplementationScreenState
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -2712,7 +2708,7 @@ class _RequirementsImplementationScreenState
  padding: const EdgeInsets.symmetric(
  horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: _approvalStatusColor(gate.status).withOpacity(0.1),
+ color: _approvalStatusColor(gate.status).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Text(
@@ -2747,7 +2743,7 @@ class _RequirementsImplementationScreenState
  padding: const EdgeInsets.symmetric(
  horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: _priorityColor(gate.priority).withOpacity(0.1),
+ color: _priorityColor(gate.priority).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Text(
@@ -2867,7 +2863,7 @@ class _RequirementsImplementationScreenState
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedReqType,
+ initialValue: selectedReqType,
  decoration: const InputDecoration(
  labelText: 'Requirement Type *',
  isDense: true,
@@ -2926,7 +2922,7 @@ class _RequirementsImplementationScreenState
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedRuleType,
+ initialValue: selectedRuleType,
  decoration: const InputDecoration(
  labelText: 'Rule Type',
  isDense: true,
@@ -2945,7 +2941,7 @@ class _RequirementsImplementationScreenState
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedSourceType,
+ initialValue: selectedSourceType,
  decoration: const InputDecoration(
  labelText: 'Source Type',
  isDense: true,
@@ -2975,7 +2971,7 @@ class _RequirementsImplementationScreenState
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedArtifactType,
+ initialValue: selectedArtifactType,
  decoration: const InputDecoration(
  labelText: 'Artifact Type',
  isDense: true,
@@ -3018,7 +3014,7 @@ class _RequirementsImplementationScreenState
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedValidationStatus,
+ initialValue: selectedValidationStatus,
  decoration: const InputDecoration(
  labelText: 'Validation Status',
  isDense: true,
@@ -3038,7 +3034,7 @@ class _RequirementsImplementationScreenState
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedGapStatus,
+ initialValue: selectedGapStatus,
  decoration: const InputDecoration(
  labelText: 'Gap Status',
  isDense: true,
@@ -3123,7 +3119,7 @@ class _RequirementsImplementationScreenState
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedConflictImpact,
+ initialValue: selectedConflictImpact,
  decoration: const InputDecoration(
  labelText: 'Impact',
  isDense: true,
@@ -3235,7 +3231,7 @@ class _RequirementsImplementationScreenState
  }) {
  final safeOptions = options.contains(value) ? options : [value, ...options];
  return DropdownButtonFormField<String>(
- value: safeOptions.contains(value) ? value : safeOptions.first,
+ initialValue: safeOptions.contains(value) ? value : safeOptions.first,
  decoration: InputDecoration(
  labelText: label,
  isDense: true,
@@ -3278,7 +3274,7 @@ class _RequirementsImplementationScreenState
  }.toList()
  ..sort();
  return DropdownButtonFormField<String>(
- value: safeOptions.contains(value.trim()) ? value.trim() : (safeOptions.isEmpty ? null : safeOptions.first),
+ initialValue: safeOptions.contains(value.trim()) ? value.trim() : (safeOptions.isEmpty ? null : safeOptions.first),
  decoration: InputDecoration(
  labelText: label,
  isDense: true,
@@ -3369,35 +3365,21 @@ class _RequirementsImplementationScreenState
  }
 
  // -------------------------------------------------------------------------
- // Navigation helper for stable shell sidebar
- // -------------------------------------------------------------------------
- void _openStableDesignItem(String label) {
- Widget? destination;
- switch (label) {
- case 'Design Management':
- destination =
- const DesignPhaseScreen(activeItemLabel: 'Design Management');
- break;
- case 'Design Specifications':
- destination = const RequirementsImplementationScreen();
- break;
- case 'Technical Alignment':
- destination = const TechnicalAlignmentScreen();
- break;
- case 'Development Set Up':
- destination = const DevelopmentSetUpScreen();
- break;
- case 'UI/UX Design':
- destination = const UiUxDesignScreen();
- break;
- }
+ // Navigation helper for stable shell sidebar  // -------------------------------------------------------------------------
+  void _openStableDesignItem(String label) {
+  final destination = switch (label) {
+  'Design Management' => '/${AppRoutes.designPhase}',
+  'Design Specifications' => '/${AppRoutes.requirementsImplementation}',
+  'Technical Alignment' => '/${AppRoutes.technicalAlignment}',
+  'Development Set Up' => '/${AppRoutes.developmentSetUp}',
+  'UI/UX Design' => '/${AppRoutes.uiUxDesign}',
+  _ => null,
+  };
 
- if (destination == null) return;
+  if (destination == null) return;
 
- Navigator.of(context).pushReplacement(
- MaterialPageRoute(builder: (_) => destination!),
- );
- }
+  context.pushReplacement(destination);
+  }
 
  Future<bool> _confirmDelete(String label) async {
  final result = await showDialog<bool>(
@@ -3475,12 +3457,11 @@ class _ApprovalGateData {
  final String status;
 }
 
-class _TableColumn {
- const _TableColumn({
- required this.label,
- this.flex = 1,
- this.alignment = Alignment.centerLeft,
- });
+class _TableColumn {  const _TableColumn({
+    required this.label,
+    this.flex = 1,
+    this.alignment = Alignment.centerLeft,
+  });
 
  final String label;
  final int flex;
@@ -3981,7 +3962,7 @@ class _VerificationPopupDialogState extends State<_VerificationPopupDialog> {
  .toList()
  ..sort();
  return DropdownButtonFormField<String>(
- value: effectiveOptions.contains(value) ? value : null,
+ initialValue: effectiveOptions.contains(value) ? value : null,
  decoration: InputDecoration(
  labelText: label,
  border: const OutlineInputBorder(),

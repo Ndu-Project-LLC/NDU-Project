@@ -61,9 +61,9 @@ class _AddonUsersSelectorState extends State<AddonUsersSelector> {
       return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: Color(0xFFE2E8F0)),
         ),
         child: Row(
           children: [
@@ -82,17 +82,16 @@ class _AddonUsersSelectorState extends State<AddonUsersSelector> {
       );
     }
 
-    final remainingSlots =
-        widget.tier.maxUsers - widget.tier.includedUsers;
+    final remainingSlots = widget.tier.maxUsers - widget.tier.includedUsers;
     final addonMonthly = widget.selection.monthlyAddonCost(widget.tier);
     final totalUsers = widget.tier.includedUsers + widget.selection.total;
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,9 +140,10 @@ class _AddonUsersSelectorState extends State<AddonUsersSelector> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFD700).withOpacity(0.10),
+              color: const Color(0xFFFFD700).withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+              border: Border.all(
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -193,8 +193,8 @@ class _AddonUsersSelectorState extends State<AddonUsersSelector> {
                   price == 0
                       ? 'Free'
                       : '${widget.currencySymbol}${price.toStringAsFixed(2)} / user / mo',
-                  style: const TextStyle(
-                      color: Color(0xFF64748B), fontSize: 11.5),
+                  style:
+                      const TextStyle(color: Color(0xFF64748B), fontSize: 11.5),
                 ),
               ],
             ),
@@ -237,8 +237,9 @@ class _AddonUsersSelectorState extends State<AddonUsersSelector> {
         backgroundColor: onPressed == null
             ? const Color(0xFFF1F5F9)
             : const Color(0xFFE2E8F0),
-        foregroundColor:
-            onPressed == null ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A),
+        foregroundColor: onPressed == null
+            ? const Color(0xFFCBD5E1)
+            : const Color(0xFF0F172A),
       ),
     );
   }

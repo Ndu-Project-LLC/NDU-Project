@@ -41,6 +41,8 @@ import 'package:ndu_project/models/agile_task.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart'
     hide ScheduleActivity;
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 class BuilderScreen extends StatefulWidget {
   const BuilderScreen({super.key});
@@ -107,7 +109,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
     final root = scheduleProvider.schedule!.activities[0];
     var newChildren = [...root.children];
 
-    List<String> _depPackageIds(WorkPackage pkg) {
+    List<String> depPackageIds0(WorkPackage pkg) {
       final deps = <String>{};
       void addIfPresent(String id) {
         if (id.trim().isNotEmpty && packageIdSet.contains(id.trim())) {
@@ -117,20 +119,30 @@ class _BuilderScreenState extends State<BuilderScreen> {
 
       switch (pkg.packageClassification) {
         case IntegratedWorkPackageService.procurementPackage:
-          for (final id in pkg.linkedEngineeringPackageIds) addIfPresent(id);
+          for (final id in pkg.linkedEngineeringPackageIds) {
+            addIfPresent(id);
+          }
           addIfPresent(pkg.parentPackageId);
         case IntegratedWorkPackageService.constructionCwp:
         case IntegratedWorkPackageService.implementationWorkPackage:
         case IntegratedWorkPackageService.agileIterationPackage:
-          for (final id in pkg.linkedEngineeringPackageIds) addIfPresent(id);
-          for (final id in pkg.linkedProcurementPackageIds) addIfPresent(id);
+          for (final id in pkg.linkedEngineeringPackageIds) {
+            addIfPresent(id);
+          }
+          for (final id in pkg.linkedProcurementPackageIds) {
+            addIfPresent(id);
+          }
           addIfPresent(pkg.parentPackageId);
         case IntegratedWorkPackageService.preCommissioningPackage:
           addIfPresent(pkg.parentPackageId);
-          for (final id in pkg.linkedEngineeringPackageIds) addIfPresent(id);
+          for (final id in pkg.linkedEngineeringPackageIds) {
+            addIfPresent(id);
+          }
         case IntegratedWorkPackageService.commissioningPackage:
           addIfPresent(pkg.parentPackageId);
-          for (final id in pkg.linkedEngineeringPackageIds) addIfPresent(id);
+          for (final id in pkg.linkedEngineeringPackageIds) {
+            addIfPresent(id);
+          }
         default:
           break;
       }
@@ -142,7 +154,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
       final activityType = _typeForPackage(pkg);
       final activityId = pkgToActId[pkg.id]!;
 
-      final depPackageIds = _depPackageIds(pkg);
+      final depPackageIds = depPackageIds0(pkg);
       final dependencies = depPackageIds
           .where((depId) => pkgToActId.containsKey(depId))
           .map((depId) => ActivityDependency(
@@ -513,17 +525,17 @@ class _BuilderScreenState extends State<BuilderScreen> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: const Color(0xFFE4E7EC)),
                 ),
-                child: Row(
+                child: const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.lightbulb_outline,
+                    Icon(Icons.lightbulb_outline,
                         size: 16, color: LightModeColors.accent),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Schedule levels: L0=Project · L1=Major Deliverable · L2=Epic/Sub-Deliverable · L3=EWP/Procurement/CWP · L4=Activity/Story · L5–8=Task. Waterfall/Hybrid schedules should be built from integrated work packages; Agile schedules should be built from story-level AgileTask items.',
                         style: TextStyle(
-                            color: const Color(0xFF495057),
+                            color: Color(0xFF495057),
                             fontSize: 12,
                             height: 1.5),
                       ),
@@ -551,8 +563,8 @@ class _BuilderScreenState extends State<BuilderScreen> {
               ),
               const SizedBox(height: 24),
               // Live activity tree
-              Text('Activity Tree',
-                  style: const TextStyle(
+              const Text('Activity Tree',
+                  style: TextStyle(
                       color: Color(0xFF1A1D1F),
                       fontSize: 15,
                       fontWeight: FontWeight.w700)),
@@ -579,17 +591,17 @@ class _BuilderScreenState extends State<BuilderScreen> {
                   border: Border.all(
                       color: LightModeColors.accent.withValues(alpha: 0.3)),
                 ),
-                child: Row(
+                child: const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.info_outline,
+                    Icon(Icons.info_outline,
                         size: 16, color: LightModeColors.accent),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'The table above shows a sample schedule for reference. Add your own activities via the Add Activity button to populate the Gantt and List View tabs. Each row maps to an EWP, CWP, or activity in your delivery model.',
                         style: TextStyle(
-                            color: const Color(0xFF495057),
+                            color: Color(0xFF495057),
                             fontSize: 12,
                             height: 1.5),
                       ),
@@ -697,9 +709,9 @@ class _BuilderScreenState extends State<BuilderScreen> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: const Color(0xFFE4E7EC)),
                 ),
-                child: Row(
+                child: const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Icon(Icons.info_outline,
                         size: 14, color: Color(0xFF6B7280)),
                     SizedBox(width: 8),
@@ -952,9 +964,9 @@ class _BuilderScreenState extends State<BuilderScreen> {
     await Clipboard.setData(ClipboardData(text: json));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Schedule JSON copied to clipboard'),
-        duration: const Duration(seconds: 2),
+      const SnackBar(
+        content: Text('Schedule JSON copied to clipboard'),
+        duration: Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         backgroundColor: LightModeColors.accent,
       ),
@@ -1306,7 +1318,7 @@ class _ActivityNode extends StatelessWidget {
                         SizedBox(
                           width: 140,
                           child: DropdownButtonFormField<DependencyType>(
-                            value: dep.type,
+                            initialValue: dep.type,
                             isDense: true,
                             items: DependencyType.values.map((t) {
                               return DropdownMenuItem(
@@ -1621,11 +1633,12 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
           ),
           const Divider(color: Color(0xFFE4E7EC), height: 1),
           // Data table
-          SingleChildScrollView(
+          FullScreenTableWrapper(
+          title: 'Schedule Builder Activities',
+          child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(const Color(0xFFF9FAFB)),
-              dataRowColor: WidgetStateProperty.all(Colors.transparent),
+            child: buildNduDataTable(context: context, zebra: false, 
+              headingRowColor: const Color(0xFFF9FAFB),
               columnSpacing: 24,
               horizontalMargin: 16,
               columns: const [
@@ -1877,20 +1890,276 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
               ],
             ),
           ),
+          tableBuilder: (fsContext) => SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: buildNduDataTable(context: context, zebra: false, 
+              headingRowColor: const Color(0xFFF9FAFB),
+              columnSpacing: 24,
+              horizontalMargin: 16,
+              columns: const [
+                DataColumn(
+                    label: Text('ID',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Name',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Duration',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Start',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Finish',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Predecessors',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(
+                    label: Text('Resources',
+                        style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600))),
+                DataColumn(label: SizedBox(width: 32)),
+              ],
+              rows: [
+                // Data rows
+                ..._rows.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final r = entry.value;
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(r.id,
+                          style: const TextStyle(
+                              color: Color(0xFF495057),
+                              fontSize: 11,
+                              fontFamily: appFontFamily,
+                              fontWeight: FontWeight.bold))),
+                      DataCell(Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                                color: Color(r.domainColor),
+                                shape: BoxShape.circle),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(r.name,
+                              style: const TextStyle(
+                                  color: Color(0xFF1A1D1F),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500)),
+                        ],
+                      )),
+                      DataCell(Text(r.duration,
+                          style: const TextStyle(
+                              color: Color(0xFF495057), fontSize: 12))),
+                      DataCell(Text(r.start,
+                          style: const TextStyle(
+                              color: Color(0xFF495057), fontSize: 12))),
+                      DataCell(Text(r.finish,
+                          style: const TextStyle(
+                              color: Color(0xFF495057), fontSize: 12))),
+                      DataCell(Text(r.predecessors,
+                          style: const TextStyle(
+                              color: Color(0xFF495057),
+                              fontSize: 11,
+                              fontFamily: appFontFamily))),
+                      DataCell(Text(r.resources,
+                          style: const TextStyle(
+                              color: Color(0xFF495057), fontSize: 12))),
+                      DataCell(
+                        IconButton(
+                          icon: const Icon(Icons.remove_circle_outline,
+                              size: 16, color: Color(0xFF9CA3AF)),
+                          onPressed: () => _removeRow(i),
+                          tooltip: 'Remove activity',
+                          padding: EdgeInsets.zero,
+                          constraints:
+                              const BoxConstraints(minWidth: 28, minHeight: 28),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+                // ── New-row edit fields ──
+                DataRow(
+                  color: WidgetStateProperty.all(const Color(0xFFFAFFFB)),
+                  cells: [
+                    DataCell(
+                      SizedBox(
+                        width: 40,
+                        child: Text(
+                          _nextId.toString(),
+                          style: const TextStyle(
+                              color: Color(0xFF9CA3AF),
+                              fontSize: 11,
+                              fontFamily: appFontFamily,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 200,
+                        child: VoiceTextField(
+                          controller: _nameCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'New activity name...',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                          onChanged: (_) => setState(() {}),
+                          onSubmitted: (_) => _addRow(),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 80,
+                        child: VoiceTextField(
+                          controller: _durationCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'e.g. 10 d',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 80,
+                        child: VoiceTextField(
+                          controller: _startCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'MM/DD/YY',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 80,
+                        child: VoiceTextField(
+                          controller: _finishCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'MM/DD/YY',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 100,
+                        child: VoiceTextField(
+                          controller: _predecessorsCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'e.g. 6FS',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 130,
+                        child: VoiceTextField(
+                          controller: _resourcesCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'e.g. Crew (4)',
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                          ),
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF1A1D1F)),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      IconButton(
+                        icon: Icon(
+                          Icons.add_circle_outline,
+                          size: 20,
+                          color: _nameCtrl.text.trim().isNotEmpty
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF9CA3AF),
+                        ),
+                        onPressed:
+                            _nameCtrl.text.trim().isNotEmpty ? _addRow : null,
+                        tooltip: 'Add activity',
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            const BoxConstraints(minWidth: 28, minHeight: 28),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          ),
           // Footnote
           if (_rows.length <= 7)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Row(
                 children: [
-                  const Icon(Icons.edit_outlined,
+                  Icon(Icons.edit_outlined,
                       size: 12, color: Color(0xFF9CA3AF)),
-                  const SizedBox(width: 6),
+                  SizedBox(width: 6),
                   Text(
                     'Type an activity name and press Enter or tap + to add. '
                     'Use KAZ AI to auto-generate realistic schedule activities.',
                     style:
-                        const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+                        TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
                   ),
                 ],
               ),
@@ -2044,11 +2313,11 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: LightModeColors.accent,
               onPrimary: Colors.white,
               surface: Colors.white,
-              onSurface: const Color(0xFF1A1D1F),
+              onSurface: Color(0xFF1A1D1F),
             ),
           ),
           child: child!,
@@ -2386,7 +2655,7 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                                       ),
                                     ),
                                   if (!hasDates && widget.isLocked)
-                                    Center(
+                                    const Center(
                                       child: Text(
                                         'No dates set',
                                         style: TextStyle(
@@ -2847,11 +3116,11 @@ class _DrawingFromBanner extends StatelessWidget {
             Icon(Icons.info_outline,
                 size: 16, color: LightModeColors.accent.withValues(alpha: 0.9)),
             const SizedBox(width: 8),
-            Expanded(
+            const Expanded(
               child: Text(
                 'No WBS or Cost Estimate data found yet. Set up the WBS and Cost Estimate modules first to enrich the schedule context.',
                 style: TextStyle(
-                    color: const Color(0xFF495057), fontSize: 12, height: 1.5),
+                    color: Color(0xFF495057), fontSize: 12, height: 1.5),
               ),
             ),
           ],

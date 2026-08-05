@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 /// A reusable Notes section widget for Launch Phase screens.
 /// Provides a labeled text area with KAZ AI, clear-all, text formatting,
@@ -20,7 +19,8 @@ class LaunchNotesSection extends StatelessWidget {
     super.key,
     required this.controller,
     this.label = 'Notes',
-    this.hint = 'Add any additional notes, observations, or context for this section...',
+    this.hint =
+        'Add any additional notes, observations, or context for this section...',
     this.onChanged,
   });
 
@@ -40,7 +40,7 @@ class LaunchNotesSection extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -89,7 +89,8 @@ class LaunchNotesSection extends StatelessWidget {
             minLines: 3,
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+              hintStyle:
+                  const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
               filled: true,
               fillColor: const Color(0xFFF9FAFB),
               border: OutlineInputBorder(
@@ -102,11 +103,13 @@ class LaunchNotesSection extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFD97706), width: 1.5),
+                borderSide:
+                    const BorderSide(color: Color(0xFFD97706), width: 1.5),
               ),
               contentPadding: const EdgeInsets.all(14),
             ),
-            style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937), height: 1.5),
+            style: const TextStyle(
+                fontSize: 14, color: Color(0xFF1F2937), height: 1.5),
             onChanged: onChanged,
           ),
         ],

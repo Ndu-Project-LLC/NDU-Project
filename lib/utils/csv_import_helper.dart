@@ -6,6 +6,7 @@
 /// - Template CSV generation with sample data per column
 /// - Field mapping with fuzzy header matching
 /// - Detailed validation reports with row/field level errors
+library;
 
 /// Describes a column that can be imported from CSV
 class CsvColumnSpec {

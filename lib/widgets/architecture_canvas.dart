@@ -230,8 +230,8 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
   void _editSelectedNode() {
     final id = _selectedNodeId;
     if (id == null) return;
-    final node =
-        widget.nodes.firstWhere((n) => n.id == id, orElse: () => widget.nodes.first);
+    final node = widget.nodes
+        .firstWhere((n) => n.id == id, orElse: () => widget.nodes.first);
     _openNodeEditor(node);
   }
 
@@ -249,8 +249,8 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
   void _duplicateSelectedNode() {
     final id = _selectedNodeId;
     if (id == null) return;
-    final node =
-        widget.nodes.firstWhere((n) => n.id == id, orElse: () => widget.nodes.first);
+    final node = widget.nodes
+        .firstWhere((n) => n.id == id, orElse: () => widget.nodes.first);
     final newNode = ArchitectureNode(
       id: 'n_${DateTime.now().millisecondsSinceEpoch}',
       label: '${node.label} (copy)',
@@ -284,155 +284,167 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
     final descController = TextEditingController(text: node.description);
     final techController = TextEditingController(text: node.technology);
     ArchitectureNodeType selectedType = node.nodeType;
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              titlePadding: EdgeInsets.zero,
-              contentPadding: const EdgeInsets.all(20),
-              actionsPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              title: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: selectedType.accentColor.withOpacity(0.08),
-                  borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(selectedType.icon, color: selectedType.accentColor),
-                    const SizedBox(width: 10),
-                    const Text('Edit Component',
-                        style: TextStyle(fontSize: 16)),
-                  ],
-                ),
-              ),
-              content: SizedBox(
-                width: 420,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Type selector
-                    const Text('Component Type',
-                        style: TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: ArchitectureNodeType.values.map((type) {
-                        final isSelected = type == selectedType;
-                        return ChoiceChip(
-                          avatar: Icon(type.icon, size: 14,
-                              color: isSelected ? Colors.white : type.accentColor),
-                          label: Text(type.label,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isSelected ? Colors.white : null,
-                              )),
-                          selected: isSelected,
-                          selectedColor: type.accentColor,
-                          onSelected: (_) =>
-                              setDialogState(() => selectedType = type),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: labelController,
-                      decoration: const InputDecoration(
-                        labelText: 'Label',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: techController,
-                      decoration: const InputDecoration(
-                        labelText: 'Technology Stack',
-                        hintText: 'e.g., Node.js, PostgreSQL, Redis...',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: descController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: selectedType.accentColor,
-                    foregroundColor: Colors.white,
+    try {
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (context, setDialogState) {
+              return AlertDialog(
+                titlePadding: EdgeInsets.zero,
+                contentPadding: const EdgeInsets.all(20),
+                actionsPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                title: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: selectedType.accentColor.withValues(alpha: 0.08),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(12)),
                   ),
-                  child: const Text('Save'),
+                  child: Row(
+                    children: [
+                      Icon(selectedType.icon, color: selectedType.accentColor),
+                      const SizedBox(width: 10),
+                      const Text('Edit Component',
+                          style: TextStyle(fontSize: 16)),
+                    ],
+                  ),
                 ),
-              ],
-            );
-          },
-        );
-      },
-    );
-    if (result != true) return;
-    node.label = labelController.text.trim().isEmpty
-        ? node.label
-        : labelController.text.trim();
-    node.nodeType = selectedType;
-    node.description = descController.text.trim();
-    node.technology = techController.text.trim();
-    node.icon = selectedType.icon;
-    widget.onNodesChanged(List.of(widget.nodes));
+                content: SizedBox(
+                  width: 420,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Type selector
+                      const Text('Component Type',
+                          style: TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: ArchitectureNodeType.values.map((type) {
+                          final isSelected = type == selectedType;
+                          return ChoiceChip(
+                            avatar: Icon(type.icon,
+                                size: 14,
+                                color: isSelected
+                                    ? Colors.white
+                                    : type.accentColor),
+                            label: Text(type.label,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isSelected ? Colors.white : null,
+                                )),
+                            selected: isSelected,
+                            selectedColor: type.accentColor,
+                            onSelected: (_) =>
+                                setDialogState(() => selectedType = type),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: labelController,
+                        decoration: const InputDecoration(
+                          labelText: 'Label',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: techController,
+                        decoration: const InputDecoration(
+                          labelText: 'Technology Stack',
+                          hintText: 'e.g., Node.js, PostgreSQL, Redis...',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: descController,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: 'Description',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: selectedType.accentColor,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Save'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+      if (result != true) return;
+      node.label = labelController.text.trim().isEmpty
+          ? node.label
+          : labelController.text.trim();
+      node.nodeType = selectedType;
+      node.description = descController.text.trim();
+      node.technology = techController.text.trim();
+      node.icon = selectedType.icon;
+      widget.onNodesChanged(List.of(widget.nodes));
+    } finally {
+      labelController.dispose();
+      descController.dispose();
+      techController.dispose();
+    }
   }
 
   Future<void> _openEdgeEditor(ArchitectureEdge edge) async {
     final controller = TextEditingController(text: edge.label);
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Connection'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Connection Label',
-            hintText: 'e.g., HTTP/REST, gRPC, WebSocket...',
-            border: OutlineInputBorder(),
+    try {
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Edit Connection'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: 'Connection Label',
+              hintText: 'e.g., HTTP/REST, gRPC, WebSocket...',
+              border: OutlineInputBorder(),
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Save'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    if (result != true) return;
-    edge.label = controller.text.trim();
-    widget.onEdgesChanged(List.of(widget.edges));
+      );
+      if (result != true) return;
+      edge.label = controller.text.trim();
+      widget.onEdgesChanged(List.of(widget.edges));
+    } finally {
+      controller.dispose();
+    }
   }
 
   Offset _toCanvasSpace(Offset globalPosition, RenderBox box) {
@@ -471,106 +483,110 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                       boundaryMargin: const EdgeInsets.all(4000),
                       minScale: 0.15,
                       maxScale: 3.0,
-                      child: CustomPaint(
-                        size: const Size(8000, 8000),
-                        painter: _showGrid ? _DotGridPainter() : null,
-                        child: Stack(children: [
-                          // Edges
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              child: CustomPaint(
-                                painter: _EdgePainter(
-                                  widget.nodes,
-                                  widget.edges,
-                                  _selectedForConnection,
-                                  _connectionDragEnd,
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Nodes
-                          ...widget.nodes.map((n) => _ProNodeWidget(
-                                key: ValueKey(n.id),
-                                node: n,
-                                connectMode: _connectMode,
-                                selectedForConnection:
-                                    _selectedForConnection == n.id,
-                                isSelected: _selectedNodeId == n.id,
-                                isHovered: _hoveredNodeId == n.id,
-                                onDrag: (delta) =>
-                                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                                  if (!mounted) return;
-                                  n.position += delta;
-                                  widget
-                                      .onNodesChanged(List.of(widget.nodes));
-                                }),
-                                onTap: () {
-                                  if (_connectMode) {
-                                    setState(() {
-                                      if (_selectedForConnection == null) {
-                                        _selectedForConnection = n.id;
-                                      } else if (_selectedForConnection !=
-                                          n.id) {
-                                        final newEdges = [
-                                          ...widget.edges,
-                                          ArchitectureEdge(
-                                            fromId: _selectedForConnection!,
-                                            toId: n.id,
-                                          )
-                                        ];
-                                        widget.onEdgesChanged(newEdges);
-                                        _selectedForConnection = null;
-                                        _connectMode = false;
-                                        _connectionDragEnd = null;
-                                      }
-                                    });
-                                    return;
-                                  }
-                                  _selectNode(n.id);
-                                },
-                                onDoubleTap: () => _openNodeEditor(n),
-                                onHover: (hovering) => Future.microtask(() {
-                                  if (!mounted) return;
-                                  setState(() => _hoveredNodeId =
-                                      hovering ? n.id : null);
-                                }),
-                                onDelete: () {
-                                  final newNodes = widget.nodes
-                                      .where((e) => e.id != n.id)
-                                      .toList();
-                                  final newEdges = widget.edges
-                                      .where((e) =>
-                                          e.fromId != n.id && e.toId != n.id)
-                                      .toList();
-                                  widget.onNodesChanged(newNodes);
-                                  widget.onEdgesChanged(newEdges);
-                                },
-                              )),
-                          // Empty state hint
-                          if (widget.nodes.isEmpty)
+                      child: RepaintBoundary(
+                        child: CustomPaint(
+                          size: const Size(8000, 8000),
+                          painter: _showGrid ? _DotGridPainter() : null,
+                          child: Stack(children: [
+                            // Edges
                             Positioned.fill(
-                              child: Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.hub_outlined,
-                                        size: 56,
-                                        color: Colors.grey.shade300),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      'Drag components here to build\nyour system architecture',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        color: Colors.grey.shade400,
-                                        height: 1.5,
-                                      ),
+                              child: IgnorePointer(
+                                child: RepaintBoundary(
+                                  child: CustomPaint(
+                                    painter: _EdgePainter(
+                                      widget.nodes,
+                                      widget.edges,
+                                      _selectedForConnection,
+                                      _connectionDragEnd,
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
-                        ]),
+                            // Nodes
+                            ...widget.nodes.map((n) => _ProNodeWidget(
+                                  key: ValueKey(n.id),
+                                  node: n,
+                                  connectMode: _connectMode,
+                                  selectedForConnection:
+                                      _selectedForConnection == n.id,
+                                  isSelected: _selectedNodeId == n.id,
+                                  isHovered: _hoveredNodeId == n.id,
+                                  onDrag: (delta) => WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    if (!mounted) return;
+                                    n.position += delta;
+                                    widget
+                                        .onNodesChanged(List.of(widget.nodes));
+                                  }),
+                                  onTap: () {
+                                    if (_connectMode) {
+                                      setState(() {
+                                        if (_selectedForConnection == null) {
+                                          _selectedForConnection = n.id;
+                                        } else if (_selectedForConnection !=
+                                            n.id) {
+                                          final newEdges = [
+                                            ...widget.edges,
+                                            ArchitectureEdge(
+                                              fromId: _selectedForConnection!,
+                                              toId: n.id,
+                                            )
+                                          ];
+                                          widget.onEdgesChanged(newEdges);
+                                          _selectedForConnection = null;
+                                          _connectMode = false;
+                                          _connectionDragEnd = null;
+                                        }
+                                      });
+                                      return;
+                                    }
+                                    _selectNode(n.id);
+                                  },
+                                  onDoubleTap: () => _openNodeEditor(n),
+                                  onHover: (hovering) => Future.microtask(() {
+                                    if (!mounted) return;
+                                    setState(() => _hoveredNodeId =
+                                        hovering ? n.id : null);
+                                  }),
+                                  onDelete: () {
+                                    final newNodes = widget.nodes
+                                        .where((e) => e.id != n.id)
+                                        .toList();
+                                    final newEdges = widget.edges
+                                        .where((e) =>
+                                            e.fromId != n.id && e.toId != n.id)
+                                        .toList();
+                                    widget.onNodesChanged(newNodes);
+                                    widget.onEdgesChanged(newEdges);
+                                  },
+                                )),
+                            // Empty state hint
+                            if (widget.nodes.isEmpty)
+                              Positioned.fill(
+                                child: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.hub_outlined,
+                                          size: 56,
+                                          color: Colors.grey.shade300),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'Drag components here to build\nyour system architecture',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color: Colors.grey.shade400,
+                                          height: 1.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ]),
+                        ),
                       ),
                     ),
                   );
@@ -593,8 +609,8 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE4E7EC)),
-                    boxShadow: const [
+                    border: Border.all(color: Color(0xFFE4E7EC)),
+                    boxShadow: [
                       BoxShadow(
                           color: Color(0x0A000000),
                           blurRadius: 8,
@@ -608,7 +624,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
+                          color: Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Icon(Icons.account_tree_outlined,
@@ -623,7 +639,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF0FDF4),
+                          color: Color(0xFFF0FDF4),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text('${widget.nodes.length}',
@@ -643,8 +659,8 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE4E7EC)),
-                    boxShadow: const [
+                    border: Border.all(color: Color(0xFFE4E7EC)),
+                    boxShadow: [
                       BoxShadow(
                           color: Color(0x0A000000),
                           blurRadius: 8,
@@ -697,9 +713,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                     if (_selectedNodeId != null) ...[
                       const SizedBox(width: 2),
                       Container(
-                          width: 1,
-                          height: 20,
-                          color: const Color(0xFFE4E7EC)),
+                          width: 1, height: 20, color: const Color(0xFFE4E7EC)),
                       const SizedBox(width: 2),
                       _toolbarButton(
                         icon: Icons.edit_outlined,
@@ -732,7 +746,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.92),
+                color: Colors.white.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFE4E7EC)),
               ),
@@ -812,7 +826,8 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
       message: 'Toggle $label',
       waitDuration: const Duration(milliseconds: 400),
       child: Material(
-        color: isActive ? activeColor.withOpacity(0.1) : Colors.transparent,
+        color:
+            isActive ? activeColor.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: onTap,
@@ -822,8 +837,8 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 16,
-                    color: isActive ? activeColor : Colors.grey[600]),
+                Icon(icon,
+                    size: 16, color: isActive ? activeColor : Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(label,
                     style: TextStyle(
@@ -882,7 +897,8 @@ class _EdgePainter extends CustomPainter {
       final toCenter = b.position + Offset(b.width / 2, b.height / 2);
 
       // Determine connection points (auto-select nearest sides)
-      final start = _getConnectionPoint(fromCenter, toCenter, a.width, a.height);
+      final start =
+          _getConnectionPoint(fromCenter, toCenter, a.width, a.height);
       final end = _getConnectionPoint(toCenter, fromCenter, b.width, b.height);
 
       final edgeColor = e.color ?? const Color(0xFF94A3B8);
@@ -916,7 +932,11 @@ class _EdgePainter extends CustomPainter {
         ..lineTo(p1.dx, p1.dy)
         ..lineTo(p2.dx, p2.dy)
         ..close();
-      canvas.drawPath(tri, paint..style = PaintingStyle.fill..color = edgeColor);
+      canvas.drawPath(
+          tri,
+          paint
+            ..style = PaintingStyle.fill
+            ..color = edgeColor);
       paint.style = PaintingStyle.stroke;
 
       // Edge label
@@ -940,9 +960,7 @@ class _EdgePainter extends CustomPainter {
         canvas.drawRRect(
           RRect.fromRectXY(
             Rect.fromCenter(
-                center: labelPos,
-                width: tp.width + 8,
-                height: tp.height + 4),
+                center: labelPos, width: tp.width + 8, height: tp.height + 4),
             4,
             4,
           ),
@@ -958,7 +976,7 @@ class _EdgePainter extends CustomPainter {
       if (a != null) {
         final fromCenter = a.position + Offset(a.width / 2, a.height / 2);
         final paint = Paint()
-          ..color = const Color(0xFF7C3AED).withOpacity(0.6)
+          ..color = const Color(0xFF7C3AED).withValues(alpha: 0.6)
           ..strokeWidth = 2
           ..style = PaintingStyle.stroke;
         canvas.drawLine(fromCenter, dragEnd!, paint);
@@ -966,8 +984,7 @@ class _EdgePainter extends CustomPainter {
     }
   }
 
-  Offset _getConnectionPoint(
-      Offset from, Offset to, double w, double h) {
+  Offset _getConnectionPoint(Offset from, Offset to, double w, double h) {
     final dx = to.dx - from.dx;
     final dy = to.dy - from.dy;
     if (dx.abs() > dy.abs()) {
@@ -1077,14 +1094,14 @@ class _ProNodeWidget extends StatelessWidget {
                     : isSelected
                         ? accent
                         : isHovered
-                            ? accent.withOpacity(0.5)
+                            ? accent.withValues(alpha: 0.5)
                             : const Color(0xFFE4E7EC),
                 width: selectedForConnection || isSelected ? 2.5 : 1,
               ),
               boxShadow: [
                 BoxShadow(
                   color: isSelected
-                      ? accent.withOpacity(0.15)
+                      ? accent.withValues(alpha: 0.15)
                       : const Color(0x08000000),
                   blurRadius: isSelected ? 16 : 8,
                   offset: const Offset(0, 4),
@@ -1100,9 +1117,9 @@ class _ProNodeWidget extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.06),
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(13)),
+                    color: accent.withValues(alpha: 0.06),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(13)),
                   ),
                   child: Row(
                     children: [
@@ -1110,11 +1127,11 @@ class _ProNodeWidget extends StatelessWidget {
                         width: 28,
                         height: 28,
                         decoration: BoxDecoration(
-                          color: accent.withOpacity(0.12),
+                          color: accent.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child:
-                            Icon(node.icon ?? node.nodeType.icon, size: 16, color: accent),
+                        child: Icon(node.icon ?? node.nodeType.icon,
+                            size: 16, color: accent),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -1125,7 +1142,7 @@ class _ProNodeWidget extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 13,
-                            color: accent.withOpacity(0.9),
+                            color: accent.withValues(alpha: 0.9),
                           ),
                         ),
                       ),
@@ -1157,7 +1174,7 @@ class _ProNodeWidget extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: accent.withOpacity(0.08),
+                            color: accent.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -1167,7 +1184,7 @@ class _ProNodeWidget extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: accent.withOpacity(0.7),
+                              color: accent.withValues(alpha: 0.7),
                             ),
                           ),
                         ),
@@ -1269,7 +1286,7 @@ class _Minimap extends StatelessWidget {
       width: mapW + 12,
       height: mapH + 12,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFE4E7EC)),
         boxShadow: const [
@@ -1279,16 +1296,18 @@ class _Minimap extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(7),
-        child: CustomPaint(
-          size: Size(mapW, mapH),
-          painter: _MinimapPainter(
-            nodes: nodes,
-            edges: edges,
-            selectedNodeId: selectedNodeId,
-            offsetX: minX - 40,
-            offsetY: minY - 40,
-            scaleX: scaleX,
-            scaleY: scaleY,
+        child: RepaintBoundary(
+          child: CustomPaint(
+            size: Size(mapW, mapH),
+            painter: _MinimapPainter(
+              nodes: nodes,
+              edges: edges,
+              selectedNodeId: selectedNodeId,
+              offsetX: minX - 40,
+              offsetY: minY - 40,
+              scaleX: scaleX,
+              scaleY: scaleY,
+            ),
           ),
         ),
       ),
@@ -1318,8 +1337,7 @@ class _MinimapPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Background
-    canvas.drawRect(
-        Rect.fromLTWH(0, 0, size.width, size.height),
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height),
         Paint()..color = const Color(0xFFF8FAFC));
 
     // Edges
@@ -1353,15 +1371,14 @@ class _MinimapPainter extends CustomPainter {
         RRect.fromRectXY(rect, 3, 3),
         Paint()
           ..color = isSelected
-              ? n.nodeType.accentColor.withOpacity(0.3)
-              : n.nodeType.accentColor.withOpacity(0.12),
+              ? n.nodeType.accentColor.withValues(alpha: 0.3)
+              : n.nodeType.accentColor.withValues(alpha: 0.12),
       );
       canvas.drawRRect(
         RRect.fromRectXY(rect, 3, 3),
         Paint()
-          ..color = isSelected
-              ? n.nodeType.accentColor
-              : const Color(0xFFE4E7EC)
+          ..color =
+              isSelected ? n.nodeType.accentColor : const Color(0xFFE4E7EC)
           ..style = PaintingStyle.stroke
           ..strokeWidth = isSelected ? 1.5 : 0.5,
       );

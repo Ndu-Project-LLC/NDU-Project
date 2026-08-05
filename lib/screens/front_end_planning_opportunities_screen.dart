@@ -23,7 +23,9 @@ import 'package:ndu_project/screens/design_phase_screen.dart';
 import 'package:ndu_project/screens/staff_team_screen.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:go_router/go_router.dart';
 
 /// Front End Planning – Project Opportunities page
 /// Built to match the provided screenshot exactly:
@@ -39,10 +41,7 @@ class FrontEndPlanningOpportunitiesScreen extends StatefulWidget {
   const FrontEndPlanningOpportunitiesScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-          builder: (_) => const FrontEndPlanningOpportunitiesScreen()),
-    );
+    context.push('/fep-opportunities');
   }
 
   @override
@@ -1210,21 +1209,14 @@ Opportunity generation constraints:
                 icon: Icons.design_services_rounded,
                 label: 'Design',
                 active: false,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const DesignPhaseScreen(
-                        activeItemLabel: 'Design Management'),
-                  ),
-                ),
+                onTap: () => context.push('/design-phase', extra: const DesignPhaseScreen(
+                        activeItemLabel: 'Design Management')),
               ),
               _mobileNavItem(
                 icon: Icons.engineering_rounded,
                 label: 'Execution',
                 active: false,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const StaffTeamScreen()),
-                ),
-              ),
+                onTap: () => context.push('/staff-team')),
             ],
           ),
         ),
@@ -1746,6 +1738,14 @@ class _OpportunityTableState extends State<_OpportunityTable> {
 
   @override
   Widget build(BuildContext context) {
+    return FullScreenTableWrapper(
+      title: 'Opportunities',
+      child: _buildTableContent(),
+      tableBuilder: (fsContext) => _buildTableContent(),
+    );
+  }
+
+  Widget _buildTableContent() {
     final border = const BorderSide(color: Color(0xFFE5E7EB));
     final headerStyle = const TextStyle(
         fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
@@ -1867,7 +1867,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                               ),
                             )),
                             // Number column
-                            td(Text('${i + 1}', style: cellStyle),
+                            td(WrappedText('${i + 1}', style: cellStyle),
                                 onDoubleTap: () => widget.onEdit(r)),
                             td(
                               _ExpandableCellText(

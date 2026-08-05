@@ -24,7 +24,6 @@ import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/services/program_service.dart';
 import 'package:ndu_project/services/project_service.dart';
 import 'package:ndu_project/widgets/compact_action_button.dart';
-import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/screens/project_activities_log_screen.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
@@ -35,8 +34,7 @@ class ProgramDashboardScreen extends StatefulWidget {
  const ProgramDashboardScreen({super.key, this.programId});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const ProgramDashboardScreen()));
+ context.push('/program-dashboard');
  }
 
  @override
@@ -90,7 +88,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  }
 
  // ─── Empty metrics fallback (used when streams haven't loaded yet) ──────
- static final _emptyMetrics = _ProgramMetrics(
+ static const _emptyMetrics = _ProgramMetrics(
  programName: 'Program Dashboard',
  programSubtitle: 'Loading…',
  totalBudget: 0,
@@ -123,9 +121,9 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  left: leftBorder != null
  ? BorderSide(color: leftBorder, width: 4)
  : BorderSide.none,
- top: BorderSide(color: _outlineVariant, width: 1),
- right: BorderSide(color: _outlineVariant, width: 1),
- bottom: BorderSide(color: _outlineVariant, width: 1),
+ top: const BorderSide(color: _outlineVariant, width: 1),
+ right: const BorderSide(color: _outlineVariant, width: 1),
+ bottom: const BorderSide(color: _outlineVariant, width: 1),
  ),
  boxShadow: const [
  BoxShadow(
@@ -225,22 +223,6 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
 
  return Scaffold(
  backgroundColor: _bg,
- floatingActionButton: Column(
- mainAxisAlignment: MainAxisAlignment.end,
- crossAxisAlignment: CrossAxisAlignment.end,
- children: [
- const KazAiChatBubble(positioned: false),
- const SizedBox(height: 12),
- FloatingActionButton(
- onPressed: () {},
- backgroundColor: _tertiary,
- foregroundColor: _onTertiary,
- elevation: 4,
- shape: const CircleBorder(),
- child: const Icon(Icons.add, size: 28),
- ),
- ],
- ),
  body: SafeArea(
  child: StreamBuilder<List<ProgramModel>>(
  stream: user == null
@@ -515,12 +497,12 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  ),
  ],
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
  Icon(Icons.view_quilt_outlined,
  size: 18, color: _onSurfaceVariant),
- const SizedBox(width: 8),
+ SizedBox(width: 8),
  Flexible(
  child: Text(
  'Program workspace overview',
@@ -575,15 +557,15 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  borderRadius: BorderRadius.circular(12)),
  textStyle: const TextStyle(fontWeight: FontWeight.w700),
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.add_circle_outline, size: 22),
- const SizedBox(width: 10),
+ Icon(Icons.add_circle_outline, size: 22),
+ SizedBox(width: 10),
  Text('Create Project',
  style: TextStyle(fontFamily: appFontFamily)),
- const SizedBox(width: 6),
- const Icon(Icons.arrow_forward, size: 20),
+ SizedBox(width: 6),
+ Icon(Icons.arrow_forward, size: 20),
  ],
  ),
  ),
@@ -618,7 +600,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  const SizedBox(height: 22),
  Text(
  metrics?.programName ?? 'Program Dashboard',
- style: TextStyle(
+ style: const TextStyle(
  color: _primary,
  fontSize: 26,
  fontWeight: FontWeight.w700,
@@ -629,7 +611,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  const SizedBox(height: 6),
  Text(
  metrics?.programSubtitle ?? 'Loading…',
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurfaceVariant,
  fontSize: 15,
  fontFamily: appFontFamily,
@@ -674,7 +656,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  errorBuilder: (_, __, ___) => Center(
  child: Text(
  initials,
- style: TextStyle(
+ style: const TextStyle(
  color: _primary,
  fontSize: 16,
  fontWeight: FontWeight.w700,
@@ -686,7 +668,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  : Center(
  child: Text(
  initials,
- style: TextStyle(
+ style: const TextStyle(
  color: _primary,
  fontSize: 16,
  fontWeight: FontWeight.w700,
@@ -705,7 +687,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  children: [
  Text(
  displayName,
- style: TextStyle(
+ style: const TextStyle(
  fontWeight: FontWeight.w700,
  color: _primary,
  fontFamily: appFontFamily,
@@ -714,7 +696,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  if (user?.email != null && user!.email!.isNotEmpty)
  Text(
  user.email!,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 12,
  color: _onSurfaceVariant,
  fontFamily: appFontFamily,
@@ -724,12 +706,12 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  ),
  ),
  const PopupMenuDivider(),
- PopupMenuItem<String>(
+ const PopupMenuItem<String>(
  value: 'logout',
  child: Row(
  children: [
  Icon(Icons.logout, size: 18, color: _crimson),
- const SizedBox(width: 10),
+ SizedBox(width: 10),
  Text('Log Out',
  style: TextStyle(color: _crimson, fontFamily: appFontFamily)),
  ],
@@ -754,7 +736,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  style: OutlinedButton.styleFrom(
  foregroundColor: _primary,
  backgroundColor: Colors.white,
- side: BorderSide(color: _outlineVariant),
+ side: const BorderSide(color: _outlineVariant),
  elevation: 0,
  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -763,7 +745,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- Text(label, style: TextStyle(fontFamily: appFontFamily)),
+ Text(label, style: const TextStyle(fontFamily: appFontFamily)),
  const SizedBox(width: 8),
  Icon(icon ?? Icons.keyboard_arrow_right, size: 20),
  ],
@@ -792,11 +774,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  icon: Icons.fact_check_outlined,
  accent: const Color(0xFFFCD34D),
  onTap: () {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const ProjectActivitiesLogScreen(),
- ),
- );
+ context.push('/project-activities-log');
  },
  ),
  ];
@@ -878,7 +856,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
- Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+ const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
  Text('TOTAL BUDGET',
  style: TextStyle(
  color: _onSurfaceVariant,
@@ -890,7 +868,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  ]),
  const SizedBox(height: 16),
  Text(_formatBudget(metrics.totalBudget),
- style: TextStyle(
+ style: const TextStyle(
  color: _primary,
  fontSize: 30,
  fontWeight: FontWeight.w900,
@@ -933,14 +911,14 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  const SizedBox(height: 8),
  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
  Text('EXPENDED: ${_formatBudget(metrics.expended)}',
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurfaceVariant,
  fontSize: 10,
  fontWeight: FontWeight.w600,
  letterSpacing: 0.5,
  fontFamily: appFontFamily)),
  Text('${(metrics.expendedPercent * 100).round()}%',
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurfaceVariant,
  fontSize: 10,
  fontWeight: FontWeight.w600,
@@ -963,7 +941,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
- Text('PLANNED VS ACTUAL COST',
+ const Text('PLANNED VS ACTUAL COST',
  style: TextStyle(
  color: _onSurfaceVariant,
  fontSize: 13,
@@ -1005,9 +983,9 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  // Actual bar
  Container(
  width: 12,
- decoration: BoxDecoration(
+ decoration: const BoxDecoration(
  color: _secondary,
- borderRadius: const BorderRadius.vertical(
+ borderRadius: BorderRadius.vertical(
  top: Radius.circular(2)),
  ),
  height: (maxBarHeight * actual[i])
@@ -1025,7 +1003,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
  children: labels
  .map((l) => Text(l,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurfaceVariant,
  fontSize: 10,
  fontWeight: FontWeight.w600,
@@ -1045,7 +1023,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
  const SizedBox(width: 4),
  Text(label,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurfaceVariant,
  fontSize: 10,
  fontWeight: FontWeight.bold,
@@ -1077,12 +1055,12 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
  Text('${(_gaugeAnim.value * progressPct).round()}%',
- style: TextStyle(
+ style: const TextStyle(
  color: _primary,
  fontSize: 30,
  fontWeight: FontWeight.w900,
  fontFamily: appFontFamily)),
- Text('COMPLETED',
+ const Text('COMPLETED',
  style: TextStyle(
  color: _onSurfaceVariant,
  fontSize: 10,
@@ -1095,7 +1073,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  ),
  ),
  const SizedBox(height: 16),
- Text('GLOBAL PROGRESS',
+ const Text('GLOBAL PROGRESS',
  style: TextStyle(
  color: _onSurfaceVariant,
  fontSize: 13,
@@ -1171,32 +1149,32 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  child: Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
- Text('Project Health Matrix',
+ const Text('Project Health Matrix',
  style: TextStyle(
  color: _primary,
  fontSize: 18,
  fontWeight: FontWeight.bold,
  fontFamily: appFontFamily)),
  Text('${projects.length} projects',
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurfaceVariant,
  fontSize: 12,
  fontFamily: appFontFamily)),
  ]),
  ),
  if (projects.isEmpty)
- Padding(
- padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+ const Padding(
+ padding: EdgeInsets.symmetric(vertical: 48, horizontal: 24),
  child: Center(
  child: Column(
  children: [
  Icon(Icons.assignment_outlined,
  color: _onSurfaceVariant, size: 32),
- const SizedBox(height: 8),
+ SizedBox(height: 8),
  Text('No projects in this program yet',
  style: TextStyle(
  color: _onSurfaceVariant, fontSize: 14)),
- const SizedBox(height: 4),
+ SizedBox(height: 4),
  Text(
  'Projects will appear here once they are added to a program.',
  style: TextStyle(
@@ -1229,13 +1207,13 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Text(p.$1,
- style: TextStyle(
+ style: const TextStyle(
  color: _primary,
  fontSize: 14,
  fontWeight: FontWeight.bold,
  fontFamily: appFontFamily)),
  Text(p.$2,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurfaceVariant,
  fontSize: 11,
  fontFamily: appFontFamily)),
@@ -1257,7 +1235,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  ])),
  const SizedBox(width: 8),
  Text(p.$3,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurfaceVariant,
  fontSize: 13,
  fontFamily: appFontFamily)),
@@ -1294,7 +1272,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  child: Align(
  alignment: Alignment.centerRight,
  child: Text(p.$7,
- style: TextStyle(
+ style: const TextStyle(
  color: _primary,
  fontSize: 14,
  fontWeight: FontWeight.bold,
@@ -1336,7 +1314,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  padding: const EdgeInsets.all(24),
  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
- Text('Critical Risks',
+ const Text('Critical Risks',
  style: TextStyle(
  color: _primary,
  fontSize: 18,
@@ -1347,7 +1325,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  decoration: BoxDecoration(
  color: _crimson.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4)),
- child: Text('3 HIGH PRIORITY',
+ child: const Text('3 HIGH PRIORITY',
  style: TextStyle(
  color: _crimson,
  fontSize: 10,
@@ -1374,14 +1352,14 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Text(r.$1,
- style: TextStyle(
+ style: const TextStyle(
  color: _primary,
  fontSize: 13,
  fontWeight: FontWeight.bold,
  fontFamily: appFontFamily)),
  const SizedBox(height: 4),
  Text(r.$2,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurfaceVariant,
  fontSize: 11,
  fontFamily: appFontFamily)),
@@ -1403,7 +1381,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  return _surfaceCard(
  padding: const EdgeInsets.all(24),
  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
- Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+ const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
  Text('Resource Capacity',
  style: TextStyle(
  color: _primary,
@@ -1428,7 +1406,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
  Text(r.$1,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurfaceVariant,
  fontSize: 11,
  fontFamily: appFontFamily)),
@@ -1471,9 +1449,9 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  leftBorder: _amber,
  padding: const EdgeInsets.all(24),
  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
- Row(children: [
+ const Row(children: [
  Icon(Icons.priority_high, color: _amber, size: 18),
- const SizedBox(width: 8),
+ SizedBox(width: 8),
  Text('ESCALATION SUMMARY',
  style: TextStyle(
  color: _amber,
@@ -1494,7 +1472,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  ),
  child:
  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
- Text('OPEN APPROVAL',
+ const Text('OPEN APPROVAL',
  style: TextStyle(
  color: _onSurfaceVariant,
  fontSize: 11,
@@ -1506,13 +1484,13 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  metrics.projectCount == 0
  ? 'No projects require approval.'
  : '${metrics.healthEntries.where((e) => e.$3 == 'At Risk' || e.$3 == 'Critical').length} project(s) need attention — review status and budget.',
- style: TextStyle(
+ style: const TextStyle(
  color: _primary, fontSize: 13, fontFamily: appFontFamily),
  ),
  const SizedBox(height: 12),
  GestureDetector(
  onTap: () {},
- child: Row(children: [
+ child: const Row(children: [
  Text('REVIEW DETAILS',
  style: TextStyle(
  color: _tertiaryContainer,
@@ -1534,7 +1512,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  ),
  child:
  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
- Text('SCHEDULE REVISION',
+ const Text('SCHEDULE REVISION',
  style: TextStyle(
  color: _onSurfaceVariant,
  fontSize: 11,
@@ -1542,14 +1520,14 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  letterSpacing: 1,
  fontFamily: appFontFamily)),
  const SizedBox(height: 4),
- Text(
+ const Text(
  'Baseline shift requested for CyberShield v4 due to legislative changes.',
  style: TextStyle(
  color: _primary, fontSize: 13, fontFamily: appFontFamily)),
  const SizedBox(height: 12),
  GestureDetector(
  onTap: () {},
- child: Row(children: [
+ child: const Row(children: [
  Text('REVIEW DETAILS',
  style: TextStyle(
  color: _tertiaryContainer,
@@ -1588,7 +1566,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  return _surfaceCard(
  padding: const EdgeInsets.all(24),
  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
- Text('RECENT ACTIVITY',
+ const Text('RECENT ACTIVITY',
  style: TextStyle(
  color: _onSurfaceVariant,
  fontSize: 13,
@@ -1650,13 +1628,13 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Text(a.$1,
- style: TextStyle(
+ style: const TextStyle(
  color: _primary,
  fontSize: 12,
  fontFamily: appFontFamily)),
  const SizedBox(height: 2),
  Text(a.$2,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurfaceVariant,
  fontSize: 10,
  fontFamily: appFontFamily)),
@@ -1679,7 +1657,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  height: 192,
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(12),
- gradient: LinearGradient(
+ gradient: const LinearGradient(
  begin: Alignment.bottomCenter,
  end: Alignment.topCenter,
  colors: [Colors.white, _surfaceHigh],
@@ -1750,7 +1728,7 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
  blurRadius: 25)
  ]))),
  // Label
- Positioned(
+ const Positioned(
  bottom: 16,
  left: 16,
  child: Column(

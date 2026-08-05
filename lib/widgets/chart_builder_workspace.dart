@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/theme.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class ChartBuilderWorkspace extends StatefulWidget {
   const ChartBuilderWorkspace({super.key});
 
@@ -20,7 +21,8 @@ class _ChartBuilderWorkspaceState extends State<ChartBuilderWorkspace> {
 
   void _addPoint() {
     setState(() {
-      _points.add(_ChartPoint(label: 'New', value: 40, color: const Color(0xFF8B5CF6)));
+      _points.add(
+          _ChartPoint(label: 'New', value: 40, color: const Color(0xFF8B5CF6)));
     });
   }
 
@@ -90,7 +92,10 @@ class _ChartBuilderWorkspaceState extends State<ChartBuilderWorkspace> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Text('Data', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.grey[800])),
+                  child: Text('Data',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: Colors.grey[800])),
                 ),
                 Expanded(
                   child: ListView.builder(
@@ -98,12 +103,18 @@ class _ChartBuilderWorkspaceState extends State<ChartBuilderWorkspace> {
                     itemCount: _points.length,
                     itemBuilder: (context, index) {
                       final point = _points[index];
-                      return _DataRow(
-                        point: point,
-                        onLabelChanged: (label) => _updatePoint(index, label: label),
-                        onValueChanged: (value) => _updatePoint(index, value: value),
-                        onColorChanged: (color) => _updatePoint(index, color: color),
-                        onRemove: () => _removePoint(index),
+                      return RepaintBoundary(
+                        key: ValueKey('chart_row_$index'),
+                        child: _DataRow(
+                          point: point,
+                          onLabelChanged: (label) =>
+                              _updatePoint(index, label: label),
+                          onValueChanged: (value) =>
+                              _updatePoint(index, value: value),
+                          onColorChanged: (color) =>
+                              _updatePoint(index, color: color),
+                          onRemove: () => _removePoint(index),
+                        ),
                       );
                     },
                   ),
@@ -140,7 +151,9 @@ class _ChartHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Row(
         children: [
-          Text('Chart Builder', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.grey[800])),
+          Text('Chart Builder',
+              style: TextStyle(
+                  fontWeight: FontWeight.w700, color: Colors.grey[800])),
           const Spacer(),
           _ChartTypeChip(
             label: 'Bar',
@@ -172,7 +185,8 @@ class _ChartHeader extends StatelessWidget {
 }
 
 class _ChartTypeChip extends StatelessWidget {
-  const _ChartTypeChip({required this.label, required this.isActive, required this.onTap});
+  const _ChartTypeChip(
+      {required this.label, required this.isActive, required this.onTap});
 
   final String label;
   final bool isActive;
@@ -186,9 +200,13 @@ class _ChartTypeChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? LightModeColors.accent.withOpacity(0.18) : Colors.white,
+          color: isActive
+              ? LightModeColors.accent.withValues(alpha: 0.18)
+              : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isActive ? LightModeColors.accent : AppSemanticColors.border),
+          border: Border.all(
+              color:
+                  isActive ? LightModeColors.accent : AppSemanticColors.border),
         ),
         child: Text(
           label,
@@ -269,7 +287,8 @@ class _DataRow extends StatelessWidget {
                     border: OutlineInputBorder(),
                     labelText: 'Value',
                   ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   onChanged: (value) {
                     final parsed = double.tryParse(value);
                     if (parsed != null) onValueChanged(parsed);
@@ -351,13 +370,16 @@ class _ChartPainter extends CustomPainter {
       final barHeight = maxValue == 0 ? 0 : (p.value / maxValue) * chartHeight;
       final barWidth = spacing * 0.5;
       final x = spacing * (i + 0.7);
-      final rect = Rect.fromLTWH(x, baseY - barHeight, barWidth, barHeight.toDouble());
+      final rect =
+          Rect.fromLTWH(x, baseY - barHeight, barWidth, barHeight.toDouble());
       final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(8));
       final paint = Paint()..color = p.color;
       canvas.drawRRect(rrect, paint);
 
       final textPainter = TextPainter(
-        text: TextSpan(text: p.label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+        text: TextSpan(
+            text: p.label,
+            style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
         textDirection: TextDirection.ltr,
       )..layout(maxWidth: barWidth + 20);
       textPainter.paint(canvas, Offset(x - 4, baseY + 6));
@@ -372,7 +394,8 @@ class _ChartPainter extends CustomPainter {
     final leftX = size.width * 0.06;
     final rightX = size.width * 0.94;
     final span = maxValue - minValue == 0 ? 1 : maxValue - minValue;
-    final step = points.length <= 1 ? 0 : (rightX - leftX) / (points.length - 1);
+    final step =
+        points.length <= 1 ? 0 : (rightX - leftX) / (points.length - 1);
 
     final line = Path();
     for (var i = 0; i < points.length; i++) {
@@ -392,11 +415,12 @@ class _ChartPainter extends CustomPainter {
         ..lineTo(leftX, topY + chartHeight)
         ..close();
       final gradient = LinearGradient(
-        colors: [const Color(0xFF2563EB).withOpacity(0.35), Colors.white],
+        colors: [const Color(0xFF2563EB).withValues(alpha: 0.35), Colors.white],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       );
-      canvas.drawPath(fillPath, Paint()..shader = gradient.createShader(Offset.zero & size));
+      canvas.drawPath(fillPath,
+          Paint()..shader = gradient.createShader(Offset.zero & size));
     }
 
     canvas.drawPath(
@@ -429,7 +453,8 @@ class _ChartPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = radius * 0.35
         ..strokeCap = StrokeCap.round;
-      canvas.drawArc(Rect.fromCircle(center: center, radius: radius), startAngle, sweep, false, paint);
+      canvas.drawArc(Rect.fromCircle(center: center, radius: radius),
+          startAngle, sweep, false, paint);
       startAngle += sweep;
     }
     final textPainter = TextPainter(
@@ -439,7 +464,8 @@ class _ChartPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    textPainter.paint(canvas, center - Offset(textPainter.width / 2, textPainter.height + 4));
+    textPainter.paint(
+        canvas, center - Offset(textPainter.width / 2, textPainter.height + 4));
   }
 
   Offset xy(double x, double y) => Offset(x, y);

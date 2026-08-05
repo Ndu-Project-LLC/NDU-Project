@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 /// Dialog for approving or rejecting a Purchase Order
 class PoApprovalDialog extends StatefulWidget {
   const PoApprovalDialog({
@@ -47,7 +48,8 @@ class _PoApprovalDialogState extends State<PoApprovalDialog> {
     final po = widget.po;
 
     return AlertDialog(
-      title: Text('${_selectedAction == 'approve' ? 'Approve' : 'Reject'} PO #${po.poNumber}'),
+      title: Text(
+          '${_selectedAction == 'approve' ? 'Approve' : 'Reject'} PO #${po.poNumber}'),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +61,8 @@ class _PoApprovalDialogState extends State<PoApprovalDialog> {
             const SizedBox(height: 8),
             _buildInfoRow('Category', po.category),
             const SizedBox(height: 8),
-            _buildInfoRow('Current Approver', po.approverName ?? 'Not assigned'),
+            _buildInfoRow(
+                'Current Approver', po.approverName ?? 'Not assigned'),
             if (po.daysUntilEscalation != null) ...[
               const SizedBox(height: 8),
               _buildEscalationWarning(po.daysUntilEscalation!),
@@ -111,7 +114,8 @@ class _PoApprovalDialogState extends State<PoApprovalDialog> {
         ),
         FilledButton(
           onPressed: (_isSubmitting ||
-                  (_selectedAction == 'reject' && _commentsController.text.trim().isEmpty))
+                  (_selectedAction == 'reject' &&
+                      _commentsController.text.trim().isEmpty))
               ? null
               : _submit,
           child: _isSubmitting
@@ -167,7 +171,9 @@ class _PoApprovalDialogState extends State<PoApprovalDialog> {
                   ? 'This approval is overdue and should be escalated to ${widget.projectOwnerName}'
                   : 'Approval deadline in $daysUntil day${daysUntil == 1 ? '' : 's'}',
               style: TextStyle(
-                color: isUrgent ? const Color(0xFF991B1B) : const Color(0xFF92400E),
+                color: isUrgent
+                    ? const Color(0xFF991B1B)
+                    : const Color(0xFF92400E),
                 fontSize: 12,
               ),
             ),
@@ -297,11 +303,10 @@ class _EscalationTargetTile extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                selected
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_off,
-                color:
-                    selected ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
+                selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                color: selected
+                    ? const Color(0xFF2563EB)
+                    : const Color(0xFF94A3B8),
               ),
               const SizedBox(width: 10),
               Expanded(

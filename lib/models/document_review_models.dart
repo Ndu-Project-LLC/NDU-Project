@@ -99,6 +99,13 @@ class ReviewHistoryEntry {
           : DateTime.now(),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ReviewHistoryEntry && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Actions that can be taken during review
@@ -198,7 +205,8 @@ class DocumentReviewItem {
       primaryReviewerId: primaryReviewerId ?? this.primaryReviewerId,
       primaryReviewerName: primaryReviewerName ?? this.primaryReviewerName,
       secondaryReviewerId: secondaryReviewerId ?? this.secondaryReviewerId,
-      secondaryReviewerName: secondaryReviewerName ?? this.secondaryReviewerName,
+      secondaryReviewerName:
+          secondaryReviewerName ?? this.secondaryReviewerName,
       finalApproverId: finalApproverId ?? this.finalApproverId,
       finalApproverName: finalApproverName ?? this.finalApproverName,
       reviewDueDate: reviewDueDate ?? this.reviewDueDate,
@@ -271,7 +279,8 @@ class DocumentReviewItem {
       reviewComments: json['reviewComments'],
       reviewHistory: json['reviewHistory'] != null
           ? (json['reviewHistory'] as List)
-              .map((e) => ReviewHistoryEntry.fromJson(e as Map<String, dynamic>))
+              .map(
+                  (e) => ReviewHistoryEntry.fromJson(e as Map<String, dynamic>))
               .toList()
           : [],
       version: json['version'] ?? 1,
@@ -379,6 +388,13 @@ class DocumentReviewItem {
       lastUpdated: DateTime.now(),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is DocumentReviewItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Template for creating review items for known document types
@@ -442,7 +458,8 @@ class DocumentTemplates {
     DocumentReviewTemplate(
       documentId: 'business_case',
       documentName: 'Business Case',
-      description: 'Project justification, cost-benefit analysis, and strategic alignment',
+      description:
+          'Project justification, cost-benefit analysis, and strategic alignment',
       phase: DocumentPhase.initiation,
       category: DocumentCategory.governance,
       sourceCheckpoint: 'business_case',
@@ -460,7 +477,8 @@ class DocumentTemplates {
     DocumentReviewTemplate(
       documentId: 'project_charter',
       documentName: 'Project Charter',
-      description: 'Project authorization, objectives, and stakeholder identification',
+      description:
+          'Project authorization, objectives, and stakeholder identification',
       phase: DocumentPhase.initiation,
       category: DocumentCategory.governance,
       sourceCheckpoint: 'project_charter',
@@ -583,7 +601,8 @@ class DocumentTemplates {
     DocumentReviewTemplate(
       documentId: 'ssher',
       documentName: 'SSHER Plan',
-      description: 'Safety, Security, Health, Environment, and Reliability plan',
+      description:
+          'Safety, Security, Health, Environment, and Reliability plan',
       phase: DocumentPhase.planning,
       category: DocumentCategory.riskCompliance,
       sourceCheckpoint: 'ssher',

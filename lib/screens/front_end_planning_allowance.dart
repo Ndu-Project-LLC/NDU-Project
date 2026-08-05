@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 /// Front End Planning – Allowance screen
 /// Refactored to support structured "Program-Aware Financial Inputs".
 ///
@@ -33,10 +34,7 @@ class FrontEndPlanningAllowanceScreen extends StatefulWidget {
  const FrontEndPlanningAllowanceScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const FrontEndPlanningAllowanceScreen()),
- );
+ context.push('/fep-allowance');
  }
 
  @override
@@ -490,7 +488,7 @@ class _FrontEndPlanningAllowanceScreenState
  const SizedBox(height: 12),
  fieldLabel('Type'),
  DropdownButtonFormField<String>(
- value: selectedType,
+ initialValue: selectedType,
  isExpanded: true,
  decoration: fieldDecoration(hintText: 'Select type'),
  items: const [
@@ -602,7 +600,7 @@ class _FrontEndPlanningAllowanceScreenState
  const SizedBox(height: 12),
  fieldLabel('Release Status'),
  DropdownButtonFormField<String>(
- value: releaseStatus,
+ initialValue: releaseStatus,
  isExpanded: true,
  decoration: fieldDecoration(hintText: 'Select status'),
  items: const [
@@ -835,7 +833,7 @@ class _FrontEndPlanningAllowanceScreenState
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.02),
+ color: Colors.black.withValues(alpha: 0.02),
  blurRadius: 4,
  offset: const Offset(0, 2),
  ),
@@ -1115,9 +1113,9 @@ class _FrontEndPlanningAllowanceScreenState
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.08),
+ color: color.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: color.withOpacity(0.25)),
+ border: Border.all(color: color.withValues(alpha: 0.25)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -1346,8 +1344,8 @@ class _FrontEndPlanningAllowanceScreenState
  _saveAndNavigateToNextStep();
  },
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Allowance',
  ),
  ),

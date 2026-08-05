@@ -98,7 +98,7 @@ class ExecutionActionBar extends StatelessWidget {
           label: Text(action.label),
           style: OutlinedButton.styleFrom(
             foregroundColor: aiColor,
-            side: BorderSide(color: aiColor.withOpacity(0.28)),
+            side: BorderSide(color: aiColor.withValues(alpha: 0.28)),
             backgroundColor: const Color(0xFFF8F7FF),
             padding: EdgeInsets.symmetric(
               horizontal: compact ? 14 : 16,
@@ -186,10 +186,10 @@ class ExecutionPageHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 22,
             offset: const Offset(0, 14),
           ),
@@ -201,7 +201,7 @@ class ExecutionPageHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFFEF3C7),
+              color: Color(0xFFFEF3C7),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -340,7 +340,8 @@ class ExecutionMetricsGrid extends StatelessWidget {
                   .map((metric) => Expanded(
                         child: Padding(
                           padding: EdgeInsets.only(
-                            left: metrics.indexOf(metric) == 0 ? 0 : spacing / 2,
+                            left:
+                                metrics.indexOf(metric) == 0 ? 0 : spacing / 2,
                             right: metrics.indexOf(metric) == metrics.length - 1
                                 ? 0
                                 : spacing / 2,
@@ -362,8 +363,7 @@ class ExecutionMetricsGrid extends StatelessWidget {
         } else {
           columns = 1;
         }
-        final double tileWidth =
-            (width - (spacing * (columns - 1))) / columns;
+        final double tileWidth = (width - (spacing * (columns - 1))) / columns;
 
         // Build rows of cards so IntrinsicHeight can equalise each row
         final List<Widget> rows = [];
@@ -378,8 +378,8 @@ class ExecutionMetricsGrid extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: rowMetrics
                     .map((metric) => SizedBox(
-                          width: tileWidth.clamp(minTileWidth, width)
-                              .toDouble(),
+                          width:
+                              tileWidth.clamp(minTileWidth, width).toDouble(),
                           child: Padding(
                             padding: EdgeInsets.only(
                               left: rowMetrics.indexOf(metric) == 0
@@ -425,10 +425,10 @@ class ExecutionMetricCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -457,7 +457,7 @@ class ExecutionMetricCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: metric.emphasisColor.withOpacity(0.12),
+                  color: metric.emphasisColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(metric.icon, size: 20, color: metric.emphasisColor),
@@ -590,13 +590,12 @@ class _ExecutionPanelShellState extends State<ExecutionPanelShell>
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: _isExpanded
-              ? const Color(0xFFE5E7EB)
-              : const Color(0xFFF3F4F6),
+          color:
+              _isExpanded ? const Color(0xFFE5E7EB) : const Color(0xFFF3F4F6),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 18,
             offset: const Offset(0, 12),
           ),
@@ -637,14 +636,13 @@ class _ExecutionPanelShellState extends State<ExecutionPanelShell>
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
                   color: (widget.headerIconColor ?? const Color(0xFF6366F1))
-                      .withOpacity(0.1),
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   widget.headerIcon,
                   size: 18,
-                  color:
-                      widget.headerIconColor ?? const Color(0xFF6366F1),
+                  color: widget.headerIconColor ?? const Color(0xFF6366F1),
                 ),
               ),
               const SizedBox(width: 12),
@@ -730,9 +728,7 @@ class _ExecutionPanelShellState extends State<ExecutionPanelShell>
       child: Icon(
         Icons.expand_more_rounded,
         size: 20,
-        color: _isExpanded
-            ? const Color(0xFF6366F1)
-            : const Color(0xFF9CA3AF),
+        color: _isExpanded ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF),
       ),
     );
   }
@@ -758,9 +754,9 @@ class ExecutionEmptyState extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Color(0xFFE2E8F0)),
       ),
       child: Column(
         children: [
@@ -769,7 +765,7 @@ class ExecutionEmptyState extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: Color(0xFFE2E8F0)),
             ),
             child: Icon(icon, size: 26, color: const Color(0xFF64748B)),
           ),
@@ -1005,7 +1001,7 @@ class _ExecutionEditorSurface extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(icon, size: 20, color: const Color(0xFF334155)),

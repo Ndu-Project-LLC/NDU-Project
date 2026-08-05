@@ -126,11 +126,11 @@ class PhaseTransitionRoute<T> extends PageRouteBuilder<T> {
                               end: Alignment.bottomRight,
                               colors: [
                                 const Color(0xFF0F172A)
-                                    .withOpacity(0.58),
+                                    .withValues(alpha: 0.58),
                                 const Color(0xFF1F2937)
-                                    .withOpacity(0.48),
+                                    .withValues(alpha: 0.48),
                                 const Color(0xFF111827)
-                                    .withOpacity(0.38),
+                                    .withValues(alpha: 0.38),
                               ],
                             ),
                           ),
@@ -142,10 +142,10 @@ class PhaseTransitionRoute<T> extends PageRouteBuilder<T> {
                     child: IgnorePointer(
                       child: FadeTransition(
                         opacity: overlayOpacity,
-                        child: Center(
+                        child: const Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
-                            children: const [
+                            children: [
                               SizedBox(
                                 height: 36,
                                 width: 36,
@@ -186,7 +186,7 @@ class PhaseTransitionRoute<T> extends PageRouteBuilder<T> {
                                 vertical: 12,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.94),
+                                color: Colors.white.withValues(alpha: 0.94),
                                 borderRadius: BorderRadius.circular(999),
                                 border: Border.all(
                                   color: const Color(0xFFE5E7EB),
@@ -194,7 +194,7 @@ class PhaseTransitionRoute<T> extends PageRouteBuilder<T> {
                                 boxShadow: [
                                   BoxShadow(
                                     color:
-                                        Colors.black.withOpacity(0.08),
+                                        Colors.black.withValues(alpha: 0.08),
                                     blurRadius: 16,
                                     offset: const Offset(0, 10),
                                   ),

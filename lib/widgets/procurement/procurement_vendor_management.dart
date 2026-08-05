@@ -421,7 +421,7 @@ class _VendorHealthCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -500,7 +500,7 @@ class _VendorOnboardingCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -570,7 +570,7 @@ class _VendorRiskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -792,7 +792,7 @@ class _VendorsSection extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: Color(0xFFE2E8F0)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -913,65 +913,71 @@ class _ApprovedVendorsSection extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
+              border: Border.all(color: Color(0xFFE5E7EB)),
             ),
-            child: Column(
-              children: [
-                for (var i = 0; i < approvedVendors.length; i++) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+            child: ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: approvedVendors.length,
+              itemBuilder: (context, i) => RepaintBoundary(
+                key: ValueKey('approved_vendor_$i'),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              approvedVendors[i].name,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              approvedVendors[i].category,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: _RatingStars(
+                              rating: approvedVendors[i].ratingScore,
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              approvedVendors[i].nextReview.trim().isEmpty
+                                  ? 'Review date N/A'
+                                  : approvedVendors[i].nextReview,
+                              textAlign: TextAlign.end,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF475569),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            approvedVendors[i].name,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            approvedVendors[i].category,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: _RatingStars(
-                            rating: approvedVendors[i].ratingScore,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            approvedVendors[i].nextReview.trim().isEmpty
-                                ? 'Review date N/A'
-                                : approvedVendors[i].nextReview,
-                            textAlign: TextAlign.end,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF475569),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (i != approvedVendors.length - 1)
-                    const Divider(height: 1, color: Color(0xFFE5E7EB)),
-                ],
-              ],
+                    if (i != approvedVendors.length - 1)
+                      const Divider(height: 1, color: Color(0xFFE5E7EB)),
+                  ],
+                ),
+              ),
             ),
           ),
       ],
@@ -1001,78 +1007,86 @@ class _VendorDataTable extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
-      child: Column(
-        children: [
-          for (var i = 0; i < vendors.length; i++) ...[
-            InkWell(
-              onTap: () => onEditVendor(vendors[i]),
-              borderRadius: BorderRadius.vertical(
-                top: i == 0 ? const Radius.circular(16) : Radius.zero,
-                bottom: i == vendors.length - 1
-                    ? const Radius.circular(16)
-                    : Radius.zero,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 14),
-                child: Row(
-                  children: [
-                    Checkbox(
-                      value: selectedVendorIds.contains(vendors[i].id),
-                      onChanged: (selected) {
-                        onToggleSelected(vendors[i].id, selected ?? false);
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            vendors[i].name,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            vendors[i].category,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                        ],
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: vendors.length,
+        itemBuilder: (context, i) => RepaintBoundary(
+          key: ValueKey('vendor_row_$i'),
+          child: Column(
+            children: [
+              InkWell(
+                onTap: () => onEditVendor(vendors[i]),
+                borderRadius: BorderRadius.vertical(
+                  top: i == 0 ? const Radius.circular(16) : Radius.zero,
+                  bottom: i == vendors.length - 1
+                      ? const Radius.circular(16)
+                      : Radius.zero,
+                ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: selectedVendorIds.contains(vendors[i].id),
+                        onChanged: (selected) {
+                          onToggleSelected(vendors[i].id, selected ?? false);
+                        },
                       ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: _RatingStars(rating: vendors[i].ratingScore),
-                    ),
-                    const SizedBox(width: 12),
-                    _YesNoBadge(value: vendors[i].isApproved, label: 'Approved'),
-                    const SizedBox(width: 8),
-                    _YesNoBadge(value: vendors[i].isPreferred, label: 'Preferred'),
-                    const SizedBox(width: 12),
-                    _VendorStatusPill(status: vendors[i].status),
-                    const SizedBox(width: 8),
-                    _VendorActionsMenu(
-                      onEdit: () => onEditVendor(vendors[i]),
-                      onDelete: () => onDeleteVendor(vendors[i].id),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              vendors[i].name,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              vendors[i].category,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: _RatingStars(rating: vendors[i].ratingScore),
+                      ),
+                      const SizedBox(width: 12),
+                      _YesNoBadge(
+                          value: vendors[i].isApproved, label: 'Approved'),
+                      const SizedBox(width: 8),
+                      _YesNoBadge(
+                          value: vendors[i].isPreferred, label: 'Preferred'),
+                      const SizedBox(width: 12),
+                      _VendorStatusPill(status: vendors[i].status),
+                      const SizedBox(width: 8),
+                      _VendorActionsMenu(
+                        onEdit: () => onEditVendor(vendors[i]),
+                        onDelete: () => onDeleteVendor(vendors[i].id),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (i != vendors.length - 1)
-              const Divider(height: 1, color: Color(0xFFE5E7EB)),
-          ],
-        ],
+              if (i != vendors.length - 1)
+                const Divider(height: 1, color: Color(0xFFE5E7EB)),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1174,7 +1188,7 @@ class _VendorNameCell extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -1273,9 +1287,7 @@ class _YesNoBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: value
-            ? const Color(0xFFDCFCE7)
-            : const Color(0xFFF1F5F9),
+        color: value ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -1283,9 +1295,7 @@ class _YesNoBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: value
-              ? const Color(0xFF047857)
-              : const Color(0xFF64748B),
+          color: value ? const Color(0xFF047857) : const Color(0xFF64748B),
         ),
       ),
     );

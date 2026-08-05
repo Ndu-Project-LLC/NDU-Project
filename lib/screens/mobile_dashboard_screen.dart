@@ -9,6 +9,7 @@ import '../services/project_service.dart';
 import '../services/program_service.dart';
 import 'project_dashboard_screen.dart';
 import 'program_dashboard_mobile_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class MobileDashboardScreen extends StatelessWidget {
  const MobileDashboardScreen({super.key});
@@ -76,12 +77,7 @@ class MobileDashboardScreen extends StatelessWidget {
  _buildCostComparison(topProjects),
  const SizedBox(height: 32),
  ElevatedButton(
- onPressed: () => Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const ProjectDashboardScreen()),
- ),
- style: ElevatedButton.styleFrom(
+ onPressed: () => context.push('/dashboard'),style: ElevatedButton.styleFrom(
  backgroundColor: const Color(0xFFFFC107),
  foregroundColor: const Color(0xFF111827),
  shape: RoundedRectangleBorder(
@@ -157,7 +153,7 @@ class MobileDashboardScreen extends StatelessWidget {
  borderRadius: BorderRadius.circular(18),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 14,
  offset: const Offset(0, 10)),
  ]),
@@ -193,13 +189,7 @@ class MobileDashboardScreen extends StatelessWidget {
  ),
  ),
  TextButton(
- onPressed: () => Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) =>
- const ProgramDashboardMobileScreen()),
- ),
- style: TextButton.styleFrom(
+ onPressed: () => context.push('/program-dashboard-mobile'),style: TextButton.styleFrom(
  minimumSize: const Size(72, 36),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12)),
@@ -315,7 +305,7 @@ class _MobileStatusCard extends StatelessWidget {
  borderRadius: BorderRadius.circular(16),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 10,
  offset: const Offset(0, 6))
  ],

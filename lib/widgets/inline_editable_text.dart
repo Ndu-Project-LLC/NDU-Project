@@ -228,8 +228,7 @@ class _InlineEditableTextState extends State<InlineEditableText> {
                         )
                       : const Icon(Icons.auto_awesome,
                           size: 16, color: Color(0xFF64748B)),
-                  onPressed:
-                      widget.isRegenerating ? null : widget.onRegenerate,
+                  onPressed: widget.isRegenerating ? null : widget.onRegenerate,
                   tooltip: 'Regenerate',
                   padding: EdgeInsets.zero,
                   constraints:
@@ -285,17 +284,15 @@ class _InlineEditableTextState extends State<InlineEditableText> {
               hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide:
-                    const BorderSide(color: Color(0xFFFFD700), width: 1.5),
+                borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                borderSide: BorderSide(color: Color(0xFFE5E7EB)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide:
-                    const BorderSide(color: Color(0xFFFFD700), width: 1.5),
+                borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -353,7 +350,7 @@ class _InlineEditableTextState extends State<InlineEditableText> {
         width: 28,
         height: 28,
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: IconButton(

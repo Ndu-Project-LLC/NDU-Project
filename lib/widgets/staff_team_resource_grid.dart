@@ -3,10 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
 import 'dart:async';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class StaffTeamResourceGrid extends StatefulWidget {
   const StaffTeamResourceGrid({
     super.key,
@@ -93,7 +95,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
   }
 
   /// World-class modal dialog for adding a new staffing role.
-  void _showAddRoleModal() {
+  Future<void> _showAddRoleModal() async {
     final roleController = TextEditingController();
     final qtyController = TextEditingController(text: '1');
     final startDateController = TextEditingController();
@@ -105,361 +107,497 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     String status = 'Not Started';
     bool aiLoading = false;
 
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: Colors.black54,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          elevation: 24,
-          child: Container(
-            width: 560,
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.85,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // ── Header ──
-                Container(
-                  padding: const EdgeInsets.fromLTRB(28, 24, 28, 20),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                    border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEEF2FF),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.person_add_alt_1_rounded, size: 22, color: Color(0xFF4338CA)),
-                      ),
-                      const SizedBox(width: 14),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Add Staffing Role', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF111827))),
-                            SizedBox(height: 2),
-                            Text('Define the role, timeline, and cost details', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        icon: const Icon(Icons.close_rounded, size: 22, color: Color(0xFF6B7280)),
-                        tooltip: 'Close',
-                      ),
-                    ],
-                  ),
-                ),
-                // ── Form Body ──
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(28, 24, 28, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+    try {
+      await showDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierColor: Colors.black54,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setModalState) => Dialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24)),
+            elevation: 24,
+            child: Container(
+              width: 560,
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ── Header ──
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(28, 24, 28, 20),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF8FAFC),
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(24)),
+                      border:
+                          Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+                    ),
+                    child: Row(
                       children: [
-                        // Role Name
-                        _ModalField(
-                          label: 'Role / Capability',
-                          controller: roleController,
-                          hint: 'e.g. Senior Cloud Architect',
-                          icon: Icons.work_outline_rounded,
-                          autofocus: true,
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEEF2FF),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.person_add_alt_1_rounded,
+                              size: 22, color: Color(0xFF4338CA)),
                         ),
-                        const SizedBox(height: 16),
-                        // Qty + Type row
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _ModalField(
-                                label: 'Quantity',
-                                controller: qtyController,
-                                hint: '1',
-                                icon: Icons.groups_outlined,
-                                keyboardType: TextInputType.number,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _ModalField(
-                                label: 'Start Date',
-                                controller: startDateController,
-                                hint: 'Month 1',
-                                icon: Icons.calendar_today_rounded,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _ModalField(
-                                label: 'Duration (months)',
-                                controller: durationController,
-                                hint: '6',
-                                icon: Icons.schedule_rounded,
-                                keyboardType: TextInputType.number,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _ModalField(
-                                label: 'Monthly Rate',
-                                controller: costController,
-                                hint: '5000',
-                                icon: Icons.attach_money_rounded,
-                                keyboardType: TextInputType.number,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // Type + Status
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Type', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF374151))),
-                                  const SizedBox(height: 6),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF9FAFB),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    child: DropdownButton<bool>(
-                                      value: isInternal,
-                                      isExpanded: true,
-                                      underline: const SizedBox(),
-                                      iconSize: 18,
-                                      style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
-                                      items: const [
-                                        DropdownMenuItem(value: true, child: Text('Internal')),
-                                        DropdownMenuItem(value: false, child: Text('External')),
-                                      ],
-                                      onChanged: (v) {
-                                        if (v != null) setModalState(() => isInternal = v);
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Status', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF374151))),
-                                  const SizedBox(height: 6),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF9FAFB),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    child: DropdownButton<String>(
-                                      value: status,
-                                      isExpanded: true,
-                                      underline: const SizedBox(),
-                                      iconSize: 18,
-                                      style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
-                                      items: const [
-                                        DropdownMenuItem(value: 'Not Started', child: Text('Not Started')),
-                                        DropdownMenuItem(value: 'In Progress', child: Text('In Progress')),
-                                        DropdownMenuItem(value: 'Active', child: Text('Active')),
-                                        DropdownMenuItem(value: 'Completed', child: Text('Completed')),
-                                      ],
-                                      onChanged: (v) {
-                                        if (v != null) setModalState(() => status = v);
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // Description
-                        const Text('Role Description', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF374151))),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: descController,
-                          maxLines: 2,
-                          style: const TextStyle(fontSize: 14),
-                          decoration: InputDecoration(
-                            hintText: 'Brief description of responsibilities...',
-                            hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFF4338CA), width: 1.5),
-                            ),
-                            contentPadding: const EdgeInsets.all(12),
-                            filled: true,
-                            fillColor: const Color(0xFFF9FAFB),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Add Staffing Role',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF111827))),
+                              SizedBox(height: 2),
+                              Text(
+                                  'Define the role, timeline, and cost details',
+                                  style: TextStyle(
+                                      fontSize: 13, color: Color(0xFF6B7280))),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        // Notes
-                        const Text('Notes', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF374151))),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: notesController,
-                          maxLines: 2,
-                          style: const TextStyle(fontSize: 14),
-                          decoration: InputDecoration(
-                            hintText: 'Additional notes...',
-                            hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: Color(0xFF4338CA), width: 1.5),
-                            ),
-                            contentPadding: const EdgeInsets.all(12),
-                            filled: true,
-                            fillColor: const Color(0xFFF9FAFB),
-                          ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          icon: const Icon(Icons.close_rounded,
+                              size: 22, color: Color(0xFF6B7280)),
+                          tooltip: 'Close',
                         ),
-                        const SizedBox(height: 8),
                       ],
                     ),
                   ),
-                ),
-                // ── Footer ──
-                Container(
-                  padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF8FAFC),
-                    border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
-                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+                  // ── Form Body ──
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(28, 24, 28, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Role Name
+                          _ModalField(
+                            label: 'Role / Capability',
+                            controller: roleController,
+                            hint: 'e.g. Senior Cloud Architect',
+                            icon: Icons.work_outline_rounded,
+                            autofocus: true,
+                          ),
+                          const SizedBox(height: 16),
+                          // Qty + Type row
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _ModalField(
+                                  label: 'Quantity',
+                                  controller: qtyController,
+                                  hint: '1',
+                                  icon: Icons.groups_outlined,
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _ModalField(
+                                  label: 'Start Date',
+                                  controller: startDateController,
+                                  hint: 'Month 1',
+                                  icon: Icons.calendar_today_rounded,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _ModalField(
+                                  label: 'Duration (months)',
+                                  controller: durationController,
+                                  hint: '6',
+                                  icon: Icons.schedule_rounded,
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _ModalField(
+                                  label: 'Monthly Rate',
+                                  controller: costController,
+                                  hint: '5000',
+                                  icon: Icons.attach_money_rounded,
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          // Type + Status
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Type',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF374151))),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF9FAFB),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                            color: const Color(0xFFE5E7EB)),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12),
+                                      child: DropdownButton<bool>(
+                                        value: isInternal,
+                                        isExpanded: true,
+                                        underline: const SizedBox(),
+                                        iconSize: 18,
+                                        style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF111827)),
+                                        items: const [
+                                          DropdownMenuItem(
+                                              value: true,
+                                              child: Text('Internal')),
+                                          DropdownMenuItem(
+                                              value: false,
+                                              child: Text('External')),
+                                        ],
+                                        onChanged: (v) {
+                                          if (v != null)
+                                            setModalState(() => isInternal = v);
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Status',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF374151))),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF9FAFB),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                            color: const Color(0xFFE5E7EB)),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12),
+                                      child: DropdownButton<String>(
+                                        value: status,
+                                        isExpanded: true,
+                                        underline: const SizedBox(),
+                                        iconSize: 18,
+                                        style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF111827)),
+                                        items: const [
+                                          DropdownMenuItem(
+                                              value: 'Not Started',
+                                              child: Text('Not Started')),
+                                          DropdownMenuItem(
+                                              value: 'In Progress',
+                                              child: Text('In Progress')),
+                                          DropdownMenuItem(
+                                              value: 'Active',
+                                              child: Text('Active')),
+                                          DropdownMenuItem(
+                                              value: 'Completed',
+                                              child: Text('Completed')),
+                                        ],
+                                        onChanged: (v) {
+                                          if (v != null)
+                                            setModalState(() => status = v);
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          // Description
+                          const Text('Role Description',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF374151))),
+                          const SizedBox(height: 6),
+                          TextField(
+                            controller: descController,
+                            maxLines: 2,
+                            style: const TextStyle(fontSize: 14),
+                            decoration: InputDecoration(
+                              hintText:
+                                  'Brief description of responsibilities...',
+                              hintStyle: const TextStyle(
+                                  fontSize: 13, color: Color(0xFF9CA3AF)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    const BorderSide(color: Color(0xFFE5E7EB)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    const BorderSide(color: Color(0xFFE5E7EB)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFF4338CA), width: 1.5),
+                              ),
+                              contentPadding: const EdgeInsets.all(12),
+                              filled: true,
+                              fillColor: const Color(0xFFF9FAFB),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Notes
+                          const Text('Notes',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF374151))),
+                          const SizedBox(height: 6),
+                          TextField(
+                            controller: notesController,
+                            maxLines: 2,
+                            style: const TextStyle(fontSize: 14),
+                            decoration: InputDecoration(
+                              hintText: 'Additional notes...',
+                              hintStyle: const TextStyle(
+                                  fontSize: 13, color: Color(0xFF9CA3AF)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    const BorderSide(color: Color(0xFFE5E7EB)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    const BorderSide(color: Color(0xFFE5E7EB)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFF4338CA), width: 1.5),
+                              ),
+                              contentPadding: const EdgeInsets.all(12),
+                              filled: true,
+                              fillColor: const Color(0xFFF9FAFB),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      // KAZ AI suggestion button
-                      OutlinedButton.icon(
-                        onPressed: aiLoading
-                            ? null
-                            : () async {
-                                setModalState(() => aiLoading = true);
-                                try {
-                                  final data = ProjectDataHelper.getData(context);
-                                  final ctx = ProjectDataHelper.buildExecutivePlanContext(data, sectionLabel: 'Staff Team Orchestration');
-                                  final ai = OpenAiServiceSecure();
-                                  final suggestions = await ai.generateStaffingRoleSuggestions(context: ctx, maxSuggestions: 1);
-                                  if (suggestions.isNotEmpty) {
-                                    roleController.text = suggestions.first;
+                  // ── Footer ──
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF8FAFC),
+                      border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+                      borderRadius:
+                          BorderRadius.vertical(bottom: Radius.circular(24)),
+                    ),
+                    child: Row(
+                      children: [
+                        // KAZ AI suggestion button
+                        OutlinedButton.icon(
+                          onPressed: aiLoading
+                              ? null
+                              : () async {
+                                  setModalState(() => aiLoading = true);
+                                  try {
+                                    final data =
+                                        ProjectDataHelper.getData(context);
+                                    final ctx = ProjectDataHelper
+                                        .buildExecutivePlanContext(data,
+                                            sectionLabel:
+                                                'Staff Team Orchestration');
+                                    final ai = OpenAiServiceSecure();
+                                    final suggestions = await ai
+                                        .generateStaffingRoleSuggestions(
+                                            context: ctx, maxSuggestions: 1);
+                                    if (suggestions.isNotEmpty) {
+                                      roleController.text = suggestions.first;
+                                    }
+                                  } catch (_) {
+                                    // silent
                                   }
-                                } catch (_) {
-                                  // silent
-                                }
-                                if (ctx.mounted) setModalState(() => aiLoading = false);
-                              },
-                        icon: aiLoading
-                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Icon(Icons.auto_awesome_rounded, size: 16),
-                        label: Text(aiLoading ? 'Generating...' : 'KAZ AI Suggest'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF7C3AED),
-                          side: const BorderSide(color: Color(0xFFDDD6FE)),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                  if (ctx.mounted)
+                                    setModalState(() => aiLoading = false);
+                                },
+                          icon: aiLoading
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.auto_awesome_rounded,
+                                  size: 16),
+                          label: Text(
+                              aiLoading ? 'Generating...' : 'KAZ AI Suggest'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF7C3AED),
+                            side: const BorderSide(color: Color(0xFFDDD6FE)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            textStyle: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
                         ),
-                      ),
-                      const Spacer(),
-                      // Cancel
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Cancel', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF6B7280))),
-                      ),
-                      const SizedBox(width: 8),
-                      // Add Role
-                      FilledButton.icon(
-                        onPressed: () {
-                          final newRow = StaffingRow(
-                            role: roleController.text.trim(),
-                            quantity: int.tryParse(qtyController.text) ?? 1,
-                            isInternal: isInternal,
-                            startDate: startDateController.text.trim(),
-                            durationMonths: durationController.text.trim(),
-                            monthlyCost: costController.text.trim(),
-                            roleDescription: descController.text.trim(),
-                            notes: notesController.text.trim(),
-                            status: status,
-                          );
-                          final updated = [..._rows, newRow];
-                          widget.onRowsChanged(updated);
-                          Navigator.pop(ctx);
-                        },
-                        icon: const Icon(Icons.add_rounded, size: 18),
-                        label: const Text('Add Role'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                        const Spacer(),
+                        // Cancel
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Cancel',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF6B7280))),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        // Add Role
+                        FilledButton.icon(
+                          onPressed: () {
+                            final newRow = StaffingRow(
+                              role: roleController.text.trim(),
+                              quantity: int.tryParse(qtyController.text) ?? 1,
+                              isInternal: isInternal,
+                              startDate: startDateController.text.trim(),
+                              durationMonths: durationController.text.trim(),
+                              monthlyCost: costController.text.trim(),
+                              roleDescription: descController.text.trim(),
+                              notes: notesController.text.trim(),
+                              status: status,
+                            );
+                            final updated = [..._rows, newRow];
+                            widget.onRowsChanged(updated);
+                            Navigator.pop(ctx);
+                          },
+                          icon: const Icon(Icons.add_rounded, size: 18),
+                          label: const Text('Add Role'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F172A),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            textStyle: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    } finally {
+      roleController.dispose();
+      qtyController.dispose();
+      startDateController.dispose();
+      durationController.dispose();
+      costController.dispose();
+      descController.dispose();
+      notesController.dispose();
+    }
   }
 
-  /// Shows a world-class import dialog with Download Template, Upload File,
-  /// and Paste CSV options. Uses the shared TableImportHelper.
-  void _showImportDialog() async {
-    final headers = [
-      'Role', 'Qty', 'Type', 'Start Date', 'Duration (months)',
-      'Monthly Rate', 'Status'
-    ];
-    final sampleRows = [
-      ['Project Manager', '1', 'Internal', 'Jan 2024', '6', '4000', 'Active'],
-      ['Technical Lead', '2', 'Internal', 'Jan 2024', '8', '5000', 'Active'],
-      ['Business Analyst', '1', 'External', 'Feb 2024', '4', '3500', 'Not Started'],
-      ['Quality Assurance', '2', 'Internal', 'Mar 2024', '6', '3000', 'Not Started'],
-    ];
+  /// CSV column specs for the Staffing Needs table. These mirror the
+  /// on-page table columns exactly (Role | Qty | Type | Start Date |
+  /// Duration | Monthly Rate | Status) so the downloaded template
+  /// matches what users see on screen.
+  static const String _staffingTableTitle = 'Staffing Needs';
+  static const List<CsvColumnSpec> _staffingColumns = [
+    CsvColumnSpec(
+      key: 'role',
+      label: 'Role',
+      required: true,
+      hint: 'e.g. Project Manager, Technical Lead',
+      sampleValue: 'Project Manager',
+    ),
+    CsvColumnSpec(
+      key: 'qty',
+      label: 'Qty',
+      required: true,
+      hint: 'Numeric headcount for this role',
+      sampleValue: '1',
+    ),
+    CsvColumnSpec(
+      key: 'type',
+      label: 'Type',
+      allowedValues: ['Internal', 'External'],
+      defaultValue: 'Internal',
+      sampleValue: 'Internal',
+    ),
+    CsvColumnSpec(
+      key: 'startDate',
+      label: 'Start Date',
+      hint: 'e.g. Jan 2024 or 2024-01-15',
+      sampleValue: 'Jan 2024',
+    ),
+    CsvColumnSpec(
+      key: 'duration',
+      label: 'Duration (months)',
+      hint: 'Numeric months',
+      sampleValue: '6',
+    ),
+    CsvColumnSpec(
+      key: 'monthlyRate',
+      label: 'Monthly Rate',
+      hint: 'Numeric monthly rate per person',
+      sampleValue: '4000',
+    ),
+    CsvColumnSpec(
+      key: 'status',
+      label: 'Status',
+      allowedValues: ['Not Started', 'In Progress', 'Active', 'Completed'],
+      defaultValue: 'Not Started',
+      sampleValue: 'Active',
+    ),
+  ];
 
-    final rows = await TableImportHelper.showImportDialog(
+  /// Shows a world-class import dialog with Download Template, Upload File,
+  /// and Paste CSV options. Uses the shared TableImportHelper with rich
+  /// CsvColumnSpec so the template mirrors the on-page table columns.
+  void _showImportDialog() async {
+    final rows = await TableImportHelper.showImportDialogSpec(
       context,
-      tableTitle: 'Staffing Needs',
-      headers: headers,
-      sampleRows: sampleRows,
+      tableTitle: _staffingTableTitle,
+      columns: _staffingColumns,
     );
 
     if (rows == null || rows.isEmpty || !mounted) return;
@@ -469,9 +607,8 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
       newRows.add(StaffingRow(
         role: parts.isNotEmpty ? parts[0] : '',
         quantity: parts.length > 1 ? int.tryParse(parts[1]) ?? 1 : 1,
-        isInternal: parts.length > 2
-            ? parts[2].toLowerCase() != 'external'
-            : true,
+        isInternal:
+            parts.length > 2 ? parts[2].toLowerCase() != 'external' : true,
         startDate: parts.length > 3 ? parts[3] : '',
         durationMonths: parts.length > 4 ? parts[4] : '',
         monthlyCost: parts.length > 5 ? parts[5] : '',
@@ -492,17 +629,13 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     }
   }
 
-  /// Downloads a CSV template file via the browser.
+  /// Downloads a CSV template file via the browser. Uses the rich
+  /// CsvColumnSpec so the template includes hints, allowed values, and
+  /// required-field markers — fully mirroring the on-page table.
   void _downloadTemplate() {
-    TableImportHelper.downloadTemplate(
-      filename: 'staffing_needs_template.csv',
-      headers: ['Role', 'Qty', 'Type', 'Start Date', 'Duration (months)', 'Monthly Rate', 'Status'],
-      sampleRows: [
-        ['Project Manager', '1', 'Internal', 'Jan 2024', '6', '4000', 'Active'],
-        ['Technical Lead', '2', 'Internal', 'Jan 2024', '8', '5000', 'Active'],
-        ['Business Analyst', '1', 'External', 'Feb 2024', '4', '3500', 'Not Started'],
-        ['Quality Assurance', '2', 'Internal', 'Mar 2024', '6', '3000', 'Not Started'],
-      ],
+    TableImportHelper.downloadTemplateForTable(
+      tableTitle: _staffingTableTitle,
+      columns: _staffingColumns,
     );
   }
 
@@ -636,9 +769,9 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
+          color: Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: Color(0xFFE5E7EB)),
         ),
         child: const Row(
           children: [
@@ -658,9 +791,9 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF3CD),
+          color: Color(0xFFFFF3CD),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFFFC107)),
+          border: Border.all(color: Color(0xFFFFC107)),
         ),
         child: Row(
           children: [
@@ -680,9 +813,9 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F3FF),
+        color: Color(0xFFF5F3FF),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFDDD6FE)),
+        border: Border.all(color: Color(0xFFDDD6FE)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -692,7 +825,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF7C3AED),
+                  color: Color(0xFF7C3AED),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.auto_awesome,
@@ -730,10 +863,10 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -749,7 +882,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
+                    color: Color(0xFFEEF2FF),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.table_chart_outlined,
@@ -834,17 +967,25 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
             _buildEmptyState()
           else ...[
             _buildTableHeader(),
-            ...List.generate(_rows.length, (index) {
-              final row = _rows[index];
-              final isLast = index == _rows.length - 1;
-              return _PremiumStaffingRow(
-                row: row,
-                index: index,
-                onChanged: (updated) => _updateRow(index, updated),
-                onDelete: () => _removeRow(index),
-                showDivider: !isLast,
-              );
-            }),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _rows.length,
+              itemBuilder: (context, index) {
+                final row = _rows[index];
+                final isLast = index == _rows.length - 1;
+                return RepaintBoundary(
+                  key: ValueKey('staffing_row_$index'),
+                  child: _PremiumStaffingRow(
+                    row: row,
+                    index: index,
+                    onChanged: (updated) => _updateRow(index, updated),
+                    onDelete: () => _removeRow(index),
+                    showDivider: !isLast,
+                  ),
+                );
+              },
+            ),
             _buildTableFooter(),
           ],
         ],
@@ -860,8 +1001,8 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
           children: [
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF3F4F6),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.people_outline_rounded,
@@ -1044,7 +1185,7 @@ class _PremiumSuggestionPill extends StatelessWidget {
           border: Border.all(color: const Color(0xFFC4B5FD)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -1216,7 +1357,8 @@ class _PremiumStaffingRowState extends State<_PremiumStaffingRow> {
                         ? _PremiumEditableCell(
                             value: _row.role,
                             hint: 'Role / capability',
-                            onChanged: (v) => _updateRow(_row.copyWith(role: v)),
+                            onChanged: (v) =>
+                                _updateRow(_row.copyWith(role: v)),
                             align: TextAlign.left,
                           )
                         : _ReadOnlyCell(
@@ -1383,7 +1525,8 @@ class _PremiumStaffingRowState extends State<_PremiumStaffingRow> {
                           color: _statusBg(_row.status),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: _statusColor(_row.status).withOpacity(0.2),
+                            color: _statusColor(_row.status)
+                                .withValues(alpha: 0.2),
                           ),
                         ),
                         child: Text(
@@ -1506,9 +1649,8 @@ class _ReadOnlyCell extends StatelessWidget {
         textAlign: align,
         style: TextStyle(
           fontSize: 13,
-          color: value.isEmpty
-              ? const Color(0xFF9CA3AF)
-              : const Color(0xFF111827),
+          color:
+              value.isEmpty ? const Color(0xFF9CA3AF) : const Color(0xFF111827),
           fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
         ),
       ),
@@ -1536,7 +1678,8 @@ class _PremiumEditableCell extends StatelessWidget {
         ..selection = TextSelection.collapsed(offset: value.length),
       onChanged: onChanged,
       textAlign: align,
-      enableDocxImport: false, // No per-cell import — use table-level import button
+      enableDocxImport:
+          false, // No per-cell import — use table-level import button
       style: const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
@@ -1636,9 +1779,9 @@ class _KazAiActionButtonState extends State<_KazAiActionButton> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
-            color: _loading ? const Color(0xFFF3F0FF) : const Color(0xFFF5F3FF),
+            color: _loading ? Color(0xFFF3F0FF) : Color(0xFFF5F3FF),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFDDD6FE)),
+            border: Border.all(color: Color(0xFFDDD6FE)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1729,9 +1872,11 @@ class _ModalField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF4338CA), width: 1.5),
+              borderSide:
+                  const BorderSide(color: Color(0xFF4338CA), width: 1.5),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             filled: true,
             fillColor: const Color(0xFFF9FAFB),
           ),

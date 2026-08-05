@@ -107,13 +107,15 @@ class ProcurementReportsView extends StatelessWidget {
         complianceMetrics.isNotEmpty;
 
     if (!hasData) {
-      return _buildEmptyState(context, onGenerateReports, showShareFeedback, showExportFeedback);
+      return _buildEmptyState(
+          context, onGenerateReports, showShareFeedback, showExportFeedback);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(context, onGenerateReports, showShareFeedback, showExportFeedback),
+        _buildHeader(
+            context, onGenerateReports, showShareFeedback, showExportFeedback),
         const SizedBox(height: 16),
         if (isMobile)
           Column(
@@ -188,13 +190,13 @@ class ProcurementReportsView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(context, onGenerateReports, showShareFeedback, showExportFeedback),
+        _buildHeader(
+            context, onGenerateReports, showShareFeedback, showExportFeedback),
         const SizedBox(height: 16),
         const ProcurementEmptyStateCard(
           icon: Icons.insert_chart_outlined,
           title: 'No report data yet',
-          message:
-              'Reports will populate as procurement activity is recorded.',
+          message: 'Reports will populate as procurement activity is recorded.',
         ),
       ],
     );
@@ -228,8 +230,8 @@ class ProcurementReportsView extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0EA5E9),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
@@ -240,8 +242,8 @@ class ProcurementReportsView extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF0F172A),
                 side: const BorderSide(color: Color(0xFFCBD5E1)),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
@@ -254,8 +256,8 @@ class ProcurementReportsView extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2563EB),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
@@ -384,7 +386,7 @@ class _SpendBreakdownCard extends StatelessWidget {
                     Container(
                       height: 8,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
+                        color: Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),

@@ -9,6 +9,7 @@ library;
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/services/portfolio_service.dart';
 import 'package:ndu_project/services/project_service.dart';
 import 'package:ndu_project/theme.dart';
@@ -26,11 +27,7 @@ class GroupIntoPortfolioScreen extends StatefulWidget {
 
   /// Push this screen onto the navigator.
   static void open(BuildContext context, List<ProjectRecord> projects) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => GroupIntoPortfolioScreen(projects: projects),
-      ),
-    );
+    context.push('/group-into-portfolio', extra: GroupIntoPortfolioScreen(projects: projects));
   }
 
   @override
@@ -228,7 +225,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
           icon: const Icon(Icons.arrow_back, color: _onSurface),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
+        title: const Text(
           'Group Into Portfolio',
           style: TextStyle(
             color: _onSurface,
@@ -249,7 +246,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -263,7 +260,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                             fontFamily: appFontFamily,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Text(
                           'When you have multiple projects, select up to seven that share a strategic outcome to create a new portfolio.',
                           style: TextStyle(
@@ -286,11 +283,11 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                       border:
                           Border.all(color: _outline.withValues(alpha: 0.3)),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.filter_alt_outlined, size: 16, color: _muted),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Text(
                           'Up to 7 projects',
                           style: TextStyle(
@@ -316,7 +313,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                 child: TextField(
                   controller: _searchController,
                   onChanged: (v) => setState(() => _searchQuery = v),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     color: _onSurface,
                     fontFamily: appFontFamily,
@@ -328,7 +325,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                       color: _muted.withValues(alpha: 0.6),
                       fontFamily: appFontFamily,
                     ),
-                    prefixIcon: Icon(Icons.search, size: 20, color: _muted),
+                    prefixIcon: const Icon(Icons.search, size: 20, color: _muted),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             onPressed: () {
@@ -336,7 +333,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                               setState(() => _searchQuery = '');
                             },
                             icon:
-                                Icon(Icons.close_rounded, size: 18, color: _muted),
+                                const Icon(Icons.close_rounded, size: 18, color: _muted),
                           )
                         : null,
                     border: InputBorder.none,
@@ -355,7 +352,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                         Icon(Icons.folder_off_outlined,
                             size: 48, color: _muted.withValues(alpha: 0.4)),
                         const SizedBox(height: 12),
-                        Text(
+                        const Text(
                           'No projects available to group',
                           style:
                               TextStyle(color: _muted, fontFamily: appFontFamily),
@@ -404,7 +401,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                                 children: [
                                   Text(
                                     p.name.isEmpty ? 'Untitled Project' : p.name,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 15,
                                       color: _onSurface,
@@ -416,7 +413,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                                   const SizedBox(height: 4),
                                   Text(
                                     p.progressSnapshot.currentPhase,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 13,
                                       color: _muted,
                                       fontFamily: appFontFamily,
@@ -469,7 +466,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                       children: [
                         Text(
                           '$selectedCount/7 projects selected. Select up to seven to create a portfolio.',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: _onSurface,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -482,7 +479,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                             selectedCount == 7
                                 ? 'Maximum number of projects selected.'
                                 : '${7 - selectedCount} more project${7 - selectedCount == 1 ? '' : 's'} can be added.',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: _muted,
                               fontSize: 12,
                               fontFamily: appFontFamily,
@@ -495,7 +492,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                   if (selectedCount > 0)
                     TextButton(
                       onPressed: _clearSelection,
-                      child: Text(
+                      child: const Text(
                         'Clear all',
                         style: TextStyle(
                           color: _muted,

@@ -13,21 +13,22 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 class ProjectPlanLevel1ScheduleScreen extends StatefulWidget {
  const ProjectPlanLevel1ScheduleScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const ProjectPlanLevel1ScheduleScreen()),
- );
+ context.push('/project-plan-level-1-schedule');
  }
 
  @override
@@ -45,13 +46,34 @@ class _Level1ScheduleScreenState
  String _methodology = 'Waterfall';
  bool _hasBaseline = false;
  List<_L1Phase> _baselinePhases = [];
+ bool _autoPopulated = false;
+ bool _isAutoPopulating = false;
+ String? _carriedContext;
 
  @override
  void initState() {
  super.initState();
  WidgetsBinding.instance.addPostFrameCallback((_) {
  _loadData();
+ _autoPopulateIfNeeded();
  });
+ }
+
+ Future<void> _autoPopulateIfNeeded() async {
+ if (_autoPopulated || _isAutoPopulating) return;
+ _autoPopulated = true;
+ _isAutoPopulating = true;
+ if (mounted) setState(() {});
+
+ try {
+ final carried = await buildAccumulatedContext(
+ context, 'project_plan_level1_schedule');
+ if (mounted) setState(() => _carriedContext = carried);
+ } catch (e) {
+ debugPrint('Level1Schedule carried-context error: $e');
+ } finally {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ }
  }
 
  void _loadData() {
@@ -325,6 +347,16 @@ class _Level1ScheduleScreenState
  context, 'project_plan_level1_schedule'),
  ),
  const SizedBox(height: 12),
+ if (_isAutoPopulating)
+ const AutoPopulatingIndicator(),
+ if (_carriedContext != null && _carriedContext!.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(bottom: 12),
+ child: CarriedContextBanner(
+ checkpoint: 'project_plan_level1_schedule',
+ contextText: _carriedContext!,
+ ),
+ ),
  Text(
  'Map major phases, milestone timing, and governance checkpoints.',
  style: const TextStyle(
@@ -538,7 +570,9 @@ class _Level1ScheduleScreenState
  color: Color(0xFF6B7280),
  );
 
- return LayoutBuilder(
+ return FullScreenTableWrapper(
+ title: 'Project Phases',
+ child: LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
@@ -665,6 +699,135 @@ class _Level1ScheduleScreenState
  ),
  );
  },
+ ),
+ tableBuilder: (fsContext) => LayoutBuilder(
+ builder: (context, constraints) {
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: SizedBox(
+ width: constraints.maxWidth > 1080 ? constraints.maxWidth : 1080,
+ child: Table(
+ defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+ columnWidths: const {
+ 0: FixedColumnWidth(56),
+ 1: FixedColumnWidth(250),
+ 2: FixedColumnWidth(145),
+ 3: FixedColumnWidth(145),
+ 4: FixedColumnWidth(110),
+ 5: FixedColumnWidth(150),
+ 6: FixedColumnWidth(100),
+ 7: FixedColumnWidth(124),
+ },
+ border: const TableBorder(
+ horizontalInside: border,
+ verticalInside: border,
+ ),
+ children: [
+ TableRow(
+ decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
+ children: [
+ _headerCell('#', headerStyle),
+ _headerCell('Phase', headerStyle),
+ _headerCell('Start', headerStyle),
+ _headerCell('End', headerStyle),
+ _headerCell('Duration', headerStyle),
+ _headerCell('Progress', headerStyle),
+ _headerCell('Tasks', headerStyle),
+ _headerCell('Status', headerStyle),
+ ],
+ ),
+ ...List.generate(_phases.length, (index) {
+ final phase = _phases[index];
+ final duration =
+ phase.endDate.difference(phase.startDate).inDays;
+ final progressPct = (phase.progress * 100).round();
+ final statusColor = _statusColor(phase.status);
+
+ return TableRow(
+ decoration: BoxDecoration(
+ color:
+ index.isEven ? Colors.white : const Color(0xFFFAFAFA),
+ ),
+ children: [
+ _dataCell(Center(
+ child: Text('${index + 1}',
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF4B5563))),
+ )),
+ _dataCell(_tableTextCell(phase.name,
+ fontWeight: FontWeight.w600)),
+ _dataCell(_tableTextCell(_formatDate(phase.startDate),
+ textAlign: TextAlign.center)),
+ _dataCell(_tableTextCell(_formatDate(phase.endDate),
+ textAlign: TextAlign.center)),
+ _dataCell(_tableTextCell('${duration}d',
+ textAlign: TextAlign.center)),
+ _dataCell(Padding(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 12, vertical: 10),
+ child: Row(
+ children: [
+ Expanded(
+ child: ClipRRect(
+ borderRadius: BorderRadius.circular(4),
+ child: LinearProgressIndicator(
+ value: phase.progress.clamp(0, 1),
+ backgroundColor: const Color(0xFFE5E7EB),
+ valueColor: AlwaysStoppedAnimation<Color>(
+ progressPct >= 80
+ ? const Color(0xFF10B981)
+ : progressPct >= 50
+ ? const Color(0xFFF59E0B)
+ : const Color(0xFF3B82F6),
+ ),
+ ),
+ ),
+ ),
+ const SizedBox(width: 8),
+ Text('$progressPct%',
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF374151))),
+ ],
+ ),
+ )),
+ _dataCell(Center(
+ child: Text('${phase.activityCount}',
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF374151))),
+ )),
+ _dataCell(Center(
+ child: Container(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 10, vertical: 4),
+ decoration: BoxDecoration(
+ color: statusColor.withOpacity(0.12),
+ borderRadius: BorderRadius.circular(999),
+ ),
+ child: Text(
+ phase.status,
+ style: TextStyle(
+ fontSize: 11,
+ fontWeight: FontWeight.w700,
+ color: statusColor,
+ ),
+ ),
+ ),
+ )),
+ ],
+ );
+ }),
+ ],
+ ),
+ ),
+ );
+ },
+ ),
  );
  }
 
@@ -728,7 +891,9 @@ class _Level1ScheduleScreenState
  color: Color(0xFF6B7280),
  );
 
- return LayoutBuilder(
+ return FullScreenTableWrapper(
+ title: 'Milestones',
+ child: LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
@@ -819,6 +984,99 @@ class _Level1ScheduleScreenState
  ),
  );
  },
+ ),
+ tableBuilder: (fsContext) => LayoutBuilder(
+ builder: (context, constraints) {
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: SizedBox(
+ width: constraints.maxWidth > 980 ? constraints.maxWidth : 980,
+ child: Table(
+ defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+ columnWidths: const {
+ 0: FixedColumnWidth(56),
+ 1: FixedColumnWidth(280),
+ 2: FixedColumnWidth(150),
+ 3: FixedColumnWidth(170),
+ 4: FlexColumnWidth(1.4),
+ },
+ border: const TableBorder(
+ horizontalInside: border,
+ verticalInside: border,
+ ),
+ children: [
+ TableRow(
+ decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
+ children: [
+ _headerCell('#', headerStyle),
+ _headerCell('Milestone', headerStyle),
+ _headerCell('Target Date', headerStyle),
+ _headerCell('Discipline', headerStyle),
+ _headerCell('Notes', headerStyle),
+ ],
+ ),
+ ...List.generate(_milestones.length, (index) {
+ final m = _milestones[index];
+ return TableRow(
+ decoration: BoxDecoration(
+ color:
+ index.isEven ? Colors.white : const Color(0xFFFAFAFA),
+ ),
+ children: [
+ _dataCell(Center(
+ child: Text('${index + 1}',
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF4B5563))),
+ )),
+ _dataCell(
+ _tableTextCell(m.name, fontWeight: FontWeight.w600)),
+ _dataCell(_tableTextCell(
+ m.targetDate != null ? _formatDate(m.targetDate!) : '—',
+ textAlign: TextAlign.center,
+ )),
+ _dataCell(Padding(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 12, vertical: 10),
+ child: Container(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 4),
+ decoration: BoxDecoration(
+ color: const Color(0xFFEFF6FF),
+ borderRadius: BorderRadius.circular(999),
+ ),
+ child: Text(
+ m.discipline.isEmpty ? 'General' : m.discipline,
+ style: const TextStyle(
+ fontSize: 11,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF1D4ED8),
+ ),
+ ),
+ ),
+ )),
+ _dataCell(Padding(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 12, vertical: 10),
+ child: Text(
+ m.comments.isEmpty ? '—' : m.comments,
+ style: const TextStyle(
+ fontSize: 12,
+ color: Color(0xFF6B7280),
+ height: 1.3),
+ softWrap: true,
+ ),
+ )),
+ ],
+ );
+ }),
+ ],
+ ),
+ ),
+ );
+ },
+ ),
  );
  }
 
@@ -1530,11 +1788,34 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  Timer? _saveDebounce;
  final ScrollController _horizontalScrollController = ScrollController();
  final ScrollController _verticalScrollController = ScrollController();
+ bool _autoPopulated = false;
+ bool _isAutoPopulating = false;
+ String? _carriedContext;
 
  @override
  void initState() {
  super.initState();
- WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+ WidgetsBinding.instance.addPostFrameCallback((_) {
+ _loadData();
+ _autoPopulateIfNeeded();
+ });
+ }
+
+ Future<void> _autoPopulateIfNeeded() async {
+ if (_autoPopulated || _isAutoPopulating) return;
+ _autoPopulated = true;
+ _isAutoPopulating = true;
+ if (mounted) setState(() {});
+
+ try {
+ final carried = await buildAccumulatedContext(
+ context, 'project_plan_detailed_schedule');
+ if (mounted) setState(() => _carriedContext = carried);
+ } catch (e) {
+ debugPrint('DetailedSchedule carried-context error: $e');
+ } finally {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ }
  }
 
  @override
@@ -1806,6 +2087,16 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  children: [
  _buildHeader(isMobile),
  const SizedBox(height: 20),
+ if (_isAutoPopulating)
+ const AutoPopulatingIndicator(),
+ if (_carriedContext != null && _carriedContext!.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(bottom: 16),
+ child: CarriedContextBanner(
+ checkpoint: 'project_plan_detailed_schedule',
+ contextText: _carriedContext!,
+ ),
+ ),
  PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Detailed Project Schedule',
@@ -2183,7 +2474,9 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  color: Color(0xFF6B7280),
  );
 
- return LayoutBuilder(
+ return FullScreenTableWrapper(
+ title: 'Tasks',
+ child: LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
@@ -2288,6 +2581,113 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  ),
  );
  },
+ ),
+ tableBuilder: (fsContext) => LayoutBuilder(
+ builder: (context, constraints) {
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: SizedBox(
+ width: constraints.maxWidth > 980 ? constraints.maxWidth : 980,
+ child: Table(
+ defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+ columnWidths: {
+ 0: const FixedColumnWidth(56),
+ 1: const FlexColumnWidth(3.6),
+ 2: const FixedColumnWidth(98),
+ 3: const FixedColumnWidth(98),
+ 4: const FixedColumnWidth(84),
+ 5: const FixedColumnWidth(112),
+ 6: const FixedColumnWidth(116),
+ 7: const FixedColumnWidth(96),
+ 8: const FixedColumnWidth(88),
+ },
+ border: const TableBorder(
+ horizontalInside: border,
+ verticalInside: border,
+ ),
+ children: [
+ TableRow(
+ decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
+ children: [
+ _headerCell('#', headerStyle),
+ _headerCell('Task', headerStyle),
+ _headerCell('Start', headerStyle),
+ _headerCell('End', headerStyle),
+ _headerCell('Days', headerStyle),
+ _headerCell('Progress', headerStyle),
+ _headerCell('Status', headerStyle),
+ _headerCell('Priority', headerStyle),
+ _headerCell('', headerStyle),
+ ],
+ ),
+ ...List.generate(_tasks.length, (index) {
+ final task = _tasks[index];
+ final duration =
+ task.dueDate.difference(task.startDate).inDays;
+ final isSelected = _selectedTaskId == task.id;
+
+ return TableRow(
+ decoration: BoxDecoration(
+ color: isSelected
+ ? const Color(0xFFE8F4FF)
+ : (index.isEven
+ ? Colors.white
+ : const Color(0xFFFAFAFA)),
+ ),
+ children: [
+ _dataCell(Center(
+ child: Text('${index + 1}',
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF4B5563))),
+ )),
+ _dataCell(_TaskNameCell(
+ task: task,
+ isSelected: isSelected,
+ onTap: () => _selectTask(task.id),
+ )),
+ _dataCell(_DateCell(
+ date: task.startDate,
+ onDateSelected: (date) {
+ _updateTask(task.copyWith(startDate: date));
+ },
+ )),
+ _dataCell(_DateCell(
+ date: task.dueDate,
+ onDateSelected: (date) {
+ _updateTask(task.copyWith(dueDate: date));
+ },
+ )),
+ _dataCell(Center(
+ child: Text(
+ '${duration}d',
+ style: const TextStyle(
+ fontSize: 11,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF374151)),
+ ),
+ )),
+ _dataCell(_ProgressCell(progress: task.progress)),
+ _dataCell(_StatusCell(status: task.status)),
+ _dataCell(_PriorityCell(priority: task.priority)),
+ _dataCell(Center(
+ child: IconButton(
+ icon: const Icon(Icons.delete_outline, size: 16),
+ color: const Color(0xFF6B7280),
+ onPressed: () => _deleteTask(task.id),
+ tooltip: 'Delete task',
+ ),
+ )),
+ ],
+ );
+ }),
+ ],
+ ),
+ ),
+ );
+ },
+ ),
  );
  }
 
@@ -3281,6 +3681,9 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  String? _undoBeforeAi;
  Timer? _saveDebounce;
  DateTime? _lastSavedAt;
+ bool _autoPopulated = false;
+ bool _isAutoPopulating = false;
+ String? _carriedContext;
 
  _SummaryData _summaryData = _SummaryData.empty();
 
@@ -3288,7 +3691,27 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  void initState() {
  super.initState();
  _summaryController.addListener(_handleSummaryChanged);
- WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+ WidgetsBinding.instance.addPostFrameCallback((_) {
+ _loadData();
+ _autoPopulateIfNeeded();
+ });
+ }
+
+ Future<void> _autoPopulateIfNeeded() async {
+ if (_autoPopulated || _isAutoPopulating) return;
+ _autoPopulated = true;
+ _isAutoPopulating = true;
+ if (mounted) setState(() {});
+
+ try {
+ final carried = await buildAccumulatedContext(
+ context, 'project_plan_condensed_summary');
+ if (mounted) setState(() => _carriedContext = carried);
+ } catch (e) {
+ debugPrint('CondensedSummary carried-context error: $e');
+ } finally {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ }
  }
 
  @override
@@ -3621,6 +4044,16 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  children: [
  _buildHeader(isMobile),
  const SizedBox(height: 20),
+ if (_isAutoPopulating)
+ const AutoPopulatingIndicator(),
+ if (_carriedContext != null && _carriedContext!.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(bottom: 16),
+ child: CarriedContextBanner(
+ checkpoint: 'project_plan_condensed_summary',
+ contextText: _carriedContext!,
+ ),
+ ),
  PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Condensed Project Summary',

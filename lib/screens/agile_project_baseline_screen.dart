@@ -31,6 +31,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -40,9 +41,7 @@ class AgileProjectBaselineScreen extends StatefulWidget {
  const AgileProjectBaselineScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const AgileProjectBaselineScreen()),
- );
+ context.push('/agile-project-baseline');
  }
 
  @override
@@ -622,8 +621,8 @@ class _AgileProjectBaselineScreenState
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Agile Delivery Model - Project Baseline',
  ),
  ),
@@ -1186,7 +1185,7 @@ class _TopHeader extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  decoration: BoxDecoration(
- color: statusColor.withOpacity(0.12),
+ color: statusColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -1555,7 +1554,7 @@ class _DropdownField<T> extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  return DropdownButtonFormField<T>(
- value: items.contains(value) ? value : null,
+ initialValue: items.contains(value) ? value : null,
  decoration: InputDecoration(
  labelText: label,
  border: const OutlineInputBorder(),
@@ -1584,7 +1583,7 @@ class _MiniPill extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -1610,8 +1609,8 @@ class _WarningTile extends StatelessWidget {
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: warning.color.withOpacity(0.3)),
- color: warning.color.withOpacity(0.08),
+ border: Border.all(color: warning.color.withValues(alpha: 0.3)),
+ color: warning.color.withValues(alpha: 0.08),
  ),
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,

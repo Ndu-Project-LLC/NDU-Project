@@ -8,28 +8,30 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
+
 class RiskTrackingScreen extends StatefulWidget {
- const RiskTrackingScreen({super.key});
+  const RiskTrackingScreen({super.key});
 
- static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const RiskTrackingScreen()),
- );
- }
+  static void open(BuildContext context) {
+    context.push('/risk-tracking-screen');
+  }
 
- @override
- State<RiskTrackingScreen> createState() => _RiskTrackingScreenState();
+  @override
+  State<RiskTrackingScreen> createState() => _RiskTrackingScreenState();
 }
 
 class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  final List<_RiskItem> _risks = [];
 
  List<_RiskSignal> _signals = [
- _RiskSignal(
+ const _RiskSignal(
  id: 'SIG-001',
  title: 'Critical path dependencies',
  category: 'Leading',
@@ -41,7 +43,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  trend: 'Increasing',
  detectedDate: '2026-05-06',
  ),
- _RiskSignal(
+ const _RiskSignal(
  id: 'SIG-002',
  title: 'Security posture drift',
  category: 'Lagging',
@@ -53,7 +55,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  trend: 'Stable',
  detectedDate: '2026-05-04',
  ),
- _RiskSignal(
+ const _RiskSignal(
  id: 'SIG-003',
  title: 'Budget volatility',
  category: 'Leading',
@@ -65,7 +67,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  trend: 'Increasing',
  detectedDate: '2026-05-07',
  ),
- _RiskSignal(
+ const _RiskSignal(
  id: 'SIG-004',
  title: 'Resource utilization imbalance',
  category: 'Leading',
@@ -80,7 +82,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  ];
 
  final List<_EscalationReadiness> _escalations = [
- _EscalationReadiness(
+ const _EscalationReadiness(
  id: 'ESC-001',
  event: 'Executive sync — critical path unblock',
  level: 'L3-Executive',
@@ -93,7 +95,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  decisionRequired: 'Approve expedited vendor failover deployment',
  lastReview: '2026-05-07',
  ),
- _EscalationReadiness(
+ const _EscalationReadiness(
  id: 'ESC-002',
  event: 'Risk board update — regulatory submission',
  level: 'L2-Management',
@@ -106,7 +108,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  decisionRequired: 'Authorize parallel regulatory submission track',
  lastReview: '2026-05-06',
  ),
- _EscalationReadiness(
+ const _EscalationReadiness(
  id: 'ESC-003',
  event: 'Ops stakeholder review — security posture',
  level: 'L2-Management',
@@ -119,7 +121,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  decisionRequired: 'Approve emergency patch cycle & retest schedule',
  lastReview: '2026-05-05',
  ),
- _EscalationReadiness(
+ const _EscalationReadiness(
  id: 'ESC-004',
  event: 'Budget variance escalation — forecast drift',
  level: 'L3-Executive',
@@ -135,7 +137,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  ];
 
  List<_MitigationPlan> _plans = [
- _MitigationPlan(
+ const _MitigationPlan(
  id: 'MIT-001',
  riskId: 'R-001',
  strategy: 'Vendor API stability — failover circuit breaker implementation',
@@ -147,7 +149,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  effectiveness: 'High',
  residualRisk: 'Low',
  ),
- _MitigationPlan(
+ const _MitigationPlan(
  id: 'MIT-002',
  riskId: 'R-002',
  strategy: 'Regulatory review delay — parallel submission track with legal',
@@ -159,7 +161,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  effectiveness: 'Medium',
  residualRisk: 'High',
  ),
- _MitigationPlan(
+ const _MitigationPlan(
  id: 'MIT-003',
  riskId: 'R-003',
  strategy: 'Data quality regression — automated validation pipeline deployment',
@@ -171,7 +173,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  effectiveness: 'High',
  residualRisk: 'Medium',
  ),
- _MitigationPlan(
+ const _MitigationPlan(
  id: 'MIT-004',
  riskId: 'R-004',
  strategy: 'Security posture drift — scheduled penetration retest & patch cycle',
@@ -183,7 +185,7 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  effectiveness: 'Medium',
  residualRisk: 'Medium',
  ),
- _MitigationPlan(
+ const _MitigationPlan(
  id: 'MIT-005',
  riskId: 'R-005',
  strategy: 'Budget volatility — revised forecast with contingency allocation',
@@ -356,10 +358,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 10),
  Row(
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Risk Tracking',
  style: TextStyle(
@@ -568,17 +570,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  trailing: _actionButton(Icons.filter_list, 'Filter'),
  child: _risks.isEmpty
  ? _buildEmptyRiskState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 16,
  horizontalMargin: 12,
  columns: const [
@@ -643,7 +646,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Risk register',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 
@@ -719,17 +729,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _plans.isEmpty
  ? _buildEmptyMitigationState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
@@ -812,7 +823,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Mitigation coverage',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 
@@ -823,7 +841,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.shield_outlined, size: 40, color: const Color(0xFFCBD5E1)),
+ const Icon(Icons.shield_outlined, size: 40, color: Color(0xFFCBD5E1)),
  const SizedBox(height: 12),
  const Text(
  'No mitigation plans defined.',
@@ -922,7 +940,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -947,7 +965,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(effectiveness,
@@ -965,7 +983,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.10),
+ color: color.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(residual,
@@ -988,17 +1006,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _signals.isEmpty
  ? _buildEmptySignalsState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
@@ -1082,7 +1101,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Risk signals',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 
@@ -1093,7 +1119,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.radar, size: 40, color: const Color(0xFFCBD5E1)),
+ const Icon(Icons.radar, size: 40, color: Color(0xFFCBD5E1)),
  const SizedBox(height: 12),
  const Text(
  'No risk signals detected.',
@@ -1123,7 +1149,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1150,7 +1176,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1175,7 +1201,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(confidence,
@@ -1194,7 +1220,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.10),
+ color: color.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1224,17 +1250,18 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: _escalations.isEmpty
  ? _buildEmptyEscalationState()
- : LayoutBuilder(
+ : Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor:
- WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 32,
- dataRowHeight: 36,
+ dataRowMinHeight: 36, dataRowMaxHeight: 36,
  columnSpacing: 14,
  horizontalMargin: 12,
  columns: const [
@@ -1334,7 +1361,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Escalation readiness',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  );
  }
 
@@ -1345,7 +1379,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.vertical_align_top, size: 40, color: const Color(0xFFCBD5E1)),
+ const Icon(Icons.vertical_align_top, size: 40, color: Color(0xFFCBD5E1)),
  const SizedBox(height: 12),
  const Text(
  'No escalation paths defined.',
@@ -1412,7 +1446,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1440,7 +1474,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1466,7 +1500,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.10),
+ color: color.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Row(
@@ -1527,7 +1561,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedLevel,
+ initialValue: selectedLevel,
  items: ['L1-Operational', 'L2-Management', 'L3-Executive', 'L4-Board/C-Suite']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -1555,7 +1589,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: ['Ready', 'Pending', 'In progress', 'Escalated', 'Deferred']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -1673,7 +1707,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedLevel,
+ initialValue: selectedLevel,
  items: ['L1-Operational', 'L2-Management', 'L3-Executive', 'L4-Board/C-Suite']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -1699,7 +1733,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: ['Ready', 'Pending', 'In progress', 'Escalated', 'Deferred']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -1832,7 +1866,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(label,
@@ -1850,7 +1884,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(4),
  ),
  child: Text(label,
@@ -1914,11 +1948,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  decoration: const InputDecoration(
  labelText: 'Probability (e.g., 0.42)'),
  keyboardType:
- TextInputType.numberWithOptions(decimal: true),
+ const TextInputType.numberWithOptions(decimal: true),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedImpact,
+ initialValue: selectedImpact,
  items: const ['Low', 'Medium', 'High']
  .map((impact) => DropdownMenuItem(
  value: impact, child: Text(impact)))
@@ -1932,7 +1966,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: const [
  'Mitigating',
  'Monitoring',
@@ -2041,11 +2075,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  VoiceTextFormField(
  controller: probabilityController,
  decoration: const InputDecoration(labelText: 'Probability'),
- keyboardType: TextInputType.numberWithOptions(decimal: true),
+ keyboardType: const TextInputType.numberWithOptions(decimal: true),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedImpact,
+ initialValue: selectedImpact,
  items: ['Low', 'Medium', 'High']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2054,7 +2088,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: ['Mitigating', 'Monitoring', 'Escalated', 'Accepted']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2185,7 +2219,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedCategory,
+ initialValue: selectedCategory,
  items: ['Integrations', 'Compliance', 'Data team', 'Cybersecurity', 'Finance', 'General']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2194,7 +2228,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: ['Not started', 'In progress', 'On track', 'At risk', 'Completed']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2227,7 +2261,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedEffectiveness,
+ initialValue: selectedEffectiveness,
  items: ['High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2236,7 +2270,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedResidual,
+ initialValue: selectedResidual,
  items: ['Low', 'Medium', 'High']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2325,7 +2359,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedCategory,
+ initialValue: selectedCategory,
  items: ['Integrations', 'Compliance', 'Data team', 'Cybersecurity', 'Finance', 'General']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2334,7 +2368,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: ['Not started', 'In progress', 'On track', 'At risk', 'Completed']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2366,7 +2400,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedEffectiveness,
+ initialValue: selectedEffectiveness,
  items: ['High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2375,7 +2409,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedResidual,
+ initialValue: selectedResidual,
  items: ['Low', 'Medium', 'High']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2489,7 +2523,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedCategory,
+ initialValue: selectedCategory,
  items: ['Leading', 'Lagging']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2498,7 +2532,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedSeverity,
+ initialValue: selectedSeverity,
  items: ['Critical', 'High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2507,7 +2541,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedConfidence,
+ initialValue: selectedConfidence,
  items: ['High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2529,7 +2563,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedTrend,
+ initialValue: selectedTrend,
  items: ['Increasing', 'Stable', 'Decreasing']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2609,7 +2643,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedCategory,
+ initialValue: selectedCategory,
  items: ['Leading', 'Lagging']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2618,7 +2652,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedSeverity,
+ initialValue: selectedSeverity,
  items: ['Critical', 'High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2627,7 +2661,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedConfidence,
+ initialValue: selectedConfidence,
  items: ['High', 'Medium', 'Low']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2648,7 +2682,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedTrend,
+ initialValue: selectedTrend,
  items: ['Increasing', 'Stable', 'Decreasing']
  .map((v) => DropdownMenuItem(value: v, child: Text(v)))
  .toList(),
@@ -2738,156 +2772,158 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 // ─── Private Helper Widgets ─────────────────────────────────────────────────
 
 class _PanelShell extends StatelessWidget {
- const _PanelShell({
- required this.title,
- required this.subtitle,
- required this.child,
- this.trailing,
- });
+  const _PanelShell({
+    required this.title,
+    required this.subtitle,
+    required this.child,
+    this.trailing,
+  });
 
- final String title;
- final String subtitle;
- final Widget child;
- final Widget? trailing;
+  final String title;
+  final String subtitle;
+  final Widget child;
+  final Widget? trailing;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(title,
- style: const TextStyle(
- fontSize: 16, fontWeight: FontWeight.w700)),
- const SizedBox(height: 4),
- Text(subtitle,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF64748B))),
- ],
- ),
- ),
- if (trailing != null) trailing!,
- ],
- ),
- const SizedBox(height: 16),
- child,
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text(subtitle,
+                        style: const TextStyle(
+                            fontSize: 12, color: Color(0xFF64748B))),
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
 }
 
 class _EscalationReadiness {
- const _EscalationReadiness({
- required this.id,
- required this.event,
- required this.level,
- required this.triggerCondition,
- required this.responsibleParty,
- required this.escalationTarget,
- required this.status,
- required this.readiness,
- required this.responseWindow,
- required this.decisionRequired,
- required this.lastReview,
- });
+  const _EscalationReadiness({
+    required this.id,
+    required this.event,
+    required this.level,
+    required this.triggerCondition,
+    required this.responsibleParty,
+    required this.escalationTarget,
+    required this.status,
+    required this.readiness,
+    required this.responseWindow,
+    required this.decisionRequired,
+    required this.lastReview,
+  });
 
- final String id;
- final String event;
- final String level; // L1-Operational | L2-Management | L3-Executive | L4-Board/C-Suite
- final String triggerCondition;
- final String responsibleParty;
- final String escalationTarget;
- final String status; // Ready | Pending | In progress | Escalated | Deferred
- final double readiness;
- final String responseWindow;
- final String decisionRequired;
- final String lastReview;
+  final String id;
+  final String event;
+  final String
+      level; // L1-Operational | L2-Management | L3-Executive | L4-Board/C-Suite
+  final String triggerCondition;
+  final String responsibleParty;
+  final String escalationTarget;
+  final String status; // Ready | Pending | In progress | Escalated | Deferred
+  final double readiness;
+  final String responseWindow;
+  final String decisionRequired;
+  final String lastReview;
 }
 
 // ─── Data Models ────────────────────────────────────────────────────────────
 
 class _RiskItem {
- const _RiskItem(this.id, this.title, this.owner, this.probability,
- this.impact, this.status, this.nextReview);
+  const _RiskItem(this.id, this.title, this.owner, this.probability,
+      this.impact, this.status, this.nextReview);
 
- final String id;
- final String title;
- final String owner;
- final String probability;
- final String impact;
- final String status;
- final String nextReview;
+  final String id;
+  final String title;
+  final String owner;
+  final String probability;
+  final String impact;
+  final String status;
+  final String nextReview;
 }
 
 class _RiskSignal {
- const _RiskSignal({
- required this.id,
- required this.title,
- required this.category,
- required this.severity,
- required this.confidence,
- required this.description,
- required this.linkedRisk,
- required this.trend,
- required this.detectedDate,
- });
+  const _RiskSignal({
+    required this.id,
+    required this.title,
+    required this.category,
+    required this.severity,
+    required this.confidence,
+    required this.description,
+    required this.linkedRisk,
+    required this.trend,
+    required this.detectedDate,
+  });
 
- final String id;
- final String title;
- final String category; // Leading | Lagging
- final String severity; // Critical | High | Medium | Low
- final String confidence; // High | Medium | Low
- final String description;
- final String linkedRisk;
- final String trend; // Increasing | Stable | Decreasing
- final String detectedDate;
+  final String id;
+  final String title;
+  final String category; // Leading | Lagging
+  final String severity; // Critical | High | Medium | Low
+  final String confidence; // High | Medium | Low
+  final String description;
+  final String linkedRisk;
+  final String trend; // Increasing | Stable | Decreasing
+  final String detectedDate;
 }
 
 class _MitigationPlan {
- const _MitigationPlan({
- required this.id,
- required this.riskId,
- required this.strategy,
- required this.owner,
- required this.category,
- required this.status,
- required this.coverage,
- required this.targetDate,
- required this.effectiveness,
- required this.residualRisk,
- });
+  const _MitigationPlan({
+    required this.id,
+    required this.riskId,
+    required this.strategy,
+    required this.owner,
+    required this.category,
+    required this.status,
+    required this.coverage,
+    required this.targetDate,
+    required this.effectiveness,
+    required this.residualRisk,
+  });
 
- final String id;
- final String riskId;
- final String strategy;
- final String owner;
- final String category;
- final String status; // Not started | In progress | On track | At risk | Completed
- final double coverage;
- final String targetDate;
- final String effectiveness; // High | Medium | Low
- final String residualRisk; // Low | Medium | High
+  final String id;
+  final String riskId;
+  final String strategy;
+  final String owner;
+  final String category;
+  final String
+      status; // Not started | In progress | On track | At risk | Completed
+  final double coverage;
+  final String targetDate;
+  final String effectiveness; // High | Medium | Low
+  final String residualRisk; // Low | Medium | High
 }
 
 class _StatCardData {
- const _StatCardData(this.label, this.value, this.supporting, this.color);
+  const _StatCardData(this.label, this.value, this.supporting, this.color);
 
- final String label;
- final String value;
- final String supporting;
- final Color color;
+  final String label;
+  final String value;
+  final String supporting;
+  final Color color;
 }

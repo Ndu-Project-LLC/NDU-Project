@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/openai/openai_config.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
@@ -39,13 +40,14 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SafeSection — Build-time error boundary that prevents a single failing child
 // widget from blanking the entire page.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 class SafeSection extends StatelessWidget {
- SafeSection({
+ const SafeSection({
  super.key,
  required this.title,
  required this.builder,
@@ -599,8 +601,8 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Potential Solutions',
  ),
  ),
@@ -1066,7 +1068,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  SizedBox(
  width: double.infinity,
  height: bannerHeight,
- child: Center(child: AppLogo(height: 64)),
+ child: const Center(child: AppLogo(height: 64)),
  ),
  // Header with brand divider (gold)
  Container(
@@ -1076,8 +1078,8 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  bottom: BorderSide(color: Color(0xFFFFD700), width: 1),
  ),
  ),
- child: Row(
- children: const [
+ child: const Row(
+ children: [
  CircleAvatar(
  radius: 20,
  backgroundColor: Color(0xFFFFD700),
@@ -1191,7 +1193,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -1229,7 +1231,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -1267,7 +1269,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -1307,7 +1309,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -1342,12 +1344,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
 
  // ignore: unused_element
  void _openBusinessCase() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const InitiationPhaseScreen(scrollToBusinessCase: true),
- ),
- );
+ context.push('/initiation-phase', extra: const InitiationPhaseScreen(scrollToBusinessCase: true));
  }
 
  List<AiSolutionItem> _collectSolutions() {
@@ -1363,90 +1360,60 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  void _openRiskIdentification() {
  final notes = _notesController.text.trim();
  final solutions = _collectSolutions();
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => RiskIdentificationScreen(
+ context.push('/risk-identification', extra: RiskIdentificationScreen(
  notes: notes,
  solutions: solutions,
  businessCase: _incomingBusinessCase,
- ),
- ),
- );
+ ));
  }  void _openITConsiderations() {
     final notes = _notesController.text.trim();
     final solutions = _collectSolutions();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ITConsiderationsScreen(
+    context.push('/it-considerations', extra: ITConsiderationsScreen(
           notes: notes,
           solutions: solutions,
           businessCase: _incomingBusinessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openInfrastructureConsiderations() {
     final notes = _notesController.text.trim();
     final solutions = _collectSolutions();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => InfrastructureConsiderationsScreen(
+    context.push('/infrastructure-considerations', extra: InfrastructureConsiderationsScreen(
           notes: notes,
           solutions: solutions,
           businessCase: _incomingBusinessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openCoreStakeholders() {
     final notes = _notesController.text.trim();
     final solutions = _collectSolutions();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CoreStakeholdersScreen(
+    context.push('/core-stakeholders', extra: CoreStakeholdersScreen(
           notes: notes,
           solutions: solutions,
           businessCase: _incomingBusinessCase,
-        ),
-      ),
-    );
+        ));
   }
 
   void _openCostAnalysis() {
     final notes = _notesController.text.trim();
     final solutions = _collectSolutions();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CostAnalysisScreen(
+    context.push('/cost-analysis', extra: CostAnalysisScreen(
           notes: notes,
           solutions: solutions,
           businessCase: _incomingBusinessCase,
-        ),
-      ),
-    );
+        ));
   }
 
  void _openPreferredSolutionAnalysis() {
  final notes = _notesController.text.trim();
  final solutions = _collectSolutions();
  final businessCase = _incomingBusinessCase.trim();
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => PreferredSolutionAnalysisScreen(
+ context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
  notes: notes,
  solutions: solutions,
  businessCase: businessCase,
- ),
- ),
- );
+ ));
  }
 
  void _scrollToSolutions() {
@@ -1519,9 +1486,9 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Padding(
- padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
- child: const Text(
+ const Padding(
+ padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
+ child: Text(
  'Notes',
  style: TextStyle(
  fontSize: 16,
@@ -1772,6 +1739,14 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  }
 
  Widget _buildDesktopSolutionsTable() {
+ return FullScreenTableWrapper(
+ title: 'Potential Solutions',
+ child: _buildDesktopSolutionsTableContent(),
+ tableBuilder: (fsContext) => _buildDesktopSolutionsTableContent(),
+ );
+ }
+
+ Widget _buildDesktopSolutionsTableContent() {
  final displayCount = _isAdminHost
  ? _solutions.length
  : (_solutions.length > 3 ? 3 : _solutions.length);
@@ -1987,7 +1962,7 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  color: const Color(0xFFE0E0E0),
  borderRadius: BorderRadius.circular(6),
  ),
- child: Text(
+ child: WrappedText(
  '${index + 1}',
  style: const TextStyle(
  fontSize: 14,
@@ -2233,22 +2208,18 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  await showDialog<void>(
  context: context,
  barrierDismissible: false,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (_) => const _LoadingDialog(),
  );
 
  if (!mounted) return;
 
  // Navigate to Risk Identification
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => RiskIdentificationScreen(
+ context.push('/risk-identification', extra: RiskIdentificationScreen(
  notes: trimmedNotes,
  solutions: solutions,
  businessCase: _incomingBusinessCase,
- ),
- ),
- );
+ ));
  }
 
  @override

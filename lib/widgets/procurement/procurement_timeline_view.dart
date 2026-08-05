@@ -16,7 +16,8 @@ class ProcurementTimelineView extends StatefulWidget {
   final ValueChanged<ProcurementItemModel>? onItemTap;
 
   @override
-  State<ProcurementTimelineView> createState() => _ProcurementTimelineViewState();
+  State<ProcurementTimelineView> createState() =>
+      _ProcurementTimelineViewState();
 }
 
 class _ProcurementTimelineViewState extends State<ProcurementTimelineView> {
@@ -113,8 +114,7 @@ class _TimelineList extends StatelessWidget {
       );
     }
 
-    final sorted = [...items]
-      ..sort((a, b) {
+    final sorted = [...items]..sort((a, b) {
         final aDate = a.requiredByDate ?? a.estimatedDelivery ?? a.updatedAt;
         final bDate = b.requiredByDate ?? b.estimatedDelivery ?? b.updatedAt;
         return aDate.compareTo(bDate);
@@ -133,14 +133,26 @@ class _TimelineList extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          for (var i = 0; i < sorted.length; i++) ...[
-            _TimelineListRow(
-              item: sorted[i],
-              selected: sorted[i].id == selectedItemId,
-              onTap: () => onItemTap(sorted[i]),
-            ),
-            if (i != sorted.length - 1) const SizedBox(height: 10),
-          ],
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: sorted.length,
+            itemBuilder: (context, i) {
+              return Column(
+                children: [
+                  RepaintBoundary(
+                    key: ValueKey('timeline_item_${sorted[i].id}'),
+                    child: _TimelineListRow(
+                      item: sorted[i],
+                      selected: sorted[i].id == selectedItemId,
+                      onTap: () => onItemTap(sorted[i]),
+                    ),
+                  ),
+                  if (i != sorted.length - 1) const SizedBox(height: 10),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );
@@ -176,8 +188,7 @@ class _TimelineListRow extends StatelessWidget {
           color: selected ? const Color(0xFFEFF6FF) : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color:
-                selected ? const Color(0xFF93C5FD) : const Color(0xFFE5E7EB),
+            color: selected ? const Color(0xFF93C5FD) : const Color(0xFFE5E7EB),
           ),
         ),
         child: Column(
@@ -278,7 +289,8 @@ class _TrackingTimelineCard extends StatelessWidget {
                   item!.requiredByDate != null
                       ? 'Required by ${DateFormat('MMM dd, yyyy').format(item!.requiredByDate!)}'
                       : 'No required-by date linked yet.',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                  style:
+                      const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                 ),
                 const SizedBox(height: 14),
                 _BadgePill(
@@ -294,10 +306,23 @@ class _TrackingTimelineCard extends StatelessWidget {
                     style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
                   )
                 else
-                  for (var i = 0; i < item!.events.length; i++) ...[
-                    _TimelineEntry(event: item!.events[i]),
-                    if (i != item!.events.length - 1) const SizedBox(height: 16),
-                  ],
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: item!.events.length,
+                    itemBuilder: (context, i) {
+                      return Column(
+                        children: [
+                          RepaintBoundary(
+                            key: ValueKey('timeline_event_$i'),
+                            child: _TimelineEntry(event: item!.events[i]),
+                          ),
+                          if (i != item!.events.length - 1)
+                            const SizedBox(height: 16),
+                        ],
+                      );
+                    },
+                  ),
               ],
             ),
     );
@@ -320,7 +345,7 @@ class _TimelineEntry extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
+            color: Color(0xFFEFF6FF),
             borderRadius: BorderRadius.circular(999),
           ),
           child: const Icon(
@@ -380,7 +405,7 @@ class _PanelFrame extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
       child: child,
@@ -436,9 +461,9 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

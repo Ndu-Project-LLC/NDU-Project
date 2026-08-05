@@ -18,6 +18,9 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
+import 'package:go_router/go_router.dart';
 const Color _kBackground = Colors.white;
 const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
@@ -29,9 +32,7 @@ class DeliverablesRoadmapScreen extends StatelessWidget {
  const DeliverablesRoadmapScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const DeliverablesRoadmapScreen()),
- );
+ context.push('/deliverables-roadmap');
  }
 
  @override
@@ -81,6 +82,9 @@ class _DeliverablesRoadmapBodyState extends State<_DeliverablesRoadmapBody> {
  String? _filterStatus;
  bool _isSaving = false;
  Timer? _saveDebounce;
+ bool _autoPopulated = false;
+ bool _isAutoPopulating = false;
+ String? _carriedContext;
 
  String? get _projectId {
  try {
@@ -93,7 +97,10 @@ class _DeliverablesRoadmapBodyState extends State<_DeliverablesRoadmapBody> {
  @override
  void initState() {
  super.initState();
- WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+ WidgetsBinding.instance.addPostFrameCallback((_) {
+ _loadData();
+ _autoPopulateIfNeeded();
+ });
  }
 
  @override
@@ -138,6 +145,68 @@ class _DeliverablesRoadmapBodyState extends State<_DeliverablesRoadmapBody> {
  } catch (e) {
  debugPrint('Error loading roadmap: $e');
  if (mounted) setState(() => _isLoading = false);
+ }
+ }
+
+ Future<void> _autoPopulateIfNeeded() async {
+ if (_autoPopulated || _isAutoPopulating) return;
+ _autoPopulated = true;
+ _isAutoPopulating = true;
+ if (mounted) setState(() {});
+
+ try {
+ final projectId = _projectId;
+ // Pull real carried context for the banner.
+ final carried = await buildAccumulatedContext(context, 'deliverables_roadmap');
+ if (mounted) setState(() => _carriedContext = carried);
+
+ if (projectId == null || projectId.isEmpty) {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ return;
+ }
+
+ // If the user already has deliverables in Firestore, don't seed.
+ if (_deliverables.isNotEmpty) {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ return;
+ }
+
+ final data = ProjectDataHelper.getData(context);
+ final seed = seedDeliverablesRoadmap(data);
+ if (seed.isNotEmpty) {
+ final newItems = <RoadmapDeliverable>[];
+ for (var i = 0; i < seed.rows.length; i++) {
+ final r = seed.rows[i];
+ newItems.add(RoadmapDeliverable(
+ title: (r['title'] ?? '').toString(),
+ description: (r['package'] ?? '').toString().isNotEmpty
+ ? 'Package: ${r['package']}'
+ : '',
+ assignee: '',
+ status: RoadmapDeliverableStatus.notStarted,
+ priority: RoadmapDeliverablePriority.medium,
+ storyPoints: 1,
+ order: i,
+ notes: 'Auto-seeded from ${r['source']}.',
+ ));
+ }
+ await RoadmapService.saveDeliverables(
+ projectId: projectId, deliverables: newItems);
+ if (mounted) {
+ setState(() => _deliverables = newItems);
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(
+ 'Seeded ${newItems.length} deliverable(s) from ${seed.source}.'),
+ behavior: SnackBarBehavior.floating,
+ ),
+ );
+ }
+ }
+ } catch (e) {
+ debugPrint('DeliverablesRoadmap auto-populate error: $e');
+ } finally {
+ if (mounted) setState(() => _isAutoPopulating = false);
  }
  }
 
@@ -225,6 +294,7 @@ class _DeliverablesRoadmapBodyState extends State<_DeliverablesRoadmapBody> {
  void _handleDeleteDeliverable(int index) async {
  final item = _deliverables[index];
  final confirmed = await _showConfirmDialog(
+ context,
  'Delete Deliverable',
  'Delete "${item.title}"?',
  );
@@ -261,6 +331,7 @@ class _DeliverablesRoadmapBodyState extends State<_DeliverablesRoadmapBody> {
  final sprint = _sprints[index];
  final hasItems = _deliverables.any((d) => d.sprintId == sprint.id);
  final confirmed = await _showConfirmDialog(
+ context,
  'Delete Sprint',
  hasItems
  ? '${sprint.name} has deliverables. Deleting will unassign them. Continue?'
@@ -364,6 +435,16 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  onForward: () =>
  PlanningPhaseNavigation.goToNext(context, 'deliverables_roadmap'), onExportPdf: _exportPdf),
  const SizedBox(height: 24),
+ if (_isAutoPopulating)
+ const AutoPopulatingIndicator(),
+ if (_carriedContext != null && _carriedContext!.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(bottom: 16),
+ child: CarriedContextBanner(
+ checkpoint: 'deliverables_roadmap',
+ contextText: _carriedContext!,
+ ),
+ ),
  _buildStatsRow(),
  const SizedBox(height: 16),
  _buildFilterBar(),
@@ -1486,9 +1567,13 @@ Future<Map<String, dynamic>?> _showDeliverableDialog(
  );
 }
 
-Future<bool?> _showConfirmDialog(String title, String message) {
+Future<bool?> _showConfirmDialog(
+  BuildContext context,
+  String title,
+  String message,
+) {
  return showDialog<bool>(
- context: GlobalKey<NavigatorState>().currentContext!,
+ context: context,
  builder: (ctx) => AlertDialog(
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
  title: Text(title,

@@ -698,7 +698,7 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
  backgroundColor: _Tokens.surface,
  drawer: Drawer(
  width: AppBreakpoints.sidebarWidth(context),
- child: SafeArea(
+ child: const SafeArea(
  child: InitiationLikeSidebar(
  activeItemLabel: 'Project Details',
  showHeader: true,
@@ -712,8 +712,8 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
  // ── Sticky TopAppBar ──
  _MobileTopBar(),
  // ── Action Buttons Row ──
- Padding(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+ const Padding(
+ padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
  child: Wrap(
  spacing: 8,
  runSpacing: 6,
@@ -1011,8 +1011,8 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Details',
  ),
  ),
@@ -1284,10 +1284,10 @@ class _MobileBottomNav extends StatelessWidget {
  },
  icon: const Icon(Icons.arrow_forward, size: 18,
  color: _Tokens.primaryOn),
- label: Text(
+ label: const Text(
  'Next: Work Breakdown Structure',
  overflow: TextOverflow.ellipsis,
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w600,
  color: _Tokens.primaryOn,
@@ -1466,14 +1466,14 @@ class _MobileProjectInfoSection extends StatelessWidget {
                       focusNode: projectObjectiveFocus,
                       maxLines: null,
                       minLines: 5,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText:
                             'What is the main objective of this project?',
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
                         filled: false,
-                        contentPadding: const EdgeInsets.symmetric(
+                        contentPadding: EdgeInsets.symmetric(
                           horizontal: 14, vertical: 12),
                       ),
                       style: const TextStyle(
@@ -1733,10 +1733,10 @@ class _MobileGoalsSection extends StatelessWidget {
  Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Project Goals',
  style: TextStyle(
@@ -1860,7 +1860,7 @@ class _MobileGoalCard extends StatelessWidget {
  Container(
  width: 24,
  height: 24,
- decoration: BoxDecoration(
+ decoration: const BoxDecoration(
  color: _Tokens.surfaceContainerHigh,
  shape: BoxShape.circle,
  ),

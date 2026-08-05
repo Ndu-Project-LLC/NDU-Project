@@ -48,11 +48,11 @@ class _AdminSubscriptionLookupScreenState
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
-        title: Row(
+        title: const Row(
           children: [
-            const Icon(Icons.search, color: Color(0xFF2196F3), size: 28),
-            const SizedBox(width: 12),
-            const Text('Subscription Lookup',
+            Icon(Icons.search, color: Color(0xFF2196F3), size: 28),
+            SizedBox(width: 12),
+            Text('Subscription Lookup',
                 style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -99,9 +99,9 @@ class _AdminSubscriptionLookupScreenState
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.05),
+        color: Colors.grey.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +160,7 @@ class _AdminSubscriptionLookupScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,7 +175,7 @@ class _AdminSubscriptionLookupScreenState
             context: context,
             tiles: _searchResults.map((user) => ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: const Color(0xFFFFC107).withOpacity(0.2),
+                    backgroundColor: const Color(0xFFFFC107).withValues(alpha: 0.2),
                     child: Text(user.displayName.isNotEmpty
                         ? user.displayName[0].toUpperCase()
                         : 'U'),
@@ -210,7 +210,7 @@ class _AdminSubscriptionLookupScreenState
         children: [
           CircleAvatar(
             radius: 32,
-            backgroundColor: Colors.white.withOpacity(0.2),
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             backgroundImage:
                 user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
             child: user.photoUrl == null
@@ -302,9 +302,9 @@ class _AdminSubscriptionLookupScreenState
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.05),
+              color: Colors.grey.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
             ),
             child: Center(
               child: Column(
@@ -352,9 +352,9 @@ class _AdminSubscriptionLookupScreenState
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.05),
+              color: Colors.grey.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
             ),
             child: Center(
               child: Column(
@@ -380,9 +380,9 @@ class _AdminSubscriptionLookupScreenState
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.05),
+        color: Colors.grey.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -794,7 +794,7 @@ class _SubscriptionCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: statusColor.withOpacity(0.3)),
+        side: BorderSide(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -803,7 +803,7 @@ class _SubscriptionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(Icons.credit_card, color: statusColor, size: 24),
@@ -824,7 +824,7 @@ class _SubscriptionCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
+                          color: statusColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -841,7 +841,7 @@ class _SubscriptionCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFC107).withOpacity(0.1),
+                            color: const Color(0xFFFFC107).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Text('TRIAL',
@@ -924,7 +924,7 @@ class _InvoiceCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: const Color(0xFF9C27B0).withOpacity(0.3)),
+        side: BorderSide(color: const Color(0xFF9C27B0).withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -933,7 +933,7 @@ class _InvoiceCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF9C27B0).withOpacity(0.1),
+                color: const Color(0xFF9C27B0).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child:
@@ -956,7 +956,7 @@ class _InvoiceCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
+                          color: statusColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(

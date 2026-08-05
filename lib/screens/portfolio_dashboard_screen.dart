@@ -29,9 +29,7 @@ class PortfolioDashboardScreen extends StatefulWidget {
  const PortfolioDashboardScreen({super.key, this.portfolioId});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
- );
+ context.push('/portfolio-dashboard');
  }
 
  @override
@@ -327,7 +325,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
             const SizedBox(height: 16),
             Text(
               isTimeout ? 'Taking longer than expected' : 'Could not load data',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: _onSurface,
@@ -337,7 +335,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
             const SizedBox(height: 8),
             Text(
               _loadError ?? '',
-              style: TextStyle(fontSize: 14, color: _muted, height: 1.5),
+              style: const TextStyle(fontSize: 14, color: _muted, height: 1.5),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -386,11 +384,11 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  offset: Offset(0, 2)),
  ],
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
  Icon(Icons.view_quilt_outlined, size: 18, color: _muted),
- const SizedBox(width: 8),
+ SizedBox(width: 8),
  Flexible(
  child: Text(
  'Portfolio workspace overview',
@@ -450,16 +448,16 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  textStyle:
  const TextStyle(fontWeight: FontWeight.w700),
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.add_circle_outline, size: 22),
- const SizedBox(width: 10),
+ Icon(Icons.add_circle_outline, size: 22),
+ SizedBox(width: 10),
  Text('Create Project',
  style:
  TextStyle(fontFamily: appFontFamily)),
- const SizedBox(width: 6),
- const Icon(Icons.arrow_forward, size: 20),
+ SizedBox(width: 6),
+ Icon(Icons.arrow_forward, size: 20),
  ],
  ),
  ),
@@ -488,7 +486,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  ],
  ),
  const SizedBox(height: 22),
- Text(
+ const Text(
  'Executive Portfolio Dashboard',
  style: TextStyle(
  color: _onSurface,
@@ -503,7 +501,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  _totalProjects == 0
  ? 'No projects yet — create one to get started'
  : 'Strategic overview across $_totalProjects project${_totalProjects == 1 ? '' : 's'}',
- style: TextStyle(
+ style: const TextStyle(
  color: _muted,
  fontSize: 15,
  fontFamily: appFontFamily,
@@ -546,7 +544,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  fit: BoxFit.cover,
  errorBuilder: (_, __, ___) => Center(
  child: Text(initials,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurface,
  fontSize: 16,
  fontWeight: FontWeight.w700,
@@ -554,7 +552,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  ))
  : Center(
  child: Text(initials,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurface,
  fontSize: 16,
  fontWeight: FontWeight.w700,
@@ -570,23 +568,23 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  mainAxisSize: MainAxisSize.min,
  children: [
  Text(displayName,
- style: TextStyle(
+ style: const TextStyle(
  fontWeight: FontWeight.w700,
  color: _onSurface,
  fontFamily: appFontFamily)),
  if (user?.email != null && user!.email!.isNotEmpty)
  Text(user.email!,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 12, color: _muted, fontFamily: appFontFamily)),
  ],
  ),
  ),
  const PopupMenuDivider(),
- PopupMenuItem<String>(
+ const PopupMenuItem<String>(
  value: 'logout',
  child: Row(children: [
  Icon(Icons.logout, size: 18, color: _crimson),
- const SizedBox(width: 10),
+ SizedBox(width: 10),
  Text('Log Out',
  style: TextStyle(color: _crimson, fontFamily: appFontFamily)),
  ]),
@@ -646,7 +644,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  final screenWidth = MediaQuery.sizeOf(context).width;
  final isDesktop = screenWidth > 1000;
  final isTablet = screenWidth > 600;
- final sp = 16.0;
+ const sp = 16.0;
 
  final budgetStr = _totalBudget >= 1000000000
  ? '\$${(_totalBudget / 1000000000).toStringAsFixed(1)}B'
@@ -787,7 +785,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
  Text(k.$1 as String,
- style: TextStyle(
+ style: const TextStyle(
  color: _muted,
  fontSize: 12,
  fontWeight: FontWeight.w600,
@@ -807,11 +805,11 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  ShaderMask(
  shaderCallback: (b) => ((k.$4 == _gold)
  ? _goldGrad
- : LinearGradient(
+ : const LinearGradient(
  colors: [_onSurface, _onSurface]))
  .createShader(b),
  child: Text(k.$2 as String,
- style: TextStyle(
+ style: const TextStyle(
  color: Colors.white,
  fontSize: 30,
  fontWeight: FontWeight.w900,
@@ -825,7 +823,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  value: k.$9 as double,
  backgroundColor: _surfaceHighest,
  valueColor:
- AlwaysStoppedAnimation(_gold),
+ const AlwaysStoppedAnimation(_gold),
  minHeight: 4)),
  const SizedBox(height: 4),
  ],
@@ -909,13 +907,13 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
        child: Row(
          children: [
-           Icon(Icons.search, size: 20, color: _muted),
+           const Icon(Icons.search, size: 20, color: _muted),
            const SizedBox(width: 10),
            Expanded(
              child: TextField(
                controller: _searchController,
                onChanged: (v) => setState(() => _searchQuery = v),
-               style: TextStyle(
+               style: const TextStyle(
                  fontSize: 14,
                  color: _onSurface,
                  fontFamily: appFontFamily,
@@ -938,7 +936,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
                  _searchController.clear();
                  setState(() => _searchQuery = '');
                },
-               icon: Icon(Icons.close_rounded, size: 18, color: _muted),
+               icon: const Icon(Icons.close_rounded, size: 18, color: _muted),
                tooltip: 'Clear search',
              ),
            Container(
@@ -993,11 +991,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
                icon: Icons.fact_check_outlined,
                accent: const Color(0xFFFCD34D),
                onTap: () {
-                 Navigator.of(context).push(
-                   MaterialPageRoute(
-                     builder: (_) => const ProjectActivitiesLogScreen(),
-                   ),
-                 );
+                 context.push('/project-activities-log');
                },
              ),
            ];
@@ -1083,7 +1077,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
        children: [
          Text(
            text,
-           style: TextStyle(
+           style: const TextStyle(
              fontWeight: FontWeight.w700,
              fontSize: 13,
              color: _onSurface,
@@ -1119,7 +1113,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  child: Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
- Text('Portfolio Overview',
+ const Text('Portfolio Overview',
  style: TextStyle(
  color: _onSurface,
  fontSize: 18,
@@ -1135,7 +1129,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  border: Border.all(
  color: _outline.withValues(alpha: 0.3))),
  child: Text('$_totalProjects projects',
- style: TextStyle(
+ style: const TextStyle(
  color: _muted,
  fontSize: 12,
  fontWeight: FontWeight.w600,
@@ -1143,8 +1137,8 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  ])),
  Divider(height: 1, color: _outline.withValues(alpha: 0.2)),
  if (sortedProjects.isEmpty)
- Padding(
- padding: const EdgeInsets.all(24),
+ const Padding(
+ padding: EdgeInsets.all(24),
  child: Center(
  child: Text('No projects found',
  style: TextStyle(
@@ -1186,7 +1180,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text('PROJECTS BY PHASE',
+ const Text('PROJECTS BY PHASE',
  style: TextStyle(
  color: _muted,
  fontSize: 11,
@@ -1195,9 +1189,9 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  fontFamily: appFontFamily)),
  const SizedBox(height: 20),
  if (phases.isEmpty)
- Center(
+ const Center(
  child: Padding(
- padding: const EdgeInsets.all(20),
+ padding: EdgeInsets.all(20),
  child: Text('No phase data',
  style: TextStyle(
  color: _muted,
@@ -1216,7 +1210,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  MainAxisAlignment.spaceBetween,
  children: [
  Text(e.key,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurface,
  fontSize: 12,
  fontWeight: FontWeight.w600,
@@ -1280,7 +1274,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text('STATUS DISTRIBUTION',
+ const Text('STATUS DISTRIBUTION',
  style: TextStyle(
  color: _muted,
  fontSize: 11,
@@ -1311,7 +1305,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
  Text('$total',
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurface,
  fontSize: 22,
  fontWeight: FontWeight.w900,
@@ -1350,7 +1344,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text('MILESTONES',
+ const Text('MILESTONES',
  style: TextStyle(
  color: _muted,
  fontSize: 11,
@@ -1373,12 +1367,12 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  value: pct,
  backgroundColor: _surfaceHighest,
  valueColor:
- AlwaysStoppedAnimation(_emerald),
+ const AlwaysStoppedAnimation(_emerald),
  minHeight: 8)),
  const SizedBox(height: 8),
  Text(
  '${(pct * 100).round()}% milestone completion rate',
- style: TextStyle(
+ style: const TextStyle(
  color: _muted,
  fontSize: 12,
  fontFamily: appFontFamily)),
@@ -1398,7 +1392,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text('ACTIVITIES',
+ const Text('ACTIVITIES',
  style: TextStyle(
  color: _muted,
  fontSize: 11,
@@ -1421,11 +1415,11 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  value: pct,
  backgroundColor: _surfaceHighest,
  valueColor:
- AlwaysStoppedAnimation(_blue),
+ const AlwaysStoppedAnimation(_blue),
  minHeight: 8)),
  const SizedBox(height: 8),
  Text('${(pct * 100).round()}% activity completion rate',
- style: TextStyle(
+ style: const TextStyle(
  color: _muted,
  fontSize: 12,
  fontFamily: appFontFamily)),
@@ -1452,7 +1446,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  child: Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
- Text('ACTIVE PROJECTS',
+ const Text('ACTIVE PROJECTS',
  style: TextStyle(
  color: _onSurface,
  fontSize: 11,
@@ -1465,13 +1459,13 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  decoration: BoxDecoration(
  color: _gold.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8)),
- child: Icon(Icons.work_outline,
+ child: const Icon(Icons.work_outline,
  color: _gold, size: 14)),
  ])),
  Divider(height: 1, color: _outline.withValues(alpha: 0.15)),
  if (activeProjects.isEmpty)
- Padding(
- padding: const EdgeInsets.all(24),
+ const Padding(
+ padding: EdgeInsets.all(24),
  child: Center(
  child: Text('All projects are completed!',
  style: TextStyle(
@@ -1495,7 +1489,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  maxLines: 1,
  overflow: TextOverflow.ellipsis)),
  Text(p.progressSnapshot.currentPhase,
- style: TextStyle(
+ style: const TextStyle(
  color: _muted,
  fontSize: 12,
  fontFamily: appFontFamily)),
@@ -1532,7 +1526,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  child: Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
- Text('OVERDUE ITEMS',
+ const Text('OVERDUE ITEMS',
  style: TextStyle(
  color: _crimsonBright,
  fontSize: 11,
@@ -1547,21 +1541,21 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  color: _crimson.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8)),
  child: Text('$_overdueActivities total',
- style: TextStyle(
+ style: const TextStyle(
  color: _crimsonBright,
  fontSize: 10,
  fontWeight: FontWeight.w800,
  fontFamily: appFontFamily))),
  ])),
  if (!hasOverdue)
- Padding(
- padding: const EdgeInsets.all(24),
+ const Padding(
+ padding: EdgeInsets.all(24),
  child: Row(
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
  Icon(Icons.check_circle,
  color: _emerald, size: 20),
- const SizedBox(width: 8),
+ SizedBox(width: 8),
  Text('No overdue items',
  style: TextStyle(
  color: _emerald,
@@ -1579,7 +1573,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  Expanded(
  child: Text(
  p.name.isEmpty ? 'Untitled' : p.name,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurface,
  fontSize: 13,
  fontWeight: FontWeight.w600,
@@ -1587,7 +1581,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  maxLines: 1,
  overflow: TextOverflow.ellipsis)),
  Text(p.progressSnapshot.currentPhase,
- style: TextStyle(
+ style: const TextStyle(
  color: _muted,
  fontSize: 12,
  fontFamily: appFontFamily)),
@@ -1601,7 +1595,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  BorderRadius.circular(8)),
  child: Text(
  '${p.progressSnapshot.overdueActivities}',
- style: TextStyle(
+ style: const TextStyle(
  color: _crimsonBright,
  fontSize: 11,
  fontWeight: FontWeight.w800,
@@ -1644,7 +1638,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
             AnimatedRotation(
               turns: isExpanded ? 0.5 : 0,
               duration: const Duration(milliseconds: 200),
-              child: Icon(
+              child: const Icon(
                 Icons.keyboard_arrow_down_rounded,
                 size: 18,
                 color: _blue,
@@ -1655,7 +1649,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
               isExpanded
                   ? 'Show Less'
                   : 'View All $totalCount Projects',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: _blue,
@@ -1673,7 +1667,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
                 ),
                 child: Text(
                   '+$remaining more',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: _blue,
@@ -1728,7 +1722,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
                     children: [
                       Text(
                         p.name.isEmpty ? 'Untitled' : p.name,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: _onSurface,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -1739,7 +1733,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
                       ),
                       Text(
                         phase,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: _muted,
                           fontSize: 11,
                           fontFamily: appFontFamily,
@@ -1760,7 +1754,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
             flex: 2,
             child: Text(
               '${p.updatedAt.day}/${p.updatedAt.month}/${p.updatedAt.year}',
-              style: TextStyle(
+              style: const TextStyle(
                 color: _muted,
                 fontSize: 12,
                 fontFamily: appFontFamily,
@@ -1780,7 +1774,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   minimumSize: const Size(0, 32),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     fontFamily: appFontFamily,
@@ -1904,10 +1898,10 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  const SizedBox(width: 8),
  Text(l,
  style:
- TextStyle(color: _onSurface, fontSize: 11, fontFamily: appFontFamily)),
+ const TextStyle(color: _onSurface, fontSize: 11, fontFamily: appFontFamily)),
  ]),
  Text(p,
- style: TextStyle(
+ style: const TextStyle(
  color: _onSurface,
  fontSize: 12,
  fontWeight: FontWeight.w800,
@@ -1925,7 +1919,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
  fontFamily: appFontFamily)),
  const SizedBox(height: 2),
  Text(label,
- style: TextStyle(
+ style: const TextStyle(
  color: _muted,
  fontSize: 10,
  fontFamily: appFontFamily)),
@@ -1941,7 +1935,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
               Icon(icon, size: 48, color: _muted.withValues(alpha: 0.4)),
               const SizedBox(height: 16),
               Text(title,
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: _onSurface,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -1949,7 +1943,7 @@ class _PortfolioDashboardScreenState extends State<PortfolioDashboardScreen>
               const SizedBox(height: 8),
               Text(subtitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: _muted,
                       fontSize: 14,
                       fontFamily: appFontFamily)),

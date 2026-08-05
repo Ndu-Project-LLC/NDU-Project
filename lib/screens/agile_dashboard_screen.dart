@@ -9,6 +9,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE DASHBOARD — World-Class Delivery Performance Screen
@@ -17,9 +18,7 @@ class AgileDashboardScreen extends StatefulWidget {
   const AgileDashboardScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AgileDashboardScreen()),
-    );
+    context.push('/agile-dashboard');
   }
 
   @override
@@ -51,34 +50,41 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
   double _sprintCompletion = 0.72;
 
   // Burn-down data (story points remaining per day)
-  final List<double> _burnDown = [
-    48, 44, 41, 38, 34, 30, 26, 21, 16, 10
-  ];
+  final List<double> _burnDown = [48, 44, 41, 38, 34, 30, 26, 21, 16, 10];
   final List<double> _idealBurn = [
-    48, 43.2, 38.4, 33.6, 28.8, 24, 19.2, 14.4, 9.6, 4.8
+    48,
+    43.2,
+    38.4,
+    33.6,
+    28.8,
+    24,
+    19.2,
+    14.4,
+    9.6,
+    4.8
   ];
 
   // Sprint health indicators
   final List<_HealthIndicator> _health = [
-    _HealthIndicator('Scope Stability', 0.92, Colors.green, 'Stable'),
-    _HealthIndicator('Velocity Trend', 0.78, _kAccent, 'On Track'),
-    _HealthIndicator('Blocker Backlog', 0.45, Colors.red, 'At Risk'),
-    _HealthIndicator('Team Capacity', 0.88, Colors.green, 'Healthy'),
+    const _HealthIndicator('Scope Stability', 0.92, Colors.green, 'Stable'),
+    const _HealthIndicator('Velocity Trend', 0.78, _kAccent, 'On Track'),
+    const _HealthIndicator('Blocker Backlog', 0.45, Colors.red, 'At Risk'),
+    const _HealthIndicator('Team Capacity', 0.88, Colors.green, 'Healthy'),
   ];
 
   // Recent activity feed
   final List<_ActivityItem> _activity = [
-    _ActivityItem('Sarah Chen', 'completed', 'NDU-1042: Login validation',
+    const _ActivityItem('Sarah Chen', 'completed', 'NDU-1042: Login validation',
         '12m ago', Icons.check_circle, Colors.green),
-    _ActivityItem('Marcus Reed', 'moved', 'NDU-1038: API rate limiting',
+    const _ActivityItem('Marcus Reed', 'moved', 'NDU-1038: API rate limiting',
         '34m ago', Icons.swap_horiz, Colors.blue),
-    _ActivityItem('Kaz AI', 'flagged', 'Velocity drift detected on Sprint 24',
+    const _ActivityItem('Kaz AI', 'flagged', 'Velocity drift detected on Sprint 24',
         '1h ago', Icons.auto_awesome, _kAccent),
-    _ActivityItem('Priya Nair', 'commented on', 'NDU-1031: Dashboard widgets',
+    const _ActivityItem('Priya Nair', 'commented on', 'NDU-1031: Dashboard widgets',
         '2h ago', Icons.chat_bubble_outline, Colors.purple),
-    _ActivityItem('James Okoro', 'blocked', 'NDU-1029: SSO integration',
+    const _ActivityItem('James Okoro', 'blocked', 'NDU-1029: SSO integration',
         '3h ago', Icons.block, Colors.red),
-    _ActivityItem('Lena Park', 'started', 'NDU-1045: Reporting module',
+    const _ActivityItem('Lena Park', 'started', 'NDU-1045: Reporting module',
         '4h ago', Icons.play_arrow, _kAccent),
   ];
 
@@ -123,9 +129,8 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
               (data['storiesTotal'] as num?)?.toInt() ?? _storiesTotal;
           _teamCapacity =
               (data['teamCapacity'] as num?)?.toInt() ?? _teamCapacity;
-          final completion = _storiesTotal == 0
-              ? 0.0
-              : _storiesCompleted / _storiesTotal;
+          final completion =
+              _storiesTotal == 0 ? 0.0 : _storiesCompleted / _storiesTotal;
           _sprintCompletion = completion;
           _isLoading = false;
         });
@@ -139,7 +144,8 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
 
   void _seedFromProjectContext(dynamic projectData) {
     final people = AgileProjectContextHelper.people(projectData, limit: 6);
-    final workItems = AgileProjectContextHelper.workItems(projectData, limit: 10);
+    final workItems =
+        AgileProjectContextHelper.workItems(projectData, limit: 10);
     final issues = AgileProjectContextHelper.issues(projectData, limit: 6);
     final risks = AgileProjectContextHelper.risks(projectData, limit: 4);
 
@@ -150,7 +156,8 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
         .length;
     _velocity = workItems.fold<int>(
       0,
-      (sum, item) => sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
+      (sum, item) =>
+          sum + AgileProjectContextHelper.estimateStoryPoints(item.title),
     );
     _sprintTotalDays = 10;
     _sprintDay = (_storiesCompleted == 0
@@ -169,13 +176,15 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
     _burnDown
       ..clear()
       ..addAll(List.generate(_sprintTotalDays, (index) {
-        final remaining = totalPoints - ((index + 1) * (totalPoints / _sprintTotalDays));
+        final remaining =
+            totalPoints - ((index + 1) * (totalPoints / _sprintTotalDays));
         return remaining.clamp(0, totalPoints);
       }));
     _idealBurn
       ..clear()
       ..addAll(List.generate(_sprintTotalDays, (index) {
-        final remaining = totalPoints - ((index + 1) * (totalPoints / _sprintTotalDays));
+        final remaining =
+            totalPoints - ((index + 1) * (totalPoints / _sprintTotalDays));
         return remaining.clamp(0, totalPoints);
       }));
 
@@ -262,10 +271,10 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Dashboard metrics saved'),
+          const SnackBar(
+            content: Text('Dashboard metrics saved'),
             backgroundColor: _kAccent,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -295,20 +304,19 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Dashboard',
                     ),
                   ),
                   SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: hp, vertical: 24),
+                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildTopBar(),
                         const SizedBox(height: 20),
-                        PlanningPhaseHeader(
+                        const PlanningPhaseHeader(
                           title: 'Agile Dashboard',
                           showNavigationButtons: false,
                           breadcrumbPhase: 'Execution',
@@ -326,13 +334,9 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                    flex: 3,
-                                    child: _buildBurnDownCard()),
+                                Expanded(flex: 3, child: _buildBurnDownCard()),
                                 const SizedBox(width: 24),
-                                Expanded(
-                                    flex: 2,
-                                    child: _buildHealthCard()),
+                                Expanded(flex: 2, child: _buildHealthCard()),
                               ],
                             )
                           else ...[
@@ -367,24 +371,24 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
   Widget _buildTopBar() {
     return Row(
       children: [
-        Image.asset('assets/images/Logo.png', height: 36),
+        Image.asset('assets/images/Logo.png',
+            height: 36,
+            cacheWidth: (MediaQuery.devicePixelRatioOf(context) * 150).round()),
         const SizedBox(width: 12),
         const Text('Ndu Project',
             style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: _kHeadline)),
+                fontSize: 18, fontWeight: FontWeight.w800, color: _kHeadline)),
         const Spacer(),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: _kAccentBg,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _kAccent.withOpacity(0.3)),
+            border: Border.all(color: _kAccent.withValues(alpha: 0.3)),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Icon(Icons.flash_on, size: 14, color: _kAccent),
               SizedBox(width: 6),
               Text('LIVE DASHBOARD',
@@ -426,8 +430,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
       _MetricCard(
         title: 'Stories Completed',
         value: '$_storiesCompleted / $_storiesTotal',
-        sublabel:
-            '${(_sprintCompletion * 100).toInt()}% of sprint goal',
+        sublabel: '${(_sprintCompletion * 100).toInt()}% of sprint goal',
         icon: Icons.task_alt,
         accent: Colors.blue,
         accentBg: const Color(0xFFDBEAFE),
@@ -477,7 +480,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
         border: Border.all(color: _kBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -498,21 +501,18 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
               ),
               const Spacer(),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: c.trendUp
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      c.trendUp
-                          ? Icons.trending_up
-                          : Icons.trending_down,
+                      c.trendUp ? Icons.trending_up : Icons.trending_down,
                       size: 12,
                       color: c.trendUp ? Colors.green : Colors.red,
                     ),
@@ -532,9 +532,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
           const SizedBox(height: 14),
           Text(c.title,
               style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: _kMuted)),
+                  fontSize: 12, fontWeight: FontWeight.w500, color: _kMuted)),
           const SizedBox(height: 4),
           Text(c.value,
               style: const TextStyle(
@@ -594,8 +592,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
               value: _sprintCompletion,
               minHeight: 14,
               backgroundColor: const Color(0xFFF3F4F6),
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(_kAccentLight),
+              valueColor: const AlwaysStoppedAnimation<Color>(_kAccentLight),
             ),
           ),
           const SizedBox(height: 12),
@@ -603,8 +600,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
             children: [
               _chip('$_storiesCompleted Completed', Colors.green),
               const SizedBox(width: 8),
-              _chip(
-                  '${_storiesTotal - _storiesCompleted} Remaining', _kAccent),
+              _chip('${_storiesTotal - _storiesCompleted} Remaining', _kAccent),
               const SizedBox(width: 8),
               _chip('Day $_sprintDay/$_sprintTotalDays', Colors.blue),
               const Spacer(),
@@ -625,14 +621,12 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(label,
           style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color)),
+              fontSize: 11, fontWeight: FontWeight.w600, color: color)),
     );
   }
 
@@ -679,7 +673,8 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(
-                _burnDown.length, (i) => Text('D${i + 1}',
+                _burnDown.length,
+                (i) => Text('D${i + 1}',
                     style: const TextStyle(fontSize: 10, color: _kMuted))),
           ),
         ],
@@ -716,12 +711,12 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.health_and_safety_outlined,
+              Icon(Icons.health_and_safety_outlined,
                   size: 20, color: _kAccent),
-              const SizedBox(width: 8),
-              const Text('Sprint Health',
+              SizedBox(width: 8),
+              Text('Sprint Health',
                   style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -756,8 +751,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
                         value: h.value,
                         minHeight: 8,
                         backgroundColor: const Color(0xFFF3F4F6),
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(h.color),
+                        valueColor: AlwaysStoppedAnimation<Color>(h.color),
                       ),
                     ),
                   ],
@@ -813,7 +807,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: a.color.withOpacity(0.1),
+              color: a.color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(a.icon, size: 16, color: a.color),
@@ -838,9 +832,7 @@ class _AgileDashboardScreenState extends State<AgileDashboardScreen> {
               ),
             ),
           ),
-          Text(a.time,
-              style: const TextStyle(
-                  fontSize: 11, color: _kMuted)),
+          Text(a.time, style: const TextStyle(fontSize: 11, color: _kMuted)),
         ],
       ),
     );
@@ -937,7 +929,7 @@ class _LoadingStrip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: const Center(
         child: Column(
@@ -969,7 +961,7 @@ class _BurnDownPainter extends CustomPainter {
     final maxVal = actual.reduce((a, b) => a > b ? a : b);
     final w = size.width;
     final h = size.height;
-    final pad = 8.0;
+    const pad = 8.0;
 
     // Grid
     final gridPaint = Paint()
@@ -1016,7 +1008,7 @@ class _BurnDownPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [accent.withOpacity(0.3), accent.withOpacity(0.0)],
+        colors: [accent.withValues(alpha: 0.3), accent.withValues(alpha: 0.0)],
       ).createShader(Rect.fromLTWH(0, 0, w, h));
     canvas.drawPath(areaPath, areaPaint);
 
@@ -1035,9 +1027,19 @@ class _BurnDownPainter extends CustomPainter {
       final y = pad + (h - 2 * pad) * (actual[i] / maxVal);
       canvas.drawCircle(Offset(x, y), 4, pointPaint);
       canvas.drawCircle(
-          Offset(x, y), 4, Paint()..color = Colors.white..style = PaintingStyle.fill..strokeWidth = 2);
+          Offset(x, y),
+          4,
+          Paint()
+            ..color = Colors.white
+            ..style = PaintingStyle.fill
+            ..strokeWidth = 2);
       canvas.drawCircle(
-          Offset(x, y), 4, Paint()..color = accent..style = PaintingStyle.stroke..strokeWidth = 2);
+          Offset(x, y),
+          4,
+          Paint()
+            ..color = accent
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2);
     }
   }
 

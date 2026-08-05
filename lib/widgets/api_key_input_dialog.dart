@@ -1,8 +1,9 @@
- import 'package:flutter/material.dart';
- import 'package:flutter/services.dart';
- import 'package:ndu_project/services/api_key_manager.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:ndu_project/services/api_key_manager.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class ApiKeyInputDialog extends StatefulWidget {
   const ApiKeyInputDialog({super.key});
 
@@ -30,7 +31,8 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
       // Select all so the next paste/typing replaces the whole value.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          _apiKeyController.selection = TextSelection(baseOffset: 0, extentOffset: _apiKeyController.text.length);
+          _apiKeyController.selection = TextSelection(
+              baseOffset: 0, extentOffset: _apiKeyController.text.length);
           _focusNode.requestFocus();
         }
       });
@@ -67,12 +69,15 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
               onTap: () {
                 // If showing placeholder, keep text selected for quick paste-over.
                 if (_isPlaceholder) {
-                  _apiKeyController.selection = TextSelection(baseOffset: 0, extentOffset: _apiKeyController.text.length);
+                  _apiKeyController.selection = TextSelection(
+                      baseOffset: 0,
+                      extentOffset: _apiKeyController.text.length);
                 }
               },
               onChanged: (_) {
                 // Once user starts editing, it's no longer a placeholder.
-                if (_isPlaceholder && _apiKeyController.text != _placeholderMask) {
+                if (_isPlaceholder &&
+                    _apiKeyController.text != _placeholderMask) {
                   setState(() => _isPlaceholder = false);
                 }
               },
@@ -85,20 +90,25 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
                   children: [
                     IconButton(
                       tooltip: _isObscured ? 'Show' : 'Hide',
-                      icon: Icon(_isObscured ? Icons.visibility : Icons.visibility_off),
-                      onPressed: () => setState(() => _isObscured = !_isObscured),
+                      icon: Icon(_isObscured
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                      onPressed: () =>
+                          setState(() => _isObscured = !_isObscured),
                     ),
                     IconButton(
                       tooltip: 'Paste',
                       icon: const Icon(Icons.content_paste),
                       onPressed: () async {
                         try {
-                          final data = await Clipboard.getData(Clipboard.kTextPlain);
+                          final data =
+                              await Clipboard.getData(Clipboard.kTextPlain);
                           final text = (data?.text ?? '').trim();
                           if (text.isNotEmpty) {
                             setState(() {
                               _apiKeyController.text = text;
-                              _apiKeyController.selection = TextSelection.collapsed(offset: text.length);
+                              _apiKeyController.selection =
+                                  TextSelection.collapsed(offset: text.length);
                               _isPlaceholder = false;
                             });
                           }
@@ -113,7 +123,7 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Column(
@@ -123,7 +133,8 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
                     children: [
                       Icon(Icons.info_outline, size: 16, color: Colors.blue),
                       SizedBox(width: 8),
-                      Text('How to get your API key:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('How to get your API key:',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                   SizedBox(height: 8),
@@ -145,7 +156,7 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _saveApiKey,
-          child: _isLoading 
+          child: _isLoading
               ? const SizedBox(
                   width: 16,
                   height: 16,
@@ -159,7 +170,7 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
 
   Future<void> _saveApiKey() async {
     final apiKey = _apiKeyController.text.trim();
-    
+
     // If still showing placeholder or empty, prompt for a real key
     if (apiKey.isEmpty || apiKey == _placeholderMask) {
       _showError('Please enter an API key');
@@ -175,7 +186,7 @@ class _ApiKeyInputDialogState extends State<ApiKeyInputDialog> {
 
     try {
       await ApiKeyManager.persistForCurrentUser(apiKey);
-      
+
       // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

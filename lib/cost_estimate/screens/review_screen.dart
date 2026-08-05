@@ -27,7 +27,7 @@ class ReviewScreen extends StatelessWidget {
         final isBaselined = estimate.status == EstimateStatus.baselined ||
             estimate.status == EstimateStatus.rebaselined;
         final review = estimate.review ??
-            ReviewApproval(
+            const ReviewApproval(
               requiredApprovers: [],
               acceptanceStep1: (confirmed: false, by: null, at: null),
               acceptanceStep2: (confirmed: false, by: null, at: null),

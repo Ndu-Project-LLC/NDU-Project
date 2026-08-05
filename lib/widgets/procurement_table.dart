@@ -14,21 +14,21 @@ class ProcurementTable extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(32),
         alignment: Alignment.center,
-        child: Column(
+        child: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.inventory_2_outlined,
+            Icon(Icons.inventory_2_outlined,
                 size: 48, color: Color(0xFFCBD5E1)),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16),
+            Text(
               'No procurement items yet.',
               style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF64748B)),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: 8),
+            Text(
               'Add items to track sourcing and contracts.',
               style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
             ),
@@ -51,7 +51,7 @@ class ProcurementTable extends StatelessWidget {
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
             ),
-            child: Row(
+            child: const Row(
               children: [
                 Expanded(flex: 3, child: _HeaderCell('Item Name')),
                 Expanded(flex: 2, child: _HeaderCell('Category')),

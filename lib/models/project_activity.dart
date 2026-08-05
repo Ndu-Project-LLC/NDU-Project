@@ -150,4 +150,11 @@ class ProjectActivity {
       updatedAt: _parseDate(json['updatedAt'], now),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ProjectActivity && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

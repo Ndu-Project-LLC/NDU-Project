@@ -19,16 +19,15 @@ import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 /// Front End Planning – Milestone screen
 /// Allows users to define project start date, key milestones, and end date.
 class FrontEndPlanningMilestoneScreen extends StatefulWidget {
  const FrontEndPlanningMilestoneScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const FrontEndPlanningMilestoneScreen()),
- );
+ context.push('/fep-milestone');
  }
 
  @override
@@ -804,8 +803,8 @@ Consider typical project timelines and ensure end date is after start date.''';
  Expanded(child: _buildContent()),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Milestone',
  ),
  ),
@@ -826,12 +825,12 @@ Consider typical project timelines and ensure end date is after start date.''';
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  // Page Title
- Row(
+ const Row(
  children: [
- const Icon(Icons.flag_outlined,
+ Icon(Icons.flag_outlined,
  color: Color(0xFFF59E0B), size: 28),
- const SizedBox(width: 12),
- const Expanded(
+ SizedBox(width: 12),
+ Expanded(
  child: Text(
  'Estimated Project Timeline',
  style: TextStyle(
@@ -865,7 +864,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 4),
  ),
@@ -977,7 +976,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 4),
  ),
@@ -1331,7 +1330,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  Container(
  padding: const EdgeInsets.all(10),
  decoration: BoxDecoration(
- color: iconColor.withOpacity(0.1),
+ color: iconColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(icon, size: 22, color: iconColor),
@@ -1397,6 +1396,14 @@ Consider typical project timelines and ensure end date is after start date.''';
  }
 
  Widget _buildMilestonesTable() {
+ return FullScreenTableWrapper(
+ title: 'Milestones',
+ child: _buildMilestonesTableContent(),
+ tableBuilder: (fsContext) => _buildMilestonesTableContent(),
+ );
+ }
+
+ Widget _buildMilestonesTableContent() {
  const border = BorderSide(color: Color(0xFFE5E7EB));
  const headerStyle = TextStyle(
  fontSize: 12,
@@ -1415,7 +1422,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  // minimum readable width; otherwise fall back to horizontal
  // scrolling so the table always fills the screen as much as
  // possible.
- final minTableWidth = 1100.0;
+ const minTableWidth = 1100.0;
  final tableWidth = constraints.maxWidth > minTableWidth
  ? constraints.maxWidth
  : minTableWidth;
@@ -1423,12 +1430,12 @@ Consider typical project timelines and ensure end date is after start date.''';
  // Proportional column widths so the table expands to fill the
  // available space (rather than the old fixed-pixel widths that
  // always left a fixed table size regardless of viewport).
- final col0 = 60.0; // #
+ const col0 = 60.0; // #
  final col1 = tableWidth * 0.22; // Milestone Name
  final col2 = tableWidth * 0.16; // Target Date
  final col3 = tableWidth * 0.16; // Discipline
  final col4 = tableWidth * 0.36; // Notes (expandable)
- final col5 = 70.0; // Actions
+ const col5 = 70.0; // Actions
  // Adjust to exactly fill tableWidth
  final allocated = col0 + col1 + col2 + col3 + col4 + col5;
  final slack = tableWidth - allocated;
@@ -1483,7 +1490,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  children: [
  _milestoneDataCell(
  Center(
- child: Text(
+ child: WrappedText(
  '${index + 1}',
  style: const TextStyle(
  fontSize: 13,
@@ -1553,7 +1560,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  const SizedBox(width: 8),
  Expanded(
- child: Text(
+ child: WrappedText(
  milestone.dueDate.isNotEmpty
  ? milestone.dueDate
  : 'Select date',
@@ -1572,7 +1579,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  if (dateError != null) ...[
  const SizedBox(height: 4),
- Text(
+ WrappedText(
  dateError,
  style: const TextStyle(
  color: Color(0xFFDC2626),

@@ -289,14 +289,10 @@ class _TabPill extends StatelessWidget {
           curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: isActive
-                ? accentColor
-                : Colors.white,
+            color: isActive ? accentColor : Colors.white,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isActive
-                  ? accentColor
-                  : const Color(0xFFE4E7EC),
+              color: isActive ? accentColor : const Color(0xFFE4E7EC),
               width: 1,
             ),
             boxShadow: isActive
@@ -325,9 +321,7 @@ class _TabPill extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                    color: isActive
-                        ? Colors.white
-                        : const Color(0xFF1A1D1F),
+                    color: isActive ? Colors.white : const Color(0xFF1A1D1F),
                     fontFamily: appFontFamily,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -336,8 +330,8 @@ class _TabPill extends StatelessWidget {
               if (badge != null && badge! > 0) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: isActive
                         ? Colors.white.withValues(alpha: 0.25)

@@ -154,7 +154,9 @@ class _AgileBacklogGovernanceScreenState
   }
 
   List<Map<String, dynamic>> _checklistToJson(List<_ChecklistItem> items) {
-    return items.map((i) => {'id': i.id, 'label': i.label, 'checked': i.checked}).toList();
+    return items
+        .map((i) => {'id': i.id, 'label': i.label, 'checked': i.checked})
+        .toList();
   }
 
   List<_ChecklistItem> _checklistFromJson(List? raw) {
@@ -176,7 +178,8 @@ class _AgileBacklogGovernanceScreenState
     try {
       final data = await AgileWireframeService.loadBacklogGovernance(pid);
       if (!mounted) return;
-      final hasContent = data.values.any((v) => v is String && v.trim().isNotEmpty);
+      final hasContent =
+          data.values.any((v) => v is String && v.trim().isNotEmpty);
       if (!hasContent) {
         final dm = await AgileWireframeService.loadDeliveryModel(pid);
         final backlogText = dm['backlog'] as String? ?? '';
@@ -203,13 +206,17 @@ class _AgileBacklogGovernanceScreenState
         _doDItems = _checklistFromJson(data['dod_checklist'] as List?);
         _waItems = _checklistFromJson(data['working_agreements'] as List?);
         if (_doRItems.isEmpty) {
-          _doRItems = _defaultDoRItems.map((l) => _ChecklistItem(label: l)).toList();
+          _doRItems =
+              _defaultDoRItems.map((l) => _ChecklistItem(label: l)).toList();
         }
         if (_doDItems.isEmpty) {
-          _doDItems = _defaultDoDItems.map((l) => _ChecklistItem(label: l)).toList();
+          _doDItems =
+              _defaultDoDItems.map((l) => _ChecklistItem(label: l)).toList();
         }
         if (_waItems.isEmpty) {
-          _waItems = _defaultWorkingAgreements.map((l) => _ChecklistItem(label: l)).toList();
+          _waItems = _defaultWorkingAgreements
+              .map((l) => _ChecklistItem(label: l))
+              .toList();
         }
         _showDoRChecklist = data['dor_use_checklist'] as bool? ?? false;
         _showDoDChecklist = data['dod_use_checklist'] as bool? ?? false;
@@ -262,8 +269,8 @@ class _AgileBacklogGovernanceScreenState
     setState(() => _isGenerating = true);
     try {
       final projectData = ProjectDataHelper.getData(context);
-      final contextText = ProjectDataHelper.buildProjectContextScan(
-          projectData, sectionLabel: 'Backlog Governance');
+      final contextText = ProjectDataHelper.buildProjectContextScan(projectData,
+          sectionLabel: 'Backlog Governance');
       final openai = OpenAiServiceSecure();
       final result = await openai.generateCompletion(
         'Based on this project context, suggest backlog governance rules.\n\n'
@@ -293,8 +300,7 @@ class _AgileBacklogGovernanceScreenState
         final items = _parseStringList(parsed['dor_items']!);
         if (items.isNotEmpty) {
           setState(() {
-            _doRItems =
-                items.map((l) => _ChecklistItem(label: l)).toList();
+            _doRItems = items.map((l) => _ChecklistItem(label: l)).toList();
           });
         }
       }
@@ -302,8 +308,7 @@ class _AgileBacklogGovernanceScreenState
         final items = _parseStringList(parsed['dod_items']!);
         if (items.isNotEmpty) {
           setState(() {
-            _doDItems =
-                items.map((l) => _ChecklistItem(label: l)).toList();
+            _doDItems = items.map((l) => _ChecklistItem(label: l)).toList();
           });
         }
       }
@@ -311,8 +316,7 @@ class _AgileBacklogGovernanceScreenState
         final items = _parseStringList(parsed['working_agreements']!);
         if (items.isNotEmpty) {
           setState(() {
-            _waItems =
-                items.map((l) => _ChecklistItem(label: l)).toList();
+            _waItems = items.map((l) => _ChecklistItem(label: l)).toList();
           });
         }
       }
@@ -395,13 +399,12 @@ class _AgileBacklogGovernanceScreenState
     _scheduleAutoSave();
   }
 
-  Future<void> _regenerateField(
-      String key, String label, String hint) async {
+  Future<void> _regenerateField(String key, String label, String hint) async {
     setState(() => _fieldIsRegenerating[key] = true);
     try {
       final data = ProjectDataHelper.getData(context);
-      final contextText = ProjectDataHelper.buildProjectContextScan(
-          data, sectionLabel: label);
+      final contextText =
+          ProjectDataHelper.buildProjectContextScan(data, sectionLabel: label);
       final currentValue = _controllers[key]?.text ?? '';
       final openai = OpenAiServiceSecure();
       final result = await openai.generateCompletion(
@@ -444,37 +447,33 @@ class _AgileBacklogGovernanceScreenState
             DraggableSidebar(
               openWidth: AppBreakpoints.sidebarWidth(context),
               child: const InitiationLikeSidebar(
-                  activeItemLabel:
-                      'Agile Delivery Model - Backlog Governance'),
+                  activeItemLabel: 'Agile Delivery Model - Backlog Governance'),
             ),
             Expanded(
               child: Stack(
                 children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                         activeItemLabel:
                             'Agile Delivery Model - Backlog Governance'),
                   ),
                   SingleChildScrollView(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: hp, vertical: 32),
+                    padding: EdgeInsets.symmetric(horizontal: hp, vertical: 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         PlanningPhaseHeader(
                           title: 'Backlog Governance',
-                          onBack: () =>
-                              PlanningPhaseNavigation.goToPrevious(
-                                  context, 'agile_backlog_governance'),
-                          onForward: () =>
-                              PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_backlog_governance'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'agile_backlog_governance'),
+                          onForward: () => PlanningPhaseNavigation.goToNext(
+                              context, 'agile_backlog_governance'),
                           onExportPdf: _exportPdf,
                         ),
                         const SizedBox(height: 32),
                         Row(
                           children: [
-                            Expanded(
+                            const Expanded(
                               child: Text(
                                 'Define the rules, criteria, and processes for managing the product backlog.',
                                 style: TextStyle(
@@ -484,25 +483,21 @@ class _AgileBacklogGovernanceScreenState
                             if (!_isLoading) ...[
                               const SizedBox(width: 12),
                               OutlinedButton.icon(
-                                onPressed: _isGenerating
-                                    ? null
-                                    : _generateWithAI,
+                                onPressed:
+                                    _isGenerating ? null : _generateWithAI,
                                 icon: _isGenerating
                                     ? const SizedBox(
                                         width: 16,
                                         height: 16,
-                                        child:
-                                            CircularProgressIndicator(
-                                                strokeWidth: 2))
-                                    : const Icon(Icons.auto_awesome,
-                                        size: 18),
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2))
+                                    : const Icon(Icons.auto_awesome, size: 18),
                                 label: Text(_isGenerating
                                     ? 'Generating...'
                                     : 'AI Generate'),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: _kAccent,
-                                  side:
-                                      const BorderSide(color: _kAccent),
+                                  side: const BorderSide(color: _kAccent),
                                 ),
                               ),
                             ],
@@ -513,16 +508,16 @@ class _AgileBacklogGovernanceScreenState
                           const Center(child: CircularProgressIndicator())
                         else ...[
                           if (_isSaving)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 8),
                               child: Row(
                                 children: [
-                                  const SizedBox(
+                                  SizedBox(
                                       width: 12,
                                       height: 12,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2)),
-                                  const SizedBox(width: 8),
+                                  SizedBox(width: 8),
                                   Text('Saving...',
                                       style: TextStyle(
                                           fontSize: 12, color: _kMuted)),
@@ -543,12 +538,10 @@ class _AgileBacklogGovernanceScreenState
                               'agile_backlog_governance'),
                           nextLabel: PlanningPhaseNavigation.nextLabel(
                               'agile_backlog_governance'),
-                          onBack: () =>
-                              PlanningPhaseNavigation.goToPrevious(
-                                  context, 'agile_backlog_governance'),
-                          onNext: () =>
-                              PlanningPhaseNavigation.goToNext(
-                                  context, 'agile_backlog_governance'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'agile_backlog_governance'),
+                          onNext: () => PlanningPhaseNavigation.goToNext(
+                              context, 'agile_backlog_governance'),
                         ),
                         const SizedBox(height: 40),
                       ],
@@ -600,25 +593,29 @@ class _AgileBacklogGovernanceScreenState
           ),
           const SizedBox(height: 8),
           if (_showDoRChecklist) ...[
-            ..._doRItems.asMap().entries.map((e) => _buildChecklistRow(
-                  e.value,
-                  (checked) {
-                    setState(() => e.value.checked = checked);
-                    _scheduleAutoSave();
-                  },
-                  (label) {
-                    setState(() => e.value.label = label);
-                    _scheduleAutoSave();
-                  },
-                  () {
-                    setState(() => _doRItems.removeAt(e.key));
-                    _scheduleAutoSave();
-                  },
-                )),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _doRItems.length,
+              itemBuilder: (context, i) => _buildChecklistRow(
+                _doRItems[i],
+                (checked) {
+                  setState(() => _doRItems[i].checked = checked);
+                  _scheduleAutoSave();
+                },
+                (label) {
+                  setState(() => _doRItems[i].label = label);
+                  _scheduleAutoSave();
+                },
+                () {
+                  setState(() => _doRItems.removeAt(i));
+                  _scheduleAutoSave();
+                },
+              ),
+            ),
             TextButton.icon(
               onPressed: () {
-                setState(() =>
-                    _doRItems.add(_ChecklistItem(label: '')));
+                setState(() => _doRItems.add(_ChecklistItem(label: '')));
                 _scheduleAutoSave();
               },
               icon: const Icon(Icons.add, size: 16),
@@ -664,25 +661,29 @@ class _AgileBacklogGovernanceScreenState
           ),
           const SizedBox(height: 8),
           if (_showDoDChecklist) ...[
-            ..._doDItems.asMap().entries.map((e) => _buildChecklistRow(
-                  e.value,
-                  (checked) {
-                    setState(() => e.value.checked = checked);
-                    _scheduleAutoSave();
-                  },
-                  (label) {
-                    setState(() => e.value.label = label);
-                    _scheduleAutoSave();
-                  },
-                  () {
-                    setState(() => _doDItems.removeAt(e.key));
-                    _scheduleAutoSave();
-                  },
-                )),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _doDItems.length,
+              itemBuilder: (context, i) => _buildChecklistRow(
+                _doDItems[i],
+                (checked) {
+                  setState(() => _doDItems[i].checked = checked);
+                  _scheduleAutoSave();
+                },
+                (label) {
+                  setState(() => _doDItems[i].label = label);
+                  _scheduleAutoSave();
+                },
+                () {
+                  setState(() => _doDItems.removeAt(i));
+                  _scheduleAutoSave();
+                },
+              ),
+            ),
             TextButton.icon(
               onPressed: () {
-                setState(() =>
-                    _doDItems.add(_ChecklistItem(label: '')));
+                setState(() => _doDItems.add(_ChecklistItem(label: '')));
                 _scheduleAutoSave();
               },
               icon: const Icon(Icons.add, size: 16),
@@ -716,8 +717,7 @@ class _AgileBacklogGovernanceScreenState
               controller: TextEditingController.fromValue(
                 TextEditingValue(
                   text: item.label,
-                  selection:
-                      TextSelection.collapsed(offset: item.label.length),
+                  selection: TextSelection.collapsed(offset: item.label.length),
                 ),
               ),
               decoration: const InputDecoration(
@@ -731,11 +731,9 @@ class _AgileBacklogGovernanceScreenState
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline,
-                size: 16, color: Colors.red),
+            icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
             onPressed: onDelete,
-            constraints:
-                const BoxConstraints(minWidth: 28, minHeight: 28),
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             padding: EdgeInsets.zero,
           ),
         ],
@@ -764,8 +762,7 @@ class _AgileBacklogGovernanceScreenState
                   setState(() {});
                 },
                 padding: EdgeInsets.zero,
-                constraints:
-                    const BoxConstraints(minWidth: 28, minHeight: 28),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
               )
             : null,
       ),
@@ -795,24 +792,30 @@ class _AgileBacklogGovernanceScreenState
                   fontWeight: FontWeight.w700,
                   color: _kHeadline)),
           const SizedBox(height: 4),
-          const Text("Team norms for communication, collaboration, and process.",
+          const Text(
+              "Team norms for communication, collaboration, and process.",
               style: TextStyle(fontSize: 12, color: _kMuted)),
           const SizedBox(height: 12),
-          ..._waItems.asMap().entries.map((e) => _buildChecklistRow(
-                e.value,
-                (checked) {
-                  setState(() => e.value.checked = checked);
-                  _scheduleAutoSave();
-                },
-                (label) {
-                  setState(() => e.value.label = label);
-                  _scheduleAutoSave();
-                },
-                () {
-                  setState(() => _waItems.removeAt(e.key));
-                  _scheduleAutoSave();
-                },
-              )),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _waItems.length,
+            itemBuilder: (context, i) => _buildChecklistRow(
+              _waItems[i],
+              (checked) {
+                setState(() => _waItems[i].checked = checked);
+                _scheduleAutoSave();
+              },
+              (label) {
+                setState(() => _waItems[i].label = label);
+                _scheduleAutoSave();
+              },
+              () {
+                setState(() => _waItems.removeAt(i));
+                _scheduleAutoSave();
+              },
+            ),
+          ),
           TextButton.icon(
             onPressed: () {
               setState(() => _waItems.add(_ChecklistItem(label: '')));
@@ -850,7 +853,7 @@ class _AgileBacklogGovernanceScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE0F2FE),
+                    color: Color(0xFFE0F2FE),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
@@ -878,8 +881,7 @@ class _AgileBacklogGovernanceScreenState
             canRedo: _canRedoField(f.key),
             onUndo: () => _undoField(f.key),
             onRedo: () => _redoField(f.key),
-            onRegenerate: () =>
-                _regenerateField(f.key, f.label, f.hint),
+            onRegenerate: () => _regenerateField(f.key, f.label, f.hint),
             child: Container(
               width: double.infinity,
               constraints: BoxConstraints(
@@ -888,16 +890,15 @@ class _AgileBacklogGovernanceScreenState
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFD1D5DB)),
+                border: Border.all(color: Color(0xFFD1D5DB)),
               ),
               child: VoiceTextField(
                 controller: controller,
-                style: const TextStyle(
-                    fontSize: 14, color: Color(0xFF1F2937)),
+                style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
                 decoration: InputDecoration(
                   hintText: f.hint,
-                  hintStyle: const TextStyle(
-                      color: Color(0xFF9CA3AF), fontSize: 13),
+                  hintStyle:
+                      const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: const EdgeInsets.all(14),
@@ -910,17 +911,16 @@ class _AgileBacklogGovernanceScreenState
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2))
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2))
                             : const Icon(Icons.auto_awesome,
                                 color: Color(0xFFF59E0B), size: 18),
                         onPressed: isRegenerating
                             ? null
-                            : () => _regenerateField(
-                                f.key, f.label, f.hint),
+                            : () => _regenerateField(f.key, f.label, f.hint),
                         padding: const EdgeInsets.all(4),
-                        constraints: const BoxConstraints(
-                            minWidth: 32, minHeight: 32),
+                        constraints:
+                            const BoxConstraints(minWidth: 32, minHeight: 32),
                       ),
                       if (hasContent)
                         IconButton(
@@ -934,8 +934,8 @@ class _AgileBacklogGovernanceScreenState
                             setState(() {});
                           },
                           padding: const EdgeInsets.all(4),
-                          constraints: const BoxConstraints(
-                              minWidth: 32, minHeight: 32),
+                          constraints:
+                              const BoxConstraints(minWidth: 32, minHeight: 32),
                         ),
                     ],
                   ),
@@ -965,9 +965,10 @@ class _AgileBacklogGovernanceScreenState
           {'Project Name': projectData.projectName ?? 'N/A'},
           {'Solution Title': projectData.solutionTitle ?? 'N/A'},
         ]),
-        PdfSection.text('Notes',
-            projectData.planningNotes[
-                    'planning_agile_backlog_governance_notes'] ??
+        PdfSection.text(
+            'Notes',
+            projectData
+                    .planningNotes['planning_agile_backlog_governance_notes'] ??
                 'No data recorded.'),
       ],
     );

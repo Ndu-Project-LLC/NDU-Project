@@ -1,13 +1,18 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/utils/download_helper_stub.dart'
+    if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
+    as dl;
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/widgets/launch_modal.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 const double _defaultColumnWidth = 160;
 const double _tableHorizontalPadding = 20;
@@ -124,20 +129,12 @@ class LaunchDataTable extends StatefulWidget {
   /// Callback when CSV rows are imported. Supports synchronous and async saves.
   final FutureOr<void> Function(List<Map<String, String>>)? onCsvImport;
 
-
-
   @override
   State<LaunchDataTable> createState() => _LaunchDataTableState();
 }
 
 class _LaunchDataTableState extends State<LaunchDataTable> {
   final TextEditingController _searchController = TextEditingController();
-
-  bool get _hasActions =>
-      widget.onAdd != null ||
-      widget.onAddValues != null ||
-      widget.onImport != null ||
-      widget.csvColumns != null;
 
   @override
   void dispose() {
@@ -166,12 +163,14 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildCardHeader(context),
-          if (widget.onSearch != null || _hasActions) _buildActionBar(context),
+          _buildActionBar(context),
           if (widget.rowCount == 0) _buildEmpty() else _buildRows(context),
         ],
       ),
     );
-  }  Widget _buildCardHeader(BuildContext context) {
+  }
+
+  Widget _buildCardHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
       child: Column(
@@ -201,11 +200,12 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
   }
 
   Widget _buildActionBar(BuildContext context) {
+    final hasSearch = widget.onSearch != null;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Row(
         children: [
-          if (widget.onSearch != null)
+          if (hasSearch)
             Expanded(
               child: Container(
                 height: 44,
@@ -218,7 +218,8 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                   children: [
                     const Padding(
                       padding: EdgeInsets.only(left: 12),
-                      child: Icon(Icons.search, size: 20, color: Color(0xFF9CA3AF)),
+                      child: Icon(Icons.search,
+                          size: 20, color: Color(0xFF9CA3AF)),
                     ),
                     Expanded(
                       child: TextField(
@@ -243,7 +244,8 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                     ),
                     const Padding(
                       padding: EdgeInsets.only(right: 12),
-                      child: Icon(Icons.mic, size: 20, color: Color(0xFFF59E0B)),
+                      child:
+                          Icon(Icons.mic, size: 20, color: Color(0xFFF59E0B)),
                     ),
                   ],
                 ),
@@ -254,7 +256,8 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
             OutlinedButton(
               onPressed: widget.onFilter,
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -275,7 +278,8 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
             ElevatedButton(
               onPressed: () => _showAddDialog(context),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 backgroundColor: const Color(0xFFF59E0B),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -301,6 +305,21 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
             const SizedBox(width: 8),
           ],
           if (widget.csvColumns != null && widget.onCsvImport != null) ...[
+            OutlinedButton.icon(
+              onPressed: () => _downloadTemplate(context),
+              icon: const Icon(Icons.download_outlined, size: 16),
+              label: const Text('Download Template'),
+              style: OutlinedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                foregroundColor: const Color(0xFF059669),
+                side: const BorderSide(color: Color(0xFF6EE7B7)),
+                backgroundColor: const Color(0xFFECFDF5),
+              ),
+            ),
+            const SizedBox(width: 8),
             OutlinedButton.icon(
               onPressed: () => _showCsvImportDialog(context),
               icon: const Icon(Icons.upload_file_outlined, size: 16),
@@ -331,6 +350,114 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
               ),
             ),
           ],
+          const SizedBox(width: 8),
+          if (!hasSearch) const Spacer(),
+          _ExpandTableChip(onTap: () => _openFullScreen(context)),
+        ],
+      ),
+    );
+  }
+
+  void _openFullScreen(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    Navigator.of(context).push(
+      PageRouteBuilder<void>(
+        opaque: false,
+        barrierColor: Colors.black54,
+        transitionDuration: const Duration(milliseconds: 220),
+        pageBuilder: (ctx, anim, secAnim) {
+          return Scaffold(
+            backgroundColor:
+                isDark ? const Color(0xFF0B1220) : const Color(0xFFF1F5F9),
+            appBar: AppBar(
+              title: Text(
+                widget.title,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              leading: IconButton(
+                tooltip: 'Close',
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(ctx).maybePop(),
+              ),
+              actions: [
+                IconButton(
+                  tooltip: 'Exit full screen',
+                  icon: const Icon(Icons.fullscreen_exit),
+                  onPressed: () => Navigator.of(ctx).maybePop(),
+                ),
+              ],
+            ),
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFE5E7EB),
+                    ),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: SingleChildScrollView(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth: MediaQuery.of(ctx).size.width - 32,
+                        ),
+                        child: _buildRowsForFullScreen(ctx),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+        transitionsBuilder: (ctx, anim, secAnim, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(
+              parent: anim,
+              curve: Curves.easeOutCubic,
+            ),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRowsForFullScreen(BuildContext context) {
+    final rows =
+        List.generate(widget.rowCount, (i) => widget.cellBuilder(context, i));
+    final effectiveColumns = _resolveColumns(rows);
+    final hasRowActions = rows.any(
+      (row) =>
+          row is LaunchDataRow &&
+          (row.onDelete != null || row.onEdit != null || row.onKazAi != null),
+    );
+    // Use a wide fixed width for full-screen so all columns are visible.
+    final minTableWidth = _minTableWidth(effectiveColumns, hasRowActions);
+    final tableWidth = minTableWidth + 320; // breathing room in full-screen
+
+    return _TableLayoutInherited(
+      tableWidth: tableWidth,
+      columns: effectiveColumns,
+      hasRowActions: hasRowActions,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildColumnHeaders(tableWidth, effectiveColumns, hasRowActions),
+          for (int i = 0; i < rows.length; i++) ...[
+            rows[i],
+            if (i < rows.length - 1)
+              const Divider(
+                  height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+          ],
         ],
       ),
     );
@@ -345,6 +472,30 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
     );
     if (result != null && result.isNotEmpty) {
       await widget.onCsvImport!(result);
+    }
+  }
+
+  /// Generates and downloads a CSV template file matching this table's
+  /// `csvColumns`. The template includes a comment row with hints, the
+  /// header row, and 1-2 sample rows so users know exactly what format
+  /// the Import CSV dialog expects.
+  void _downloadTemplate(BuildContext context) {
+    if (widget.csvColumns == null || widget.csvColumns!.isEmpty) return;
+
+    final template = CsvImportHelper.generateTemplate(widget.csvColumns!);
+    final filename = CsvImportHelper.templateFilename(widget.title);
+    final bytes = utf8.encode(template);
+    dl.downloadFile(bytes, filename, mimeType: 'text/csv');
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Template downloaded: $filename'),
+          backgroundColor: const Color(0xFF059669),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 
@@ -388,12 +539,18 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
   Widget _buildRows(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final rows = List.generate(widget.rowCount, (i) => widget.cellBuilder(context, i));
+        // Build rows once for column measurement. Each row is then wrapped in
+        // a RepaintBoundary so that typing/editing in one cell only repaints
+        // that single row instead of the whole table.
+        final rows = List.generate(
+            widget.rowCount, (i) => widget.cellBuilder(context, i));
         final effectiveColumns = _resolveColumns(rows);
         final hasRowActions = rows.any(
           (row) =>
               row is LaunchDataRow &&
-              (row.onDelete != null || row.onEdit != null || row.onKazAi != null),
+              (row.onDelete != null ||
+                  row.onEdit != null ||
+                  row.onKazAi != null),
         );
         final minTableWidth = _minTableWidth(effectiveColumns, hasRowActions);
         final tableWidth = constraints.maxWidth > minTableWidth
@@ -411,12 +568,27 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
               children: [
                 _buildColumnHeaders(
                     tableWidth, effectiveColumns, hasRowActions),
-                for (int i = 0; i < rows.length; i++) ...[
-                  rows[i],
-                  if (i < rows.length - 1)
-                    const Divider(
-                        height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
-                ],
+                // Use a lazily-built list body so large tables don't lay out
+                // every row up front; only visible rows are mounted.
+                if (rows.isEmpty)
+                  _buildEmpty()
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: rows.length * 2 - 1,
+                    itemBuilder: (context, idx) {
+                      if (idx.isOdd) {
+                        return const Divider(
+                            height: 1, thickness: 1, color: Color(0xFFF1F5F9));
+                      }
+                      final rowIdx = idx ~/ 2;
+                      return RepaintBoundary(
+                        key: ValueKey('launch_row_$rowIdx'),
+                        child: rows[rowIdx],
+                      );
+                    },
+                  ),
               ],
             ),
           ),
@@ -461,7 +633,7 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
       return sum + (col.width ?? _defaultColumnWidth);
     });
     final gapWidth = columns.isEmpty ? 0 : _columnGap * (columns.length - 1);
-    final rowPadding = _tableHorizontalPadding * 2;
+    const rowPadding = _tableHorizontalPadding * 2;
     final actionWidth = hasRowActions ? _actionColumnWidth : 0.0;
     return columnWidths + gapWidth + rowPadding + actionWidth;
   }
@@ -501,9 +673,9 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
             ),
           ),
           if (hasRowActions)
-            SizedBox(
+            const SizedBox(
               width: _actionColumnWidth,
-              child: const Center(
+              child: Center(
                 child: Text(
                   'Actions',
                   style: TextStyle(
@@ -568,7 +740,9 @@ class _LaunchDataRowState extends State<LaunchDataRow> {
   Widget build(BuildContext context) {
     final tableLayout = _TableLayoutInherited.of(context);
     final columns = tableLayout?.columns;
-    final hasActions = widget.onDelete != null || widget.onEdit != null || widget.onKazAi != null;
+    final hasActions = widget.onDelete != null ||
+        widget.onEdit != null ||
+        widget.onKazAi != null;
     return MouseRegion(
       onEnter: (_) => Future.microtask(() {
         if (mounted) setState(() => _hovering = true);
@@ -629,7 +803,8 @@ class _LaunchDataRowState extends State<LaunchDataRow> {
                               ),
                             ),
                           if (widget.onKazAi != null &&
-                              (widget.onEdit != null || widget.onDelete != null))
+                              (widget.onEdit != null ||
+                                  widget.onDelete != null))
                             const SizedBox(width: 2),
                           if (widget.onEdit != null)
                             Tooltip(
@@ -763,9 +938,9 @@ class _LaunchEditableCellState extends State<LaunchEditableCell> {
     if (!isEditing) {
       return Align(
         alignment: Alignment.center,
-        child:        Text(
+        child: WrappedText(
           widget.value.isEmpty ? '—' : widget.value,
-          softWrap: true,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 13,
             color: widget.value.isEmpty
@@ -1276,7 +1451,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
         child: LaunchModalShell(
           icon: Icons.add_rounded,
           title: 'Add to ${widget.title}',
-          subtitle: 'Fill in the fields below to add a new entry to this table.',
+          subtitle:
+              'Fill in the fields below to add a new entry to this table.',
           body: AnimatedBuilder(
             animation: _fadeIn,
             builder: (context, child) {
@@ -1320,7 +1496,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
         AnimatedBuilder(
           animation: _fadeIn,
           builder: (context, child) {
-            final progress = (_fadeIn.value * 1000 - delay).clamp(0.0, 1.0) / 1.0;
+            final progress =
+                (_fadeIn.value * 1000 - delay).clamp(0.0, 1.0) / 1.0;
             final slide = Curves.easeOut.transform(progress.clamp(0.0, 1.0));
             return Opacity(
               opacity: progress.clamp(0.0, 1.0),
@@ -1357,7 +1534,9 @@ class _AddItemDialogState extends State<_AddItemDialog>
               const SizedBox(width: 4),
               const Text('*',
                   style: TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFEF4444))),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFEF4444))),
             ],
           ],
         ),
@@ -1409,8 +1588,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
                       ? null
                       : () => _generateFieldWithAi(col.label),
                   padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(
-                      minWidth: 28, minHeight: 28),
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
                 ),
                 // Clear-all button — deletes all content
                 if ((_controllers[col.label]?.text ?? '').isNotEmpty)
@@ -1423,8 +1602,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
                       setState(() {});
                     },
                     padding: const EdgeInsets.all(4),
-                    constraints: const BoxConstraints(
-                        minWidth: 28, minHeight: 28),
+                    constraints:
+                        const BoxConstraints(minWidth: 28, minHeight: 28),
                   ),
               ],
             ),
@@ -1569,9 +1748,8 @@ class _AddItemDialogState extends State<_AddItemDialog>
             : const Icon(Icons.check_rounded, size: 16),
         label: Text(_showSuccess ? 'Added!' : 'Add Item'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: _showSuccess
-              ? const Color(0xFF10B981)
-              : const Color(0xFFFFC107),
+          backgroundColor:
+              _showSuccess ? const Color(0xFF10B981) : const Color(0xFFFFC107),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1677,4 +1855,50 @@ InputDecoration _modalInputDecoration({String? hint, String? error}) {
       borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.6),
     ),
   );
+}
+
+/// Small "Expand" chip used in [LaunchDataTable]'s action bar.
+/// Tapping it opens the table in a full-screen dialog.
+class _ExpandTableChip extends StatelessWidget {
+  final VoidCallback onTap;
+  const _ExpandTableChip({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Tooltip(
+          message: 'Expand table to full screen',
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.fullscreen,
+                    size: 16, color: Color(0xFF4B5563)),
+                SizedBox(width: 6),
+                Text(
+                  'Expand',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

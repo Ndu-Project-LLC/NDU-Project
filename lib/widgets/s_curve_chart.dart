@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class SCurveChart extends StatelessWidget {
-  const SCurveChart({super.key, 
+  const SCurveChart({
+    super.key,
     required this.plannedData,
     required this.actualData,
     required this.startDate,
@@ -26,9 +27,9 @@ class SCurveChart extends StatelessWidget {
         height: height,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
+          color: Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: Color(0xFFE5E7EB)),
         ),
         child: const Center(
           child: Text(
@@ -46,7 +47,7 @@ class SCurveChart extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,15 +63,17 @@ class SCurveChart extends StatelessWidget {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                return CustomPaint(
-                  size: Size(constraints.maxWidth, constraints.maxHeight),
-                  painter: _SCurvePainter(
-                    plannedData: plannedData,
-                    actualData: actualData,
-                    startDate: startDate,
-                    endDate: endDate,
-                    plannedColor: plannedColor,
-                    actualColor: actualColor,
+                return RepaintBoundary(
+                  child: CustomPaint(
+                    size: Size(constraints.maxWidth, constraints.maxHeight),
+                    painter: _SCurvePainter(
+                      plannedData: plannedData,
+                      actualData: actualData,
+                      startDate: startDate,
+                      endDate: endDate,
+                      plannedColor: plannedColor,
+                      actualColor: actualColor,
+                    ),
                   ),
                 );
               },
@@ -96,7 +99,8 @@ class _LegendItem extends StatelessWidget {
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+          decoration: BoxDecoration(
+              color: color, borderRadius: BorderRadius.circular(2)),
         ),
         const SizedBox(width: 6),
         Text(
@@ -148,7 +152,8 @@ class _SCurvePainter extends CustomPainter {
 
     for (int i = 0; i <= 4; i++) {
       final y = origin.dy - (i * chartHeight / 4);
-      canvas.drawLine(Offset(origin.dx, y), Offset(origin.dx + chartWidth, y), gridPaint);
+      canvas.drawLine(
+          Offset(origin.dx, y), Offset(origin.dx + chartWidth, y), gridPaint);
     }
 
     // Draw axes
@@ -156,8 +161,10 @@ class _SCurvePainter extends CustomPainter {
       ..color = const Color(0xFF9CA3AF)
       ..strokeWidth = 2;
 
-    canvas.drawLine(origin, Offset(origin.dx + chartWidth, origin.dy), axisPaint);
-    canvas.drawLine(origin, Offset(origin.dx, origin.dy - chartHeight), axisPaint);
+    canvas.drawLine(
+        origin, Offset(origin.dx + chartWidth, origin.dy), axisPaint);
+    canvas.drawLine(
+        origin, Offset(origin.dx, origin.dy - chartHeight), axisPaint);
 
     // Draw Y-axis labels
     for (int i = 0; i <= 4; i++) {
@@ -171,7 +178,10 @@ class _SCurvePainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
-      textPainter.paint(canvas, Offset(origin.dx - textPainter.width - 6, y - textPainter.height / 2));
+      textPainter.paint(
+          canvas,
+          Offset(
+              origin.dx - textPainter.width - 6, y - textPainter.height / 2));
     }
 
     // Draw X-axis labels (months)
@@ -184,7 +194,8 @@ class _SCurvePainter extends CustomPainter {
     }
 
     for (int i = 0; i < months.length; i++) {
-      final x = origin.dx + (i * chartWidth / (months.length - 1).clamp(1, 100));
+      final x =
+          origin.dx + (i * chartWidth / (months.length - 1).clamp(1, 100));
       final textPainter = TextPainter(
         text: TextSpan(
           text: months[i],
@@ -193,17 +204,20 @@ class _SCurvePainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
-      textPainter.paint(canvas, Offset(x - textPainter.width / 2, origin.dy + 6));
+      textPainter.paint(
+          canvas, Offset(x - textPainter.width / 2, origin.dy + 6));
     }
 
     // Draw planned curve
     if (plannedData.isNotEmpty) {
-      _drawCurve(canvas, origin, chartWidth, chartHeight, totalDays, maxCost, plannedData, plannedColor);
+      _drawCurve(canvas, origin, chartWidth, chartHeight, totalDays, maxCost,
+          plannedData, plannedColor);
     }
 
     // Draw actual curve
     if (actualData.isNotEmpty) {
-      _drawCurve(canvas, origin, chartWidth, chartHeight, totalDays, maxCost, actualData, actualColor);
+      _drawCurve(canvas, origin, chartWidth, chartHeight, totalDays, maxCost,
+          actualData, actualColor);
     }
   }
 
@@ -249,7 +263,20 @@ class _SCurvePainter extends CustomPainter {
   }
 
   String _monthAbbreviation(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     return months[month - 1];
   }
 

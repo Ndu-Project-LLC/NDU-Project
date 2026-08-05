@@ -20,6 +20,8 @@ import 'package:ndu_project/utils/file_upload_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 class BackendDesignScreen extends StatefulWidget {
  const BackendDesignScreen({super.key});
 
@@ -85,8 +87,8 @@ class _BackendDesignScreenState extends State<BackendDesignScreen> {
  ];
  String _quickComponentType = 'Service';
  String _quickComponentStatus = 'Planned';
- String _quickComponentOwner = 'Platform';
- String _quickEntityOwner = 'Operations';
+ final String _quickComponentOwner = 'Platform';
+ final String _quickEntityOwner = 'Operations';
 
  List<String> _ownerOptions({String? currentValue}) {
  final data = ProjectDataHelper.getData(context);
@@ -341,14 +343,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  LaunchPhaseNavigation(
  backLabel: 'Back: UI/UX Design',
  nextLabel: 'Next: Engineering',
- onBack: () => Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const UiUxDesignScreen())),
- onNext: () => Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const EngineeringDesignScreen())),
+ onBack: () => context.push('/ui-ux-design'),onNext: () => context.push('/engineering-design'),
  ),
  ],
  ),
@@ -445,9 +440,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: double.infinity,
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
- color: color.withOpacity(0.04),
+ color: color.withValues(alpha: 0.04),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.12)),
+ border: Border.all(color: color.withValues(alpha: 0.12)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,7 +452,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(icon, size: 16, color: color),
@@ -569,7 +564,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFF10B981).withOpacity(0.12),
+ color: const Color(0xFF10B981).withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -943,9 +938,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
  } catch (e) {
  debugPrint('KAZ AI generation failed: $e');
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+ if (mounted) {
+   ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(content: Text('KAZ AI failed: $e'), backgroundColor: const Color(0xFFDC2626)),
  );
+ }
  } finally {
  if (mounted) setState(() => _isKazAiLoadingRowId = null);
  }
@@ -978,18 +975,20 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (cleaned.isNotEmpty) setDialogState(() => controller.text = cleaned);
  } catch (e) {
  debugPrint('KAZ AI field generation failed: $e');
- if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+ if (mounted) {
+   ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(content: Text('KAZ AI failed: $e'), backgroundColor: const Color(0xFFDC2626)),
  );
+ }
  }
  if (context.mounted) setLocalState(() => isLoading = false);
  },
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: const Color(0xFFF59E0B).withOpacity(0.1),
+ color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
+ border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -1013,9 +1012,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  constraints: const BoxConstraints(maxWidth: 140),
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: color.withOpacity(0.22)),
+ border: Border.all(color: color.withValues(alpha: 0.22)),
  ),
  child: Text(
  label,
@@ -1045,12 +1044,12 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  begin: Alignment.topLeft,
  end: Alignment.bottomRight,
  colors: [
- accent.withOpacity(0.08),
+ accent.withValues(alpha: 0.08),
  Colors.white,
  ],
  ),
  borderRadius: BorderRadius.circular(18),
- border: Border.all(color: accent.withOpacity(0.18)),
+ border: Border.all(color: accent.withValues(alpha: 0.18)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1061,7 +1060,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 40,
  height: 40,
  decoration: BoxDecoration(
- color: accent.withOpacity(0.12),
+ color: accent.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(14),
  ),
  child: Icon(icon, color: accent),
@@ -1171,7 +1170,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 6),
  DropdownButtonFormField<String>(
- value: value,
+ initialValue: value,
  items: items
  .map(
  (item) => DropdownMenuItem<String>(
@@ -1526,7 +1525,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: type,
+ initialValue: type,
  items: _componentTypes
  .map((option) =>
  DropdownMenuItem(value: option, child: Text(option)))
@@ -1564,7 +1563,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: owner,
+ initialValue: owner,
  items: ownerOptions
  .map((option) =>
  DropdownMenuItem(value: option, child: Text(option)))
@@ -1580,7 +1579,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: _componentStatuses
  .map((option) =>
  DropdownMenuItem(value: option, child: Text(option)))
@@ -1681,7 +1680,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: protocol,
+ initialValue: protocol,
  items: _protocolOptions
  .map((option) =>
  DropdownMenuItem(value: option, child: Text(option)))
@@ -1810,7 +1809,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: owner,
+ initialValue: owner,
  items: ownerOptions
  .map((option) =>
  DropdownMenuItem(value: option, child: Text(option)))
@@ -1826,7 +1825,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: _documentStatuses
  .map((option) =>
  DropdownMenuItem(value: option, child: Text(option)))
@@ -2060,7 +2059,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: owner,
+ initialValue: owner,
  items: ownerOptions
  .map((option) =>
  DropdownMenuItem(value: option, child: Text(option)))
@@ -2304,7 +2303,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- return _EditableTable(
+ return FullScreenTableWrapper(
+ title: 'Backend Components',
+ child: _EditableTable(
  columns: columns,
  rows: [
  for (final entry in _components)
@@ -2363,6 +2364,67 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  ),
  ],
+ ),
+ tableBuilder: (fsContext) => _EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _components)
+ _EditableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _TextCell(
+ value: entry.name,
+ fieldKey: '${entry.id}_name',
+ hintText: 'Component',
+ onChanged: (value) =>
+ _updateComponent(entry.copyWith(name: value)),
+ ),
+ _DropdownCell(
+ value: entry.type,
+ fieldKey: '${entry.id}_type',
+ options: _componentTypes,
+ onChanged: (value) =>
+ _updateComponent(entry.copyWith(type: value)),
+ ),
+ _TextCell(
+ value: entry.responsibility,
+ fieldKey: '${entry.id}_responsibility',
+ hintText: 'Responsibility',
+ maxLines: 2,
+ onChanged: (value) =>
+ _updateComponent(entry.copyWith(responsibility: value)),
+ ),
+ _DropdownCell(
+ value: entry.owner,
+ fieldKey: '${entry.id}_owner',
+ options: _ownerOptions(currentValue: entry.owner),
+ onChanged: (value) =>
+ _updateComponent(entry.copyWith(owner: value)),
+ ),
+ _DropdownCell(
+ value: entry.status,
+ fieldKey: '${entry.id}_status',
+ options: _componentStatuses,
+ onChanged: (value) =>
+ _updateComponent(entry.copyWith(status: value)),
+ ),
+ _WidgetCell(
+ child: _buildKazAiRowButton(
+ 'component_${entry.id}',
+ 'component description',
+ 'component',
+ () => _updateComponent(entry.copyWith(responsibility: 'AI-generated description')),
+ ),
+ ),
+ _EditCell(
+ onPressed: () => _openComponentDialog(existing: entry),
+ ),
+ _DeleteCell(onPressed: () => _deleteComponent(entry.id)),
+ ],
+ ),
+ ],
+ ),
  );
  }
 
@@ -2385,7 +2447,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  }
 
- return _EditableTable(
+ return FullScreenTableWrapper(
+ title: 'Backend Fields',
+ child: _EditableTable(
  columns: columns,
  rows: [
  for (final entry in _fields)
@@ -2443,6 +2507,66 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  ),
  ],
+ ),
+ tableBuilder: (fsContext) => _EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _fields)
+ _EditableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _TextCell(
+ value: entry.table,
+ fieldKey: '${entry.id}_table',
+ hintText: 'Entity',
+ onChanged: (value) =>
+ _updateField(entry.copyWith(table: value)),
+ ),
+ _TextCell(
+ value: entry.field,
+ fieldKey: '${entry.id}_field',
+ hintText: 'Field',
+ onChanged: (value) =>
+ _updateField(entry.copyWith(field: value)),
+ ),
+ _TextCell(
+ value: entry.type,
+ fieldKey: '${entry.id}_type',
+ hintText: 'Type',
+ onChanged: (value) => _updateField(entry.copyWith(type: value)),
+ ),
+ _TextCell(
+ value: entry.constraints,
+ fieldKey: '${entry.id}_constraints',
+ hintText: 'Constraints',
+ onChanged: (value) =>
+ _updateField(entry.copyWith(constraints: value)),
+ ),
+ _TextCell(
+ value: entry.notes,
+ fieldKey: '${entry.id}_notes',
+ hintText: 'Notes',
+ maxLines: 2,
+ onChanged: (value) =>
+ _updateField(entry.copyWith(notes: value)),
+ ),
+ _WidgetCell(
+ child: _buildKazAiRowButton(
+ 'field_${entry.id}',
+ 'field notes',
+ 'database field',
+ () => _updateField(entry.copyWith(notes: 'AI-generated notes')),
+ ),
+ ),
+ _EditCell(
+ onPressed: () => _openFieldDialog(existing: entry),
+ ),
+ _DeleteCell(onPressed: () => _deleteField(entry.id)),
+ ],
+ ),
+ ],
+ ),
  );
  }
 }
@@ -2472,7 +2596,7 @@ class _PanelShell extends StatelessWidget {
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -2901,7 +3025,7 @@ class _BackendInfrastructureSnapshot {
  ),
  ];
 
- final pipelineStages = const [
+ const pipelineStages = [
  _PipelineStageItem(
  environment: 'Staging',
  label: 'Validate',
@@ -3343,7 +3467,7 @@ class _DropdownCell extends StatelessWidget {
  final resolved = options.contains(value) ? value : options.first;
  return DropdownButtonFormField<String>(
  key: ValueKey(fieldKey),
- value: resolved,
+ initialValue: resolved,
  items: options
  .map((option) => DropdownMenuItem(value: option, child: Text(option)))
  .toList(),

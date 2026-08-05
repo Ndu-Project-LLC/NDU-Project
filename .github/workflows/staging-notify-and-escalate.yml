@@ -1,0 +1,292 @@
+name: Staging Notify & Escalate
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Trigger: when auto-deploy-staging.yml completes successfully.
+# SILENT_ACTORS gate: if the actor who triggered the deploy is in
+# SILENT_ACTORS, the entire workflow skips (no Issue, no @mentions, no
+# escalation gates, no promotion PR).
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  workflow_run:
+    workflows: ["Auto-Deploy Staging"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read
+
+concurrency:
+  group: staging-notify
+  cancel-in-progress: false
+
+jobs:
+  # ── SILENT_ACTORS GATE ────────────────────────────────────────────────────
+  # Note: when triggered via workflow_run, github.actor is the user who pushed
+  # to main (the original triggerer), NOT the workflow_run event itself.
+  gate:
+    name: Silent-actor gate
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+      actor: ${{ steps.check.outputs.actor }}
+      sha: ${{ steps.check.outputs.sha }}
+    steps:
+      - id: check
+        run: |
+          set -eu
+          # When triggered by workflow_run, github.actor is the workflow_run
+          # event's actor (the bot or user who triggered the upstream push).
+          # We resolve the original pusher via the workflow_run API.
+          ACTOR="${{ github.actor }}"
+          SHA="${{ github.sha }}"
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            ACTOR="${{ github.event.workflow_run.actor.login }}"
+            SHA="${{ github.event.workflow_run.head_sha }}"
+          fi
+          SILENT="${{ vars.SILENT_ACTORS }}"
+          if [ -z "$SILENT" ]; then
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "No SILENT_ACTORS variable set — running normally."
+            exit 0
+          fi
+          if echo ",$SILENT," | grep -iq ",$ACTOR,"; then
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping entire workflow — @$ACTOR is in SILENT_ACTORS."
+          else
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "@$ACTOR not in SILENT_ACTORS — running normally."
+          fi
+
+  # ── B.1: NOTIFY STAKEHOLDERS ──────────────────────────────────────────────
+  # Opens a tracking Issue that @mentions stakeholders (from STAKEHOLDER_GITHUB_LOGINS
+  # repo variable, default @NduProject). GitHub natively emails everyone @mentioned.
+  notify-stakeholders:
+    name: B.1 Notify stakeholders
+    needs: gate
+    if: needs.gate.outputs.should_skip != 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      issue_number: ${{ steps.create_issue.outputs.issue_number }}
+      issue_url: ${{ steps.create_issue.outputs.issue_url }}
+    steps:
+      - name: Open tracking Issue
+        id: create_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const stakeholders = process.env.STAKEHOLDER_LOGINS || '@NduProject';
+            const actor = '${{ needs.gate.outputs.actor }}';
+            const sha = '${{ needs.gate.outputs.sha }}';
+            const shortSha = sha.slice(0, 7);
+            const repo = '${{ github.repository }}';
+            const stagingUrl = 'https://staging.nduproject.com/';
+
+            const body = [
+              `## Staging deploy complete — review requested`,
+              ``,
+              `**Deployed by:** @${actor}`,
+              `**Commit:** [\`${shortSha}\`](https://github.com/${repo}/commit/${sha})`,
+              `**Live site:** ${stagingUrl}`,
+              ``,
+              `---`,
+              ``,
+              `### What changed`,
+              ``,
+              `View the full commit history:`,
+              `https://github.com/${repo}/commits/main`,
+              ``,
+              `### Review instructions`,
+              ``,
+              `1. Open ${stagingUrl}`,
+              `2. Smoke-test the affected feature(s)`,
+              `3. Approve by adding a 👍 reaction to this Issue, OR reject by leaving a comment`,
+              `4. On approval, the staging-review environment gate will pass automatically`,
+              ``,
+              `### Stakeholders`,
+              ``,
+              `${stakeholders}`,
+              ``,
+              `---`,
+              `_This Issue was opened automatically by the staging-notify-and-escalate workflow._`,
+            ].join('\n');
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[STAGING REVIEW] Deploy ${shortSha} — please review`,
+              body: body,
+              labels: ['staging-review', 'auto-generated'],
+            });
+
+            core.setOutput('issue_number', issue.data.number);
+            core.setOutput('issue_url', issue.data.html_url);
+          env:
+            STAKEHOLDER_LOGINS: ${{ vars.STAKEHOLDER_GITHUB_LOGINS }}
+
+      - name: Summary
+        run: |
+          echo "### Staging notification Issue opened" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Issue #${{ steps.create_issue.outputs.issue_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "URL: ${{ steps.create_issue.outputs.issue_url }}" >> $GITHUB_STEP_SUMMARY
+
+  # ── B.2: STAGING APPROVAL GATE ────────────────────────────────────────────
+  # Pauses at the 'staging-review' GitHub Environment. Required reviewers
+  # (configured in repo settings) must approve before the workflow continues.
+  staging-approval-gate:
+    name: B.2 Staging-review gate
+    needs: [gate, notify-stakeholders]
+    if: needs.gate.outputs.should_skip != 'true'
+    environment:
+      name: staging-review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Approval confirmed
+        run: |
+          echo "Staging review approved."
+          echo "Posting confirmation comment on tracking Issue."
+      - name: Post approval comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ needs.notify-stakeholders.outputs.issue_number }},
+              body: [
+                `✅ **Staging review approved** by @${{ github.actor }}.`,
+                ``,
+                `Notifying final approver next.`,
+              ].join('\n'),
+            });
+
+  # ── B.3: NOTIFY CHIMMIE ───────────────────────────────────────────────────
+  # Posts a comment on the SAME tracking Issue @mentioning chimmie. GitHub
+  # emails chimmie the comment natively.
+  notify-chimmie:
+    name: B.3 Notify chimmie
+    needs: [gate, notify-stakeholders, staging-approval-gate]
+    if: needs.gate.outputs.should_skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request final approval from chimmie
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const finalApprover = process.env.FINAL_APPROVER_LOGIN || '@chimmie';
+            const issueNumber = ${{ needs.notify-stakeholders.outputs.issue_number }};
+            const sha = '${{ needs.gate.outputs.sha }}';
+            const shortSha = sha.slice(0, 7);
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: [
+                `${finalApprover} — **final approval requested**`,
+                ``,
+                `Staging review has passed for deploy \`${shortSha}\`.`,
+                `Please approve the \`final-approval\` environment gate to authorize production promotion.`,
+                ``,
+                `Issue: #${issueNumber}`,
+              ].join('\n'),
+            });
+          env:
+            FINAL_APPROVER_LOGIN: ${{ vars.FINAL_APPROVER_LOGIN }}
+
+  # ── B.4: FINAL APPROVAL GATE ──────────────────────────────────────────────
+  # Pauses at the 'final-approval' GitHub Environment. Required reviewer is
+  # chimmie. Once approved, the workflow continues to open the promotion PR.
+  final-approval-gate:
+    name: B.4 Final-approval gate
+    needs: [gate, notify-chimmie]
+    if: needs.gate.outputs.should_skip != 'true'
+    environment:
+      name: final-approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Final approval confirmed
+        run: |
+          echo "Final approval granted."
+      - name: Post success comment + close Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = ${{ needs.notify-stakeholders.outputs.issue_number }};
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: [
+                `✅ **Final approval granted** by @${{ github.actor }}.`,
+                ``,
+                `Opening promotion PR (main → production) now.`,
+              ].join('\n'),
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              state: 'closed',
+              state_reason: 'completed',
+            });
+
+  # ── B.5: OPEN PROMOTION PR ────────────────────────────────────────────────
+  # Opens a PR from main → production with --reviewer NduProject.
+  # PR body links back to the tracking Issue for audit trail.
+  open-promotion-pr:
+    name: B.5 Open promotion PR
+    needs: [gate, final-approval-gate]
+    if: needs.gate.outputs.should_skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Open promotion PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA="${{ needs.gate.outputs.sha }}"
+          SHORT="${SHA:0:7}"
+          ISSUE_NUM="${{ needs.notify-stakeholders.outputs.issue_number }}"
+          BODY=$(cat <<EOF
+          ## Promote staging → production
+
+          This PR promotes deploy \`$SHORT\` to production after both
+          staging review and final approval were granted.
+
+          - **Source commit:** \`$SHORT\`
+          - **Tracking Issue:** #$ISSUE_NUM
+          - **Staging URL:** https://staging.nduproject.com/
+          - **Production URL (after merge):** https://nduproject.com/
+
+          ### Reviewer
+
+          \@NduProject — please review and merge.
+
+          ---
+
+          _Auto-generated by staging-notify-and-escalate workflow._
+          EOF
+          )
+          gh pr create \
+            --base production \
+            --head main \
+            --title "Promote $SHORT to production" \
+            --body "$BODY" \
+            --reviewer NduProject \
+            --label "production-promotion"

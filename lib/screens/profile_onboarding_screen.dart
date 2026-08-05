@@ -486,7 +486,7 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  child: GestureDetector(
  onTap: () {}, // swallow taps
  child: Container(
- color: Colors.black.withOpacity(0.74 * _entranceOpacity.value),
+ color: Colors.black.withValues(alpha: 0.74 * _entranceOpacity.value),
  child: BackdropFilter(
  filter: ImageFilter.blur(
  sigmaX: 24 * _entranceOpacity.value,
@@ -531,15 +531,15 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  stops: [0.0, 0.7],
  ),
  borderRadius: BorderRadius.circular(24),
- border: Border.all(color: _border.withOpacity(0.4), width: 1),
+ border: Border.all(color: _border.withValues(alpha: 0.4), width: 1),
  boxShadow: [
  BoxShadow(
- color: _gold.withOpacity(0.10),
+ color: _gold.withValues(alpha: 0.10),
  blurRadius: 80,
  spreadRadius: 0,
  ),
  BoxShadow(
- color: Colors.black.withOpacity(0.55),
+ color: Colors.black.withValues(alpha: 0.55),
  blurRadius: 60,
  offset: const Offset(0, 24),
  ),
@@ -621,7 +621,7 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  decoration: BoxDecoration(
  color: _bgSurface,
  borderRadius: BorderRadius.circular(20),
- border: Border.all(color: _border.withOpacity(0.3), width: 1),
+ border: Border.all(color: _border.withValues(alpha: 0.3), width: 1),
  ),
  child: RichText(
  text: TextSpan(
@@ -668,9 +668,9 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  return Container(
  padding: const EdgeInsets.fromLTRB(20, 14, 20, 22),
  decoration: BoxDecoration(
- color: _bgSurface.withOpacity(0.85),
+ color: _bgSurface.withValues(alpha: 0.85),
  border: Border(
- top: BorderSide(color: _border.withOpacity(0.3), width: 1),
+ top: BorderSide(color: _border.withValues(alpha: 0.3), width: 1),
  ),
  ),
  child: Column(
@@ -736,9 +736,9 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
  decoration: BoxDecoration(
- color: _gold.withOpacity(0.10),
+ color: _gold.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: _gold.withOpacity(0.30), width: 1),
+ border: Border.all(color: _gold.withValues(alpha: 0.30), width: 1),
  ),
  child: Text(
  eyebrow.toUpperCase(),
@@ -791,22 +791,22 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  children: [
  const SizedBox(height: 4),
  // Logo branding
- Row(
+ const Row(
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
- const Icon(Icons.trending_up_rounded,
+ Icon(Icons.trending_up_rounded,
  color: _gold, size: 32),
- const SizedBox(width: 8),
+ SizedBox(width: 8),
  Text.rich(
  TextSpan(
  text: 'NDU ',
- style: const TextStyle(
+ style: TextStyle(
  color: _textPrimary,
  fontSize: 24,
  fontWeight: FontWeight.w800,
  letterSpacing: -0.5,
  ),
- children: const [
+ children: [
  TextSpan(
  text: 'PROJECT',
  style: TextStyle(color: _gold),
@@ -835,7 +835,7 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  gradient: LinearGradient(
  colors: [
  Colors.transparent,
- _gold.withOpacity(0.8),
+ _gold.withValues(alpha: 0.8),
  Colors.transparent,
  ],
  ),
@@ -871,10 +871,10 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  ],
  ),
  const SizedBox(height: 22),
- Text(
+ const Text(
  'A few quick questions (about 2 minutes) will help us tailor your workspace — show the right templates, the right dashboards, and the right starting point for your first project.',
  textAlign: TextAlign.center,
- style: const TextStyle(
+ style: TextStyle(
  color: _textSecondary,
  fontSize: 15,
  height: 1.6,
@@ -886,21 +886,21 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  width: double.infinity,
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: _bgSurfaceHigh.withOpacity(0.4),
+ color: _bgSurfaceHigh.withValues(alpha: 0.4),
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: _border.withOpacity(0.3), width: 1),
+ border: Border.all(color: _border.withValues(alpha: 0.3), width: 1),
  boxShadow: [
  BoxShadow(
- color: _gold.withOpacity(0.10),
+ color: _gold.withValues(alpha: 0.10),
  blurRadius: 24,
  spreadRadius: 0,
  ),
  ],
  ),
- child: Column(
+ child: const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const Text(
+ Text(
  'WHAT HAPPENS NEXT',
  style: TextStyle(
  color: _gold,
@@ -909,7 +909,7 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  letterSpacing: 1.5,
  ),
  ),
- const SizedBox(height: 18),
+ SizedBox(height: 18),
  _WelcomeStepRow(
  number: '1',
  title: 'Tell us about you',
@@ -918,7 +918,7 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  isCompleted: false,
  isActive: true,
  ),
- const SizedBox(height: 16),
+ SizedBox(height: 16),
  _WelcomeStepRow(
  number: '2',
  title: 'Pick your project preferences',
@@ -927,7 +927,7 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  isCompleted: false,
  isActive: false,
  ),
- const SizedBox(height: 16),
+ SizedBox(height: 16),
  _WelcomeStepRow(
  number: '3',
  title: 'Tailor your workspace',
@@ -1231,13 +1231,13 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  width: double.infinity,
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
- color: _gold.withOpacity(0.06),
+ color: _gold.withValues(alpha: 0.06),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: _gold.withOpacity(0.25), width: 1),
+ border: Border.all(color: _gold.withValues(alpha: 0.25), width: 1),
  ),
- child: Column(
+ child: const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Row(
  children: [
  Icon(Icons.lightbulb_rounded, color: _gold, size: 18),
@@ -1318,9 +1318,9 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  Container(
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
- color: _bgSurfaceHigh.withOpacity(0.4),
+ color: _bgSurfaceHigh.withValues(alpha: 0.4),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: _border.withOpacity(0.3), width: 1),
+ border: Border.all(color: _border.withValues(alpha: 0.3), width: 1),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1391,13 +1391,13 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  Row(
  children: [
  Icon(Icons.mark_email_read_rounded,
- color: _gold.withOpacity(0.8), size: 14),
+ color: _gold.withValues(alpha: 0.8), size: 14),
  const SizedBox(width: 6),
  Expanded(
  child: Text(
  'Invitation emails are sent immediately from nduproject.tech. Each link expires in 7 days and takes the recipient to the sign-in page.',
  style: TextStyle(
- color: _textSecondary.withOpacity(0.85),
+ color: _textSecondary.withValues(alpha: 0.85),
  fontSize: 11,
  height: 1.5,
  ),
@@ -1561,18 +1561,18 @@ class _ProfileOnboardingScreenState extends State<ProfileOnboardingScreen>
  width: double.infinity,
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
- color: _gold.withOpacity(0.06),
+ color: _gold.withValues(alpha: 0.06),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: _gold.withOpacity(0.25), width: 1),
+ border: Border.all(color: _gold.withValues(alpha: 0.25), width: 1),
  ),
- child: Row(
+ child: const Row(
  children: [
  Icon(Icons.rocket_launch_rounded, color: _gold, size: 22),
- const SizedBox(width: 12),
+ SizedBox(width: 12),
  Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'You\'re ready to launch',
  style: TextStyle(
@@ -1734,7 +1734,7 @@ class _GhostButtonState extends State<_GhostButton> {
  decoration: BoxDecoration(
  color: _hover ? _bgSurfaceHighest : Colors.transparent,
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: _border.withOpacity(0.4), width: 1),
+ border: Border.all(color: _border.withValues(alpha: 0.4), width: 1),
  ),
  child: Row(
  mainAxisSize: widget.fullWidth ? MainAxisSize.max : MainAxisSize.min,
@@ -1809,7 +1809,7 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
  boxShadow: _hover
  ? [
  BoxShadow(
- color: _gold.withOpacity(0.35),
+ color: _gold.withValues(alpha: 0.35),
  blurRadius: 18,
  spreadRadius: 0,
  ),
@@ -1913,13 +1913,13 @@ class _OptionChipState extends State<_OptionChip> {
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
  decoration: BoxDecoration(
  color: widget.selected
- ? _gold.withOpacity(0.12)
+ ? _gold.withValues(alpha: 0.12)
  : (_hover ? _bgSurfaceHigh : _bgSurfaceMid),
  borderRadius: BorderRadius.circular(10),
  border: Border.all(
  color: widget.selected
  ? _gold
- : (_hover ? _border : _border.withOpacity(0.4)),
+ : (_hover ? _border : _border.withValues(alpha: 0.4)),
  width: widget.selected ? 1.5 : 1,
  ),
  ),
@@ -1990,13 +1990,13 @@ class _BigChoiceTileState extends State<_BigChoiceTile> {
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
  color: widget.selected
- ? _gold.withOpacity(0.08)
+ ? _gold.withValues(alpha: 0.08)
  : (_hover ? _bgSurfaceHigh : _bgSurfaceMid),
  borderRadius: BorderRadius.circular(12),
  border: Border.all(
  color: widget.selected
  ? _gold
- : (_hover ? _border : _border.withOpacity(0.4)),
+ : (_hover ? _border : _border.withValues(alpha: 0.4)),
  width: widget.selected ? 1.5 : 1,
  ),
  ),
@@ -2007,7 +2007,7 @@ class _BigChoiceTileState extends State<_BigChoiceTile> {
  height: 40,
  decoration: BoxDecoration(
  color: widget.selected
- ? _gold.withOpacity(0.18)
+ ? _gold.withValues(alpha: 0.18)
  : _bgSurfaceHighest,
  borderRadius: BorderRadius.circular(10),
  ),
@@ -2090,11 +2090,11 @@ class _ToolChipState extends State<_ToolChip> {
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
  decoration: BoxDecoration(
  color: widget.selected
- ? _gold.withOpacity(0.14)
+ ? _gold.withValues(alpha: 0.14)
  : (_hover ? _bgSurfaceHigh : _bgSurfaceMid),
  borderRadius: BorderRadius.circular(8),
  border: Border.all(
- color: widget.selected ? _gold : _border.withOpacity(0.4),
+ color: widget.selected ? _gold : _border.withValues(alpha: 0.4),
  width: widget.selected ? 1.5 : 1,
  ),
  ),
@@ -2186,16 +2186,16 @@ class _SearchableOptionListState extends State<_SearchableOptionList> {
  Container(
  constraints: const BoxConstraints(maxHeight: 280),
  decoration: BoxDecoration(
- color: _bgSurfaceMid.withOpacity(0.4),
+ color: _bgSurfaceMid.withValues(alpha: 0.4),
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: _border.withOpacity(0.3), width: 1),
+ border: Border.all(color: _border.withValues(alpha: 0.3), width: 1),
  ),
  child: ListView.separated(
  shrinkWrap: true,
  padding: const EdgeInsets.symmetric(vertical: 4),
  itemCount: filtered.length,
  separatorBuilder: (_, __) => Divider(
- color: _border.withOpacity(0.2),
+ color: _border.withValues(alpha: 0.2),
  height: 1,
  indent: 12,
  endIndent: 12,
@@ -2430,14 +2430,14 @@ class _InviteChip extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  final borderColor = switch (status) {
- _InviteStatus.sending => _border.withOpacity(0.5),
- _InviteStatus.sent => const Color(0xFF22C55E).withOpacity(0.6),
- _InviteStatus.failed => const Color(0xFFEF4444).withOpacity(0.6),
+ _InviteStatus.sending => _border.withValues(alpha: 0.5),
+ _InviteStatus.sent => const Color(0xFF22C55E).withValues(alpha: 0.6),
+ _InviteStatus.failed => const Color(0xFFEF4444).withValues(alpha: 0.6),
  };
  final bgColor = switch (status) {
  _InviteStatus.sending => _bgSurfaceHighest,
- _InviteStatus.sent => const Color(0xFF22C55E).withOpacity(0.08),
- _InviteStatus.failed => const Color(0xFFEF4444).withOpacity(0.08),
+ _InviteStatus.sent => const Color(0xFF22C55E).withValues(alpha: 0.08),
+ _InviteStatus.failed => const Color(0xFFEF4444).withValues(alpha: 0.08),
  };
  return GestureDetector(
  onTap: (status == _InviteStatus.failed && onRetry != null) ? onRetry : null,
@@ -2543,9 +2543,9 @@ class _ReviewRow extends StatelessWidget {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
  decoration: BoxDecoration(
- color: _bgSurfaceMid.withOpacity(0.4),
+ color: _bgSurfaceMid.withValues(alpha: 0.4),
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: _border.withOpacity(0.25), width: 1),
+ border: Border.all(color: _border.withValues(alpha: 0.25), width: 1),
  ),
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -2673,7 +2673,7 @@ class _AtmosphericBackground extends StatelessWidget {
  height: 500,
  decoration: BoxDecoration(
  shape: BoxShape.circle,
- color: const Color(0xFF0231DE).withOpacity(0.05),
+ color: const Color(0xFF0231DE).withValues(alpha: 0.05),
  ),
  ),
  ),
@@ -2686,7 +2686,7 @@ class _AtmosphericBackground extends StatelessWidget {
  height: 400,
  decoration: BoxDecoration(
  shape: BoxShape.circle,
- color: _gold.withOpacity(0.04),
+ color: _gold.withValues(alpha: 0.04),
  ),
  ),
  ),
@@ -2735,7 +2735,7 @@ class _CelebrationOverlay extends StatelessWidget {
  shape: BoxShape.circle,
  boxShadow: [
  BoxShadow(
- color: _gold.withOpacity(0.5),
+ color: _gold.withValues(alpha: 0.5),
  blurRadius: 50,
  spreadRadius: 8,
  ),
@@ -2774,7 +2774,7 @@ class _ConfettiPainter extends CustomPainter {
  final y = startY + (size.height + 200) * t + rng.nextDouble() * 60;
  final w = 6.0 + rng.nextDouble() * 6;
  final h = 10.0 + rng.nextDouble() * 8;
- final paint = Paint()..color = colors[i % colors.length].withOpacity(0.8);
+ final paint = Paint()..color = colors[i % colors.length].withValues(alpha: 0.8);
  canvas.save();
  canvas.translate(x, y);
  canvas.rotate(rng.nextDouble() * 6.28 + t * 6);

@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart' as fp;
 import 'package:excel/excel.dart' hide Border;
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 /// World-class CSV / XLSX Import Dialog
 ///
@@ -131,16 +132,14 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
 
       for (int i = 1; i < rows.length; i++) {
         final row = rows[i];
-        final values = row
-            .map((cell) {
-              final val = cell?.value?.toString() ?? '';
-              // Escape commas and quotes for CSV
-              if (val.contains(',') || val.contains('"') || val.contains('\n')) {
-                return '"${val.replaceAll('"', '""')}"';
-              }
-              return val;
-            })
-            .toList();
+        final values = row.map((cell) {
+          final val = cell?.value?.toString() ?? '';
+          // Escape commas and quotes for CSV
+          if (val.contains(',') || val.contains('"') || val.contains('\n')) {
+            return '"${val.replaceAll('"', '""')}"';
+          }
+          return val;
+        }).toList();
         csvLines.add(values.join(','));
       }
 
@@ -158,8 +157,6 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
       setState(() => _isFileLoading = false);
     }
   }
-
-
 
   Future<void> _pickFile() async {
     setState(() => _isFileLoading = true);
@@ -217,7 +214,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 40,
                 offset: const Offset(0, 20),
               ),
@@ -263,11 +260,10 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child:
-                const Icon(Icons.upload_file, color: Colors.white, size: 22),
+            child: const Icon(Icons.upload_file, color: Colors.white, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -287,7 +283,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
                   widget.tableTitle,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -298,7 +294,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close, color: Colors.white, size: 22),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.15),
+              backgroundColor: Colors.white.withValues(alpha: 0.15),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
@@ -336,9 +332,9 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F9FF),
+        color: Color(0xFFF0F9FF),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFBAE6FD)),
+        border: Border.all(color: Color(0xFFBAE6FD)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,8 +429,6 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
     );
   }
 
-
-
   // ─── Drop Zone ─────────────────────────────────────────────────────
 
   Widget _buildDropZone() {
@@ -444,14 +438,12 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: _isDragging
-              ? const Color(0xFFEFF6FF)
-              : const Color(0xFFFAFBFC),
+          color:
+              _isDragging ? const Color(0xFFEFF6FF) : const Color(0xFFFAFBFC),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _isDragging
-                ? const Color(0xFF2563EB)
-                : const Color(0xFFD1D5DB),
+            color:
+                _isDragging ? const Color(0xFF2563EB) : const Color(0xFFD1D5DB),
             width: _isDragging ? 2.5 : 1.5,
           ),
         ),
@@ -471,7 +463,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: _isDragging
-                      ? const Color(0xFF2563EB).withOpacity(0.1)
+                      ? const Color(0xFF2563EB).withValues(alpha: 0.1)
                       : const Color(0xFFF3F4F6),
                   shape: BoxShape.circle,
                 ),
@@ -505,22 +497,20 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
               _isFileLoading ? '' : 'or click to browse files',
               style: TextStyle(
                 fontSize: 13,
-                color: const Color(0xFF6B7280).withOpacity(0.8),
+                color: const Color(0xFF6B7280).withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(height: 12),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+                color: Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.info_outline,
-                      size: 14, color: Color(0xFF9CA3AF)),
+                  Icon(Icons.info_outline, size: 14, color: Color(0xFF9CA3AF)),
                   SizedBox(width: 6),
                   Text(
                     'Supports .csv and .xlsx files up to 5MB',
@@ -576,15 +566,15 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
             fillColor: const Color(0xFFF9FAFB),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              borderSide: BorderSide(color: Color(0xFFE5E7EB)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              borderSide: BorderSide(color: Color(0xFFE5E7EB)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF2563EB)),
+              borderSide: BorderSide(color: Color(0xFF2563EB)),
             ),
           ),
           onChanged: (val) {
@@ -611,13 +601,10 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color:
-            hasErrors ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
+        color: hasErrors ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: hasErrors
-              ? const Color(0xFFFECACA)
-              : const Color(0xFFBBF7D0),
+          color: hasErrors ? const Color(0xFFFECACA) : const Color(0xFFBBF7D0),
         ),
       ),
       child: Column(
@@ -760,7 +747,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
+              border: Border.all(color: Color(0xFFE5E7EB)),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
@@ -798,11 +785,11 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
                                 horizontal: 4, vertical: 2),
                             decoration: hasError
                                 ? BoxDecoration(
-                                    color: const Color(0xFFFEE2E2),
+                                    color: Color(0xFFFEE2E2),
                                     borderRadius: BorderRadius.circular(4),
                                   )
                                 : null,
-                            child: Text(
+                            child: WrappedText(
                               val.isEmpty ? '—' : val,
                               style: TextStyle(
                                 fontSize: 12,
@@ -851,8 +838,7 @@ class _CsvImportDialogState extends State<_CsvImportDialog>
             onPressed: () => Navigator.of(context).pop(),
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFF6B7280),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             child: const Text('Cancel'),
           ),

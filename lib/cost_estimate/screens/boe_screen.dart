@@ -149,20 +149,20 @@ class _BOEScreenState extends State<BOEScreen> {
               controller: _scopeBasisCtrl,
               maxLines: 4,
               enabled: canEdit,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText:
                     'Describe the deliverables, WBS elements, and backlog items included...',
-                hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+                hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
                 filled: true,
                 fillColor: Colors.white,
-                border: const OutlineInputBorder(
+                border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                     borderSide: BorderSide(color: Color(0xFFE4E7EC))),
-                focusedBorder: const OutlineInputBorder(
+                focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                     borderSide:
                         BorderSide(color: LightModeColors.accent, width: 1.6)),
-                enabledBorder: const OutlineInputBorder(
+                enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                     borderSide: BorderSide(color: Color(0xFFE4E7EC))),
               ),
@@ -236,20 +236,20 @@ class _BOEScreenState extends State<BOEScreen> {
               controller: _escalationCtrl,
               maxLines: 3,
               enabled: canEdit,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText:
                     'e.g. 3% annual labor escalation, 5% material escalation...',
-                hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+                hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
                 filled: true,
                 fillColor: Colors.white,
-                border: const OutlineInputBorder(
+                border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                     borderSide: BorderSide(color: Color(0xFFE4E7EC))),
-                focusedBorder: const OutlineInputBorder(
+                focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                     borderSide:
                         BorderSide(color: LightModeColors.accent, width: 1.6)),
-                enabledBorder: const OutlineInputBorder(
+                enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                     borderSide: BorderSide(color: Color(0xFFE4E7EC))),
               ),

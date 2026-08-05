@@ -20,7 +20,8 @@ String _extractJson(String text) {
   if (match != null) return match.group(1)?.trim() ?? text.trim();
   final jsonStart = text.indexOf('{');
   final jsonEnd = text.lastIndexOf('}');
-  if (jsonStart >= 0 && jsonEnd > jsonStart) return text.substring(jsonStart, jsonEnd + 1);
+  if (jsonStart >= 0 && jsonEnd > jsonStart)
+    return text.substring(jsonStart, jsonEnd + 1);
   return text.trim();
 }
 
@@ -78,7 +79,8 @@ String _usdRateHint(String currency) {
 String _convertHint(double usdAmount, String currency) {
   final rate = _usdToCurrencyRates[currency.toUpperCase()] ?? 1.0;
   final converted = usdAmount * rate;
-  if (converted >= 1000000) return '${(converted / 1000000).toStringAsFixed(1)}M';
+  if (converted >= 1000000)
+    return '${(converted / 1000000).toStringAsFixed(1)}M';
   if (converted >= 1000) return converted.toStringAsFixed(0);
   return converted.toStringAsFixed(converted % 1 == 0 ? 0 : 2);
 }
@@ -109,7 +111,8 @@ String _nduProjectSystemPrompt({
       : 'Return only the content requested for the task.';
   final extra = (extraRules ?? '').trim();
   final now = DateTime.now();
-  final currentDate = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  final currentDate =
+      '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
   final currentYear = now.year;
 
   return '''
@@ -474,6 +477,13 @@ class OpenAiServiceSecure {
   OpenAiServiceSecure({http.Client? client})
       : _client = client ?? http.Client();
 
+  /// Releases the underlying [http.Client] connection pool.
+  /// Call when this service instance is no longer needed (e.g. via a
+  /// provider's dispose callback) to avoid leaking keep-alive connections.
+  void dispose() {
+    _client.close();
+  }
+
   Future<T> _runSerialized<T>(Future<T> Function() operation) {
     final completer = Completer<T>();
     _serializedQueue = _serializedQueue.catchError((_) {}).then((_) async {
@@ -531,8 +541,7 @@ class OpenAiServiceSecure {
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       return content.trim();
     });
   }
@@ -589,8 +598,7 @@ class OpenAiServiceSecure {
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       final text =
           (parsed['text'] ?? parsed['section'] ?? parsed['content'] ?? '')
@@ -694,12 +702,10 @@ ${_escape(trimmedText)}
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
-      final text = (parsed['text'] ??
-              parsed['section'] ??
-              parsed['content'] ??
-              '')
-          .toString()
-          .trim();
+      final text =
+          (parsed['text'] ?? parsed['section'] ?? parsed['content'] ?? '')
+              .toString()
+              .trim();
       final cleanText = _stripAsterisks(text);
       return cleanText;
     } catch (e) {
@@ -756,8 +762,7 @@ ${_escape(trimmedText)}
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = _decodeJsonSafely(content);
       if (parsed == null) {
         return _fallbackQualitySeedBundle(trimmedContext, section);
@@ -1092,8 +1097,7 @@ ${_escape(trimmedText)}
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       List<String> toList(dynamic val) {
@@ -1152,8 +1156,7 @@ ${_escape(trimmedText)}
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       List<RiskRegisterItem> risks = [];
@@ -1236,8 +1239,7 @@ ${_escape(trimmedText)}
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final mitigations = <String, String>{};
@@ -1335,8 +1337,7 @@ ${_escape(trimmedText)}
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final itMap = parsed['it'] as Map<String, dynamic>? ?? {};
@@ -1434,8 +1435,7 @@ Rules:
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final rawItems = parsed['items'] as List?;
@@ -1515,8 +1515,7 @@ Return ONLY valid JSON: {"objective": "..." }
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       final objective = _stripAsterisks(
         (parsed['objective'] ?? '').toString().trim(),
@@ -1603,8 +1602,7 @@ $trimmedContext
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final rawFields = parsed['fields'] is Map
@@ -1995,8 +1993,7 @@ Use concise professional language. Status should use In progress, Pending, In re
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final pipeline = (parsed['pipeline'] as List?)
@@ -2080,8 +2077,7 @@ Use concise professional language. Status must be one of: Approved, Aligned, Rea
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       return parsed;
@@ -2134,8 +2130,7 @@ Return JSON with:
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final security = (parsed['security'] as List?)
@@ -2400,8 +2395,7 @@ Return JSON with:
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       final list = (parsed['opportunities'] as List? ?? []);
       final result = <OpportunityItem>[];
@@ -2665,8 +2659,7 @@ $c
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       final dynamic value =
           parsed['estimated_cost'] ?? parsed['cost'] ?? parsed['value'];
@@ -2926,8 +2919,7 @@ $scaleConstraints
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final list = (parsed['items'] as List?)?.map((e) {
@@ -3002,14 +2994,13 @@ $scaleConstraints
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       final list = (parsed['items'] as List? ?? []);
 
       final result = <AllowanceItem>[];
       var counter = DateTime.now().microsecondsSinceEpoch;
-for (final item in list) {
+      for (final item in list) {
         if (item is! Map) continue;
         final map = item as Map<String, dynamic>;
 
@@ -3040,9 +3031,9 @@ for (final item in list) {
         if (map['scheduleImpactWeeks'] is num) {
           scheduleImpactWeeks = (map['scheduleImpactWeeks'] as num).toDouble();
         } else {
-          scheduleImpactWeeks = double.tryParse(
-                  map['scheduleImpactWeeks']?.toString() ?? '') ??
-              0.0;
+          scheduleImpactWeeks =
+              double.tryParse(map['scheduleImpactWeeks']?.toString() ?? '') ??
+                  0.0;
         }
 
         result.add(AllowanceItem(
@@ -3053,17 +3044,18 @@ for (final item in list) {
           appliesTo: appliesTo,
           notes: (map['notes'] ?? '').toString(),
           description: (map['description'] ?? '').toString(),
-          estimatedCostOrQuantity:
-              (map['estimatedCostOrQuantity'] ?? map['estimatedCostOrQty'] ?? '')
-                  .toString(),
+          estimatedCostOrQuantity: (map['estimatedCostOrQuantity'] ??
+                  map['estimatedCostOrQty'] ??
+                  '')
+              .toString(),
           scheduleImpact: (map['scheduleImpact'] ?? '').toString(),
           scheduleImpactWeeks: scheduleImpactWeeks,
           responsibleDiscipline:
               (map['responsibleDiscipline'] ?? map['discipline'] ?? '')
                   .toString(),
           assumptions: (map['assumptions'] ?? '').toString(),
-          triggerContext: (map['triggerContext'] ?? map['trigger'] ?? '')
-              .toString(),
+          triggerContext:
+              (map['triggerContext'] ?? map['trigger'] ?? '').toString(),
         ));
         counter += 1;
       }
@@ -3336,8 +3328,7 @@ $domainHints
 
     final data =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-    final content =
-        OpenAiConfig.extractContent(data);
+    final content = OpenAiConfig.extractContent(data);
     final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
     final items = (parsed['solutions'] as List? ?? [])
         .map((e) => AiSolutionItem.fromMap(e as Map<String, dynamic>))
@@ -3385,8 +3376,7 @@ $domainHints
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final List list = (parsed['risks'] as List? ?? []);
@@ -3554,7 +3544,8 @@ $domainHints
     }
 
     final response = await _client
-        .post(uri, headers: headers, body: jsonEncode(OpenAiConfig.wrapBody(payload)))
+        .post(uri,
+            headers: headers, body: jsonEncode(OpenAiConfig.wrapBody(payload)))
         .timeout(const Duration(seconds: 30));
     if (response.statusCode == 429) {
       throw Exception('API quota exceeded. Please check your OpenAI billing.');
@@ -3655,8 +3646,10 @@ $domainHints
     if (!cleaned.startsWith('[')) {
       // Try to find the first [ character
       final idx = cleaned.indexOf('[');
-      if (idx >= 0) cleaned = cleaned.substring(idx);
-      else return null;
+      if (idx >= 0)
+        cleaned = cleaned.substring(idx);
+      else
+        return null;
     }
     try {
       final decoded = jsonDecode(cleaned);
@@ -3711,8 +3704,7 @@ $domainHints
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final List list = (parsed['technologies'] as List? ?? []);
@@ -3807,8 +3799,7 @@ $domainHints
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final List list = (parsed['cost_breakdown'] as List? ?? []);
@@ -3995,7 +3986,8 @@ $domainHints
     String contextNotes = '',
   }) {
     final type = _detectProjectTypeForSolution(solution, contextNotes);
-    final combinedContext = '${solution.title} ${solution.description} $contextNotes';
+    final combinedContext =
+        '${solution.title} ${solution.description} $contextNotes';
     final projectScale = _detectProjectScale(combinedContext);
     final templates = _fallbackCostTemplatesForType(type);
     final seed =
@@ -4006,9 +3998,9 @@ $domainHints
     // Scale cost items proportionally to project scale.
     // Small projects should have much lower costs than the template defaults.
     final scaleCostFactor = switch (projectScale) {
-      _AiProjectScale.small => 0.08,  // ~8% of template cost for small projects
-      _AiProjectScale.medium => 1.0,  // full template cost for medium projects
-      _AiProjectScale.large => 1.5,   // 1.5x template cost for large projects
+      _AiProjectScale.small => 0.08, // ~8% of template cost for small projects
+      _AiProjectScale.medium => 1.0, // full template cost for medium projects
+      _AiProjectScale.large => 1.5, // 1.5x template cost for large projects
     };
 
     final items = <AiCostItem>[];
@@ -4684,15 +4676,45 @@ Domain guardrail: $guardrails
 
     // --- Small-scale indicators ---
     final smallIndicators = <String>[
-      'barbershop', 'barber shop', 'salon', 'hair salon', 'nail salon',
-      'small business', 'small retail', 'sole proprietor', 'mom and pop',
-      'local shop', 'local store', 'boutique', 'freelance', 'solo',
-      'micro business', 'home-based', 'pop-up', 'food truck', 'food cart',
-      'corner store', 'kiosk', 'stall', 'personal brand',
-      'pet grooming', 'dog walking', 'tutoring', 'cleaning service',
-      'lawn care', 'small clinic', 'dental practice', 'yoga studio',
-      'gym studio', 'personal training', 'craft', 'artisan',
-      'personal app', 'portfolio app', 'booking app', 'appointment app',
+      'barbershop',
+      'barber shop',
+      'salon',
+      'hair salon',
+      'nail salon',
+      'small business',
+      'small retail',
+      'sole proprietor',
+      'mom and pop',
+      'local shop',
+      'local store',
+      'boutique',
+      'freelance',
+      'solo',
+      'micro business',
+      'home-based',
+      'pop-up',
+      'food truck',
+      'food cart',
+      'corner store',
+      'kiosk',
+      'stall',
+      'personal brand',
+      'pet grooming',
+      'dog walking',
+      'tutoring',
+      'cleaning service',
+      'lawn care',
+      'small clinic',
+      'dental practice',
+      'yoga studio',
+      'gym studio',
+      'personal training',
+      'craft',
+      'artisan',
+      'personal app',
+      'portfolio app',
+      'booking app',
+      'appointment app',
     ];
     int smallScore = 0;
     for (final term in smallIndicators) {
@@ -4700,31 +4722,72 @@ Domain guardrail: $guardrails
     }
     // Budget hints for small scale
     if (_containsAnyKeywords(normalized, [
-      'under 50k', '<50k', '< 50,000', 'under \$50', 'budget of \$10',
-      'budget of \$15', 'budget of \$20', 'budget of \$25', 'budget of \$30',
-      'budget of \$35', 'budget of \$40', 'budget of \$45',
+      'under 50k',
+      '<50k',
+      '< 50,000',
+      'under \$50',
+      'budget of \$10',
+      'budget of \$15',
+      'budget of \$20',
+      'budget of \$25',
+      'budget of \$30',
+      'budget of \$35',
+      'budget of \$40',
+      'budget of \$45',
     ])) {
       smallScore += 4;
     }
     // Team size hints for small scale
     if (_containsAnyKeywords(normalized, [
-      '1-3 people', '1-3 team', '2-5 team', 'solo developer',
-      'small team', 'tiny team',
+      '1-3 people',
+      '1-3 team',
+      '2-5 team',
+      'solo developer',
+      'small team',
+      'tiny team',
     ])) {
       smallScore += 3;
     }
 
     // --- Large-scale indicators ---
     final largeIndicators = <String>[
-      'enterprise', 'corporation', 'multi-site', 'multi-site',
-      'infrastructure', 'government', 'municipal', 'federal',
-      'hospital', 'university', 'campus', 'city-wide', 'nationwide',
-      'global', 'regional', 'district', 'province', 'state-wide',
-      'construction project', 'civil works', 'industrial',
-      'manufacturing plant', 'power plant', 'data center', 'data centre',
-      'oil and gas', 'mining', 'pipeline', 'railway', 'airport',
-      'large-scale', 'large scale', 'multi-phase', 'multi-year',
-      'multi-million', 'enterprise resource planning', 'erp implementation',
+      'enterprise',
+      'corporation',
+      'multi-site',
+      'multi-site',
+      'infrastructure',
+      'government',
+      'municipal',
+      'federal',
+      'hospital',
+      'university',
+      'campus',
+      'city-wide',
+      'nationwide',
+      'global',
+      'regional',
+      'district',
+      'province',
+      'state-wide',
+      'construction project',
+      'civil works',
+      'industrial',
+      'manufacturing plant',
+      'power plant',
+      'data center',
+      'data centre',
+      'oil and gas',
+      'mining',
+      'pipeline',
+      'railway',
+      'airport',
+      'large-scale',
+      'large scale',
+      'multi-phase',
+      'multi-year',
+      'multi-million',
+      'enterprise resource planning',
+      'erp implementation',
       'digital transformation',
     ];
     int largeScore = 0;
@@ -4733,15 +4796,26 @@ Domain guardrail: $guardrails
     }
     // Budget hints for large scale
     if (_containsAnyKeywords(normalized, [
-      'over 200k', '>200k', '> 200,000', 'over \$200', 'budget of \$500',
-      'budget of \$1m', 'budget of \$2m', 'million', 'multi-million',
+      'over 200k',
+      '>200k',
+      '> 200,000',
+      'over \$200',
+      'budget of \$500',
+      'budget of \$1m',
+      'budget of \$2m',
+      'million',
+      'multi-million',
     ])) {
       largeScore += 4;
     }
     // Team size hints for large scale
     if (_containsAnyKeywords(normalized, [
-      '50+ people', '100+ team', 'large team', 'enterprise team',
-      'cross-functional team', 'multiple teams',
+      '50+ people',
+      '100+ team',
+      'large team',
+      'enterprise team',
+      'cross-functional team',
+      'multiple teams',
     ])) {
       largeScore += 3;
     }
@@ -4749,8 +4823,10 @@ Domain guardrail: $guardrails
     // --- Decision logic ---
     if (smallScore >= 3 && largeScore < 3) return _AiProjectScale.small;
     if (largeScore >= 3 && smallScore < 3) return _AiProjectScale.large;
-    if (smallScore >= 3 && smallScore > largeScore) return _AiProjectScale.small;
-    if (largeScore >= 3 && largeScore > smallScore) return _AiProjectScale.large;
+    if (smallScore >= 3 && smallScore > largeScore)
+      return _AiProjectScale.small;
+    if (largeScore >= 3 && largeScore > smallScore)
+      return _AiProjectScale.large;
     // Default to medium when no strong signal
     return _AiProjectScale.medium;
   }
@@ -4899,21 +4975,21 @@ Domain guardrail: $guardrails
     return switch (scale) {
       _AiProjectScale.small =>
         'CRITICAL SCALE CONSTRAINT: This is a SMALL-SCALE project (local business, small team). '
-        'Monthly benefit unit values MUST NOT exceed \$1,500. '
-        'Monthly staffing costs MUST be \$500-\$3,000 per role. '
-        'Total project budget is likely under \$50K. '
-        'Any value suggesting \$5,000+/mo benefit for a single category is UNREALISTIC and will be rejected. '
-        'A barbershop making \$8K/mo cannot realize \$3K/mo in new revenue from one app feature.',
+            'Monthly benefit unit values MUST NOT exceed \$1,500. '
+            'Monthly staffing costs MUST be \$500-\$3,000 per role. '
+            'Total project budget is likely under \$50K. '
+            'Any value suggesting \$5,000+/mo benefit for a single category is UNREALISTIC and will be rejected. '
+            'A barbershop making \$8K/mo cannot realize \$3K/mo in new revenue from one app feature.',
       _AiProjectScale.medium =>
         'SCALE CONSTRAINT: This is a MEDIUM-SCALE project (department/mid-size business). '
-        'Monthly benefit unit values should range \$1,000-\$8,000. '
-        'Monthly staffing costs should be \$1,500-\$8,000 per role. '
-        'Total project budget is likely \$50K-\$200K.',
+            'Monthly benefit unit values should range \$1,000-\$8,000. '
+            'Monthly staffing costs should be \$1,500-\$8,000 per role. '
+            'Total project budget is likely \$50K-\$200K.',
       _AiProjectScale.large =>
         'SCALE CONSTRAINT: This is a LARGE-SCALE project (enterprise/infrastructure). '
-        'Monthly benefit unit values can range \$5,000-\$40,000. '
-        'Monthly staffing costs can be \$3,000-\$15,000 per role for senior positions. '
-        'Total project budget is likely \$200K+.',
+            'Monthly benefit unit values can range \$5,000-\$40,000. '
+            'Monthly staffing costs can be \$3,000-\$15,000 per role for senior positions. '
+            'Total project budget is likely \$200K+.',
     };
   }
 
@@ -4922,14 +4998,14 @@ Domain guardrail: $guardrails
     return switch (scale) {
       _AiProjectScale.small =>
         'TIMELINE CONSTRAINT: This is a SMALL project. Total project duration should be 1-12 weeks. '
-        'Individual activities should be 1-10 working days. Do NOT suggest multi-month phases. '
-        'A simple booking app does not need 6 months of development.',
+            'Individual activities should be 1-10 working days. Do NOT suggest multi-month phases. '
+            'A simple booking app does not need 6 months of development.',
       _AiProjectScale.medium =>
         'TIMELINE CONSTRAINT: This is a MEDIUM project. Total duration should be 3-9 months. '
-        'Individual activities should be 3-30 working days. Phases can span 1-3 months.',
+            'Individual activities should be 3-30 working days. Phases can span 1-3 months.',
       _AiProjectScale.large =>
         'TIMELINE CONSTRAINT: This is a LARGE project. Total duration can be 9-24+ months. '
-        'Individual activities should be 5-60 working days. Phases can span 2-6 months.',
+            'Individual activities should be 5-60 working days. Phases can span 2-6 months.',
     };
   }
 
@@ -4938,16 +5014,16 @@ Domain guardrail: $guardrails
     return switch (scale) {
       _AiProjectScale.small =>
         'STAFFING COST CONSTRAINT: Small/local business in Africa — monthly cost per role MUST be \$500-\$3,000. '
-        'A barbershop manager earns ~\$800-\$2,000/mo, a part-time developer ~\$1,000-\$2,500/mo. '
-        'Do NOT suggest \$8,000/mo for any single role in a small business context.',
+            'A barbershop manager earns ~\$800-\$2,000/mo, a part-time developer ~\$1,000-\$2,500/mo. '
+            'Do NOT suggest \$8,000/mo for any single role in a small business context.',
       _AiProjectScale.medium =>
         'STAFFING COST GUIDANCE: Mid-size enterprise — monthly cost per role typically \$1,500-\$8,000. '
-        'Project managers: \$3,000-\$6,000/mo. Senior developers: \$4,000-\$8,000/mo. '
-        'Business analysts: \$2,000-\$5,000/mo.',
+            'Project managers: \$3,000-\$6,000/mo. Senior developers: \$4,000-\$8,000/mo. '
+            'Business analysts: \$2,000-\$5,000/mo.',
       _AiProjectScale.large =>
         'STAFFING COST GUIDANCE: Large enterprise — monthly cost per role typically \$3,000-\$15,000. '
-        'Program managers: \$6,000-\$12,000/mo. Solution architects: \$8,000-\$15,000/mo. '
-        'Senior engineers: \$5,000-\$10,000/mo.',
+            'Program managers: \$6,000-\$12,000/mo. Solution architects: \$8,000-\$15,000/mo. '
+            'Senior engineers: \$5,000-\$10,000/mo.',
     };
   }
 
@@ -5184,8 +5260,7 @@ Domain guardrail: $guardrails
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       final valueMap =
           (parsed['project_value'] ?? parsed) as Map<String, dynamic>;
@@ -5273,7 +5348,8 @@ Domain guardrail: $guardrails
     final variation = 0.9 + ((seed % 26) / 100);
     final scaleMultiplier =
         1 + ((solutions.length > 1 ? solutions.length - 1 : 0) * 0.07);
-    final estimated = _normalizeEstimatedCost(baseline * variation * scaleMultiplier);
+    final estimated =
+        _normalizeEstimatedCost(baseline * variation * scaleMultiplier);
 
     // Scale-aware floor: prevent small projects from getting inflated fallbacks
     final floor = switch (projectScale) {
@@ -5412,17 +5488,17 @@ Domain guardrail: $guardrails
     final scaleGuidance = switch (projectScale) {
       _AiProjectScale.small =>
         'This is a SMALL-SCALE project (e.g., barbershop, salon, local shop, small business tool). '
-        'Estimated annual benefit should be \$5,000–\$30,000. '
-        'A single-location small business cannot generate \$100K+ in annual benefit from one app or tool. '
-        'Be realistic: a barbershop making \$150K/year in revenue cannot realize \$283K in project benefit.',
+            'Estimated annual benefit should be \$5,000–\$30,000. '
+            'A single-location small business cannot generate \$100K+ in annual benefit from one app or tool. '
+            'Be realistic: a barbershop making \$150K/year in revenue cannot realize \$283K in project benefit.',
       _AiProjectScale.medium =>
         'This is a MEDIUM-SCALE project (department-level, mid-size business). '
-        'Estimated annual benefit should be \$30,000–\$150,000. '
-        'Scale proportionally to the organisation size and budget.',
+            'Estimated annual benefit should be \$30,000–\$150,000. '
+            'Scale proportionally to the organisation size and budget.',
       _AiProjectScale.large =>
         'This is a LARGE-SCALE project (enterprise, infrastructure, multi-site). '
-        'Estimated annual benefit should be \$150,000–\$500,000. '
-        'Scale proportionally to the organisation size and budget.',
+            'Estimated annual benefit should be \$150,000–\$500,000. '
+            'Scale proportionally to the organisation size and budget.',
     };
     return '''
 Based on the following project cost-benefit analysis data, estimate direct financial value and provide category-specific benefit narratives.
@@ -5525,8 +5601,7 @@ Return plain text only.'''
     }
     final data =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-    final content =
-        OpenAiConfig.extractContent(data);
+    final content = OpenAiConfig.extractContent(data);
     return _stripAsterisks(content).trim();
   }
 
@@ -5607,8 +5682,7 @@ Return plain text only.'''
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       final seen = <String>{};
       final items = (parsed['items'] as List? ?? [])
@@ -5690,7 +5764,7 @@ Return plain text only.'''
     final scaleUnitRange = switch (projectScale) {
       _AiProjectScale.small =>
         '\$100-\$1,500/mo for small local businesses (e.g., barbershop, salon). '
-        'A barbershop generating \$10K/mo in revenue cannot realize \$5K/mo in benefit from a single app.',
+            'A barbershop generating \$10K/mo in revenue cannot realize \$5K/mo in benefit from a single app.',
       _AiProjectScale.medium =>
         '\$1,000-\$8,000/mo for mid-size enterprises or department-level projects.',
       _AiProjectScale.large =>
@@ -5756,7 +5830,8 @@ Return ONLY JSON.
       _AiProjectScale.medium => 45000.0,
       _AiProjectScale.large => 250000.0,
     };
-    final total = estimatedProjectValue > 0 ? estimatedProjectValue : scaleDefault;
+    final total =
+        estimatedProjectValue > 0 ? estimatedProjectValue : scaleDefault;
     final type = _detectProjectType(combinedContext);
     final allocations = <MapEntry<String, double>>[
       const MapEntry('revenue', 0.24),
@@ -5981,25 +6056,23 @@ Return ONLY JSON.
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
-      final scenarios = (parsed['savings_scenarios'] as List? ?? [])
-          .map((e) {
-            final raw = AiBenefitSavingsSuggestion.fromMap(
-                (e ?? {}) as Map<String, dynamic>);
-            // Post-processing: clamp projected savings to realistic range
-            final clampedSavings = _clampSavingsValue(raw.projectedSavings, totalBenefit);
-            return AiBenefitSavingsSuggestion(
-              lever: raw.lever,
-              recommendation: raw.recommendation,
-              projectedSavings: clampedSavings,
-              timeframe: raw.timeframe,
-              confidence: raw.confidence,
-              rationale: raw.rationale,
-            );
-          })
-          .where((e) {
+      final scenarios = (parsed['savings_scenarios'] as List? ?? []).map((e) {
+        final raw = AiBenefitSavingsSuggestion.fromMap(
+            (e ?? {}) as Map<String, dynamic>);
+        // Post-processing: clamp projected savings to realistic range
+        final clampedSavings =
+            _clampSavingsValue(raw.projectedSavings, totalBenefit);
+        return AiBenefitSavingsSuggestion(
+          lever: raw.lever,
+          recommendation: raw.recommendation,
+          projectedSavings: clampedSavings,
+          timeframe: raw.timeframe,
+          confidence: raw.confidence,
+          rationale: raw.rationale,
+        );
+      }).where((e) {
         if (e.lever.isEmpty) return false;
         if (e.projectedSavings <= 0) return false;
         final mergedText = '${e.lever} ${e.recommendation} ${e.rationale}';
@@ -6178,8 +6251,7 @@ Remember: Return ONLY a JSON object with key "savings_scenarios".
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final List list = (parsed['infrastructure'] as List? ?? []);
@@ -6358,8 +6430,7 @@ Context notes (optional): $notes
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final Map<String, List<String>> internalResult = {};
@@ -6753,8 +6824,7 @@ Make each suggestion:
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final suggestions = (parsed['suggestions'] as List? ?? [])
@@ -7152,7 +7222,8 @@ $escaped
         },
         {
           'role': 'user',
-          'content': _staffingRowsPrompt(trimmedContext, maxRows, staffingGuidance),
+          'content':
+              _staffingRowsPrompt(trimmedContext, maxRows, staffingGuidance),
         },
       ],
     }));
@@ -7182,7 +7253,8 @@ $escaped
     return _fallbackStaffingRows(trimmedContext, maxRows);
   }
 
-  String _staffingRowsPrompt(String context, int maxRows, String staffingGuidance) {
+  String _staffingRowsPrompt(
+      String context, int maxRows, String staffingGuidance) {
     final escaped = _escape(context);
     return '''
 Generate up to $maxRows staffing rows for the execution phase based on the project context.
@@ -7219,8 +7291,7 @@ $escaped
 ''';
   }
 
-  List<StaffingRow> _parseStaffingRows(
-      Map<String, dynamic> parsed, int maxRows,
+  List<StaffingRow> _parseStaffingRows(Map<String, dynamic> parsed, int maxRows,
       [_AiProjectScale projectScale = _AiProjectScale.medium]) {
     final rowsRaw = parsed['staffingRows'] ??
         parsed['rows'] ??
@@ -7257,8 +7328,10 @@ $escaped
       // Clamp monthly cost to scale-appropriate range
       final monthlyCostParsed = double.tryParse(
             monthlyCostRaw.replaceAll(RegExp(r'[^0-9.]'), ''),
-          ) ?? 0;
-      final monthlyCostClamped = _clampStaffCost(monthlyCostParsed, projectScale);
+          ) ??
+          0;
+      final monthlyCostClamped =
+          _clampStaffCost(monthlyCostParsed, projectScale);
       final monthlyCost = monthlyCostClamped.toStringAsFixed(0);
       final description =
           (map['roleDescription'] ?? map['description'] ?? map['summary'] ?? '')
@@ -9142,8 +9215,7 @@ Return JSON in this format:
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       final risks = (parsed['risks'] as List? ?? [])
           .map((e) {
@@ -9226,8 +9298,7 @@ Return JSON in this format:
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       final List rawWbs = parsed['wbs'] as List? ?? [];
 
@@ -9365,7 +9436,8 @@ Additional Context: $contextNotes
         },
         {
           'role': 'user',
-          'content': _scheduleActivitiesPrompt(trimmedContext, wbsItems, durationGuidance),
+          'content': _scheduleActivitiesPrompt(
+              trimmedContext, wbsItems, durationGuidance),
         },
       ],
     }));
@@ -9401,8 +9473,8 @@ Additional Context: $contextNotes
     return _fallbackScheduleActivities(wbsItems);
   }
 
-  String _scheduleActivitiesPrompt(
-      String context, List<Map<String, String>> wbsItems, String durationGuidance) {
+  String _scheduleActivitiesPrompt(String context,
+      List<Map<String, String>> wbsItems, String durationGuidance) {
     final escaped = _escape(context);
     final itemsJson = jsonEncode(wbsItems);
     return '''
@@ -9507,8 +9579,7 @@ $escaped
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       return {
@@ -9649,8 +9720,7 @@ Return ONLY valid JSON.
       }
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final budget =
@@ -9970,8 +10040,7 @@ Return ONLY valid JSON.
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
 
       final contracts = normalizeContracts(parsed['contracts']);
@@ -10314,8 +10383,7 @@ Return ONLY JSON: {"items":[...]}'''
       if (response.statusCode < 200 || response.statusCode >= 300) return [];
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       return (parsed['items'] as List? ?? [])
           .map((e) => Map<String, dynamic>.from(e as Map))
@@ -10369,8 +10437,7 @@ Return ONLY JSON: {"items":[...]}'''
       if (response.statusCode < 200 || response.statusCode >= 300) return [];
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       return (parsed['items'] as List? ?? [])
           .map((e) => Map<String, dynamic>.from(e as Map))
@@ -10423,8 +10490,7 @@ Return ONLY JSON: {"items":[...]}'''
       if (response.statusCode < 200 || response.statusCode >= 300) return [];
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final parsed = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
       return (parsed['items'] as List? ?? [])
           .map((e) => Map<String, dynamic>.from(e as Map))
@@ -11726,8 +11792,7 @@ Return only the title, no additional text.''';
 
       final data =
           jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-      final content =
-          OpenAiConfig.extractContent(data);
+      final content = OpenAiConfig.extractContent(data);
       final title = content.trim().toUpperCase();
 
       // Ensure it starts with G[goalNumber]
@@ -11770,7 +11835,8 @@ Return only the title, no additional text.''';
         ? 'None yet.'
         : existingScopeItems.map((s) => '  - $s').join('\n');
 
-    final prompt = '''Based on the project context below, generate a comprehensive list of scope items.
+    final prompt =
+        '''Based on the project context below, generate a comprehensive list of scope items.
 
 Project Context:
 $trimmedContext
@@ -11813,7 +11879,8 @@ IMPORTANT RULES:
         final content =
             parsed['choices']?[0]?['message']?['content']?.toString();
         if (content != null) {
-          final result = jsonDecode(_extractJson(content)) as Map<String, dynamic>;
+          final result =
+              jsonDecode(_extractJson(content)) as Map<String, dynamic>;
           final items = result['scopeItems'];
           if (items is List) {
             return items

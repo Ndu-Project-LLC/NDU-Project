@@ -22,10 +22,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 class ToolsIntegrationScreen extends StatefulWidget {
  const ToolsIntegrationScreen({super.key});
 
- static void open(BuildContext context) => Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const ToolsIntegrationScreen()),
- );
+ static void open(BuildContext context) => context.push('/tools-integration');
 
  @override
  State<ToolsIntegrationScreen> createState() => _ToolsIntegrationScreenState();
@@ -235,46 +232,46 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
 
  List<_IntegrationRow> _defaultIntegrations() {
  return [
- _IntegrationRow(
+ const _IntegrationRow(
  id: 'figma', name: 'Figma', subtitle: 'Design files',
  provider: 'Figma', status: 'Connected', scopes: 'files:read, files:write',
  mapsTo: 'Epics, stories', lastSync: '1 hr ago',
- icon: Icons.design_services, iconColor: const Color(0xFFF24E1E),
+ icon: Icons.design_services, iconColor: Color(0xFFF24E1E),
  features: 'Project mapping enabled.', autoHandoff: 'ON', syncMode: null, errorInfo: null,
  ),
- _IntegrationRow(
+ const _IntegrationRow(
  id: 'drawio', name: 'Draw.io', subtitle: 'Architecture diagrams',
  provider: 'Draw.io', status: 'Degraded', scopes: 'diagrams:read',
  mapsTo: 'Tech specs', lastSync: '2 hr ago',
- icon: Icons.account_tree, iconColor: const Color(0xFFFF6D00),
+ icon: Icons.account_tree, iconColor: Color(0xFFFF6D00),
  features: 'Change detection enabled with retries.', autoHandoff: null, syncMode: 'scheduled', errorInfo: '2 errors in last hour',
  ),
- _IntegrationRow(
+ const _IntegrationRow(
  id: 'miro', name: 'Miro', subtitle: 'Workshops & ideation',
  provider: 'Miro', status: 'Connected', scopes: 'boards:read, comments',
  mapsTo: 'Requirements', lastSync: '30 min ago',
- icon: Icons.dashboard, iconColor: const Color(0xFFFFD02F),
+ icon: Icons.dashboard, iconColor: Color(0xFFFFD02F),
  features: 'Cluster-to-epic mapping.', autoHandoff: null, syncMode: null, errorInfo: null,
  ),
- _IntegrationRow(
+ const _IntegrationRow(
  id: 'whiteboard', name: 'Whiteboard', subtitle: 'Live sessions',
  provider: 'Whiteboard', status: 'Connected', scopes: 'sessions:read',
  mapsTo: 'Decisions, actions', lastSync: '5 min ago',
- icon: Icons.sticky_note_2, iconColor: const Color(0xFF0078D4),
+ icon: Icons.sticky_note_2, iconColor: Color(0xFF0078D4),
  features: 'Outputs pushed to notes & actions.', autoHandoff: null, syncMode: null, errorInfo: null,
  ),
- _IntegrationRow(
+ const _IntegrationRow(
  id: 'jira', name: 'Jira', subtitle: 'Sprint & backlog tracking',
  provider: 'Jira', status: 'Connected', scopes: 'issues:read, issues:write',
  mapsTo: 'Tasks, bugs', lastSync: '15 min ago',
- icon: Icons.track_changes, iconColor: const Color(0xFF0052CC),
+ icon: Icons.track_changes, iconColor: Color(0xFF0052CC),
  features: 'Sprint sync with auto-epic linking.', autoHandoff: 'ON', syncMode: null, errorInfo: null,
  ),
- _IntegrationRow(
+ const _IntegrationRow(
  id: 'github', name: 'GitHub', subtitle: 'Source code & CI/CD',
  provider: 'GitHub', status: 'Not connected', scopes: 'repo:read, repo:write',
  mapsTo: 'Code, PRs', lastSync: 'Never',
- icon: Icons.code, iconColor: const Color(0xFF24292F),
+ icon: Icons.code, iconColor: Color(0xFF24292F),
  features: 'PR-to-task linking and CI pipeline triggers.', autoHandoff: null, syncMode: null, errorInfo: null,
  ),
  ];
@@ -282,19 +279,19 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
 
  List<_RiskSignalRow> _defaultRiskSignals() {
  return [
- _RiskSignalRow(
+ const _RiskSignalRow(
  id: 'sig_1', signal: 'Degraded connection',
  description: 'Draw.io experiencing retry failures — 2 errors in last hour',
  severity: 'High', category: 'Connectivity',
  owner: 'Operations Lead', source: 'Auto-detected', status: 'Open',
  ),
- _RiskSignalRow(
+ const _RiskSignalRow(
  id: 'sig_2', signal: 'Token expiry warning',
  description: '1 integration approaching token expiration within 48 hours',
  severity: 'Medium', category: 'Authentication',
  owner: 'Security Lead', source: 'Auto-detected', status: 'Monitoring',
  ),
- _RiskSignalRow(
+ const _RiskSignalRow(
  id: 'sig_3', signal: 'Scope mismatch',
  description: 'Jira scopes need update for new project fields — missing issues:write scope on 2 project boards',
  severity: 'High', category: 'Governance',
@@ -305,15 +302,15 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
 
  List<_ActionRow> _defaultActionRows() {
  return [
- _ActionRow(
+ const _ActionRow(
  id: 'act_1', title: 'Rotate GitHub API credentials',
  priority: 'Critical', dueDate: 'Oct 18', owner: 'Security Lead', status: 'Pending',
  ),
- _ActionRow(
+ const _ActionRow(
  id: 'act_2', title: 'Update Jira integration scopes',
  priority: 'High', dueDate: 'Oct 22', owner: 'Integration Lead', status: 'In Progress',
  ),
- _ActionRow(
+ const _ActionRow(
  id: 'act_3', title: 'Schedule Draw.io connection diagnostic',
  priority: 'Medium', dueDate: 'Oct 28', owner: 'Operations Lead', status: 'Not Started',
  ),
@@ -322,32 +319,32 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
 
  List<_ApprovalGateData> _defaultApprovalGates() {
  return [
- _ApprovalGateData(
+ const _ApprovalGateData(
  id: 'gate_1', gate: 'Security & Access Review',
  description: 'Validate OAuth scopes, API key rotation policies, and access control lists per ISO 27001 A.9',
  approver: 'Security Lead', department: 'Security', priority: 'Critical', status: 'In Review', targetDate: 'Nov 1',
  ),
- _ApprovalGateData(
+ const _ApprovalGateData(
  id: 'gate_2', gate: 'Data Flow Validation',
  description: 'Confirm data mapping integrity, field-level encryption, and PII handling compliance per GDPR/CCPA',
  approver: 'Data Governance Lead', department: 'Data', priority: 'Critical', status: 'Pending', targetDate: 'Nov 5',
  ),
- _ApprovalGateData(
+ const _ApprovalGateData(
  id: 'gate_3', gate: 'Operational Readiness',
  description: 'Verify uptime SLA targets, failover mechanisms, and incident response procedures per ITIL Service Level Management',
  approver: 'Operations Manager', department: 'Operations', priority: 'High', status: 'Pending', targetDate: 'Nov 10',
  ),
- _ApprovalGateData(
+ const _ApprovalGateData(
  id: 'gate_4', gate: 'Integration Testing Sign-off',
  description: 'Confirm end-to-end integration testing, error handling validation, and performance benchmarks met',
  approver: 'QA Lead', department: 'Quality', priority: 'High', status: 'Not Started', targetDate: 'Nov 15',
  ),
- _ApprovalGateData(
+ const _ApprovalGateData(
  id: 'gate_5', gate: 'Vendor & License Compliance',
  description: 'Verify vendor contract terms, license scope alignment, and usage limits per procurement governance',
  approver: 'Procurement Lead', department: 'Procurement', priority: 'Medium', status: 'Not Started', targetDate: 'Nov 20',
  ),
- _ApprovalGateData(
+ const _ApprovalGateData(
  id: 'gate_6', gate: 'Executive Authorization',
  description: 'Final approval from executive sponsor for production integration activation and data exchange authorization',
  approver: 'Executive Sponsor', department: 'Executive', priority: 'High', status: 'Not Started', targetDate: 'Nov 25',
@@ -357,23 +354,23 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
 
  List<_DataFlowRow> _defaultDataFlows() {
  return [
- _DataFlowRow(
+ const _DataFlowRow(
  id: 'flow_1', source: 'Figma', target: 'Jira', dataType: 'Design specs',
  apiMethod: 'REST POST', frequency: 'On change', transformation: 'Component-to-epic mapping', status: 'Active',
  ),
- _DataFlowRow(
+ const _DataFlowRow(
  id: 'flow_2', source: 'Jira', target: 'GitHub', dataType: 'Sprint tasks',
  apiMethod: 'REST POST/PUT', frequency: 'Real-time', transformation: 'Issue-to-PR linking', status: 'Active',
  ),
- _DataFlowRow(
+ const _DataFlowRow(
  id: 'flow_3', source: 'Miro', target: 'Requirements', dataType: 'Workshop outputs',
  apiMethod: 'REST GET', frequency: 'Scheduled', transformation: 'Cluster-to-requirement mapping', status: 'Active',
  ),
- _DataFlowRow(
+ const _DataFlowRow(
  id: 'flow_4', source: 'Draw.io', target: 'Tech specs', dataType: 'Architecture diagrams',
  apiMethod: 'REST GET', frequency: 'On change', transformation: 'SVG-to-document embedding', status: 'Degraded',
  ),
- _DataFlowRow(
+ const _DataFlowRow(
  id: 'flow_5', source: 'Whiteboard', target: 'Decisions log', dataType: 'Session artifacts',
  apiMethod: 'WebSocket', frequency: 'Real-time', transformation: 'Auto-extract action items', status: 'Active',
  ),
@@ -729,9 +726,9 @@ showNavigationButtons: false,
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
  decoration: BoxDecoration(
- color: item.color.withOpacity(0.08),
+ color: item.color.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: item.color.withOpacity(0.18)),
+ border: Border.all(color: item.color.withValues(alpha: 0.18)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -828,7 +825,7 @@ showNavigationButtons: false,
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -854,10 +851,10 @@ showNavigationButtons: false,
  AnimatedRotation(
  duration: const Duration(milliseconds: 200),
  turns: _frameworkGuideExpanded ? 0.5 : 0,
- child: Icon(
+ child: const Icon(
  Icons.expand_more,
  size: 22,
- color: const Color(0xFF6B7280),
+ color: Color(0xFF6B7280),
  ),
  ),
  ],
@@ -933,9 +930,9 @@ showNavigationButtons: false,
  width: double.infinity,
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
- color: color.withOpacity(0.04),
+ color: color.withValues(alpha: 0.04),
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.12)),
+ border: Border.all(color: color.withValues(alpha: 0.12)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -945,7 +942,7 @@ showNavigationButtons: false,
  Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Icon(icon, size: 16, color: color),
@@ -1011,14 +1008,14 @@ showNavigationButtons: false,
  ),
  const SizedBox(height: 4),
  if (filtered.isEmpty)
- Padding(
- padding: const EdgeInsets.all(32),
+ const Padding(
+ padding: EdgeInsets.all(32),
  child: Center(
  child: Column(
  children: [
- const Icon(Icons.extension_outlined, color: Color(0xFF9CA3AF), size: 32),
- const SizedBox(height: 12),
- const Text(
+ Icon(Icons.extension_outlined, color: Color(0xFF9CA3AF), size: 32),
+ SizedBox(height: 12),
+ Text(
  'No integrations found. Add a tool to start tracking connections.',
  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF6B7280)),
  ),
@@ -1048,7 +1045,7 @@ showNavigationButtons: false,
  Container(
  padding: const EdgeInsets.all(6),
  decoration: BoxDecoration(
- color: item.iconColor.withOpacity(0.1),
+ color: item.iconColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Icon(item.icon, size: 16, color: item.iconColor),
@@ -1385,7 +1382,7 @@ showNavigationButtons: false,
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.shield_outlined, size: 36, color: const Color(0xFF10B981).withOpacity(0.6)),
+ Icon(Icons.shield_outlined, size: 36, color: const Color(0xFF10B981).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No active risk signals', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w600)),
  ],
@@ -1530,7 +1527,7 @@ showNavigationButtons: false,
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.check_circle_outline, size: 36, color: const Color(0xFF10B981).withOpacity(0.6)),
+ Icon(Icons.check_circle_outline, size: 36, color: const Color(0xFF10B981).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No pending actions', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w600)),
  ],
@@ -1706,9 +1703,9 @@ showNavigationButtons: false,
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: const Color(0xFFF59E0B).withOpacity(0.1),
+ color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
+ border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -1759,7 +1756,7 @@ showNavigationButtons: false,
  mainAxisSize: MainAxisSize.min,
  children: [
  DropdownButtonFormField<String>(
- value: providerCtl.text,
+ initialValue: providerCtl.text,
  items: ['Figma', 'Draw.io', 'Miro', 'Whiteboard', 'Jira', 'GitHub', 'Custom']
  .map((p) => DropdownMenuItem(value: p, child: Text(p)))
  .toList(),
@@ -1790,7 +1787,7 @@ showNavigationButtons: false,
  VoiceTextField(controller: subtitleCtl, decoration: const InputDecoration(labelText: 'Subtitle', border: OutlineInputBorder())),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: ['Connected', 'Degraded', 'Not connected', 'Expired']
  .map((s) => DropdownMenuItem(value: s, child: Text(s)))
  .toList(),
@@ -1993,7 +1990,7 @@ showNavigationButtons: false,
  Row(children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: severity,
+ initialValue: severity,
  items: ['Critical', 'High', 'Medium', 'Low'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) { if (v != null) setDialogState(() => severity = v); },
  decoration: const InputDecoration(labelText: 'Severity', border: OutlineInputBorder()),
@@ -2002,7 +1999,7 @@ showNavigationButtons: false,
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: category,
+ initialValue: category,
  items: ['Connectivity', 'Authentication', 'Governance', 'Security', 'Performance'].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
  onChanged: (v) { if (v != null) setDialogState(() => category = v); },
  decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
@@ -2015,7 +2012,7 @@ showNavigationButtons: false,
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: ['Open', 'Monitoring', 'Resolved', 'Escalated'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) { if (v != null) setDialogState(() => status = v); },
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
@@ -2095,7 +2092,7 @@ showNavigationButtons: false,
  Row(children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: priority,
+ initialValue: priority,
  items: ['Critical', 'High', 'Medium', 'Low'].map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
  onChanged: (v) { if (v != null) setDialogState(() => priority = v); },
  decoration: const InputDecoration(labelText: 'Priority', border: OutlineInputBorder()),
@@ -2110,7 +2107,7 @@ showNavigationButtons: false,
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: ['Not Started', 'In Progress', 'Pending', 'Completed'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) { if (v != null) setDialogState(() => status = v); },
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
@@ -2183,7 +2180,7 @@ showNavigationButtons: false,
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.verified_outlined, size: 36, color: const Color(0xFF10B981).withOpacity(0.6)),
+ Icon(Icons.verified_outlined, size: 36, color: const Color(0xFF10B981).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('All gates cleared', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w600)),
  ],
@@ -2311,7 +2308,7 @@ showNavigationButtons: false,
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.swap_horiz, size: 36, color: const Color(0xFF9CA3AF).withOpacity(0.6)),
+ Icon(Icons.swap_horiz, size: 36, color: const Color(0xFF9CA3AF).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No data flows configured', style: TextStyle(color: Color(0xFF6B7280), fontWeight: FontWeight.w600)),
  ],
@@ -2450,7 +2447,7 @@ showNavigationButtons: false,
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: department,
+ initialValue: department,
  items: ['Security', 'Data', 'Operations', 'Quality', 'Procurement', 'Executive', 'Other']
  .map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
  onChanged: (v) { if (v != null) setDialogState(() => department = v); },
@@ -2462,7 +2459,7 @@ showNavigationButtons: false,
  Row(children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: priority,
+ initialValue: priority,
  items: ['Critical', 'High', 'Medium', 'Low'].map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
  onChanged: (v) { if (v != null) setDialogState(() => priority = v); },
  decoration: const InputDecoration(labelText: 'Priority', border: OutlineInputBorder()),
@@ -2471,7 +2468,7 @@ showNavigationButtons: false,
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: ['Not Started', 'In Review', 'Pending', 'Approved', 'Rejected'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) { if (v != null) setDialogState(() => status = v); },
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
@@ -2582,7 +2579,7 @@ showNavigationButtons: false,
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: apiMethodCtl.text,
+ initialValue: apiMethodCtl.text,
  items: ['REST GET', 'REST POST', 'REST POST/PUT', 'REST PUT', 'WebSocket', 'GraphQL', 'Webhook']
  .map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
  onChanged: (v) { if (v != null) apiMethodCtl.text = v; },
@@ -2594,7 +2591,7 @@ showNavigationButtons: false,
  Row(children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: frequencyCtl.text.isEmpty ? 'On change' : frequencyCtl.text,
+ initialValue: frequencyCtl.text.isEmpty ? 'On change' : frequencyCtl.text,
  items: ['Real-time', 'On change', 'Scheduled', 'Manual'].map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
  onChanged: (v) { if (v != null) frequencyCtl.text = v; },
  decoration: const InputDecoration(labelText: 'Frequency', border: OutlineInputBorder()),
@@ -2603,7 +2600,7 @@ showNavigationButtons: false,
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: ['Active', 'Degraded', 'Disabled', 'Pending'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
  onChanged: (v) { if (v != null) setDialogState(() => status = v); },
  decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
@@ -3271,7 +3268,7 @@ class _PanelShell extends StatelessWidget {
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -3315,7 +3312,7 @@ class _PanelShell extends StatelessWidget {
 // =============================================================================
 
 class _Debouncer {
- _Debouncer({this.delay = const Duration(milliseconds: 300)});
+ _Debouncer() : delay = const Duration(milliseconds: 300);
  final Duration delay;
  Timer? _timer;
 

@@ -169,9 +169,9 @@ class _ExecutionPhasePageState extends State<ExecutionPhasePage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: Color(0xFFE2E8F0)),
               ),
               child: Text(
                 widget.introText!,
@@ -187,7 +187,8 @@ class _ExecutionPhasePageState extends State<ExecutionPhasePage> {
     return ExecutionPageHeader(
       badge: 'Execution Phase',
       title: widget.title,
-      description: _loading ? '${widget.subtitle} · Loading...' : widget.subtitle,
+      description:
+          _loading ? '${widget.subtitle} · Loading...' : widget.subtitle,
       metadata: metadata,
     );
   }

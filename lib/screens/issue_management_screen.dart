@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -16,13 +18,12 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 class IssueManagementScreen extends StatefulWidget {
  const IssueManagementScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const IssueManagementScreen()),
- );
+ context.push('/issue-management');
  }
 
  @override
@@ -36,6 +37,73 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  String _searchQuery = '';
 
  List<_IssueMetric> _metrics = [];
+ bool _autoPopulated = false;
+ bool _isAutoPopulating = false;
+ String? _carriedContext;
+
+ @override
+ void initState() {
+ super.initState();
+ WidgetsBinding.instance.addPostFrameCallback((_) => _autoPopulateIfNeeded());
+ }
+
+ Future<void> _autoPopulateIfNeeded() async {
+ if (_autoPopulated || _isAutoPopulating) return;
+ _autoPopulated = true;
+ _isAutoPopulating = true;
+ if (mounted) setState(() {});
+
+ try {
+ final data = ProjectDataHelper.getData(context);
+ // If the user already has issue log items, do nothing.
+ if (data.issueLogItems.isNotEmpty) {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ return;
+ }
+
+ // Pull real carried context for display in the banner.
+ final carried = await buildAccumulatedContext(context, 'issue_management');
+ if (mounted) setState(() => _carriedContext = carried);
+
+ // Deterministic seed from real prior-phase data — never invents issues.
+ // Seed pulls from risk register + planning issue log (NOT the current
+ // screen's issueLogItems, which we already checked is empty).
+ final seed = seedIssueManagement(data);
+ if (seed.isNotEmpty) {
+ final newItems = seed.rows.map((r) => IssueLogItem(
+ id: DateTime.now().microsecondsSinceEpoch.toString(),
+ title: (r['title'] ?? '').toString(),
+ description: (r['description'] ?? '').toString(),
+ type: (r['type'] ?? '').toString(),
+ severity: (r['severity'] ?? '').toString(),
+ status: (r['status'] ?? 'Open').toString(),
+ assignee: (r['assignee'] ?? '').toString(),
+ dueDate: (r['dueDate'] ?? '').toString(),
+ milestone: (r['milestone'] ?? '').toString(),
+ )).toList();
+
+ await ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: 'issue_management',
+ dataUpdater: (d) => d.copyWith(issueLogItems: newItems),
+ );
+
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(
+ 'Seeded ${newItems.length} issue(s) from ${seed.source}.'),
+ behavior: SnackBarBehavior.floating,
+ ),
+ );
+ }
+ }
+ } catch (e) {
+ debugPrint('IssueManagement auto-populate error: $e');
+ } finally {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ }
+ }
 
  Future<void> _handleNewIssue() async {
  final entry = await showDialog<IssueLogItem>(
@@ -190,6 +258,16 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  children: [
  PlanningPhaseHeader(title: 'Issue Management', onExportPdf: _exportPdf),
  const SizedBox(height: 24),
+ if (_isAutoPopulating)
+ const AutoPopulatingIndicator(),
+ if (_carriedContext != null && _carriedContext!.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(bottom: 16),
+ child: CarriedContextBanner(
+ checkpoint: 'issue_management',
+ contextText: _carriedContext!,
+ ),
+ ),
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Issue Management',
@@ -1300,3 +1378,4 @@ class _MilestoneIssues {
  final String statusLabel;
  final Color indicatorColor;
 }
+

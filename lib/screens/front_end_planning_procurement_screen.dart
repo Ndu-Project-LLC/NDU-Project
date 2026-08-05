@@ -25,6 +25,7 @@ import 'package:ndu_project/services/vendor_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/widgets/procurement_dialogs.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/models/procurement/procurement_ui_extensions.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
@@ -34,6 +35,7 @@ import 'package:ndu_project/widgets/procurement/procurement_vendor_management.da
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 enum ProcurementScreenMode { fep, planning }
 
 enum _MissingProcurementAction {
@@ -55,10 +57,7 @@ class FrontEndPlanningProcurementScreen extends StatefulWidget {
  final String? activeItemLabel;
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const FrontEndPlanningProcurementScreen()),
- );
+ context.push('/fep-procurement');
  }
 
  @override
@@ -561,7 +560,7 @@ class _FrontEndPlanningProcurementScreenState
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: unit,
+ initialValue: unit,
  decoration: const InputDecoration(labelText: 'Unit'),
  items: const [
  DropdownMenuItem(value: 'week', child: Text('Week')),
@@ -2245,7 +2244,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openEditVendorDialog(VendorModel vendor) async {
- final categoryOptions = const [
+ const categoryOptions = [
  'IT Equipment',
  'Construction Services',
  'Furniture',
@@ -2259,7 +2258,7 @@ class _FrontEndPlanningProcurementScreenState
  final result = await showDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) {
  return AddVendorDialog(
  contextChips: _buildDialogContextChips(),
@@ -2812,7 +2811,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  _ProcurementTab? _nextTab() {
- final tabs = _ProcurementTab.values;
+ const tabs = _ProcurementTab.values;
  final index = tabs.indexOf(_selectedTab);
  if (index == -1 || index >= tabs.length - 1) return null;
  for (var i = index + 1; i < tabs.length; i++) {
@@ -3373,7 +3372,7 @@ class _FrontEndPlanningProcurementScreenState
  content: Text(
  'Continuing to ${_nextFlowDestinationLabel()}. You can complete remaining procurement fields later.',
  ),
- duration: Duration(seconds: 3),
+ duration: const Duration(seconds: 3),
  ),
  );
  }
@@ -3911,10 +3910,10 @@ class _FrontEndPlanningProcurementScreenState
  borderRadius: BorderRadius.circular(14),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  ),
- child: ResponsiveDataTableWrapper(
- minWidth: 820,
- child: buildNduDataTable(
+ child: buildNduTableWithExpand(
  context: context,
+ title: 'Procurement Needs',
+ minWidth: 820,
  columnSpacing: 24,
  horizontalMargin: 18,
  headingRowHeight: 48,
@@ -3942,7 +3941,6 @@ class _FrontEndPlanningProcurementScreenState
  ],
  );
  }).toList(),
- ),
  ),
  ),
  ],
@@ -4115,7 +4113,7 @@ class _FrontEndPlanningProcurementScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<StrategyStatus>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(labelText: 'Status'),
  items: StrategyStatus.values
  .map(
@@ -4289,7 +4287,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openAddItemDialog() async {
- final categoryOptions = const [
+ const categoryOptions = [
  'Materials',
  'Equipment',
  'Services',
@@ -4304,7 +4302,7 @@ class _FrontEndPlanningProcurementScreenState
  final result = await showDialog<ProcurementItemModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) {
  return AddItemDialog(
  contextChips: _buildDialogContextChips(),
@@ -4348,7 +4346,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openEditItemDialog(ProcurementItemModel item) async {
- final categoryOptions = const [
+ const categoryOptions = [
  'Materials',
  'Equipment',
  'Services',
@@ -4363,7 +4361,7 @@ class _FrontEndPlanningProcurementScreenState
  final result = await showDialog<ProcurementItemModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) {
  return AddItemDialog(
  contextChips: _buildDialogContextChips(),
@@ -4479,7 +4477,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openAddVendorDialog() async {
- final categoryOptions = const [
+ const categoryOptions = [
  'IT Equipment',
  'Construction Services',
  'Furniture',
@@ -4493,7 +4491,7 @@ class _FrontEndPlanningProcurementScreenState
  final result = await showDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) {
  return AddVendorDialog(
  contextChips: _buildDialogContextChips(),
@@ -4577,7 +4575,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openCreateRfqDialog() async {
- final categoryOptions = const [
+ const categoryOptions = [
  'IT Equipment',
  'Construction Services',
  'Furniture',
@@ -4590,7 +4588,7 @@ class _FrontEndPlanningProcurementScreenState
  final result = await showDialog<RfqModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) {
  return CreateRfqDialog(
  contextChips: _buildDialogContextChips(),
@@ -4643,7 +4641,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openEditRfqDialog(RfqModel rfq) async {
- final categoryOptions = const [
+ const categoryOptions = [
  'IT Equipment',
  'Construction Services',
  'Furniture',
@@ -4656,7 +4654,7 @@ class _FrontEndPlanningProcurementScreenState
  final result = await showDialog<RfqModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) {
  return CreateRfqDialog(
  contextChips: _buildDialogContextChips(),
@@ -4853,7 +4851,7 @@ class _FrontEndPlanningProcurementScreenState
  if (!_isPurchaseOrdersSectionEnabled) return;
  }
 
- final categoryOptions = const [
+ const categoryOptions = [
  'IT Equipment',
  'Construction Services',
  'Furniture',
@@ -4870,7 +4868,7 @@ class _FrontEndPlanningProcurementScreenState
  final result = await showDialog<PurchaseOrderModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) {
  return CreatePoDialog(
  contextChips: _buildDialogContextChips(),
@@ -4929,7 +4927,7 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openEditPoDialog(PurchaseOrderModel order) async {
- final categoryOptions = const [
+ const categoryOptions = [
  'IT Equipment',
  'Construction Services',
  'Furniture',
@@ -4941,7 +4939,7 @@ class _FrontEndPlanningProcurementScreenState
  final result = await showDialog<PurchaseOrderModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) {
  return CreatePoDialog(
  contextChips: _buildDialogContextChips(),
@@ -5770,7 +5768,7 @@ class _ProcurementTabBar extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final tabs = _ProcurementTab.values;
+ const tabs = _ProcurementTab.values;
  return Container(
  decoration: BoxDecoration(
  color: Colors.white,
@@ -6455,10 +6453,10 @@ class _ItemsToolbar extends StatelessWidget {
  return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _SearchField(),
+ const _SearchField(),
  const SizedBox(height: 12),
- Row(
- children: const [
+ const Row(
+ children: [
  Expanded(child: _DropdownField(label: 'All Categories')),
  SizedBox(width: 12),
  Expanded(child: _DropdownField(label: 'All Statuses')),
@@ -7345,7 +7343,14 @@ class _ProcurementStrategiesSection extends StatelessWidget {
  onAction: onAddStrategy,
  )
  else
- Container(
+ _buildStrategiesTable(strategies),
+ ],
+ );
+ }
+
+ Widget _buildStrategiesTable(List<ProcurementStrategyModel> strategies) {
+ Widget buildTable() {
+ return Container(
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
@@ -7444,8 +7449,13 @@ class _ProcurementStrategiesSection extends StatelessWidget {
  ),
  ),
  ),
- ),
- ],
+ );
+ }
+
+ return FullScreenTableWrapper(
+ title: 'Procurement Strategies',
+ child: buildTable(),
+ tableBuilder: (fsContext) => buildTable(),
  );
  }
 }
@@ -7558,7 +7568,26 @@ class _StrategiesSection extends StatelessWidget {
  'Add procurement scope items to define potential vendors, contract type, estimated duration, value, and bidding requirements.',
  )
  else
- Container(
+ _buildScopeItemsTable(items),
+ const SizedBox(height: 12),
+ Align(
+ alignment: Alignment.centerLeft,
+ child: OutlinedButton.icon(
+ onPressed: onAddScope,
+ style: OutlinedButton.styleFrom(
+ foregroundColor: const Color(0xFF0F172A),
+ side: const BorderSide(color: Color(0xFFCBD5E1)),
+ ),
+ icon: const Icon(Icons.add_rounded, size: 16),
+ label: const Text('Add Scope Row'),
+ )),
+ ],
+ );
+ }
+
+ Widget _buildScopeItemsTable(List<ProcurementItemModel> items) {
+ Widget buildTable() {
+ return Container(
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
@@ -7625,20 +7654,13 @@ class _StrategiesSection extends StatelessWidget {
  ),
  ),
  ),
- ),
- const SizedBox(height: 12),
- Align(
- alignment: Alignment.centerLeft,
- child: OutlinedButton.icon(
- onPressed: onAddScope,
- style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF0F172A),
- side: const BorderSide(color: Color(0xFFCBD5E1)),
- ),
- icon: const Icon(Icons.add_rounded, size: 16),
- label: const Text('Add Scope Row'),
- )),
- ],
+ );
+ }
+
+ return FullScreenTableWrapper(
+ title: 'Procurement Scope',
+ child: buildTable(),
+ tableBuilder: (fsContext) => buildTable(),
  );
  }
 }
@@ -7671,7 +7693,7 @@ class _ScopeValueCell extends StatelessWidget {
  Widget build(BuildContext context) {
  return Padding(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
- child: Text(
+ child: WrappedText(
  text.isEmpty ? '-' : text,
  style: const TextStyle(
  fontSize: 12,
@@ -8013,13 +8035,57 @@ class _VendorDataTable extends StatelessWidget {
  borderRadius: BorderRadius.circular(16),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  ),
- child: Scrollbar(
- thumbVisibility: true,
- scrollbarOrientation: ScrollbarOrientation.bottom,
- child: SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: ConstrainedBox(
- constraints: BoxConstraints(minWidth: constraints.maxWidth),
+ child: FullScreenTableWrapper(
+ title: 'Vendor Directory',
+ tableBuilder: (fsContext) => buildNduDataTable(
+ context: fsContext,
+ columnSpacing: 18,
+ horizontalMargin: 24,
+ headingTextStyle: const TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF475569)),
+ dataTextStyle:
+ const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+ showCheckboxColumn: false,
+ columns: const [
+ DataColumn(label: Center(child: SizedBox(width: 24))),
+ DataColumn(label: Center(child: Text('Vendor Name'))),
+ DataColumn(label: Center(child: Text('Category'))),
+ DataColumn(label: Center(child: Text('Status'))),
+ DataColumn(label: Center(child: Text('Contact'))),
+ DataColumn(label: Center(child: Text('Rating'))),
+ DataColumn(label: Center(child: Text('Actions'))),
+ ],
+ rows: vendors
+ .map(
+ (vendor) => DataRow(
+ cells: [
+ DataCell(
+ Checkbox(
+ value: selectedVendorIds.contains(vendor.id),
+ onChanged: (value) =>
+ onToggleSelected(vendor.id, value ?? false),
+ ),
+ ),
+ DataCell(_VendorNameCell(vendor: vendor)),
+ DataCell(Text(vendor.category)),
+ DataCell(_VendorStatusPill(status: vendor.status)),
+ DataCell(Text(vendor.contactLabel)),
+ DataCell(_RatingStars(rating: vendor.ratingScore)),
+ DataCell(_VendorActionsMenu(
+ vendor: vendor,
+ onEdit: () => onEditVendor(vendor),
+ onDelete: () => onDeleteVendor(vendor.id),
+ )),
+ ],
+ ),
+ )
+ .toList(),
+ ),
+ child: ResponsiveDataTableWrapper(
+ minWidth: constraints.maxWidth,
+ maxHeight: 600,
  child: buildNduDataTable(
  context: context,
  columnSpacing: 18,
@@ -8065,7 +8131,6 @@ class _VendorDataTable extends StatelessWidget {
  ),
  )
  .toList(),
- ),
  ),
  ),
  ),
@@ -8251,7 +8316,7 @@ class _RatingStars extends StatelessWidget {
 }
 
 class _YesNoBadge extends StatelessWidget {
- const _YesNoBadge({required this.value, this.showStar = false});
+ const _YesNoBadge({required this.value}) : showStar = false;
 
  final bool value;
  final bool showStar;
@@ -8314,9 +8379,9 @@ class _VendorStatusPill extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- color: tone.withOpacity(0.12),
+ color: tone.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: tone.withOpacity(0.35)),
+ border: Border.all(color: tone.withValues(alpha: 0.35)),
  ),
  child: Text(
  status.trim().isEmpty ? 'Unknown' : status.trim(),
@@ -8351,9 +8416,9 @@ class _PriorityPill extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- color: tone.withOpacity(0.12),
+ color: tone.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: tone.withOpacity(0.35)),
+ border: Border.all(color: tone.withValues(alpha: 0.35)),
  ),
  child: Text(
  label,
@@ -9181,7 +9246,7 @@ class _ProcurementWorkflowPlannerCard extends StatelessWidget {
  SizedBox(
  width: 320,
  child: DropdownButtonFormField<String>(
- value: selectedScopeId,
+ initialValue: selectedScopeId,
  decoration: const InputDecoration(
  labelText: 'Procurement Scope',
  isDense: true,
@@ -9464,8 +9529,8 @@ class _RfqListCard extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
- children: const [
+ const Row(
+ children: [
  Text(
  'Active RFQs',
  style: TextStyle(
@@ -10133,8 +10198,8 @@ class _PurchaseOrderHeaderRow extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Row(
- children: const [
+ return const Row(
+ children: [
  _HeaderCell(label: 'PO', flex: 2),
  _HeaderCell(label: 'Vendor', flex: 3),
  _HeaderCell(label: 'Category', flex: 2),
@@ -10669,7 +10734,7 @@ class _ItemTrackingView extends StatelessWidget {
  Expanded(
  child: Text(
  title,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 20,
  fontWeight: FontWeight.w700,
  color: Color(0xFF0F172A),
@@ -10963,7 +11028,7 @@ class _ProcurementTemplatesView extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final templates = const <Map<String, String>>[
+ const templates = <Map<String, String>>[
  {
  'title': 'RFQ Template',
  'description':

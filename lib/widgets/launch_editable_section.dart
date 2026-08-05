@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/table_import_helper.dart';
 import 'package:ndu_project/widgets/execution_phase_ui.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class LaunchEntry {
   const LaunchEntry({
     required this.title,
@@ -98,61 +100,80 @@ class LaunchEditableSection extends StatelessWidget {
     );
   }
 
-  /// Shows the world-class import dialog for this section.
-  void _showImportForSection(BuildContext context) async {
-    final headers = showStatusChip
-        ? ['Item', 'Details', 'Status']
-        : ['Item', 'Details'];
-    final sampleRows = showStatusChip
-        ? [
-            ['Complete HR onboarding', 'Submit contracts and setup payroll', 'Planned'],
-            ['Provision laptops', 'Order and configure 2 laptops', 'In Progress'],
-            ['Team kickoff meeting', 'Schedule for week 1', 'Completed'],
+  /// CSV column specs for this section's table. Mirrors the on-page
+  /// columns: Item | Details (+ Status if [showStatusChip] is true).
+  /// "Actions" column is a UI control and is intentionally NOT in the
+  /// template.
+  List<CsvColumnSpec> _buildColumnSpecs() {
+    return showStatusChip
+        ? const [
+            CsvColumnSpec(
+              key: 'item',
+              label: 'Item',
+              required: true,
+              hint: 'Short title for the entry',
+              sampleValue: 'Complete HR onboarding',
+            ),
+            CsvColumnSpec(
+              key: 'details',
+              label: 'Details',
+              hint: 'Longer description of the entry',
+              sampleValue: 'Submit contracts and setup payroll',
+            ),
+            CsvColumnSpec(
+              key: 'status',
+              label: 'Status',
+              allowedValues: ['Planned', 'In Progress', 'Completed'],
+              defaultValue: 'Planned',
+              sampleValue: 'Planned',
+            ),
           ]
-        : [
-            ['Complete HR onboarding', 'Submit contracts and setup payroll'],
-            ['Provision laptops', 'Order and configure 2 laptops'],
-            ['Team kickoff meeting', 'Schedule for week 1'],
+        : const [
+            CsvColumnSpec(
+              key: 'item',
+              label: 'Item',
+              required: true,
+              hint: 'Short title for the entry',
+              sampleValue: 'Complete HR onboarding',
+            ),
+            CsvColumnSpec(
+              key: 'details',
+              label: 'Details',
+              hint: 'Longer description of the entry',
+              sampleValue: 'Submit contracts and setup payroll',
+            ),
           ];
+  }
 
-    final rows = await TableImportHelper.showImportDialog(
+  /// Shows the world-class import dialog for this section. Uses the rich
+  /// CsvColumnSpec so the template mirrors the on-page table columns
+  /// exactly (Item | Details | optional Status).
+  void _showImportForSection(BuildContext context) async {
+    final columns = _buildColumnSpecs();
+    final rows = await TableImportHelper.showImportDialogSpec(
       context,
       tableTitle: title,
-      headers: headers,
-      sampleRows: sampleRows,
+      columns: columns,
     );
 
     if (rows == null || rows.isEmpty) return;
 
-    // Import the rows as new entries
+    // Import the rows as new entries. The caller's onAdd handler is
+    // responsible for actually persisting each new entry; we invoke it
+    // once per imported row.
     for (final parts in rows) {
       onAdd();
     }
   }
 
-  /// Downloads a CSV template for this section.
+  /// Downloads a CSV template for this section. Uses the rich
+  /// CsvColumnSpec so the template includes hints, allowed values, and
+  /// required-field markers — fully mirroring the on-page table.
   void _downloadTemplateForSection() {
-    final headers = showStatusChip
-        ? ['Item', 'Details', 'Status']
-        : ['Item', 'Details'];
-    final sampleRows = showStatusChip
-        ? [
-            ['Complete HR onboarding', 'Submit contracts and setup payroll', 'Planned'],
-            ['Provision laptops', 'Order and configure 2 laptops', 'In Progress'],
-            ['Team kickoff meeting', 'Schedule for week 1', 'Completed'],
-          ]
-        : [
-            ['Complete HR onboarding', 'Submit contracts and setup payroll'],
-            ['Provision laptops', 'Order and configure 2 laptops'],
-            ['Team kickoff meeting', 'Schedule for week 1'],
-          ];
-
-    final filename =
-        '${title.toLowerCase().replaceAll(' ', '_')}_template.csv';
-    TableImportHelper.downloadTemplate(
-      filename: filename,
-      headers: headers,
-      sampleRows: sampleRows,
+    final columns = _buildColumnSpecs();
+    TableImportHelper.downloadTemplateForTable(
+      tableTitle: title,
+      columns: columns,
     );
   }
 
@@ -187,8 +208,7 @@ class LaunchEditableSection extends StatelessWidget {
             entry: entries[i],
             showStatusChip: showStatusChip,
             onEdit: onEdit != null ? () => onEdit!(i, entries[i]) : null,
-            onDuplicate:
-                onDuplicate != null ? () => onDuplicate!(i) : null,
+            onDuplicate: onDuplicate != null ? () => onDuplicate!(i) : null,
             onRemove: () => onRemove(i),
           ),
           if (i != entries.length - 1) const SizedBox(height: 12),
@@ -325,7 +345,7 @@ class LaunchEditableSection extends StatelessWidget {
                                       label: entries[i].status!,
                                     ),
                                   )
-                                : Text('Not set', style: detailStyle),
+                                : const Text('Not set', style: detailStyle),
                           ),
                         Expanded(
                           flex: columns.last.flex,
@@ -387,7 +407,7 @@ class _LaunchEntryCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 12,
             offset: const Offset(0, 8),
           ),

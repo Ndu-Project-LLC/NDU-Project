@@ -38,26 +38,26 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            border: Border.all(color: Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
             ],
           ),
-          child: ResponsiveDataTableWrapper(
+          child: buildNduTableWithExpand(
+            context: context,
+            title: 'Stakeholder Alignment',
             minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 900,
             maxHeight: 560,
-            child: buildNduDataTable(
-              context: context,
-              columnSpacing: 24,
-              horizontalMargin: 20,
-              headingRowHeight: 56,
-              dataRowMinHeight: 52,
-              dataRowMaxHeight: 120,
-              columns: const [
+            columnSpacing: 24,
+            horizontalMargin: 20,
+            headingRowHeight: 56,
+            dataRowMinHeight: 52,
+            dataRowMaxHeight: 120,
+            columns: const [
                 DataColumn(
                   label: Center(
                     child: Text('Stakeholder Name/Role',
@@ -168,7 +168,6 @@ class StakeholderAlignmentTableWidget extends StatelessWidget {
                   ],
                 );
               }).toList(),
-            ),
           ),
         );
       },
@@ -222,6 +221,12 @@ class _StakeholderAlignmentRowWidgetState
     'Risk Mitigation',
     'User Experience',
   ];
+
+  @override
+  void dispose() {
+    _debouncer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -303,7 +308,7 @@ class _StakeholderAlignmentRowWidgetState
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: Color(0xFFE2E8F0)),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -579,7 +584,7 @@ class _AlignmentStatusPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(

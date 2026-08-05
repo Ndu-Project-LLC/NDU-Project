@@ -7,6 +7,8 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
@@ -17,13 +19,12 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:go_router/go_router.dart';
 class ProjectBaselineScreen extends StatefulWidget {
  const ProjectBaselineScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const ProjectBaselineScreen()),
- );
+ context.push('/project-baseline');
  }
 
  @override
@@ -34,6 +35,9 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  bool _loading = true;
  bool _showComparison = false;
  bool _isGenerating = false;
+ bool _autoPopulated = false;
+ bool _isAutoPopulating = false;
+ String? _carriedContext;
 
  String _projectName = '';
  DateTime? _baselineStartDate;
@@ -58,7 +62,26 @@ class _ProjectBaselineScreenState extends State<ProjectBaselineScreen> {
  @override
  void initState() {
  super.initState();
- WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+ WidgetsBinding.instance.addPostFrameCallback((_) {
+ _loadData();
+ _autoPopulateIfNeeded();
+ });
+ }
+
+ Future<void> _autoPopulateIfNeeded() async {
+ if (_autoPopulated || _isAutoPopulating) return;
+ _autoPopulated = true;
+ _isAutoPopulating = true;
+ if (mounted) setState(() {});
+
+ try {
+ final carried = await buildAccumulatedContext(context, 'project_baseline');
+ if (mounted) setState(() => _carriedContext = carried);
+ } catch (e) {
+ debugPrint('ProjectBaseline carried-context error: $e');
+ } finally {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ }
  }
 
  void _loadData() {
@@ -688,6 +711,16 @@ onBack: () =>
  onForward: () => PlanningPhaseNavigation.goToNext(
  context, 'project_baseline'), onExportPdf: _exportPdf),
  const SizedBox(height: 16),
+ if (_isAutoPopulating)
+ const AutoPopulatingIndicator(),
+ if (_carriedContext != null && _carriedContext!.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(bottom: 16),
+ child: CarriedContextBanner(
+ checkpoint: 'project_baseline',
+ contextText: _carriedContext!,
+ ),
+ ),
  _buildHeader(context),
  const SizedBox(height: 24),
  _buildComparisonToggle(),
@@ -720,8 +753,8 @@ onBack: () =>
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Project Baseline',
  ),
  ),
@@ -741,7 +774,7 @@ onBack: () =>
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 16,
  offset: const Offset(0, 8),
  ),
@@ -868,7 +901,7 @@ onBack: () =>
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
  decoration: BoxDecoration(
- color: color.withOpacity(0.08),
+ color: color.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Row(
@@ -884,7 +917,7 @@ onBack: () =>
  label,
  style: TextStyle(
  fontSize: 10,
- color: color.withOpacity(0.8),
+ color: color.withValues(alpha: 0.8),
  ),
  ),
  Text(
@@ -991,7 +1024,7 @@ onBack: () =>
  borderRadius: BorderRadius.circular(20),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFF2563EB).withOpacity(0.3),
+ color: const Color(0xFF2563EB).withValues(alpha: 0.3),
  blurRadius: 20,
  offset: const Offset(0, 12),
  ),
@@ -1000,8 +1033,8 @@ onBack: () =>
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
- children: const [
+ const Row(
+ children: [
  Icon(Icons.schedule, color: Colors.white, size: 24),
  SizedBox(width: 12),
  Text(
@@ -1026,7 +1059,7 @@ onBack: () =>
  const SizedBox(height: 16),
  Container(
  height: 1,
- color: Colors.white.withOpacity(0.2),
+ color: Colors.white.withValues(alpha: 0.2),
  ),
  const SizedBox(height: 16),
  const Text(
@@ -1099,7 +1132,7 @@ onBack: () =>
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 16,
  offset: const Offset(0, 8),
  ),
@@ -1108,8 +1141,8 @@ onBack: () =>
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
- children: const [
+ const Row(
+ children: [
  Icon(Icons.account_balance_wallet,
  color: Color(0xFF10B981), size: 24),
  SizedBox(width: 12),
@@ -1203,7 +1236,7 @@ onBack: () =>
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 16,
  offset: const Offset(0, 8),
  ),
@@ -1212,8 +1245,8 @@ onBack: () =>
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
- children: const [
+ const Row(
+ children: [
  Icon(Icons.dashboard_customize,
  color: Color(0xFF8B5CF6), size: 24),
  SizedBox(width: 12),
@@ -1319,7 +1352,7 @@ onBack: () =>
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 16,
  offset: const Offset(0, 8),
  ),
@@ -1528,7 +1561,7 @@ onBack: () =>
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 16,
  offset: const Offset(0, 8),
  ),
@@ -1733,7 +1766,7 @@ onBack: () =>
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 16,
  offset: const Offset(0, 8),
  ),
@@ -1775,23 +1808,23 @@ onBack: () =>
  ),
  const SizedBox(height: 20),
  if (_baselineVersions.isEmpty)
- Center(
+ const Center(
  child: Padding(
- padding: const EdgeInsets.all(32),
+ padding: EdgeInsets.all(32),
  child: Column(
  children: [
- const Icon(Icons.add_chart,
+ Icon(Icons.add_chart,
  size: 48, color: Color(0xFF9CA3AF)),
- const SizedBox(height: 12),
- const Text(
+ SizedBox(height: 12),
+ Text(
  'No baseline versions yet.',
  style: TextStyle(
  color: Color(0xFF9CA3AF),
  fontStyle: FontStyle.italic,
  ),
  ),
- const SizedBox(height: 8),
- const Text(
+ SizedBox(height: 8),
+ Text(
  'Click "New Baseline" to create your first baseline version.',
  style: TextStyle(
  fontSize: 12,
@@ -2162,7 +2195,7 @@ onBack: () =>
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 16,
  offset: const Offset(0, 8),
  ),
@@ -2245,9 +2278,9 @@ onBack: () =>
  return Container(
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: varianceColor.withOpacity(0.08),
+ color: varianceColor.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: varianceColor.withOpacity(0.2)),
+ border: Border.all(color: varianceColor.withValues(alpha: 0.2)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -2280,7 +2313,7 @@ onBack: () =>
  'Comparing baseline dates vs current dates',
  style: TextStyle(
  fontSize: 12,
- color: varianceColor.withOpacity(0.8),
+ color: varianceColor.withValues(alpha: 0.8),
  ),
  ),
  ],
@@ -2310,9 +2343,9 @@ onBack: () =>
  return Container(
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: varianceColor.withOpacity(0.08),
+ color: varianceColor.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: varianceColor.withOpacity(0.2)),
+ border: Border.all(color: varianceColor.withValues(alpha: 0.2)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -2345,7 +2378,7 @@ onBack: () =>
  'Comparing baseline budget vs current spend',
  style: TextStyle(
  fontSize: 12,
- color: varianceColor.withOpacity(0.8),
+ color: varianceColor.withValues(alpha: 0.8),
  ),
  ),
  ],

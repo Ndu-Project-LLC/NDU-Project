@@ -126,7 +126,7 @@ class _TeamTrainingAndBuildingScreenState
  backgroundColor: Colors.grey[50],
  drawer: Drawer(
  width: sidebarWidth,
- child: SafeArea(
+ child: const SafeArea(
  child: InitiationLikeSidebar(
  activeItemLabel: 'Team Training and Team Building',
  showHeader: true,
@@ -223,10 +223,10 @@ class _TeamTrainingAndBuildingScreenState
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: Colors.grey.withOpacity(0.25)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  blurRadius: 10,
  offset: const Offset(0, 2),
  )
@@ -327,8 +327,8 @@ class _TeamTrainingAndBuildingScreenState
  ),
  ),
  const SizedBox(height: 16),
- Row(
- children: const [
+ const Row(
+ children: [
  Expanded(
  child: _BenefitCard(
  icon: Icons.lightbulb_outline,
@@ -450,7 +450,7 @@ class _TeamTrainingAndBuildingScreenState
  borderRadius: BorderRadius.circular(12),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.1),
+ color: Colors.black.withValues(alpha: 0.1),
  blurRadius: 4,
  offset: const Offset(0, 2),
  )
@@ -715,7 +715,7 @@ class _TeamTrainingAndBuildingScreenState
  const SizedBox(height: 16),
  PremiumEditDialog.fieldLabel('Category'),
  DropdownButtonFormField<String>(
- value: category,
+ initialValue: category,
  items: const [
  DropdownMenuItem(
  value: 'Onboarding', child: Text('Onboarding')),
@@ -873,7 +873,7 @@ class _TeamTrainingAndBuildingScreenState
  if (existingDocs.isNotEmpty) ...[
  const SizedBox(height: 10),
  DropdownButtonFormField<String>(
- value: selectedExistingDocUrl != null &&
+ initialValue: selectedExistingDocUrl != null &&
  existingDocs
  .any((doc) => doc.url == selectedExistingDocUrl)
  ? selectedExistingDocUrl
@@ -1180,7 +1180,7 @@ class _TeamTrainingAndBuildingScreenState
  if (existingDocs.isNotEmpty) ...[
  const SizedBox(height: 10),
  DropdownButtonFormField<String>(
- value: selectedExistingDocUrl != null &&
+ initialValue: selectedExistingDocUrl != null &&
  existingDocs.any(
  (doc) => doc.url == selectedExistingDocUrl)
  ? selectedExistingDocUrl
@@ -2153,7 +2153,7 @@ class _UpcomingTrainingList extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: Colors.grey.withOpacity(0.25)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -2161,7 +2161,7 @@ class _UpcomingTrainingList extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: accent.withOpacity(0.06),
+ color: accent.withValues(alpha: 0.06),
  borderRadius:
  const BorderRadius.vertical(top: Radius.circular(12)),
  ),
@@ -2361,10 +2361,10 @@ class _BenefitCard extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: Colors.grey.withOpacity(0.25)),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.25)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.05),
+ color: Colors.black.withValues(alpha: 0.05),
  blurRadius: 8,
  offset: const Offset(0, 2),
  )
@@ -2375,7 +2375,7 @@ class _BenefitCard extends StatelessWidget {
  children: [
  CircleAvatar(
  radius: 18,
- backgroundColor: Colors.grey.withOpacity(0.15),
+ backgroundColor: Colors.grey.withValues(alpha: 0.15),
  child: Icon(icon, color: Colors.blueGrey[700]),
  ),
  const SizedBox(height: 12),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/project_charter_sections.dart'; // For shared styles
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 // --- 10. Contractors ---
 
@@ -31,9 +33,11 @@ class CharterContractors extends StatelessWidget {
  style:
  TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
  if (contractors.isNotEmpty)
- SingleChildScrollView(
+ FullScreenTableWrapper(
+ title: 'Charter Contractors',
+ child: SingleChildScrollView(
  scrollDirection: Axis.horizontal,
- child: DataTable(
+ child: buildNduDataTable(context: context, 
  headingRowHeight: 40,
  columnSpacing: 24,
  columns: const [
@@ -78,6 +82,54 @@ class CharterContractors extends StatelessWidget {
  .toList(),
  ),
  ),
+ tableBuilder: (fsContext) => SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: buildNduDataTable(context: context, 
+ headingRowHeight: 40,
+ columnSpacing: 24,
+ columns: const [
+ DataColumn(
+ label: Text('Contractor Name',
+ style: TextStyle(
+ fontWeight: FontWeight.bold, fontSize: 12))),
+ DataColumn(
+ label: Text('Service / Responsibility',
+ style: TextStyle(
+ fontWeight: FontWeight.bold, fontSize: 12))),
+ DataColumn(
+ label: Text('Est. Cost',
+ style: TextStyle(
+ fontWeight: FontWeight.bold, fontSize: 12))),
+ DataColumn(
+ label: Text('Status',
+ style: TextStyle(
+ fontWeight: FontWeight.bold, fontSize: 12))),
+ ],
+ rows: contractors
+ .map((c) => DataRow(cells: [
+ DataCell(Text(c.name,
+ style: const TextStyle(
+ fontWeight: FontWeight.w500))),
+ DataCell(Text(c.service)),
+ DataCell(Text(NumberFormat.simpleCurrency(name: 'USD')
+ .format(c.estimatedCost))),
+ DataCell(Container(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 4),
+ decoration: BoxDecoration(
+ color: Colors.orange.shade50,
+ borderRadius: BorderRadius.circular(12),
+ ),
+ child: Text(c.status,
+ style: TextStyle(
+ fontSize: 10,
+ color: Colors.orange.shade800)),
+ )),
+ ]))
+ .toList(),
+ ),
+ ),
+ ),
  ],
  ),
  );
@@ -110,9 +162,11 @@ class CharterVendors extends StatelessWidget {
  style:
  TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
  if (vendors.isNotEmpty)
- SingleChildScrollView(
+ FullScreenTableWrapper(
+ title: 'Charter Vendors',
+ child: SingleChildScrollView(
  scrollDirection: Axis.horizontal,
- child: DataTable(
+ child: buildNduDataTable(context: context, 
  headingRowHeight: 40,
  columnSpacing: 24,
  columns: const [
@@ -144,6 +198,43 @@ class CharterVendors extends StatelessWidget {
  DataCell(Text(v.procurementStage)),
  ]))
  .toList(),
+ ),
+ ),
+ tableBuilder: (fsContext) => SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: buildNduDataTable(context: context, 
+ headingRowHeight: 40,
+ columnSpacing: 24,
+ columns: const [
+ DataColumn(
+ label: Text('Vendor Name',
+ style: TextStyle(
+ fontWeight: FontWeight.bold, fontSize: 12))),
+ DataColumn(
+ label: Text('Equipment / Service',
+ style: TextStyle(
+ fontWeight: FontWeight.bold, fontSize: 12))),
+ DataColumn(
+ label: Text('Est. Price',
+ style: TextStyle(
+ fontWeight: FontWeight.bold, fontSize: 12))),
+ DataColumn(
+ label: Text('Stage',
+ style: TextStyle(
+ fontWeight: FontWeight.bold, fontSize: 12))),
+ ],
+ rows: vendors
+ .map((v) => DataRow(cells: [
+ DataCell(Text(v.name,
+ style: const TextStyle(
+ fontWeight: FontWeight.w500))),
+ DataCell(Text(v.equipmentOrService)),
+ DataCell(Text(NumberFormat.simpleCurrency(name: 'USD')
+ .format(v.estimatedPrice))),
+ DataCell(Text(v.procurementStage)),
+ ]))
+ .toList(),
+ ),
  ),
  ),
  ],
@@ -309,9 +400,9 @@ class CharterSecurity extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.all(20),
  decoration: kCardDecoration,
- child: Column(
+ child: const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text('SECURITY', style: kSectionTitleStyle),
  SizedBox(height: 16),
  Text('No specific security configurations defined.',

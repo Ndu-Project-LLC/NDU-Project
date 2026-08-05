@@ -4,6 +4,7 @@ import 'package:ndu_project/services/permission_service.dart';
 import 'package:ndu_project/widgets/permission_aware_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:go_router/go_router.dart';
 
 /// World-class User Management Screen for admins and owners
 /// Comprehensive user and role management interface
@@ -11,9 +12,7 @@ class UserManagementScreen extends StatefulWidget {
   const UserManagementScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const UserManagementScreen()),
-    );
+    context.push('/user-management');
   }
 
   @override
@@ -99,10 +98,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [
-                      const Color(0xFF6366F1),
-                      const Color(0xFF8B5CF6),
+                      Color(0xFF6366F1),
+                      Color(0xFF8B5CF6),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -272,8 +271,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           Container(
             width: 80,
             height: 80,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF3F4F6),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -500,7 +499,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: role.color.withOpacity(0.12),
+            color: role.color.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: role.color),
           ),
@@ -671,7 +670,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<SiteRole>(
-                    value: selectedRole,
+                    initialValue: selectedRole,
                     decoration: const InputDecoration(
                       labelText: 'Role',
                       prefixIcon: Icon(Icons.badge),
@@ -762,9 +761,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Edit User',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
                               color: Color(0xFF111827),
@@ -1085,7 +1084,7 @@ class _UserPermissionsDialogState extends State<_UserPermissionsDialog> {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Material(
                     color: isSelected
-                        ? role.color.withOpacity(0.15)
+                        ? role.color.withValues(alpha: 0.15)
                         : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     child: InkWell(

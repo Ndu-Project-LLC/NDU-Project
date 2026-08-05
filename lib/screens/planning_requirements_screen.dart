@@ -25,6 +25,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 class PlanningRequirementsScreen extends StatefulWidget {
  const PlanningRequirementsScreen({super.key});
 
@@ -1102,8 +1103,8 @@ $requirementsList
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Requirements',
  ),
  ),
@@ -1135,11 +1136,11 @@ $requirementsList
  crossAxisAlignment:
  CrossAxisAlignment.start,
  children: [
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment:
  CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Requirements Plan',
  style: TextStyle(
@@ -1365,13 +1366,13 @@ $requirementsList
  ),
  );
  }  Widget _buildRequirementsTable(BuildContext context) {
-    final headerStyle = const TextStyle(
+    const headerStyle = TextStyle(
       fontSize: 13,
       fontWeight: FontWeight.w700,
       color: Color(0xFF4B5563),
     );
-    final borderColor = const Color(0xFFE5E7EB);
-    final bgHeader = const Color(0xFFF9FAFB);
+    const borderColor = Color(0xFFE5E7EB);
+    const bgHeader = Color(0xFFF9FAFB);
 
     // Column widths matching the original table
     const colW = <double>[
@@ -1420,7 +1421,7 @@ $requirementsList
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.drag_indicator, size: 18, color: const Color(0xFF9CA3AF)),
+                      const Icon(Icons.drag_indicator, size: 18, color: Color(0xFF9CA3AF)),
                       const SizedBox(width: 2),
                       Text('${row.number}',
                         style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
@@ -1620,7 +1621,9 @@ $requirementsList
       );
     }
 
-    return Container(
+    return FullScreenTableWrapper(
+    title: 'Planning Requirements',
+    child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1688,6 +1691,76 @@ $requirementsList
           ),
         ),
       ),
+    ),
+    tableBuilder: (fsContext) => Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: SizedBox(
+        height: 460,
+        child: Scrollbar(
+          controller: _requirementsHorizontalController,
+          thumbVisibility: true,
+          child: SingleChildScrollView(
+            controller: _requirementsHorizontalController,
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: totalWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header row (non-draggable)
+                  Container(
+                    key: const ValueKey('req_header'),
+                    decoration: BoxDecoration(
+                      color: bgHeader,
+                      border: Border(
+                        bottom: BorderSide(color: borderColor),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        hCell('No', colW[0]),
+                        hCell('Requirement', colW[1]),
+                        hCell('Requirement type', colW[2]),
+                        hCell('Discipline', colW[3]),
+                        hCell('Role', colW[4]),
+                        hCell('Person', colW[5]),
+                        hCell('Phase', colW[6]),
+                        hCell('Requirement source', colW[7]),
+                        hCell('Comments and Requirement Source Links', colW[8]),
+                        hCell('', colW[9]),
+                      ],
+                    ),
+                  ),
+                  // Data rows (draggable) or empty state
+                  Expanded(
+                    child: _rows.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No requirements yet. Add one or import from CSV.',
+                              style: TextStyle(color: Color(0xFF9CA3AF)),
+                            ),
+                          )
+                        : Scrollbar(
+                            controller: _requirementsVerticalController,
+                            thumbVisibility: true,
+                            child: ReorderableListView(
+                              buildDefaultDragHandles: false,
+                              onReorder: _onReorder,
+                              children: List.generate(_rows.length, (i) => buildDataRow(i)),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
     );
   }
 
@@ -1743,14 +1816,14 @@ $requirementsList
  }
 
   List<CsvColumnSpec> get _csvColumns => [
-    CsvColumnSpec(key: 'description', label: 'Requirement', required: true, sampleValue: 'The system shall support user authentication'),
-    CsvColumnSpec(key: 'type', label: 'Type', allowedValues: _RequirementRow.requirementTypeOptions, defaultValue: 'Functional', sampleValue: 'Functional'),
-    CsvColumnSpec(key: 'discipline', label: 'Discipline', allowedValues: _RequirementRow.disciplineOptions, defaultValue: 'IT', sampleValue: 'IT'),
-    CsvColumnSpec(key: 'role', label: 'Role', sampleValue: 'Requirements Lead'),
-    CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
-    CsvColumnSpec(key: 'phase', label: 'Phase', allowedValues: _RequirementRow.phaseOptions, defaultValue: 'Planning', sampleValue: 'Planning'),
-    CsvColumnSpec(key: 'source', label: 'Source', sampleValue: 'Stakeholder interview'),
-    CsvColumnSpec(key: 'comments', label: 'Comments', sampleValue: 'High priority'),
+    const CsvColumnSpec(key: 'description', label: 'Requirement', required: true, sampleValue: 'The system shall support user authentication'),
+    const CsvColumnSpec(key: 'type', label: 'Type', allowedValues: _RequirementRow.requirementTypeOptions, defaultValue: 'Functional', sampleValue: 'Functional'),
+    const CsvColumnSpec(key: 'discipline', label: 'Discipline', allowedValues: _RequirementRow.disciplineOptions, defaultValue: 'IT', sampleValue: 'IT'),
+    const CsvColumnSpec(key: 'role', label: 'Role', sampleValue: 'Requirements Lead'),
+    const CsvColumnSpec(key: 'person', label: 'Person', sampleValue: 'John Doe'),
+    const CsvColumnSpec(key: 'phase', label: 'Phase', allowedValues: _RequirementRow.phaseOptions, defaultValue: 'Planning', sampleValue: 'Planning'),
+    const CsvColumnSpec(key: 'source', label: 'Source', sampleValue: 'Stakeholder interview'),
+    const CsvColumnSpec(key: 'comments', label: 'Comments', sampleValue: 'High priority'),
   ];
 
   void _downloadTemplate() {

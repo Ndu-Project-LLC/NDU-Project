@@ -207,7 +207,7 @@ class PBSModuleScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: status.color.withOpacity(0.15),
+        color: status.color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -244,7 +244,7 @@ class PBSModuleScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<ProductType>(
-                    value: selectedType,
+                    initialValue: selectedType,
                     decoration: const InputDecoration(labelText: 'Product Type'),
                     items: ProductType.values.map((t) {
                       return DropdownMenuItem(value: t, child: Text(t.label));
@@ -336,7 +336,7 @@ class PBSModuleScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<PBSStatus>(
-                  value: selectedStatus,
+                  initialValue: selectedStatus,
                   decoration: const InputDecoration(labelText: 'Status'),
                   items: PBSStatus.values.map((s) {
                     return DropdownMenuItem(value: s, child: Text(s.label));

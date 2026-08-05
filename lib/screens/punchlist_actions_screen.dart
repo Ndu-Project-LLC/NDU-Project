@@ -12,26 +12,28 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
+
 class PunchlistActionsScreen extends StatefulWidget {
- const PunchlistActionsScreen({super.key});
+  const PunchlistActionsScreen({super.key});
 
- static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const PunchlistActionsScreen()),
- );
- }
+  static void open(BuildContext context) {
+    context.push('/punchlist-actions');
+  }
 
- @override
- State<PunchlistActionsScreen> createState() => _PunchlistActionsScreenState();
+  @override
+  State<PunchlistActionsScreen> createState() => _PunchlistActionsScreenState();
 }
 
 class _PunchlistActionsScreenState extends State<PunchlistActionsScreen> {
- static const double _panelMinHeight = 200;
+  static const double _panelMinHeight = 200;
 
- /*
+  /*
  final List<_PunchlistInsight> _priorityItems = const [
  _PunchlistInsight(
  title: 'Rework integrations interface alerts',
@@ -790,14 +792,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 10),
  // Full-width table
- LayoutBuilder(
+ Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 30,
  dataRowMinHeight: 22,
  dataRowMaxHeight: 28,
@@ -897,7 +901,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Punchlist Distribution',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  ],
  ),
  );
@@ -967,14 +978,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 10),
  // Full-width table
- LayoutBuilder(
+ Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 30,
  dataRowMinHeight: 22,
  dataRowMaxHeight: 28,
@@ -1092,7 +1105,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Action Velocity',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  ],
  ),
  );
@@ -1152,14 +1172,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 10),
  // Full-width table
- LayoutBuilder(
+ Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 30,
  dataRowMinHeight: 22,
  dataRowMaxHeight: 28,
@@ -1314,7 +1336,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Capacity Health',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  ],
  ),
  );
@@ -1374,14 +1403,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 10),
  // Full-width table
- LayoutBuilder(
+ Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+  return LayoutBuilder(
  builder: (context, constraints) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: constraints.maxWidth),
- child: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+ child: buildNduDataTable(context: context, 
+ headingRowColor: const Color(0xFFF8FAFC),
  headingRowHeight: 30,
  dataRowMinHeight: 22,
  dataRowMaxHeight: 28,
@@ -1510,7 +1541,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
- ),
+ );
+  }
+  return FullScreenTableWrapper(
+   title: 'Shift Coverage',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ })
  ],
  ),
  );
@@ -2428,510 +2466,576 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 }
 
-
 class _PunchlistInsight {
- const _PunchlistInsight({
- required this.title,
- required this.owner,
- required this.dueIn,
- required this.severity,
- required this.status,
- });
+  const _PunchlistInsight({
+    required this.title,
+    required this.owner,
+    required this.dueIn,
+    required this.severity,
+    required this.status,
+  });
 
- final String title;
- final String owner;
- final String dueIn;
- final _PunchlistSeverity severity;
- final String status;
+  final String title;
+  final String owner;
+  final String dueIn;
+  final _PunchlistSeverity severity;
+  final String status;
 
- Map<String, dynamic> toMap() => {
- 'title': title,
- 'owner': owner,
- 'dueIn': dueIn,
- 'severity': severity.name,
- 'status': status,
- };
+  Map<String, dynamic> toMap() => {
+        'title': title,
+        'owner': owner,
+        'dueIn': dueIn,
+        'severity': severity.name,
+        'status': status,
+      };
 
- static _PunchlistInsight fromMap(Map<String, dynamic> map) {
- final severityKey = map['severity']?.toString() ?? 'medium';
- return _PunchlistInsight(
- title: map['title']?.toString() ?? '',
- owner: map['owner']?.toString() ?? '',
- dueIn: map['dueIn']?.toString() ?? '',
- severity: _severityFromKey(severityKey),
- status: map['status']?.toString() ?? '',
- );
- }
+  static _PunchlistInsight fromMap(Map<String, dynamic> map) {
+    final severityKey = map['severity']?.toString() ?? 'medium';
+    return _PunchlistInsight(
+      title: map['title']?.toString() ?? '',
+      owner: map['owner']?.toString() ?? '',
+      dueIn: map['dueIn']?.toString() ?? '',
+      severity: _severityFromKey(severityKey),
+      status: map['status']?.toString() ?? '',
+    );
+  }
 
- static List<_PunchlistInsight> fromList(dynamic data) {
- if (data is! List) return [];
- return data
- .whereType<Map>()
- .map((item) => _PunchlistInsight.fromMap(
- Map<String, dynamic>.from(item)))
- .toList();
- }
+  static List<_PunchlistInsight> fromList(dynamic data) {
+    if (data is! List) return [];
+    return data
+        .whereType<Map>()
+        .map((item) =>
+            _PunchlistInsight.fromMap(Map<String, dynamic>.from(item)))
+        .toList();
+  }
 
- static _PunchlistSeverity _severityFromKey(String key) {
- switch (key.toLowerCase()) {
- case 'critical':
- return _PunchlistSeverity.critical;
- case 'high':
- return _PunchlistSeverity.high;
- case 'low':
- return _PunchlistSeverity.low;
- default:
- return _PunchlistSeverity.medium;
- }
- }
+  static _PunchlistSeverity _severityFromKey(String key) {
+    switch (key.toLowerCase()) {
+      case 'critical':
+        return _PunchlistSeverity.critical;
+      case 'high':
+        return _PunchlistSeverity.high;
+      case 'low':
+        return _PunchlistSeverity.low;
+      default:
+        return _PunchlistSeverity.medium;
+    }
+  }
 }
 
 enum _PunchlistSeverity { low, medium, high, critical }
 
 extension on _PunchlistSeverity {
- Color get color {
- switch (this) {
- case _PunchlistSeverity.low:
- return const Color(0xFF22C55E);
- case _PunchlistSeverity.medium:
- return const Color(0xFFFBBF24);
- case _PunchlistSeverity.high:
- return const Color(0xFF2563EB);
- case _PunchlistSeverity.critical:
- return const Color(0xFFEF4444);
- }
- }
+  Color get color {
+    switch (this) {
+      case _PunchlistSeverity.low:
+        return const Color(0xFF22C55E);
+      case _PunchlistSeverity.medium:
+        return const Color(0xFFFBBF24);
+      case _PunchlistSeverity.high:
+        return const Color(0xFF2563EB);
+      case _PunchlistSeverity.critical:
+        return const Color(0xFFEF4444);
+    }
+  }
 
- IconData get icon {
- switch (this) {
- case _PunchlistSeverity.low:
- return Icons.check_circle_outline;
- case _PunchlistSeverity.medium:
- return Icons.auto_fix_normal_outlined;
- case _PunchlistSeverity.high:
- return Icons.flag_outlined;
- case _PunchlistSeverity.critical:
- return Icons.warning_amber_outlined;
- }
- }
+  IconData get icon {
+    switch (this) {
+      case _PunchlistSeverity.low:
+        return Icons.check_circle_outline;
+      case _PunchlistSeverity.medium:
+        return Icons.auto_fix_normal_outlined;
+      case _PunchlistSeverity.high:
+        return Icons.flag_outlined;
+      case _PunchlistSeverity.critical:
+        return Icons.warning_amber_outlined;
+    }
+  }
 }
 
 class _LegendRow extends StatelessWidget {
- const _LegendRow({
- required this.label,
- required this.color,
- required this.value,
- });
+  const _LegendRow({
+    required this.label,
+    required this.color,
+    required this.value,
+  });
 
- final String label;
- final Color color;
- final String value;
+  final String label;
+  final Color color;
+  final String value;
 
- @override
- Widget build(BuildContext context) {
- return Row(
- children: [
- Container(
- width: 12,
- height: 12,
- decoration: BoxDecoration(
- color: color, borderRadius: BorderRadius.circular(4)),
- ),
- const SizedBox(width: 12),
- Expanded(
- child: Text(
- label,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: Color(0xFF475569),
- ),
- ),
- ),
- Text(
- value,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: Color(0xFF0F172A),
- ),
- ),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+              color: color, borderRadius: BorderRadius.circular(4)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF475569),
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _DistributionRow {
- const _DistributionRow({
- required this.category,
- required this.openItems,
- required this.critical,
- required this.high,
- required this.medium,
- required this.low,
- required this.closed,
- required this.owner,
- required this.status,
- this.lastUpdated = '',
- });
+  const _DistributionRow({
+    required this.category,
+    required this.openItems,
+    required this.critical,
+    required this.high,
+    required this.medium,
+    required this.low,
+    required this.closed,
+    required this.owner,
+    required this.status,
+    this.lastUpdated = '',
+  });
 
- final String category;
- final int openItems;
- final int critical;
- final int high;
- final int medium;
- final int low;
- final int closed;
- final String owner;
- final String status;
- final String lastUpdated;
+  final String category;
+  final int openItems;
+  final int critical;
+  final int high;
+  final int medium;
+  final int low;
+  final int closed;
+  final String owner;
+  final String status;
+  final String lastUpdated;
 
- int get total => openItems + closed;
- double get percentComplete => total > 0 ? (closed / total * 100) : 0.0;
+  int get total => openItems + closed;
+  double get percentComplete => total > 0 ? (closed / total * 100) : 0.0;
 
- Map<String, dynamic> toMap() => {
- 'category': category,
- 'openItems': openItems,
- 'critical': critical,
- 'high': high,
- 'medium': medium,
- 'low': low,
- 'closed': closed,
- 'owner': owner,
- 'status': status,
- 'lastUpdated': lastUpdated,
- };
+  Map<String, dynamic> toMap() => {
+        'category': category,
+        'openItems': openItems,
+        'critical': critical,
+        'high': high,
+        'medium': medium,
+        'low': low,
+        'closed': closed,
+        'owner': owner,
+        'status': status,
+        'lastUpdated': lastUpdated,
+      };
 
- static _DistributionRow fromMap(Map<String, dynamic> map) => _DistributionRow(
- category: map['category']?.toString() ?? '',
- openItems: (map['openItems'] is int) ? map['openItems'] as int : int.tryParse(map['openItems'].toString()) ?? 0,
- critical: (map['critical'] is int) ? map['critical'] as int : int.tryParse(map['critical'].toString()) ?? 0,
- high: (map['high'] is int) ? map['high'] as int : int.tryParse(map['high'].toString()) ?? 0,
- medium: (map['medium'] is int) ? map['medium'] as int : int.tryParse(map['medium'].toString()) ?? 0,
- low: (map['low'] is int) ? map['low'] as int : int.tryParse(map['low'].toString()) ?? 0,
- closed: (map['closed'] is int) ? map['closed'] as int : int.tryParse(map['closed'].toString()) ?? 0,
- owner: map['owner']?.toString() ?? '',
- status: map['status']?.toString() ?? 'Active',
- lastUpdated: map['lastUpdated']?.toString() ?? '',
- );
+  static _DistributionRow fromMap(Map<String, dynamic> map) => _DistributionRow(
+        category: map['category']?.toString() ?? '',
+        openItems: (map['openItems'] is int)
+            ? map['openItems'] as int
+            : int.tryParse(map['openItems'].toString()) ?? 0,
+        critical: (map['critical'] is int)
+            ? map['critical'] as int
+            : int.tryParse(map['critical'].toString()) ?? 0,
+        high: (map['high'] is int)
+            ? map['high'] as int
+            : int.tryParse(map['high'].toString()) ?? 0,
+        medium: (map['medium'] is int)
+            ? map['medium'] as int
+            : int.tryParse(map['medium'].toString()) ?? 0,
+        low: (map['low'] is int)
+            ? map['low'] as int
+            : int.tryParse(map['low'].toString()) ?? 0,
+        closed: (map['closed'] is int)
+            ? map['closed'] as int
+            : int.tryParse(map['closed'].toString()) ?? 0,
+        owner: map['owner']?.toString() ?? '',
+        status: map['status']?.toString() ?? 'Active',
+        lastUpdated: map['lastUpdated']?.toString() ?? '',
+      );
 }
 
 class _ActionVelocityRow {
- const _ActionVelocityRow({
- required this.workstream,
- required this.openItems,
- required this.closedThisSprint,
- required this.velocity,
- required this.throughput,
- required this.delta,
- required this.avgCycleTime,
- required this.period,
- required this.owner,
- required this.status,
- });
+  const _ActionVelocityRow({
+    required this.workstream,
+    required this.openItems,
+    required this.closedThisSprint,
+    required this.velocity,
+    required this.throughput,
+    required this.delta,
+    required this.avgCycleTime,
+    required this.period,
+    required this.owner,
+    required this.status,
+  });
 
- final String workstream;
- final int openItems;
- final int closedThisSprint;
- final int velocity;
- final double throughput;
- final String delta;
- final double avgCycleTime;
- final String period;
- final String owner;
- final String status;
+  final String workstream;
+  final int openItems;
+  final int closedThisSprint;
+  final int velocity;
+  final double throughput;
+  final String delta;
+  final double avgCycleTime;
+  final String period;
+  final String owner;
+  final String status;
 
- Map<String, dynamic> toMap() => {
- 'workstream': workstream,
- 'openItems': openItems,
- 'closedThisSprint': closedThisSprint,
- 'velocity': velocity,
- 'throughput': throughput,
- 'delta': delta,
- 'avgCycleTime': avgCycleTime,
- 'period': period,
- 'owner': owner,
- 'status': status,
- };
+  Map<String, dynamic> toMap() => {
+        'workstream': workstream,
+        'openItems': openItems,
+        'closedThisSprint': closedThisSprint,
+        'velocity': velocity,
+        'throughput': throughput,
+        'delta': delta,
+        'avgCycleTime': avgCycleTime,
+        'period': period,
+        'owner': owner,
+        'status': status,
+      };
 
- static _ActionVelocityRow fromMap(Map<String, dynamic> map) => _ActionVelocityRow(
- workstream: map['workstream']?.toString() ?? '',
- openItems: (map['openItems'] is int) ? map['openItems'] as int : int.tryParse(map['openItems'].toString()) ?? 0,
- closedThisSprint: (map['closedThisSprint'] is int) ? map['closedThisSprint'] as int : int.tryParse(map['closedThisSprint'].toString()) ?? 0,
- velocity: (map['velocity'] is int) ? map['velocity'] as int : int.tryParse(map['velocity'].toString()) ?? 0,
- throughput: (map['throughput'] is num) ? (map['throughput'] as num).toDouble() : double.tryParse(map['throughput'].toString()) ?? 0.0,
- delta: map['delta']?.toString() ?? '+0.0%',
- avgCycleTime: (map['avgCycleTime'] is num) ? (map['avgCycleTime'] as num).toDouble() : double.tryParse(map['avgCycleTime'].toString()) ?? 0.0,
- period: map['period']?.toString() ?? '',
- owner: map['owner']?.toString() ?? '',
- status: map['status']?.toString() ?? 'On Track',
- );
+  static _ActionVelocityRow fromMap(Map<String, dynamic> map) =>
+      _ActionVelocityRow(
+        workstream: map['workstream']?.toString() ?? '',
+        openItems: (map['openItems'] is int)
+            ? map['openItems'] as int
+            : int.tryParse(map['openItems'].toString()) ?? 0,
+        closedThisSprint: (map['closedThisSprint'] is int)
+            ? map['closedThisSprint'] as int
+            : int.tryParse(map['closedThisSprint'].toString()) ?? 0,
+        velocity: (map['velocity'] is int)
+            ? map['velocity'] as int
+            : int.tryParse(map['velocity'].toString()) ?? 0,
+        throughput: (map['throughput'] is num)
+            ? (map['throughput'] as num).toDouble()
+            : double.tryParse(map['throughput'].toString()) ?? 0.0,
+        delta: map['delta']?.toString() ?? '+0.0%',
+        avgCycleTime: (map['avgCycleTime'] is num)
+            ? (map['avgCycleTime'] as num).toDouble()
+            : double.tryParse(map['avgCycleTime'].toString()) ?? 0.0,
+        period: map['period']?.toString() ?? '',
+        owner: map['owner']?.toString() ?? '',
+        status: map['status']?.toString() ?? 'On Track',
+      );
 }
 
 class _CapacityHealthRow {
- const _CapacityHealthRow({
- required this.team,
- required this.plannedFte,
- required this.allocatedFte,
- required this.availableFte,
- required this.utilization,
- required this.overallocated,
- required this.fteVariance,
- required this.burnRate,
- required this.productivityIndex,
- required this.overtimeHrs,
- required this.absenteeismRate,
- required this.skillGap,
- required this.backlogWeeks,
- required this.costVariance,
- required this.riskLevel,
- required this.owner,
- required this.status,
- this.lastUpdated = '',
- });
+  const _CapacityHealthRow({
+    required this.team,
+    required this.plannedFte,
+    required this.allocatedFte,
+    required this.availableFte,
+    required this.utilization,
+    required this.overallocated,
+    required this.fteVariance,
+    required this.burnRate,
+    required this.productivityIndex,
+    required this.overtimeHrs,
+    required this.absenteeismRate,
+    required this.skillGap,
+    required this.backlogWeeks,
+    required this.costVariance,
+    required this.riskLevel,
+    required this.owner,
+    required this.status,
+    this.lastUpdated = '',
+  });
 
- final String team;
- final double plannedFte;
- final double allocatedFte;
- final double availableFte;
- final int utilization;
- final double overallocated;
- final double fteVariance;
- final int burnRate;
- final int productivityIndex;
- final int overtimeHrs;
- final double absenteeismRate;
- final int skillGap;
- final double backlogWeeks;
- final int costVariance;
- final String riskLevel;
- final String owner;
- final String status;
- final String lastUpdated;
+  final String team;
+  final double plannedFte;
+  final double allocatedFte;
+  final double availableFte;
+  final int utilization;
+  final double overallocated;
+  final double fteVariance;
+  final int burnRate;
+  final int productivityIndex;
+  final int overtimeHrs;
+  final double absenteeismRate;
+  final int skillGap;
+  final double backlogWeeks;
+  final int costVariance;
+  final String riskLevel;
+  final String owner;
+  final String status;
+  final String lastUpdated;
 
- Map<String, dynamic> toMap() => {
- 'team': team,
- 'plannedFte': plannedFte,
- 'allocatedFte': allocatedFte,
- 'availableFte': availableFte,
- 'utilization': utilization,
- 'overallocated': overallocated,
- 'fteVariance': fteVariance,
- 'burnRate': burnRate,
- 'productivityIndex': productivityIndex,
- 'overtimeHrs': overtimeHrs,
- 'absenteeismRate': absenteeismRate,
- 'skillGap': skillGap,
- 'backlogWeeks': backlogWeeks,
- 'costVariance': costVariance,
- 'riskLevel': riskLevel,
- 'owner': owner,
- 'status': status,
- 'lastUpdated': lastUpdated,
- };
+  Map<String, dynamic> toMap() => {
+        'team': team,
+        'plannedFte': plannedFte,
+        'allocatedFte': allocatedFte,
+        'availableFte': availableFte,
+        'utilization': utilization,
+        'overallocated': overallocated,
+        'fteVariance': fteVariance,
+        'burnRate': burnRate,
+        'productivityIndex': productivityIndex,
+        'overtimeHrs': overtimeHrs,
+        'absenteeismRate': absenteeismRate,
+        'skillGap': skillGap,
+        'backlogWeeks': backlogWeeks,
+        'costVariance': costVariance,
+        'riskLevel': riskLevel,
+        'owner': owner,
+        'status': status,
+        'lastUpdated': lastUpdated,
+      };
 
- static _CapacityHealthRow fromMap(Map<String, dynamic> map) => _CapacityHealthRow(
- team: map['team']?.toString() ?? '',
- plannedFte: (map['plannedFte'] is num) ? (map['plannedFte'] as num).toDouble() : double.tryParse(map['plannedFte'].toString()) ?? 0.0,
- allocatedFte: (map['allocatedFte'] is num) ? (map['allocatedFte'] as num).toDouble() : double.tryParse(map['allocatedFte'].toString()) ?? 0.0,
- availableFte: (map['availableFte'] is num) ? (map['availableFte'] as num).toDouble() : double.tryParse(map['availableFte'].toString()) ?? 0.0,
- utilization: (map['utilization'] is int) ? map['utilization'] as int : int.tryParse(map['utilization'].toString()) ?? 0,
- overallocated: (map['overallocated'] is num) ? (map['overallocated'] as num).toDouble() : double.tryParse(map['overallocated'].toString()) ?? 0.0,
- fteVariance: (map['fteVariance'] is num) ? (map['fteVariance'] as num).toDouble() : double.tryParse(map['fteVariance'].toString()) ?? 0.0,
- burnRate: (map['burnRate'] is int) ? map['burnRate'] as int : int.tryParse(map['burnRate'].toString()) ?? 0,
- productivityIndex: (map['productivityIndex'] is int) ? map['productivityIndex'] as int : int.tryParse(map['productivityIndex'].toString()) ?? 100,
- overtimeHrs: (map['overtimeHrs'] is int) ? map['overtimeHrs'] as int : int.tryParse(map['overtimeHrs'].toString()) ?? 0,
- absenteeismRate: (map['absenteeismRate'] is num) ? (map['absenteeismRate'] as num).toDouble() : double.tryParse(map['absenteeismRate'].toString()) ?? 0.0,
- skillGap: (map['skillGap'] is int) ? map['skillGap'] as int : int.tryParse(map['skillGap'].toString()) ?? 0,
- backlogWeeks: (map['backlogWeeks'] is num) ? (map['backlogWeeks'] as num).toDouble() : double.tryParse(map['backlogWeeks'].toString()) ?? 0.0,
- costVariance: (map['costVariance'] is int) ? map['costVariance'] as int : int.tryParse(map['costVariance'].toString()) ?? 0,
- riskLevel: map['riskLevel']?.toString() ?? 'Medium',
- owner: map['owner']?.toString() ?? '',
- status: map['status']?.toString() ?? 'Active',
- lastUpdated: map['lastUpdated']?.toString() ?? '',
- );
+  static _CapacityHealthRow fromMap(Map<String, dynamic> map) =>
+      _CapacityHealthRow(
+        team: map['team']?.toString() ?? '',
+        plannedFte: (map['plannedFte'] is num)
+            ? (map['plannedFte'] as num).toDouble()
+            : double.tryParse(map['plannedFte'].toString()) ?? 0.0,
+        allocatedFte: (map['allocatedFte'] is num)
+            ? (map['allocatedFte'] as num).toDouble()
+            : double.tryParse(map['allocatedFte'].toString()) ?? 0.0,
+        availableFte: (map['availableFte'] is num)
+            ? (map['availableFte'] as num).toDouble()
+            : double.tryParse(map['availableFte'].toString()) ?? 0.0,
+        utilization: (map['utilization'] is int)
+            ? map['utilization'] as int
+            : int.tryParse(map['utilization'].toString()) ?? 0,
+        overallocated: (map['overallocated'] is num)
+            ? (map['overallocated'] as num).toDouble()
+            : double.tryParse(map['overallocated'].toString()) ?? 0.0,
+        fteVariance: (map['fteVariance'] is num)
+            ? (map['fteVariance'] as num).toDouble()
+            : double.tryParse(map['fteVariance'].toString()) ?? 0.0,
+        burnRate: (map['burnRate'] is int)
+            ? map['burnRate'] as int
+            : int.tryParse(map['burnRate'].toString()) ?? 0,
+        productivityIndex: (map['productivityIndex'] is int)
+            ? map['productivityIndex'] as int
+            : int.tryParse(map['productivityIndex'].toString()) ?? 100,
+        overtimeHrs: (map['overtimeHrs'] is int)
+            ? map['overtimeHrs'] as int
+            : int.tryParse(map['overtimeHrs'].toString()) ?? 0,
+        absenteeismRate: (map['absenteeismRate'] is num)
+            ? (map['absenteeismRate'] as num).toDouble()
+            : double.tryParse(map['absenteeismRate'].toString()) ?? 0.0,
+        skillGap: (map['skillGap'] is int)
+            ? map['skillGap'] as int
+            : int.tryParse(map['skillGap'].toString()) ?? 0,
+        backlogWeeks: (map['backlogWeeks'] is num)
+            ? (map['backlogWeeks'] as num).toDouble()
+            : double.tryParse(map['backlogWeeks'].toString()) ?? 0.0,
+        costVariance: (map['costVariance'] is int)
+            ? map['costVariance'] as int
+            : int.tryParse(map['costVariance'].toString()) ?? 0,
+        riskLevel: map['riskLevel']?.toString() ?? 'Medium',
+        owner: map['owner']?.toString() ?? '',
+        status: map['status']?.toString() ?? 'Active',
+        lastUpdated: map['lastUpdated']?.toString() ?? '',
+      );
 }
 
 class _ShiftCoverageRow {
- const _ShiftCoverageRow({
- required this.shift,
- required this.requiredHeadcount,
- required this.actualHeadcount,
- required this.coveragePercent,
- required this.gap,
- required this.shiftPattern,
- required this.overtimeHrs,
- required this.contractorFill,
- required this.agencyStaff,
- required this.absenceCount,
- required this.complianceStatus,
- required this.nextRotation,
- required this.supervisor,
- required this.riskFlag,
- required this.status,
- this.lastUpdated = '',
- });
+  const _ShiftCoverageRow({
+    required this.shift,
+    required this.requiredHeadcount,
+    required this.actualHeadcount,
+    required this.coveragePercent,
+    required this.gap,
+    required this.shiftPattern,
+    required this.overtimeHrs,
+    required this.contractorFill,
+    required this.agencyStaff,
+    required this.absenceCount,
+    required this.complianceStatus,
+    required this.nextRotation,
+    required this.supervisor,
+    required this.riskFlag,
+    required this.status,
+    this.lastUpdated = '',
+  });
 
- final String shift;
- final int requiredHeadcount;
- final int actualHeadcount;
- final int coveragePercent;
- final int gap;
- final String shiftPattern;
- final int overtimeHrs;
- final int contractorFill;
- final int agencyStaff;
- final int absenceCount;
- final String complianceStatus;
- final String nextRotation;
- final String supervisor;
- final String riskFlag;
- final String status;
- final String lastUpdated;
+  final String shift;
+  final int requiredHeadcount;
+  final int actualHeadcount;
+  final int coveragePercent;
+  final int gap;
+  final String shiftPattern;
+  final int overtimeHrs;
+  final int contractorFill;
+  final int agencyStaff;
+  final int absenceCount;
+  final String complianceStatus;
+  final String nextRotation;
+  final String supervisor;
+  final String riskFlag;
+  final String status;
+  final String lastUpdated;
 
- Map<String, dynamic> toMap() => {
- 'shift': shift,
- 'requiredHeadcount': requiredHeadcount,
- 'actualHeadcount': actualHeadcount,
- 'coveragePercent': coveragePercent,
- 'gap': gap,
- 'shiftPattern': shiftPattern,
- 'overtimeHrs': overtimeHrs,
- 'contractorFill': contractorFill,
- 'agencyStaff': agencyStaff,
- 'absenceCount': absenceCount,
- 'complianceStatus': complianceStatus,
- 'nextRotation': nextRotation,
- 'supervisor': supervisor,
- 'riskFlag': riskFlag,
- 'status': status,
- 'lastUpdated': lastUpdated,
- };
+  Map<String, dynamic> toMap() => {
+        'shift': shift,
+        'requiredHeadcount': requiredHeadcount,
+        'actualHeadcount': actualHeadcount,
+        'coveragePercent': coveragePercent,
+        'gap': gap,
+        'shiftPattern': shiftPattern,
+        'overtimeHrs': overtimeHrs,
+        'contractorFill': contractorFill,
+        'agencyStaff': agencyStaff,
+        'absenceCount': absenceCount,
+        'complianceStatus': complianceStatus,
+        'nextRotation': nextRotation,
+        'supervisor': supervisor,
+        'riskFlag': riskFlag,
+        'status': status,
+        'lastUpdated': lastUpdated,
+      };
 
- static _ShiftCoverageRow fromMap(Map<String, dynamic> map) => _ShiftCoverageRow(
- shift: map['shift']?.toString() ?? '',
- requiredHeadcount: (map['requiredHeadcount'] is int) ? map['requiredHeadcount'] as int : int.tryParse(map['requiredHeadcount'].toString()) ?? 0,
- actualHeadcount: (map['actualHeadcount'] is int) ? map['actualHeadcount'] as int : int.tryParse(map['actualHeadcount'].toString()) ?? 0,
- coveragePercent: (map['coveragePercent'] is int) ? map['coveragePercent'] as int : int.tryParse(map['coveragePercent'].toString()) ?? 0,
- gap: (map['gap'] is int) ? map['gap'] as int : int.tryParse(map['gap'].toString()) ?? 0,
- shiftPattern: map['shiftPattern']?.toString() ?? '',
- overtimeHrs: (map['overtimeHrs'] is int) ? map['overtimeHrs'] as int : int.tryParse(map['overtimeHrs'].toString()) ?? 0,
- contractorFill: (map['contractorFill'] is int) ? map['contractorFill'] as int : int.tryParse(map['contractorFill'].toString()) ?? 0,
- agencyStaff: (map['agencyStaff'] is int) ? map['agencyStaff'] as int : int.tryParse(map['agencyStaff'].toString()) ?? 0,
- absenceCount: (map['absenceCount'] is int) ? map['absenceCount'] as int : int.tryParse(map['absenceCount'].toString()) ?? 0,
- complianceStatus: map['complianceStatus']?.toString() ?? 'Compliant',
- nextRotation: map['nextRotation']?.toString() ?? '',
- supervisor: map['supervisor']?.toString() ?? '',
- riskFlag: map['riskFlag']?.toString() ?? 'None',
- status: map['status']?.toString() ?? 'Covered',
- lastUpdated: map['lastUpdated']?.toString() ?? '',
- );
+  static _ShiftCoverageRow fromMap(Map<String, dynamic> map) =>
+      _ShiftCoverageRow(
+        shift: map['shift']?.toString() ?? '',
+        requiredHeadcount: (map['requiredHeadcount'] is int)
+            ? map['requiredHeadcount'] as int
+            : int.tryParse(map['requiredHeadcount'].toString()) ?? 0,
+        actualHeadcount: (map['actualHeadcount'] is int)
+            ? map['actualHeadcount'] as int
+            : int.tryParse(map['actualHeadcount'].toString()) ?? 0,
+        coveragePercent: (map['coveragePercent'] is int)
+            ? map['coveragePercent'] as int
+            : int.tryParse(map['coveragePercent'].toString()) ?? 0,
+        gap: (map['gap'] is int)
+            ? map['gap'] as int
+            : int.tryParse(map['gap'].toString()) ?? 0,
+        shiftPattern: map['shiftPattern']?.toString() ?? '',
+        overtimeHrs: (map['overtimeHrs'] is int)
+            ? map['overtimeHrs'] as int
+            : int.tryParse(map['overtimeHrs'].toString()) ?? 0,
+        contractorFill: (map['contractorFill'] is int)
+            ? map['contractorFill'] as int
+            : int.tryParse(map['contractorFill'].toString()) ?? 0,
+        agencyStaff: (map['agencyStaff'] is int)
+            ? map['agencyStaff'] as int
+            : int.tryParse(map['agencyStaff'].toString()) ?? 0,
+        absenceCount: (map['absenceCount'] is int)
+            ? map['absenceCount'] as int
+            : int.tryParse(map['absenceCount'].toString()) ?? 0,
+        complianceStatus: map['complianceStatus']?.toString() ?? 'Compliant',
+        nextRotation: map['nextRotation']?.toString() ?? '',
+        supervisor: map['supervisor']?.toString() ?? '',
+        riskFlag: map['riskFlag']?.toString() ?? 'None',
+        status: map['status']?.toString() ?? 'Covered',
+        lastUpdated: map['lastUpdated']?.toString() ?? '',
+      );
 }
 
 class _MetricPill extends StatelessWidget {
- const _MetricPill(
- {required this.label, required this.value, required this.color});
+  const _MetricPill(
+      {required this.label, required this.value, required this.color});
 
- final String label;
- final String value;
- final Color color;
+  final String label;
+  final String value;
+  final Color color;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
- decoration: BoxDecoration(
- color: color.withOpacity(0.08),
- borderRadius: BorderRadius.circular(20),
- border: Border.all(color: color.withOpacity(0.28)),
- ),
- child: Row(
- children: [
- Container(
- width: 10,
- height: 10,
- decoration: BoxDecoration(
- color: color, borderRadius: BorderRadius.circular(999)),
- ),
- const SizedBox(width: 12),
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- label,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: color.darken(),
- ),
- ),
- const SizedBox(height: 6),
- Text(
- value,
- style: const TextStyle(
- fontSize: 16,
- fontWeight: FontWeight.w800,
- color: Color(0xFF0F172A),
- ),
- ),
- ],
- ),
- ),
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+                color: color, borderRadius: BorderRadius.circular(999)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: color.darken(),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ChecklistRow extends StatelessWidget {
- const _ChecklistRow(
- {required this.label, required this.status, required this.color});
+  const _ChecklistRow(
+      {required this.label, required this.status, required this.color});
 
- final String label;
- final String status;
- final Color color;
+  final String label;
+  final String status;
+  final Color color;
 
- @override
- Widget build(BuildContext context) {
- return Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Icon(Icons.check_circle, color: color, size: 20),
- const SizedBox(width: 12),
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- label,
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: Color(0xFF1F2937),
- ),
- ),
- const SizedBox(height: 4),
- Text(
- status,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: Color(0xFF475569),
- ),
- ),
- ],
- ),
- ),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.check_circle, color: color, size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                status,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF475569),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 extension _ColorShade on Color {
- Color darken([double amount = .2]) {
- final hsl = HSLColor.fromColor(this);
- final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
- return hslDark.toColor();
- }
+  Color darken([double amount = .2]) {
+    final hsl = HSLColor.fromColor(this);
+    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    return hslDark.toColor();
+  }
 }

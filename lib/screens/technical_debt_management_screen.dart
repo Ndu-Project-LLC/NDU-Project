@@ -12,21 +12,22 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/widgets/launch_editable_section.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
+
 class TechnicalDebtManagementScreen extends StatefulWidget {
- const TechnicalDebtManagementScreen({super.key});
+  const TechnicalDebtManagementScreen({super.key});
 
- static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const TechnicalDebtManagementScreen()),
- );
- }
+  static void open(BuildContext context) {
+    context.push('/technical-debt-management');
+  }
 
- @override
- State<TechnicalDebtManagementScreen> createState() =>
- _TechnicalDebtManagementScreenState();
+  @override
+  State<TechnicalDebtManagementScreen> createState() =>
+      _TechnicalDebtManagementScreenState();
 }
 
 class _TechnicalDebtManagementScreenState
@@ -448,6 +449,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAdd: _showAddRemediationTrackDialog,
  ),
  child: _GovernanceTable(
+ title: 'Remediation runway',
  columns: const [
  _GovernanceColumn('Priority lane', 1.35),
  _GovernanceColumn('Exit criteria / closure standard', 2.3),
@@ -491,6 +493,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAdd: _showAddRootCauseDialog,
  ),
  child: _GovernanceTable(
+ title: 'Root cause signals',
  columns: const [
  _GovernanceColumn('Signal cluster', 1.35),
  _GovernanceColumn('Diagnostic interpretation', 1.9),
@@ -535,6 +538,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAdd: _showAddOwnerDialog,
  ),
  child: _GovernanceTable(
+ title: 'Ownership coverage',
  columns: const [
  _GovernanceColumn('Workstream', 1.35),
  _GovernanceColumn('Accountable owner', 1.4),
@@ -2108,15 +2112,18 @@ class _GovernanceTable extends StatelessWidget {
  const _GovernanceTable({
  required this.columns,
  required this.rows,
+ this.title,
  });
 
  final List<_GovernanceColumn> columns;
  final List<List<Widget>> rows;
+ final String? title;
 
  @override
  Widget build(BuildContext context) {
+ Widget buildInner(BuildContext bc) {
  return LayoutBuilder(
- builder: (context, constraints) {
+ builder: (lbc, constraints) {
  final minWidth = columns.fold<double>(
  0,
  (sum, column) => sum + (column.flex * 142),
@@ -2156,93 +2163,100 @@ class _GovernanceTable extends StatelessWidget {
  },
  );
  }
+
+ return FullScreenTableWrapper(
+ title: title,
+ child: buildInner(context),
+ tableBuilder: buildInner,
+ );
+ }
 }
 
 class _GovernanceHeaderRow extends StatelessWidget {
- const _GovernanceHeaderRow({required this.columns});
+  const _GovernanceHeaderRow({required this.columns});
 
- final List<_GovernanceColumn> columns;
+  final List<_GovernanceColumn> columns;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
- color: const Color(0xFFF8FAFC),
- child: Row(
- children: columns
- .map(
- (column) => Expanded(
- flex: column.flexValue,
- child: Padding(
- padding: const EdgeInsets.only(right: 12),
- child: Text(
- column.label,
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w700,
- color: Color(0xFF475569),
- ),
- ),
- ),
- ),
- )
- .toList(),
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      color: const Color(0xFFF8FAFC),
+      child: Row(
+        children: columns
+            .map(
+              (column) => Expanded(
+                flex: column.flexValue,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Text(
+                    column.label,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF475569),
+                    ),
+                  ),
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
 }
 
 class _GovernanceBodyRow extends StatelessWidget {
- const _GovernanceBodyRow({
- required this.columns,
- required this.cells,
- required this.isLast,
- required this.isAlt,
- });
+  const _GovernanceBodyRow({
+    required this.columns,
+    required this.cells,
+    required this.isLast,
+    required this.isAlt,
+  });
 
- final List<_GovernanceColumn> columns;
- final List<Widget> cells;
- final bool isLast;
- final bool isAlt;
+  final List<_GovernanceColumn> columns;
+  final List<Widget> cells;
+  final bool isLast;
+  final bool isAlt;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
- decoration: BoxDecoration(
- color: isAlt ? const Color(0xFFFCFDFF) : Colors.white,
- border: isLast
- ? null
- : const Border(
- top: BorderSide(color: Color(0xFFE2E8F0)),
- ),
- ),
- child: Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: List.generate(columns.length, (index) {
- return Expanded(
- flex: columns[index].flexValue,
- child: Padding(
- padding: const EdgeInsets.only(right: 12),
- child: cells[index],
- ),
- );
- }),
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: isAlt ? const Color(0xFFFCFDFF) : Colors.white,
+        border: isLast
+            ? null
+            : const Border(
+                top: BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(columns.length, (index) {
+          return Expanded(
+            flex: columns[index].flexValue,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: cells[index],
+            ),
+          );
+        }),
+      ),
+    );
+  }
 }
 
 class _PriorityCell extends StatelessWidget {
- const _PriorityCell({
- required this.title,
- required this.supporting,
- required this.color,
- });
+  const _PriorityCell({
+    required this.title,
+    required this.supporting,
+    required this.color,
+  });
 
- final String title;
- final String supporting;
- final Color color;
+  final String title;
+  final String supporting;
+  final Color color;
 
  @override
  Widget build(BuildContext context) {
@@ -2260,7 +2274,7 @@ class _PriorityCell extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text(
+ WrappedText(
  title,
  style: const TextStyle(
  fontSize: 13,
@@ -2269,7 +2283,7 @@ class _PriorityCell extends StatelessWidget {
  ),
  ),
  const SizedBox(height: 4),
- Text(
+ WrappedText(
  supporting,
  style: const TextStyle(
  fontSize: 11,
@@ -2286,13 +2300,13 @@ class _PriorityCell extends StatelessWidget {
 }
 
 class _BodyCell extends StatelessWidget {
- const _BodyCell(this.value);
+  const _BodyCell(this.value);
 
- final String value;
+  final String value;
 
  @override
  Widget build(BuildContext context) {
- return Text(
+ return WrappedText(
  value,
  style: const TextStyle(
  fontSize: 12,
@@ -2304,83 +2318,83 @@ class _BodyCell extends StatelessWidget {
 }
 
 class _ProgressCell extends StatelessWidget {
- const _ProgressCell({
- required this.value,
- required this.color,
- });
+  const _ProgressCell({
+    required this.value,
+    required this.color,
+  });
 
- final double value;
- final Color color;
+  final double value;
+  final Color color;
 
- @override
- Widget build(BuildContext context) {
- final percentage = (value.clamp(0.0, 1.0) * 100).round();
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- '$percentage%',
- style: TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: color,
- ),
- ),
- const SizedBox(height: 8),
- ClipRRect(
- borderRadius: BorderRadius.circular(8),
- child: LinearProgressIndicator(
- value: value.clamp(0.0, 1.0),
- minHeight: 8,
- backgroundColor: const Color(0xFFE5E7EB),
- valueColor: AlwaysStoppedAnimation<Color>(color),
- ),
- ),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    final percentage = (value.clamp(0.0, 1.0) * 100).round();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$percentage%',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: value.clamp(0.0, 1.0),
+            minHeight: 8,
+            backgroundColor: const Color(0xFFE5E7EB),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _RiskTierCell extends StatelessWidget {
- const _RiskTierCell({
- required this.label,
- required this.color,
- });
+  const _RiskTierCell({
+    required this.label,
+    required this.color,
+  });
 
- final String label;
- final Color color;
+  final String label;
+  final Color color;
 
- @override
- Widget build(BuildContext context) {
- return Align(
- alignment: Alignment.centerLeft,
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
- decoration: BoxDecoration(
- color: color.withOpacity(0.12),
- borderRadius: BorderRadius.circular(16),
- ),
- child: Text(
- label,
- style: TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w700,
- color: color,
- ),
- ),
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _OwnerCoverageCell extends StatelessWidget {
- const _OwnerCoverageCell({
- required this.owner,
- required this.count,
- });
+  const _OwnerCoverageCell({
+    required this.owner,
+    required this.count,
+  });
 
- final String owner;
- final String count;
+  final String owner;
+  final String count;
 
  @override
  Widget build(BuildContext context) {
@@ -2405,7 +2419,7 @@ class _OwnerCoverageCell extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text(
+ WrappedText(
  owner,
  style: const TextStyle(
  fontSize: 13,
@@ -2414,7 +2428,7 @@ class _OwnerCoverageCell extends StatelessWidget {
  ),
  ),
  const SizedBox(height: 3),
- Text(
+ WrappedText(
  '$count accountable role${count == '1' ? '' : 's'}',
  style: const TextStyle(
  fontSize: 11,
@@ -2430,255 +2444,256 @@ class _OwnerCoverageCell extends StatelessWidget {
 }
 
 class _RowActionsCell extends StatelessWidget {
- const _RowActionsCell({
- required this.onEdit,
- required this.onDelete,
- });
+  const _RowActionsCell({
+    required this.onEdit,
+    required this.onDelete,
+  });
 
- final VoidCallback onEdit;
- final VoidCallback onDelete;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
- @override
- Widget build(BuildContext context) {
- return Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- IconButton(
- onPressed: onEdit,
- icon: const Icon(Icons.edit, size: 16),
- color: const Color(0xFF64748B),
- tooltip: 'Edit',
- padding: EdgeInsets.zero,
- constraints: const BoxConstraints.tightFor(width: 32, height: 32),
- ),
- IconButton(
- onPressed: onDelete,
- icon: const Icon(Icons.delete_outline, size: 16),
- color: const Color(0xFFEF4444),
- tooltip: 'Delete',
- padding: EdgeInsets.zero,
- constraints: const BoxConstraints.tightFor(width: 32, height: 32),
- ),
- ],
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          onPressed: onEdit,
+          icon: const Icon(Icons.edit, size: 16),
+          color: const Color(0xFF64748B),
+          tooltip: 'Edit',
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+        ),
+        IconButton(
+          onPressed: onDelete,
+          icon: const Icon(Icons.delete_outline, size: 16),
+          color: const Color(0xFFEF4444),
+          tooltip: 'Delete',
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+        ),
+      ],
+    );
+  }
 }
 
 class _GovernanceColumn {
- const _GovernanceColumn(this.label, this.flex);
+  const _GovernanceColumn(this.label, this.flex);
 
- final String label;
- final double flex;
+  final String label;
+  final double flex;
 
- int get flexValue => (flex * 100).round();
+  int get flexValue => (flex * 100).round();
 }
 
 class _GovernanceColorOption {
- const _GovernanceColorOption(this.label, this.value);
+  const _GovernanceColorOption(this.label, this.value);
 
- final String label;
- final int value;
+  final String label;
+  final int value;
 }
 
 class _RemediationRunwayRow {
- const _RemediationRunwayRow({
- required this.primary,
- required this.secondary,
- required this.exitCriteria,
- required this.evidence,
- required this.ownerCadence,
- required this.progress,
- required this.color,
- });
+  const _RemediationRunwayRow({
+    required this.primary,
+    required this.secondary,
+    required this.exitCriteria,
+    required this.evidence,
+    required this.ownerCadence,
+    required this.progress,
+    required this.color,
+  });
 
- final String primary;
- final String secondary;
- final String exitCriteria;
- final String evidence;
- final String ownerCadence;
- final double progress;
- final Color color;
+  final String primary;
+  final String secondary;
+  final String exitCriteria;
+  final String evidence;
+  final String ownerCadence;
+  final double progress;
+  final Color color;
 }
 
 class _RootCauseSignalRow {
- const _RootCauseSignalRow({
- required this.signal,
- required this.source,
- required this.indicator,
- required this.evidence,
- required this.control,
- required this.tier,
- required this.color,
- });
+  const _RootCauseSignalRow({
+    required this.signal,
+    required this.source,
+    required this.indicator,
+    required this.evidence,
+    required this.control,
+    required this.tier,
+    required this.color,
+  });
 
- final String signal;
- final String source;
- final String indicator;
- final String evidence;
- final String control;
- final String tier;
- final Color color;
+  final String signal;
+  final String source;
+  final String indicator;
+  final String evidence;
+  final String control;
+  final String tier;
+  final Color color;
 }
 
 class _OwnershipCoverageRow {
- const _OwnershipCoverageRow({
- required this.workstream,
- required this.scope,
- required this.owner,
- required this.count,
- required this.coverage,
- required this.review,
- required this.escalation,
- required this.color,
- });
+  const _OwnershipCoverageRow({
+    required this.workstream,
+    required this.scope,
+    required this.owner,
+    required this.count,
+    required this.coverage,
+    required this.review,
+    required this.escalation,
+    required this.color,
+  });
 
- final String workstream;
- final String scope;
- final String owner;
- final String count;
- final String coverage;
- final String review;
- final String escalation;
- final Color color;
+  final String workstream;
+  final String scope;
+  final String owner;
+  final String count;
+  final String coverage;
+  final String review;
+  final String escalation;
+  final Color color;
 }
 
 class _LaneProfile {
- const _LaneProfile({
- required this.secondary,
- required this.exitCriteria,
- required this.evidence,
- required this.ownerCadence,
- });
+  const _LaneProfile({
+    required this.secondary,
+    required this.exitCriteria,
+    required this.evidence,
+    required this.ownerCadence,
+  });
 
- final String secondary;
- final String exitCriteria;
- final String evidence;
- final String ownerCadence;
+  final String secondary;
+  final String exitCriteria;
+  final String evidence;
+  final String ownerCadence;
 }
 
 class _RootCauseProfile {
- const _RootCauseProfile({
- required this.source,
- required this.indicator,
- required this.evidence,
- required this.control,
- required this.tier,
- required this.color,
- });
+  const _RootCauseProfile({
+    required this.source,
+    required this.indicator,
+    required this.evidence,
+    required this.control,
+    required this.tier,
+    required this.color,
+  });
 
- final String source;
- final String indicator;
- final String evidence;
- final String control;
- final String tier;
- final Color color;
+  final String source;
+  final String indicator;
+  final String evidence;
+  final String control;
+  final String tier;
+  final Color color;
 }
 
 class _OwnerProfile {
- const _OwnerProfile({
- required this.workstream,
- required this.scope,
- required this.coverage,
- required this.review,
- required this.escalation,
- required this.color,
- });
+  const _OwnerProfile({
+    required this.workstream,
+    required this.scope,
+    required this.coverage,
+    required this.review,
+    required this.escalation,
+    required this.color,
+  });
 
- final String workstream;
- final String scope;
- final String coverage;
- final String review;
- final String escalation;
- final Color color;
+  final String workstream;
+  final String scope;
+  final String coverage;
+  final String review;
+  final String escalation;
+  final Color color;
 }
 
 class _PanelShell extends StatelessWidget {
- const _PanelShell({
- required this.title,
- required this.subtitle,
- required this.child,
- this.trailing,
- });
+  const _PanelShell({
+    required this.title,
+    required this.subtitle,
+    required this.child,
+    this.trailing,
+  });
 
- final String title;
- final String subtitle;
- final Widget child;
- final Widget? trailing;
+  final String title;
+  final String subtitle;
+  final Widget child;
+  final Widget? trailing;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(title,
- style: const TextStyle(
- fontSize: 16, fontWeight: FontWeight.w700)),
- const SizedBox(height: 4),
- Text(subtitle,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF64748B))),
- ],
- ),
- ),
- if (trailing != null) trailing!,
- ],
- ),
- const SizedBox(height: 16),
- child,
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text(subtitle,
+                        style: const TextStyle(
+                            fontSize: 12, color: Color(0xFF64748B))),
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
 }
 
 // Legacy private data classes removed; using persisted models from project_data_model.dart
 
 class _StatCardData {
- const _StatCardData(this.label, this.value, this.supporting, this.color);
+  const _StatCardData(this.label, this.value, this.supporting, this.color);
 
- final String label;
- final String value;
- final String supporting;
- final Color color;
+  final String label;
+  final String value;
+  final String supporting;
+  final Color color;
 }
 
 class _DebtItem {
- const _DebtItem(this.id, this.title, this.area, this.owner, this.severity, this.status, this.target);
+  const _DebtItem(this.id, this.title, this.area, this.owner, this.severity,
+      this.status, this.target);
 
- final String id;
- final String title;
- final String area;
- final String owner;
- final String severity;
- final String status;
- final String target;
+  final String id;
+  final String title;
+  final String area;
+  final String owner;
+  final String severity;
+  final String status;
+  final String target;
 }
 
 class _DebtInsight {
- const _DebtInsight(this.title, this.subtitle);
+  const _DebtInsight(this.title, this.subtitle);
 
- final String title;
- final String subtitle;
+  final String title;
+  final String subtitle;
 }
 
 class _RemediationTrack {
- const _RemediationTrack(this.label, this.progress, this.color);
+  const _RemediationTrack(this.label, this.progress, this.color);
 
- final String label;
- final double progress;
- final Color color;
+  final String label;
+  final double progress;
+  final Color color;
 }

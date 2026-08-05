@@ -39,13 +39,13 @@ class _ExpandableTextState extends State<ExpandableText> {
       text: widget.text,
       style: widget.style ?? Theme.of(context).textTheme.bodyMedium,
     );
-    
+
     final textPainter = TextPainter(
       text: textSpan,
       maxLines: widget.maxLines,
       textDirection: TextDirection.ltr,
     );
-    
+
     textPainter.layout(maxWidth: MediaQuery.of(context).size.width - 100);
     _exceedsMaxLines = textPainter.didExceedMaxLines;
     textPainter.dispose();
@@ -76,7 +76,8 @@ class _ExpandableTextState extends State<ExpandableText> {
               child: Text(
                 _isExpanded ? 'View less' : 'View more',
                 style: TextStyle(
-                  color: widget.expandButtonColor ?? Theme.of(context).primaryColor,
+                  color: widget.expandButtonColor ??
+                      Theme.of(context).primaryColor,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),

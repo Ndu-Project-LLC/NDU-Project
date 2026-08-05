@@ -20,6 +20,7 @@ import 'package:ndu_project/widgets/procurement_tables.dart';
 import 'package:ndu_project/widgets/procurement_dialogs.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // Layout Imports
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -27,6 +28,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/responsive.dart'; // Added for AppBreakpoints
+import 'package:go_router/go_router.dart';
 
 /// Front End Planning – Contracting screen (formerly Contract & Vendor Quotes).
 /// Updated to use the standard FEP layout with DraggableSidebar and FrontEndPlanningHeader.
@@ -34,10 +36,7 @@ class FrontEndPlanningContractVendorQuotesScreen extends StatefulWidget {
  const FrontEndPlanningContractVendorQuotesScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const FrontEndPlanningContractVendorQuotesScreen()),
- );
+ context.push('/fep-vendor-quotes');
  }
 
  @override
@@ -579,7 +578,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedUnit,
+ initialValue: selectedUnit,
  decoration: const InputDecoration(labelText: 'Duration Unit'),
  items: _workflowDurationUnits
  .map(
@@ -887,7 +886,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SizedBox(
  width: 130,
  child: DropdownButtonFormField<String>(
- value: step.unit,
+ initialValue: step.unit,
  decoration: const InputDecoration(
  isDense: true,
  labelText: 'Unit',
@@ -1000,7 +999,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SizedBox(
  width: 320,
  child: DropdownButtonFormField<String>(
- value: effectiveScopeId,
+ initialValue: effectiveScopeId,
  decoration: const InputDecoration(
  labelText: 'Contract Scope',
  isDense: true,
@@ -1705,10 +1704,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  else ...[
  Row(
  children: [
- Expanded(
+ const Expanded(
  child: Text(
  'Commence scope processes in this stage using role-based authority.',
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 12,
  color: Color(0xFF6B7280),
  ),
@@ -1734,7 +1733,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SizedBox(
  width: 240,
  child: DropdownButtonFormField<String>(
- value: actingRole,
+ initialValue: actingRole,
  decoration: const InputDecoration(
  labelText: 'Acting Role',
  isDense: true,
@@ -1855,7 +1854,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  SizedBox(
  width: 260,
  child: DropdownButtonFormField<String>(
- value: availableRoles
+ initialValue: availableRoles
  .contains(state.authorizedRole)
  ? state.authorizedRole
  : _defaultAuthorizedRole(
@@ -2101,7 +2100,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  return;
  }
 
- final categoryOptions = const [
+ const categoryOptions = [
  'Construction',
  'Services',
  'Consulting',
@@ -2110,7 +2109,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final result = await showDialog<ContractModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (ctx) => AddContractDialog(
  contextChips: _buildDialogContextChips(),
  categoryOptions: categoryOptions,
@@ -2127,7 +2126,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final projectId = _activeProjectIdOrNull();
  if (projectId == null) return;
 
- final categoryOptions = const [
+ const categoryOptions = [
  'Construction',
  'Services',
  'Consulting',
@@ -2136,7 +2135,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final result = await showDialog<ContractModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (ctx) => AddContractDialog(
  contextChips: _buildDialogContextChips(),
  categoryOptions: categoryOptions,
@@ -2207,7 +2206,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  return;
  }
 
- final categoryOptions = const [
+ const categoryOptions = [
  'Construction Services',
  'Services',
  'Consulting',
@@ -2220,7 +2219,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final result = await showDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) => AddVendorDialog(
  contextChips: _buildDialogContextChips(),
  categoryOptions: categoryOptions,
@@ -2295,7 +2294,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final projectId = _activeProjectIdOrNull();
  if (projectId == null) return;
 
- final categoryOptions = const [
+ const categoryOptions = [
  'Construction Services',
  'Services',
  'Consulting',
@@ -2308,7 +2307,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final result = await showDialog<VendorModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) => AddVendorDialog(
  contextChips: _buildDialogContextChips(),
  categoryOptions: categoryOptions,
@@ -2426,7 +2425,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final result = await showDialog<ProcurementItemModel>(
  context: context,
  barrierDismissible: true,
- barrierColor: Colors.black.withOpacity(0.45),
+ barrierColor: Colors.black.withValues(alpha: 0.45),
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setState) => AlertDialog(
  title: Text(existing == null
@@ -2463,7 +2462,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: contractType,
+ initialValue: contractType,
  items: _contractTypeOptions
  .map((option) => DropdownMenuItem<String>(
  value: option,
@@ -2495,7 +2494,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: biddingRequired,
+ initialValue: biddingRequired,
  items: _biddingOptions
  .map((option) => DropdownMenuItem<String>(
  value: option,
@@ -2511,7 +2510,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: startStage,
+ initialValue: startStage,
  items: _startStageOptions
  .map((option) => DropdownMenuItem<String>(
  value: option,
@@ -2778,7 +2777,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  mainAxisSize: MainAxisSize.min,
  children: [
  DropdownButtonFormField<String>(
- value:
+ initialValue:
  candidates.isNotEmpty ? candidates.first : null,
  items: candidates
  .map((name) => DropdownMenuItem<String>(
@@ -3157,10 +3156,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  ),
- child: ResponsiveDataTableWrapper(
- minWidth: 760,
- child: buildNduDataTable(
+ child: buildNduTableWithExpand(
  context: context,
+ title: 'Scope Tracking Status',
+ minWidth: 760,
  columnSpacing: 24,
  horizontalMargin: 18,
  headingRowHeight: 48,
@@ -3215,7 +3214,6 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ],
  );
  }).toList(),
- ),
  ),
  ),
  ],
@@ -3294,10 +3292,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  ),
- child: ResponsiveDataTableWrapper(
- minWidth: 820,
- child: buildNduDataTable(
+ child: buildNduTableWithExpand(
  context: context,
+ title: 'Reports',
+ minWidth: 820,
  columnSpacing: 24,
  horizontalMargin: 18,
  headingRowHeight: 48,
@@ -3361,7 +3359,6 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  }).toList(),
  ),
  ),
- ),
  ],
  );
  }
@@ -3400,10 +3397,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  ),
- child: ResponsiveDataTableWrapper(
- minWidth: 760,
- child: buildNduDataTable(
+ child: buildNduTableWithExpand(
  context: context,
+ title: 'Approved Contractors',
+ minWidth: 760,
  columnSpacing: 24,
  horizontalMargin: 18,
  headingRowHeight: 48,
@@ -3471,7 +3468,6 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ],
  );
  }).toList(),
- ),
  ),
  );
  }
@@ -3621,9 +3617,9 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
  decoration: BoxDecoration(
- color: tone.withOpacity(0.2),
+ color: tone.withValues(alpha: 0.2),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: tone.withOpacity(0.6)),
+ border: Border.all(color: tone.withValues(alpha: 0.6)),
  ),
  child: Text(
  label,
@@ -3640,9 +3636,9 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: tone.withOpacity(0.12),
+ color: tone.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: tone.withOpacity(0.35)),
+ border: Border.all(color: tone.withValues(alpha: 0.35)),
  ),
  child: Text(
  label,
@@ -3713,7 +3709,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  mainAxisSize: MainAxisSize.min,
  children: [
  DropdownButtonFormField<String>(
- value: selected.id,
+ initialValue: selected.id,
  decoration: const InputDecoration(labelText: 'Scope'),
  items: scopes
  .map((scope) => DropdownMenuItem<String>(
@@ -3739,7 +3735,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration:
  const InputDecoration(labelText: 'Tracking Status'),
  items: _trackingStatusOptions
@@ -3806,7 +3802,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  decoration: const InputDecoration(labelText: 'Status'),
  items: _reportStatusOptions
  .map((option) => DropdownMenuItem<String>(
@@ -5498,21 +5494,21 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFFEE2E2)),
  ),
- child: Column(
+ child: const Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.cloud_off_outlined,
+ Icon(Icons.cloud_off_outlined,
  size: 48, color: Color(0xFFEF4444)),
- const SizedBox(height: 16),
- const Text(
+ SizedBox(height: 16),
+ Text(
  'Unable to load contracting data',
  style: TextStyle(
  fontWeight: FontWeight.bold,
  color: Color(0xFFB91C1C),
  fontSize: 16),
  ),
- const SizedBox(height: 8),
- const Text(
+ SizedBox(height: 8),
+ Text(
  'Please refresh the page or contact support if the issue persists.',
  textAlign: TextAlign.center,
  style: TextStyle(color: Color(0xFFB91C1C), fontSize: 13),
@@ -5555,8 +5551,8 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Contracting',
  ),
  ),
@@ -6084,7 +6080,7 @@ class _BottomOverlay extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  border: Border(
- top: BorderSide(color: Colors.grey.withOpacity(0.2)),
+ top: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
  ),
  ),
  child: Row(
@@ -6262,7 +6258,7 @@ class _ContractScopeDetailsBoard extends StatelessWidget {
  : width > 940
  ? 2
  : 1;
- final spacing = 12.0;
+ const spacing = 12.0;
  final cardWidth = cardsPerRow == 1
  ? width
  : (width - ((cardsPerRow - 1) * spacing)) / cardsPerRow;
@@ -6573,7 +6569,7 @@ class _ContractScopeDetailCardState extends State<_ContractScopeDetailCard> {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: stage,
+ initialValue: stage,
  decoration: const InputDecoration(
  labelText: 'Contracting Start Stage',
  isDense: true,
@@ -7081,7 +7077,174 @@ class _ContractingScopeTable extends StatelessWidget {
  builder: (context, constraints) {
  final minWidth =
  constraints.maxWidth > 1500 ? constraints.maxWidth : 1500.0;
- return ResponsiveDataTableWrapper(
+ return FullScreenTableWrapper(
+ title: 'Procurement Items',
+ tableBuilder: (fsContext) => ResponsiveDataTableWrapper(
+ minWidth: minWidth,
+ maxHeight: 560,
+ child: buildNduDataTable(
+ context: fsContext,
+ columnSpacing: 16,
+ horizontalMargin: 12,
+ border: TableBorder.all(
+ color: const Color(0xFFE5E7EB),
+ width: 0.7,
+ borderRadius: BorderRadius.circular(10),
+ ),
+ columns: const [
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'No',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Contract Scope',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Description',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Potential Contractors',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Contract Type',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Estimated Duration',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Estimated Value',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: Align(
+ alignment: Alignment.centerLeft,
+ child: Text(
+ 'Bidding Required',
+ textAlign: TextAlign.left,
+ style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+ ),
+ ),
+ ),
+ DataColumn(label: Center(child: Text(''))),
+ ],
+ rows: items.asMap().entries.map((entry) {
+ final index = entry.key;
+ final item = entry.value;
+ final actionItems = <PopupMenuEntry<String>>[];
+ if (onEdit != null) {
+ actionItems.add(
+ const PopupMenuItem<String>(
+ value: 'edit',
+ child: Row(
+ children: [
+ Icon(Icons.edit_outlined, size: 16),
+ SizedBox(width: 8),
+ Text('Edit scope'),
+ ],
+ ),
+ ),
+ );
+ }
+ if (onDelete != null) {
+ actionItems.add(
+ const PopupMenuItem<String>(
+ value: 'delete',
+ child: Row(
+ children: [
+ Icon(Icons.delete_outline, size: 16, color: Colors.red),
+ SizedBox(width: 8),
+ Text('Delete', style: TextStyle(color: Colors.red)),
+ ],
+ ),
+ ),
+ );
+ }
+
+ return DataRow(
+ cells: [
+ DataCell(Text('${index + 1}')),
+ DataCell(_cellText(item.name, width: 170, bold: true)),
+ DataCell(_cellText(item.description, width: 220)),
+ DataCell(_cellText(item.notes, width: 190)),
+ DataCell(_cellText(item.category, width: 120)),
+ DataCell(_cellText(item.comments, width: 150)),
+ DataCell(_cellText(_formatCurrency(item.budget), width: 130)),
+ DataCell(_cellText(
+ item.responsibleMember.trim().isEmpty
+ ? 'Not Sure'
+ : item.responsibleMember.trim(),
+ width: 130,
+ )),
+ DataCell(
+ hasActions
+ ? PopupMenuButton<String>(
+ icon: const Icon(Icons.more_horiz,
+ color: Colors.grey),
+ itemBuilder: (_) => actionItems,
+ onSelected: (value) {
+ if (value == 'edit' && onEdit != null) {
+ onEdit!(item);
+ } else if (value == 'delete' &&
+ onDelete != null) {
+ onDelete!(item);
+ }
+ },
+ )
+ : const SizedBox.shrink(),
+ ),
+ ],
+ );
+ }).toList(),
+ ),
+ ),
+ child: ResponsiveDataTableWrapper(
  minWidth: minWidth,
  maxHeight: 560,
  child: buildNduDataTable(
@@ -7244,6 +7407,7 @@ class _ContractingScopeTable extends StatelessWidget {
  ],
  );
  }).toList(),
+ ),
  ),
  );
  },

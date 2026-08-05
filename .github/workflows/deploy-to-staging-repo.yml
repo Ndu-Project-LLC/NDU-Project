@@ -1,0 +1,166 @@
+name: Deploy to Staging Repo
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cross-repo staging deployment.
+#
+# When the main NDU-Project repo successfully builds & deploys to its
+# internal gh-pages branch (via auto-deploy-staging.yml), THIS workflow
+# fires and pushes the same build to the SEPARATE ndu-staging repository,
+# which serves https://staging.nduproject.com via GitHub Pages.
+#
+# Trigger chain:
+#   push to main
+#     → auto-deploy-staging.yml  (builds + pushes to gh-pages branch on main repo)
+#     → THIS workflow             (builds + force-pushes to Ndu-Project-LLC/ndu-staging:main)
+#       → GitHub Pages on ndu-staging serves staging.nduproject.com
+#
+# Required secret:
+#   ACCESS_TOKEN  — PAT with `repo` scope, or fine-grained PAT
+#                   with `Contents: Write` on Ndu-Project-LLC/ndu-staging
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  # Chain after the existing staging deploy workflow
+  workflow_run:
+    workflows: ["Auto-Deploy Staging"]
+    types: [completed]
+    branches: [main]
+
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref (branch/tag/SHA) to deploy'
+        required: false
+        default: 'main'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-to-staging-repo
+  cancel-in-progress: false
+
+jobs:
+  # ── SILENT_ACTORS GATE ────────────────────────────────────────────────────
+  gate:
+    name: Silent-actor gate
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+      deploy_ref: ${{ steps.ref.outputs.deploy_ref }}
+    steps:
+      - id: ref
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "deploy_ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy_ref=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - id: check
+        run: |
+          set -eu
+          ACTOR="${{ github.actor }}"
+          SILENT="${{ vars.SILENT_ACTORS }}"
+          if [ -z "$SILENT" ]; then
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+            echo "No SILENT_ACTORS variable set — running normally."
+            exit 0
+          fi
+          if echo ",$SILENT," | grep -iq ",$ACTOR,"; then
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping — @$ACTOR is in SILENT_ACTORS."
+          else
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+            echo "@$ACTOR not in SILENT_ACTORS — running normally."
+          fi
+
+  # ── BUILD & CROSS-REPO PUSH ──────────────────────────────────────────────
+  build-and-push:
+    name: Build Flutter web → push to ndu-staging repo
+    needs: gate
+    if: needs.gate.outputs.should_skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repo at ${{ needs.gate.outputs.deploy_ref }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.deploy_ref }}
+          fetch-depth: 0
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v4
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Build web (release)
+        run: flutter build web --release --base-href "/" --no-tree-shake-icons
+
+      - name: Stage deployment files (CNAME + .nojekyll)
+        run: |
+          cd build/web
+          echo "staging.nduproject.com" > CNAME
+          touch .nojekyll
+          echo "✓ CNAME = $(cat CNAME)"
+          echo "✓ .nojekyll created"
+
+      - name: Generate deploy metadata
+        id: meta
+        run: |
+          BUILD_SHA="${{ needs.gate.outputs.deploy_ref }}"
+          BUILD_SHORT="${BUILD_SHA:0:7}"
+          BUILD_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          BUNDLE_SIZE=$(du -sh build/web/main.dart.js | cut -f1)
+          {
+            echo "sha=$BUILD_SHA"
+            echo "short=$BUILD_SHORT"
+            echo "date=$BUILD_DATE"
+            echo "bundle=$BUNDLE_SIZE"
+          } >> "$GITHUB_OUTPUT"
+          echo "Build SHA: $BUILD_SHORT"
+          echo "Build date: $BUILD_DATE"
+          echo "Bundle size: $BUNDLE_SIZE"
+
+      - name: Push build to Ndu-Project-LLC/ndu-staging:main
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.ACCESS_TOKEN }}
+          external_repository: Ndu-Project-LLC/ndu-staging
+          publish_branch: main
+          publish_dir: build/web
+          keep_files: false
+          user_name: 'ndu-deploy-bot'
+          user_email: 'ndu-deploy-bot@users.noreply.github.com'
+          commit_message: |
+            deploy: staging build ${{ steps.meta.outputs.short }}
+
+            Source: Ndu-Project-LLC/NDU-Project@${{ steps.meta.outputs.short }}
+            Built:  ${{ steps.meta.outputs.date }}
+            Bundle: ${{ steps.meta.outputs.bundle }}
+
+            Triggered by: ${{ github.event_name }}
+            Actor: ${{ github.actor }}
+
+      - name: Deployment summary
+        run: |
+          echo "============================================"
+          echo "  ✅ Staging deploy complete"
+          echo "============================================"
+          echo "  Source SHA:  ${{ steps.meta.outputs.short }}"
+          echo "  Built at:    ${{ steps.meta.outputs.date }}"
+          echo "  Bundle size: ${{ steps.meta.outputs.bundle }}"
+          echo "  Target repo: Ndu-Project-LLC/ndu-staging"
+          echo "  Target branch: main"
+          echo ""
+          echo "  Live URL:    https://staging.nduproject.com"
+          echo "  (Pages rebuild takes ~60-90s after push)"
+          echo "============================================"

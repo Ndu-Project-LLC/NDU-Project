@@ -207,4 +207,11 @@ class RoadmapDeliverable {
       createdByName: json['createdByName']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is RoadmapDeliverable && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

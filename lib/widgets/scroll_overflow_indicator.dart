@@ -82,8 +82,8 @@ class _ScrollOverflowIndicatorState extends State<ScrollOverflowIndicator>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white.withOpacity(0.0),
-                          Colors.white.withOpacity(0.94),
+                          Colors.white.withValues(alpha: 0.0),
+                          Colors.white.withValues(alpha: 0.94),
                         ],
                       ),
                     ),

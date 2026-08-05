@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -27,6 +29,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
+import 'package:go_router/go_router.dart';
 enum _ScopeTab { overview, registry, traceability, baseline }
 
 const List<String> _tabLabels = [
@@ -40,9 +43,7 @@ class ScopeTrackingPlanScreen extends StatefulWidget {
  const ScopeTrackingPlanScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const ScopeTrackingPlanScreen()),
- );
+ context.push('/scope-tracking-plan');
  }
 
  @override
@@ -368,8 +369,8 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Scope Tracking Plan',
  ),
  ),
@@ -469,20 +470,20 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  const SizedBox(height: 20),
  const _ScopeControlPlaybook(),
  const SizedBox(height: 20),
- Row(
+ const Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Expanded(
  child: Column(
- children: const [
+ children: [
  _GovernanceCadenceCard(),
  SizedBox(height: 20),
  _ChangeIntakeCard(),
  ],
  ),
  ),
- const SizedBox(width: 20),
- const Expanded(
+ SizedBox(width: 20),
+ Expanded(
  child: _DriftSignalsCard(),
  ),
  ],
@@ -683,76 +684,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ],
  ),
  const SizedBox(height: 20),
- Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE2E8F0)),
- ),
- child: SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: DataTable(
- columnSpacing: 20,
- horizontalMargin: 16,
- headingRowHeight: 48,
- dataRowMinHeight: 44,
- dataRowMaxHeight: 80,
- columns: const [
- DataColumn(label: Center(child: Text('Scope Item',
- style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))))),
- DataColumn(label: Center(child: Text('WBS',
- style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))))),
- DataColumn(label: Center(child: Text('Requirement',
- style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))))),
- DataColumn(label: Center(child: Text('Schedule',
- style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))))),
- DataColumn(label: Center(child: Text('Status',
- style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))))),
- ],
- rows: _items.map((item) {
- final wbsTitle = item.wbsId.isNotEmpty
- ? flatWbs.where((w) => w.id == item.wbsId).firstOrNull?.title ?? 'Unknown'
- : '';
- final reqText = item.requirementId.isNotEmpty
- ? requirements.where((r) => r.id == item.requirementId).firstOrNull?.plannedText ?? ''
- : '';
- final schedTitle = item.scheduleActivityId.isNotEmpty
- ? scheduleActivities.where((s) => s.id == item.scheduleActivityId).firstOrNull?.title ?? ''
- : '';
-
- return DataRow(cells: [
- DataCell(ConstrainedBox(
- constraints: const BoxConstraints(maxWidth: 180),
- child: Text(item.scopeItem,
- style: const TextStyle(fontSize: 11),
- maxLines: 2, overflow: TextOverflow.ellipsis),
- )),
- DataCell(Center(
- child: _LinkBadge(
- label: wbsTitle.isEmpty ? 'Unlinked' : wbsTitle,
- linked: item.wbsId.isNotEmpty,
- ),
- )),
- DataCell(Center(
- child: _LinkBadge(
- label: reqText.isEmpty ? 'Unlinked' : reqText,
- linked: item.requirementId.isNotEmpty,
- ),
- )),
- DataCell(Center(
- child: _LinkBadge(
- label: schedTitle.isEmpty ? 'Unlinked' : schedTitle,
- linked: item.scheduleActivityId.isNotEmpty,
- ),
- )),
- DataCell(Center(
- child: _StatusBadge(status: item.implementationStatus),
- )),
- ]);
- }).toList(),
- ),
- ),
- ),
+ _buildScopeTracingTable(context, flatWbs, requirements, scheduleActivities),
  const SizedBox(height: 24),
  Container(
  padding: const EdgeInsets.all(16),
@@ -761,14 +693,14 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFFFEAD0)),
  ),
- child: Row(
+ child: const Row(
  children: [
- const Icon(Icons.info_outline, size: 18, color: Color(0xFF9A3412)),
- const SizedBox(width: 12),
+ Icon(Icons.info_outline, size: 18, color: Color(0xFF9A3412)),
+ SizedBox(width: 12),
  Expanded(
  child: Text(
  'To link scope items, edit them in the Scope Registry tab and set the WBS, Requirement, or Schedule Activity ID fields.',
- style: const TextStyle(fontSize: 12, color: Color(0xFF7C2D12)),
+ style: TextStyle(fontSize: 12, color: Color(0xFF7C2D12)),
  ),
  ),
  ],
@@ -1009,7 +941,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
- value: 'predictive',
+ initialValue: 'predictive',
  decoration: const InputDecoration(
  labelText: 'Scope Type',
  border: OutlineInputBorder(),
@@ -1039,7 +971,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ),
  const SizedBox(height: 16),
  DropdownButtonFormField<String>(
- value: 'Not Started',
+ initialValue: 'Not Started',
  decoration: const InputDecoration(
  labelText: 'Status',
  border: OutlineInputBorder(),
@@ -1192,6 +1124,94 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ],
  );
  }
+
+ Widget _buildScopeTracingTable(
+ BuildContext context,
+ List<WorkItem> flatWbs,
+ List<PlanningRequirementItem> requirements,
+ List<ScheduleActivity> scheduleActivities,
+ ) {
+ final rows = _items.map((item) {
+ final wbsTitle = item.wbsId.isNotEmpty
+ ? flatWbs.where((w) => w.id == item.wbsId).firstOrNull?.title ?? 'Unknown'
+ : '';
+ final reqText = item.requirementId.isNotEmpty
+ ? requirements.where((r) => r.id == item.requirementId).firstOrNull?.plannedText ?? ''
+ : '';
+ final schedTitle = item.scheduleActivityId.isNotEmpty
+ ? scheduleActivities.where((s) => s.id == item.scheduleActivityId).firstOrNull?.title ?? ''
+ : '';
+
+ return DataRow(cells: [
+ DataCell(ConstrainedBox(
+ constraints: const BoxConstraints(maxWidth: 240),
+ child: WrappedText(item.scopeItem,
+ style: const TextStyle(fontSize: 11),
+ maxLines: 3),
+ )),
+ DataCell(Center(
+ child: _LinkBadge(
+ label: wbsTitle.isEmpty ? 'Unlinked' : wbsTitle,
+ linked: item.wbsId.isNotEmpty,
+ ),
+ )),
+ DataCell(Center(
+ child: _LinkBadge(
+ label: reqText.isEmpty ? 'Unlinked' : reqText,
+ linked: item.requirementId.isNotEmpty,
+ ),
+ )),
+ DataCell(Center(
+ child: _LinkBadge(
+ label: schedTitle.isEmpty ? 'Unlinked' : schedTitle,
+ linked: item.scheduleActivityId.isNotEmpty,
+ ),
+ )),
+ DataCell(Center(
+ child: _StatusBadge(status: item.implementationStatus),
+ )),
+ ]);
+ }).toList();
+
+ final columns = const [
+ DataColumn(label: Center(child: Text('Scope Item',
+ style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))))),
+ DataColumn(label: Center(child: Text('WBS',
+ style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))))),
+ DataColumn(label: Center(child: Text('Requirement',
+ style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))))),
+ DataColumn(label: Center(child: Text('Schedule',
+ style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))))),
+ DataColumn(label: Center(child: Text('Status',
+ style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF374151))))),
+ ];
+
+ return FullScreenTableWrapper(
+ title: 'Scope Traceability Matrix',
+ child: ResponsiveDataTableWrapper(
+ child: buildNduDataTable(
+ context: context,
+ columns: columns,
+ rows: rows,
+ columnSpacing: 20,
+ horizontalMargin: 16,
+ headingRowHeight: 48,
+ dataRowMinHeight: 44,
+ dataRowMaxHeight: 80,
+ ),
+ ),
+ tableBuilder: (fsContext) => buildNduDataTable(
+ context: fsContext,
+ columns: columns,
+ rows: rows,
+ columnSpacing: 28,
+ horizontalMargin: 20,
+ headingRowHeight: 56,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 160,
+ ),
+ );
+ }
 }
 
 class _ScopeMetricData {
@@ -1218,10 +1238,10 @@ class _ScopeMetricCard extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: data.color.withOpacity(0.2)),
+ border: Border.all(color: data.color.withValues(alpha: 0.2)),
  boxShadow: [
  BoxShadow(
- color: data.color.withOpacity(0.06),
+ color: data.color.withValues(alpha: 0.06),
  blurRadius: 12,
  offset: const Offset(0, 6),
  ),
@@ -1237,7 +1257,7 @@ class _ScopeMetricCard extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: data.color.withOpacity(0.1),
+ color: data.color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -1284,7 +1304,7 @@ class _TraceStat extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withOpacity(0.2)),
+ border: Border.all(color: color.withValues(alpha: 0.2)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -1324,7 +1344,7 @@ class _LinkBadge extends StatelessWidget {
  constraints: const BoxConstraints(maxWidth: 140),
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: color.withOpacity(0.1),
+ color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Text(
@@ -1367,7 +1387,7 @@ class _StatusBadge extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: c.withOpacity(0.12),
+ color: c.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Text(
@@ -1399,7 +1419,7 @@ class _BaselineStatCard extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: color.withOpacity(0.15)),
+ border: Border.all(color: color.withValues(alpha: 0.15)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1642,9 +1662,9 @@ class _ScopeControlPlaybook extends StatelessWidget {
  color: Color(0x0F000000), blurRadius: 10, offset: Offset(0, 6)),
  ],
  ),
- child: Column(
+ child: const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Scope Control Playbook',
  style: TextStyle(
@@ -1772,12 +1792,12 @@ class _ChangeIntakeCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return _ScopeCardShell(
+ return const _ScopeCardShell(
  title: 'Change Intake Workflow',
  subtitle: 'Standardize how scope changes move through governance.',
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  _WorkflowStep(
  step: '1',
  title: 'Submit request',
@@ -1809,30 +1829,30 @@ class _GovernanceCadenceCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return _ScopeCardShell(
+ return const _ScopeCardShell(
  title: 'Governance Cadence',
  subtitle: 'Oversight rhythm for scope health.',
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const _CadenceRow(
+ _CadenceRow(
  label: 'Change control board', value: 'Weekly • Tue 10:00'),
- const _CadenceRow(
+ _CadenceRow(
  label: 'Scope health review', value: 'Bi-weekly • Fri 14:00'),
- const _CadenceRow(
+ _CadenceRow(
  label: 'Executive checkpoint', value: 'Monthly • 1st Thu'),
- const SizedBox(height: 16),
- const Text(
+ SizedBox(height: 16),
+ Text(
  'Next session agenda',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
  color: Color(0xFF111827)),
  ),
- const SizedBox(height: 8),
- const _ScopeBullet(text: 'Review open CRs and fast-track decisions'),
- const _ScopeBullet(text: 'Validate variance vs baseline'),
- const _ScopeBullet(text: 'Confirm mitigation owners'),
+ SizedBox(height: 8),
+ _ScopeBullet(text: 'Review open CRs and fast-track decisions'),
+ _ScopeBullet(text: 'Validate variance vs baseline'),
+ _ScopeBullet(text: 'Confirm mitigation owners'),
  ],
  ),
  );
@@ -1844,20 +1864,20 @@ class _DriftSignalsCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return _ScopeCardShell(
+ return const _ScopeCardShell(
  title: 'Scope Drift Signals',
  subtitle: 'Early warnings to protect delivery.',
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const _ScopeBullet(text: 'Unplanned work added in sprints'),
- const _ScopeBullet(text: 'Variance > 3% for two cycles'),
- const _ScopeBullet(text: 'Dependencies added without CR'),
- const SizedBox(height: 16),
+ _ScopeBullet(text: 'Unplanned work added in sprints'),
+ _ScopeBullet(text: 'Variance > 3% for two cycles'),
+ _ScopeBullet(text: 'Dependencies added without CR'),
+ SizedBox(height: 16),
  Wrap(
  spacing: 8,
  runSpacing: 8,
- children: const [
+ children: [
  _ScopeTag(label: '3 Active Alerts', tone: Color(0xFFF59E0B)),
  _ScopeTag(label: '1 Escalation', tone: Color(0xFFEF4444)),
  _ScopeTag(label: 'Risk Score: Medium', tone: Color(0xFF6366F1)),
@@ -1952,7 +1972,7 @@ class _ScopeTag extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(

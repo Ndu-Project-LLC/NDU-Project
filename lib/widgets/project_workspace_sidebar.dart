@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 const Color _kAccentColor = Color(0xFFFFC812);
 const Color _kTextPrimary = Color(0xFF1A1D1F);
 const Color _kTextSecondary = Color(0xFF6B7280);
@@ -14,7 +15,8 @@ class ProjectWorkspaceSidebar extends StatefulWidget {
   final String activeLabel;
 
   @override
-  State<ProjectWorkspaceSidebar> createState() => _ProjectWorkspaceSidebarState();
+  State<ProjectWorkspaceSidebar> createState() =>
+      _ProjectWorkspaceSidebarState();
 }
 
 class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
@@ -43,13 +45,19 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
       _SidebarItemData(icon: Icons.assignment_outlined, label: 'Contract'),
       _SidebarItemData(icon: Icons.shopping_bag_outlined, label: 'Procurement'),
       _SidebarItemData(icon: Icons.schedule_outlined, label: 'Schedule'),
-      _SidebarItemData(icon: Icons.attach_money_outlined, label: 'Cost Estimate'),
-      _SidebarItemData(icon: Icons.change_circle_outlined, label: 'Change Management'),
-      _SidebarItemData(icon: Icons.account_tree_outlined, label: 'Project Plan'),
-      _SidebarItemData(icon: Icons.groups_3_outlined, label: 'Stakeholder Management'),
+      _SidebarItemData(
+          icon: Icons.attach_money_outlined, label: 'Cost Estimate'),
+      _SidebarItemData(
+          icon: Icons.change_circle_outlined, label: 'Change Management'),
+      _SidebarItemData(
+          icon: Icons.account_tree_outlined, label: 'Project Plan'),
+      _SidebarItemData(
+          icon: Icons.groups_3_outlined, label: 'Stakeholder Management'),
       _SidebarItemData(icon: Icons.shield_outlined, label: 'Risk Assessment'),
-      _SidebarItemData(icon: Icons.security_outlined, label: 'Security Management'),
-      _SidebarItemData(icon: Icons.report_problem_outlined, label: 'Issue Management'),
+      _SidebarItemData(
+          icon: Icons.security_outlined, label: 'Security Management'),
+      _SidebarItemData(
+          icon: Icons.report_problem_outlined, label: 'Issue Management'),
       _SidebarItemData(
         icon: Icons.shield_moon_outlined,
         label: 'Project Controls',
@@ -59,7 +67,10 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
 
     final filteredItems = _searchQuery.isEmpty
         ? allItems
-        : allItems.where((item) => item.label.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+        : allItems
+            .where((item) =>
+                item.label.toLowerCase().contains(_searchQuery.toLowerCase()))
+            .toList();
 
     return Container(
       width: 260,
@@ -75,13 +86,21 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
           const SizedBox(height: 4),
           const Text(
             'Navigate. Deliver. Upgrade',
-            style: TextStyle(color: _kTextSecondary, fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 0.3),
+            style: TextStyle(
+                color: _kTextSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.3),
           ),
           const SizedBox(height: 32),
           const CircleAvatar(
             radius: 34,
             backgroundColor: _kSurfaceBorder,
-            child: Text('S', style: TextStyle(color: _kTextPrimary, fontSize: 26, fontWeight: FontWeight.w600)),
+            child: Text('S',
+                style: TextStyle(
+                    color: _kTextPrimary,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w600)),
           ),
           const SizedBox(height: 14),
           // Brand banner above the "StackOne" label, spanning sidebar width
@@ -93,29 +112,45 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text('StackOne', style: TextStyle(color: _kTextPrimary, fontSize: 16, fontWeight: FontWeight.w700)),
+          const Text('StackOne',
+              style: TextStyle(
+                  color: _kTextPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          const Text('12 Members', style: TextStyle(color: _kTextSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+          const Text('12 Members',
+              style: TextStyle(
+                  color: _kTextSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500)),
           const SizedBox(height: 24),
           // Search bar
           Container(
             height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
+              color: Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: _kSurfaceBorder),
             ),
             child: VoiceTextField(
               controller: _searchController,
               onChanged: (value) => setState(() => _searchQuery = value),
-              style: const TextStyle(color: _kTextPrimary, fontSize: 14, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                  color: _kTextPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500),
               decoration: InputDecoration(
                 hintText: 'Search menu...',
-                hintStyle: TextStyle(color: _kTextSecondary.withOpacity(0.6), fontSize: 14),
-                prefixIcon: Icon(Icons.search_rounded, color: _kTextSecondary.withOpacity(0.7), size: 20),
+                hintStyle: TextStyle(
+                    color: _kTextSecondary.withValues(alpha: 0.6),
+                    fontSize: 14),
+                prefixIcon: Icon(Icons.search_rounded,
+                    color: _kTextSecondary.withValues(alpha: 0.7), size: 20),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: Icon(Icons.clear_rounded, color: _kTextSecondary.withOpacity(0.7), size: 18),
+                        icon: Icon(Icons.clear_rounded,
+                            color: _kTextSecondary.withValues(alpha: 0.7),
+                            size: 18),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
@@ -125,7 +160,8 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
                       )
                     : null,
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               ),
             ),
           ),
@@ -136,11 +172,16 @@ class _ProjectWorkspaceSidebarState extends State<ProjectWorkspaceSidebar> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.search_off_rounded, color: _kTextSecondary.withOpacity(0.4), size: 40),
+                        Icon(Icons.search_off_rounded,
+                            color: _kTextSecondary.withValues(alpha: 0.4),
+                            size: 40),
                         const SizedBox(height: 12),
                         Text(
                           'No results found',
-                          style: TextStyle(color: _kTextSecondary.withOpacity(0.6), fontSize: 13, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                              color: _kTextSecondary.withValues(alpha: 0.6),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -174,7 +215,11 @@ class _SidebarItemData {
 }
 
 class _SidebarItem extends StatelessWidget {
-  const _SidebarItem({required this.icon, required this.label, required this.isActive, this.onTap});
+  const _SidebarItem(
+      {required this.icon,
+      required this.label,
+      required this.isActive,
+      this.onTap});
   final IconData icon;
   final String label;
   final bool isActive;
@@ -182,8 +227,10 @@ class _SidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = isActive ? _kAccentColor.withOpacity(0.18) : Colors.transparent;
-    final borderColor = isActive ? _kAccentColor.withOpacity(0.35) : Colors.transparent;
+    final background =
+        isActive ? _kAccentColor.withValues(alpha: 0.18) : Colors.transparent;
+    final borderColor =
+        isActive ? _kAccentColor.withValues(alpha: 0.35) : Colors.transparent;
     final iconColor = isActive ? _kAccentColor : const Color(0xFF6B7280);
     final labelColor = _kTextPrimary;
     return Material(

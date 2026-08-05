@@ -91,10 +91,10 @@ class _CollapsibleSectionState extends State<CollapsibleSection>
                 if (widget.itemCount != null) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                      color: Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -114,10 +114,10 @@ class _CollapsibleSectionState extends State<CollapsibleSection>
                   builder: (context, _) {
                     return Transform.rotate(
                       angle: _chevronRotation.value * 3.14159265,
-                      child: Icon(
+                      child: const Icon(
                         Icons.keyboard_arrow_down_rounded,
                         size: 22,
-                        color: const Color(0xFF94A3B8),
+                        color: Color(0xFF94A3B8),
                       ),
                     );
                   },

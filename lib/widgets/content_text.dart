@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:provider/provider.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 /// Widget that displays content from Firestore with real-time updates
 /// Usage:
 /// ```dart
@@ -37,7 +38,8 @@ class ContentText extends StatelessWidget {
   Widget build(BuildContext context) {
     // Use Selector to only rebuild when this specific content key changes
     return Selector<AppContentProvider, String>(
-      selector: (_, provider) => provider.getDisplayContent(contentKey, fallback: fallback),
+      selector: (_, provider) =>
+          provider.getDisplayContent(contentKey, fallback: fallback),
       builder: (_, content, __) => Text(
         content,
         style: style,
@@ -61,7 +63,8 @@ class ContentText extends StatelessWidget {
 class ContentBuilder extends StatelessWidget {
   const ContentBuilder({super.key, required this.builder});
 
-  final Widget Function(BuildContext context, String Function(String key, {String fallback}) getContent) builder;
+  final Widget Function(BuildContext context,
+      String Function(String key, {String fallback}) getContent) builder;
 
   @override
   Widget build(BuildContext context) {
@@ -102,17 +105,23 @@ class EditableContentText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Use Selector to only rebuild when edit mode or content changes
-    return Selector<AppContentProvider, ({bool isEditMode, bool isStaticEditMode, String content})>(
+    return Selector<AppContentProvider,
+        ({bool isEditMode, bool isStaticEditMode, String content})>(
       selector: (_, provider) => (
         isEditMode: provider.isEditMode,
         isStaticEditMode: provider.isStaticEditMode,
         content: provider.getDisplayContent(contentKey, fallback: fallback),
       ),
-      builder: (context, data, _) => _buildContent(context, data.isEditMode || data.isStaticEditMode, data.isStaticEditMode, data.content),
+      builder: (context, data, _) => _buildContent(
+          context,
+          data.isEditMode || data.isStaticEditMode,
+          data.isStaticEditMode,
+          data.content),
     );
   }
 
-  Widget _buildContent(BuildContext context, bool isEditMode, bool isStaticEditMode, String content) {
+  Widget _buildContent(BuildContext context, bool isEditMode,
+      bool isStaticEditMode, String content) {
     final canEdit = AdminEditToggle.isAdmin();
 
     if (!isEditMode || !canEdit) {
@@ -132,9 +141,9 @@ class EditableContentText extends StatelessWidget {
       borderRadius: BorderRadius.circular(4),
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: accent.withOpacity(0.3), width: 1),
+          border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
           borderRadius: BorderRadius.circular(4),
-          color: accent.withOpacity(0.05),
+          color: accent.withValues(alpha: 0.05),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: Row(
@@ -150,7 +159,7 @@ class EditableContentText extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.edit, size: 14, color: accent.withOpacity(0.7)),
+            Icon(Icons.edit, size: 14, color: accent.withValues(alpha: 0.7)),
           ],
         ),
       ),
@@ -163,7 +172,8 @@ class EditableContentText extends StatelessWidget {
       context: context,
       builder: (ctx) => _ContentEditDialog(
         contentKey: contentKey,
-        currentValue: provider.getDisplayContent(contentKey, fallback: fallback),
+        currentValue:
+            provider.getDisplayContent(contentKey, fallback: fallback),
         fallback: fallback,
         category: category,
         provider: provider,
@@ -217,16 +227,19 @@ class _ContentEditDialogState extends State<_ContentEditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.isStaticEditMode ? 'Edit Static Content' : 'Edit Content'),
+      title: Text(
+          widget.isStaticEditMode ? 'Edit Static Content' : 'Edit Content'),
       content: SizedBox(
         width: 500,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Key: ${widget.contentKey}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+            Text('Key: ${widget.contentKey}',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12)),
             const SizedBox(height: 8),
-            Text('Category: ${widget.category}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+            Text('Category: ${widget.category}',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12)),
             if (widget.isStaticEditMode) ...[
               const SizedBox(height: 8),
               const Text(
@@ -260,7 +273,12 @@ class _ContentEditDialogState extends State<_ContentEditDialog> {
           ),
         ElevatedButton(
           onPressed: _isSaving ? null : _saveContent,
-          child: _isSaving ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Save'),
+          child: _isSaving
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+              : const Text('Save'),
         ),
       ],
     );
@@ -285,7 +303,8 @@ class _ContentEditDialogState extends State<_ContentEditDialog> {
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Static content updated on this device')),
+            const SnackBar(
+                content: Text('Static content updated on this device')),
           );
         }
         return;

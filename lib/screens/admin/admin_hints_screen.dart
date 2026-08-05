@@ -5,14 +5,13 @@ import 'package:ndu_project/services/hint_service.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:go_router/go_router.dart';
 
 class AdminHintsScreen extends StatefulWidget {
   const AdminHintsScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AdminHintsScreen()),
-    );
+    context.push('/admin-hints');
   }
 
   @override
@@ -202,7 +201,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: _colorForCategory(hint.category).withOpacity(0.12),
+                      color: _colorForCategory(hint.category).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
@@ -333,7 +332,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
             icon: const Icon(Icons.add_circle_outline),
             label: const Text('Create Hint'),
             style: TextButton.styleFrom(
-              backgroundColor: _hintActionColor.withOpacity(0.18),
+              backgroundColor: _hintActionColor.withValues(alpha: 0.18),
               foregroundColor: _hintActionForegroundColor,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(
@@ -440,7 +439,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.07),
+            color: Colors.black.withValues(alpha: 0.07),
             blurRadius: 28,
             offset: const Offset(0, 14),
           ),
@@ -469,7 +468,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF111827).withOpacity(0.06),
+                        color: const Color(0xFF111827).withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: const Text(
@@ -501,10 +500,10 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
                       ),
                     ),
                     const SizedBox(height: 18),
-                    Wrap(
+                    const Wrap(
                       spacing: 10,
                       runSpacing: 10,
-                      children: const [
+                      children: [
                         _HeroChip(
                           icon: Icons.edit_note_outlined,
                           label: 'Per-screen content control',
@@ -602,10 +601,10 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
                 children: [
                   Row(
                     children: [
-                      Expanded(
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
                               'Mute hints for screens already viewed here',
                               style: TextStyle(
@@ -680,7 +679,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -763,11 +762,11 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
           label: Text(option == 'all' ? 'All' : _chipTitle(option)),
           selected: selected == option,
           onSelected: (_) => onSelected(option),
-          selectedColor: _colorForCategory(option).withOpacity(0.14),
+          selectedColor: _colorForCategory(option).withValues(alpha: 0.14),
           backgroundColor: Colors.white,
           side: BorderSide(
             color: selected == option
-                ? _colorForCategory(option).withOpacity(0.35)
+                ? _colorForCategory(option).withValues(alpha: 0.35)
                 : const Color(0xFFE5E7EB),
           ),
           shape: RoundedRectangleBorder(
@@ -790,7 +789,7 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
         final bool mobile = constraints.maxWidth < 760;
         final bool tablet = constraints.maxWidth < 1220;
         final int columns = mobile ? 1 : (tablet ? 2 : 3);
-        final double spacing = 18;
+        const double spacing = 18;
         final double cardWidth =
             (constraints.maxWidth - (spacing * (columns - 1))) / columns;
 
@@ -824,15 +823,15 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
-      child: Column(
+      child: const Column(
         children: [
-          const Icon(
+          Icon(
             Icons.search_off_outlined,
             size: 52,
             color: Color(0xFF9CA3AF),
           ),
-          const SizedBox(height: 12),
-          const Text(
+          SizedBox(height: 12),
+          Text(
             'No hints match your current filters.',
             style: TextStyle(
               fontSize: 18,
@@ -840,8 +839,8 @@ class _AdminHintsScreenState extends State<AdminHintsScreen> {
               color: Color(0xFF111827),
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Clear the search or change filters to reveal the rest of the hint catalog.',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -921,7 +920,7 @@ class _HintCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 18,
             offset: const Offset(0, 10),
           ),
@@ -936,7 +935,7 @@ class _HintCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: accent.withOpacity(0.14),
+                  color: accent.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(Icons.tips_and_updates_outlined, color: accent),
@@ -990,10 +989,10 @@ class _HintCard extends StatelessWidget {
                     : const Color(0xFFF59E0B),
               ),
               if (viewedOnThisDevice)
-                _MetaChip(
+                const _MetaChip(
                   label: 'Device',
                   value: 'Viewed',
-                  accent: const Color(0xFF4F46E5),
+                  accent: Color(0xFF4F46E5),
                 ),
             ],
           ),
@@ -1039,9 +1038,9 @@ class _HintCard extends StatelessWidget {
                   icon: const Icon(Icons.visibility_outlined, size: 16),
                   label: const Text('Preview'),
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: _hintActionColor.withOpacity(0.12),
+                    backgroundColor: _hintActionColor.withValues(alpha: 0.12),
                     foregroundColor: _hintActionForegroundColor,
-                    side: BorderSide(color: _hintActionColor.withOpacity(0.7)),
+                    side: BorderSide(color: _hintActionColor.withValues(alpha: 0.7)),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -1426,12 +1425,12 @@ class _HintPreviewPane extends StatelessWidget {
               borderRadius: BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 16,
                   offset: const Offset(0, 10),
                 ),
               ],
-              border: Border.all(color: accent.withOpacity(0.18)),
+              border: Border.all(color: accent.withValues(alpha: 0.18)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1442,7 +1441,7 @@ class _HintPreviewPane extends StatelessWidget {
                       width: 42,
                       height: 42,
                       decoration: BoxDecoration(
-                        color: accent.withOpacity(0.12),
+                        color: accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(Icons.info_outline, color: accent),
@@ -1536,7 +1535,7 @@ class _CommandPanel extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -1606,7 +1605,7 @@ class _HeroMetricCard extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: data.color.withOpacity(0.12),
+              color: data.color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(data.icon, color: data.color),
@@ -1694,7 +1693,7 @@ class _MetaChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withOpacity(0.16)),
+        border: Border.all(color: accent.withValues(alpha: 0.16)),
       ),
       child: RichText(
         text: TextSpan(
@@ -1741,7 +1740,7 @@ class _ActionPillButton extends StatelessWidget {
       icon: Icon(icon, size: 18),
       label: Text(label),
       style: FilledButton.styleFrom(
-        backgroundColor: accent.withOpacity(0.12),
+        backgroundColor: accent.withValues(alpha: 0.12),
         foregroundColor: accent,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),

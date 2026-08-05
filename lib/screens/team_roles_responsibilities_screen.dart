@@ -14,15 +14,14 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/utils/table_import_helper.dart';
+import 'package:go_router/go_router.dart';
 class TeamRolesResponsibilitiesScreen extends StatefulWidget {
  const TeamRolesResponsibilitiesScreen({super.key});
 
  static Future<void> open(BuildContext context) {
- return Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const TeamRolesResponsibilitiesScreen()),
- );
+ return context.push('/team-roles');
  }
 
  @override
@@ -50,6 +49,111 @@ class _TeamRolesResponsibilitiesScreenState
  'Recruiting',
  'Offer',
  'Onboarded',
+ ];
+
+ // ─── CSV column specs (mirror each on-page table's columns) ─────────────
+ // These specs are used by both Download Template and Import CSV so the
+ // template format always matches what the user sees on screen.
+
+ static const String _coverageTableTitle = 'Coverage & Ownership Matrix';
+ static const List<CsvColumnSpec> _coverageColumns = [
+ CsvColumnSpec(
+ key: 'area',
+ label: 'Role/Area',
+ required: true,
+ hint: 'e.g. Product, Engineering, QA',
+ sampleValue: 'Product',
+ ),
+ CsvColumnSpec(
+ key: 'owner',
+ label: 'Primary owner',
+ hint: 'Person accountable for this area',
+ sampleValue: 'A. Mokoena',
+ ),
+ CsvColumnSpec(
+ key: 'backup',
+ label: 'Backup',
+ hint: 'Delegated backup owner',
+ sampleValue: 'T. Dlamini',
+ ),
+ CsvColumnSpec(
+ key: 'status',
+ label: 'Status',
+ allowedValues: ['On track', 'At risk', 'In review', 'Blocked'],
+ defaultValue: 'On track',
+ sampleValue: 'On track',
+ ),
+ CsvColumnSpec(
+ key: 'notes',
+ label: 'Notes',
+ hint: 'Optional context, risks, or hand-off notes',
+ sampleValue: 'Steady; minor QA gap',
+ ),
+ ];
+
+ static const String _hiringTableTitle = 'Hiring & Onboarding Plan';
+ static const List<CsvColumnSpec> _hiringColumns = [
+ CsvColumnSpec(
+ key: 'role',
+ label: 'Role',
+ required: true,
+ hint: 'e.g. QA Lead, Backend Developer',
+ sampleValue: 'QA Lead',
+ ),
+ CsvColumnSpec(
+ key: 'headcount',
+ label: 'Headcount',
+ hint: 'Numeric headcount to hire',
+ sampleValue: '1',
+ ),
+ CsvColumnSpec(
+ key: 'startDate',
+ label: 'Start date',
+ hint: 'e.g. 2025-01-15 or Jan 2025',
+ sampleValue: '2025-01-15',
+ ),
+ CsvColumnSpec(
+ key: 'rampPlan',
+ label: 'Ramp plan',
+ hint: 'Onboarding milestones',
+ sampleValue: '2-week shadow, then own QA cycle',
+ ),
+ CsvColumnSpec(
+ key: 'status',
+ label: 'Status',
+ allowedValues: ['Planned', 'Recruiting', 'Offer', 'Onboarded'],
+ defaultValue: 'Planned',
+ sampleValue: 'Planned',
+ ),
+ ];
+
+ static const String _decisionTableTitle = 'Decision & Escalation Points';
+ static const List<CsvColumnSpec> _decisionColumns = [
+ CsvColumnSpec(
+ key: 'decision',
+ label: 'Decision area',
+ required: true,
+ hint: 'e.g. Release readiness, Budget reallocation',
+ sampleValue: 'Release readiness',
+ ),
+ CsvColumnSpec(
+ key: 'owner',
+ label: 'Owner',
+ hint: 'Person who owns the decision',
+ sampleValue: 'PM',
+ ),
+ CsvColumnSpec(
+ key: 'approver',
+ label: 'Approver',
+ hint: 'Person who signs off',
+ sampleValue: 'Sponsor',
+ ),
+ CsvColumnSpec(
+ key: 'cadence',
+ label: 'Cadence',
+ hint: 'e.g. Weekly, Bi-weekly, Ad hoc',
+ sampleValue: 'Weekly',
+ ),
  ];
 
  List<_StaffingMetric> _staffingMetrics = [];
@@ -281,7 +385,7 @@ class _TeamRolesResponsibilitiesScreenState
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.02),
+ color: Colors.black.withValues(alpha: 0.02),
  blurRadius: 10,
  offset: const Offset(0, 4),
  ),
@@ -424,8 +528,8 @@ class _TeamRolesResponsibilitiesScreenState
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Roles & Responsibilities',
  ),
  ),
@@ -500,8 +604,10 @@ class _TeamRolesResponsibilitiesScreenState
  return _SectionCardShell(
  title: 'Coverage & ownership matrix',
  subtitle: 'Define primary owners, backups, and coverage status.',
- trailing: TextButton.icon(
- onPressed: () {
+ trailing: _TableHeaderActions(
+ onDownload: _downloadCoverageTemplate,
+ onImport: _importCoverage,
+ onAdd: () {
  setState(() => _coverageRows.add(_CoverageRow(
  id: _newId(),
  area: '',
@@ -512,8 +618,7 @@ class _TeamRolesResponsibilitiesScreenState
  )));
  _scheduleSave();
  },
- icon: const Icon(Icons.add, size: 18),
- label: const Text('Add row'),
+ addLabel: 'Add row',
  ),
  child: Column(
  children: [
@@ -525,9 +630,134 @@ class _TeamRolesResponsibilitiesScreenState
  );
  }
 
+ // ─── Template download / CSV import handlers (mirror on-page tables) ────
+
+ void _downloadCoverageTemplate() {
+ TableImportHelper.downloadTemplateForTable(
+ tableTitle: _coverageTableTitle,
+ columns: _coverageColumns,
+ );
+ _showTemplateSnack('Coverage template downloaded');
+ }
+
+ Future<void> _importCoverage() async {
+ final rows = await TableImportHelper.showImportDialogSpec(
+ context,
+ tableTitle: _coverageTableTitle,
+ columns: _coverageColumns,
+ );
+ if (rows == null || rows.isEmpty || !mounted) return;
+ final imported = <_CoverageRow>[];
+ for (final parts in rows) {
+ imported.add(_CoverageRow(
+ id: _newId(),
+ area: parts.isNotEmpty ? parts[0] : '',
+ owner: parts.length > 1 ? parts[1] : '',
+ backup: parts.length > 2 ? parts[2] : '',
+ status: parts.length > 3 &&
+ _coverageStatusOptions.contains(parts[3])
+ ? parts[3]
+ : _coverageStatusOptions.first,
+ notes: parts.length > 4 ? parts[4] : '',
+ ));
+ }
+ if (imported.isEmpty) return;
+ setState(() => _coverageRows.addAll(imported));
+ _scheduleSave();
+ _showImportedSnack(imported.length, 'coverage rows');
+ }
+
+ void _downloadHiringTemplate() {
+ TableImportHelper.downloadTemplateForTable(
+ tableTitle: _hiringTableTitle,
+ columns: _hiringColumns,
+ );
+ _showTemplateSnack('Hiring template downloaded');
+ }
+
+ Future<void> _importHiring() async {
+ final rows = await TableImportHelper.showImportDialogSpec(
+ context,
+ tableTitle: _hiringTableTitle,
+ columns: _hiringColumns,
+ );
+ if (rows == null || rows.isEmpty || !mounted) return;
+ final imported = <_HiringRow>[];
+ for (final parts in rows) {
+ imported.add(_HiringRow(
+ id: _newId(),
+ role: parts.isNotEmpty ? parts[0] : '',
+ headcount: parts.length > 1 ? parts[1] : '',
+ startDate: parts.length > 2 ? parts[2] : '',
+ rampPlan: parts.length > 3 ? parts[3] : '',
+ status: parts.length > 4 &&
+ _hiringStatusOptions.contains(parts[4])
+ ? parts[4]
+ : _hiringStatusOptions.first,
+ ));
+ }
+ if (imported.isEmpty) return;
+ setState(() => _hiringRows.addAll(imported));
+ _scheduleSave();
+ _showImportedSnack(imported.length, 'hiring rows');
+ }
+
+ void _downloadDecisionTemplate() {
+ TableImportHelper.downloadTemplateForTable(
+ tableTitle: _decisionTableTitle,
+ columns: _decisionColumns,
+ );
+ _showTemplateSnack('Decision template downloaded');
+ }
+
+ Future<void> _importDecision() async {
+ final rows = await TableImportHelper.showImportDialogSpec(
+ context,
+ tableTitle: _decisionTableTitle,
+ columns: _decisionColumns,
+ );
+ if (rows == null || rows.isEmpty || !mounted) return;
+ final imported = <_DecisionRow>[];
+ for (final parts in rows) {
+ imported.add(_DecisionRow(
+ id: _newId(),
+ decision: parts.isNotEmpty ? parts[0] : '',
+ owner: parts.length > 1 ? parts[1] : '',
+ approver: parts.length > 2 ? parts[2] : '',
+ cadence: parts.length > 3 ? parts[3] : '',
+ ));
+ }
+ if (imported.isEmpty) return;
+ setState(() => _decisionRows.addAll(imported));
+ _scheduleSave();
+ _showImportedSnack(imported.length, 'decision rows');
+ }
+
+ void _showTemplateSnack(String label) {
+ if (!mounted) return;
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(label),
+ behavior: SnackBarBehavior.floating,
+ duration: const Duration(seconds: 2),
+ ),
+ );
+ }
+
+ void _showImportedSnack(int count, String label) {
+ if (!mounted) return;
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text('Imported $count $label'),
+ behavior: SnackBarBehavior.floating,
+ duration: const Duration(seconds: 2),
+ ),
+ );
+ }
+
  Widget _coverageHeaderRow() {
- return Row(
- children: const [
+ return const Row(
+ children: [
  Expanded(flex: 2, child: _ColumnLabel('Role/Area')),
  Expanded(child: _ColumnLabel('Primary owner')),
  Expanded(child: _ColumnLabel('Backup')),
@@ -571,7 +801,7 @@ class _TeamRolesResponsibilitiesScreenState
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: _coverageStatusOptions.contains(row.status)
+ initialValue: _coverageStatusOptions.contains(row.status)
  ? row.status
  : _coverageStatusOptions.first,
  decoration: _inlineInputDecoration('Status'),
@@ -616,8 +846,10 @@ class _TeamRolesResponsibilitiesScreenState
  return _SectionCardShell(
  title: 'Hiring & onboarding plan',
  subtitle: 'Track headcount additions and onboarding milestones.',
- trailing: TextButton.icon(
- onPressed: () {
+ trailing: _TableHeaderActions(
+ onDownload: _downloadHiringTemplate,
+ onImport: _importHiring,
+ onAdd: () {
  setState(() => _hiringRows.add(_HiringRow(
  id: _newId(),
  role: '',
@@ -628,8 +860,7 @@ class _TeamRolesResponsibilitiesScreenState
  )));
  _scheduleSave();
  },
- icon: const Icon(Icons.add, size: 18),
- label: const Text('Add hire'),
+ addLabel: 'Add hire',
  ),
  child: Column(
  children: [
@@ -642,8 +873,8 @@ class _TeamRolesResponsibilitiesScreenState
  }
 
  Widget _hiringHeaderRow() {
- return Row(
- children: const [
+ return const Row(
+ children: [
  Expanded(flex: 2, child: _ColumnLabel('Role')),
  Expanded(child: _ColumnLabel('Headcount')),
  Expanded(child: _ColumnLabel('Start date')),
@@ -699,7 +930,7 @@ class _TeamRolesResponsibilitiesScreenState
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: _hiringStatusOptions.contains(row.status)
+ initialValue: _hiringStatusOptions.contains(row.status)
  ? row.status
  : _hiringStatusOptions.first,
  decoration: _inlineInputDecoration('Status'),
@@ -735,8 +966,10 @@ class _TeamRolesResponsibilitiesScreenState
  return _SectionCardShell(
  title: 'Decision & escalation points',
  subtitle: 'List decision areas, owners, and cadence.',
- trailing: TextButton.icon(
- onPressed: () {
+ trailing: _TableHeaderActions(
+ onDownload: _downloadDecisionTemplate,
+ onImport: _importDecision,
+ onAdd: () {
  setState(() => _decisionRows.add(_DecisionRow(
  id: _newId(),
  decision: '',
@@ -746,8 +979,7 @@ class _TeamRolesResponsibilitiesScreenState
  )));
  _scheduleSave();
  },
- icon: const Icon(Icons.add, size: 18),
- label: const Text('Add decision'),
+ addLabel: 'Add decision',
  ),
  child: Column(
  children: [
@@ -760,8 +992,8 @@ class _TeamRolesResponsibilitiesScreenState
  }
 
  Widget _decisionHeaderRow() {
- return Row(
- children: const [
+ return const Row(
+ children: [
  Expanded(flex: 2, child: _ColumnLabel('Decision area')),
  Expanded(child: _ColumnLabel('Owner')),
  Expanded(child: _ColumnLabel('Approver')),
@@ -864,7 +1096,7 @@ class _TeamRolesResponsibilitiesScreenState
  if (projectId == null || projectId.isEmpty) return;
  final result = await showDialog<_RoleCardData>(
  context: context,
- barrierColor: Colors.black.withOpacity(0.2),
+ barrierColor: Colors.black.withValues(alpha: 0.2),
  builder: (_) => _TeamMemberDialog(initialData: existingData),
  );
 
@@ -1083,8 +1315,8 @@ class _WorkProgressHeader extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Row(
- children: const [
+ return const Row(
+ children: [
  Expanded(
  child: Text(
  'Name',
@@ -1763,7 +1995,7 @@ class _WorkProgressEntryEditor extends StatelessWidget {
  onPressed: onRemove,
  splashRadius: 22,
  icon: Icon(Icons.delete_outline,
- color: colors.error.withOpacity(0.85)),
+ color: colors.error.withValues(alpha: 0.85)),
  ),
  ],
  ),
@@ -1777,7 +2009,7 @@ class _WorkProgressEntryEditor extends StatelessWidget {
  hintText: 'e.g. Draft integration plan',
  prefixIcon: Icon(Icons.task_alt_outlined, color: colors.primary),
  filled: true,
- fillColor: colors.surfaceContainerHighest.withOpacity(0.4),
+ fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.4),
  contentPadding:
  const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
  border: OutlineInputBorder(
@@ -1796,7 +2028,7 @@ class _WorkProgressEntryEditor extends StatelessWidget {
  ),
  const SizedBox(height: 14),
  DropdownButtonFormField<String>(
- value: draft.status,
+ initialValue: draft.status,
  onChanged: (value) {
  if (value == null) return;
  onStatusChanged(value);
@@ -1815,7 +2047,7 @@ class _WorkProgressEntryEditor extends StatelessWidget {
  labelText: 'Status',
  prefixIcon: Icon(Icons.flag_outlined, color: colors.primary),
  filled: true,
- fillColor: colors.surfaceContainerHighest.withOpacity(0.4),
+ fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.4),
  contentPadding:
  const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
  border: OutlineInputBorder(
@@ -1834,6 +2066,78 @@ class _WorkProgressEntryEditor extends StatelessWidget {
  ),
  ],
  ),
+ );
+ }
+}
+
+class _TableHeaderActions extends StatelessWidget {
+ const _TableHeaderActions({
+ required this.onDownload,
+ required this.onImport,
+ required this.onAdd,
+ required this.addLabel,
+ });
+
+ final VoidCallback onDownload;
+ final Future<void> Function() onImport;
+ final VoidCallback onAdd;
+ final String addLabel;
+
+ @override
+ Widget build(BuildContext context) {
+ return Wrap(
+ spacing: 6,
+ runSpacing: 6,
+ children: [
+ OutlinedButton.icon(
+ onPressed: onDownload,
+ icon: const Icon(Icons.download_outlined, size: 16),
+ label: const Text('Template'),
+ style: OutlinedButton.styleFrom(
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+ minimumSize: const Size(0, 36),
+ textStyle: const TextStyle(
+ fontSize: 12, fontWeight: FontWeight.w600),
+ foregroundColor: const Color(0xFF059669),
+ side: const BorderSide(color: Color(0xFFA7F3D0)),
+ backgroundColor: const Color(0xFFECFDF5),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(10)),
+ ),
+ ),
+ OutlinedButton.icon(
+ onPressed: () async {
+ await onImport();
+ },
+ icon: const Icon(Icons.upload_file_outlined, size: 16),
+ label: const Text('Import CSV'),
+ style: OutlinedButton.styleFrom(
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+ minimumSize: const Size(0, 36),
+ textStyle: const TextStyle(
+ fontSize: 12, fontWeight: FontWeight.w600),
+ foregroundColor: const Color(0xFF2563EB),
+ side: const BorderSide(color: Color(0xFFBFDBFE)),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(10)),
+ ),
+ ),
+ FilledButton.icon(
+ onPressed: onAdd,
+ icon: const Icon(Icons.add, size: 16),
+ label: Text(addLabel),
+ style: FilledButton.styleFrom(
+ padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+ minimumSize: const Size(0, 36),
+ textStyle: const TextStyle(
+ fontSize: 12, fontWeight: FontWeight.w600),
+ backgroundColor: const Color(0xFF111827),
+ foregroundColor: Colors.white,
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(10)),
+ ),
+ ),
+ ],
  );
  }
 }
@@ -1939,7 +2243,7 @@ class _TeamMemberDialogState extends State<_TeamMemberDialog> {
  width: 44,
  height: 44,
  decoration: BoxDecoration(
- color: colors.primary.withOpacity(0.12),
+ color: colors.primary.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(14),
  ),
  child: Icon(Icons.group_add_outlined,
@@ -2445,8 +2749,7 @@ class _DialogTextField extends StatelessWidget {
  this.icon,
  this.keyboardType,
  this.maxLines = 1,
- this.onChanged,
- });
+ }) : onChanged = null;
 
  @override
  Widget build(BuildContext context) {
@@ -2469,7 +2772,7 @@ class _DialogTextField extends StatelessWidget {
  prefixIcon: icon == null ? null : Icon(icon, color: colors.primary),
  alignLabelWithHint: maxLines > 1,
  filled: true,
- fillColor: colors.surfaceContainerHighest.withOpacity(0.4),
+ fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.4),
  contentPadding:
  const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
  labelStyle: labelStyle,
@@ -2504,7 +2807,7 @@ class _ChoicePills extends StatelessWidget {
  Widget build(BuildContext context) {
  final theme = Theme.of(context);
  final colors = theme.colorScheme;
- final chipColor = colors.surfaceContainerHighest.withOpacity(0.6);
+ final chipColor = colors.surfaceContainerHighest.withValues(alpha: 0.6);
  final activeColor = colors.primary;
  final labelStyle = theme.textTheme.labelMedium?.copyWith(
  fontWeight: FontWeight.w600,
@@ -2603,7 +2906,7 @@ class _DateSelector extends StatelessWidget {
  decoration: InputDecoration(
  labelText: label,
  filled: true,
- fillColor: colors.surfaceContainerHighest.withOpacity(0.4),
+ fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.4),
  contentPadding:
  const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
  labelStyle: labelStyle,

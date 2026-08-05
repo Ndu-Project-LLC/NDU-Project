@@ -148,7 +148,8 @@ class _WhiteButton extends StatelessWidget {
         foregroundColor: Colors.black87,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8)),
       ),
       icon: Icon(icon, size: 18),
       label: Text(
@@ -176,7 +177,8 @@ class _AiAssistButton extends StatelessWidget {
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8)),
       ),
       icon: Icon(icon, size: 18),
       label: Text(
@@ -204,7 +206,7 @@ class CircleIconButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: Color(0xFFE5E7EB)),
         ),
         child: Icon(
           icon,
@@ -235,62 +237,64 @@ class CurrentUserProfileChip extends StatelessWidget {
     final photoUrl = user?.photoURL;
     final email = user?.email ?? '';
 
-    return StreamBuilder<bool>(
-      stream: UserService.watchAdminStatus(),
-      builder: (context, snapshot) {
-        final isAdmin = snapshot.data ?? UserService.isAdminEmail(email);
-        final role = isAdmin ? 'Admin' : 'Member';
+    return RepaintBoundary(
+      child: StreamBuilder<bool>(
+        stream: UserService.watchAdminStatus(),
+        builder: (context, snapshot) {
+          final isAdmin = snapshot.data ?? UserService.isAdminEmail(email);
+          final role = isAdmin ? 'Admin' : 'Member';
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: const Color(0xFFE5E7EB),
-                backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
-                    ? NetworkImage(photoUrl)
-                    : null,
-                child: (photoUrl == null || photoUrl.isEmpty)
-                    ? Text(
-                        _initials(displayName),
-                        style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF4B5563)),
-                      )
-                    : null,
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    displayName,
-                    style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF111827)),
-                  ),
-                  Text(
-                    role,
-                    style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF6B7280)),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: Color(0xFFE5E7EB)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: const Color(0xFFE5E7EB),
+                  backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
+                      ? NetworkImage(photoUrl)
+                      : null,
+                  child: (photoUrl == null || photoUrl.isEmpty)
+                      ? Text(
+                          _initials(displayName),
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF4B5563)),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF111827)),
+                    ),
+                    Text(
+                      role,
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF6B7280)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -329,7 +333,8 @@ class SectionIntro extends StatelessWidget {
 }
 
 class ExecutionPlanForm extends StatefulWidget {
-  const ExecutionPlanForm({super.key, 
+  const ExecutionPlanForm({
+    super.key,
     this.title = 'Executive Plan Outline',
     required this.hintText,
     this.noteKey,
@@ -381,8 +386,7 @@ class _ExecutionPlanFormState extends State<ExecutionPlanForm> {
             executionPhaseData: updatedExecutionData,
             planningNotes: {
               ...data.planningNotes,
-              noteKey:
-                  trimmed,
+              noteKey: trimmed,
             },
           );
         },
@@ -489,7 +493,7 @@ class AiTipCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFE1EEFF),
+        color: Color(0xFFE1EEFF),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -525,9 +529,9 @@ class AiBadge extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Row(
+      child: const Row(
         mainAxisSize: MainAxisSize.min,
-        children: const [
+        children: [
           Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
           SizedBox(width: 6),
           Text(
@@ -566,7 +570,8 @@ class AddRowButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         backgroundColor: Colors.white,
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
@@ -594,14 +599,16 @@ class AddSolutionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         backgroundColor: Colors.white,
         side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
 }
 
 class CrossReferenceNote extends StatelessWidget {
-  const CrossReferenceNote({super.key, required this.standalonePage, this.standaloneLabel});
+  const CrossReferenceNote(
+      {super.key, required this.standalonePage, this.standaloneLabel});
 
   final String standalonePage;
   final String? standaloneLabel;
@@ -611,9 +618,9 @@ class CrossReferenceNote extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4),
+        color: Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFBBF7D0)),
+        border: Border.all(color: Color(0xFFBBF7D0)),
       ),
       child: Row(
         children: [
@@ -636,7 +643,8 @@ class CrossReferenceNote extends StatelessWidget {
 }
 
 class YellowActionButton extends StatelessWidget {
-  const YellowActionButton({super.key, required this.label, required this.onPressed});
+  const YellowActionButton(
+      {super.key, required this.label, required this.onPressed});
 
   final String label;
   final VoidCallback onPressed;
@@ -650,7 +658,8 @@ class YellowActionButton extends StatelessWidget {
         foregroundColor: Colors.black,
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24)),
       ),
       child: Text(
         label,

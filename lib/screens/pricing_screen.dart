@@ -177,18 +177,18 @@ class _PricingScreenState extends State<PricingScreen> {
       {bool isBasicPlan = false, _PlanTier? tier}) {
     // Navigate directly to the appropriate dashboard based on the plan tier,
     // skipping the Management Level selection screen.
-    Widget screen;
+    final String url;
     if (isBasicPlan || tier == _PlanTier.basicProject) {
-      screen = const BasicPlanDashboardScreen();
+      url = '/${AppRoutes.basicPlanDashboard}';
     } else if (tier == _PlanTier.program) {
-      screen = const ProgramDashboardScreen();
+      url = '/${AppRoutes.programDashboard}';
     } else if (tier == _PlanTier.portfolio) {
-      screen = const PortfolioDashboardScreen();
+      url = '/${AppRoutes.portfolioDashboard}';
     } else {
       // Default: Project dashboard
-      screen = const ProjectDashboardScreen();
+      url = '/${AppRoutes.dashboard}';
     }
-    navigator.push(MaterialPageRoute(builder: (_) => screen));
+    navigator.context.push(url);
   }
 
   _PlanPrice _priceForPlan(_PricingPlan plan) {
@@ -577,10 +577,10 @@ class _PricingScreenState extends State<PricingScreen> {
             ],
           ),
           const SizedBox(height: 22),
-          Wrap(
+          const Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: const [
+            children: [
               _HeroMetric(
                   label: 'Delivery models',
                   value: 'Project • Program • Portfolio'),
@@ -677,8 +677,8 @@ class _PricingScreenState extends State<PricingScreen> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
               ),
-              child: Column(
-                children: const [
+              child: const Column(
+                children: [
                   _HeroChecklistItem(
                       'Structured planning, governance, and execution in one flow'),
                   _HeroChecklistItem(
@@ -1353,7 +1353,7 @@ class _PlanColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accent = _themeColor;
+    const Color accent = _themeColor;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
@@ -1432,8 +1432,8 @@ class _PlanColumn extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(color: accent.withValues(alpha: 0.3)),
                   ),
-                  child: Row(
-                    children: const [
+                  child: const Row(
+                    children: [
                       Icon(Icons.check_circle, color: _themeColor, size: 16),
                       SizedBox(width: 6),
                       Text(
@@ -1690,22 +1690,22 @@ class _PricingExtras extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.group_add, color: _themeColor, size: 24),
-              const SizedBox(width: 10),
-              const Text('Additional User Pricing',
+              Icon(Icons.group_add, color: _themeColor, size: 24),
+              SizedBox(width: 10),
+              Text('Additional User Pricing',
                   style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: _primaryText)),
             ],
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
               'As your team grows, you can add users without changing plans.',
               style:
                   TextStyle(fontSize: 14, color: _secondaryText, height: 1.5)),

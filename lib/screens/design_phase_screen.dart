@@ -34,6 +34,8 @@ import 'package:ndu_project/widgets/design_phase_stable_shell.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ndu_project/routing/app_router.dart';
 class DesignPhaseScreen extends StatefulWidget {
  const DesignPhaseScreen(
  {super.key, this.activeItemLabel = 'Design Management'});
@@ -439,11 +441,7 @@ Future<void> _loadProgress(String projectId) async {
  backLabel: 'Back: Design overview',
  nextLabel: 'Next: Requirements Implementation',
  onBack: () => Navigator.of(context).maybePop(),
- onNext: () => Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const RequirementsImplementationScreen()),
- ),
- ),
+ onNext: () => context.push('/requirements-implementation')),
  ],
  ),
  );
@@ -520,13 +518,7 @@ Future<void> _loadProgress(String projectId) async {
  child: const Text('Back: Design overview'),
  ),
  ElevatedButton(
- onPressed: () => Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) =>
- const RequirementsImplementationScreen(),
- ),
- ),
- child: const Text('Next: Requirements Implementation'),
+ onPressed: () => context.push('/requirements-implementation'),child: const Text('Next: Requirements Implementation'),
  ),
  ],
  ),
@@ -534,36 +526,22 @@ Future<void> _loadProgress(String projectId) async {
  ],
  ),
  ),
- );
- }
+ );  }
 
- void _openStableDesignItem(String label) {
- Widget? destination;
- switch (label) {
- case 'Design Management':
- destination =
- const DesignPhaseScreen(activeItemLabel: 'Design Management');
- break;
- case 'Design Specifications':
- destination = const RequirementsImplementationScreen();
- break;
- case 'Technical Alignment':
- destination = const TechnicalAlignmentScreen();
- break;
- case 'Development Set Up':
- destination = const DevelopmentSetUpScreen();
- break;
- case 'UI/UX Design':
- destination = const UiUxDesignScreen();
- break;
- }
+  void _openStableDesignItem(String label) {
+  final destination = switch (label) {
+  'Design Management' => '/${AppRoutes.designPhase}',
+  'Design Specifications' => '/${AppRoutes.requirementsImplementation}',
+  'Technical Alignment' => '/${AppRoutes.technicalAlignment}',
+  'Development Set Up' => '/${AppRoutes.developmentSetUp}',
+  'UI/UX Design' => '/${AppRoutes.uiUxDesign}',
+  _ => null,
+  };
 
- if (destination == null) return;
+  if (destination == null) return;
 
- Navigator.of(context).pushReplacement(
- MaterialPageRoute(builder: (_) => destination!),
- );
- }
+  context.pushReplacement(destination);
+  }
 
  // ── 1. Design Readiness Progress Card ──────────────────────────────────
  Widget _buildReadinessProgressCard() {
@@ -742,7 +720,7 @@ Future<void> _loadProgress(String projectId) async {
  width: 28,
  height: 28,
  decoration: BoxDecoration(
- color: Colors.white.withOpacity(0.8),
+ color: Colors.white.withValues(alpha: 0.8),
  shape: BoxShape.circle,
  ),
  child: Icon(
@@ -907,7 +885,7 @@ Future<void> _loadProgress(String projectId) async {
  ),
  const SizedBox(height: 8),
  DropdownButtonFormField<T>(
- value: value,
+ initialValue: value,
  decoration: InputDecoration(
  isDense: true,
  contentPadding:
@@ -990,7 +968,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
  decoration: BoxDecoration(
- color: const Color(0xFF005BB3).withOpacity(0.12),
+ color: const Color(0xFF005BB3).withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Text(
@@ -1014,14 +992,14 @@ Future<void> _loadProgress(String projectId) async {
  Icon(
  Icons.folder_open_outlined,
  size: 48,
- color: const Color(0xFF005BB3).withOpacity(0.3),
+ color: const Color(0xFF005BB3).withValues(alpha: 0.3),
  ),
  const SizedBox(height: 12),
  Text(
  'No documents added',
  style: TextStyle(
  fontSize: 13,
- color: const Color(0xFF005BB3).withOpacity(0.6),
+ color: const Color(0xFF005BB3).withValues(alpha: 0.6),
  fontWeight: FontWeight.w500,
  ),
  ),
@@ -1074,7 +1052,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: const Color(0xFF005BB3).withOpacity(0.1),
+ color: const Color(0xFF005BB3).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -1210,7 +1188,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
  decoration: BoxDecoration(
- color: const Color(0xFF005BB3).withOpacity(0.12),
+ color: const Color(0xFF005BB3).withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Text(
@@ -1234,14 +1212,14 @@ Future<void> _loadProgress(String projectId) async {
  Icon(
  Icons.handyman_outlined,
  size: 48,
- color: const Color(0xFF005BB3).withOpacity(0.3),
+ color: const Color(0xFF005BB3).withValues(alpha: 0.3),
  ),
  const SizedBox(height: 12),
  Text(
  'No tools configured',
  style: TextStyle(
  fontSize: 13,
- color: const Color(0xFF005BB3).withOpacity(0.6),
+ color: const Color(0xFF005BB3).withValues(alpha: 0.6),
  fontWeight: FontWeight.w500,
  ),
  ),
@@ -1294,7 +1272,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
- color: const Color(0xFF005BB3).withOpacity(0.1),
+ color: const Color(0xFF005BB3).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -1405,10 +1383,10 @@ Future<void> _loadProgress(String projectId) async {
  // ── Header Bar ──
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
- decoration: BoxDecoration(
+ decoration: const BoxDecoration(
  color: Colors.white,
- borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
- border: Border(bottom: BorderSide(color: const Color(0xFFE4E7EC))),
+ borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+ border: Border(bottom: BorderSide(color: Color(0xFFE4E7EC))),
  ),
  child: Row(
  children: [
@@ -1541,10 +1519,10 @@ Future<void> _loadProgress(String projectId) async {
  // ── Left: Component Library Sidebar ──
  Container(
  width: 210,
- decoration: BoxDecoration(
- color: const Color(0xFFFAFBFD),
- border: Border(right: BorderSide(color: const Color(0xFFE4E7EC))),
- borderRadius: const BorderRadius.only(
+ decoration: const BoxDecoration(
+ color: Color(0xFFFAFBFD),
+ border: Border(right: BorderSide(color: Color(0xFFE4E7EC))),
+ borderRadius: BorderRadius.only(
  bottomLeft: Radius.circular(16),
  ),
  ),
@@ -1646,12 +1624,12 @@ Future<void> _loadProgress(String projectId) async {
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Icon(Icons.lightbulb_outline, size: 14, color: const Color(0xFF2563EB)),
+ const Icon(Icons.lightbulb_outline, size: 14, color: Color(0xFF2563EB)),
  const SizedBox(width: 6),
  Expanded(
  child: Text(
  'Drag components to canvas. Use Connect mode to draw arrows between nodes.',
- style: TextStyle(fontSize: 10, color: const Color(0xFF2563EB).withOpacity(0.8), height: 1.4),
+ style: TextStyle(fontSize: 10, color: const Color(0xFF2563EB).withValues(alpha: 0.8), height: 1.4),
  ),
  ),
  ],
@@ -1714,7 +1692,7 @@ Future<void> _loadProgress(String projectId) async {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- border: Border.all(color: effectiveColor.withOpacity(0.25)),
+ border: Border.all(color: effectiveColor.withValues(alpha: 0.25)),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(
@@ -2260,12 +2238,7 @@ Future<void> _loadProgress(String projectId) async {
  child: const Text('Back'),
  ),
  ElevatedButton(
- onPressed: () => Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const RequirementsImplementationScreen(),
- ),
- ),
- child: const Text('Requirements Implementation'),
+ onPressed: () => context.push('/requirements-implementation'),child: const Text('Requirements Implementation'),
  ),
  ],
  ),
@@ -2399,7 +2372,7 @@ Future<void> _loadProgress(String projectId) async {
  ),
  const SizedBox(height: 8),
  DropdownButtonFormField<T>(
- value: value,
+ initialValue: value,
  decoration: InputDecoration(
  isDense: true,
  contentPadding:
@@ -2640,12 +2613,12 @@ Future<void> _loadProgress(String projectId) async {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
- const Text('Design Tools',
+ Text('Design Tools',
  style: TextStyle(fontWeight: FontWeight.w600)),
- const Icon(Icons.add, size: 16),
+ Icon(Icons.add, size: 16),
  ],
  ),
  const SizedBox(height: 8),
@@ -2719,8 +2692,8 @@ Future<void> _loadProgress(String projectId) async {
  bool showExternalIcon = false,
  }) {
  final backgroundColor = isSelected
- ? Colors.blue.withOpacity(0.1)
- : Colors.grey.withOpacity(0.06);
+ ? Colors.blue.withValues(alpha: 0.1)
+ : Colors.grey.withValues(alpha: 0.06);
  return Material(
  color: Colors.transparent,
  child: InkWell(
@@ -2781,12 +2754,12 @@ Future<void> _loadProgress(String projectId) async {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
- const Text('Collaborators',
+ Text('Collaborators',
  style: TextStyle(fontWeight: FontWeight.w600)),
- const Icon(Icons.add, size: 16),
+ Icon(Icons.add, size: 16),
  ],
  ),
  const SizedBox(height: 8),
@@ -2862,7 +2835,7 @@ Future<void> _loadProgress(String projectId) async {
  children: [
  CircleAvatar(
  radius: 16,
- backgroundColor: color.withOpacity(0.2),
+ backgroundColor: color.withValues(alpha: 0.2),
  child: Text(initials,
  style: TextStyle(
  fontSize: 12, color: color, fontWeight: FontWeight.bold)),
@@ -2931,7 +2904,7 @@ Future<void> _loadProgress(String projectId) async {
  borderRadius: BorderRadius.circular(16),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.2),
+ color: Colors.black.withValues(alpha: 0.2),
  blurRadius: 20,
  offset: const Offset(0, 10),
  ),
@@ -3024,7 +2997,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: Colors.blue.withOpacity(0.1),
+ color: Colors.blue.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(4),
  ),
  child: const Text('Required',
@@ -3045,7 +3018,7 @@ Future<void> _loadProgress(String projectId) async {
  TextStyle(fontSize: 12, color: Colors.grey[600])),
  const SizedBox(height: 8),
  DropdownButtonFormField<ProjectMethodology>(
- value: methodology,
+ initialValue: methodology,
  decoration: InputDecoration(
  isDense: true,
  contentPadding: const EdgeInsets.symmetric(
@@ -3082,7 +3055,7 @@ Future<void> _loadProgress(String projectId) async {
  TextStyle(fontSize: 12, color: Colors.grey[600])),
  const SizedBox(height: 8),
  DropdownButtonFormField<ProjectIndustry>(
- value: industry,
+ initialValue: industry,
  decoration: InputDecoration(
  isDense: true,
  contentPadding: const EdgeInsets.symmetric(
@@ -3116,7 +3089,7 @@ Future<void> _loadProgress(String projectId) async {
  TextStyle(fontSize: 12, color: Colors.grey[600])),
  const SizedBox(height: 8),
  DropdownButtonFormField<ExecutionStrategy>(
- value: strategy,
+ initialValue: strategy,
  decoration: InputDecoration(
  isDense: true,
  contentPadding: const EdgeInsets.symmetric(
@@ -3229,7 +3202,7 @@ Future<void> _loadProgress(String projectId) async {
  // Editor Header
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
- decoration: BoxDecoration(
+ decoration: const BoxDecoration(
  border:
  Border(bottom: BorderSide(color: AppSemanticColors.border)),
  ),
@@ -3392,7 +3365,7 @@ Future<void> _loadProgress(String projectId) async {
  // Footer
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
- decoration: BoxDecoration(
+ decoration: const BoxDecoration(
  border: Border(top: BorderSide(color: AppSemanticColors.border)),
  ),
  child: Row(
@@ -3425,7 +3398,7 @@ Future<void> _loadProgress(String projectId) async {
  if (_activeTool != DesignTool.architecture) {
  return Container(
  width: 220,
- decoration: BoxDecoration(
+ decoration: const BoxDecoration(
  border: Border(right: BorderSide(color: AppSemanticColors.border)),
  ),
  child: _buildToolSidebarContent(),
@@ -3433,7 +3406,7 @@ Future<void> _loadProgress(String projectId) async {
  }
  return Container(
  width: 220,
- decoration: BoxDecoration(
+ decoration: const BoxDecoration(
  border: Border(right: BorderSide(color: AppSemanticColors.border)),
  ),
  child: Column(
@@ -3568,7 +3541,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.all(10),
  decoration: BoxDecoration(
- color: Colors.grey.withOpacity(0.06),
+ color: Colors.grey.withValues(alpha: 0.06),
  borderRadius: BorderRadius.circular(10),
  border: Border.all(color: Colors.grey.shade200),
  ),
@@ -3811,7 +3784,7 @@ Future<void> _loadProgress(String projectId) async {
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: docType,
+ initialValue: docType,
  decoration: const InputDecoration(
  labelText: 'Type',
  border: OutlineInputBorder(),
@@ -3953,7 +3926,9 @@ Future<void> _loadProgress(String projectId) async {
  ElevatedButton(
  onPressed: () {
  if (titleController.text.trim().isEmpty &&
- uploadedFileName == null) return;
+ uploadedFileName == null) {
+   return;
+ }
 
  final provider = ProjectDataInherited.maybeOf(context);
  if (provider == null) return;
@@ -4193,7 +4168,9 @@ Future<void> _loadProgress(String projectId) async {
  ElevatedButton(
  onPressed: () {
  if (nameController.text.trim().isEmpty &&
- uploadedFileName == null) return;
+ uploadedFileName == null) {
+   return;
+ }
 
  final provider = ProjectDataInherited.maybeOf(context);
  if (provider == null) return;
@@ -4382,7 +4359,7 @@ Future<void> _loadProgress(String projectId) async {
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
  decoration: BoxDecoration(
  color: isDragging
- ? accent.withOpacity(0.12)
+ ? accent.withValues(alpha: 0.12)
  : item.type.bgColor,
  borderRadius: BorderRadius.circular(10),
  border: Border.all(
@@ -4396,7 +4373,7 @@ Future<void> _loadProgress(String projectId) async {
  width: 28,
  height: 28,
  decoration: BoxDecoration(
- color: accent.withOpacity(0.12),
+ color: accent.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(7),
  ),
  child: Icon(item.icon, size: 15, color: accent),
@@ -4407,7 +4384,7 @@ Future<void> _loadProgress(String projectId) async {
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: accent.withOpacity(0.85),
+ color: accent.withValues(alpha: 0.85),
  )),
  ),
  if (showAddButton && onAddToCanvas != null) ...[

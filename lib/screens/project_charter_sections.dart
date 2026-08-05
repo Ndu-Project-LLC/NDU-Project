@@ -1,6 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/user_model.dart';
+import 'package:ndu_project/services/charter_approval_service.dart';
+import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/expandable_text.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
@@ -127,7 +132,7 @@ class CharterHeroHeader extends StatelessWidget {
  Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  children: [
- Text(
+ const Text(
  'PROJECT CHARTER',
  style: TextStyle(
  fontSize: 12,
@@ -170,7 +175,7 @@ class CharterHeroHeader extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
  decoration: BoxDecoration(
- color: BrandColors.primaryContainer.withOpacity(0.1),
+ color: BrandColors.primaryContainer.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(20),
  ),
  child: const Text(
@@ -269,7 +274,7 @@ class CharterDashboardStats extends StatelessWidget {
  label,
  textAlign: isMobile ? TextAlign.left : TextAlign.center,
  style: TextStyle(
- color: Colors.white.withOpacity(0.6),
+ color: Colors.white.withValues(alpha: 0.6),
  fontSize: 11,
  fontWeight: FontWeight.w600,
  letterSpacing: 1.0,
@@ -296,7 +301,7 @@ class CharterDashboardStats extends StatelessWidget {
  return Container(
  height: 40,
  width: 1,
- color: Colors.white.withOpacity(0.2),
+ color: Colors.white.withValues(alpha: 0.2),
  );
  }
 
@@ -703,7 +708,7 @@ class CharterProjectDefinition extends StatelessWidget {
  const Divider(color: BrandColors.outlineVariant),
  const SizedBox(height: 16),
  // Business Case subsection
- Text(
+ const Text(
  'BUSINESS CASE',
  style: TextStyle(
  fontSize: 12,
@@ -715,7 +720,7 @@ class CharterProjectDefinition extends StatelessWidget {
  const SizedBox(height: 8),
  ExpandableText(
  text: data!.businessCase.trim().isEmpty
- ? 'Provide the financial and strategic rationale (ROI/NPV context) for this project.'
+ ? 'Provide the financial and strategic rationale for this project.'
  : data!.businessCase,
  style: TextStyle(
  fontSize: 14,
@@ -760,8 +765,6 @@ class CharterFinancialOverview extends StatelessWidget {
  children: [
  sectionTitleWithIcon(
  Icons.payments_outlined, 'Financial Overview'),
- // "ROI Analysis" badge removed per user request — the
- // charter no longer displays an ROI Analysis pill.
  ],
  ),
  const SizedBox(height: 20),
@@ -893,7 +896,7 @@ class CharterFinancialOverview extends StatelessWidget {
  child: Text(
  '${pct.toStringAsFixed(1)}%',
  textAlign: TextAlign.right,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 12, color: BrandColors.onSurfaceVariant),
  ),
  ),
@@ -1136,7 +1139,7 @@ class CharterScope extends StatelessWidget {
  const SizedBox(height: 16),
 
  // Within Scope - tag pills
- Text(
+ const Text(
  'WITHIN SCOPE',
  style: TextStyle(
  fontSize: 12,
@@ -1164,11 +1167,11 @@ class CharterScope extends StatelessWidget {
  color: BrandColors.primaryFixed,
  borderRadius: BorderRadius.circular(16),
  border: Border.all(
- color: BrandColors.primary.withOpacity(0.3)),
+ color: BrandColors.primary.withValues(alpha: 0.3)),
  ),
  child: Text(
  item.trim(),
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w500,
  color: BrandColors.onPrimaryFixedVariant,
@@ -1181,7 +1184,7 @@ class CharterScope extends StatelessWidget {
  const SizedBox(height: 20),
 
  // Out of Scope - bullet list with error-colored label
- Text(
+ const Text(
  'OUT OF SCOPE',
  style: TextStyle(
  fontSize: 12,
@@ -1313,7 +1316,7 @@ class CharterRisks extends StatelessWidget {
  ),
  child: Text(
  '$totalRisksCount Total',
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
  color: BrandColors.onErrorContainer,
@@ -1367,7 +1370,7 @@ class CharterRisks extends StatelessWidget {
  ),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.03),
+ color: Colors.black.withValues(alpha: 0.03),
  offset: const Offset(0, 1),
  blurRadius: 2,
  )
@@ -1380,12 +1383,15 @@ class CharterRisks extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ // Strip a leading orphan period (data-entry typo like
+ // ". Failure to..." → "Failure to...").
  Text(
- item['description'],
+ _cleanRiskDescription(item['description']),
  style: const TextStyle(
  fontSize: 14,
  fontWeight: FontWeight.w500,
  color: BrandColors.onSurface,
+ height: 1.45,
  ),
  ),
  if (item['mitigation'] != null &&
@@ -1469,6 +1475,18 @@ class CharterRisks extends StatelessWidget {
  default:
  return 0;
  }
+ }
+
+ /// Strip a leading orphan period and surrounding whitespace from a
+ /// risk description (data-entry typo like ". Failure to..." →
+ /// "Failure to...").
+ String _cleanRiskDescription(dynamic desc) {
+ final s = desc?.toString() ?? '';
+ var t = s.trim();
+ while (t.startsWith('.') || t.startsWith(',') || t.startsWith(';')) {
+ t = t.substring(1).trim();
+ }
+ return t;
  }
 }
 
@@ -1677,6 +1695,11 @@ class CharterTechnicalProcurementBento extends StatelessWidget {
 
  Widget _buildStatCard(String title, int count, String subtitle,
  IconData icon, Color accentColor, Color bgColor) {
+ // Helper text to disambiguate "0" counts — tells the user whether
+ // the count is genuinely zero or just not yet captured.
+ final helper = count == 0
+ ? 'No records added yet. Use "View / Edit Source" to add.'
+ : null;
  return Container(
  padding: const EdgeInsets.all(20),
  decoration: kCardBorderDecoration,
@@ -1702,7 +1725,7 @@ class CharterTechnicalProcurementBento extends StatelessWidget {
  decoration: BoxDecoration(
  color: bgColor,
  borderRadius: BorderRadius.circular(10),
- border: Border.all(color: accentColor.withOpacity(0.2)),
+ border: Border.all(color: accentColor.withValues(alpha: 0.2)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1717,7 +1740,16 @@ class CharterTechnicalProcurementBento extends StatelessWidget {
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: accentColor.withOpacity(0.8))),
+ color: accentColor.withValues(alpha: 0.8))),
+ if (helper != null) ...[
+ const SizedBox(height: 6),
+ Text(helper,
+ style: TextStyle(
+ fontSize: 10,
+ fontStyle: FontStyle.italic,
+ color: accentColor.withValues(alpha: 0.65),
+ height: 1.3)),
+ ],
  ],
  ),
  ),
@@ -1868,7 +1900,7 @@ class _TimelineItem extends StatelessWidget {
  const SizedBox(height: 4),
  Text(
  date,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 12,
  color: BrandColors.outline,
  fontWeight: FontWeight.w500,
@@ -1898,16 +1930,161 @@ class CharterFloatingApprovalBar extends StatefulWidget {
 
 class _CharterFloatingApprovalBarState
     extends State<CharterFloatingApprovalBar> {
+  List<UserModel> _allUsers = const [];
+  ResolvedApprover _resolved = ResolvedApprover.empty;
+  bool _resolving = false;
+  bool _sendingEmail = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsersAndResolve();
+  }
+
+  @override
+  void didUpdateWidget(covariant CharterFloatingApprovalBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Re-resolve when the underlying data changes (e.g. user just named
+    // a sponsor on the meta-info card).
+    if (oldWidget.data?.charterProjectSponsorName !=
+            widget.data?.charterProjectSponsorName ||
+        oldWidget.data?.charterProjectManagerName !=
+            widget.data?.charterProjectManagerName ||
+        oldWidget.data?.charterEmail != widget.data?.charterEmail) {
+      _resolveFromCachedUsers();
+    }
+  }
+
+  Future<void> _loadUsersAndResolve() async {
+    if (_resolving) return;
+    setState(() => _resolving = true);
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('users')
+          .limit(200)
+          .get();
+      final users =
+          snap.docs.map((d) => UserModel.fromJson(d.data())).toList();
+      if (!mounted) return;
+      setState(() {
+        _allUsers = users;
+        _resolved = widget.data == null
+            ? ResolvedApprover.empty
+            : CharterApprovalService.resolveApprover(
+                data: widget.data!, allUsers: users);
+        _resolving = false;
+      });
+    } catch (e) {
+      debugPrint('CharterFloatingApprovalBar: user load failed: $e');
+      if (mounted) {
+        setState(() {
+          _resolved = widget.data == null
+              ? ResolvedApprover.empty
+              : CharterApprovalService.resolveApprover(
+                  data: widget.data!, allUsers: const []);
+          _resolving = false;
+        });
+      }
+    }
+  }
+
+  void _resolveFromCachedUsers() {
+    if (widget.data == null) return;
+    setState(() {
+      _resolved = CharterApprovalService.resolveApprover(
+          data: widget.data!, allUsers: _allUsers);
+    });
+  }
+
+  Future<void> _sendApprovalRequestEmail() async {
+    final data = widget.data;
+    if (data == null) return;
+    if (!_resolved.hasEmail) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'No email address on file for the resolved approver. Assign a sponsor or project manager with an email first.'),
+          backgroundColor: Color(0xFFD97706),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    setState(() => _sendingEmail = true);
+    try {
+      final result = await CharterApprovalService.sendApprovalRequestEmail(
+        data: data,
+        approver: _resolved,
+      );
+      if (!mounted) return;
+      final msg = switch (result.result) {
+        CharterEmailSendResult.queued =>
+          'Approval request email queued for ${_resolved.name} (${_resolved.email}). They will receive an email shortly.',
+        CharterEmailSendResult.mailtoGenerated =>
+          'Opening your email client to send the approval request to ${_resolved.name} (${_resolved.email}).',
+        CharterEmailSendResult.noApproverEmail =>
+          'No email address on file for the resolved approver.',
+        CharterEmailSendResult.failed =>
+          'Could not queue the email: ${result.error ?? "unknown error"}',
+      };
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: result.result == CharterEmailSendResult.queued ||
+                  result.result == CharterEmailSendResult.mailtoGenerated
+              ? Colors.green
+              : const Color(0xFFD97706),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+          action: result.mailtoUri != null
+              ? SnackBarAction(
+                  label: 'Copy email link',
+                  textColor: Colors.white,
+                  onPressed: () async {
+                    await Clipboard.setData(
+                        ClipboardData(text: result.mailtoUri!));
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Email link copied to clipboard. Paste it into your browser address bar to open your email client.'),
+                        duration: Duration(seconds: 6),
+                      ),
+                    );
+                  },
+                )
+              : null,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send approval email: $e'),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _sendingEmail = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = widget.data;
-    // Determine signer info
-    String signerName = data?.charterProjectSponsorName ?? '';
-    String signerRole = 'Project Sponsor';
-    if (signerName.isEmpty) {
-      signerName = data?.charterProjectManagerName ?? '';
-      signerRole = 'Project Owner';
-    }
+    // Prefer the resolved approver (which knows about registered
+    // users and the admin fallback), fall back to the raw charter
+    // fields for display.
+    String signerName = _resolved.name.isNotEmpty && _resolved.name != 'Pending Assignment'
+        ? _resolved.name
+        : (data?.charterProjectSponsorName ?? data?.charterProjectManagerName ?? '');
+    String signerRole = _resolved.role.isNotEmpty && _resolved.role != 'Sponsor'
+        ? _resolved.role
+        : (data?.charterProjectSponsorName.isNotEmpty == true
+            ? 'Project Sponsor'
+            : (data?.charterProjectManagerName.isNotEmpty == true
+                ? 'Project Owner'
+                : 'Pending Assignment'));
     if (signerName.isEmpty) {
       signerName = 'Pending Assignment';
     }
@@ -1920,7 +2097,7 @@ class _CharterFloatingApprovalBarState
         color: BrandColors.inverseSurface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             offset: const Offset(0, -4),
             blurRadius: 12,
           )
@@ -1931,20 +2108,30 @@ class _CharterFloatingApprovalBarState
           constraints: const BoxConstraints(maxWidth: 1400),
           child: LayoutBuilder(builder: (context, constraints) {
             final isMobile = constraints.maxWidth < 600;
+            final info = _buildApprovalInfo(signerName, signerRole, isApproved);
+            final emailBtn = _buildEmailButton();
+            final approveBtn = _buildApproveButton(context, signerName, isApproved);
+            final actions = Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (emailBtn != null) ...[emailBtn, const SizedBox(width: 8)],
+                approveBtn,
+              ],
+            );
             if (isMobile) {
               return Column(
                 children: [
-                  _buildApprovalInfo(signerName, signerRole, isApproved),
+                  info,
                   const SizedBox(height: 12),
-                  _buildApproveButton(context, signerName, isApproved),
+                  actions,
                 ],
               );
             }
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildApprovalInfo(signerName, signerRole, isApproved),
-                _buildApproveButton(context, signerName, isApproved),
+                info,
+                actions,
               ],
             );
           }),
@@ -1964,7 +2151,7 @@ class _CharterFloatingApprovalBarState
           child: Text(
             'Approval Authority: $signerName ($signerRole) — Charter to be approved by sponsor, owner or applicable lead',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -1997,6 +2184,65 @@ class _CharterFloatingApprovalBarState
     );
   }
 
+  Widget? _buildEmailButton() {
+    final data = widget.data;
+    if (data == null) return null;
+    final isApproved = data.charterApprovalDate != null ||
+        (data.frontEndPlanning.charterApproved ?? false);
+    if (isApproved) return null;
+
+    final hasApproverEmail = _resolved.hasEmail;
+    final label = _resolved.isFallback
+        ? 'Email Site Admin'
+        : (_resolved.isRegisteredUser
+            ? 'Email Approver'
+            : 'Email Sponsor');
+
+    return InkWell(
+      onTap: _sendingEmail ? null : () => _sendApprovalRequestEmail(),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_sendingEmail)
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            else
+              Icon(
+                hasApproverEmail
+                    ? Icons.mail_outline_rounded
+                    : Icons.person_add_alt_outlined,
+                size: 16,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+            const SizedBox(width: 6),
+            Text(
+              _sendingEmail ? 'Sending…' : label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.95),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildApproveButton(
       BuildContext context, String signerName, bool isApproved) {
     if (isApproved) return const SizedBox();
@@ -2014,7 +2260,7 @@ class _CharterFloatingApprovalBarState
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-              color: BrandColors.primary.withOpacity(0.3),
+              color: BrandColors.primary.withValues(alpha: 0.3),
               offset: const Offset(0, 2),
               blurRadius: 8,
             )
@@ -2047,7 +2293,7 @@ class _CharterFloatingApprovalBarState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-              'Assign a sponsor or project owner before approval. Use the sponsor suggestion banner in the Governance section.'),
+              'Charter to be approved by sponsor, owner or applicable lead'),
           backgroundColor: const Color(0xFFD97706),
           behavior: SnackBarBehavior.floating,
           action: SnackBarAction(
@@ -2069,12 +2315,12 @@ class _CharterFloatingApprovalBarState
         builder: (dialogContext, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16)),
-          title: Row(
+          title: const Row(
             children: [
-              const Icon(Icons.gavel_outlined,
+              Icon(Icons.gavel_outlined,
                   color: BrandColors.primary, size: 22),
-              const SizedBox(width: 10),
-              const Text('Confirm Charter Approval'),
+              SizedBox(width: 10),
+              Text('Confirm Charter Approval'),
             ],
           ),
           content: ConstrainedBox(

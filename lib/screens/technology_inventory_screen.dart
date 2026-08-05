@@ -10,11 +10,12 @@ import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:go_router/go_router.dart';
 class TechnologyInventoryScreen extends StatefulWidget {
  const TechnologyInventoryScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TechnologyInventoryScreen()));
+ context.push('/technology-inventory');
  }
 
  @override
@@ -203,9 +204,10 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  child: Card(
  child: Padding(
  padding: const EdgeInsets.all(12),
- child: ResponsiveDataTableWrapper(
+ child: buildNduTableWithExpand(
+ context: context,
+ title: 'Technology Inventory',
  maxHeight: 420,
- child: DataTable(
  columns: const [
  DataColumn(
  label: Center(
@@ -228,7 +230,6 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  DataCell(Center(child: Text(it['notes'] ?? ''))),
  ]);
  }).toList(),
- ),
  ),
  ),
  ),

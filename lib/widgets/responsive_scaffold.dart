@@ -3,7 +3,6 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
-import 'package:ndu_project/widgets/activity_log_app_bar_button.dart';
 
 /// A responsive scaffold that adapts sidebar behavior based on screen size.
 /// - Desktop/Tablet: Shows sidebar in a Row layout with draggable handle
@@ -83,7 +82,8 @@ class ResponsiveScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = AppBreakpoints.isMobile(context);
-    final bgColor = backgroundColor ?? Theme.of(context).scaffoldBackgroundColor;
+    final bgColor =
+        backgroundColor ?? Theme.of(context).scaffoldBackgroundColor;
 
     final wrappedBody = _wrapBody(context);
 
@@ -311,7 +311,8 @@ class ResponsiveRowOrColumn extends StatelessWidget {
     );
   }
 
-  List<Widget> _insertSpacing(List<Widget> widgets, double spacing, {required bool isRow}) {
+  List<Widget> _insertSpacing(List<Widget> widgets, double spacing,
+      {required bool isRow}) {
     if (widgets.isEmpty) return widgets;
 
     final result = <Widget>[];

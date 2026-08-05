@@ -13,11 +13,13 @@ import '../services/portfolio_service.dart';
 import '../services/program_service.dart';
 import '../services/project_navigation_service.dart';
 import '../services/project_service.dart';
+import '../utils/dashboard_palette.dart';
 import '../utils/navigation_route_resolver.dart';
 import 'initiation_phase_screen.dart';
 import 'program_dashboard_mobile_screen.dart';
 import 'portfolio_dashboard_screen.dart';
-import 'project_workspace_dashboard_screen.dart';
+import 'regular_project_dashboard_screen.dart';
+import 'project_command_center_screen.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import '../widgets/dashboard_bottom_nav_bar.dart';
@@ -32,7 +34,6 @@ class _Tokens {
  static const surface = Color(0xFFF7F9FB);
  static const surfaceContainerLowest = Color(0xFFFFFFFF);
  static const surfaceContainerLow = Color(0xFFF2F4F6);
- static const surfaceContainer = Color(0xFFECEEF0);
  static const surfaceContainerHigh = Color(0xFFE6E8EA);
  static const surfaceContainerHighest = Color(0xFFE0E3E5);
 
@@ -41,16 +42,8 @@ class _Tokens {
  static const onSurfaceVariant = Color(0xFF414754);
  static const onSecondaryFixed = Color(0xFF1C1B1B);
  static const outline = Color(0xFF717786);
- static const outlineVariant = Color(0xFFC0C6D6);
-
- // Brand / Accent
- static const primary = Color(0xFF005BB3);
- static const primaryContainer = Color(0xFF0073DF);
- static const tertiaryFixedDim = Color(0xFFFABD00);
- static const tertiary = Color(0xFF755700);
- static const error = Color(0xFFBA1A1A);
- static const inverseSurface = Color(0xFF2D3133);
- static const inverseOnSurface = Color(0xFFEFF1F3);
+ static const outlineVariant = Color(0xFFC0C6D6);  // Brand / Accent
+  static const error = Color(0xFFBA1A1A);
 
  // Spacing
  static const containerMargin = 16.0;
@@ -86,6 +79,11 @@ class _ProjectDashboardMobileShellState
  String _query = '';
  String _groupQuery = '';
  int _bottomNavIndex = 0;
+
+ /// Active palette: warm-teal Runway for Regular (basic), royal-blue
+ /// Command Center for Project (standard).
+ DashboardPalette get _palette =>
+     DashboardPalette.forPlan(widget.isBasicPlan);
 
  @override
  void dispose() {
@@ -130,11 +128,11 @@ class _ProjectDashboardMobileShellState
  final screen = NavigationRouteResolver.resolveCheckpointToScreen(
  checkpoint.isEmpty ? 'initiation' : checkpoint,
  context,
- );
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => screen ?? const InitiationPhaseScreen()),
- );
+ );  context.push(
+  NavigationRouteResolver.resolveCheckpointToUrl(
+      checkpoint.isEmpty ? 'initiation' : checkpoint),
+  extra: screen ?? const InitiationPhaseScreen(),
+  );
  } on TimeoutException {
  if (!mounted) return;
  Navigator.of(context, rootNavigator: true).pop();
@@ -154,33 +152,19 @@ class _ProjectDashboardMobileShellState
  }
 
  void _navigateToProgram() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const ProgramDashboardMobileScreen()),
- );
+ context.push('/program-dashboard-mobile');
  }
 
  void _navigateToRegularProjects() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const ProjectWorkspaceDashboardScreen(isBasicPlan: true)),
- );
+ context.push('/regular-project-dashboard');
  }
 
  void _navigateToProjects() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const ProjectWorkspaceDashboardScreen(isBasicPlan: false)),
- );
+ context.push('/project-command-center');
  }
 
  void _navigateToPortfolio() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
- );
+ context.push('/portfolio-dashboard');
  }
 
  Future<void> _handleLogout() async {
@@ -249,7 +233,7 @@ class _ProjectDashboardMobileShellState
  borderRadius: BorderRadius.circular(_Tokens.radiusXl),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 20,
  offset: const Offset(0, 4),
  ),
@@ -329,8 +313,8 @@ class _ProjectDashboardMobileShellState
  contentPadding: const EdgeInsets.symmetric(vertical: 14),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(_Tokens.radiusXl),
- borderSide:
- BorderSide(color: _Tokens.primary.withOpacity(0.2), width: 2),
+ borderSide:            BorderSide(
+                color: _palette.primary.withValues(alpha: 0.25), width: 2),
  ),
  enabledBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(_Tokens.radiusXl),
@@ -381,7 +365,7 @@ class _ProjectDashboardMobileShellState
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(12),
  border:
- Border.all(color: _Tokens.outlineVariant.withOpacity(0.5)),
+ Border.all(color: _Tokens.outlineVariant.withValues(alpha: 0.5)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +386,7 @@ class _ProjectDashboardMobileShellState
  padding: const EdgeInsets.symmetric(
  horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: healthColor.withOpacity(0.1),
+ color: healthColor.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -435,11 +419,10 @@ class _ProjectDashboardMobileShellState
  minHeight: 6,
  backgroundColor: _Tokens.surfaceContainerHighest,
  valueColor: AlwaysStoppedAnimation<Color>(
- pct >= 80
- ? const Color(0xFF16A34A)
- : pct >= 50
- ? _Tokens.primary
- : const Color(0xFFF59E0B),
+ pct >= 80                ? const Color(0xFF16A34A)
+                : pct >= 50
+                ? _palette.primary
+                : const Color(0xFFF59E0B),
  ),
  ),
  ),
@@ -470,16 +453,16 @@ class _ProjectDashboardMobileShellState
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(_Tokens.radiusXl),
  border: Border.all(
- color: _Tokens.outlineVariant.withOpacity(0.5),
+ color: _Tokens.outlineVariant.withValues(alpha: 0.5),
  width: 2,
  style: BorderStyle.solid,
  ),
- color: _Tokens.surface.withOpacity(0.5),
+ color: _Tokens.surface.withValues(alpha: 0.5),
  ),
  child: Column(
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
- Icon(Icons.work_off_outlined,
+ const Icon(Icons.work_off_outlined,
  size: 48, color: _Tokens.outlineVariant),
  const SizedBox(height: 8),
  Text(
@@ -562,7 +545,7 @@ class _ProjectDashboardMobileShellState
  color: _Tokens.surfaceContainerLowest,
  border: Border(
  bottom: BorderSide(
- color: _Tokens.outlineVariant.withOpacity(0.5)),
+ color: _Tokens.outlineVariant.withValues(alpha: 0.5)),
  ),
  ),
  child: Padding(
@@ -612,28 +595,41 @@ class _ProjectDashboardMobileShellState
  // Placeholder for notification action
  },
  ),
- const SizedBox(width: 4),
- // Right: Yellow chat "C" button
- GestureDetector(
- onTap: () => KazAiChatBubble.openChat(context),
- child: Container(
- width: 32,
- height: 32,
- decoration: const BoxDecoration(
- color: _Tokens.tertiaryFixedDim,
- shape: BoxShape.circle,
- ),
- alignment: Alignment.center,
- child: const Text(
- 'C',
- style: TextStyle(
- fontSize: 15,
- fontWeight: FontWeight.w800,
- color: Colors.white,
- ),
- ),
- ),
- ),
+ const SizedBox(width: 4),            // Right: KAZ AI copilot pill
+            GestureDetector(
+              onTap: () => KazAiChatBubble.openChat(context),
+              child: Container(
+                height: 32,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFFFC812), Color(0xFFFF9800)],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.6)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.auto_awesome_rounded,
+                        size: 13, color: Color(0xFF1C1C1C)),
+                    SizedBox(width: 4),
+                    Text(
+                      'KAZ AI',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.2,
+                        color: Color(0xFF1C1C1C),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
  ],
  ),
  ),
@@ -652,7 +648,7 @@ class _ProjectDashboardMobileShellState
  border: Border(
  bottom: BorderSide(
  color:
- _Tokens.outlineVariant.withOpacity(0.5)),
+ _Tokens.outlineVariant.withValues(alpha: 0.5)),
  ),
  ),
  padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -666,22 +662,21 @@ class _ProjectDashboardMobileShellState
  shape: BoxShape.circle,
  border: Border.all(
  color: _Tokens.outlineVariant
- .withOpacity(0.3)),
+ .withValues(alpha: 0.3)),
  ),
  alignment: Alignment.center,
  child: Icon(Icons.chevron_left_rounded,
  size: 18,
  color: _Tokens.onSurfaceVariant
- .withOpacity(0.4)),
- ),
- const SizedBox(width: 4),
- const Text(
- 'Dashboard',
- style: TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w600,
- color: _Tokens.primary,
- ),
+ .withValues(alpha: 0.4)),
+ ),  const SizedBox(width: 4),
+  Text(
+  'Dashboard',
+  style: TextStyle(
+  fontSize: 13,
+  fontWeight: FontWeight.w700,
+  color: _palette.primaryDeep,
+  ),
  ),
  ],
  ),
@@ -737,13 +732,13 @@ class _ProjectDashboardMobileShellState
  border: Border.all(
  color: _Tokens.outlineVariant),
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.domain,
+ Icon(Icons.domain,
  size: 16,
  color: _Tokens.onSurfaceVariant),
- const SizedBox(width: 6),
+ SizedBox(width: 6),
  Text(
  'Project workspace overview',
  style: TextStyle(
@@ -793,22 +788,26 @@ class _ProjectDashboardMobileShellState
  label: 'Regular Projects',
  value: user == null
  ? 'Sign in to view'
- : basicCount.toString(),
- icon: Icons.folder_special,
- iconBg: const Color(0xFFF0FDFA),
- iconColor: const Color(0xFF0D9488),
- filled: true,
- onTap: _navigateToRegularProjects,
+ : basicCount.toString(),  // 'Regular Projects' keeps its gold identity on both plans so it
+  // stays visually distinct from the standard 'Projects' card.
+  icon: Icons.folder_special,
+  iconBg: _palette.isBasicPlan
+      ? const Color(0xFFFFF4CC)
+      : const Color(0xFFFEF3C7),
+  iconColor: _palette.isBasicPlan
+      ? const Color(0xFFD97706)
+      : const Color(0xFFB45309),
+  filled: true,
+  onTap: _navigateToRegularProjects,
  ),
  _statCard(
  label: 'Projects',
  value: user == null
  ? 'Sign in to view'
- : singleCount.toString(),
- icon: Icons.folder,
- iconBg: const Color(0xFFEFF6FF),
- iconColor: _Tokens.primary,
- onTap: _navigateToProjects,
+ : singleCount.toString(),  icon: Icons.folder,
+  iconBg: _palette.primarySoft,
+  iconColor: _palette.primary,
+  onTap: _navigateToProjects,
  ),
  _statCard(
  label: 'Programs',
@@ -845,7 +844,7 @@ class _ProjectDashboardMobileShellState
  BorderRadius.circular(_Tokens.radiusXl),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 20,
  offset: const Offset(0, 4),
  ),
@@ -871,19 +870,17 @@ class _ProjectDashboardMobileShellState
  ),
  ),
  TextButton(
- onPressed: () {},
- style: TextButton.styleFrom(
- foregroundColor: _Tokens.primary,
- padding: EdgeInsets.zero,
- minimumSize: Size.zero,
- tapTargetSize:
- MaterialTapTargetSize
- .shrinkWrap,
- ),
- child: const Text('See All',
- style: TextStyle(
- fontWeight: FontWeight.w600,
- fontSize: 15)),
+ onPressed: () {},  style: TextButton.styleFrom(
+  foregroundColor: _palette.primaryDeep,
+  padding: EdgeInsets.zero,
+  minimumSize: Size.zero,
+  tapTargetSize:
+  MaterialTapTargetSize
+  .shrinkWrap,
+ ),  child: const Text('See All',
+  style: TextStyle(
+  fontWeight: FontWeight.w600,
+  fontSize: 15)),
  ),
  ],
  ),
@@ -910,15 +907,14 @@ class _ProjectDashboardMobileShellState
  _Tokens.radiusXl),
  border: Border.all(
  color: _Tokens.outlineVariant
- .withOpacity(0.3),
+ .withValues(alpha: 0.3),
  ),
  ),
  child: Row(
- children: [
- const Icon(Icons.trending_up,
- size: 18,
- color: _Tokens.primary),
- const SizedBox(width: 8),
+ children: [  Icon(Icons.trending_up,
+  size: 18,
+  color: _palette.primary),
+  const SizedBox(width: 8),
  Expanded(
  child: Text(
  widget.isBasicPlan
@@ -975,7 +971,7 @@ class _ProjectDashboardMobileShellState
  _Tokens.radiusXl),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 20,
  offset: const Offset(0, 4),
  ),
@@ -1043,14 +1039,14 @@ class _ProjectDashboardMobileShellState
  color: _Tokens.outlineVariant,
  ),
  ),
- child: Row(
+ child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Icon(Icons.filter_list,
+ Icon(Icons.filter_list,
  size: 18,
  color:
  _Tokens.onSurfaceVariant),
- const SizedBox(width: 6),
+ SizedBox(width: 6),
  Text(
  'Up to 3 projects',
  style: TextStyle(
@@ -1083,16 +1079,16 @@ class _ProjectDashboardMobileShellState
  padding: const EdgeInsets.all(24),
  decoration: BoxDecoration(
  color: _Tokens.onSecondaryFixed
- .withOpacity(0.05),
+ .withValues(alpha: 0.05),
  borderRadius:
  BorderRadius.circular(
  _Tokens.radiusXl),
  border: Border.all(
  color: _Tokens.onSecondaryFixed
- .withOpacity(0.1),
+ .withValues(alpha: 0.1),
  ),
  ),
- child: Center(
+ child: const Center(
  child: Text(
  'Sign in to group projects',
  style: TextStyle(
@@ -1122,17 +1118,17 @@ class _ProjectDashboardMobileShellState
  // ── FAB ─────────────────────────────────────────────
  Positioned(
  right: 24,
- bottom: 88,
- child: FloatingActionButton(
- onPressed: widget.onAddProject,
- backgroundColor: _Tokens.primary,
- elevation: 6,
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(16),
- ),
- child: const Icon(Icons.add,
- color: Colors.white, size: 28),
- ),
+ bottom: 88,  child: FloatingActionButton(
+    onPressed: widget.onAddProject,
+    backgroundColor: _palette.primary,
+    foregroundColor: const Color(0xFF1C1C1C),
+    elevation: 6,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: const Icon(Icons.add,
+        color: Color(0xFF1C1C1C), size: 28),
+  ),
  ),
 
  // ── Bottom Navigation Bar ────────────────────────────
@@ -1200,6 +1196,7 @@ class _PremiumUserGreeting extends StatelessWidget {
  final firstName = displayName.split(' ').first;
  final initials = _initials(displayName);
  final greeting = '${_timePrefix()}, $firstName';
+ final palette = DashboardPalette.forPlan(isBasicPlan);
 
  // Photo URL from Firebase Auth
  final photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
@@ -1207,26 +1204,26 @@ class _PremiumUserGreeting extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
  decoration: BoxDecoration(
- gradient: const LinearGradient(
+ gradient: LinearGradient(
  begin: Alignment.topLeft,
  end: Alignment.bottomRight,
  colors: [
- Color(0xFFFFFFFF),
- Color(0xFFF7F9FB),
+ Colors.white,
+ palette.canvas,
  ],
  ),
- borderRadius: BorderRadius.circular(16),
+ borderRadius: BorderRadius.circular(18),
  border: Border.all(
- color: const Color(0xFFE0E3E5).withOpacity(0.6),
+ color: palette.outline.withValues(alpha: 0.7),
  ),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.03),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 16,
  offset: const Offset(0, 4),
  ),
  BoxShadow(
- color: const Color(0xFFFFCC00).withOpacity(0.06),
+ color: palette.primary.withValues(alpha: 0.08),
  blurRadius: 24,
  offset: const Offset(0, 8),
  ),
@@ -1239,19 +1236,24 @@ class _PremiumUserGreeting extends StatelessWidget {
  width: 48,
  height: 48,
  decoration: BoxDecoration(
- gradient: const LinearGradient(
+ gradient: LinearGradient(
  begin: Alignment.topLeft,
- end: Alignment.bottomRight,
- colors: [
- Color(0xFFFFCC00),
- Color(0xFFFFE066),
- Color(0xFFFFD633),
- ],
+ end: Alignment.bottomRight,                  colors: isBasicPlan
+                      ? const [
+                          Color(0xFFFFC812),
+                          Color(0xFFFABD00),
+                          Color(0xFFF59E0B),
+                        ]
+                      : const [
+                          Color(0xFFF4B400),
+                          Color(0xFFE8A000),
+                          Color(0xFFD97706),
+                        ],
  ),
  borderRadius: BorderRadius.circular(14),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFFFFCC00).withOpacity(0.35),
+ color: palette.primary.withValues(alpha: 0.35),
  blurRadius: 12,
  offset: const Offset(0, 4),
  ),
@@ -1298,14 +1300,10 @@ class _PremiumUserGreeting extends StatelessWidget {
  padding: const EdgeInsets.symmetric(
  horizontal: 8, vertical: 2),
  decoration: BoxDecoration(
- color: isBasicPlan
- ? const Color(0xFFEFF6FF)
- : const Color(0xFFFFF8E1),
+ color: palette.primarySoft,
  borderRadius: BorderRadius.circular(6),
  border: Border.all(
- color: isBasicPlan
- ? const Color(0xFFBFDBFE)
- : const Color(0xFFFFE082),
+ color: palette.primary.withValues(alpha: 0.35),
  width: 0.5,
  ),
  ),
@@ -1314,43 +1312,38 @@ class _PremiumUserGreeting extends StatelessWidget {
  children: [
  Icon(
  isBasicPlan
- ? Icons.star_outline
+ ? Icons.rocket_launch_outlined
  : Icons.workspace_premium_outlined,
  size: 11,
- color: isBasicPlan
- ? const Color(0xFF2563EB)
- : const Color(0xFFF59E0B),
+ color: palette.primary,
  ),
  const SizedBox(width: 3),
  Text(
- isBasicPlan ? 'Basic Plan' : 'Pro Plan',
+ isBasicPlan ? 'Regular Project' : 'Project',
  style: TextStyle(
  fontSize: 10,
  fontWeight: FontWeight.w700,
  letterSpacing: 0.04,
- color: isBasicPlan
- ? const Color(0xFF2563EB)
- : const Color(0xFFB45309),
+ color: palette.primaryDeep,
  ),
  ),
  ],
  ),
  ),
  const SizedBox(width: 8),
- Flexible(
- child: Text(
- isBasicPlan
- ? 'Basic plan dashboard'
- : 'Project dashboard',
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w500,
- color: Color(0xFF414754),
- letterSpacing: 0.02,
- height: 1.3,
- ),
- overflow: TextOverflow.ellipsis,
- ),
+ Flexible(  child: Text(
+  isBasicPlan
+  ? 'Regular project workspace'
+  : 'Project workspace',
+  style: TextStyle(
+  fontSize: 12,
+  fontWeight: FontWeight.w500,
+  color: palette.muted,
+  letterSpacing: 0.02,
+  height: 1.3,
+  ),
+  overflow: TextOverflow.ellipsis,
+  ),
  ),
  ],
  ),
@@ -1368,7 +1361,7 @@ class _PremiumUserGreeting extends StatelessWidget {
  border: Border.all(color: Colors.white, width: 2),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFF22C55E).withOpacity(0.4),
+ color: const Color(0xFF22C55E).withValues(alpha: 0.4),
  blurRadius: 6,
  offset: const Offset(0, 1),
  ),

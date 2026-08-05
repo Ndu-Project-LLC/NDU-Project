@@ -12,6 +12,8 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 class LongLeadEquipmentOrderingScreen extends StatefulWidget {
  const LongLeadEquipmentOrderingScreen({super.key});
 
@@ -301,12 +303,7 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  const SizedBox(height: 12),
  ElevatedButton.icon(
- onPressed: () => Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const SpecializedDesignScreen(),
- ),
- ),
- icon: const Icon(Icons.arrow_forward, size: 18),
+ onPressed: () => context.push('/specialized-design'),icon: const Icon(Icons.arrow_forward, size: 18),
  label: const Text('Next: Specialized design'),
  style: ElevatedButton.styleFrom(
  backgroundColor: Colors.black87,
@@ -340,12 +337,7 @@ class _LongLeadEquipmentOrderingScreenState
  style: TextStyle(fontSize: 13, color: Colors.grey[500])),
  const Spacer(),
  ElevatedButton.icon(
- onPressed: () => Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const SpecializedDesignScreen(),
- ),
- ),
- icon: const Icon(Icons.arrow_forward, size: 18),
+ onPressed: () => context.push('/specialized-design'),icon: const Icon(Icons.arrow_forward, size: 18),
  label: const Text('Next: Specialized design'),
  style: ElevatedButton.styleFrom(
  backgroundColor: Colors.black87,
@@ -363,7 +355,7 @@ class _LongLeadEquipmentOrderingScreenState
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Icon(Icons.lightbulb_outline,
+ const Icon(Icons.lightbulb_outline,
  size: 18, color: LightModeColors.accent),
  const SizedBox(width: 8),
  Expanded(
@@ -486,7 +478,7 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: criticality,
+ initialValue: criticality,
  items: _criticalityOptions
  .map((option) => DropdownMenuItem(
  value: option,
@@ -610,7 +602,7 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: _equipmentStatusOptions
  .map((option) => DropdownMenuItem(
  value: option,
@@ -710,7 +702,7 @@ class _LongLeadEquipmentOrderingScreenState
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: _actionStatusOptions
  .map((option) => DropdownMenuItem(
  value: option,
@@ -784,7 +776,9 @@ class _LongLeadEquipmentOrderingScreenState
  );
  }
 
- return _EditableTable(
+ return FullScreenTableWrapper(
+ title: 'Equipment Categories',
+ child: _EditableTable(
  columns: columns,
  rows: [
  for (final entry in _categories)
@@ -832,6 +826,56 @@ class _LongLeadEquipmentOrderingScreenState
  ],
  ),
  ],
+ ),
+ tableBuilder: (fsContext) => _EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _categories)
+ _EditableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _TextCell(
+ value: entry.title,
+ fieldKey: '${entry.id}_title',
+ hintText: 'Category',
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(title: value)),
+ ),
+ _TextCell(
+ value: entry.description,
+ fieldKey: '${entry.id}_desc',
+ hintText: 'Description',
+ maxLines: 2,
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(description: value)),
+ ),
+ _DropdownCell(
+ value: entry.criticality,
+ fieldKey: '${entry.id}_criticality',
+ options: _criticalityOptions,
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(criticality: value)),
+ ),
+ _TextCell(
+ value: entry.leadTimeThreshold,
+ fieldKey: '${entry.id}_threshold',
+ hintText: 'e.g., 6 weeks',
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(leadTimeThreshold: value)),
+ ),
+ _TextCell(
+ value: entry.owner,
+ fieldKey: '${entry.id}_owner',
+ hintText: 'Owner',
+ onChanged: (value) =>
+ _updateCategory(entry.copyWith(owner: value)),
+ ),
+ _DeleteCell(onPressed: () => _deleteCategory(entry.id)),
+ ],
+ ),
+ ],
+ ),
  );
  }
 
@@ -854,7 +898,9 @@ class _LongLeadEquipmentOrderingScreenState
  );
  }
 
- return _EditableTable(
+ return FullScreenTableWrapper(
+ title: 'Long-Lead Equipment',
+ child: _EditableTable(
  columns: columns,
  rows: [
  for (final entry in _equipmentItems)
@@ -915,6 +961,69 @@ class _LongLeadEquipmentOrderingScreenState
  ],
  ),
  ],
+ ),
+ tableBuilder: (fsContext) => _EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _equipmentItems)
+ _EditableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _TextCell(
+ value: entry.name,
+ fieldKey: '${entry.id}_name',
+ hintText: 'Item',
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(name: value)),
+ ),
+ _TextCell(
+ value: entry.category,
+ fieldKey: '${entry.id}_category',
+ hintText: 'Category',
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(category: value)),
+ ),
+ _TextCell(
+ value: entry.vendor,
+ fieldKey: '${entry.id}_vendor',
+ hintText: 'Vendor',
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(vendor: value)),
+ ),
+ _TextCell(
+ value: entry.leadTime,
+ fieldKey: '${entry.id}_lead',
+ hintText: 'e.g., 12 weeks',
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(leadTime: value)),
+ ),
+ _TextCell(
+ value: entry.expectedDelivery,
+ fieldKey: '${entry.id}_delivery',
+ hintText: 'YYYY-MM-DD',
+ onChanged: (value) => _updateEquipmentItem(
+ entry.copyWith(expectedDelivery: value)),
+ ),
+ _DropdownCell(
+ value: entry.status,
+ fieldKey: '${entry.id}_status',
+ options: _equipmentStatusOptions,
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(status: value)),
+ ),
+ _TextCell(
+ value: entry.owner,
+ fieldKey: '${entry.id}_owner',
+ hintText: 'Owner',
+ onChanged: (value) =>
+ _updateEquipmentItem(entry.copyWith(owner: value)),
+ ),
+ _DeleteCell(onPressed: () => _deleteEquipmentItem(entry.id)),
+ ],
+ ),
+ ],
+ ),
  );
  }
 
@@ -935,7 +1044,9 @@ class _LongLeadEquipmentOrderingScreenState
  );
  }
 
- return _EditableTable(
+ return FullScreenTableWrapper(
+ title: 'Procurement Actions',
+ child: _EditableTable(
  columns: columns,
  rows: [
  for (final entry in _actions)
@@ -983,6 +1094,56 @@ class _LongLeadEquipmentOrderingScreenState
  ],
  ),
  ],
+ ),
+ tableBuilder: (fsContext) => _EditableTable(
+ columns: columns,
+ rows: [
+ for (final entry in _actions)
+ _EditableRow(
+ key: ValueKey(entry.id),
+ columns: columns,
+ cells: [
+ _TextCell(
+ value: entry.title,
+ fieldKey: '${entry.id}_title',
+ hintText: 'Action',
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(title: value)),
+ ),
+ _TextCell(
+ value: entry.owner,
+ fieldKey: '${entry.id}_owner',
+ hintText: 'Owner',
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(owner: value)),
+ ),
+ _TextCell(
+ value: entry.dueDate,
+ fieldKey: '${entry.id}_due',
+ hintText: 'YYYY-MM-DD',
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(dueDate: value)),
+ ),
+ _DropdownCell(
+ value: entry.status,
+ fieldKey: '${entry.id}_status',
+ options: _actionStatusOptions,
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(status: value)),
+ ),
+ _TextCell(
+ value: entry.notes,
+ fieldKey: '${entry.id}_notes',
+ hintText: 'Notes',
+ maxLines: 2,
+ onChanged: (value) =>
+ _updateAction(entry.copyWith(notes: value)),
+ ),
+ _DeleteCell(onPressed: () => _deleteAction(entry.id)),
+ ],
+ ),
+ ],
+ ),
  );
  }
 
@@ -1205,7 +1366,7 @@ class _DropdownCell extends StatelessWidget {
  final resolvedValue = options.contains(value) ? value : options.first;
  return DropdownButtonFormField<String>(
  key: ValueKey(fieldKey),
- value: resolvedValue,
+ initialValue: resolvedValue,
  items: options
  .map((option) => DropdownMenuItem(value: option, child: Text(option)))
  .toList(),

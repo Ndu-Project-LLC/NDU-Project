@@ -10,6 +10,7 @@ import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 /// Custom Scope Tracking Table with inline editing, CRUD actions, and AI capabilities
 class ScopeTrackingTableWidget extends StatelessWidget {
   const ScopeTrackingTableWidget({
@@ -41,24 +42,24 @@ class ScopeTrackingTableWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            border: Border.all(color: Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
             ],
           ),
-          child: ResponsiveDataTableWrapper(
+          child: buildNduTableWithExpand(
+            context: context,
+            title: 'Scope Tracking',
             minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 1000,
             maxHeight: 560,
-            child: buildNduDataTable(
-              context: context,
-              columnSpacing: 20,
-              horizontalMargin: 16,
-              headingRowHeight: 56,
-              dataRowMinHeight: 52,
+            columnSpacing: 20,
+            horizontalMargin: 16,
+            headingRowHeight: 56,
+            dataRowMinHeight: 52,
               dataRowMaxHeight: 120,
               columns: const [
                 DataColumn(
@@ -187,7 +188,6 @@ class ScopeTrackingTableWidget extends StatelessWidget {
                   ],
                 );
               }).toList(),
-            ),
           ),
         );
       },
@@ -235,6 +235,12 @@ class _ScopeTrackingRowWidgetState extends State<_ScopeTrackingRowWidget> {
     'UAT',
     'Stakeholder Review',
   ];
+
+  @override
+  void dispose() {
+    _debouncer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -568,7 +574,7 @@ class _StatusPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(

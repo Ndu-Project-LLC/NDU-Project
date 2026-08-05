@@ -23,6 +23,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 enum _QualityTab { plan, targets, qaTracking, qcTracking, metrics }
 
 const _dateHint = 'Select date';
@@ -301,9 +303,7 @@ class QualityManagementScreen extends StatefulWidget {
  const QualityManagementScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const QualityManagementScreen()),
- );
+ context.push('/quality-management');
  }
 
  @override
@@ -391,8 +391,8 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  if (isMobile) {
  return Scaffold(
  backgroundColor: Colors.white,
- drawer: MobileSidebarDrawer(
- sidebar: const InitiationLikeSidebar(
+ drawer: const MobileSidebarDrawer(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Quality Management',
  ),
  ),
@@ -555,12 +555,12 @@ class _PageHeader extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Column(
+ return const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Row(
  children: [
- const Expanded(
+ Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -584,7 +584,7 @@ class _PageHeader extends StatelessWidget {
  ],
  ),
  ),
- const SizedBox(width: 16),
+ SizedBox(width: 16),
  ],
  ),
  ],
@@ -700,7 +700,7 @@ class _TabStrip extends StatelessWidget {
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 12),
  ),
@@ -1389,9 +1389,9 @@ class _QualityPlanViewState extends State<_QualityPlanView> {
  OutlinedButton.icon(
  onPressed: () async {
  final rows = await showCsvImportDialog(context, tableTitle: 'Quality Standards', columns: [
- CsvColumnSpec(key: 'name', label: 'Standard Name', sampleValue: 'ISO 9001'),
- CsvColumnSpec(key: 'source', label: 'Source', sampleValue: 'ISO'),
- CsvColumnSpec(key: 'category', label: 'Category', sampleValue: 'Quality'),
+ const CsvColumnSpec(key: 'name', label: 'Standard Name', sampleValue: 'ISO 9001'),
+ const CsvColumnSpec(key: 'source', label: 'Source', sampleValue: 'ISO'),
+ const CsvColumnSpec(key: 'category', label: 'Category', sampleValue: 'Quality'),
  ]);
  if (rows == null || !mounted) return;
  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${rows.length} standards imported from CSV'), backgroundColor: Colors.green));
@@ -1705,7 +1705,7 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _SectionHeader(
+ const _SectionHeader(
  title: 'QA Workflow Controls',
  subtitle:
  'Methods, tools, checklists, and frequency used to prevent defects.',
@@ -1717,7 +1717,7 @@ class _QaTrackingViewState extends State<_QaTrackingView> {
  onRemove: _removeWorkflowControl,
  ),
  const SizedBox(height: 24),
- _SectionHeader(
+ const _SectionHeader(
  title: 'QA Task Log',
  subtitle:
  'CSV-style tracking for QA activities, ownership, dates, status, and priority.',
@@ -2029,7 +2029,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _SectionHeader(
+ const _SectionHeader(
  title: 'QC Workflow Controls',
  subtitle:
  'Inspection methods, checklists, and frequencies that detect defects early.',
@@ -2041,7 +2041,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  onRemove: _removeWorkflowControl,
  ),
  const SizedBox(height: 24),
- _SectionHeader(
+ const _SectionHeader(
  title: 'QC Task Log',
  subtitle:
  'Track process audits, inspections, and compliance checks across deliverables.',
@@ -2053,7 +2053,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  onRemove: _removeTask,
  ),
  const SizedBox(height: 24),
- _SectionHeader(
+ const _SectionHeader(
  title: 'Audit Plan & Results',
  subtitle:
  'Run planned audits and convert failed/conditional results into corrective actions.',
@@ -2066,7 +2066,7 @@ class _QcTrackingViewState extends State<_QcTrackingView> {
  onCreateCorrectiveAction: _createCorrectiveAction,
  ),
  const SizedBox(height: 24),
- _SectionHeader(
+ const _SectionHeader(
  title: 'Corrective Actions',
  subtitle:
  'Manage remediation ownership, due dates, and verification closure.',
@@ -2386,7 +2386,7 @@ class _MetricsViewState extends State<_MetricsView> {
  },
  ),
  const SizedBox(height: 24),
- _SectionHeader(
+ const _SectionHeader(
  title: 'Status Tallies',
  subtitle: 'Counts are auto-derived from QA/QC task logs.',
  ),
@@ -2409,7 +2409,7 @@ class _MetricsViewState extends State<_MetricsView> {
  ],
  ),
  const SizedBox(height: 16),
- _SectionHeader(
+ const _SectionHeader(
  title: 'Priority Tallies',
  subtitle: 'Counts by minimal/moderate/critical priorities.',
  ),
@@ -2490,7 +2490,7 @@ class _MetricsViewState extends State<_MetricsView> {
  },
  ),
  const SizedBox(height: 24),
- _SectionHeader(
+ const _SectionHeader(
  title: 'Quality Activity Roadmap',
  subtitle:
  'Chronological view of QA/QC tasks, audits, and corrective actions.',
@@ -2533,7 +2533,7 @@ class _PrimaryCard extends StatelessWidget {
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.03),
+ color: Colors.black.withValues(alpha: 0.03),
  blurRadius: 20,
  offset: const Offset(0, 14),
  ),
@@ -2714,6 +2714,7 @@ class _StandardsTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Quality Standards',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -2778,6 +2779,7 @@ class _ObjectivesTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Quality Objectives',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -2844,6 +2846,7 @@ class _WorkflowControlsTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Workflow Controls',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -2930,6 +2933,7 @@ class _TaskLogTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Task Log',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -3014,6 +3018,7 @@ class _AuditPlanTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Audit Plan',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -3097,6 +3102,7 @@ class _CorrectiveActionsTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Corrective Actions',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -3156,6 +3162,7 @@ class _QualityChangeLogTable extends StatelessWidget {
  }
 
  return _DataTableShell(
+ title: 'Quality Change Log',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
  columns: const [
@@ -3226,24 +3233,41 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _DataTableShell extends StatelessWidget {
- const _DataTableShell({required this.table});
+ const _DataTableShell({required this.table, this.title});
 
  final DataTable table;
+ final String? title;
 
  @override
  Widget build(BuildContext context) {
- return Container(
- width: double.infinity,
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: table,
- ),
- );
+  final inline = Container(
+   width: double.infinity,
+   decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(16),
+    border: Border.all(color: const Color(0xFFE5E7EB)),
+   ),
+   child: SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: table,
+   ),
+  );
+  return FullScreenTableWrapper(
+   title: title,
+   child: inline,
+   tableBuilder: (fsContext) => Container(
+    width: double.infinity,
+    decoration: BoxDecoration(
+     color: Colors.white,
+     borderRadius: BorderRadius.circular(16),
+     border: Border.all(color: const Color(0xFFE5E7EB)),
+    ),
+    child: SingleChildScrollView(
+     scrollDirection: Axis.horizontal,
+     child: table,
+    ),
+   ),
+  );
  }
 }
 
@@ -3521,21 +3545,21 @@ class _QualityStandardDialogState extends State<_QualityStandardDialog> {
  mainAxisSize: MainAxisSize.min,
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Name'),
+ const _FieldLabel('Name'),
  VoiceTextField(
  controller: _name, decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
- _FieldLabel('Source'),
+ const _FieldLabel('Source'),
  VoiceTextField(
  controller: _source,
  decoration: _inputDecoration(context, 'e.g. ISO 9001')),
  const SizedBox(height: 10),
- _FieldLabel('Category'),
+ const _FieldLabel('Category'),
  VoiceTextField(
  controller: _category,
  decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
- _FieldLabel('Description'),
+ const _FieldLabel('Description'),
  VoiceTextField(
  controller: _description,
  minLines: 2,
@@ -3543,7 +3567,7 @@ class _QualityStandardDialogState extends State<_QualityStandardDialog> {
  decoration: _inputDecoration(context, ''),
  ),
  const SizedBox(height: 10),
- _FieldLabel('Applicability'),
+ const _FieldLabel('Applicability'),
  VoiceTextField(
  controller: _applicability,
  decoration: _inputDecoration(context, '')),
@@ -3651,11 +3675,11 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
  crossAxisAlignment: CrossAxisAlignment.start,
  mainAxisSize: MainAxisSize.min,
  children: [
- _FieldLabel('Objective'),
+ const _FieldLabel('Objective'),
  VoiceTextField(
  controller: _title, decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
- _FieldLabel('Acceptance Criteria'),
+ const _FieldLabel('Acceptance Criteria'),
  VoiceTextField(
  controller: _acceptance,
  minLines: 2,
@@ -3669,7 +3693,7 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Metric'),
+ const _FieldLabel('Metric'),
  VoiceTextField(
  controller: _metric,
  decoration: _inputDecoration(context, '')),
@@ -3681,7 +3705,7 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Target'),
+ const _FieldLabel('Target'),
  VoiceTextField(
  controller: _target,
  decoration: _inputDecoration(context, '')),
@@ -3697,7 +3721,7 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Current'),
+ const _FieldLabel('Current'),
  VoiceTextField(
  controller: _current,
  decoration: _inputDecoration(context, '')),
@@ -3709,9 +3733,9 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Owner'),
+ const _FieldLabel('Owner'),
  DropdownButtonFormField<String>(
- value: _owner,
+ initialValue: _owner,
  decoration: _inputDecoration(context, ''),
  items: widget.ownerOptions
  .map((e) =>
@@ -3727,17 +3751,17 @@ class _QualityObjectiveDialogState extends State<_QualityObjectiveDialog> {
  ],
  ),
  const SizedBox(height: 10),
- _FieldLabel('Linked Requirement'),
+ const _FieldLabel('Linked Requirement'),
  VoiceTextField(
  controller: _linkedReq,
  decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
- _FieldLabel('Linked WBS'),
+ const _FieldLabel('Linked WBS'),
  VoiceTextField(
  controller: _linkedWbs,
  decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
- _FieldLabel('Status'),
+ const _FieldLabel('Status'),
  VoiceTextField(
  controller: _status,
  decoration:
@@ -3842,11 +3866,11 @@ class _WorkflowControlDialogState extends State<_WorkflowControlDialog> {
  crossAxisAlignment: CrossAxisAlignment.start,
  mainAxisSize: MainAxisSize.min,
  children: [
- _FieldLabel('Control Name'),
+ const _FieldLabel('Control Name'),
  VoiceTextField(
  controller: _name, decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
- _FieldLabel('Method'),
+ const _FieldLabel('Method'),
  VoiceTextField(
  controller: _method,
  minLines: 2,
@@ -3854,11 +3878,11 @@ class _WorkflowControlDialogState extends State<_WorkflowControlDialog> {
  decoration: _inputDecoration(context, ''),
  ),
  const SizedBox(height: 10),
- _FieldLabel('Tools'),
+ const _FieldLabel('Tools'),
  VoiceTextField(
  controller: _tools, decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
- _FieldLabel('Checklist'),
+ const _FieldLabel('Checklist'),
  VoiceTextField(
  controller: _checklist,
  decoration: _inputDecoration(context, '')),
@@ -3869,7 +3893,7 @@ class _WorkflowControlDialogState extends State<_WorkflowControlDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Frequency'),
+ const _FieldLabel('Frequency'),
  VoiceTextField(
  controller: _frequency,
  decoration: _inputDecoration(context, 'Weekly')),
@@ -3881,9 +3905,9 @@ class _WorkflowControlDialogState extends State<_WorkflowControlDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Owner'),
+ const _FieldLabel('Owner'),
  DropdownButtonFormField<String>(
- value: _owner,
+ initialValue: _owner,
  decoration: _inputDecoration(context, ''),
  items: widget.ownerOptions
  .map((e) =>
@@ -3899,7 +3923,7 @@ class _WorkflowControlDialogState extends State<_WorkflowControlDialog> {
  ],
  ),
  const SizedBox(height: 10),
- _FieldLabel('Standards Reference'),
+ const _FieldLabel('Standards Reference'),
  VoiceTextField(
  controller: _standards,
  decoration:
@@ -4047,7 +4071,7 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
  crossAxisAlignment: CrossAxisAlignment.start,
  mainAxisSize: MainAxisSize.min,
  children: [
- _FieldLabel('Task'),
+ const _FieldLabel('Task'),
  VoiceTextField(
  controller: _task,
  decoration: _inputDecoration(context, 'Task title')),
@@ -4058,7 +4082,7 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('% Complete'),
+ const _FieldLabel('% Complete'),
  VoiceTextField(
  controller: _percent,
  decoration: _inputDecoration(context, '0-100')),
@@ -4070,9 +4094,9 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Responsible'),
+ const _FieldLabel('Responsible'),
  DropdownButtonFormField<String>(
- value: _responsible,
+ initialValue: _responsible,
  decoration: _inputDecoration(context, ''),
  items: widget.ownerOptions
  .map((e) =>
@@ -4096,7 +4120,7 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Start Date'),
+ const _FieldLabel('Start Date'),
  _datePickerField(
  context,
  controller: _start,
@@ -4110,7 +4134,7 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('End Date'),
+ const _FieldLabel('End Date'),
  _datePickerField(
  context,
  controller: _end,
@@ -4128,9 +4152,9 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Status'),
+ const _FieldLabel('Status'),
  DropdownButtonFormField<QualityTaskStatus>(
- value: _status,
+ initialValue: _status,
  decoration: _inputDecoration(context, ''),
  items: const [
  DropdownMenuItem(
@@ -4158,9 +4182,9 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Priority'),
+ const _FieldLabel('Priority'),
  DropdownButtonFormField<QualityTaskPriority>(
- value: _priority,
+ initialValue: _priority,
  decoration: _inputDecoration(context, ''),
  items: const [
  DropdownMenuItem(
@@ -4183,7 +4207,7 @@ class _QualityTaskDialogState extends State<_QualityTaskDialog> {
  ],
  ),
  const SizedBox(height: 10),
- _FieldLabel('Comments'),
+ const _FieldLabel('Comments'),
  VoiceTextField(
  controller: _comments,
  minLines: 2,
@@ -4328,11 +4352,11 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
  crossAxisAlignment: CrossAxisAlignment.start,
  mainAxisSize: MainAxisSize.min,
  children: [
- _FieldLabel('Audit Title'),
+ const _FieldLabel('Audit Title'),
  VoiceTextField(
  controller: _title, decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
- _FieldLabel('Scope'),
+ const _FieldLabel('Scope'),
  VoiceTextField(
  controller: _scope,
  minLines: 2,
@@ -4346,7 +4370,7 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Planned Date'),
+ const _FieldLabel('Planned Date'),
  _datePickerField(
  context,
  controller: _planned,
@@ -4360,7 +4384,7 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Completed Date'),
+ const _FieldLabel('Completed Date'),
  _datePickerField(
  context,
  controller: _completed,
@@ -4378,9 +4402,9 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Owner'),
+ const _FieldLabel('Owner'),
  DropdownButtonFormField<String>(
- value: _owner,
+ initialValue: _owner,
  decoration: _inputDecoration(context, ''),
  items: widget.ownerOptions
  .map((e) =>
@@ -4398,9 +4422,9 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Result'),
+ const _FieldLabel('Result'),
  DropdownButtonFormField<AuditResultStatus>(
- value: _result,
+ initialValue: _result,
  decoration: _inputDecoration(context, ''),
  items: const [
  DropdownMenuItem(
@@ -4430,7 +4454,7 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
  ],
  ),
  const SizedBox(height: 10),
- _FieldLabel('Findings'),
+ const _FieldLabel('Findings'),
  VoiceTextField(
  controller: _findings,
  minLines: 2,
@@ -4438,7 +4462,7 @@ class _QualityAuditDialogState extends State<_QualityAuditDialog> {
  decoration: _inputDecoration(context, ''),
  ),
  const SizedBox(height: 10),
- _FieldLabel('Notes'),
+ const _FieldLabel('Notes'),
  VoiceTextField(
  controller: _notes,
  minLines: 2,
@@ -4578,11 +4602,11 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
  crossAxisAlignment: CrossAxisAlignment.start,
  mainAxisSize: MainAxisSize.min,
  children: [
- _FieldLabel('Title'),
+ const _FieldLabel('Title'),
  VoiceTextField(
  controller: _title, decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
- _FieldLabel('Root Cause'),
+ const _FieldLabel('Root Cause'),
  VoiceTextField(
  controller: _rootCause,
  minLines: 2,
@@ -4590,7 +4614,7 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
  decoration: _inputDecoration(context, ''),
  ),
  const SizedBox(height: 10),
- _FieldLabel('Action'),
+ const _FieldLabel('Action'),
  VoiceTextField(
  controller: _action,
  minLines: 2,
@@ -4604,9 +4628,9 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Owner'),
+ const _FieldLabel('Owner'),
  DropdownButtonFormField<String>(
- value: _owner,
+ initialValue: _owner,
  decoration: _inputDecoration(context, ''),
  items: widget.ownerOptions
  .map((e) =>
@@ -4624,7 +4648,7 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Due Date'),
+ const _FieldLabel('Due Date'),
  _datePickerField(
  context,
  controller: _dueDate,
@@ -4636,9 +4660,9 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
  ],
  ),
  const SizedBox(height: 10),
- _FieldLabel('Status'),
+ const _FieldLabel('Status'),
  DropdownButtonFormField<CorrectiveActionStatus>(
- value: _status,
+ initialValue: _status,
  decoration: _inputDecoration(context, ''),
  items: const [
  DropdownMenuItem(
@@ -4661,7 +4685,7 @@ class _CorrectiveActionDialogState extends State<_CorrectiveActionDialog> {
  },
  ),
  const SizedBox(height: 10),
- _FieldLabel('Verification Notes'),
+ const _FieldLabel('Verification Notes'),
  VoiceTextField(
  controller: _verification,
  minLines: 2,
@@ -4776,7 +4800,7 @@ class _QualityChangeDialogState extends State<_QualityChangeDialog> {
  crossAxisAlignment: CrossAxisAlignment.start,
  mainAxisSize: MainAxisSize.min,
  children: [
- _FieldLabel('Description'),
+ const _FieldLabel('Description'),
  VoiceTextField(
  controller: _description,
  minLines: 2,
@@ -4784,7 +4808,7 @@ class _QualityChangeDialogState extends State<_QualityChangeDialog> {
  decoration: _inputDecoration(context, ''),
  ),
  const SizedBox(height: 10),
- _FieldLabel('Reason'),
+ const _FieldLabel('Reason'),
  VoiceTextField(
  controller: _reason, decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
@@ -4794,7 +4818,7 @@ class _QualityChangeDialogState extends State<_QualityChangeDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Requested By'),
+ const _FieldLabel('Requested By'),
  VoiceTextField(
  controller: _requestedBy,
  decoration: _inputDecoration(context, '')),
@@ -4806,7 +4830,7 @@ class _QualityChangeDialogState extends State<_QualityChangeDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Approved By'),
+ const _FieldLabel('Approved By'),
  VoiceTextField(
  controller: _approvedBy,
  decoration: _inputDecoration(context, '')),
@@ -4822,7 +4846,7 @@ class _QualityChangeDialogState extends State<_QualityChangeDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Date'),
+ const _FieldLabel('Date'),
  _datePickerField(
  context,
  controller: _date,
@@ -4836,7 +4860,7 @@ class _QualityChangeDialogState extends State<_QualityChangeDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Status'),
+ const _FieldLabel('Status'),
  VoiceTextField(
  controller: _status,
  decoration:
@@ -4934,11 +4958,11 @@ class _TrainingShortcutDialogState extends State<_TrainingShortcutDialog> {
  crossAxisAlignment: CrossAxisAlignment.start,
  mainAxisSize: MainAxisSize.min,
  children: [
- _FieldLabel('Title'),
+ const _FieldLabel('Title'),
  VoiceTextField(
  controller: _title, decoration: _inputDecoration(context, '')),
  const SizedBox(height: 10),
- _FieldLabel('Description'),
+ const _FieldLabel('Description'),
  VoiceTextField(
  controller: _description,
  minLines: 2,
@@ -4952,7 +4976,7 @@ class _TrainingShortcutDialogState extends State<_TrainingShortcutDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Date'),
+ const _FieldLabel('Date'),
  _datePickerField(
  context,
  controller: _date,
@@ -4966,7 +4990,7 @@ class _TrainingShortcutDialogState extends State<_TrainingShortcutDialog> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- _FieldLabel('Duration'),
+ const _FieldLabel('Duration'),
  VoiceTextField(
  controller: _duration,
  decoration: _inputDecoration(context, '60 mins')),
@@ -5069,12 +5093,12 @@ class _DashboardConfigDialogState extends State<_DashboardConfigDialog> {
  crossAxisAlignment: CrossAxisAlignment.start,
  mainAxisSize: MainAxisSize.min,
  children: [
- _FieldLabel('Target Time to Resolution (days)'),
+ const _FieldLabel('Target Time to Resolution (days)'),
  VoiceTextField(
  controller: _target,
  decoration: _inputDecoration(context, '15')),
  const SizedBox(height: 10),
- _FieldLabel('Max Trend Points'),
+ const _FieldLabel('Max Trend Points'),
  VoiceTextField(
  controller: _trendPoints,
  decoration: _inputDecoration(context, '12')),
@@ -5224,7 +5248,7 @@ class _MetricsEditDialogState extends State<_MetricsEditDialog> {
  const SizedBox(width: 8),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: trend,
+ initialValue: trend,
  decoration: _inputDecoration(context, ''),
  items: const [
  DropdownMenuItem(value: 'neutral', child: Text('Neutral')),
@@ -5277,13 +5301,13 @@ class _MetricsEditDialogState extends State<_MetricsEditDialog> {
  onTrend: (v) => setState(() => _otdTrend = v),
  ),
  const SizedBox(height: 12),
- _FieldLabel('Defect Trend (comma-separated)'),
+ const _FieldLabel('Defect Trend (comma-separated)'),
  VoiceTextField(
  controller: _defectTrend,
  decoration: _inputDecoration(context, '12, 10, 9, 8, 7, 6'),
  ),
  const SizedBox(height: 10),
- _FieldLabel('Satisfaction Trend (comma-separated)'),
+ const _FieldLabel('Satisfaction Trend (comma-separated)'),
  VoiceTextField(
  controller: _satisfactionTrend,
  decoration:
@@ -5372,7 +5396,7 @@ class _MetricSummaryCard extends StatelessWidget {
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 14,
  offset: const Offset(0, 10),
  ),
@@ -5462,7 +5486,7 @@ class _TrendCard extends StatelessWidget {
  border: Border.all(color: const Color(0xFFE5E7EB)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 16,
  offset: const Offset(0, 12),
  ),
@@ -5578,7 +5602,7 @@ class _TrendLinePainter extends CustomPainter {
  areaPath.close();
 
  final areaPaint = Paint()
- ..color = areaColor.withOpacity(0.5)
+ ..color = areaColor.withValues(alpha: 0.5)
  ..style = PaintingStyle.fill;
  canvas.drawPath(areaPath, areaPaint);
 

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/front_end_planning_summary.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
@@ -685,17 +686,13 @@ class _ProjectDecisionSummaryScreenState
  AiSolutionItem(title: item.title, description: item.description))
  .toList(growable: false);
 
- Navigator.of(context).pushReplacement(
- MaterialPageRoute(
- builder: (_) => ProjectDecisionSummaryScreen(
+ context.pushReplacement('/project-decision-summary', extra: ProjectDecisionSummaryScreen(
  projectName: projectName,
  selectedSolution: selected,
  allSolutions: allSolutions,
  businessCase: widget.businessCase,
  notes: widget.notes,
- ),
- ),
- );
+ ));
 
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(content: Text('New project created: $projectName')),
@@ -782,7 +779,7 @@ class _ProjectDecisionSummaryScreenState
  drawer: isMobile
  ? Drawer(
  width: AppBreakpoints.sidebarWidth(context),
- child: SafeArea(
+ child: const SafeArea(
  child: InitiationLikeSidebar(
  activeItemLabel: 'Preferred Solution',
  showHeader: true,
@@ -820,8 +817,8 @@ class _ProjectDecisionSummaryScreenState
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Preferred Solution',
  ),
  ),
@@ -989,7 +986,7 @@ class _ProjectDecisionSummaryScreenState
  ),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 10,
  offset: const Offset(0, 3),
  ),
@@ -1309,9 +1306,9 @@ class _ProjectDecisionSummaryScreenState
  ),
  ),
  if (!_isSelectionFinalized)
- Text(
+ const Text(
  _finalSelectionWarning,
- style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+ style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
  ),
  const SizedBox(height: 14),
  ElevatedButton.icon(

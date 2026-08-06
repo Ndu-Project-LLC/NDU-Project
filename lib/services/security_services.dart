@@ -56,8 +56,13 @@ class SecurityPolicy {
   factory SecurityPolicy.defaults() => const SecurityPolicy(
         passwordLoginEnabled: true,
         passwordlessEmailEnabled: false,
-        mfaEnabled: true,
-        requireMfaEveryLogin: true,
+        // 2FA is OPT-IN. Previous default of `mfaEnabled: true` forced every
+        // user through a 2FA Cloud-Function flow that silently failed for
+        // anyone who hadn't enrolled, leaving them unable to authenticate.
+        // Now we default to disabled — admins must explicitly enable 2FA via
+        // the Settings screen, which writes the policy to Firestore.
+        mfaEnabled: false,
+        requireMfaEveryLogin: false,
         requireMfaNewDeviceOnly: false,
         requireMfaHighRiskOnly: false,
         requireMfaAdminOnly: false,
@@ -98,8 +103,12 @@ class SecurityPolicy {
     return SecurityPolicy(
       passwordLoginEnabled: data['passwordLoginEnabled'] != false,
       passwordlessEmailEnabled: data['passwordlessEmailEnabled'] == true,
-      mfaEnabled: data['mfaEnabled'] != false,
-      requireMfaEveryLogin: data['requireMfaEveryLogin'] != false,
+      // Treat missing 2FA fields as DISABLED (opt-in), not enabled.
+      // Previously `!= false` would default to `true` for any project that
+      // hadn't written the security_settings_system/current document,
+      // forcing every user through a broken 2FA flow.
+      mfaEnabled: data['mfaEnabled'] == true,
+      requireMfaEveryLogin: data['requireMfaEveryLogin'] == true,
       requireMfaNewDeviceOnly: data['requireMfaNewDeviceOnly'] == true,
       requireMfaHighRiskOnly: data['requireMfaHighRiskOnly'] == true,
       requireMfaAdminOnly: data['requireMfaAdminOnly'] == true,
@@ -721,6 +730,12 @@ class TwoFactorAuthService {
           .collection('security_settings_system')
           .doc('current')
           .get();
+      // Distinguish "doc doesn't exist yet" (use defaults) from "Firestore
+      // errored" (also use defaults). Either way, defaults are now SAFE because
+      // mfaEnabled defaults to false (opt-in).
+      if (!doc.exists) {
+        return SecurityPolicy.defaults();
+      }
       return SecurityPolicy.fromMap(doc.data());
     } catch (e) {
       debugPrint('[TwoFactorAuthService] loadPolicy error: $e');

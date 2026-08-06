@@ -119,8 +119,15 @@ class _SignInScreenState extends State<SignInScreen> {
         refreshed.uid,
         rememberDays: policy.rememberDeviceDays,
       );
+      // Also check the user's individual twoFactorEnabled flag — even if the
+      // system policy has 2FA enabled, a user who has not personally enrolled
+      // should NOT be forced into a 2FA flow (the Cloud Function would have
+      // no secret/phone on file and would silently fail). This guards against
+      // a stale system policy from a prior "enforce 2FA for all" deployment.
+      final userEnrolled = await TwoFactorAuthService.isEnabled();
       if (!mounted) return;
       final requiresMfa = policy.mfaEnabled &&
+          userEnrolled &&
           !_isGoogleProvider(refreshed) &&
           (!policy.requireMfaNewDeviceOnly || !trustedDevice);
       if (requiresMfa) {

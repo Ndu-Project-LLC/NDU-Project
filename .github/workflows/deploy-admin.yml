@@ -1,10 +1,10 @@
-name: Promote Staging → Production (nduproject.com)
+name: Promote Staging → Production (admin.nduproject.com)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Trigger: manual dispatch only.
 # Builds the Flutter web app from the staging branch HEAD and deploys to the
-# `gh-pages` branch of THIS repo (Ndu-Project-LLC/NDU-Project), which serves
-# https://nduproject.com via GitHub Pages.
+# `gh-pages` branch of THIS repo (admin.nduproject.com), which serves
+# https://admin.nduproject.com via GitHub Pages.
 #
 # This workflow uses the 'production' environment with required reviewers.
 # When triggered, GitHub sends an approval email to all configured reviewers.
@@ -14,7 +14,7 @@ name: Promote Staging → Production (nduproject.com)
 # configured on the 'production' environment).
 #
 # Usage:
-#   1. Go to Actions tab → "Promote Staging → Production (nduproject.com)"
+#   1. Go to Actions tab → "Promote Staging → Production (admin.nduproject.com)"
 #   2. Click "Run workflow"
 #   3. Reviewer receives email, clicks "Review deployments", approves
 #   4. Build + deploy proceeds automatically after approval
@@ -24,7 +24,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm_promotion:
-        description: "Type 'promote' to confirm promotion to production (nduproject.com)"
+        description: "Type 'promote' to confirm promotion to production (admin.nduproject.com)"
         required: true
         default: ""
         type: choice
@@ -38,7 +38,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: promote-production-web
+  group: promote-production-admin
   cancel-in-progress: false
 
 jobs:
@@ -76,7 +76,6 @@ jobs:
             echo "date=$BUILD_DATE"
           } >> "$GITHUB_OUTPUT"
           echo "Promoting staging SHA: $STAGING_SHORT"
-          echo "Build date: $BUILD_DATE"
 
       - name: Display promotion summary
         run: |
@@ -84,7 +83,7 @@ jobs:
           echo "  🚀 Promotion: staging → production"
           echo "============================================"
           echo "  Source:      staging branch @ ${{ steps.info.outputs.short }}"
-          echo "  Target:      nduproject.com (gh-pages)"
+          echo "  Target:      admin.nduproject.com (gh-pages)"
           echo "  Date:        ${{ steps.info.outputs.date }}"
           echo ""
           echo "  ⏳ Waiting for reviewer approval..."
@@ -95,11 +94,9 @@ jobs:
   build-and-deploy:
     name: Build + Deploy to production (requires approval)
     needs: pre-check
-    # The 'production' environment must be configured with required reviewers.
-    # GitHub will pause here and send approval emails. Once approved, this job runs.
     environment:
       name: production
-      url: https://nduproject.com
+      url: https://admin.nduproject.com
     runs-on: ubuntu-latest
     env:
       STAGING_SHA: ${{ needs.pre-check.outputs.sha }}
@@ -135,26 +132,22 @@ jobs:
       - name: Preserve production CNAME + .nojekyll + SPA routing config
         run: |
           cd build/web
-          echo "nduproject.com" > CNAME
+          echo "admin.nduproject.com" > CNAME
           touch .nojekyll
           if [ -f ../../staticwebapp.config.json ]; then
             cp ../../staticwebapp.config.json ./staticwebapp.config.json
-            echo "✓ staticwebapp.config.json copied"
           fi
           echo "✓ CNAME = $(cat CNAME)"
-          echo "✓ .nojekyll created"
 
       - name: Generate bundle size info
         id: bundle
         run: |
           BUNDLE_SIZE=$(du -sh build/web/main.dart.js | cut -f1)
           echo "size=$BUNDLE_SIZE" >> "$GITHUB_OUTPUT"
-          echo "Bundle size: $BUNDLE_SIZE"
 
-      - name: Deploy to gh-pages (nduproject.com)
+      - name: Deploy to gh-pages (admin.nduproject.com)
         uses: peaceiris/actions-gh-pages@v4
         with:
-          # Self-repo push — use ACCESS_TOKEN (PAT) for reliability
           personal_token: ${{ secrets.ACCESS_TOKEN }}
           publish_dir: build/web
           publish_branch: gh-pages
@@ -162,7 +155,7 @@ jobs:
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
           commit_message: |
-            deploy: nduproject.com — promoted from staging ${{ env.STAGING_SHORT }}
+            deploy: admin.nduproject.com — promoted from staging ${{ env.STAGING_SHORT }}
 
       - name: Deployment summary
         run: |
@@ -172,10 +165,9 @@ jobs:
           echo "  Source SHA:  ${{ env.STAGING_SHORT }}"
           echo "  Built at:    ${{ needs.pre-check.outputs.date }}"
           echo "  Bundle size: ${{ steps.bundle.outputs.size }}"
-          echo "  Target:      gh-pages (nduproject.com)"
+          echo "  Target:      gh-pages (admin.nduproject.com)"
           echo ""
-          echo "  Live URL:    https://nduproject.com"
-          echo "  (Pages rebuild takes ~60-90s after push)"
+          echo "  Live URL:    https://admin.nduproject.com"
           echo "============================================"
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🚀 Production deploy complete" >> $GITHUB_STEP_SUMMARY
@@ -183,4 +175,4 @@ jobs:
           echo "**Promoted from:** \`staging@${{ env.STAGING_SHORT }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Approved by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "**Bundle:** ${{ steps.bundle.outputs.size }}" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** https://nduproject.com/" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://admin.nduproject.com/" >> $GITHUB_STEP_SUMMARY

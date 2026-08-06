@@ -1,7 +1,7 @@
 name: Build Flutter Web
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Build check for PRs and pushes to main/ci-pipeline.
+# Build check for PRs and pushes to main/ci-pipeline/staging.
 # Builds the Flutter web app to verify compilation. Uploads the build artifact
 # for downstream deploy workflows to consume.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -10,7 +10,7 @@ on:
   push:
     branches: [main, ci-pipeline, staging]
   pull_request:
-    branches: [main]
+    branches: [main, staging]
   workflow_dispatch:
 
 permissions:

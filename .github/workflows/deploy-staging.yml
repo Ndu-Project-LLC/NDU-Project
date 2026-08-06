@@ -1,0 +1,161 @@
+name: Deploy Staging (staging.nduproject.com)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Trigger: push to 'staging' branch OR manual dispatch.
+# Builds the Flutter web app from the staging branch and deploys to the
+# `gh-pages` branch of the staging.nduproject.com repo, which serves
+# https://staging.nduproject.com via GitHub Pages.
+#
+# This is the staging environment — auto-deploys on every push to staging.
+# To promote to production (nduproject.com), run the
+# "Promote Staging → Production" workflow and get reviewer approval.
+#
+# SILENT_ACTORS gate: if github.actor is in the SILENT_ACTORS repo variable,
+# the entire workflow skips.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-staging-web
+  cancel-in-progress: false
+
+jobs:
+  # ── SILENT_ACTORS GATE ────────────────────────────────────────────────────
+  gate:
+    name: Silent-actor gate
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+      actor: ${{ github.actor }}
+      sha: ${{ github.sha }}
+    steps:
+      - id: check
+        run: |
+          set -eu
+          ACTOR="${{ github.actor }}"
+          SHA="${{ github.sha }}"
+          SILENT="${{ vars.SILENT_ACTORS }}"
+          if [ -z "$SILENT" ]; then
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "No SILENT_ACTORS variable set — running normally."
+            exit 0
+          fi
+          if echo ",$SILENT," | grep -iq ",$ACTOR,"; then
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping entire workflow — @$ACTOR is in SILENT_ACTORS."
+          else
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "@$ACTOR not in SILENT_ACTORS — running normally."
+          fi
+
+  # ── BUILD & DEPLOY TO STAGING ─────────────────────────────────────────────
+  build-and-deploy:
+    name: Build Flutter web → staging.nduproject.com
+    needs: gate
+    if: needs.gate.outputs.should_skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Build web (release, staging)
+        env:
+          OPENAI_PROXY_API_KEY: ${{ secrets.OPENAI_PROXY_API_KEY }}
+          OPENAI_PROXY_ENDPOINT: ${{ secrets.OPENAI_PROXY_ENDPOINT }}
+        run: |
+          flutter build web --release --base-href "/" --no-tree-shake-icons \
+            --dart-define=OPENAI_PROXY_API_KEY=${OPENAI_PROXY_API_KEY} \
+            --dart-define=OPENAI_PROXY_ENDPOINT=${OPENAI_PROXY_ENDPOINT} \
+            --dart-define=ENVIRONMENT=staging
+
+      - name: Preserve staging CNAME + .nojekyll + SPA routing config
+        run: |
+          cd build/web
+          echo "staging.nduproject.com" > CNAME
+          touch .nojekyll
+          if [ -f ../../staticwebapp.config.json ]; then
+            cp ../../staticwebapp.config.json ./staticwebapp.config.json
+            echo "✓ staticwebapp.config.json copied"
+          fi
+          echo "✓ CNAME = $(cat CNAME)"
+          echo "✓ .nojekyll created"
+
+      - name: Generate deploy metadata
+        id: meta
+        run: |
+          BUILD_SHA="${{ needs.gate.outputs.sha }}"
+          BUILD_SHORT="${BUILD_SHA:0:7}"
+          BUILD_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          BUNDLE_SIZE=$(du -sh build/web/main.dart.js | cut -f1)
+          {
+            echo "sha=$BUILD_SHA"
+            echo "short=$BUILD_SHORT"
+            echo "date=$BUILD_DATE"
+            echo "bundle=$BUNDLE_SIZE"
+          } >> "$GITHUB_OUTPUT"
+          echo "Build SHA: $BUILD_SHORT"
+          echo "Build date: $BUILD_DATE"
+          echo "Bundle size: $BUNDLE_SIZE"
+
+      - name: Deploy to staging repo gh-pages (staging.nduproject.com)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          # ACCESS_TOKEN (PAT with repo scope) — needed for cross-repo push
+          personal_token: ${{ secrets.ACCESS_TOKEN }}
+          external_repository: Ndu-Project-LLC/staging.nduproject.com
+          publish_dir: build/web
+          publish_branch: gh-pages
+          keep_files: false
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: |
+            deploy: staging.nduproject.com — fresh rebuild from ${{ steps.meta.outputs.short }}
+
+      - name: Deployment summary
+        run: |
+          echo "============================================"
+          echo "  ✅ Staging deploy complete"
+          echo "============================================"
+          echo "  Source SHA:  ${{ steps.meta.outputs.short }}"
+          echo "  Built at:    ${{ steps.meta.outputs.date }}"
+          echo "  Bundle size: ${{ steps.meta.outputs.bundle }}"
+          echo "  Target:      staging.nduproject.com repo (gh-pages)"
+          echo ""
+          echo "  Live URL:    https://staging.nduproject.com"
+          echo "  (Pages rebuild takes ~60-90s after push)"
+          echo "============================================"
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Staging deploy complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ steps.meta.outputs.short }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed by:** @${{ needs.gate.outputs.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Bundle:** ${{ steps.meta.outputs.bundle }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://staging.nduproject.com/" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "To promote to production (nduproject.com), run the **Promote Staging → Production** workflow." >> $GITHUB_STEP_SUMMARY

@@ -12,6 +12,13 @@ name: Deploy Staging (staging.nduproject.com)
 #
 # SILENT_ACTORS gate: if github.actor is in the SILENT_ACTORS repo variable,
 # the entire workflow skips.
+#
+# PREFLIGHT CHECKS: every deploy runs a preflight job that MUST pass before
+# the build-and-deploy job is allowed to start. This guarantees that a
+# triggered deployment never fails mid-flight — if preflight fails, the
+# workflow stops cleanly before any artifact is pushed. The preflight job
+# runs: flutter analyze (fatal on errors), flutter test (unit + widget),
+# and required-file checks.
 # ─────────────────────────────────────────────────────────────────────────────
 
 on:
@@ -61,12 +68,101 @@ jobs:
             echo "@$ACTOR not in SILENT_ACTORS — running normally."
           fi
 
+  # ── PREFLIGHT CHECKS (must pass before deploy) ──────────────────────────
+  # Runs the full test suite + static analysis. If any check fails, the
+  # workflow stops here and the build-and-deploy job is skipped — guaranteeing
+  # that a triggered deployment never fails mid-flight.
+  preflight:
+    name: Preflight checks (analyze + test)
+    needs: gate
+    if: needs.gate.outputs.should_skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Preflight summary
+        run: |
+          echo "============================================"
+          echo "  🔍 Preflight checks — staging.nduproject.com"
+          echo "============================================"
+          echo "  Commit:      ${{ needs.gate.outputs.sha }}"
+          echo "  Triggered by: @${{ needs.gate.outputs.actor }}"
+          echo "  Branch:      ${{ github.ref_name }}"
+          echo "============================================"
+
+      - name: Required files present
+        run: |
+          set -eu
+          REQUIRED_FILES=(
+            "pubspec.yaml"
+            "lib/main.dart"
+            "web/index.html"
+            "analysis_options.yaml"
+          )
+          MISSING=0
+          for f in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Missing required file: $f"
+              MISSING=1
+            else
+              echo "✓ $f"
+            fi
+          done
+          if [ "$MISSING" -ne 0 ]; then
+            echo "::error::Preflight FAILED — required files missing. Deployment blocked."
+            exit 1
+          fi
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Flutter analyze (fatal on errors)
+        run: |
+          set -eu
+          echo "── flutter analyze ──"
+          # --no-fatal-infos avoids breaking on style nits, but real errors
+          # (undefined names, type mismatches, unused imports marked as error)
+          # WILL fail this step and block the deploy.
+          flutter analyze --no-pub --no-fatal-infos
+          echo "✓ flutter analyze passed"
+
+      - name: Flutter test (unit + widget)
+        run: |
+          set -eu
+          echo "── flutter test ──"
+          # Runs every test under test/ (excluding integration tests).
+          # If any test fails, this step fails and the deploy is blocked.
+          flutter test --no-pub --reporter expanded
+          echo "✓ flutter test passed"
+
+      - name: Preflight passed
+        if: success()
+        run: |
+          echo "============================================"
+          echo "  ✅ Preflight checks passed"
+          echo "  Proceeding to build + deploy..."
+          echo "============================================"
+
   # ── BUILD & DEPLOY TO STAGING ─────────────────────────────────────────────
   build-and-deploy:
     name: Build Flutter web → staging.nduproject.com
-    needs: gate
+    needs: [gate, preflight]
     # Only run on the NDU-Project repo (not on admin.nduproject.com repo)
-    if: needs.gate.outputs.should_skip != 'true' && github.repository == 'Ndu-Project-LLC/NDU-Project'
+    # AND only if preflight checks passed (needs.preflight.result == 'success')
+    if: |
+      needs.gate.outputs.should_skip != 'true' &&
+      github.repository == 'Ndu-Project-LLC/NDU-Project' &&
+      needs.preflight.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

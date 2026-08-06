@@ -53,11 +53,11 @@ fi
 ACTORS="${1:-}"
 if [ -z "$ACTORS" ]; then
   echo "Enter the GitHub usernames whose pushes should be SILENT."
-  echo "Comma-separated, no @ symbol. Example: CHAMA18,z.ai"
+  echo "Comma-separated, no @ symbol. Example: CHAMA18"
   echo ""
-  echo "Tip: To attribute ALL activity from one user (e.g. 'z.ai') to another"
-  echo "     (e.g. 'CHAMA18'), list BOTH names. The gate treats them as the"
-  echo "     same silent actor — both will skip the entire workflow."
+  echo "Tip: To make multiple accounts silent, list each name separated by"
+  echo "     a comma. The gate treats each as a separate silent actor —"
+  echo "     each will skip the entire workflow."
   echo ""
   read -r -p "SILENT_ACTORS: " ACTORS
 fi

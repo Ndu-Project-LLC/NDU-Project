@@ -14,10 +14,10 @@
 #
 # Why this is "silent":
 #   - The commit that adds/updates the workflow files is made by CHAMA18 (the
-#     token owner). Since SILENT_ACTORS is already set to include CHAMA18,z.ai
+#     token owner). Since SILENT_ACTORS is already set to include CHAMA18
 #     BEFORE the workflow files land, any workflow that fires on the install
 #     commit will hit the gate and skip every downstream job.
-#   - All FUTURE pushes by CHAMA18 or z.ai → gate fires → no build, no deploy,
+#   - All FUTURE pushes by CHAMA18 → gate fires → no build, no deploy,
 #     no Issue @mentions, no escalation, no promotion PR.
 #
 # Usage:
@@ -27,7 +27,7 @@
 #
 # Defaults:
 #   REPO    = NduProject/NDU-Project
-#   ACTORS  = CHAMA18,z.ai
+#   ACTORS  = CHAMA18
 #
 # Prereqs:
 #   - gh CLI installed (script will use $GH_BIN, falling back to PATH)
@@ -40,7 +40,7 @@
 set -euo pipefail
 
 REPO="${1:-NduProject/NDU-Project}"
-ACTORS="${2:-CHAMA18,z.ai}"
+ACTORS="${2:-CHAMA18}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKFLOWS_SRC="$SCRIPT_DIR/../.github/workflows"

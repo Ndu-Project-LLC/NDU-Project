@@ -11,8 +11,8 @@
 bash scripts/apply_silent_actors.sh NduProject/NDU-Project
 
 # 2. Set the SILENT_ACTORS variable.
-#    For CHAMA18 — and to also attribute any 'z.ai' activity to CHAMA18:
-bash scripts/set_silent_actors.sh CHAMA18,z.ai
+#    For CHAMA18:
+bash scripts/set_silent_actors.sh CHAMA18
 
 # 3. Verify
 gh variable list --repo NduProject/NDU-Project
@@ -29,21 +29,19 @@ The gate is case-insensitive and matches against `github.actor`, so any of
 these will all skip the workflow identically:
 
 ```bash
-# Both CHAMA18 and z.ai skip the workflow silently
-bash scripts/set_silent_actors.sh CHAMA18,z.ai
+# CHAMA18 skips the workflow silently
+bash scripts/set_silent_actors.sh CHAMA18
 ```
 
 | `github.actor` | Behavior |
 |---|---|
 | `CHAMA18` | ✅ Workflow skips (matches `CHAMA18` in list) |
 | `chama18` | ✅ Workflow skips (case-insensitive match) |
-| `z.ai` | ✅ Workflow skips (matches `z.ai` in list) |
-| `Z.AI` | ✅ Workflow skips (case-insensitive match) |
 | `alickv26` | ❌ Workflow runs normally (not in list) |
 
 Use this pattern when:
 - You push from multiple machines with different git configs
-- You have a bot account (e.g. `z.ai`) that should be treated the same as your personal account (`CHAMA18`)
+- You want your own pushes to skip CI/CD (e.g. for routine chore commits)
 - You're migrating from one GitHub username to another and want both silent during the transition
 
 ## How it works
@@ -142,14 +140,14 @@ need to refer to them.
 gh variable get SILENT_ACTORS --repo NduProject/NDU-Project
 
 # Set new value (replaces the old one — list everyone)
-bash scripts/set_silent_actors.sh CHAMA18,z.ai,NduProject
+bash scripts/set_silent_actors.sh CHAMA18,NduProject
 ```
 
 ### Remove a user
 
 ```bash
 # Re-set with the updated list (the set command replaces, doesn't append)
-bash scripts/set_silent_actors.sh CHAMA18,z.ai
+bash scripts/set_silent_actors.sh CHAMA18
 ```
 
 ### Clear the list entirely (re-enable notifications for everyone)

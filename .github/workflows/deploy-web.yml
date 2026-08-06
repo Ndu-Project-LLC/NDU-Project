@@ -1,9 +1,9 @@
-name: Deploy Admin (admin.nduproject.com)
+name: Deploy Web (nduproject.com)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Trigger: push to main OR manual dispatch.
 # Builds the Flutter web app and deploys to the `gh-pages` branch of THIS repo,
-# which serves https://admin.nduproject.com via GitHub Pages.
+# which serves https://nduproject.com via GitHub Pages.
 #
 # SILENT_ACTORS gate: if github.actor is in the SILENT_ACTORS repo variable,
 # the entire workflow skips (no build, no deploy, no notifications).
@@ -20,7 +20,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: admin-deploy
+  group: web-deploy
   cancel-in-progress: false
 
 jobs:
@@ -60,7 +60,7 @@ jobs:
 
   # ── BUILD & DEPLOY ────────────────────────────────────────────────────────
   build-and-deploy:
-    name: Build Flutter web → push to gh-pages (admin.nduproject.com)
+    name: Build Flutter web → push to gh-pages (nduproject.com)
     needs: gate
     if: needs.gate.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
@@ -89,11 +89,16 @@ jobs:
             --dart-define=OPENAI_PROXY_API_KEY=${OPENAI_PROXY_API_KEY} \
             --dart-define=OPENAI_PROXY_ENDPOINT=${OPENAI_PROXY_ENDPOINT}
 
-      - name: Preserve admin CNAME + .nojekyll
+      - name: Preserve production CNAME + .nojekyll + SPA routing config
         run: |
           cd build/web
-          echo "admin.nduproject.com" > CNAME
+          echo "nduproject.com" > CNAME
           touch .nojekyll
+          # Copy SPA routing config if present at repo root (mirrors staticwebapp.config.json behaviour)
+          if [ -f ../../staticwebapp.config.json ]; then
+            cp ../../staticwebapp.config.json ./staticwebapp.config.json
+            echo "✓ staticwebapp.config.json copied"
+          fi
           echo "✓ CNAME = $(cat CNAME)"
           echo "✓ .nojekyll created"
 
@@ -114,39 +119,38 @@ jobs:
           echo "Build date: $BUILD_DATE"
           echo "Bundle size: $BUNDLE_SIZE"
 
-      - name: Deploy to gh-pages (admin.nduproject.com)
+      - name: Deploy to gh-pages (nduproject.com)
         uses: peaceiris/actions-gh-pages@v4
         with:
           # Use ACCESS_TOKEN (PAT with repo scope) instead of the default GITHUB_TOKEN,
           # because the repo's default workflow permissions may be read-only and
           # github-actions[bot] would otherwise be denied push access to gh-pages.
           personal_token: ${{ secrets.ACCESS_TOKEN }}
-          external_repository: Ndu-Project-LLC/admin.nduproject.com
           publish_dir: build/web
           publish_branch: gh-pages
           keep_files: false
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
           commit_message: |
-            deploy: admin.nduproject.com — fresh rebuild from ${{ steps.meta.outputs.short }}
+            deploy: nduproject.com — fresh rebuild from ${{ steps.meta.outputs.short }}
 
       - name: Deployment summary
         run: |
           echo "============================================"
-          echo "  ✅ Admin deploy complete"
+          echo "  ✅ Web deploy complete"
           echo "============================================"
           echo "  Source SHA:  ${{ steps.meta.outputs.short }}"
           echo "  Built at:    ${{ steps.meta.outputs.date }}"
           echo "  Bundle size: ${{ steps.meta.outputs.bundle }}"
-          echo "  Target:      gh-pages (admin.nduproject.com)"
+          echo "  Target:      gh-pages (nduproject.com)"
           echo ""
-          echo "  Live URL:    https://admin.nduproject.com"
+          echo "  Live URL:    https://nduproject.com"
           echo "  (Pages rebuild takes ~60-90s after push)"
           echo "============================================"
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Admin deploy complete" >> $GITHUB_STEP_SUMMARY
+          echo "### Web deploy complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ steps.meta.outputs.short }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Deployed by:** @${{ needs.gate.outputs.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "**Bundle:** ${{ steps.meta.outputs.bundle }}" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** https://admin.nduproject.com/" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://nduproject.com/" >> $GITHUB_STEP_SUMMARY

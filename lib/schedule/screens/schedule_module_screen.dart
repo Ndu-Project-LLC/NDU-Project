@@ -32,15 +32,14 @@ import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/services/planning_sync_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
 
 
 class ScheduleModuleScreen extends StatefulWidget {
   const ScheduleModuleScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ScheduleModuleScreen()),
-    );
+    context.push('/schedule');
   }
 
   @override
@@ -163,7 +162,7 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                   title: 'Schedule Navigation',
                   subtitle: 'Navigate between schedule sections',
                   icon: Icons.calendar_month_outlined,
-                  tabs: [
+                  tabs: const [
                     SectionTab(icon: Icons.build_outlined, label: 'Builder'),
                     SectionTab(icon: Icons.bar_chart, label: 'Gantt'),
                     SectionTab(icon: Icons.list_alt, label: 'List View'),
@@ -238,10 +237,10 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
-                  children: [
-                    const BuilderScreen(),
-                    const GanttScreen(),
-                    const ListViewScreen(),
+                  children: const [
+                    BuilderScreen(),
+                    GanttScreen(),
+                    ListViewScreen(),
                   ],
                 ),
               ),

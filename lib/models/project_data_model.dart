@@ -156,6 +156,8 @@ class ProjectDataModel {
   // Organisation Plan Data
   List<RoleDefinition> projectRoles;
   List<RaciMatrixRow> raciMatrixRows;
+  List<RaciDeliverableRow> raciDeliverableRows;
+  RaciApprovalStatus raciApprovalStatus;
   List<StaffingRequirement> staffingRequirements;
   List<InfrastructurePlanningItem> planningInfrastructureItems;
   List<TrainingActivity> trainingActivities;
@@ -328,6 +330,8 @@ class ProjectDataModel {
     this.coreStakeholdersData,
     List<RoleDefinition>? projectRoles,
     List<RaciMatrixRow>? raciMatrixRows,
+    List<RaciDeliverableRow>? raciDeliverableRows,
+    RaciApprovalStatus? raciApprovalStatus,
     List<StaffingRequirement>? staffingRequirements,
     List<InfrastructurePlanningItem>? planningInfrastructureItems,
     List<TrainingActivity>? trainingActivities,
@@ -414,9 +418,11 @@ class ProjectDataModel {
         obsElements = obsElements ?? [],
         cbsElements = cbsElements ?? [],
         designDeliverablesData =
-            designDeliverablesData ?? DesignDeliverablesData(),
+            designDeliverablesData ?? const DesignDeliverablesData(),
         projectRoles = projectRoles ?? [],
         raciMatrixRows = raciMatrixRows ?? [],
+        raciDeliverableRows = raciDeliverableRows ?? [],
+        raciApprovalStatus = raciApprovalStatus ?? RaciApprovalStatus(),
         staffingRequirements = staffingRequirements ?? [],
         planningInfrastructureItems = planningInfrastructureItems ?? [],
         trainingActivities = trainingActivities ?? [],
@@ -514,6 +520,8 @@ class ProjectDataModel {
     CoreStakeholdersData? coreStakeholdersData,
     List<RoleDefinition>? projectRoles,
     List<RaciMatrixRow>? raciMatrixRows,
+    List<RaciDeliverableRow>? raciDeliverableRows,
+    RaciApprovalStatus? raciApprovalStatus,
     List<StaffingRequirement>? staffingRequirements,
     List<InfrastructurePlanningItem>? planningInfrastructureItems,
     List<TrainingActivity>? trainingActivities,
@@ -670,6 +678,8 @@ class ProjectDataModel {
       coreStakeholdersData: coreStakeholdersData ?? this.coreStakeholdersData,
       projectRoles: projectRoles ?? this.projectRoles,
       raciMatrixRows: raciMatrixRows ?? this.raciMatrixRows,
+      raciDeliverableRows: raciDeliverableRows ?? this.raciDeliverableRows,
+      raciApprovalStatus: raciApprovalStatus ?? this.raciApprovalStatus,
       staffingRequirements: staffingRequirements ?? this.staffingRequirements,
       planningInfrastructureItems:
           planningInfrastructureItems ?? this.planningInfrastructureItems,
@@ -844,6 +854,9 @@ class ProjectDataModel {
         'coreStakeholdersData': coreStakeholdersData!.toJson(),
       'projectRoles': projectRoles.map((r) => r.toJson()).toList(),
       'raciMatrixRows': raciMatrixRows.map((r) => r.toJson()).toList(),
+      'raciDeliverableRows':
+          raciDeliverableRows.map((r) => r.toJson()).toList(),
+      'raciApprovalStatus': raciApprovalStatus.toJson(),
       'staffingRequirements':
           staffingRequirements.map((s) => s.toJson()).toList(),
       'planningInfrastructureItems':
@@ -1129,6 +1142,11 @@ class ProjectDataModel {
           'coreStakeholdersData', CoreStakeholdersData.fromJson),
       projectRoles: safeParseList('projectRoles', RoleDefinition.fromJson),
       raciMatrixRows: safeParseList('raciMatrixRows', RaciMatrixRow.fromJson),
+      raciDeliverableRows: safeParseList(
+          'raciDeliverableRows', RaciDeliverableRow.fromJson),
+      raciApprovalStatus: safeParseSingle(
+              'raciApprovalStatus', RaciApprovalStatus.fromJson) ??
+          RaciApprovalStatus(),
       staffingRequirements:
           safeParseList('staffingRequirements', StaffingRequirement.fromJson),
       planningInfrastructureItems: safeParseList(
@@ -1137,7 +1155,7 @@ class ProjectDataModel {
           safeParseList('trainingActivities', TrainingActivity.fromJson),
       designDeliverablesData: safeParseSingle(
               'designDeliverables', DesignDeliverablesData.fromJson) ??
-          DesignDeliverablesData(),
+          const DesignDeliverablesData(),
       executionPhaseData:
           safeParseSingle('executionPhaseData', ExecutionPhaseData.fromJson),
       designManagementData: safeParseSingle(
@@ -1202,8 +1220,7 @@ class ProjectDataModel {
       city: json['city']?.toString() ?? '',
       projectCategory: json['projectCategory']?.toString() ?? '',
       projectIndustry: json['projectIndustry']?.toString() ?? '',
-      stakeholderEntries:
-          (json['stakeholderEntries'] as List?)
+      stakeholderEntries: (json['stakeholderEntries'] as List?)
               ?.map((e) => StakeholderEntry.fromJson(e))
               .toList() ??
           [],
@@ -1477,6 +1494,15 @@ class PlanningGoal {
           [PlanningMilestone()],
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PlanningGoal && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PlanningMilestone {
@@ -1567,6 +1593,15 @@ class LaunchChecklistItem {
 
   static String _generateId() =>
       DateTime.now().microsecondsSinceEpoch.toString();
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is LaunchChecklistItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class Milestone {
@@ -1585,8 +1620,8 @@ class Milestone {
     this.references = '',
     this.comments = '',
   }) : id = (id == null || id.trim().isEmpty)
-          ? DateTime.now().microsecondsSinceEpoch.toString()
-          : id;
+            ? DateTime.now().microsecondsSinceEpoch.toString()
+            : id;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -1608,6 +1643,15 @@ class Milestone {
       comments: json['comments'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Milestone && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// Returns default milestones for fallback when AI generation fails
@@ -1741,6 +1785,15 @@ class WorkItem {
       obsId: json['obsId']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is WorkItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 enum ProgressMeasurementMethod {
@@ -1985,6 +2038,15 @@ class ScheduleActivity {
           : 0,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ScheduleActivity && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class IssueLogItem {
@@ -2035,6 +2097,15 @@ class IssueLogItem {
       milestone: json['milestone'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is IssueLogItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class RequirementItem {
@@ -2096,6 +2167,15 @@ class RequirementItem {
       comments: json['comments']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RequirementItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PlanningRequirementItem {
@@ -2157,6 +2237,15 @@ class PlanningRequirementItem {
       lastSourceHash: json['lastSourceHash']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PlanningRequirementItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class FrontEndPlanningData {
@@ -2179,16 +2268,20 @@ class FrontEndPlanningData {
   // Milestone date fields
   String milestoneStartDate;
   String milestoneEndDate;
+
   /// 2-step SME review verification for milestones.
   bool milestoneSmeReviewStep1;
   bool milestoneSmeReviewStep2;
+
   /// Charter lifecycle flags. Once the charter is approved, the FEP
   /// sections are locked (view-only) and the Planning phase unlocks.
   bool charterApproved;
   DateTime? charterApprovedAt;
+
   /// Once true, all Business Case sections are locked (view-only, no AI
   /// generate). Triggered when the preferred solution is locked.
   bool businessCaseLocked;
+
   /// When true, the user opted to skip the Business Case workflow
   /// because the solution was already known. The project description
   /// carries the basis for FEP documentation instead.
@@ -2338,8 +2431,10 @@ class FrontEndPlanningData {
       contracts: contracts ?? this.contracts,
       milestoneStartDate: milestoneStartDate ?? this.milestoneStartDate,
       milestoneEndDate: milestoneEndDate ?? this.milestoneEndDate,
-      milestoneSmeReviewStep1: milestoneSmeReviewStep1 ?? this.milestoneSmeReviewStep1,
-      milestoneSmeReviewStep2: milestoneSmeReviewStep2 ?? this.milestoneSmeReviewStep2,
+      milestoneSmeReviewStep1:
+          milestoneSmeReviewStep1 ?? this.milestoneSmeReviewStep1,
+      milestoneSmeReviewStep2:
+          milestoneSmeReviewStep2 ?? this.milestoneSmeReviewStep2,
       charterApproved: charterApproved ?? this.charterApproved,
       charterApprovedAt: charterApprovedAt ?? this.charterApprovedAt,
       businessCaseLocked: businessCaseLocked ?? this.businessCaseLocked,
@@ -2617,6 +2712,15 @@ class InfrastructurePlanningItem {
       status: json['status']?.toString() ?? 'Planned',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is InfrastructurePlanningItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class TechnologyPersonnelItem {
@@ -2680,6 +2784,15 @@ class TechnologyPersonnelItem {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is TechnologyPersonnelItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class AllowanceItem {
@@ -2694,20 +2807,27 @@ class AllowanceItem {
   String releaseStatus;
   double releasedAmount;
   double actualAmount;
+
   /// Allowance description (what the allowance covers).
   String description;
+
   /// Estimated cost OR quantity (e.g., "$50,000", "10% of base", "200 hrs").
   String estimatedCostOrQuantity;
+
   /// Schedule impact (if applicable) — short text describing schedule
   /// exposure (e.g., "Adds 2 weeks to commissioning").
   String scheduleImpact;
+
   /// Schedule impact duration in weeks (numeric allowance for schedule
   /// contingency tracking). Nullable/zero when not applicable.
   double scheduleImpactWeeks;
+
   /// Responsible discipline (e.g., "Civil", "Electrical", "Procurement").
   String responsibleDiscipline;
+
   /// Assumptions underpinning this allowance.
   String assumptions;
+
   /// Geographic / contextual trigger that suggested this allowance (e.g.,
   /// "Hurricane exposure — Gulf Coast US", "Power instability — West Africa").
   /// Populated by the auto-generation logic based on project location.
@@ -2782,12 +2902,20 @@ class AllowanceItem {
           ? (json['scheduleImpactWeeks'] as num).toDouble()
           : double.tryParse(json['scheduleImpactWeeks']?.toString() ?? '') ??
               0.0,
-      responsibleDiscipline:
-          json['responsibleDiscipline']?.toString() ?? '',
+      responsibleDiscipline: json['responsibleDiscipline']?.toString() ?? '',
       assumptions: json['assumptions']?.toString() ?? '',
       triggerContext: json['triggerContext']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AllowanceItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class OpportunityItem {
@@ -2900,6 +3028,15 @@ class OpportunityItem {
       isAccepted: json['isAccepted'] == true,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is OpportunityItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class RiskRegisterItem {
@@ -3161,6 +3298,15 @@ class ExecutionRiskItem {
       controlAccountId: json['controlAccountId']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ExecutionRiskItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class ExecutionRiskSignal {
@@ -3207,6 +3353,15 @@ class ExecutionRiskSignal {
       associatedRiskId: json['associatedRiskId']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ExecutionRiskSignal && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class ExecutionRiskMitigation {
@@ -3269,6 +3424,15 @@ class ExecutionRiskMitigation {
       createdAt: json['createdAt']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ExecutionRiskMitigation && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class RoleItem {
@@ -3288,6 +3452,15 @@ class RoleItem {
         name: json['name'] ?? '',
         description: json['description'] ?? '');
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RoleItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PermissionItem {
@@ -3307,6 +3480,15 @@ class PermissionItem {
         resource: json['resource'] ?? '',
         scope: json['scope'] ?? '');
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PermissionItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class SecuritySetting {
@@ -3343,6 +3525,15 @@ class AccessLogItem {
       timestamp: json['timestamp'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AccessLogItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class SSHERData {
@@ -3448,6 +3639,15 @@ class SsherEntry {
       mitigation: json['mitigation'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is SsherEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class SafetyItem {
@@ -3556,6 +3756,15 @@ class PotentialSolution {
       fieldHistories: fieldHistories ?? this.fieldHistories,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PotentialSolution && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LessonRecord {
@@ -3620,6 +3829,15 @@ class LessonRecord {
       dateSubmitted: parsed,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is LessonRecord && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class SolutionRisk {
@@ -3658,12 +3876,32 @@ class TeamMember {
   String email;
   String responsibilities;
 
+  /// Phone number including country + area code. Optional but recommended
+  /// for "Manage Closely" stakeholders (especially Project Team members
+  /// who do not have site access and must be reachable out-of-band).
+  /// Free-text so users can store any format, e.g. +260 97 123 4567.
+  String phone;
+
+  /// Physical location (city, country) of the team member. Used by the
+  /// Engagement Plan / Communication Roster to surface timezone and
+  /// travel considerations for stakeholder engagement.
+  String location;
+
+  /// Whether this team member has access to the NDU Project site/app.
+  /// When false, they must be engaged via email/phone only — their email
+  /// address becomes the primary communication channel. Defaults to true
+  /// since most PT members are internal users provisioned in the app.
+  bool hasSiteAccess;
+
   TeamMember({
     String? id,
     this.name = '',
     this.role = '',
     this.email = '',
     this.responsibilities = '',
+    this.phone = '',
+    this.location = '',
+    this.hasSiteAccess = true,
   }) : id = id ?? _generateId();
 
   Map<String, dynamic> toJson() => {
@@ -3672,6 +3910,9 @@ class TeamMember {
         'role': role,
         'email': email,
         'responsibilities': responsibilities,
+        'phone': phone,
+        'location': location,
+        'hasSiteAccess': hasSiteAccess,
       };
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
@@ -3681,11 +3922,44 @@ class TeamMember {
       role: json['role'] ?? '',
       email: json['email'] ?? '',
       responsibilities: json['responsibilities'] ?? '',
+      phone: json['phone']?.toString() ?? '',
+      location: json['location']?.toString() ?? '',
+      hasSiteAccess: json['hasSiteAccess'] != false,
+    );
+  }
+
+  TeamMember copyWith({
+    String? name,
+    String? role,
+    String? email,
+    String? responsibilities,
+    String? phone,
+    String? location,
+    bool? hasSiteAccess,
+  }) {
+    return TeamMember(
+      id: id,
+      name: name ?? this.name,
+      role: role ?? this.role,
+      email: email ?? this.email,
+      responsibilities: responsibilities ?? this.responsibilities,
+      phone: phone ?? this.phone,
+      location: location ?? this.location,
+      hasSiteAccess: hasSiteAccess ?? this.hasSiteAccess,
     );
   }
 
   static String _generateId() =>
       DateTime.now().microsecondsSinceEpoch.toString();
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is TeamMember && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PreferredSolutionAnalysis {
@@ -4018,6 +4292,15 @@ class CostEstimateItem {
 
   static String _generateId() =>
       DateTime.now().microsecondsSinceEpoch.toString();
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CostEstimateItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class WorkPackage {
@@ -4293,10 +4576,9 @@ class WorkPackage {
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      milestoneIds: (json['milestoneIds'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      milestoneIds:
+          (json['milestoneIds'] as List?)?.map((e) => e.toString()).toList() ??
+              [],
       areaOrSystem: json['areaOrSystem']?.toString() ?? '',
       contractorOrCrew: json['contractorOrCrew']?.toString() ?? '',
       releaseStatus: json['releaseStatus']?.toString() ?? 'draft',
@@ -4439,6 +4721,15 @@ class WorkPackage {
       percentComplete: percentComplete ?? this.percentComplete,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is WorkPackage && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PackageDeliverable {
@@ -4513,6 +4804,15 @@ class PackageDeliverable {
       requiredForProcurement: json['requiredForProcurement'] == true,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PackageDeliverable && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PackageReadinessChecklist {
@@ -5188,6 +5488,15 @@ class BenefitLineItem {
       notes: json['notes'] ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is BenefitLineItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class ITConsiderationsData {
@@ -5408,6 +5717,15 @@ class DebtItem {
         status: json['status'] ?? '',
         target: json['target'] ?? '',
       );
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is DebtItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class DebtInsight {
@@ -5712,6 +6030,15 @@ class ScenarioRecord {
             ? (json['likelihood'] as num).toInt()
             : 2,
       );
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ScenarioRecord && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class DesignDeliverablesData {
@@ -6021,6 +6348,7 @@ class RoleDefinition {
   String description;
   String workstream;
   bool isPredefined;
+  int headcount;
 
   RoleDefinition({
     String? id,
@@ -6028,7 +6356,26 @@ class RoleDefinition {
     this.description = '',
     this.workstream = '',
     this.isPredefined = false,
+    this.headcount = 1,
   }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+
+  RoleDefinition copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? workstream,
+    bool? isPredefined,
+    int? headcount,
+  }) {
+    return RoleDefinition(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      workstream: workstream ?? this.workstream,
+      isPredefined: isPredefined ?? this.isPredefined,
+      headcount: headcount ?? this.headcount,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -6036,6 +6383,7 @@ class RoleDefinition {
         'description': description,
         'workstream': workstream,
         'isPredefined': isPredefined,
+        'headcount': headcount,
       };
 
   factory RoleDefinition.fromJson(Map<String, dynamic> json) {
@@ -6045,8 +6393,20 @@ class RoleDefinition {
       description: json['description']?.toString() ?? '',
       workstream: json['workstream']?.toString() ?? '',
       isPredefined: json['isPredefined'] == true,
+      headcount: (json['headcount'] is num)
+          ? (json['headcount'] as num).toInt()
+          : int.tryParse(json['headcount']?.toString() ?? '') ?? 1,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RoleDefinition && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class RaciMatrixRow {
@@ -6098,6 +6458,238 @@ class RaciMatrixRow {
       assignments: (json['assignments'] as Map?)?.map((key, value) =>
               MapEntry(key.toString(), value?.toString() ?? '')) ??
           <String, String>{},
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RaciMatrixRow && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+/// Designations supported by the new RACI Deliverable Matrix.
+/// R  = Responsible (does the work)
+/// A  = Approver / Accountable (final sign-off)
+/// C  = Consulted (two-way input)
+/// RV = Reviewer (verifies output before approval)
+/// I  = Informed (one-way update)
+/// V  = Viewer (read-only access to the deliverable)
+class RaciDesignation {
+  RaciDesignation._();
+
+  static const String responsible = 'R';
+  static const String approver = 'A';
+  static const String consulted = 'C';
+  static const String reviewer = 'RV';
+  static const String informed = 'I';
+  static const String viewer = 'V';
+
+  static const List<String> all = [
+    responsible,
+    approver,
+    consulted,
+    reviewer,
+    informed,
+    viewer,
+  ];
+
+  static String label(String code) {
+    switch (code.toUpperCase()) {
+      case 'R':
+        return 'Responsible';
+      case 'A':
+        return 'Approver';
+      case 'C':
+        return 'Consulted';
+      case 'RV':
+        return 'Reviewer';
+      case 'I':
+        return 'Informed';
+      case 'V':
+        return 'Viewer';
+      default:
+        return '—';
+    }
+  }
+
+  static String description(String code) {
+    switch (code.toUpperCase()) {
+      case 'R':
+        return 'Does the work to produce the deliverable.';
+      case 'A':
+        return 'Final accountability — signs off the deliverable.';
+      case 'C':
+        return 'Two-way input — expertise solicited before action.';
+      case 'RV':
+        return 'Reviews the output before final approval.';
+      case 'I':
+        return 'Kept informed of progress and outcome (one-way).';
+      case 'V':
+        return 'Read-only visibility on the deliverable.';
+      default:
+        return '';
+    }
+  }
+
+  /// ARGB int values for the designation's background and foreground
+  /// colors. UI layer wraps these with `Color(...)`. Keeping the model
+  /// free of `dart:ui` avoids import conflicts.
+  static ({int bg, int fg}) color(String code) {
+    switch (code.toUpperCase()) {
+      case 'R':
+        return (bg: 0xFFDBEAFE, fg: 0xFF1D4ED8);
+      case 'A':
+        return (bg: 0xFFFEE2E2, fg: 0xFFB91C1C);
+      case 'C':
+        return (bg: 0xFFDCFCE7, fg: 0xFF15803D);
+      case 'RV':
+        return (bg: 0xFFFFEDD5, fg: 0xFFC2410C);
+      case 'I':
+        return (bg: 0xFFF3E8FF, fg: 0xFF7E22CE);
+      case 'V':
+        return (bg: 0xFFE0E7FF, fg: 0xFF4338CA);
+      default:
+        return (bg: 0xFFF3F4F6, fg: 0xFF6B7280);
+    }
+  }
+
+  static bool isValid(String code) =>
+      all.contains(code.toUpperCase());
+}
+
+/// One row of the new RACI Deliverable Matrix.
+///
+/// Unlike the legacy [RaciMatrixRow] (which stores role metadata + a map of
+/// deliverable-type -> designation), this row is keyed by sidebar checkpoint
+/// (the deliverable on the left side of the matrix) and stores a map of
+/// roleTitle -> designation. Assignments are keyed by role title (lower-cased)
+/// so that when a person is replaced in the Staffing Plan, the new hire
+/// automatically inherits the prior person's assignments.
+class RaciDeliverableRow {
+  String id;
+  String checkpoint;
+  String label;
+  String phase;
+  /// roleKey (lowercase role title) -> designation (R/A/C/RV/I/V).
+  Map<String, String> assignments;
+
+  RaciDeliverableRow({
+    String? id,
+    this.checkpoint = '',
+    this.label = '',
+    this.phase = '',
+    Map<String, String>? assignments,
+  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+        assignments = assignments ?? <String, String>{};
+
+  RaciDeliverableRow copyWith({
+    String? id,
+    String? checkpoint,
+    String? label,
+    String? phase,
+    Map<String, String>? assignments,
+  }) {
+    return RaciDeliverableRow(
+      id: id ?? this.id,
+      checkpoint: checkpoint ?? this.checkpoint,
+      label: label ?? this.label,
+      phase: phase ?? this.phase,
+      assignments: assignments ?? Map<String, String>.from(this.assignments),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'checkpoint': checkpoint,
+        'label': label,
+        'phase': phase,
+        'assignments': assignments,
+      };
+
+  factory RaciDeliverableRow.fromJson(Map<String, dynamic> json) {
+    return RaciDeliverableRow(
+      id: json['id']?.toString(),
+      checkpoint: json['checkpoint']?.toString() ?? '',
+      label: json['label']?.toString() ?? '',
+      phase: json['phase']?.toString() ?? '',
+      assignments: (json['assignments'] as Map?)?.map((key, value) =>
+              MapEntry(key.toString(), value?.toString() ?? '')) ??
+          <String, String>{},
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is RaciDeliverableRow && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+/// Approval state for the RACI Deliverable Matrix.
+///
+/// Once approved, the matrix is considered the basis for project execution
+/// and feeds the project activities log + personal dashboards. Edits after
+/// approval require re-approval (the [isApproved] flag is reset to false
+/// whenever a cell changes).
+class RaciApprovalStatus {
+  bool isApproved;
+  String approverName;
+  String approverRole;
+  DateTime? approvedAt;
+  String confirmationText;
+
+  RaciApprovalStatus({
+    this.isApproved = false,
+    this.approverName = '',
+    this.approverRole = '',
+    this.approvedAt,
+    this.confirmationText =
+        'I confirm stakeholder alignment on all deliverable responsibility '
+        'assignments, forming the basis for project execution.',
+  });
+
+  RaciApprovalStatus copyWith({
+    bool? isApproved,
+    String? approverName,
+    String? approverRole,
+    DateTime? approvedAt,
+    String? confirmationText,
+  }) {
+    return RaciApprovalStatus(
+      isApproved: isApproved ?? this.isApproved,
+      approverName: approverName ?? this.approverName,
+      approverRole: approverRole ?? this.approverRole,
+      approvedAt: approvedAt ?? this.approvedAt,
+      confirmationText: confirmationText ?? this.confirmationText,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'isApproved': isApproved,
+        'approverName': approverName,
+        'approverRole': approverRole,
+        'approvedAt': approvedAt?.toIso8601String(),
+        'confirmationText': confirmationText,
+      };
+
+  factory RaciApprovalStatus.fromJson(Map<String, dynamic> json) {
+    return RaciApprovalStatus(
+      isApproved: json['isApproved'] == true,
+      approverName: json['approverName']?.toString() ?? '',
+      approverRole: json['approverRole']?.toString() ?? '',
+      approvedAt: json['approvedAt'] is String
+          ? DateTime.tryParse(json['approvedAt'] as String)
+          : null,
+      confirmationText: json['confirmationText']?.toString() ??
+          'I confirm stakeholder alignment on all deliverable responsibility '
+              'assignments, forming the basis for project execution.',
     );
   }
 }
@@ -6203,6 +6795,15 @@ class StaffingRequirement {
       notes: notes ?? this.notes,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is StaffingRequirement && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class TrainingActivity {
@@ -6299,6 +6900,15 @@ class TrainingActivity {
       isCompleted: isCompleted ?? this.isCompleted,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is TrainingActivity && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class StakeholderEntry {
@@ -6407,6 +7017,15 @@ class StakeholderEntry {
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is StakeholderEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class EngagementPlanEntry {
@@ -6422,6 +7041,41 @@ class EngagementPlanEntry {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// Which stakeholder group this engagement plan targets.
+  /// Examples: 'Project Team', 'Sponsor', 'Steering Committee', 'External',
+  /// 'Customer', 'Vendor', 'Regulator'. Used to segment communication plans
+  /// so each group has its own cadence and channels.
+  final String stakeholderGroup;
+
+  /// Whether this stakeholder is in the "Manage Closely" segment
+  /// (high influence + high interest, per the Influence/Interest matrix).
+  /// Project Team members default to true — they require the most frequent
+  /// engagement and the richest communication channels.
+  final bool manageClosely;
+
+  /// Where shared data/artefacts will be published for this stakeholder
+  /// group. Free-text so users can paste URLs, SharePoint paths, Google
+  /// Drive folders, email distribution lists, etc. One item per line.
+  /// Example:
+  ///   https://drive.google.com/...
+  ///   SharePoint: /PMO/Project Alpha/Reports
+  ///   Email DL: project-alpha-team@nduproject.com
+  final String dataShareLinks;
+
+  /// Per-quarter engagement description. Each value is a short plan for
+  /// how this stakeholder group will be engaged in that quarter.
+  /// Example Q1: 'Kickoff workshop + weekly status email'
+  /// Example Q2: 'Bi-weekly demo + sprint review attendance'
+  final String q1Plan;
+  final String q2Plan;
+  final String q3Plan;
+  final String q4Plan;
+
+  /// Optional link back to a [TeamMember.id] when this row was
+  /// auto-generated from the staffing plan / team members list. Allows
+  /// the UI to keep the row in sync with PT member edits (name, email).
+  final String teamMemberId;
+
   EngagementPlanEntry({
     required this.id,
     required this.stakeholder,
@@ -6434,6 +7088,14 @@ class EngagementPlanEntry {
     required this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.stakeholderGroup = '',
+    this.manageClosely = false,
+    this.dataShareLinks = '',
+    this.q1Plan = '',
+    this.q2Plan = '',
+    this.q3Plan = '',
+    this.q4Plan = '',
+    this.teamMemberId = '',
   });
 
   factory EngagementPlanEntry.empty() {
@@ -6462,6 +7124,14 @@ class EngagementPlanEntry {
     String? status,
     String? nextTouchpoint,
     String? notes,
+    String? stakeholderGroup,
+    bool? manageClosely,
+    String? dataShareLinks,
+    String? q1Plan,
+    String? q2Plan,
+    String? q3Plan,
+    String? q4Plan,
+    String? teamMemberId,
     DateTime? updatedAt,
   }) {
     return EngagementPlanEntry(
@@ -6474,6 +7144,14 @@ class EngagementPlanEntry {
       status: status ?? this.status,
       nextTouchpoint: nextTouchpoint ?? this.nextTouchpoint,
       notes: notes ?? this.notes,
+      stakeholderGroup: stakeholderGroup ?? this.stakeholderGroup,
+      manageClosely: manageClosely ?? this.manageClosely,
+      dataShareLinks: dataShareLinks ?? this.dataShareLinks,
+      q1Plan: q1Plan ?? this.q1Plan,
+      q2Plan: q2Plan ?? this.q2Plan,
+      q3Plan: q3Plan ?? this.q3Plan,
+      q4Plan: q4Plan ?? this.q4Plan,
+      teamMemberId: teamMemberId ?? this.teamMemberId,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -6489,6 +7167,14 @@ class EngagementPlanEntry {
         'status': status,
         'nextTouchpoint': nextTouchpoint,
         'notes': notes,
+        'stakeholderGroup': stakeholderGroup,
+        'manageClosely': manageClosely,
+        'dataShareLinks': dataShareLinks,
+        'q1Plan': q1Plan,
+        'q2Plan': q2Plan,
+        'q3Plan': q3Plan,
+        'q4Plan': q4Plan,
+        'teamMemberId': teamMemberId,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
       };
@@ -6504,10 +7190,27 @@ class EngagementPlanEntry {
       status: json['status']?.toString() ?? 'Planned',
       nextTouchpoint: json['nextTouchpoint']?.toString() ?? '',
       notes: json['notes']?.toString() ?? '',
+      stakeholderGroup: json['stakeholderGroup']?.toString() ?? '',
+      manageClosely: json['manageClosely'] == true,
+      dataShareLinks: json['dataShareLinks']?.toString() ?? '',
+      q1Plan: json['q1Plan']?.toString() ?? '',
+      q2Plan: json['q2Plan']?.toString() ?? '',
+      q3Plan: json['q3Plan']?.toString() ?? '',
+      q4Plan: json['q4Plan']?.toString() ?? '',
+      teamMemberId: json['teamMemberId']?.toString() ?? '',
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is EngagementPlanEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 enum QualityTargetStatus { onTrack, monitoring, offTrack }
@@ -6584,6 +7287,15 @@ class QualityTarget {
       status: status ?? this.status,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityTarget && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QaTechnique {
@@ -6643,6 +7355,15 @@ class QaTechnique {
       standards: standards ?? this.standards,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QaTechnique && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QcTechnique {
@@ -6695,6 +7416,15 @@ class QcTechnique {
       frequency: frequency ?? this.frequency,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QcTechnique && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 enum QualityWorkflowType { qa, qc }
@@ -6864,6 +7594,15 @@ class QualityStandard {
       applicability: applicability ?? this.applicability,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityStandard && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityObjective {
@@ -6956,6 +7695,15 @@ class QualityObjective {
       status: status ?? this.status,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityObjective && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityWorkflowControl {
@@ -7042,6 +7790,15 @@ class QualityWorkflowControl {
       standardsReference: standardsReference ?? this.standardsReference,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityWorkflowControl && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityAuditEntry {
@@ -7127,6 +7884,15 @@ class QualityAuditEntry {
       notes: notes ?? this.notes,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityAuditEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityTaskEntry {
@@ -7239,6 +8005,15 @@ class QualityTaskEntry {
       resolvedDate: resolvedDate ?? this.resolvedDate,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityTaskEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class CorrectiveActionEntry {
@@ -7341,6 +8116,15 @@ class CorrectiveActionEntry {
       verificationNotes: verificationNotes ?? this.verificationNotes,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CorrectiveActionEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityChangeEntry {
@@ -7412,6 +8196,15 @@ class QualityChangeEntry {
       status: status ?? this.status,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QualityChangeEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class QualityDashboardConfig {
@@ -7487,24 +8280,24 @@ class QualityComputedSnapshot {
     required this.generatedAt,
   });
 
-  factory QualityComputedSnapshot.empty() => QualityComputedSnapshot(
+  factory QualityComputedSnapshot.empty() => const QualityComputedSnapshot(
         averageTimeToResolutionDays: 0,
         targetTimeToResolutionDays: 15,
         averageTaskCompletionPercent: 0,
         plannedAuditsCompletionPercent: 0,
-        statusTallies: const {
+        statusTallies: {
           'notStarted': 0,
           'inProgress': 0,
           'complete': 0,
           'blocked': 0,
         },
-        priorityTallies: const {
+        priorityTallies: {
           'minimal': 0,
           'moderate': 0,
           'critical': 0,
         },
-        defectTrendData: const [],
-        satisfactionTrendData: const [],
+        defectTrendData: [],
+        satisfactionTrendData: [],
         generatedAt: '',
       );
 
@@ -8055,6 +8848,15 @@ class Contractor {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Contractor && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class Vendor {
@@ -8100,6 +8902,15 @@ class Vendor {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Vendor && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class PlanningDashboardItem {
@@ -8146,6 +8957,15 @@ class PlanningDashboardItem {
       isAiGenerated: json['isAiGenerated'] ?? false,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is PlanningDashboardItem && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class MonitoringControlsData {
@@ -8310,6 +9130,15 @@ class InterfaceEntry {
       protocol: json['protocol']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is InterfaceEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class InterfaceChangeLogEntry {
@@ -8384,4 +9213,13 @@ class InterfaceChangeLogEntry {
       changedAt: json['changedAt']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is InterfaceChangeLogEntry && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

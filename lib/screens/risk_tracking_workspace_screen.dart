@@ -12,22 +12,24 @@ import 'package:ndu_project/screens/scope_completion_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:go_router/go_router.dart';
+
 class RiskTrackingWorkspaceScreen extends StatefulWidget {
- const RiskTrackingWorkspaceScreen({super.key});
+  const RiskTrackingWorkspaceScreen({super.key});
 
- static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const RiskTrackingWorkspaceScreen()),
- );
- }
+  static void open(BuildContext context) {
+    context.push('/risk-tracking');
+  }
 
- @override
- State<RiskTrackingWorkspaceScreen> createState() =>
- _RiskTrackingWorkspaceScreenState();
+  @override
+  State<RiskTrackingWorkspaceScreen> createState() =>
+      _RiskTrackingWorkspaceScreenState();
 }
 
 class _RiskTrackingWorkspaceScreenState
@@ -777,14 +779,15 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  }
 
  Widget _buildRiskTable() {
- return Container(
+ final table = Container(
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  ),
- child: DataTable(
- headingRowColor: WidgetStateProperty.all(const Color(0xFFF9FAFB)),
+ child: buildNduDataTable(
+ context: context,
+ headingRowColor: const Color(0xFFF9FAFB),
  dataRowMaxHeight: 80,
  columnSpacing: 12,
  columns: const [
@@ -955,6 +958,192 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  );
  }).toList(),
+ ),
+ );
+
+ return FullScreenTableWrapper(
+ title: 'Risk Tracking Workspace',
+ child: table,
+ tableBuilder: (fsContext) => Container(
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(12),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: buildNduDataTable(
+ context: fsContext,
+ headingRowColor: const Color(0xFFF9FAFB),
+ dataRowMaxHeight: 120,
+ columnSpacing: 18,
+ columns: const [
+ DataColumn(
+ label: Text('Risk',
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF374151))),
+ ),
+ DataColumn(
+ label: Text('Category',
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF374151))),
+ ),
+ DataColumn(
+ label: Text('Score',
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF374151))),
+ ),
+ DataColumn(
+ label: Text('L/I',
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF374151))),
+ ),
+ DataColumn(
+ label: Text('Owner',
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF374151))),
+ ),
+ DataColumn(
+ label: Text('Status',
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF374151))),
+ ),
+ DataColumn(
+ label: Text('Next Review',
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF374151))),
+ ),
+ DataColumn(
+ label: Text('Actions',
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF374151))),
+ ),
+ ],
+ rows: _filteredRisks.map((risk) {
+ final statusColor = _getStatusColor(risk.status);
+ final scoreColor = _getRiskScoreColor(risk.riskScore);
+
+ return DataRow(
+ color: WidgetStateProperty.all(Colors.white),
+ cells: [
+ DataCell(
+ SizedBox(
+ width: 260,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ mainAxisAlignment: MainAxisAlignment.center,
+ children: [
+ Text(
+ risk.title,
+ style: const TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ maxLines: 3,
+ overflow: TextOverflow.ellipsis,
+ ),
+ if (risk.description.isNotEmpty) ...[
+ const SizedBox(height: 2),
+ Text(
+ risk.description,
+ style: const TextStyle(
+ fontSize: 11,
+ color: Color(0xFF9CA3AF),
+ ),
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis,
+ ),
+ ],
+ ],
+ ),
+ ),
+ ),
+ DataCell(
+ _buildCategoryBadge(risk.category),
+ ),
+ DataCell(
+ _buildRiskScoreBadge(risk.riskScore, scoreColor),
+ ),
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Text(
+ '${risk.likelihoodScore}',
+ style: TextStyle(
+ fontSize: 11,
+ fontWeight: FontWeight.w700,
+ color: _getScoreColor(risk.likelihoodScore),
+ ),
+ ),
+ const Text('/',
+ style:
+ TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+ Text(
+ '${risk.impactScore}',
+ style: TextStyle(
+ fontSize: 11,
+ fontWeight: FontWeight.w700,
+ color: _getScoreColor(risk.impactScore),
+ ),
+ ),
+ ],
+ ),
+ ),
+ DataCell(
+ SizedBox(
+ width: 140,
+ child: Text(
+ risk.owner,
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF4B5563),
+ ),
+ overflow: TextOverflow.ellipsis,
+ ),
+ ),
+ ),
+ DataCell(_buildStatusBadge(risk.status, statusColor)),
+ DataCell(
+ Text(
+ _formatDateShort(risk.nextReview),
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF6B7280),
+ ),
+ ),
+ ),
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ _buildEditButton(() => _showRiskEditor(existing: risk)),
+ const SizedBox(width: 6),
+ _buildDeleteButton(() => _deleteRisk(risk.id)),
+ ],
+ ),
+ ),
+ ],
+ );
+ }).toList(),
+ ),
  ),
  );
  }
@@ -2949,290 +3138,290 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
 // Data Models
 class _RiskData {
- const _RiskData({
- required this.id,
- required this.title,
- this.description = '',
- this.category = 'General',
- required this.owner,
- required this.likelihoodScore,
- required this.impactScore,
- required this.probability,
- required this.impact,
- required this.riskScore,
- required this.status,
- this.triggerEvents = '',
- this.mitigationStrategy = '',
- required this.nextReview,
- this.associatedMitigation = '',
- required this.createdAt,
- required this.lastModified,
- });
+  const _RiskData({
+    required this.id,
+    required this.title,
+    this.description = '',
+    this.category = 'General',
+    required this.owner,
+    required this.likelihoodScore,
+    required this.impactScore,
+    required this.probability,
+    required this.impact,
+    required this.riskScore,
+    required this.status,
+    this.triggerEvents = '',
+    this.mitigationStrategy = '',
+    required this.nextReview,
+    this.associatedMitigation = '',
+    required this.createdAt,
+    required this.lastModified,
+  });
 
- final String id;
- final String title;
- final String description;
- final String category;
- final String owner;
- final int likelihoodScore;
- final int impactScore;
- final String probability;
- final String impact;
- final int riskScore;
- final String status;
- final String triggerEvents;
- final String mitigationStrategy;
- final String nextReview;
- final String associatedMitigation;
- final String createdAt;
- final String lastModified;
+  final String id;
+  final String title;
+  final String description;
+  final String category;
+  final String owner;
+  final int likelihoodScore;
+  final int impactScore;
+  final String probability;
+  final String impact;
+  final int riskScore;
+  final String status;
+  final String triggerEvents;
+  final String mitigationStrategy;
+  final String nextReview;
+  final String associatedMitigation;
+  final String createdAt;
+  final String lastModified;
 
- static _RiskData empty() => _RiskData(
- id: '',
- title: '',
- owner: '',
- likelihoodScore: 0,
- impactScore: 0,
- probability: '',
- impact: '',
- riskScore: 0,
- status: '',
- nextReview: '',
- createdAt: '',
- lastModified: '',
- );
+  static _RiskData empty() => _RiskData(
+        id: '',
+        title: '',
+        owner: '',
+        likelihoodScore: 0,
+        impactScore: 0,
+        probability: '',
+        impact: '',
+        riskScore: 0,
+        status: '',
+        nextReview: '',
+        createdAt: '',
+        lastModified: '',
+      );
 
- ExecutionRiskItem toShared() => ExecutionRiskItem(
- id: id,
- title: title,
- description: description,
- category: category,
- owner: owner,
- likelihoodScore: likelihoodScore,
- impactScore: impactScore,
- probability: probability,
- impact: impact,
- riskScore: riskScore,
- status: status,
- triggerEvents: triggerEvents,
- mitigationStrategy: mitigationStrategy,
- nextReview: nextReview,
- associatedMitigation: associatedMitigation,
- createdAt: createdAt,
- lastModified: lastModified,
- );
+  ExecutionRiskItem toShared() => ExecutionRiskItem(
+        id: id,
+        title: title,
+        description: description,
+        category: category,
+        owner: owner,
+        likelihoodScore: likelihoodScore,
+        impactScore: impactScore,
+        probability: probability,
+        impact: impact,
+        riskScore: riskScore,
+        status: status,
+        triggerEvents: triggerEvents,
+        mitigationStrategy: mitigationStrategy,
+        nextReview: nextReview,
+        associatedMitigation: associatedMitigation,
+        createdAt: createdAt,
+        lastModified: lastModified,
+      );
 
- Map<String, dynamic> toMap() => {
- 'id': id,
- 'title': title,
- 'description': description,
- 'category': category,
- 'owner': owner,
- 'likelihoodScore': likelihoodScore,
- 'impactScore': impactScore,
- 'probability': probability,
- 'impact': impact,
- 'riskScore': riskScore,
- 'status': status,
- 'triggerEvents': triggerEvents,
- 'mitigationStrategy': mitigationStrategy,
- 'nextReview': nextReview,
- 'associatedMitigation': associatedMitigation,
- 'createdAt': createdAt,
- 'lastModified': lastModified,
- };
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'title': title,
+        'description': description,
+        'category': category,
+        'owner': owner,
+        'likelihoodScore': likelihoodScore,
+        'impactScore': impactScore,
+        'probability': probability,
+        'impact': impact,
+        'riskScore': riskScore,
+        'status': status,
+        'triggerEvents': triggerEvents,
+        'mitigationStrategy': mitigationStrategy,
+        'nextReview': nextReview,
+        'associatedMitigation': associatedMitigation,
+        'createdAt': createdAt,
+        'lastModified': lastModified,
+      };
 
- factory _RiskData.fromMap(Map<String, dynamic> map) => _RiskData(
- id: map['id']?.toString() ?? '',
- title: map['title']?.toString() ?? '',
- description: map['description']?.toString() ?? '',
- category: map['category']?.toString() ?? 'General',
- owner: map['owner']?.toString() ?? 'Unassigned',
- likelihoodScore: map['likelihoodScore'] as int? ?? 3,
- impactScore: map['impactScore'] as int? ?? 3,
- probability: map['probability']?.toString() ?? 'Medium',
- impact: map['impact']?.toString() ?? 'Medium',
- riskScore: map['riskScore'] as int? ?? 9,
- status: map['status']?.toString() ?? 'Open',
- triggerEvents: map['triggerEvents']?.toString() ?? '',
- mitigationStrategy: map['mitigationStrategy']?.toString() ?? '',
- nextReview: map['nextReview']?.toString() ?? 'TBD',
- associatedMitigation: map['associatedMitigation']?.toString() ?? '',
- createdAt: map['createdAt']?.toString() ?? '',
- lastModified: map['lastModified']?.toString() ?? '',
- );
+  factory _RiskData.fromMap(Map<String, dynamic> map) => _RiskData(
+        id: map['id']?.toString() ?? '',
+        title: map['title']?.toString() ?? '',
+        description: map['description']?.toString() ?? '',
+        category: map['category']?.toString() ?? 'General',
+        owner: map['owner']?.toString() ?? 'Unassigned',
+        likelihoodScore: map['likelihoodScore'] as int? ?? 3,
+        impactScore: map['impactScore'] as int? ?? 3,
+        probability: map['probability']?.toString() ?? 'Medium',
+        impact: map['impact']?.toString() ?? 'Medium',
+        riskScore: map['riskScore'] as int? ?? 9,
+        status: map['status']?.toString() ?? 'Open',
+        triggerEvents: map['triggerEvents']?.toString() ?? '',
+        mitigationStrategy: map['mitigationStrategy']?.toString() ?? '',
+        nextReview: map['nextReview']?.toString() ?? 'TBD',
+        associatedMitigation: map['associatedMitigation']?.toString() ?? '',
+        createdAt: map['createdAt']?.toString() ?? '',
+        lastModified: map['lastModified']?.toString() ?? '',
+      );
 
- factory _RiskData.fromShared(ExecutionRiskItem item) => _RiskData(
- id: item.id,
- title: item.title,
- description: item.description,
- category: item.category,
- owner: item.owner.isEmpty ? 'Unassigned' : item.owner,
- likelihoodScore: item.likelihoodScore,
- impactScore: item.impactScore,
- probability: item.probability.isEmpty ? 'Medium' : item.probability,
- impact: item.impact.isEmpty ? 'Medium' : item.impact,
- riskScore: item.riskScore,
- status: item.status.isEmpty ? 'Open' : item.status,
- triggerEvents: item.triggerEvents,
- mitigationStrategy: item.mitigationStrategy,
- nextReview: item.nextReview.isEmpty ? 'TBD' : item.nextReview,
- associatedMitigation: item.associatedMitigation,
- createdAt: item.createdAt,
- lastModified: item.lastModified,
- );
+  factory _RiskData.fromShared(ExecutionRiskItem item) => _RiskData(
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        category: item.category,
+        owner: item.owner.isEmpty ? 'Unassigned' : item.owner,
+        likelihoodScore: item.likelihoodScore,
+        impactScore: item.impactScore,
+        probability: item.probability.isEmpty ? 'Medium' : item.probability,
+        impact: item.impact.isEmpty ? 'Medium' : item.impact,
+        riskScore: item.riskScore,
+        status: item.status.isEmpty ? 'Open' : item.status,
+        triggerEvents: item.triggerEvents,
+        mitigationStrategy: item.mitigationStrategy,
+        nextReview: item.nextReview.isEmpty ? 'TBD' : item.nextReview,
+        associatedMitigation: item.associatedMitigation,
+        createdAt: item.createdAt,
+        lastModified: item.lastModified,
+      );
 }
 
 class _SignalData {
- const _SignalData({
- required this.id,
- required this.title,
- this.detail = '',
- required this.severity,
- this.source = '',
- required this.dateDetected,
- this.confidenceLevel = 'Medium',
- this.associatedRiskId = '',
- });
+  const _SignalData({
+    required this.id,
+    required this.title,
+    this.detail = '',
+    required this.severity,
+    this.source = '',
+    required this.dateDetected,
+    this.confidenceLevel = 'Medium',
+    this.associatedRiskId = '',
+  });
 
- final String id;
- final String title;
- final String detail;
- final String severity;
- final String source;
- final String dateDetected;
- final String confidenceLevel;
- final String associatedRiskId;
+  final String id;
+  final String title;
+  final String detail;
+  final String severity;
+  final String source;
+  final String dateDetected;
+  final String confidenceLevel;
+  final String associatedRiskId;
 
- ExecutionRiskSignal toShared() => ExecutionRiskSignal(
- id: id,
- title: title,
- detail: detail,
- severity: severity,
- source: source,
- dateDetected: dateDetected,
- confidenceLevel: confidenceLevel,
- associatedRiskId: associatedRiskId,
- );
+  ExecutionRiskSignal toShared() => ExecutionRiskSignal(
+        id: id,
+        title: title,
+        detail: detail,
+        severity: severity,
+        source: source,
+        dateDetected: dateDetected,
+        confidenceLevel: confidenceLevel,
+        associatedRiskId: associatedRiskId,
+      );
 
- Map<String, dynamic> toMap() => {
- 'id': id,
- 'title': title,
- 'detail': detail,
- 'severity': severity,
- 'source': source,
- 'dateDetected': dateDetected,
- 'confidenceLevel': confidenceLevel,
- 'associatedRiskId': associatedRiskId,
- };
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'title': title,
+        'detail': detail,
+        'severity': severity,
+        'source': source,
+        'dateDetected': dateDetected,
+        'confidenceLevel': confidenceLevel,
+        'associatedRiskId': associatedRiskId,
+      };
 
- factory _SignalData.fromMap(Map<String, dynamic> map) => _SignalData(
- id: map['id']?.toString() ?? '',
- title: map['title']?.toString() ?? '',
- detail: map['detail']?.toString() ?? '',
- severity: map['severity']?.toString() ?? 'Medium',
- source: map['source']?.toString() ?? '',
- dateDetected: map['dateDetected']?.toString() ?? '',
- confidenceLevel: map['confidenceLevel']?.toString() ?? 'Medium',
- associatedRiskId: map['associatedRiskId']?.toString() ?? '',
- );
+  factory _SignalData.fromMap(Map<String, dynamic> map) => _SignalData(
+        id: map['id']?.toString() ?? '',
+        title: map['title']?.toString() ?? '',
+        detail: map['detail']?.toString() ?? '',
+        severity: map['severity']?.toString() ?? 'Medium',
+        source: map['source']?.toString() ?? '',
+        dateDetected: map['dateDetected']?.toString() ?? '',
+        confidenceLevel: map['confidenceLevel']?.toString() ?? 'Medium',
+        associatedRiskId: map['associatedRiskId']?.toString() ?? '',
+      );
 
- factory _SignalData.fromShared(ExecutionRiskSignal item) => _SignalData(
- id: item.id,
- title: item.title,
- detail: item.detail,
- severity: item.severity.isEmpty ? 'Medium' : item.severity,
- source: item.source,
- dateDetected: item.dateDetected,
- confidenceLevel:
- item.confidenceLevel.isEmpty ? 'Medium' : item.confidenceLevel,
- associatedRiskId: item.associatedRiskId,
- );
+  factory _SignalData.fromShared(ExecutionRiskSignal item) => _SignalData(
+        id: item.id,
+        title: item.title,
+        detail: item.detail,
+        severity: item.severity.isEmpty ? 'Medium' : item.severity,
+        source: item.source,
+        dateDetected: item.dateDetected,
+        confidenceLevel:
+            item.confidenceLevel.isEmpty ? 'Medium' : item.confidenceLevel,
+        associatedRiskId: item.associatedRiskId,
+      );
 }
 
 class _MitigationData {
- const _MitigationData({
- required this.id,
- required this.title,
- this.description = '',
- required this.owner,
- required this.status,
- required this.dueDate,
- this.progress = 0,
- this.estimatedCost = '',
- this.statusNotes = '',
- this.associatedRiskId = '',
- required this.createdAt,
- });
+  const _MitigationData({
+    required this.id,
+    required this.title,
+    this.description = '',
+    required this.owner,
+    required this.status,
+    required this.dueDate,
+    this.progress = 0,
+    this.estimatedCost = '',
+    this.statusNotes = '',
+    this.associatedRiskId = '',
+    required this.createdAt,
+  });
 
- final String id;
- final String title;
- final String description;
- final String owner;
- final String status;
- final String dueDate;
- final int progress;
- final String estimatedCost;
- final String statusNotes;
- final String associatedRiskId;
- final String createdAt;
+  final String id;
+  final String title;
+  final String description;
+  final String owner;
+  final String status;
+  final String dueDate;
+  final int progress;
+  final String estimatedCost;
+  final String statusNotes;
+  final String associatedRiskId;
+  final String createdAt;
 
- ExecutionRiskMitigation toShared({required String associatedRiskTitle}) =>
- ExecutionRiskMitigation(
- id: id,
- title: title,
- description: description,
- owner: owner,
- status: status,
- dueDate: dueDate,
- progress: progress,
- estimatedCost: estimatedCost,
- statusNotes: statusNotes,
- associatedRiskId: associatedRiskId,
- associatedRiskTitle: associatedRiskTitle,
- createdAt: createdAt,
- );
+  ExecutionRiskMitigation toShared({required String associatedRiskTitle}) =>
+      ExecutionRiskMitigation(
+        id: id,
+        title: title,
+        description: description,
+        owner: owner,
+        status: status,
+        dueDate: dueDate,
+        progress: progress,
+        estimatedCost: estimatedCost,
+        statusNotes: statusNotes,
+        associatedRiskId: associatedRiskId,
+        associatedRiskTitle: associatedRiskTitle,
+        createdAt: createdAt,
+      );
 
- Map<String, dynamic> toMap() => {
- 'id': id,
- 'title': title,
- 'description': description,
- 'owner': owner,
- 'status': status,
- 'dueDate': dueDate,
- 'progress': progress,
- 'estimatedCost': estimatedCost,
- 'statusNotes': statusNotes,
- 'associatedRiskId': associatedRiskId,
- 'createdAt': createdAt,
- };
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'title': title,
+        'description': description,
+        'owner': owner,
+        'status': status,
+        'dueDate': dueDate,
+        'progress': progress,
+        'estimatedCost': estimatedCost,
+        'statusNotes': statusNotes,
+        'associatedRiskId': associatedRiskId,
+        'createdAt': createdAt,
+      };
 
- factory _MitigationData.fromMap(Map<String, dynamic> map) => _MitigationData(
- id: map['id']?.toString() ?? '',
- title: map['title']?.toString() ?? '',
- description: map['description']?.toString() ?? '',
- owner: map['owner']?.toString() ?? 'Unassigned',
- status: map['status']?.toString() ?? 'Planning',
- dueDate: map['dueDate']?.toString() ?? 'TBD',
- progress: map['progress'] as int? ?? 0,
- estimatedCost: map['estimatedCost']?.toString() ?? '',
- statusNotes: map['statusNotes']?.toString() ?? '',
- associatedRiskId: map['associatedRiskId']?.toString() ?? '',
- createdAt: map['createdAt']?.toString() ?? '',
- );
+  factory _MitigationData.fromMap(Map<String, dynamic> map) => _MitigationData(
+        id: map['id']?.toString() ?? '',
+        title: map['title']?.toString() ?? '',
+        description: map['description']?.toString() ?? '',
+        owner: map['owner']?.toString() ?? 'Unassigned',
+        status: map['status']?.toString() ?? 'Planning',
+        dueDate: map['dueDate']?.toString() ?? 'TBD',
+        progress: map['progress'] as int? ?? 0,
+        estimatedCost: map['estimatedCost']?.toString() ?? '',
+        statusNotes: map['statusNotes']?.toString() ?? '',
+        associatedRiskId: map['associatedRiskId']?.toString() ?? '',
+        createdAt: map['createdAt']?.toString() ?? '',
+      );
 
- factory _MitigationData.fromShared(ExecutionRiskMitigation item) =>
- _MitigationData(
- id: item.id,
- title: item.title,
- description: item.description,
- owner: item.owner.isEmpty ? 'Unassigned' : item.owner,
- status: item.status.isEmpty ? 'Planning' : item.status,
- dueDate: item.dueDate.isEmpty ? 'TBD' : item.dueDate,
- progress: item.progress,
- estimatedCost: item.estimatedCost,
- statusNotes: item.statusNotes,
- associatedRiskId: item.associatedRiskId,
- createdAt: item.createdAt,
- );
+  factory _MitigationData.fromShared(ExecutionRiskMitigation item) =>
+      _MitigationData(
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        owner: item.owner.isEmpty ? 'Unassigned' : item.owner,
+        status: item.status.isEmpty ? 'Planning' : item.status,
+        dueDate: item.dueDate.isEmpty ? 'TBD' : item.dueDate,
+        progress: item.progress,
+        estimatedCost: item.estimatedCost,
+        statusNotes: item.statusNotes,
+        associatedRiskId: item.associatedRiskId,
+        createdAt: item.createdAt,
+      );
 }

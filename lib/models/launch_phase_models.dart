@@ -51,6 +51,13 @@ class LaunchScopeItem {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchScopeItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchMilestone {
@@ -106,6 +113,13 @@ class LaunchMilestone {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchMilestone && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchFollowUpItem {
@@ -155,6 +169,13 @@ class LaunchFollowUpItem {
       status: json['status']?.toString() ?? 'Open',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchFollowUpItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchTeamMember {
@@ -210,6 +231,13 @@ class LaunchTeamMember {
       releaseStatus: json['releaseStatus']?.toString() ?? 'Active',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchTeamMember && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchHandoverItem {
@@ -274,6 +302,13 @@ class LaunchHandoverItem {
       status: json['status']?.toString() ?? 'Pending',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchHandoverItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchKnowledgeTransfer {
@@ -335,6 +370,14 @@ class LaunchKnowledgeTransfer {
       artifacts: json['artifacts']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LaunchKnowledgeTransfer && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchApproval {
@@ -390,6 +433,13 @@ class LaunchApproval {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchApproval && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchContractItem {
@@ -458,6 +508,13 @@ class LaunchContractItem {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchContractItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchCloseOutStep {
@@ -507,6 +564,13 @@ class LaunchCloseOutStep {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchCloseOutStep && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchVendorItem {
@@ -568,6 +632,13 @@ class LaunchVendorItem {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchVendorItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchAccessItem {
@@ -629,6 +700,13 @@ class LaunchAccessItem {
       status: json['status']?.toString() ?? 'Pending',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchAccessItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchWarrantyItem {
@@ -696,6 +774,13 @@ class LaunchWarrantyItem {
       status: json['status']?.toString() ?? 'Active',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchWarrantyItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchGapItem {
@@ -753,6 +838,13 @@ class LaunchGapItem {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchGapItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchMilestoneVariance {
@@ -808,6 +900,14 @@ class LaunchMilestoneVariance {
       status: json['status']?.toString() ?? 'On Track',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LaunchMilestoneVariance && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchBudgetVariance {
@@ -863,6 +963,14 @@ class LaunchBudgetVariance {
       variancePercent: json['variancePercent']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LaunchBudgetVariance && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchCloseOutCheckItem {
@@ -921,6 +1029,14 @@ class LaunchCloseOutCheckItem {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LaunchCloseOutCheckItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchArchiveItem {
@@ -976,6 +1092,13 @@ class LaunchArchiveItem {
       status: json['status']?.toString() ?? 'Pending',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchArchiveItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchCommunicationItem {
@@ -1031,6 +1154,14 @@ class LaunchCommunicationItem {
       status: json['status']?.toString() ?? 'Planned',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LaunchCommunicationItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchOpsCostItem {
@@ -1080,6 +1211,13 @@ class LaunchOpsCostItem {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is LaunchOpsCostItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchFinancialMetric {
@@ -1123,6 +1261,14 @@ class LaunchFinancialMetric {
       notes: json['notes']?.toString() ?? '',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LaunchFinancialMetric && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchRootCauseItem {
@@ -1178,6 +1324,14 @@ class LaunchRootCauseItem {
       status: json['status']?.toString() ?? 'Open',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LaunchRootCauseItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchHighlightItem {
@@ -1221,6 +1375,14 @@ class LaunchHighlightItem {
       category: json['category']?.toString() ?? 'Win',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LaunchHighlightItem && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class LaunchClosureNotes {

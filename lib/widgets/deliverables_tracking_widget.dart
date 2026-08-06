@@ -11,6 +11,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 /// Deliverables Tracking sub-page with Timeline view and full CRUD
 class DeliverablesTrackingWidget extends StatefulWidget {
   const DeliverablesTrackingWidget({
@@ -187,10 +188,10 @@ class _DeliverablesTrackingWidgetState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -272,17 +273,25 @@ class _DeliverablesTrackingWidgetState
           ),
         ),
         // Table Rows
-        ...List.generate(_deliverables.length, (index) {
-          final deliverable = _deliverables[index];
-          final isLast = index == _deliverables.length - 1;
-          return _DeliverableRowWidget(
-            deliverable: deliverable,
-            onChanged: (updated) => _updateDeliverable(index, updated),
-            onDelete: () => _deleteDeliverable(index),
-            onRegenerate: () => _regenerateDeliverable(index),
-            showDivider: !isLast,
-          );
-        }),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _deliverables.length,
+          itemBuilder: (context, index) {
+            final deliverable = _deliverables[index];
+            final isLast = index == _deliverables.length - 1;
+            return RepaintBoundary(
+              key: ValueKey('deliverable_row_$index'),
+              child: _DeliverableRowWidget(
+                deliverable: deliverable,
+                onChanged: (updated) => _updateDeliverable(index, updated),
+                onDelete: () => _deleteDeliverable(index),
+                onRegenerate: () => _regenerateDeliverable(index),
+                showDivider: !isLast,
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -431,8 +440,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value:
-                        selectedStatus.isEmpty ? null : selectedStatus,
+                    value: selectedStatus.isEmpty ? null : selectedStatus,
                     decoration: const InputDecoration(
                       labelText: 'Status',
                       isDense: true,
@@ -587,7 +595,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
                             horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: _getStatusColor(_deliverable.status)
-                              .withOpacity(0.1),
+                              .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

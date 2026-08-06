@@ -1,0 +1,246 @@
+name: Deploy Staging (staging.admin.nduproject.com)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Trigger: push to 'staging' branch OR manual dispatch.
+# Builds the Flutter web app from the staging branch and deploys to the
+# `gh-pages` branch of the staging.admin.nduproject.com repo, which serves
+# https://staging.admin.nduproject.com via GitHub Pages.
+#
+# This is the staging environment — auto-deploys on every push to staging.
+# To promote to production (admin.nduproject.com), run the
+# "Promote Staging → Production" workflow and get reviewer approval.
+#
+# PREFLIGHT CHECKS: every deploy runs a preflight job that MUST pass before
+# the build-and-deploy job is allowed to start. This guarantees that a
+# triggered deployment never fails mid-flight — if preflight fails, the
+# workflow stops cleanly before any artifact is pushed. The preflight job
+# runs: flutter analyze (fatal on errors), flutter test (unit + widget),
+# and required-file checks.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-staging-admin
+  cancel-in-progress: false
+
+jobs:
+  # ── SILENT_ACTORS GATE ────────────────────────────────────────────────────
+  gate:
+    name: Silent-actor gate
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+      actor: ${{ github.actor }}
+      sha: ${{ github.sha }}
+    steps:
+      - id: check
+        run: |
+          set -eu
+          ACTOR="${{ github.actor }}"
+          SHA="${{ github.sha }}"
+          SILENT="${{ vars.SILENT_ACTORS }}"
+          if [ -z "$SILENT" ]; then
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if echo ",$SILENT," | grep -iq ",$ACTOR,"; then
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping entire workflow — @$ACTOR is in SILENT_ACTORS."
+          else
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+            echo "actor=$ACTOR" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── PREFLIGHT CHECKS (must pass before deploy) ──────────────────────────
+  # Runs the full test suite + static analysis. If any check fails, the
+  # workflow stops here and the build-and-deploy job is skipped — guaranteeing
+  # that a triggered deployment never fails mid-flight.
+  preflight:
+    name: Preflight checks (analyze + test)
+    needs: gate
+    if: needs.gate.outputs.should_skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Preflight summary
+        run: |
+          echo "============================================"
+          echo "  🔍 Preflight checks — staging.admin.nduproject.com"
+          echo "============================================"
+          echo "  Commit:       ${{ needs.gate.outputs.sha }}"
+          echo "  Triggered by: @${{ needs.gate.outputs.actor }}"
+          echo "  Branch:       ${{ github.ref_name }}"
+          echo "============================================"
+
+      - name: Required files present
+        run: |
+          set -eu
+          REQUIRED_FILES=(
+            "pubspec.yaml"
+            "lib/main.dart"
+            "web/index.html"
+            "analysis_options.yaml"
+          )
+          MISSING=0
+          for f in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Missing required file: $f"
+              MISSING=1
+            else
+              echo "✓ $f"
+            fi
+          done
+          if [ "$MISSING" -ne 0 ]; then
+            echo "::error::Preflight FAILED — required files missing. Deployment blocked."
+            exit 1
+          fi
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Flutter analyze (fatal on errors)
+        run: |
+          set -eu
+          echo "── flutter analyze ──"
+          # --no-fatal-infos + --no-fatal-warnings avoid breaking on style nits
+          # and unused-element warnings. Real ERRORS (undefined names, type
+          # mismatches, syntax errors) WILL still fail this step and block the deploy.
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
+          echo "✓ flutter analyze passed"
+
+      - name: Flutter test (unit + widget)
+        run: |
+          set -eu
+          echo "── flutter test ──"
+          # Runs every test under test/ (excluding integration tests).
+          # If any test fails, this step fails and the deploy is blocked.
+          flutter test --no-pub --reporter expanded
+          echo "✓ flutter test passed"
+
+      - name: Preflight passed
+        if: success()
+        run: |
+          echo "============================================"
+          echo "  ✅ Preflight checks passed"
+          echo "  Proceeding to build + deploy..."
+          echo "============================================"
+
+  # ── BUILD & DEPLOY TO STAGING ─────────────────────────────────────────────
+  build-and-deploy:
+    name: Build Flutter web → staging.admin.nduproject.com
+    needs: [gate, preflight]
+    # Only run on the admin.nduproject.com repo (not on NDU-Project repo)
+    # AND only if preflight checks passed (needs.preflight.result == 'success')
+    if: |
+      needs.gate.outputs.should_skip != 'true' &&
+      github.repository == 'Ndu-Project-LLC/admin.nduproject.com' &&
+      needs.preflight.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Build web (release, staging)
+        env:
+          OPENAI_PROXY_API_KEY: ${{ secrets.OPENAI_PROXY_API_KEY }}
+          OPENAI_PROXY_ENDPOINT: ${{ secrets.OPENAI_PROXY_ENDPOINT }}
+        run: |
+          flutter build web --release --base-href "/" --no-tree-shake-icons \
+            --dart-define=OPENAI_PROXY_API_KEY=${OPENAI_PROXY_API_KEY} \
+            --dart-define=OPENAI_PROXY_ENDPOINT=${OPENAI_PROXY_ENDPOINT} \
+            --dart-define=ENVIRONMENT=staging
+
+      - name: Preserve staging CNAME + .nojekyll + SPA routing config
+        run: |
+          cd build/web
+          echo "staging.admin.nduproject.com" > CNAME
+          touch .nojekyll
+          if [ -f ../../staticwebapp.config.json ]; then
+            cp ../../staticwebapp.config.json ./staticwebapp.config.json
+          fi
+          echo "✓ CNAME = $(cat CNAME)"
+
+      - name: Generate deploy metadata
+        id: meta
+        run: |
+          BUILD_SHA="${{ needs.gate.outputs.sha }}"
+          BUILD_SHORT="${BUILD_SHA:0:7}"
+          BUILD_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          BUNDLE_SIZE=$(du -sh build/web/main.dart.js | cut -f1)
+          {
+            echo "sha=$BUILD_SHA"
+            echo "short=$BUILD_SHORT"
+            echo "date=$BUILD_DATE"
+            echo "bundle=$BUNDLE_SIZE"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to staging repo gh-pages (staging.admin.nduproject.com)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.ACCESS_TOKEN }}
+          external_repository: Ndu-Project-LLC/staging.admin.nduproject.com
+          publish_dir: build/web
+          publish_branch: gh-pages
+          keep_files: false
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: |
+            deploy: staging.admin.nduproject.com — fresh rebuild from ${{ steps.meta.outputs.short }}
+
+      - name: Deployment summary
+        run: |
+          echo "============================================"
+          echo "  ✅ Staging deploy complete"
+          echo "============================================"
+          echo "  Source SHA:  ${{ steps.meta.outputs.short }}"
+          echo "  Built at:    ${{ steps.meta.outputs.date }}"
+          echo "  Bundle size: ${{ steps.meta.outputs.bundle }}"
+          echo "  Target:      staging.admin.nduproject.com repo (gh-pages)"
+          echo ""
+          echo "  Live URL:    https://staging.admin.nduproject.com"
+          echo "============================================"
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Staging deploy complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ steps.meta.outputs.short }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed by:** @${{ needs.gate.outputs.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Bundle:** ${{ steps.meta.outputs.bundle }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://staging.admin.nduproject.com/" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "To promote to production (admin.nduproject.com), run the **Promote Staging → Production** workflow." >> $GITHUB_STEP_SUMMARY

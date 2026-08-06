@@ -13,6 +13,11 @@ class PlanningDashboardCard extends StatelessWidget {
   final VoidCallback? onGenerateAI;
   final bool isGenerating;
   final String emptyStateText;
+  /// When provided, the list becomes reorderable via long-press drag
+  /// (using `ReorderableListView.builder`). A drag handle icon is
+  /// shown on each row. When null, the list is a static
+  /// `ListView.separated` (legacy behavior).
+  final void Function(int oldIndex, int newIndex)? onReorder;
 
   const PlanningDashboardCard({
     super.key,
@@ -27,6 +32,7 @@ class PlanningDashboardCard extends StatelessWidget {
     this.onGenerateAI,
     this.isGenerating = false,
     this.emptyStateText = 'No items yet. Add manually or generate with AI.',
+    this.onReorder,
   });
 
   @override
@@ -39,7 +45,7 @@ class PlanningDashboardCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE4E7EC)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -87,7 +93,8 @@ class PlanningDashboardCard extends StatelessWidget {
                     if (onUndo != null)
                       IconButton(
                         onPressed: canUndo ? onUndo : null,
-                        tooltip: canUndo ? 'Undo last delete' : 'Nothing to undo',
+                        tooltip:
+                            canUndo ? 'Undo last delete' : 'Nothing to undo',
                         icon: const Icon(
                           Icons.undo_rounded,
                           color: Color(0xFF0F766E),
@@ -101,7 +108,8 @@ class PlanningDashboardCard extends StatelessWidget {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.auto_awesome,
                                 color: Color(0xFF7C3AED)), // Purple accent
@@ -129,6 +137,41 @@ class PlanningDashboardCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
               ),
+            )
+          else if (onReorder != null)
+            // Reorderable list — long-press an item to drag it.
+            ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              itemCount: items.length,
+              onReorder: onReorder!,
+              proxyDecorator: (child, index, animation) {
+                return AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, child) {
+                    final elevation = Tween<double>(begin: 0, end: 6)
+                        .animate(animation)
+                        .value;
+                    return Material(
+                      elevation: elevation,
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.transparent,
+                      child: child,
+                    );
+                  },
+                  child: child,
+                );
+              },
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return ReorderableDelayedDragStartListener(
+                  key: ValueKey(
+                      '${title}_item_${index}_${item.description.hashCode}'),
+                  index: index,
+                  child: _buildItemRow(context, item, showDragHandle: true),
+                );
+              },
             )
           else
             ListView.separated(
@@ -179,7 +222,8 @@ class PlanningDashboardCard extends StatelessWidget {
     );
   }
 
-  Widget _buildItemRow(BuildContext context, PlanningDashboardItem item) {
+  Widget _buildItemRow(BuildContext context, PlanningDashboardItem item,
+      {bool showDragHandle = false}) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
@@ -190,6 +234,18 @@ class PlanningDashboardCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Drag handle (only shown when reorderable).
+          if (showDragHandle) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 2.0),
+              child: Icon(
+                Icons.drag_indicator,
+                size: 18,
+                color: Colors.grey[400],
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           // Icon based on context (hard to guess, generic dot for now)
           Padding(
             padding: const EdgeInsets.only(top: 2.0),

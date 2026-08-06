@@ -151,7 +151,7 @@ class _PageHeader extends StatelessWidget {
  style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
  );
 
- final chips = Wrap(
+ const chips = Wrap(
  spacing: 12,
  children: const [
  _SoftBadge(icon: Icons.group_outlined, label: 'Teams'),
@@ -167,7 +167,7 @@ class _PageHeader extends StatelessWidget {
  const SizedBox(height: 12),
  chips,
  const SizedBox(height: 12),
- Wrap(
+ const Wrap(
  spacing: 8,
  runSpacing: 6,
  children: [
@@ -200,7 +200,7 @@ class _NotesArea extends StatelessWidget {
  color: Colors.white,
  borderRadius: BorderRadius.circular(24),
  boxShadow: [
- BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 24, offset: const Offset(0, 12)),
+ BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 24, offset: const Offset(0, 12)),
  ],
  ),
  child: VoiceTextField(
@@ -287,10 +287,10 @@ class _ScheduleToolbar extends StatelessWidget {
  spacing: 12,
  runSpacing: 12,
  children: [
- _ToolbarButton(icon: Icons.group_work_outlined, label: 'Team'),
- _ToolbarButton(icon: Icons.filter_alt_outlined, label: 'Filter'),
- _ToolbarButton(icon: Icons.speed, label: 'Estimates'),
- _ToolbarButton(icon: Icons.cloud_download_outlined, label: 'Import'),
+ const _ToolbarButton(icon: Icons.group_work_outlined, label: 'Team'),
+ const _ToolbarButton(icon: Icons.filter_alt_outlined, label: 'Filter'),
+ const _ToolbarButton(icon: Icons.speed, label: 'Estimates'),
+ const _ToolbarButton(icon: Icons.cloud_download_outlined, label: 'Import'),
  FilledButton.icon(
  onPressed: () => _showCreateTaskDialog(context),
  icon: const Icon(Icons.add),
@@ -309,7 +309,7 @@ class _ScheduleToolbar extends StatelessWidget {
  color: Colors.white,
  borderRadius: BorderRadius.circular(24),
  boxShadow: [
- BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 12)),
+ BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 12)),
  ],
  ),
  child: isMobile
@@ -350,7 +350,7 @@ class _ToolbarButton extends StatelessWidget {
  label: Text(label),
  style: OutlinedButton.styleFrom(
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
- side: BorderSide(color: AppSemanticColors.border),
+ side: const BorderSide(color: AppSemanticColors.border),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
  ),
  );
@@ -378,7 +378,7 @@ class _WorkBreakdownStructure extends StatelessWidget {
  children: metrics.map((metric) => _MetricTile(metric: metric)).toList(),
  ),
  const SizedBox(height: 24),
- _LegendList(items: const [
+ const _LegendList(items: [
  _LegendItem(label: 'Project Cost', color: Color(0xFF2563EB)),
  _LegendItem(label: 'Schedule Drift', color: Color(0xFFF59E0B)),
  _LegendItem(label: 'Critical Path Impact', color: Color(0xFFFF5A5F)),
@@ -394,9 +394,9 @@ class _WorkBreakdownStructure extends StatelessWidget {
  borderRadius: BorderRadius.circular(24),
  border: Border.all(color: AppSemanticColors.border),
  ),
- child: Column(
+ child: const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  _WbsLane(
  badgeLabel: 'Infrastructure Development',
  badgeColor: Color(0xFF2563EB),
@@ -430,7 +430,7 @@ class _WorkBreakdownStructure extends StatelessWidget {
  color: Colors.white,
  borderRadius: BorderRadius.circular(28),
  boxShadow: [
- BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 24, offset: const Offset(0, 12)),
+ BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 24, offset: const Offset(0, 12)),
  ],
  ),
  child: isMobile
@@ -472,7 +472,7 @@ class _TimelineTabs extends StatelessWidget {
  color: Colors.white,
  borderRadius: BorderRadius.circular(24),
  boxShadow: [
- BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 18, offset: const Offset(0, 10)),
+ BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 18, offset: const Offset(0, 10)),
  ],
  ),
  child: isMobile
@@ -515,7 +515,7 @@ class _TimelineTab extends StatelessWidget {
  color: selected ? theme.colorScheme.primary : Colors.grey[100],
  borderRadius: BorderRadius.circular(999),
  boxShadow: selected
- ? [BoxShadow(color: theme.colorScheme.primary.withOpacity(0.32), blurRadius: 16, offset: const Offset(0, 8))]
+ ? [BoxShadow(color: theme.colorScheme.primary.withValues(alpha: 0.32), blurRadius: 16, offset: const Offset(0, 8))]
  : null,
  ),
  child: Text(
@@ -629,7 +629,7 @@ class _KanbanColumn extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(24),
- border: Border.all(color: Colors.white.withOpacity(0.4)),
+ border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
  ),
  child: Center(
  child: Text('No items yet', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[500])),
@@ -664,7 +664,7 @@ class _KanbanCard extends StatelessWidget {
  color: Colors.white,
  borderRadius: BorderRadius.circular(24),
  boxShadow: [
- BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 18, offset: const Offset(0, 12)),
+ BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 18, offset: const Offset(0, 12)),
  ],
  ),
  child: Column(
@@ -684,7 +684,7 @@ class _KanbanCard extends StatelessWidget {
  children: [
  CircleAvatar(
  radius: 18,
- backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+ backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
  child: Text(
  card.assigneeInitials,
  style: theme.textTheme.labelLarge?.copyWith(
@@ -770,7 +770,7 @@ class _BoardFooter extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final legendItems = const [
+ const legendItems = [
  _LegendItem(label: 'Completed', color: Color(0xFF16A34A)),
  _LegendItem(label: 'In Progress', color: Color(0xFF2563EB)),
  _LegendItem(label: 'Pending', color: Color(0xFFF59E0B)),
@@ -793,7 +793,7 @@ class _BoardFooter extends StatelessWidget {
  color: Colors.white,
  borderRadius: BorderRadius.circular(28),
  boxShadow: [
- BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 22, offset: const Offset(0, 10)),
+ BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 22, offset: const Offset(0, 10)),
  ],
  ),
  child: isMobile
@@ -883,7 +883,7 @@ class _StatusPill extends StatelessWidget {
  final color = _resolveColor(context);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
- decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(999)),
+ decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)),
  child: Text(
  label,
  style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -947,7 +947,7 @@ class _ProgressIndicator extends StatelessWidget {
  child: LinearProgressIndicator(
  value: progress.clamp(0.02, 1.0),
  minHeight: 8,
- backgroundColor: color.withOpacity(0.12),
+ backgroundColor: color.withValues(alpha: 0.12),
  valueColor: AlwaysStoppedAnimation<Color>(color),
  ),
  ),
@@ -970,7 +970,7 @@ class _SoftBadge extends StatelessWidget {
  color: Colors.white,
  borderRadius: BorderRadius.circular(999),
  boxShadow: [
- BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, 8)),
+ BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 8)),
  ],
  ),
  child: Row(
@@ -1028,7 +1028,7 @@ class _WbsLane extends StatelessWidget {
  children: [
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
- decoration: BoxDecoration(color: badgeColor.withOpacity(0.12), borderRadius: BorderRadius.circular(999)),
+ decoration: BoxDecoration(color: badgeColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)),
  child: Text(badgeLabel, style: theme.textTheme.labelLarge?.copyWith(color: badgeColor, fontWeight: FontWeight.w700)),
  ),
  const SizedBox(height: 12),

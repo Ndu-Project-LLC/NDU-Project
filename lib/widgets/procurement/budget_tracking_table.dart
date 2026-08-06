@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ndu_project/models/procurement/procurement_models.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 class BudgetTrackingTable extends StatelessWidget {
   const BudgetTrackingTable({
@@ -21,7 +23,7 @@ class BudgetTrackingTable extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: Color(0xFFE5E7EB)),
         ),
         child: const Text(
           'No procurement items yet for budget tracking.',
@@ -38,7 +40,7 @@ class BudgetTrackingTable extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +49,8 @@ class BudgetTrackingTable extends StatelessWidget {
             spacing: 12,
             runSpacing: 12,
             children: [
-              _MetricTile(label: 'Budget', value: _formatCurrency(totals.budget)),
+              _MetricTile(
+                  label: 'Budget', value: _formatCurrency(totals.budget)),
               _MetricTile(label: 'Spent', value: _formatCurrency(totals.spent)),
               _MetricTile(
                 label: 'Committed',
@@ -60,50 +63,76 @@ class BudgetTrackingTable extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: const [
-                DataColumn(label: Text('Item')),
-                DataColumn(label: Text('Budget')),
-                DataColumn(label: Text('Spent')),
-                DataColumn(label: Text('Committed')),
-                DataColumn(label: Text('Remaining')),
-                DataColumn(label: Text('Variance')),
-                DataColumn(label: Text('Status')),
-              ],
-              rows: items
-                  .map(
-                    (item) {
-                      final committed = item.committedAmount(purchaseOrders);
-                      final remaining = item.remainingBudget(purchaseOrders);
-                      final variance = item.variancePercent(purchaseOrders);
-                      final status = item.budgetStatus(purchaseOrders);
-                      return DataRow(
-                        cells: [
-                          DataCell(
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 220),
-                              child: Text(
-                                item.name,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                          DataCell(Text(_formatCurrency(item.budget))),
-                          DataCell(Text(_formatCurrency(item.spent))),
-                          DataCell(Text(_formatCurrency(committed))),
-                          DataCell(Text(_formatCurrency(remaining))),
-                          DataCell(Text('${variance.toStringAsFixed(1)}%')),
-                          DataCell(_BudgetStatusBadge(status: status)),
-                        ],
-                      );
-                    },
-                  )
-                  .toList(growable: false),
+          _buildBudgetTable(context, items, purchaseOrders),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBudgetTable(
+    BuildContext context,
+    List<ProcurementItemModel> items,
+    List<PurchaseOrderModel> purchaseOrders,
+  ) {
+    final rows = items.map((item) {
+      final committed = item.committedAmount(purchaseOrders);
+      final remaining = item.remainingBudget(purchaseOrders);
+      final variance = item.variancePercent(purchaseOrders);
+      final status = item.budgetStatus(purchaseOrders);
+      return DataRow(
+        cells: [
+          DataCell(
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 220),
+              child: WrappedText(
+                item.name,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
             ),
           ),
+          DataCell(WrappedText(_formatCurrency(item.budget))),
+          DataCell(WrappedText(_formatCurrency(item.spent))),
+          DataCell(WrappedText(_formatCurrency(committed))),
+          DataCell(WrappedText(_formatCurrency(remaining))),
+          DataCell(WrappedText('${variance.toStringAsFixed(1)}%')),
+          DataCell(_BudgetStatusBadge(status: status)),
         ],
+      );
+    }).toList(growable: false);
+
+    return FullScreenTableWrapper(
+      title: 'Budget Tracking',
+      child: ResponsiveDataTableWrapper(
+        child: buildNduDataTable(
+          context: context,
+          columns: const [
+            DataColumn(label: Text('Item')),
+            DataColumn(label: Text('Budget'), numeric: true),
+            DataColumn(label: Text('Spent'), numeric: true),
+            DataColumn(label: Text('Committed'), numeric: true),
+            DataColumn(label: Text('Remaining'), numeric: true),
+            DataColumn(label: Text('Variance'), numeric: true),
+            DataColumn(label: Text('Status')),
+          ],
+          rows: rows,
+          zebra: true,
+        ),
+      ),
+      tableBuilder: (fsContext) => buildNduDataTable(
+        context: fsContext,
+        columns: const [
+          DataColumn(label: Text('Item')),
+          DataColumn(label: Text('Budget'), numeric: true),
+          DataColumn(label: Text('Spent'), numeric: true),
+          DataColumn(label: Text('Committed'), numeric: true),
+          DataColumn(label: Text('Remaining'), numeric: true),
+          DataColumn(label: Text('Variance'), numeric: true),
+          DataColumn(label: Text('Status')),
+        ],
+        rows: rows,
+        zebra: true,
+        columnSpacing: 28,
+        horizontalMargin: 18,
       ),
     );
   }
@@ -160,9 +189,9 @@ class _MetricTile extends StatelessWidget {
       width: 180,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

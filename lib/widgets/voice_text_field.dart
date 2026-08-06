@@ -271,11 +271,11 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       if (!started) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(kIsWeb
                   ? 'Voice input unavailable. Use Chrome/Edge/Safari over HTTPS and allow mic access. Firefox is not supported.'
                   : 'Speech recognition is not available on this device.'),
-              duration: const Duration(seconds: 3),
+              duration: Duration(seconds: 3),
             ),
           );
         }
@@ -347,8 +347,10 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     // message instead of silently failing.
     final voiceEnabled = widget.enableVoice && !widget.obscureText;
     final docxEnabled = widget.enableDocxImport && !widget.obscureText;
-    final kazAiEnabled = widget.enableKazAi && !widget.obscureText && !widget.readOnly;
-    final effectiveDecoration = _buildDecoration(voiceEnabled, docxEnabled, kazAiEnabled);
+    final kazAiEnabled =
+        widget.enableKazAi && !widget.obscureText && !widget.readOnly;
+    final effectiveDecoration =
+        _buildDecoration(voiceEnabled, docxEnabled, kazAiEnabled);
 
     // Show text formatting toolbar only for multi-line fields
     final showToolbar = widget.enableTextFormatting &&
@@ -415,14 +417,16 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     return textField;
   }
 
-  InputDecoration _buildDecoration(bool voiceEnabled, bool docxEnabled, bool kazAiEnabled) {
+  InputDecoration _buildDecoration(
+      bool voiceEnabled, bool docxEnabled, bool kazAiEnabled) {
     final base = widget.decoration ?? const InputDecoration();
 
     final icons = <Widget>[];
     if (docxEnabled) icons.add(_buildDocxImportIcon());
     if (voiceEnabled) icons.add(_buildMicIcon());
     if (kazAiEnabled) icons.add(_buildKazAiIcon());
-    if (kazAiEnabled && _controller.text.isNotEmpty) icons.add(_buildClearIcon());
+    if (kazAiEnabled && _controller.text.isNotEmpty)
+      icons.add(_buildClearIcon());
 
     if (icons.isEmpty) return base;
 
@@ -448,7 +452,10 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     if (_isGeneratingAi) {
       return const Padding(
         padding: EdgeInsets.all(8),
-        child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+        child: SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
     return IconButton(
@@ -477,15 +484,14 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
   }
 
   Widget _buildDocxImportIcon() {
-    final iconColor =
-        widget.docxImportIconColor ?? const Color(0xFF0EA5E9);
+    final iconColor = widget.docxImportIconColor ?? const Color(0xFF0EA5E9);
     if (_isImportingDoc) {
       return Container(
         width: 36,
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: Padding(
@@ -523,7 +529,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: IconButton(
@@ -570,7 +576,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
           borderRadius: BorderRadius.circular(24),
         ),
         contentPadding: EdgeInsets.zero,
-        content: Container(
+        content: SizedBox(
           width: 420,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -595,7 +601,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                       width: 72,
                       height: 72,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
+                        color: Colors.white.withValues(alpha: 0.25),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -634,17 +640,20 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                   children: [
                     _buildPermissionBullet(
                       icon: Icons.record_voice_over_outlined,
-                      text: 'Speak naturally — your voice will be converted to text in this field',
+                      text:
+                          'Speak naturally — your voice will be converted to text in this field',
                     ),
                     const SizedBox(height: 12),
                     _buildPermissionBullet(
                       icon: Icons.lock_outline,
-                      text: 'Audio is processed securely and never stored or shared',
+                      text:
+                          'Audio is processed securely and never stored or shared',
                     ),
                     const SizedBox(height: 12),
                     _buildPermissionBullet(
                       icon: Icons.toggle_on_outlined,
-                      text: 'You can stop voice input at any time by tapping the mic icon again',
+                      text:
+                          'You can stop voice input at any time by tapping the mic icon again',
                     ),
                     const SizedBox(height: 16),
                     Container(
@@ -653,11 +662,11 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                         color: const Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFFFCD34D).withOpacity(0.4),
+                          color: const Color(0xFFFCD34D).withValues(alpha: 0.4),
                         ),
                       ),
-                      child: Row(
-                        children: const [
+                      child: const Row(
+                        children: [
                           Icon(Icons.info_outline,
                               size: 16, color: Color(0xFF92400E)),
                           SizedBox(width: 8),
@@ -683,8 +692,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                   children: [
                     Expanded(
                       child: TextButton(
-                        onPressed: () =>
-                            Navigator.of(dialogContext).pop(false),
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
@@ -703,8 +711,7 @@ Future<bool> showMicrophonePermissionDialog(BuildContext context) async {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () =>
-                            Navigator.of(dialogContext).pop(true),
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
                         icon: const Icon(Icons.mic, size: 18),
                         label: const Text(
                           'Allow',
@@ -1032,11 +1039,11 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
       if (!started) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(kIsWeb
                   ? 'Voice input unavailable. Use Chrome/Edge/Safari over HTTPS and allow mic access. Firefox is not supported.'
                   : 'Speech recognition is not available on this device.'),
-              duration: const Duration(seconds: 3),
+              duration: Duration(seconds: 3),
             ),
           );
         }
@@ -1106,7 +1113,8 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     // message instead of silently failing.
     final voiceEnabled = widget.enableVoice && !widget.obscureText;
     final docxEnabled = widget.enableDocxImport && !widget.obscureText;
-    final kazAiEnabled = widget.enableKazAi && !widget.obscureText && !widget.readOnly;
+    final kazAiEnabled =
+        widget.enableKazAi && !widget.obscureText && !widget.readOnly;
     final effectiveDecoration =
         _buildDecoration(voiceEnabled, docxEnabled, kazAiEnabled);
 
@@ -1181,14 +1189,16 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     return textField;
   }
 
-  InputDecoration _buildDecoration(bool voiceEnabled, bool docxEnabled, bool kazAiEnabled) {
+  InputDecoration _buildDecoration(
+      bool voiceEnabled, bool docxEnabled, bool kazAiEnabled) {
     final base = widget.decoration ?? const InputDecoration();
 
     final icons = <Widget>[];
     if (docxEnabled) icons.add(_buildDocxImportIcon());
     if (voiceEnabled) icons.add(_buildMicIcon());
     if (kazAiEnabled) icons.add(_buildKazAiIcon());
-    if (kazAiEnabled && _controller.text.isNotEmpty) icons.add(_buildClearIcon());
+    if (kazAiEnabled && _controller.text.isNotEmpty)
+      icons.add(_buildClearIcon());
 
     if (icons.isEmpty) return base;
 
@@ -1210,12 +1220,14 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
     return base.copyWith(suffixIcon: suffixWidget);
   }
 
-
   Widget _buildKazAiIcon() {
     if (_isGeneratingAi) {
       return const Padding(
         padding: EdgeInsets.all(8),
-        child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+        child: SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
     return IconButton(
@@ -1243,15 +1255,14 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
   }
 
   Widget _buildDocxImportIcon() {
-    final iconColor =
-        widget.docxImportIconColor ?? const Color(0xFF0EA5E9);
+    final iconColor = widget.docxImportIconColor ?? const Color(0xFF0EA5E9);
     if (_isImportingDoc) {
       return Container(
         width: 36,
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: Padding(
@@ -1289,7 +1300,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
         height: 36,
         margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
+          color: iconColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
         ),
         child: IconButton(

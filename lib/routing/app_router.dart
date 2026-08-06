@@ -33,6 +33,7 @@ import 'package:ndu_project/screens/front_end_planning_requirements_screen.dart'
 import 'package:ndu_project/screens/front_end_planning_personnel_screen.dart';
 import 'package:ndu_project/screens/front_end_planning_procurement_screen.dart';
 import 'package:ndu_project/screens/front_end_planning_contract_vendor_quotes_screen.dart';
+import 'package:ndu_project/screens/front_end_planning_contracts_screen.dart';
 import 'package:ndu_project/screens/front_end_planning_infrastructure_screen.dart';
 import 'package:ndu_project/screens/planning_contracting_screen.dart';
 import 'package:ndu_project/screens/planning_technology_screen.dart';
@@ -130,6 +131,98 @@ import 'package:ndu_project/screens/ssher_screen_1.dart';
 import 'package:ndu_project/screens/ssher_screen_2.dart';
 import 'package:ndu_project/screens/ssher_screen_3.dart';
 import 'package:ndu_project/screens/ssher_screen_4.dart';
+
+// Workspace dashboards & remaining pages
+import 'package:ndu_project/screens/regular_project_dashboard_screen.dart';
+import 'package:ndu_project/screens/project_command_center_screen.dart';
+import 'package:ndu_project/screens/program_dashboard_mobile_screen.dart';
+import 'package:ndu_project/screens/project_baseline_screen.dart';
+import 'package:ndu_project/screens/schedule_screen.dart';
+import 'package:ndu_project/screens/agile_project_hub_screen.dart';
+import 'package:ndu_project/screens/agile_release_plan_screen.dart';
+import 'package:ndu_project/screens/team_status_check_screen.dart';
+import 'package:ndu_project/screens/admin_content_screen.dart';
+import 'package:ndu_project/screens/admin/admin_hints_screen.dart';
+import 'package:ndu_project/screens/admin/admin_dashboard_screen.dart';
+import 'package:ndu_project/screens/admin/user_management_screen.dart';
+import 'package:ndu_project/screens/punchlist_actions_screen.dart';
+import 'package:ndu_project/screens/ai_recommendations_screen.dart';
+import 'package:ndu_project/screens/technology_definitions_screen.dart';
+import 'package:ndu_project/screens/external_integrations_screen.dart';
+import 'package:ndu_project/screens/ai_integrations_screen.dart';
+import 'package:ndu_project/screens/quality_management_screen.dart';
+import 'package:ndu_project/screens/interface_management_screen.dart';
+import 'package:ndu_project/screens/planning_requirements_screen.dart';
+import 'package:ndu_project/screens/ssher_safety_full_view.dart';
+import 'package:ndu_project/screens/gap_analysis_scope_reconcillation_screen.dart';
+import 'package:ndu_project/screens/project_workspace_dashboard_screen.dart';
+import 'package:ndu_project/screens/group_into_portfolio_screen.dart';
+import 'package:ndu_project/screens/actual_vs_planned_gap_analysis_screen.dart';
+import 'package:ndu_project/screens/deliverables_roadmap_detailed_screen.dart';
+import 'package:ndu_project/screens/execution_enabling_work_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_best_practices_screen.dart';
+import 'package:ndu_project/screens/execution_plan_lessons_learned_screen.dart';
+import 'package:ndu_project/screens/execution_plan_stakeholder_identification_screen.dart';
+import 'package:ndu_project/screens/execution_plan_communication_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_infrastructure_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_construction_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_agile_delivery_plan_screen.dart';
+import 'package:ndu_project/screens/execution_plan_details_screen.dart';
+import 'package:ndu_project/screens/two_factor_verification_screen.dart';
+import 'package:ndu_project/screens/business_system_integrations_screen.dart';
+import 'package:ndu_project/screens/project_plan_subsections_screen.dart';
+import 'package:ndu_project/screens/agile_delivery_model_screen.dart';
+import 'package:ndu_project/screens/agile_kanban_config_screen.dart';
+import 'package:ndu_project/screens/agile_acceptance_criteria_screen.dart';
+import 'package:ndu_project/screens/agile_epics_features_screen.dart';
+import 'package:ndu_project/screens/agile_scrum_config_screen.dart';
+import 'package:ndu_project/screens/agile_capacity_planning_screen.dart';
+import 'package:ndu_project/screens/agile_metrics_planning_screen.dart';
+import 'package:ndu_project/screens/deliverable_roadmap_subsections_screen.dart';
+import 'package:ndu_project/screens/organization_plan_subsections_screen.dart';
+import 'package:ndu_project/screens/startup_planning_subsections_screen.dart';
+import 'package:ndu_project/screens/startup_planning_screen.dart';
+import 'package:ndu_project/screens/agile_backlog_governance_screen.dart';
+import 'package:ndu_project/screens/agile_sprint_calendar_screen.dart';
+import 'package:ndu_project/screens/agile_team_structure_screen.dart';
+import 'package:ndu_project/screens/mfa_enrollment_screen.dart';
+import 'package:ndu_project/screens/recovery_codes_screen.dart';
+import 'package:ndu_project/screens/project_activities_log_screen.dart';
+import 'package:ndu_project/screens/basic_plan_dashboard_screen.dart';
+import 'package:ndu_project/screens/admin/admin_pricing_config_screen.dart';
+import 'package:ndu_project/screens/execution_plan_interface_management_screen.dart';
+import 'package:ndu_project/screens/design_deliverables_screen.dart';
+import 'package:ndu_project/screens/design_planning_screen.dart';
+import 'package:ndu_project/screens/partner_screen.dart';
+import 'package:ndu_project/screens/how_it_works_screen.dart';
+import 'package:ndu_project/screens/use_cases_screen.dart';
+import 'package:ndu_project/screens/landing/landing_page_screen.dart';
+import 'package:ndu_project/screens/execution_plan_solutions_screen.dart';
+import 'package:ndu_project/screens/execution_issue_management_screen.dart';
+import 'package:ndu_project/screens/finalize_project_screen.dart';
+import 'package:ndu_project/screens/commerce_viability_screen.dart';
+import 'package:ndu_project/screens/team_handover_screen.dart';
+import 'package:ndu_project/screens/scope_tracking_plan_screen.dart';
+import 'package:ndu_project/screens/salvage_disposal_team_screen.dart';
+import 'package:ndu_project/screens/risk_tracking_screen.dart';
+import 'package:ndu_project/screens/recognition_awards_screen.dart';
+import 'package:ndu_project/screens/agile_sprint_reviews_screen.dart';
+import 'package:ndu_project/screens/agile_retrospectives_screen.dart';
+import 'package:ndu_project/screens/agile_roadmap_screen.dart';
+import 'package:ndu_project/screens/agile_daily_standups_screen.dart';
+import 'package:ndu_project/screens/agile_iteration_management_screen.dart';
+import 'package:ndu_project/screens/agile_risks_screen.dart';
+import 'package:ndu_project/screens/agile_metrics_screen.dart';
+import 'package:ndu_project/screens/agile_kanban_board_screen.dart';
+import 'package:ndu_project/screens/agile_ai_coach_screen.dart';
+import 'package:ndu_project/screens/agile_dashboard_screen.dart';
+import 'package:ndu_project/screens/agile_project_baseline_screen.dart';
+import 'package:ndu_project/screens/document_review_matrix_screen.dart';
+import 'package:ndu_project/screens/specialized_design_screen.dart';
+import 'package:ndu_project/screens/planning_procurement_v2_screen.dart';
+import 'package:ndu_project/screens/project_team_activities_screen.dart';
+import 'package:ndu_project/screens/technology_inventory_screen.dart';
 
 // Admin (used in admin main entry)
 import 'package:ndu_project/screens/admin/admin_home_screen.dart';
@@ -271,6 +364,108 @@ class AppRoutes {
   static const privacyPolicy = 'privacy-policy';
   static const termsConditions = 'terms-conditions';
 
+  // Workspace dashboards & remaining pages (unique URLs for every page)
+  static const regularProjectDashboard = 'regular-project-dashboard';
+  static const projectCommandCenter = 'project-command-center';
+  static const programDashboardMobile = 'program-dashboard-mobile';
+  static const projectBaseline = 'project-baseline';
+  static const scheduleScreen = 'schedule-screen';
+  static const agileProjectHub = 'agile-project-hub';
+  static const agileReleasePlan = 'agile-release-plan';
+  static const teamStatusCheck = 'team-status-check';
+  static const adminContent = 'admin-content';
+  static const adminHints = 'admin-hints';
+  static const adminDashboard = 'admin-dashboard';
+  static const userManagement = 'user-management';
+  static const punchlistActions = 'punchlist-actions';
+  static const aiRecommendations = 'ai-recommendations';
+  static const technologyDefinitions = 'technology-definitions';
+  static const externalIntegrations = 'external-integrations';
+  static const aiIntegrations = 'ai-integrations';
+  static const qualityManagement = 'quality-management';
+  static const safetyFullView = 'safety-full-view';
+  static const gapAnalysisScopeReconcillation = 'gap-analysis-scope-reconciliation';
+  static const projectWorkspaceDashboard = 'project-workspace-dashboard';
+  static const groupIntoPortfolio = 'group-into-portfolio';
+  static const actualVsPlannedGapAnalysis = 'actual-vs-planned-gap-analysis';
+  static const deliverablesRoadmapDetailed = 'deliverables-roadmap-detailed';
+  static const executionEnablingWorkPlan = 'execution-enabling-work-plan';
+  static const executionPlanBestPractices = 'execution-plan-best-practices';
+  static const executionPlanLessonsLearned = 'execution-plan-lessons-learned';
+  static const executionPlanStakeholderIdentification = 'execution-plan-stakeholder-identification';
+  static const executionPlanCommunicationPlan = 'execution-plan-communication-plan';
+  static const executionPlanInfrastructurePlan = 'execution-plan-infrastructure-plan';
+  static const executionPlanInterfaceManagementPlan = 'execution-plan-interface-management-plan';
+  static const executionPlanConstructionPlan = 'execution-plan-construction-plan';
+  static const executionPlanAgileDeliveryPlan = 'execution-plan-agile-delivery-plan';
+  static const executionPlanDetails = 'execution-plan-details';
+  static const twoFactorVerification = 'two-factor-verification';
+  static const businessSystemIntegrations = 'business-system-integrations';
+  static const projectPlanLevel1Schedule = 'project-plan-level-1-schedule';
+  static const agileBacklogGovernance = 'agile-backlog-governance';
+  static const agileSprintCalendar = 'agile-sprint-calendar';
+  static const agileTeamStructure = 'agile-team-structure';
+  static const mfaEnrollment = 'mfa-enrollment';
+  static const recoveryCodes = 'recovery-codes';
+  static const projectActivitiesLog = 'project-activities-log';
+  static const basicPlanDashboard = 'basic-plan-dashboard';
+  static const adminPricingConfig = 'admin-pricing-config';
+  static const executionPlanInterfaceManagement = 'execution-interface-management';
+  static const projectPlanDetailedSchedule = 'project-plan-detailed-schedule';
+  static const projectPlanCondensedSummary = 'project-plan-condensed-summary';
+  static const agileDeliveryModel = 'agile-delivery-model';
+  static const agileKanbanConfig = 'agile-kanban-config';
+  static const agileAcceptanceCriteria = 'agile-acceptance-criteria';
+  static const agileEpicsFeatures = 'agile-epics-features';
+  static const agileScrumConfig = 'agile-scrum-config';
+  static const agileCapacityPlanning = 'agile-capacity-planning';
+  static const agileMetricsPlanning = 'agile-metrics-planning';
+  static const deliverableRoadmapAgileMapOut = 'deliverable-roadmap-agile-map-out';
+  static const organizationRolesResponsibilities = 'organization-roles-responsibilities';
+  static const organizationRaciMatrix = 'organization-raci-matrix';
+  static const organizationStaffingPlan = 'organization-staffing-plan';
+  static const startupPlanningOperations = 'startup-planning-operations';
+  static const startupPlanningHypercare = 'startup-planning-hypercare';
+  static const startupPlanningDevOps = 'startup-planning-devops';
+  static const startupPlanningCloseOutPlan = 'startup-planning-closeout-plan';
+  static const startupPlanning = 'startup-planning';
+  static const interfaceManagement = 'interface-management';
+  static const planningRequirements = 'planning-requirements';
+  static const designDeliverables = 'design-deliverables';
+  static const designPlanning = 'design-planning';
+  static const partner = 'partner';
+  static const howItWorks = 'how-it-works';
+  static const useCases = 'use-cases';
+  static const landingPageScreen = 'landing-page-screen';
+  static const projectDetails = 'project-details';
+  static const executionPlanSolutions = 'execution-plan-solutions';
+  static const executionIssueManagement = 'execution-issue-management';
+  static const finalizeProject = 'finalize-project';
+  static const commerceViability = 'commerce-viability';
+  static const teamHandover = 'team-handover';
+  static const scopeTrackingPlan = 'scope-tracking-plan';
+  static const salvageDisposalTeam = 'salvage-disposal-team';
+  static const riskTrackingScreen = 'risk-tracking-screen';
+  static const recognitionAwards = 'recognition-awards';
+  static const agileSprintReviews = 'agile-sprint-reviews';
+  static const agileRetrospectives = 'agile-retrospectives';
+  static const agileRoadmap = 'agile-roadmap';
+  static const agileDailyStandups = 'agile-daily-standups';
+  static const agileIterationManagement = 'agile-iteration-management';
+  static const agileRisks = 'agile-risks';
+  static const agileMetrics = 'agile-metrics';
+  static const agileKanbanBoard = 'agile-kanban-board';
+  static const agileAiCoach = 'agile-ai-coach';
+  static const agileDashboard = 'agile-dashboard';
+  static const agileProjectBaseline = 'agile-project-baseline';
+  static const documentReviewMatrix = 'document-review-matrix';
+  static const specializedDesign = 'specialized-design';
+  static const createContract = 'create-contract';
+  static const planningProcurement = 'planning-procurement';
+  static const projectTeamActivities = 'project-team-activities';
+  static const technologyInventory = 'technology-inventory';
+  static const costEstimateScreen = 'cost-estimate-screen';
+
   // SSHER suite
   static const ssherStacked = 'ssher-stacked';
   static const ssher1 = 'ssher-1';
@@ -300,9 +495,88 @@ String? _adminHostGuard(User? user) {
   return null;
 }
 
+/// Detects route-table collisions that would break deep linking.
+///
+/// go_router only rejects duplicate *sibling* paths at construction time; two
+/// routes in different parents can still resolve to the same full path and
+/// silently shadow each other. This walks the whole tree (including nested
+/// [GoRoute]s under shells) and returns a human-readable description of the
+/// first violation, or `null` when the table is valid.
+///
+/// Used as a runtime guard by [AppRouter] and exercised directly by the
+/// router tests.
+String? routeTableViolation(List<RouteBase> routes) {
+  final fullPaths = <String, List<String>>{};
+  final names = <String, String>{};
+  final nameConflicts = <String>[];
+
+  void walk(RouteBase route, String parent) {
+    final segment = route is GoRoute ? route.path : null;
+    final full = segment == null
+        ? parent
+        : '$parent/$segment'.replaceAll(RegExp(r'/+'), '/');
+    if (route is GoRoute) {
+      final label = route.name ??
+          (parent.isEmpty ? '<unnamed>' : '$parent/<unnamed>');
+      // Guard against empty/absent segments: an empty child path would
+      // resolve to the parent's own full path and be miscounted as a
+      // collision. (This go_router version rejects empty paths, but keep the
+      // walk defensive against future variants.)
+      if (segment != null && segment.isNotEmpty) {
+        fullPaths.putIfAbsent(full, () => <String>[]).add(label);
+      }
+      final name = route.name;
+      if (name != null && name.isNotEmpty) {
+        final existing = names[name];
+        if (existing != null && existing != full) {
+          nameConflicts.add('"$name" registered for both "$existing" and "$full"');
+        } else {
+          names[name] = full;
+        }
+      }
+    }
+    for (final sub in route.routes) {
+      walk(sub, segment == null ? parent : full);
+    }
+  }
+
+  for (final route in routes) {
+    walk(route, '');
+  }
+
+  final collisions = fullPaths.entries
+      .where((entry) => entry.value.length > 1)
+      .map((entry) => '  ${entry.key} -> ${entry.value.join(', ')}')
+      .toList()
+    ..sort();
+  if (collisions.isNotEmpty) {
+    return 'duplicate full paths across the route tree:\n'
+        '${collisions.join('\n')}\n'
+        'Fix the collisions so every deep link resolves to a single screen.';
+  }
+  if (nameConflicts.isNotEmpty) {
+    return 'duplicate route names: ${nameConflicts.join('; ')}';
+  }
+  return null;
+}
+
+/// Builds a [GoRouter] and runs [routeTableViolation] over its configuration.
+///
+/// Throws a [StateError] in debug and release builds when the route table is
+/// invalid, so a misconfigured deep link fails loudly at startup instead of
+/// 404ing or shadowing another page at runtime.
+GoRouter _guardedRouter(String routerId, GoRouter Function() build) {
+  final router = build();
+  final violation = routeTableViolation(router.configuration.routes);
+  if (violation != null) {
+    throw StateError('GoRouter "$routerId" rejected: $violation');
+  }
+  return router;
+}
+
 class AppRouter {
   // The primary router for the end-user app
-  static final GoRouter main = GoRouter(
+  static final GoRouter main = _guardedRouter('main', () => GoRouter(
     debugLogDiagnostics: kDebugMode,
     initialLocation: PlatformRouter.getInitialRoute(),
     redirect: (context, state) async {
@@ -521,7 +795,7 @@ class AppRouter {
       GoRoute(
         name: AppRoutes.coreStakeholders,
         path: '/${AppRoutes.coreStakeholders}',
-        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const CoreStakeholdersScreen(notes: '', solutions: [])),
+        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const CoreStakeholdersScreen(notes: '', solutions: []))),
       ),
 
       // FEP cluster
@@ -532,7 +806,7 @@ class AppRouter {
       GoRoute(
           name: AppRoutes.fepWorkspace,
           path: '/${AppRoutes.fepWorkspace}',
-          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const FrontEndPlanningWorkspaceScreen())),
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const FrontEndPlanningWorkspaceScreen()))),
       GoRoute(
           name: AppRoutes.fepRequirements,
           path: '/${AppRoutes.fepRequirements}',
@@ -613,14 +887,14 @@ class AppRouter {
       GoRoute(
         name: AppRoutes.projectDecisionSummary,
         path: '/${AppRoutes.projectDecisionSummary}',
-        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: ProjectDecisionSummaryScreen(
+        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, ProjectDecisionSummaryScreen(
           projectName: 'Untitled Project',
           selectedSolution: AiSolutionItem(
               title: 'TBD Solution', description: 'Draft placeholder'),
           allSolutions: const [],
           businessCase: '',
           notes: '',
-        )),
+        ))),
       ),
       GoRoute(
           name: AppRoutes.progressTracking,
@@ -653,7 +927,7 @@ class AppRouter {
       GoRoute(
         name: AppRoutes.costAnalysis,
         path: '/${AppRoutes.costAnalysis}',
-        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const CostAnalysisScreen(notes: '', solutions: [])),
+        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const CostAnalysisScreen(notes: '', solutions: []))),
       ),
       GoRoute(
           name: AppRoutes.potentialSolutions,
@@ -662,8 +936,8 @@ class AppRouter {
       GoRoute(
         name: AppRoutes.preferredSolutionAnalysis,
         path: '/${AppRoutes.preferredSolutionAnalysis}',
-        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const PreferredSolutionAnalysisScreen(
-            notes: '', solutions: [], businessCase: '')),
+        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const PreferredSolutionAnalysisScreen(
+            notes: '', solutions: [], businessCase: ''))),
       ),
       GoRoute(
           name: AppRoutes.riskAssessment,
@@ -672,7 +946,7 @@ class AppRouter {
       GoRoute(
         name: AppRoutes.riskIdentification,
         path: '/${AppRoutes.riskIdentification}',
-        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const RiskIdentificationScreen(notes: '', solutions: [])),
+        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const RiskIdentificationScreen(notes: '', solutions: []))),
       ),
       GoRoute(
           name: AppRoutes.issueManagement,
@@ -689,7 +963,7 @@ class AppRouter {
       GoRoute(
           name: AppRoutes.contractDetails,
           path: '/${AppRoutes.contractDetails}',
-          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: ContractDetailsDashboardScreen())),
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ContractDetailsDashboardScreen())),
       GoRoute(
           name: AppRoutes.scheduleManagementBoard,
           path: '/${AppRoutes.scheduleManagementBoard}',
@@ -738,12 +1012,12 @@ class AppRouter {
       GoRoute(
         name: AppRoutes.infrastructureConsiderations,
         path: '/${AppRoutes.infrastructureConsiderations}',
-        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const InfrastructureConsiderationsScreen(notes: '', solutions: [])),
+        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const InfrastructureConsiderationsScreen(notes: '', solutions: []))),
       ),
       GoRoute(
         name: AppRoutes.itConsiderations,
         path: '/${AppRoutes.itConsiderations}',
-        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ITConsiderationsScreen(notes: '', solutions: [])),
+        pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const ITConsiderationsScreen(notes: '', solutions: []))),
       ),
       GoRoute(
           name: AppRoutes.securityManagement,
@@ -809,7 +1083,7 @@ class AppRouter {
       GoRoute(
           name: AppRoutes.projectCloseOut,
           path: '/${AppRoutes.projectCloseOut}',
-          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectCloseOutScreen())),
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const ProjectCloseOutScreen()))),
       GoRoute(
           name: AppRoutes.demobilizeTeam,
           path: '/${AppRoutes.demobilizeTeam}',
@@ -906,6 +1180,408 @@ class AppRouter {
           name: AppRoutes.termsConditions,
           path: '/${AppRoutes.termsConditions}',
           pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const TermsConditionsScreen())),
+      // Workspace dashboards & remaining pages
+      GoRoute(
+          name: AppRoutes.regularProjectDashboard,
+          path: '/${AppRoutes.regularProjectDashboard}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const RegularProjectDashboardScreen())),
+      GoRoute(
+          name: AppRoutes.projectCommandCenter,
+          path: '/${AppRoutes.projectCommandCenter}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectCommandCenterScreen())),
+      GoRoute(
+          name: AppRoutes.programDashboardMobile,
+          path: '/${AppRoutes.programDashboardMobile}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProgramDashboardMobileScreen())),
+      GoRoute(
+          name: AppRoutes.projectBaseline,
+          path: '/${AppRoutes.projectBaseline}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectBaselineScreen())),
+      GoRoute(
+          name: AppRoutes.scheduleScreen,
+          path: '/${AppRoutes.scheduleScreen}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ScheduleScreen())),
+      GoRoute(
+          name: AppRoutes.agileProjectHub,
+          path: '/${AppRoutes.agileProjectHub}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileProjectHubScreen())),
+      GoRoute(
+          name: AppRoutes.agileReleasePlan,
+          path: '/${AppRoutes.agileReleasePlan}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileReleasePlanScreen())),
+      GoRoute(
+          name: AppRoutes.teamStatusCheck,
+          path: '/${AppRoutes.teamStatusCheck}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const TeamStatusCheckScreen())),
+      GoRoute(
+          name: AppRoutes.adminContent,
+          path: '/${AppRoutes.adminContent}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AdminContentScreen())),
+      GoRoute(
+          name: AppRoutes.adminHints,
+          path: '/${AppRoutes.adminHints}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AdminHintsScreen())),
+      GoRoute(
+          name: AppRoutes.adminDashboard,
+          path: '/${AppRoutes.adminDashboard}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AdminDashboardScreen())),
+      GoRoute(
+          name: AppRoutes.userManagement,
+          path: '/${AppRoutes.userManagement}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const UserManagementScreen())),
+      GoRoute(
+          name: AppRoutes.punchlistActions,
+          path: '/${AppRoutes.punchlistActions}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const PunchlistActionsScreen())),
+      GoRoute(
+          name: AppRoutes.aiRecommendations,
+          path: '/${AppRoutes.aiRecommendations}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AiRecommendationsScreen())),
+      GoRoute(
+          name: AppRoutes.technologyDefinitions,
+          path: '/${AppRoutes.technologyDefinitions}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const TechnologyDefinitionsScreen())),
+      GoRoute(
+          name: AppRoutes.externalIntegrations,
+          path: '/${AppRoutes.externalIntegrations}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExternalIntegrationsScreen())),
+      GoRoute(
+          name: AppRoutes.aiIntegrations,
+          path: '/${AppRoutes.aiIntegrations}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AiIntegrationsScreen())),
+      GoRoute(
+          name: AppRoutes.qualityManagement,
+          path: '/${AppRoutes.qualityManagement}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const QualityManagementScreen())),
+      GoRoute(
+          name: AppRoutes.safetyFullView,
+          path: '/${AppRoutes.safetyFullView}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const SafetyFullViewScreen(
+              columns: [], initialRows: [], accentColor: Color(0xFF34A853), detailsText: '')))),
+      GoRoute(
+          name: AppRoutes.gapAnalysisScopeReconcillation,
+          path: '/${AppRoutes.gapAnalysisScopeReconcillation}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const GapAnalysisScopeReconcillationScreen())),
+      GoRoute(
+          name: AppRoutes.projectWorkspaceDashboard,
+          path: '/${AppRoutes.projectWorkspaceDashboard}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const ProjectWorkspaceDashboardScreen(isBasicPlan: false)))),
+      GoRoute(
+          name: AppRoutes.groupIntoPortfolio,
+          path: '/${AppRoutes.groupIntoPortfolio}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const GroupIntoPortfolioScreen(projects: [])))),
+      GoRoute(
+          name: AppRoutes.actualVsPlannedGapAnalysis,
+          path: '/${AppRoutes.actualVsPlannedGapAnalysis}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ActualVsPlannedGapAnalysisScreen())),
+      GoRoute(
+          name: AppRoutes.deliverablesRoadmapDetailed,
+          path: '/${AppRoutes.deliverablesRoadmapDetailed}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const DeliverablesRoadmapDetailedScreen())),
+      GoRoute(
+          name: AppRoutes.executionEnablingWorkPlan,
+          path: '/${AppRoutes.executionEnablingWorkPlan}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionEnablingWorkPlanScreen())),
+      GoRoute(
+          name: AppRoutes.executionPlanBestPractices,
+          path: '/${AppRoutes.executionPlanBestPractices}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanBestPracticesScreen())),
+      GoRoute(
+          name: AppRoutes.executionPlanLessonsLearned,
+          path: '/${AppRoutes.executionPlanLessonsLearned}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanLessonsLearnedScreen())),
+      GoRoute(
+          name: AppRoutes.executionPlanStakeholderIdentification,
+          path: '/${AppRoutes.executionPlanStakeholderIdentification}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanStakeholderIdentificationScreen())),
+      GoRoute(
+          name: AppRoutes.executionPlanCommunicationPlan,
+          path: '/${AppRoutes.executionPlanCommunicationPlan}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanCommunicationPlanScreen())),
+      GoRoute(
+          name: AppRoutes.executionPlanInfrastructurePlan,
+          path: '/${AppRoutes.executionPlanInfrastructurePlan}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanInfrastructurePlanScreen())),
+      GoRoute(
+          name: AppRoutes.executionPlanInterfaceManagementPlan,
+          path: '/${AppRoutes.executionPlanInterfaceManagementPlan}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanInterfaceManagementPlanScreen())),
+      GoRoute(
+          name: AppRoutes.executionPlanConstructionPlan,
+          path: '/${AppRoutes.executionPlanConstructionPlan}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanConstructionPlanScreen())),
+      GoRoute(
+          name: AppRoutes.executionPlanAgileDeliveryPlan,
+          path: '/${AppRoutes.executionPlanAgileDeliveryPlan}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanAgileDeliveryPlanScreen())),
+      GoRoute(
+          name: AppRoutes.executionPlanDetails,
+          path: '/${AppRoutes.executionPlanDetails}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanDetailsScreen())),
+      GoRoute(
+          name: AppRoutes.twoFactorVerification,
+          path: '/${AppRoutes.twoFactorVerification}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const TwoFactorVerificationScreen(email: '')))),
+      GoRoute(
+          name: AppRoutes.businessSystemIntegrations,
+          path: '/${AppRoutes.businessSystemIntegrations}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const BusinessSystemIntegrationsScreen(programId: '')))),
+      GoRoute(
+          name: AppRoutes.projectPlanLevel1Schedule,
+          path: '/${AppRoutes.projectPlanLevel1Schedule}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectPlanLevel1ScheduleScreen())),
+      GoRoute(
+          name: AppRoutes.agileBacklogGovernance,
+          path: '/${AppRoutes.agileBacklogGovernance}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileBacklogGovernanceScreen())),
+      GoRoute(
+          name: AppRoutes.agileSprintCalendar,
+          path: '/${AppRoutes.agileSprintCalendar}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileSprintCalendarScreen())),
+      GoRoute(
+          name: AppRoutes.agileTeamStructure,
+          path: '/${AppRoutes.agileTeamStructure}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileTeamStructureScreen())),
+      GoRoute(
+          name: AppRoutes.mfaEnrollment,
+          path: '/${AppRoutes.mfaEnrollment}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const MfaEnrollmentScreen())),
+      GoRoute(
+          name: AppRoutes.recoveryCodes,
+          path: '/${AppRoutes.recoveryCodes}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const RecoveryCodesScreen())),
+      GoRoute(
+          name: AppRoutes.projectActivitiesLog,
+          path: '/${AppRoutes.projectActivitiesLog}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectActivitiesLogScreen())),
+      GoRoute(
+          name: AppRoutes.basicPlanDashboard,
+          path: '/${AppRoutes.basicPlanDashboard}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const BasicPlanDashboardScreen())),
+      GoRoute(
+          name: AppRoutes.adminPricingConfig,
+          path: '/${AppRoutes.adminPricingConfig}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AdminPricingConfigScreen())),
+      GoRoute(
+          name: AppRoutes.executionPlanInterfaceManagement,
+          path: '/${AppRoutes.executionPlanInterfaceManagement}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanInterfaceManagementScreen())),
+      GoRoute(
+          name: AppRoutes.projectPlanDetailedSchedule,
+          path: '/${AppRoutes.projectPlanDetailedSchedule}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectPlanDetailedScheduleScreen())),
+      GoRoute(
+          name: AppRoutes.projectPlanCondensedSummary,
+          path: '/${AppRoutes.projectPlanCondensedSummary}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectPlanCondensedSummaryScreen())),
+      GoRoute(
+          name: AppRoutes.agileDeliveryModel,
+          path: '/${AppRoutes.agileDeliveryModel}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileDeliveryModelScreen())),
+      GoRoute(
+          name: AppRoutes.agileKanbanConfig,
+          path: '/${AppRoutes.agileKanbanConfig}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileKanbanConfigScreen())),
+      GoRoute(
+          name: AppRoutes.agileAcceptanceCriteria,
+          path: '/${AppRoutes.agileAcceptanceCriteria}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileAcceptanceCriteriaScreen())),
+      GoRoute(
+          name: AppRoutes.agileEpicsFeatures,
+          path: '/${AppRoutes.agileEpicsFeatures}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileEpicsFeaturesScreen())),
+      GoRoute(
+          name: AppRoutes.agileScrumConfig,
+          path: '/${AppRoutes.agileScrumConfig}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileScrumConfigScreen())),
+      GoRoute(
+          name: AppRoutes.agileCapacityPlanning,
+          path: '/${AppRoutes.agileCapacityPlanning}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileCapacityPlanningScreen())),
+      GoRoute(
+          name: AppRoutes.agileMetricsPlanning,
+          path: '/${AppRoutes.agileMetricsPlanning}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileMetricsPlanningScreen())),
+      GoRoute(
+          name: AppRoutes.deliverableRoadmapAgileMapOut,
+          path: '/${AppRoutes.deliverableRoadmapAgileMapOut}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const DeliverableRoadmapAgileMapOutScreen())),
+      GoRoute(
+          name: AppRoutes.organizationRolesResponsibilities,
+          path: '/${AppRoutes.organizationRolesResponsibilities}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const OrganizationRolesResponsibilitiesScreen())),
+      GoRoute(
+          name: AppRoutes.organizationRaciMatrix,
+          path: '/${AppRoutes.organizationRaciMatrix}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const OrganizationRaciMatrixScreen())),
+      GoRoute(
+          name: AppRoutes.organizationStaffingPlan,
+          path: '/${AppRoutes.organizationStaffingPlan}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const OrganizationStaffingPlanScreen())),
+      GoRoute(
+          name: AppRoutes.startupPlanningOperations,
+          path: '/${AppRoutes.startupPlanningOperations}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const StartUpPlanningOperationsScreen())),
+      GoRoute(
+          name: AppRoutes.startupPlanningHypercare,
+          path: '/${AppRoutes.startupPlanningHypercare}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const StartUpPlanningHypercareScreen())),
+      GoRoute(
+          name: AppRoutes.startupPlanningDevOps,
+          path: '/${AppRoutes.startupPlanningDevOps}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const StartUpPlanningDevOpsScreen())),
+      GoRoute(
+          name: AppRoutes.startupPlanningCloseOutPlan,
+          path: '/${AppRoutes.startupPlanningCloseOutPlan}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const StartUpPlanningCloseOutPlanScreen())),
+      GoRoute(
+          name: AppRoutes.startupPlanning,
+          path: '/${AppRoutes.startupPlanning}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const StartUpPlanningScreen())),
+      GoRoute(
+          name: AppRoutes.interfaceManagement,
+          path: '/${AppRoutes.interfaceManagement}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const InterfaceManagementScreen())),
+      GoRoute(
+          name: AppRoutes.planningRequirements,
+          path: '/${AppRoutes.planningRequirements}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const PlanningRequirementsScreen())),
+      GoRoute(
+          name: AppRoutes.designDeliverables,
+          path: '/${AppRoutes.designDeliverables}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const DesignDeliverablesScreen())),
+      GoRoute(
+          name: AppRoutes.designPlanning,
+          path: '/${AppRoutes.designPlanning}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const DesignPlanningScreen())),
+      GoRoute(
+          name: AppRoutes.partner,
+          path: '/${AppRoutes.partner}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const PartnerScreen())),
+      GoRoute(
+          name: AppRoutes.howItWorks,
+          path: '/${AppRoutes.howItWorks}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const HowItWorksScreen())),
+      GoRoute(
+          name: AppRoutes.useCases,
+          path: '/${AppRoutes.useCases}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const UseCasesScreen())),
+      GoRoute(
+          name: AppRoutes.landingPageScreen,
+          path: '/${AppRoutes.landingPageScreen}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const LandingPageScreen())),
+      GoRoute(
+          name: AppRoutes.projectDetails,
+          path: '/${AppRoutes.projectDetails}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectDetailsScreen())),
+      GoRoute(
+          name: AppRoutes.executionPlanSolutions,
+          path: '/${AppRoutes.executionPlanSolutions}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionPlanSolutionsScreen())),
+      GoRoute(
+          name: AppRoutes.executionIssueManagement,
+          path: '/${AppRoutes.executionIssueManagement}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ExecutionIssueManagementScreen())),
+      GoRoute(
+          name: AppRoutes.finalizeProject,
+          path: '/${AppRoutes.finalizeProject}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const FinalizeProjectScreen())),
+      GoRoute(
+          name: AppRoutes.commerceViability,
+          path: '/${AppRoutes.commerceViability}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const CommerceViabilityScreen())),
+      GoRoute(
+          name: AppRoutes.teamHandover,
+          path: '/${AppRoutes.teamHandover}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const TeamHandoverScreen())),
+      GoRoute(
+          name: AppRoutes.scopeTrackingPlan,
+          path: '/${AppRoutes.scopeTrackingPlan}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ScopeTrackingPlanScreen())),
+      GoRoute(
+          name: AppRoutes.salvageDisposalTeam,
+          path: '/${AppRoutes.salvageDisposalTeam}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const SalvageDisposalTeamScreen())),
+      GoRoute(
+          name: AppRoutes.riskTrackingScreen,
+          path: '/${AppRoutes.riskTrackingScreen}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const RiskTrackingScreen())),
+      GoRoute(
+          name: AppRoutes.recognitionAwards,
+          path: '/${AppRoutes.recognitionAwards}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const RecognitionAwardsScreen())),
+      GoRoute(
+          name: AppRoutes.agileSprintReviews,
+          path: '/${AppRoutes.agileSprintReviews}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileSprintReviewsScreen())),
+      GoRoute(
+          name: AppRoutes.agileRetrospectives,
+          path: '/${AppRoutes.agileRetrospectives}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileRetrospectivesScreen())),
+      GoRoute(
+          name: AppRoutes.agileRoadmap,
+          path: '/${AppRoutes.agileRoadmap}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileRoadmapScreen())),
+      GoRoute(
+          name: AppRoutes.agileDailyStandups,
+          path: '/${AppRoutes.agileDailyStandups}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileDailyStandupsScreen())),
+      GoRoute(
+          name: AppRoutes.agileIterationManagement,
+          path: '/${AppRoutes.agileIterationManagement}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileIterationManagementScreen())),
+      GoRoute(
+          name: AppRoutes.agileRisks,
+          path: '/${AppRoutes.agileRisks}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileRisksScreen())),
+      GoRoute(
+          name: AppRoutes.agileMetrics,
+          path: '/${AppRoutes.agileMetrics}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileMetricsScreen())),
+      GoRoute(
+          name: AppRoutes.agileKanbanBoard,
+          path: '/${AppRoutes.agileKanbanBoard}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileKanbanBoardScreen())),
+      GoRoute(
+          name: AppRoutes.agileAiCoach,
+          path: '/${AppRoutes.agileAiCoach}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileAiCoachScreen())),
+      GoRoute(
+          name: AppRoutes.agileDashboard,
+          path: '/${AppRoutes.agileDashboard}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileDashboardScreen())),
+      GoRoute(
+          name: AppRoutes.agileProjectBaseline,
+          path: '/${AppRoutes.agileProjectBaseline}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const AgileProjectBaselineScreen())),
+      GoRoute(
+          name: AppRoutes.documentReviewMatrix,
+          path: '/${AppRoutes.documentReviewMatrix}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const DocumentReviewMatrixScreen())),
+      GoRoute(
+          name: AppRoutes.specializedDesign,
+          path: '/${AppRoutes.specializedDesign}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const SpecializedDesignScreen())),
+      GoRoute(
+          name: AppRoutes.createContract,
+          path: '/${AppRoutes.createContract}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: _extraOr(s, const CreateContractScreen()))),
+      GoRoute(
+          name: AppRoutes.planningProcurement,
+          path: '/${AppRoutes.planningProcurement}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const PlanningProcurementV2Screen())),
+      GoRoute(
+          name: AppRoutes.projectTeamActivities,
+          path: '/${AppRoutes.projectTeamActivities}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const ProjectTeamActivitiesScreen())),
+      GoRoute(
+          name: AppRoutes.technologyInventory,
+          path: '/${AppRoutes.technologyInventory}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const TechnologyInventoryScreen())),
+      GoRoute(
+          name: AppRoutes.costEstimateScreen,
+          path: '/${AppRoutes.costEstimateScreen}',
+          pageBuilder: (c, s) => shimmerTransitionPage(state: s, child: const CostEstimateScreen())),
       // SSHER suite
       GoRoute(
           name: AppRoutes.ssherStacked,
@@ -932,10 +1608,10 @@ class AppRouter {
     errorBuilder: (context, state) {
       return _RouteNotFound(path: state.uri.toString());
     },
-  );
+  ));
 
   // Admin router: used by lib/main_admin.dart
-  static final GoRouter admin = GoRouter(
+  static final GoRouter admin = _guardedRouter('admin', () => GoRouter(
     debugLogDiagnostics: kDebugMode,
     initialLocation: '/',
     redirect: (context, state) {
@@ -1040,7 +1716,7 @@ class AppRouter {
     ],
     errorBuilder: (context, state) =>
         _RouteNotFound(path: state.uri.toString()),
-  );
+  ));
 
   // ── Helpers for the activity auto-logger ──────────────────────────────────
 
@@ -1064,6 +1740,9 @@ class AppRouter {
     if (path == '/dashboard') return ('Project Dashboard', 'Initiation');
     if (path == '/program-dashboard') return ('Program Dashboard', 'Program');
     if (path == '/portfolio-dashboard') return ('Portfolio Dashboard', 'Portfolio');
+    if (path == '/regular-project-dashboard') return ('Regular Projects', 'Project');
+    if (path == '/project-command-center') return ('Project Command Center', 'Project');
+    if (path == '/program-dashboard-mobile') return ('Program Dashboard', 'Program');
 
     // Design phase routes
     if (path.contains('design')) return ('Design Phase', 'Design');
@@ -1116,6 +1795,14 @@ class AppRouter {
       return w[0].toUpperCase() + w.substring(1);
     }).join(' ');
   }
+}
+
+/// Resolves a screen instance passed through GoRouter `extra`, falling back
+/// to [fallback] when the route was opened as a bare deep link (e.g. after a
+/// browser refresh, where `extra` is not preserved).
+T _extraOr<T>(GoRouterState state, T fallback) {
+  final extra = state.extra;
+  return extra is T ? extra : fallback;
 }
 
 class _RouteNotFound extends StatelessWidget {

@@ -4,7 +4,8 @@ class ContractAmendment {
   final String amendmentNumber;
   final String title;
   final String description;
-  final String status; // 'draft' | 'pending_approval' | 'approved' | 'executed' | 'rejected'
+  final String
+      status; // 'draft' | 'pending_approval' | 'approved' | 'executed' | 'rejected'
   final DateTime? approvalDate;
   final String? changeRequestId;
 
@@ -58,7 +59,8 @@ class ContractAmendment {
     }
 
     return ContractAmendment(
-      id: json['id']?.toString() ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id: json['id']?.toString() ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       contractId: json['contractId']?.toString() ?? '',
       amendmentNumber: json['amendmentNumber']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
@@ -77,4 +79,11 @@ class ContractAmendment {
       createdAt: parseDate(json['createdAt']) ?? DateTime.now(),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is ContractAmendment && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

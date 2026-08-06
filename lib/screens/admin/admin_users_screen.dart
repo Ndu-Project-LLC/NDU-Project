@@ -30,11 +30,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: Colors.black),
         ),
-        title: Row(
+        title: const Row(
           children: [
-            const Icon(Icons.people, color: Color(0xFF2196F3), size: 28),
-            const SizedBox(width: 12),
-            const Text('User Management',
+            Icon(Icons.people, color: Color(0xFF2196F3), size: 28),
+            SizedBox(width: 12),
+            Text('User Management',
                 style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -79,14 +79,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   final filteredUsers = _filterUsers(allUsers);
 
                   if (filteredUsers.isEmpty) {
-                    return Center(
+                    return const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.people_outline,
+                          Icon(Icons.people_outline,
                               size: 64, color: Colors.grey),
-                          const SizedBox(height: 16),
-                          const Text('No users found',
+                          SizedBox(height: 16),
+                          Text('No users found',
                               style: TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.w600)),
                         ],
@@ -119,8 +119,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(32, 16, 32, 16),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.05),
-        border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.2))),
+        color: Colors.grey.withValues(alpha: 0.05),
+        border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
       ),
       child: Row(
         children: [
@@ -141,7 +141,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     if (selected) setState(() => _filterBy = filter['value']!);
                   },
                   selectedColor: const Color(0xFFFFC107),
-                  backgroundColor: Colors.grey.withOpacity(0.1),
+                  backgroundColor: Colors.grey.withValues(alpha: 0.1),
                   labelStyle: TextStyle(
                     color: _filterBy == filter['value']
                         ? Colors.black
@@ -283,7 +283,7 @@ class _UserCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -294,7 +294,7 @@ class _UserCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: const Color(0xFFFFC107).withOpacity(0.2),
+                  backgroundColor: const Color(0xFFFFC107).withValues(alpha: 0.2),
                   backgroundImage: user.photoUrl != null
                       ? NetworkImage(user.photoUrl!)
                       : null,
@@ -326,7 +326,7 @@ class _UserCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFC107).withOpacity(0.2),
+                                color: const Color(0xFFFFC107).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Text('ADMIN',
@@ -341,7 +341,7 @@ class _UserCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
+                                color: Colors.red.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Text('INACTIVE',
@@ -363,7 +363,7 @@ class _UserCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Divider(color: Colors.grey.withOpacity(0.2)),
+            Divider(color: Colors.grey.withValues(alpha: 0.2)),
             const SizedBox(height: 16),
             Row(
               children: [

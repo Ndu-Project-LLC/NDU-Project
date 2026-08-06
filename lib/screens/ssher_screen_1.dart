@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/screens/ssher_components.dart';
 import 'package:ndu_project/screens/ssher_screen_2.dart';
 import 'package:ndu_project/widgets/responsive.dart';
@@ -28,7 +29,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  backgroundColor: Colors.grey[50],
  drawer: Drawer(
  width: sidebarWidth,
- child: SafeArea(
+ child: const SafeArea(
  child: InitiationLikeSidebar(
  activeItemLabel: 'SSHE Planning',
  showHeader: true,
@@ -56,7 +57,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
  border:
- Border.all(color: Colors.grey.withOpacity(0.2)),
+ Border.all(color: Colors.grey.withValues(alpha: 0.2)),
  ),
  child: Column(
  children: [
@@ -64,7 +65,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  padding: const EdgeInsets.symmetric(
  horizontal: 20, vertical: 14),
  decoration: BoxDecoration(
- color: Colors.blue.withOpacity(0.08),
+ color: Colors.blue.withValues(alpha: 0.08),
  borderRadius: const BorderRadius.vertical(
  top: Radius.circular(12)),
  ),
@@ -74,7 +75,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  width: 30,
  height: 30,
  decoration: BoxDecoration(
- color: Colors.blue.withOpacity(0.15),
+ color: Colors.blue.withValues(alpha: 0.15),
  shape: BoxShape.circle),
  child: const Icon(Icons.receipt_long,
  size: 18, color: Colors.blue),
@@ -96,7 +97,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  color: Colors.white,
  borderRadius: BorderRadius.circular(8),
  border: Border.all(
- color: Colors.grey.withOpacity(0.25)),
+ color: Colors.grey.withValues(alpha: 0.25)),
  ),
  child: Text(
  'This SSHER plan encompasses comprehensive risk management across all operational domains. Safety protocols focus on workplace injury prevention and emergency response procedures. Security measures address both physical and cyber threats with multi- layered protection strategies. Health initiatives promote employee wellbeing and occupational health standards. Environmental considerations ensure sustainable practices and regulatory compliance. Regulatory frameworks maintain adherence to industry standards and legal requirements .',
@@ -109,9 +110,9 @@ class _SsherScreen1State extends State<SsherScreen1> {
  ),
 
  // Safety section
- SsherSectionCard(
+ const SsherSectionCard(
  leadingIcon: Icons.health_and_safety,
- accentColor: const Color(0xFF34A853),
+ accentColor: Color(0xFF34A853),
  title: 'Safety',
  subtitle:
  'Workplace safety protocols and risk management',
@@ -119,7 +120,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  'Comprehensive safety protocols including personal protective equipment requirements, emergency evacuation procedures, incident reporting systems , and regular safety training programs for all personnel .',
  itemsLabel: '12 Items',
  addButtonLabel: 'Add Safety Item',
- columns: const [
+ columns: [
  '#',
  'Department',
  'Team Member',
@@ -130,46 +131,46 @@ class _SsherScreen1State extends State<SsherScreen1> {
  ],
  rows: [
  [
- const Text('1', style: TextStyle(fontSize: 12)),
- const Text('Operations',
+ Text('1', style: TextStyle(fontSize: 12)),
+ Text('Operations',
  style: TextStyle(fontSize: 13)),
- const Text('Sarah Johnson',
+ Text('Sarah Johnson',
  style: TextStyle(fontSize: 13)),
- const Text('Chemical exposure i...',
+ Text('Chemical exposure i...',
  style: TextStyle(
  fontSize: 13, color: Colors.black87)),
- const RiskBadge.high(),
- const Text('Enhanced ventilation s...',
+ RiskBadge.high(),
+ Text('Enhanced ventilation s...',
  style: TextStyle(fontSize: 13)),
- const ActionButtons(),
+ ActionButtons(),
  ],
  [
- const Text('2', style: TextStyle(fontSize: 12)),
- const Text('Manufacturing',
+ Text('2', style: TextStyle(fontSize: 12)),
+ Text('Manufacturing',
  style: TextStyle(fontSize: 13)),
- const Text('Mike Chen',
+ Text('Mike Chen',
  style: TextStyle(fontSize: 13)),
- const Text('Heavy machinery o...',
+ Text('Heavy machinery o...',
  style: TextStyle(fontSize: 13)),
- const RiskBadge.high(),
- const Text('Operator certification, ...',
+ RiskBadge.high(),
+ Text('Operator certification, ...',
  style: TextStyle(fontSize: 13)),
- const ActionButtons(),
+ ActionButtons(),
  ],
  ],
  ),
 
  // Security header only (as shown in first screenshot)
- SsherSectionCard(
+ const SsherSectionCard(
  leadingIcon: Icons.shield_outlined,
- accentColor: const Color(0xFFEF5350),
+ accentColor: Color(0xFFEF5350),
  title: 'Security',
  subtitle: 'Physical and cyber security measures',
  detailsPlaceholder:
  'Multi- layered security approach including physical access controls, cybersecurity measures, surveillance systems, and incident response',
  itemsLabel: '12 Items',
  addButtonLabel: 'Add Safety Item',
- columns: const [
+ columns: [
  '#',
  'Department',
  'Team Member',
@@ -178,17 +179,14 @@ class _SsherScreen1State extends State<SsherScreen1> {
  'Mitigation Strategy',
  'Actions'
  ],
- rows: const [],
+ rows: [],
  ),
 
  // navigation to next page
  Align(
  alignment: Alignment.centerRight,
  child: ElevatedButton(
- onPressed: () => Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const SsherScreen2())),
+ onPressed: () => context.push('/ssher-2'),
  style: ElevatedButton.styleFrom(
  backgroundColor: const Color(0xFFFFD700),
  foregroundColor: Colors.black,
@@ -244,7 +242,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
  border: Border.all(
- color: Colors.grey.withOpacity(0.2)),
+ color: Colors.grey.withValues(alpha: 0.2)),
  ),
  child: Column(
  children: [
@@ -252,7 +250,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  padding: const EdgeInsets.symmetric(
  horizontal: 20, vertical: 14),
  decoration: BoxDecoration(
- color: Colors.blue.withOpacity(0.08),
+ color: Colors.blue.withValues(alpha: 0.08),
  borderRadius: const BorderRadius.vertical(
  top: Radius.circular(12)),
  ),
@@ -263,7 +261,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  height: 30,
  decoration: BoxDecoration(
  color:
- Colors.blue.withOpacity(0.15),
+ Colors.blue.withValues(alpha: 0.15),
  shape: BoxShape.circle),
  child: const Icon(Icons.receipt_long,
  size: 18, color: Colors.blue),
@@ -285,7 +283,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  color: Colors.white,
  borderRadius: BorderRadius.circular(8),
  border: Border.all(
- color: Colors.grey.withOpacity(0.25)),
+ color: Colors.grey.withValues(alpha: 0.25)),
  ),
  child: Text(
  'This SSHER plan encompasses comprehensive risk management across all operational domains. Safety protocols focus on workplace injury prevention and emergency response procedures. Security measures address both physical and cyber threats with multi- layered protection strategies. Health initiatives promote employee wellbeing and occupational health standards. Environmental considerations ensure sustainable practices and regulatory compliance. Regulatory frameworks maintain adherence to industry standards and legal requirements .',
@@ -298,9 +296,9 @@ class _SsherScreen1State extends State<SsherScreen1> {
  ),
 
  // Safety section
- SsherSectionCard(
+ const SsherSectionCard(
  leadingIcon: Icons.health_and_safety,
- accentColor: const Color(0xFF34A853),
+ accentColor: Color(0xFF34A853),
  title: 'Safety',
  subtitle:
  'Workplace safety protocols and risk management',
@@ -308,7 +306,7 @@ class _SsherScreen1State extends State<SsherScreen1> {
  'Comprehensive safety protocols including personal protective equipment requirements, emergency evacuation procedures, incident reporting systems , and regular safety training programs for all personnel .',
  itemsLabel: '12 Items',
  addButtonLabel: 'Add Safety Item',
- columns: const [
+ columns: [
  '#',
  'Department',
  'Team Member',
@@ -319,46 +317,46 @@ class _SsherScreen1State extends State<SsherScreen1> {
  ],
  rows: [
  [
- const Text('1', style: TextStyle(fontSize: 12)),
- const Text('Operations',
+ Text('1', style: TextStyle(fontSize: 12)),
+ Text('Operations',
  style: TextStyle(fontSize: 13)),
- const Text('Sarah Johnson',
+ Text('Sarah Johnson',
  style: TextStyle(fontSize: 13)),
- const Text('Chemical exposure i...',
+ Text('Chemical exposure i...',
  style: TextStyle(
  fontSize: 13, color: Colors.black87)),
- const RiskBadge.high(),
- const Text('Enhanced ventilation s...',
+ RiskBadge.high(),
+ Text('Enhanced ventilation s...',
  style: TextStyle(fontSize: 13)),
- const ActionButtons(),
+ ActionButtons(),
  ],
  [
- const Text('2', style: TextStyle(fontSize: 12)),
- const Text('Manufacturing',
+ Text('2', style: TextStyle(fontSize: 12)),
+ Text('Manufacturing',
  style: TextStyle(fontSize: 13)),
- const Text('Mike Chen',
+ Text('Mike Chen',
  style: TextStyle(fontSize: 13)),
- const Text('Heavy machinery o...',
+ Text('Heavy machinery o...',
  style: TextStyle(fontSize: 13)),
- const RiskBadge.high(),
- const Text('Operator certification, ...',
+ RiskBadge.high(),
+ Text('Operator certification, ...',
  style: TextStyle(fontSize: 13)),
- const ActionButtons(),
+ ActionButtons(),
  ],
  ],
  ),
 
  // Security header only (as shown in first screenshot)
- SsherSectionCard(
+ const SsherSectionCard(
  leadingIcon: Icons.shield_outlined,
- accentColor: const Color(0xFFEF5350),
+ accentColor: Color(0xFFEF5350),
  title: 'Security',
  subtitle: 'Physical and cyber security measures',
  detailsPlaceholder:
  'Multi- layered security approach including physical access controls, cybersecurity measures, surveillance systems, and incident response',
  itemsLabel: '12 Items',
  addButtonLabel: 'Add Safety Item',
- columns: const [
+ columns: [
  '#',
  'Department',
  'Team Member',
@@ -367,17 +365,14 @@ class _SsherScreen1State extends State<SsherScreen1> {
  'Mitigation Strategy',
  'Actions'
  ],
- rows: const [],
+ rows: [],
  ),
 
  // navigation to next page
  Align(
  alignment: Alignment.centerRight,
  child: ElevatedButton(
- onPressed: () => Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const SsherScreen2())),
+ onPressed: () => context.push('/ssher-2'),
  style: ElevatedButton.styleFrom(
  backgroundColor: const Color(0xFFFFD700),
  foregroundColor: Colors.black,

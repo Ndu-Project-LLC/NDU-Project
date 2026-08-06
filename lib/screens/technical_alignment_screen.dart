@@ -23,11 +23,14 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/design_phase_stable_shell.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ndu_project/routing/app_router.dart';
 
 const double _technicalAlignmentActionColumnWidth = 112;
 const double _technicalAlignmentActionButtonSize = 32;
@@ -395,10 +398,10 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
       debugPrint('Error saving technical alignment: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Failed to save. Please check your permissions and try again.'),
-            backgroundColor: const Color(0xFFB91C1C),
-            duration: const Duration(seconds: 5),
+          const SnackBar(
+            content: Text('Failed to save. Please check your permissions and try again.'),
+            backgroundColor: Color(0xFFB91C1C),
+            duration: Duration(seconds: 5),
           ),
         );
       }
@@ -443,19 +446,11 @@ class _TechnicalAlignmentScreenState extends State<TechnicalAlignmentScreen> {
  }
 
  void _navigateToRequirementsImplementation() {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const RequirementsImplementationScreen(),
- ),
- );
+ context.push('/requirements-implementation');
  }
 
  void _navigateToDevelopmentSetUp() {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const DevelopmentSetUpScreen(),
- ),
- );
+ context.push('/development-set-up');
  }
 
  Future<void> _generateAllAlignment() async {
@@ -639,7 +634,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Icon(Icons.lightbulb_outline,
+ const Icon(Icons.lightbulb_outline,
  size: 18, color: LightModeColors.accent),
  const SizedBox(width: 8),
  Expanded(
@@ -856,7 +851,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: Row(
  children: [
- Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.delivery_dining_outlined, color: Colors.white, size: 26)),
+ Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.delivery_dining_outlined, color: Colors.white, size: 26)),
  const SizedBox(width: 16),
  const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Add Delivery Model', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)), SizedBox(height: 4), Text('Define a new delivery model with alignment evidence and exit standards', style: TextStyle(fontSize: 13, color: Colors.white70))])),
  IconButton(onPressed: () => Navigator.of(dialogContext).pop(), icon: const Icon(Icons.close, color: Colors.white, size: 22)),
@@ -881,7 +876,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(height: 12),
  Container(
  padding: const EdgeInsets.all(14),
- decoration: BoxDecoration(color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFFCD34D).withOpacity(0.4))),
+ decoration: BoxDecoration(color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFFCD34D).withValues(alpha: 0.4))),
  child: Row(children: [
  const Icon(Icons.auto_awesome, size: 18, color: Color(0xFFD97706)),
  const SizedBox(width: 10),
@@ -908,7 +903,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  Container(
  padding: const EdgeInsets.fromLTRB(28, 12, 28, 20),
- decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)), border: Border(top: BorderSide(color: const Color(0xFFE5E7EB), width: 1))),
+ decoration: const BoxDecoration(color: Color(0xFFF9FAFB), borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)), border: Border(top: BorderSide(color: Color(0xFFE5E7EB), width: 1))),
  child: Row(
  mainAxisAlignment: MainAxisAlignment.end,
  children: [
@@ -1100,7 +1095,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Icon(Icons.delivery_dining_outlined,
  size: 36,
- color: const Color(0xFF9CA3AF).withOpacity(0.6)),
+ color: const Color(0xFF9CA3AF).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No delivery models yet',
  style: TextStyle(
@@ -1393,9 +1388,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFF59E0B).withOpacity(0.1),
+ color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
+ border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -1601,7 +1596,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Icon(Icons.fact_check_outlined,
  size: 36,
- color: const Color(0xFF9CA3AF).withOpacity(0.6)),
+ color: const Color(0xFF9CA3AF).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No readiness gate items yet',
  style: TextStyle(
@@ -1699,7 +1694,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 5, vertical: 3),
                   decoration: BoxDecoration(
-                    color: decisionColor.withOpacity(0.1),
+                    color: decisionColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4)),
                   child: Text(row.decision,
                     style: TextStyle(
@@ -1858,7 +1853,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: decision,
+ initialValue: decision,
  decoration: const InputDecoration(
  labelText: 'Decision',
  isDense: true,
@@ -1869,8 +1864,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  value: s, child: Text(s)))
  .toList(),
  onChanged: (v) {
- if (v != null)
- setDState(() => decision = v);
+ if (v != null) {
+   setDState(() => decision = v);
+ }
  },
  ),
  ),
@@ -1933,7 +1929,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ? options
  : [normalized, ...options];
  return DropdownButtonFormField<String>(
- value: normalized.isEmpty ? items.first : normalized,
+ initialValue: normalized.isEmpty ? items.first : normalized,
  alignment: Alignment.center,
  isExpanded: true,
  style: TextStyle(
@@ -2010,7 +2006,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  Icon(Icons.link_outlined,
  size: 36,
- color: const Color(0xFF9CA3AF).withOpacity(0.6)),
+ color: const Color(0xFF9CA3AF).withValues(alpha: 0.6)),
  const SizedBox(height: 8),
  const Text('No traceability items yet',
  style: TextStyle(
@@ -2302,7 +2298,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -2321,7 +2317,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addConstraintRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Constraint And Guardrail Register',
  columns: const [
  _TableColumn(label: 'Constraint', flex: 3, minWidth: 260),
  _TableColumn(label: 'Guardrail', flex: 5, minWidth: 400),
@@ -2333,16 +2330,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  minWidth: _technicalAlignmentActionColumnWidth,
  alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_constraints.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _constraints.isEmpty
+ ? _buildEmptyTableState(
  message: 'No constraints yet. Add the first constraint.',
  actionLabel: 'Add constraint',
  onAction: _addConstraintRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(label: 'Constraint', flex: 3, minWidth: 260),
  _TableColumn(label: 'Guardrail', flex: 5, minWidth: 400),
@@ -2362,6 +2356,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ownerOptions: ownerOptions,
  ),
  ),
+ ),
  ],
  ),
  );
@@ -2376,7 +2371,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -2395,7 +2390,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addMappingRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Requirement To Solution Mapping',
  columns: const [
  _TableColumn(label: 'Requirement Area', flex: 3, minWidth: 260),
  _TableColumn(
@@ -2407,16 +2403,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  minWidth: _technicalAlignmentActionColumnWidth,
  alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_mappings.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _mappings.isEmpty
+ ? _buildEmptyTableState(
  message: 'No requirement mappings yet. Add the first mapping.',
  actionLabel: 'Add mapping',
  onAction: _addMappingRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(label: 'Requirement Area', flex: 3, minWidth: 260),
  _TableColumn(
@@ -2435,6 +2428,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  isStriped: i.isOdd,
  ),
  ),
+ ),
  ],
  ),
  );
@@ -2449,7 +2443,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: const Color(0xFFE2E8F0)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -2468,7 +2462,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addDependencyRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Dependency And Decision Watchlist',
  columns: const [
  _TableColumn(
  label: 'Dependency / Decision', flex: 3, minWidth: 260),
@@ -2481,16 +2476,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  minWidth: _technicalAlignmentActionColumnWidth,
  alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_dependencies.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _dependencies.isEmpty
+ ? _buildEmptyTableState(
  message: 'No dependencies yet. Add the first dependency.',
  actionLabel: 'Add dependency',
  onAction: _addDependencyRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(
  label: 'Dependency / Decision', flex: 3, minWidth: 260),
@@ -2511,38 +2503,25 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ownerOptions: ownerOptions,
  ),
  ),
+ ),
  ],
  ),
- );
- }
+ );  }
 
- void _openStableDesignItem(String label) {
- Widget? destination;
- switch (label) {
- case 'Design Management':
- destination =
- const DesignPhaseScreen(activeItemLabel: 'Design Management');
- break;
- case 'Design Specifications':
- destination = const RequirementsImplementationScreen();
- break;
- case 'Technical Alignment':
- destination = const TechnicalAlignmentScreen();
- break;
- case 'Development Set Up':
- destination = const DevelopmentSetUpScreen();
- break;
- case 'UI/UX Design':
- destination = const UiUxDesignScreen();
- break;
- }
+  void _openStableDesignItem(String label) {
+  final destination = switch (label) {
+  'Design Management' => '/${AppRoutes.designPhase}',
+  'Design Specifications' => '/${AppRoutes.requirementsImplementation}',
+  'Technical Alignment' => '/${AppRoutes.technicalAlignment}',
+  'Development Set Up' => '/${AppRoutes.developmentSetUp}',
+  'UI/UX Design' => '/${AppRoutes.uiUxDesign}',
+  _ => null,
+  };
 
- if (destination == null) return;
+  if (destination == null) return;
 
- Navigator.of(context).pushReplacement(
- MaterialPageRoute(builder: (_) => destination!),
- );
- }
+  context.pushReplacement(destination);
+  }
 
  Widget _buildEngineeringHubHeader({
  required bool isMobile,
@@ -2579,7 +2558,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  label: const Text('Export summary'),
  style: OutlinedButton.styleFrom(
  foregroundColor: Colors.white,
- side: BorderSide(color: Colors.white.withOpacity(0.24)),
+ side: BorderSide(color: Colors.white.withValues(alpha: 0.24)),
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
  ),
  );
@@ -2630,7 +2609,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Technical Alignment for ${snapshot.projectLabel}. This dashboard checks the design concept against real systems, legacy dependencies, venue conditions, security obligations, and operational workarounds.',
  style: TextStyle(
  fontSize: 14,
- color: Colors.white.withOpacity(0.84),
+ color: Colors.white.withValues(alpha: 0.84),
  height: 1.5,
  ),
  ),
@@ -2670,10 +2649,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: double.infinity,
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
- color: Colors.white.withOpacity(0.08),
+ color: Colors.white.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(16),
  border: Border.all(
- color: Colors.white.withOpacity(0.10),
+ color: Colors.white.withValues(alpha: 0.10),
  ),
  ),
  child: Text(
@@ -2681,7 +2660,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  
  style: TextStyle(
  fontSize: 12.5,
- color: Colors.white.withOpacity(0.82),
+ color: Colors.white.withValues(alpha: 0.82),
  height: 1.45,
  ),
  ),
@@ -2767,7 +2746,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildGovernanceGrid(_TechnicalAlignmentDashboardSnapshot snapshot) {
  return LayoutBuilder(
  builder: (context, constraints) {
- final spacing = 20.0;
+ const spacing = 20.0;
  final columns = constraints.maxWidth >= 1080 ? 2 : 1;
  final cardWidth = columns == 1
  ? constraints.maxWidth
@@ -3018,7 +2997,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: _severityColor(item.severity).withOpacity(0.14),
+ color: _severityColor(item.severity).withValues(alpha: 0.14),
  borderRadius: BorderRadius.circular(12),
  ),
  child: Icon(
@@ -3510,7 +3489,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 34,
  height: 34,
  decoration: BoxDecoration(
- color: _protocolColor(item.status).withOpacity(0.12),
+ color: _protocolColor(item.status).withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(10),
  ),
  child: Icon(
@@ -3717,9 +3696,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 42,
  height: 42,
  decoration: BoxDecoration(
- color: accent.withOpacity(0.10),
+ color: accent.withValues(alpha: 0.10),
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: accent.withOpacity(0.18)),
+ border: Border.all(color: accent.withValues(alpha: 0.18)),
  ),
  child: Icon(icon, color: accent),
  ),
@@ -3761,9 +3740,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: Colors.white.withOpacity(0.08),
+ color: Colors.white.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: Colors.white.withOpacity(0.12)),
+ border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -3773,7 +3752,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Colors.white.withOpacity(0.72),
+ color: Colors.white.withValues(alpha: 0.72),
  ),
  ),
  const SizedBox(height: 4),
@@ -3794,9 +3773,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: color.withOpacity(0.22)),
+ border: Border.all(color: color.withValues(alpha: 0.22)),
  ),
  child: Text(
  label,
@@ -3902,7 +3881,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  decoration: BoxDecoration(
  color: color,
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: color.withOpacity(0.9)),
+ border: Border.all(color: color.withValues(alpha: 0.9)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -3972,7 +3951,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: AppSemanticColors.border),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -3991,7 +3970,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addConstraintRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Constraints & guardrails',
  columns: const [
  _TableColumn(label: 'Constraint', flex: 3, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Guardrail', flex: 5, minWidth: 400, alignment: Alignment.center),
@@ -4000,16 +3980,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _TableColumn(
  label: 'Actions', flex: 2, minWidth: _technicalAlignmentActionColumnWidth, alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_constraints.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _constraints.isEmpty
+ ? _buildEmptyTableState(
  message: 'No constraints captured yet. Add the first guardrail.',
  actionLabel: 'Add constraint',
  onAction: _addConstraintRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(label: 'Constraint', flex: 3, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Guardrail', flex: 5, minWidth: 400, alignment: Alignment.center),
@@ -4026,6 +4003,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ownerOptions: ownerOptions,
  ),
  ),
+ ),
  ],
  ),
  );
@@ -4040,7 +4018,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: AppSemanticColors.border),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -4059,7 +4037,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addMappingRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Requirements → solution mapping',
  columns: const [
  _TableColumn(label: 'Requirement', flex: 3, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Technical approach', flex: 5, minWidth: 460, alignment: Alignment.center),
@@ -4067,17 +4046,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _TableColumn(
  label: 'Actions', flex: 2, minWidth: _technicalAlignmentActionColumnWidth, alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_mappings.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _mappings.isEmpty
+ ? _buildEmptyTableState(
  message:
  'No mappings yet. Add the first requirement-to-solution entry.',
  actionLabel: 'Add mapping',
  onAction: _addMappingRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(label: 'Requirement', flex: 3, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Technical approach', flex: 5, minWidth: 460, alignment: Alignment.center),
@@ -4087,6 +4063,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  rowCount: _mappings.length,
  rowBuilder: (i) => _buildMappingRow(_mappings[i], index: i, isStriped: i.isOdd),
+ ),
  ),
  const SizedBox(height: 16),
  Text(
@@ -4107,7 +4084,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  border: Border.all(color: AppSemanticColors.border),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 18,
  offset: const Offset(0, 10),
  ),
@@ -4126,7 +4103,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onAction: _addDependencyRow,
  ),
  const SizedBox(height: 16),
- _buildScrollableTableHeader(
+ _wrapScrollableTableWithExpand(
+ title: 'Dependencies & decisions',
  columns: const [
  _TableColumn(label: 'Dependency or decision', flex: 4, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Detail', flex: 5, minWidth: 380, alignment: Alignment.center),
@@ -4135,17 +4113,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _TableColumn(
  label: 'Actions', flex: 2, minWidth: _technicalAlignmentActionColumnWidth, alignment: Alignment.center),
  ],
- ),
- const SizedBox(height: 10),
- if (_dependencies.isEmpty)
- _buildEmptyTableState(
+ bodyBuilder: (bc) => _dependencies.isEmpty
+ ? _buildEmptyTableState(
  message:
  'No dependencies yet. Add the first decision or external dependency.',
  actionLabel: 'Add dependency',
  onAction: _addDependencyRow,
  )
- else
- _buildScrollableTableBody(
+ : _buildScrollableTableBody(
  columns: const [
  _TableColumn(label: 'Dependency or decision', flex: 4, minWidth: 260, alignment: Alignment.center),
  _TableColumn(label: 'Detail', flex: 5, minWidth: 380, alignment: Alignment.center),
@@ -4160,6 +4135,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  index: i,
  isStriped: i.isOdd,
  ownerOptions: ownerOptions,
+ ),
  ),
  ),
  const SizedBox(height: 16),
@@ -4328,9 +4304,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 44,
  height: 44,
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: color.withOpacity(0.2)),
+ border: Border.all(color: color.withValues(alpha: 0.2)),
  ),
  child: Icon(icon, color: color, size: 22),
  ),
@@ -4441,6 +4417,33 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  );
  },
+ );
+ }
+
+ /// Wraps the scrollable table header + body in a [FullScreenTableWrapper]
+ /// so the table can be expanded to a full-screen view. Pass the same
+ /// [columns] used by both the header and the body, and a [bodyBuilder]
+ /// that returns either the body widget or the empty-state widget for the
+ /// given [BuildContext].
+ Widget _wrapScrollableTableWithExpand({
+ required String title,
+ required List<_TableColumn> columns,
+ required WidgetBuilder bodyBuilder,
+ }) {
+ Widget buildInner(BuildContext bc) {
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ _buildScrollableTableHeader(columns: columns),
+ const SizedBox(height: 10),
+ bodyBuilder(bc),
+ ],
+ );
+ }
+ return FullScreenTableWrapper(
+ title: title,
+ child: buildInner(context),
+ tableBuilder: buildInner,
  );
  }
 
@@ -4806,7 +4809,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ? _statusOptions
  : [normalized, ..._statusOptions];
  return DropdownButtonFormField<String>(
- value: normalized.isEmpty ? items.first : normalized,
+ initialValue: normalized.isEmpty ? items.first : normalized,
  alignment: Alignment.center,
  isExpanded: true,
  style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
@@ -4861,7 +4864,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ? options
  : [normalized, ...options];
  return DropdownButtonFormField<String>(
- value: normalized.isEmpty ? items.first : normalized,
+ initialValue: normalized.isEmpty ? items.first : normalized,
  alignment: Alignment.center,
  isExpanded: true,
  style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
@@ -5969,9 +5972,9 @@ class _DeliveryModelPanelShell extends StatelessWidget {
  width: 44,
  height: 44,
  decoration: BoxDecoration(
- color: accent.withOpacity(0.12),
+ color: accent.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: accent.withOpacity(0.2)),
+ border: Border.all(color: accent.withValues(alpha: 0.2)),
  ),
  child: Icon(icon, color: accent, size: 22),
  ),

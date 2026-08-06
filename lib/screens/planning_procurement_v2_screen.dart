@@ -34,14 +34,13 @@ import 'package:ndu_project/widgets/procurement/procurement_workflow_builder.dar
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 
 class PlanningProcurementV2Screen extends StatefulWidget {
  const PlanningProcurementV2Screen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const PlanningProcurementV2Screen()),
- );
+ context.push('/planning-procurement');
  }
 
  @override
@@ -208,8 +207,8 @@ class _PlanningProcurementV2ScreenState
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Planning Procurement',
  ),
  ),
@@ -555,7 +554,7 @@ class _PlanningProcurementV2ScreenState
  ContextChip(label: 'Project', value: data.projectName.trim()),
  if (data.solutionTitle.trim().isNotEmpty)
  ContextChip(label: 'Solution', value: data.solutionTitle.trim()),
- ContextChip(label: 'Phase', value: 'Planning'),
+ const ContextChip(label: 'Phase', value: 'Planning'),
  ];
  }
 
@@ -727,7 +726,7 @@ class _PlanningProcurementV2ScreenState
  }
 
  Future<void> _openAddVendorDialog() async {
- final categoryOptions = const [
+ const categoryOptions = [
  'IT Equipment',
  'Construction Services',
  'Furniture',
@@ -809,7 +808,7 @@ class _PlanningProcurementV2ScreenState
  }
 
  Future<void> _openEditVendorDialog(VendorModel vendor) async {
- final categoryOptions = const [
+ const categoryOptions = [
  'IT Equipment',
  'Construction Services',
  'Furniture',
@@ -1802,7 +1801,7 @@ class _PlanningProcurementV2ScreenState
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: unit,
+ initialValue: unit,
  decoration: const InputDecoration(labelText: 'Unit'),
  items: const [
  DropdownMenuItem(value: 'week', child: Text('Week')),

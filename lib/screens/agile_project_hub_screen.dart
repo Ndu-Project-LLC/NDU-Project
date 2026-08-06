@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// AGILE PROJECT HUB — World-Class Landing Screen
@@ -29,9 +30,7 @@ class AgileProjectHubScreen extends StatefulWidget {
   const AgileProjectHubScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AgileProjectHubScreen()),
-    );
+    context.push('/agile-project-hub');
   }
 
   @override
@@ -380,12 +379,10 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
         AgileDashboardScreen.open(context);
         break;
       case 1:
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const AgileBacklogGovernanceScreen()));
+        context.push('/agile-backlog-governance');
         break;
       case 2:
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const AgileSprintCalendarScreen()));
+        context.push('/agile-sprint-calendar');
         break;
       case 3:
         AgileIterationManagementScreen.open(context);
@@ -403,22 +400,19 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
         AgileRetrospectivesScreen.open(context);
         break;
       case 8:
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const AgileBacklogGovernanceScreen()));
+        context.push('/agile-backlog-governance');
         break;
       case 9:
         AgileMetricsScreen.open(context);
         break;
       case 10:
-        Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AgileReleasePlanScreen()));
+        context.push('/agile-release-plan');
         break;
       case 11:
         AgileRisksScreen.open(context);
         break;
       case 12:
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const AgileTeamStructureScreen()));
+        context.push('/agile-team-structure');
         break;
       case 13:
         AgileAiCoachScreen.open(context);
@@ -433,13 +427,14 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                 ),
                 borderRadius: BorderRadius.circular(8),
@@ -468,7 +463,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+                color: Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -541,8 +536,8 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
                       ),
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Agile Project Hub',
                     ),
                   ),
@@ -747,7 +742,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFFEEF2FF),
+                color: Color(0xFFEEF2FF),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -762,16 +757,18 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
           ],
         ),
         const SizedBox(height: 20),
-        Column(
-          children: [
-            for (int i = 0; i < _sections.length; i++) ...[
-              SizedBox(
-                width: double.infinity,
-                child: _buildSectionCard(_sections[i]),
-              ),
-              if (i < _sections.length - 1) const SizedBox(height: 20),
-            ],
-          ],
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _sections.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 20),
+          itemBuilder: (context, i) => RepaintBoundary(
+            key: ValueKey('agile_hub_section_$i'),
+            child: SizedBox(
+              width: double.infinity,
+              child: _buildSectionCard(_sections[i]),
+            ),
+          ),
         ),
       ],
     );
@@ -787,7 +784,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            border: Border.all(color: Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -920,11 +917,11 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [Color(0xFFF0FDF4), Color(0xFFECFDF5)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFBBF7D0)),
+        border: Border.all(color: Color(0xFFBBF7D0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

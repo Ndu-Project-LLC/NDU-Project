@@ -8,6 +8,7 @@ import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/vendor_service.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class ProcurementAssignableMemberOption {
   const ProcurementAssignableMemberOption({
     required this.id,
@@ -74,7 +75,7 @@ class ProcurementDialogShell extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
                 color: Color(0x1F0F172A),
                 blurRadius: 30,
@@ -103,7 +104,7 @@ class ProcurementDialogShell extends StatelessWidget {
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFDBEAFE).withOpacity(0.4),
+                        color: const Color(0xFFDBEAFE).withValues(alpha: 0.4),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -117,8 +118,8 @@ class ProcurementDialogShell extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                          boxShadow: const [
+                          border: Border.all(color: Color(0xFFE2E8F0)),
+                          boxShadow: [
                             BoxShadow(
                                 color: Color(0x140F172A),
                                 blurRadius: 10,
@@ -250,7 +251,7 @@ class ContextChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -364,6 +365,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
     _descCtrl.dispose();
     _budgetCtrl.dispose();
     _nameFocus.dispose();
+    _openAi.dispose();
     super.dispose();
   }
 
@@ -547,13 +549,13 @@ class _AddItemDialogState extends State<AddItemDialog> {
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -685,7 +687,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _category,
+                    initialValue: _category,
                     decoration: _dialogDecoration(label: 'Category'),
                     items: categoryOptions
                         .map((option) => DropdownMenuItem(
@@ -700,7 +702,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: DropdownButtonFormField<ProcurementItemStatus>(
-                    value: _status,
+                    initialValue: _status,
                     decoration: _dialogDecoration(label: 'Status'),
                     items: ProcurementItemStatus.values
                         .map((option) => DropdownMenuItem(
@@ -716,7 +718,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<ProcurementPriority>(
-              value: _priority,
+              initialValue: _priority,
               decoration: _dialogDecoration(label: 'Priority'),
               items: ProcurementPriority.values
                   .map((option) => DropdownMenuItem(
@@ -1091,6 +1093,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
     _nameCtrl.dispose();
     _otherCategoryCtrl.dispose();
     _nameFocus.dispose();
+    _openAi.dispose();
     super.dispose();
   }
 
@@ -1317,13 +1320,13 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -1486,7 +1489,7 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
             ],
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _category,
+              initialValue: _category,
               decoration: _dialogDecoration(label: 'Category'),
               items: categoryOptions
                   .map((option) =>
@@ -1558,7 +1561,10 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                       children: [
                         Switch(
                           value: _approved,
-                          thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF2563EB) : null),
+                          thumbColor: WidgetStateProperty.resolveWith(
+                              (states) => states.contains(WidgetState.selected)
+                                  ? const Color(0xFF2563EB)
+                                  : null),
                           onChanged: (value) =>
                               setState(() => _approved = value),
                         ),
@@ -1569,7 +1575,10 @@ class _AddVendorDialogState extends State<AddVendorDialog> {
                       children: [
                         Switch(
                           value: _preferred,
-                          thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF2563EB) : null),
+                          thumbColor: WidgetStateProperty.resolveWith(
+                              (states) => states.contains(WidgetState.selected)
+                                  ? const Color(0xFF2563EB)
+                                  : null),
                           onChanged: (value) =>
                               setState(() => _preferred = value),
                         ),
@@ -1695,13 +1704,13 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -1780,7 +1789,7 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _category,
+                    initialValue: _category,
                     decoration: _dialogDecoration(label: 'Category'),
                     items: categoryOptions
                         .map((option) => DropdownMenuItem(
@@ -1895,7 +1904,7 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<RfqStatus>(
-                    value: _status,
+                    initialValue: _status,
                     decoration: _dialogDecoration(label: 'Status'),
                     items: RfqStatus.values
                         .map((option) => DropdownMenuItem(
@@ -1910,7 +1919,7 @@ class _CreateRfqDialogState extends State<CreateRfqDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: DropdownButtonFormField<ProcurementPriority>(
-                    value: _priority,
+                    initialValue: _priority,
                     decoration: _dialogDecoration(label: 'Priority'),
                     items: ProcurementPriority.values
                         .map((option) => DropdownMenuItem(
@@ -2107,13 +2116,13 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -2206,9 +2215,9 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: Color(0xFFE2E8F0)),
                   ),
                   child: const Text(
                     'No source items available.',
@@ -2217,7 +2226,7 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
                 )
               else
                 DropdownButtonFormField<String>(
-                  value: _selectedSourceItemId,
+                  initialValue: _selectedSourceItemId,
                   decoration:
                       _dialogDecoration(label: 'Item from procurement list'),
                   items: List<DropdownMenuItem<String>>.generate(
@@ -2289,7 +2298,7 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _category,
+                    initialValue: _category,
                     decoration: _dialogDecoration(label: 'Category'),
                     items: categoryOptions
                         .map((option) => DropdownMenuItem(
@@ -2387,7 +2396,7 @@ class _CreatePoDialogState extends State<CreatePoDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<PurchaseOrderStatus>(
-              value: _status,
+              initialValue: _status,
               decoration: _dialogDecoration(label: 'Status'),
               items: PurchaseOrderStatus.values
                   .map((option) => DropdownMenuItem(
@@ -2503,13 +2512,13 @@ class _AddContractDialogState extends State<AddContractDialog> {
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          borderSide: BorderSide(color: Color(0xFFE2E8F0))),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFFD700), width: 1.5)),
+          borderSide: BorderSide(color: Color(0xFFFFD700), width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
   }
@@ -2700,7 +2709,7 @@ class _AddContractDialogState extends State<AddContractDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<ContractStatus>(
-              value: _status,
+              initialValue: _status,
               decoration: _dialogDecoration(label: 'Status'),
               items: ContractStatus.values.map((option) {
                 final words = option.name

@@ -36,6 +36,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 
 enum _MissingInfrastructureAction { manual, autoFill, skip }
 
@@ -336,8 +337,8 @@ class _InfrastructureConsiderationsScreenState
  Expanded(child: _buildMainContent()),
  ])),
  ]),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Infrastructure Considerations',
  ),
  ),
@@ -762,7 +763,7 @@ class _InfrastructureConsiderationsScreenState
  SizedBox(
  width: double.infinity,
  height: bannerHeight,
- child: Center(child: AppLogo(height: 64)),
+ child: const Center(child: AppLogo(height: 64)),
  ),
  Container(
  padding: const EdgeInsets.all(24),
@@ -865,7 +866,7 @@ class _InfrastructureConsiderationsScreenState
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: active
  ? BoxDecoration(
- color: theme.colorScheme.primary.withOpacity(0.08),
+ color: theme.colorScheme.primary.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(8),
  )
  : null,
@@ -904,7 +905,7 @@ class _InfrastructureConsiderationsScreenState
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(children: [
@@ -939,7 +940,7 @@ class _InfrastructureConsiderationsScreenState
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.12) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.12) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(children: [
@@ -978,7 +979,7 @@ class _InfrastructureConsiderationsScreenState
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(children: [
@@ -1015,7 +1016,7 @@ class _InfrastructureConsiderationsScreenState
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
  decoration: BoxDecoration(
- color: isActive ? primary.withOpacity(0.10) : Colors.transparent,
+ color: isActive ? primary.withValues(alpha: 0.10) : Colors.transparent,
  borderRadius: BorderRadius.circular(8),
  ),
  child: Row(children: [
@@ -1041,84 +1042,49 @@ class _InfrastructureConsiderationsScreenState
  }
 
  void _openBusinessCase() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const InitiationPhaseScreen(scrollToBusinessCase: true),
- ),
- );
+ context.push('/initiation-phase', extra: const InitiationPhaseScreen(scrollToBusinessCase: true));
  }
 
  void _openPotentialSolutions() {
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => const PotentialSolutionsScreen(),
- ),
- );
+ context.push('/potential-solutions');
  }  void _openRiskIdentification() {
-  Navigator.push(
-  context,
-  MaterialPageRoute(
-  builder: (_) => RiskIdentificationScreen(
+  context.push('/risk-identification', extra: RiskIdentificationScreen(
   notes: _notesController.text,
   solutions: widget.solutions,
   businessCase: widget.businessCase,
-  ),
-  ),
-  );
+  ));
   }
 
   void _openITConsiderations() {
-  Navigator.push(
-  context,
-  MaterialPageRoute(
-  builder: (_) => ITConsiderationsScreen(
+  context.push('/it-considerations', extra: ITConsiderationsScreen(
   notes: _notesController.text,
   solutions: widget.solutions,
   businessCase: widget.businessCase,
-  ),
-  ),
-  );
+  ));
   }
 
   void _openCoreStakeholders() {
-  Navigator.push(
-  context,
-  MaterialPageRoute(
-  builder: (_) => CoreStakeholdersScreen(
+  context.push('/core-stakeholders', extra: CoreStakeholdersScreen(
   notes: _notesController.text,
   solutions: widget.solutions,
   businessCase: widget.businessCase,
-  ),
-  ),
-  );
+  ));
   }
 
   void _openCostAnalysis() {
-  Navigator.push(
-  context,
-  MaterialPageRoute(
-  builder: (_) => CostAnalysisScreen(
+  context.push('/cost-analysis', extra: CostAnalysisScreen(
   notes: _notesController.text,
   solutions: widget.solutions,
   businessCase: widget.businessCase,
-  ),
-  ),
-  );
+  ));
   }
 
   void _openPreferredSolutionAnalysis() {
-  Navigator.push(
-  context,
-  MaterialPageRoute(
-  builder: (_) => PreferredSolutionAnalysisScreen(
+  context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
   notes: _notesController.text,
   solutions: widget.solutions,
   businessCase: widget.businessCase,
-  ),
-  ),
-  );
+  ));
   }
 
  Widget _buildMainContent() {
@@ -1173,7 +1139,7 @@ class _InfrastructureConsiderationsScreenState
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: Colors.grey.withOpacity(0.3))),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.3))),
  child: VoiceTextField(
  controller: _notesController,
  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
@@ -1264,11 +1230,11 @@ class _InfrastructureConsiderationsScreenState
  const SizedBox(height: 16),
  // Add Item button (admin-only)
  Row(children: [
- Tooltip(
+ const Tooltip(
  message:
  'Add a new infrastructure consideration entry manually',
  child:
- const Icon(Icons.lightbulb_outline, color: Colors.black87),
+ Icon(Icons.lightbulb_outline, color: Colors.black87),
  ),
  const SizedBox(width: 8),
  ElevatedButton.icon(
@@ -1628,15 +1594,10 @@ class _InfrastructureConsiderationsScreenState
  if (!mounted) return;
  Navigator.of(context).pop();
 
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (context) => CoreStakeholdersScreen(
+ context.push('/core-stakeholders', extra: CoreStakeholdersScreen(
  notes: _notesController.text,
  solutions: widget.solutions,
- ),
- ),
- );
+ ));
  }
 
  // ignore: unused_element
@@ -1715,7 +1676,7 @@ class _InfrastructureConsiderationsScreenState
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  decoration: BoxDecoration(
  color: isStriped ? const Color(0xFFF9FAFC) : Colors.white,
- border: Border(top: BorderSide(color: const Color(0xFFE4E7EC)))),
+ border: const Border(top: BorderSide(color: Color(0xFFE4E7EC)))),
  child: isMobile
  ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
  Text(
@@ -1841,7 +1802,7 @@ class _InfrastructureConsiderationsScreenState
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: Colors.grey.withOpacity(0.25))),
+ border: Border.all(color: Colors.grey.withValues(alpha: 0.25))),
  child: VoiceTextField(
  controller: controller,
  minLines: 4,

@@ -64,15 +64,14 @@ class _InterfaceItem {
  final Color riskColor;
 }
 
-class _ProgramAction {
- const _ProgramAction({
- required this.title,
- required this.description,
- required this.appliesTo,
- required this.isOn,
- this.badgeColor,
- this.badgeTextColor,
- });
+class _ProgramAction {  const _ProgramAction({
+    required this.title,
+    required this.description,
+    required this.appliesTo,
+    required this.isOn,
+    this.badgeColor,
+    this.badgeTextColor,
+  });
 
  final String title;
  final String description;
@@ -478,13 +477,11 @@ class _ProgramDashboardMobileScreenState
  final screen = NavigationRouteResolver.resolveCheckpointToScreen(
  checkpointRoute.isEmpty ? 'initiation' : checkpointRoute,
  context,
- );
-
- Navigator.push(
- context,
- MaterialPageRoute(
- builder: (_) => screen ?? const InitiationPhaseScreen()),
- );
+ );  context.push(
+  NavigationRouteResolver.resolveCheckpointToUrl(
+      checkpointRoute.isEmpty ? 'initiation' : checkpointRoute),
+  extra: screen ?? const InitiationPhaseScreen(),
+  );
  } else {
  debugPrint('Failed to load project: ${provider.lastError}');
  if (context.mounted) {
@@ -603,10 +600,7 @@ class _ProgramDashboardMobileScreenState
  width: double.infinity,
  child: ElevatedButton(
  onPressed: () {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
- );
+ context.push('/portfolio-dashboard');
  },
  style: ElevatedButton.styleFrom(
  backgroundColor: const Color(0xFFFFC800),
@@ -617,9 +611,9 @@ class _ProgramDashboardMobileScreenState
  elevation: 4,
  shadowColor: const Color(0xFFFFC800).withValues(alpha: 0.4),
  ),
- child: Row(
+ child: const Row(
  mainAxisAlignment: MainAxisAlignment.center,
- children: const [
+ children: [
  Icon(Icons.arrow_upward, size: 18),
  SizedBox(width: 8),
  Text('ROLL UP TO PORTFOLIO'),
@@ -647,10 +641,7 @@ class _ProgramDashboardMobileScreenState
  if (index == 0) {
  Navigator.pop(context);
  } else if (index == 2) {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PortfolioDashboardScreen()),
- );
+ context.push('/portfolio-dashboard');
  } else if (index == 3) {
  context.go('/${AppRoutes.settings}?from=${AppRoutes.dashboard}');
  }
@@ -705,11 +696,11 @@ class _TopNavBar extends StatelessWidget {
  ),
  const SizedBox(width: 10),
  // Title / subtitle
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- const Text(
+ Text(
  'NDUPROJECT',
  style: TextStyle(
  fontSize: 13,
@@ -723,7 +714,7 @@ class _TopNavBar extends StatelessWidget {
  style: TextStyle(
  fontSize: 9,
  fontWeight: FontWeight.w600,
- color: const Color(0xFF6B7280),
+ color: Color(0xFF6B7280),
  letterSpacing: 1.2,
  ),
  ),
@@ -799,28 +790,28 @@ class _PageSummary extends StatelessWidget {
  color: Colors.white,
  width: double.infinity,
  padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
- child: Column(
+ child: const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  // Breadcrumb with arrow
  Row(
  children: [
- const Icon(Icons.arrow_back_ios, size: 14,
+ Icon(Icons.arrow_back_ios, size: 14,
  color: Color(0xFF3B82F6)),
- const SizedBox(width: 4),
+ SizedBox(width: 4),
  Text(
  'Program workspace overview',
  style: TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w600,
- color: const Color(0xFF3B82F6),
+ color: Color(0xFF3B82F6),
  ),
  ),
  ],
  ),
- const SizedBox(height: 12),
+ SizedBox(height: 12),
  // Title
- const Text(
+ Text(
  'Data Intelligence',
  style: TextStyle(
  fontSize: 28,
@@ -829,9 +820,9 @@ class _PageSummary extends StatelessWidget {
  height: 1.2,
  ),
  ),
- const SizedBox(height: 8),
+ SizedBox(height: 8),
  // Description
- const Text(
+ Text(
  'Coordinate up to three related projects with shared outcomes. Manage interfaces, prioritize delivery, and roll estimates and risk into a single program view before promoting to a portfolio.',
  style: TextStyle(
  fontSize: 14,
@@ -922,7 +913,7 @@ class _StatCard extends StatelessWidget {
  border: Border.all(color: const Color(0xFFF3F4F6)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 8,
  offset: const Offset(0, 2),
  ),
@@ -989,11 +980,11 @@ class _StatusIndicators extends StatelessWidget {
  bgColor: const Color(0xFFDBEAFE),
  textColor: const Color(0xFF1D4ED8),
  ),
- _StatusPill(
+ const _StatusPill(
  icon: Icons.check_circle,
  text: 'ROLLED UP ESTIMATE: \$5.4M',
- bgColor: const Color(0xFFDCFCE7),
- textColor: const Color(0xFF15803D),
+ bgColor: Color(0xFFDCFCE7),
+ textColor: Color(0xFF15803D),
  ),
  ],
  ),
@@ -1210,7 +1201,7 @@ class _ProjectCard extends StatelessWidget {
  border: Border.all(color: const Color(0xFFF3F4F6)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 8,
  offset: const Offset(0, 2),
  ),
@@ -1296,7 +1287,7 @@ class _ProjectCard extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: info.priorityColor.withOpacity(0.12),
+ color: info.priorityColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Text(
@@ -1312,8 +1303,8 @@ class _ProjectCard extends StatelessWidget {
  // Owner
  Row(
  children: [
- Icon(Icons.person_outline, size: 14,
- color: const Color(0xFF9CA3AF)),
+ const Icon(Icons.person_outline, size: 14,
+ color: Color(0xFF9CA3AF)),
  const SizedBox(width: 4),
  Text(
  info.owner,
@@ -1376,7 +1367,7 @@ class _ProgramActionsSection extends StatelessWidget {
  border: Border.all(color: const Color(0xFFF3F4F6)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 8,
  offset: const Offset(0, 2),
  ),
@@ -1597,7 +1588,7 @@ class _InterfaceCard extends StatelessWidget {
  border: Border.all(color: const Color(0xFFF3F4F6)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 8,
  offset: const Offset(0, 2),
  ),
@@ -1623,7 +1614,7 @@ class _InterfaceCard extends StatelessWidget {
  padding:
  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: item.riskColor.withOpacity(0.12),
+ color: item.riskColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(8),
  ),
  child: Text(
@@ -1694,23 +1685,23 @@ class _RollupSection extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  final schedules = [
- _ScheduleItem(
+ const _ScheduleItem(
  label: 'Goal 1',
  startMonths: 0,
  endMonths: 11,
- color: const Color(0xFF22C55E),
+ color: Color(0xFF22C55E),
  ),
- _ScheduleItem(
+ const _ScheduleItem(
  label: 'Goal 2',
  startMonths: 3,
  endMonths: 18,
- color: const Color(0xFF3B82F6),
+ color: Color(0xFF3B82F6),
  ),
- _ScheduleItem(
+ const _ScheduleItem(
  label: 'Goal 3',
  startMonths: 6,
  endMonths: 12,
- color: const Color(0xFFF97316),
+ color: Color(0xFFF97316),
  ),
  ];
 
@@ -1739,7 +1730,7 @@ class _RollupSection extends StatelessWidget {
  border: Border.all(color: const Color(0xFFF3F4F6)),
  boxShadow: [
  BoxShadow(
- color: Colors.black.withOpacity(0.04),
+ color: Colors.black.withValues(alpha: 0.04),
  blurRadius: 8,
  offset: const Offset(0, 2),
  ),
@@ -1753,11 +1744,11 @@ class _RollupSection extends StatelessWidget {
  height: 160,
  child: CustomPaint(
  painter: _DonutChartPainter(slices: _demoSlices),
- child: Center(
+ child: const Center(
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- const Text(
+ Text(
  '\$5.4M',
  style: TextStyle(
  fontSize: 20,
@@ -1765,7 +1756,7 @@ class _RollupSection extends StatelessWidget {
  color: Color(0xFF111827),
  ),
  ),
- const Text(
+ Text(
  'Total',
  style: TextStyle(
  fontSize: 12,
@@ -1806,10 +1797,10 @@ class _RollupSection extends StatelessWidget {
  const Spacer(),
  Text(
  '\$${slice.amount.toStringAsFixed(1)}M',
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w700,
- color: const Color(0xFF6B7280),
+ color: Color(0xFF6B7280),
  ),
  ),
  ],
@@ -1841,15 +1832,15 @@ class _RollupSection extends StatelessWidget {
  borderRadius: BorderRadius.circular(10),
  border: Border.all(color: const Color(0xFFFDE68A)),
  ),
- child: Row(
+ child: const Row(
  children: [
- const Icon(Icons.shield_moon_outlined, size: 18,
+ Icon(Icons.shield_moon_outlined, size: 18,
  color: Color(0xFF92400E)),
- const SizedBox(width: 8),
+ SizedBox(width: 8),
  Expanded(
  child: Text(
  'Risk posture: Medium · 3 open high risks across all goals',
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
  color: Color(0xFF92400E),
@@ -1952,14 +1943,14 @@ class _DonutChartPainter extends CustomPainter {
  void paint(Canvas canvas, Size size) {
  final center = Offset(size.width / 2, size.height / 2);
  final radius = size.width / 2;
- final strokeWidth = 22.0;
+ const strokeWidth = 22.0;
  final paint = Paint()
  ..style = PaintingStyle.stroke
  ..strokeWidth = strokeWidth
  ..strokeCap = StrokeCap.round;
 
  double start = -math.pi / 2;
- final gapAngle = 0.03; // Small gap between segments
+ const gapAngle = 0.03; // Small gap between segments
 
  for (int i = 0; i < slices.length; i++) {
  final slice = slices[i];

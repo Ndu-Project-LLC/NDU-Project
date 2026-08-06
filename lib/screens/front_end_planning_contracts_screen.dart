@@ -19,6 +19,8 @@ import 'package:ndu_project/widgets/front_end_planning_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 const String _contractingCollection = 'contracting';
 const String _contractPlanNoteKey = 'planning_contract_plan';
 const String _contractPlanMarketKey = 'planning_contract_market';
@@ -94,10 +96,7 @@ class FrontEndPlanningContractsScreen extends StatefulWidget {
  const FrontEndPlanningContractsScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => const FrontEndPlanningContractsScreen()),
- );
+ context.push('/fep-contracts');
  }
 
  @override
@@ -112,16 +111,11 @@ class _FrontEndPlanningContractsScreenState
  bool _isSeedingContracts = false;
 
  void _openCreateContract() {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const CreateContractScreen()),
- );
+ context.push('/create-contract');
  }
 
  void _openEditContract(ContractModel contract) {
- Navigator.of(context).push(
- MaterialPageRoute(
- builder: (_) => CreateContractScreen(contract: contract)),
- );
+ context.push('/create-contract', extra: CreateContractScreen(contract: contract));
  }
 
  @override
@@ -159,10 +153,7 @@ class _FrontEndPlanningContractsScreenState
  }
 
  void _navigateToProcurement() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PlanningProcurementScreen()),
- );
+ context.push('/planning-procurement');
  }
 
  Future<void> _seedContractsFromInitiationIfNeeded() async {
@@ -490,12 +481,12 @@ class _FrontEndPlanningContractsScreenState
  ),
  const SizedBox(height: 20),
  ] else ...[
- Row(
+ const Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Expanded(
  child: Column(
- children: const [
+ children: [
  _CollapsibleAiTextCard(
  title: 'Vendor & Market Strategy',
  subtitle:
@@ -531,10 +522,10 @@ class _FrontEndPlanningContractsScreenState
  ],
  ),
  ),
- const SizedBox(width: 20),
+ SizedBox(width: 20),
  Expanded(
  child: Column(
- children: const [
+ children: [
  _CollapsibleAiTextCard(
  title: 'Approval Readiness',
  subtitle:
@@ -628,8 +619,8 @@ class _FrontEndPlanningContractsScreenState
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Contract',
  ),
  ),
@@ -1266,8 +1257,8 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Contract',
  ),
  ),
@@ -1306,21 +1297,11 @@ class _ContractingStrategyScreenState extends State<ContractingStrategyScreen> {
  }
 
  void _openContractDetails() {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractDetailsScreen'),
- builder: (_) => const ContractDetailsScreen(),
- ),
- );
+ context.push('/contract-details');
  }
 
  void _openContractingStatus() {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractingStatusScreen'),
- builder: (_) => const ContractingStatusScreen(),
- ),
- );
+ context.push('/contracting-status');
  }
 
  Future<void> _loadStrategyData() async {
@@ -1516,8 +1497,8 @@ class _ContractingStrategyScreenState extends State<ContractingStrategyScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Contract',
  ),
  ),
@@ -1923,9 +1904,9 @@ class _ExistingQuotesSection extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  if (quotes.isEmpty) {
- return Column(
+ return const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text(
  'Existing Contracting quotes',
  style: TextStyle(
@@ -1975,6 +1956,14 @@ class _ExistingQuotesTable extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
+ return FullScreenTableWrapper(
+ title: 'Existing Quotes',
+ child: _buildTable(),
+ tableBuilder: (fsContext) => _buildTable(),
+ );
+ }
+
+ Widget _buildTable() {
  return Container(
  decoration: BoxDecoration(
  color: Colors.white,
@@ -2006,10 +1995,10 @@ class _ExistingQuotesHeader extends StatelessWidget {
  const style = TextStyle(
  fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF6B7280));
 
- return Padding(
- padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+ return const Padding(
+ padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),
  child: Row(
- children: const [
+ children: [
  Expanded(flex: 24, child: Text('Contractor', style: style)),
  Expanded(flex: 26, child: Text('Description', style: style)),
  Expanded(flex: 18, child: Text('Estimated Value', style: style)),
@@ -2040,7 +2029,7 @@ class _ExistingQuotesRow extends StatelessWidget {
  children: [
  Expanded(
  flex: 24,
- child: Text(
+ child: WrappedText(
  data.contractor,
  style: const TextStyle(
  fontSize: 14,
@@ -2050,14 +2039,14 @@ class _ExistingQuotesRow extends StatelessWidget {
  ),
  Expanded(
  flex: 26,
- child: Text(
+ child: WrappedText(
  data.description,
  style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
  ),
  ),
  Expanded(
  flex: 18,
- child: Text(
+ child: WrappedText(
  data.estimatedValue,
  style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
  ),
@@ -2118,9 +2107,9 @@ class _QuoteStatusChip extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: color.withOpacity(0.26)),
+ border: Border.all(color: color.withValues(alpha: 0.26)),
  ),
  child: Text(
  label,
@@ -2282,7 +2271,7 @@ class _ContractDropdownField extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  return DropdownButtonFormField<String>(
- value: value,
+ initialValue: value,
  onChanged: onChanged,
  validator: validator,
  items: items
@@ -2398,13 +2387,12 @@ class _ContractDateField extends StatelessWidget {
  }
 }
 
-class _ContractHeader extends StatelessWidget {
- const _ContractHeader({
- required this.title,
- this.onBack,
- this.onForward,
- this.onCreateContract,
- });
+class _ContractHeader extends StatelessWidget {  const _ContractHeader({
+    required this.title,
+    this.onBack,
+    this.onForward,
+    this.onCreateContract,
+  });
 
  final String title;
  final VoidCallback? onBack;
@@ -2500,16 +2488,16 @@ class _PlanningSummaryRow extends StatelessWidget {
  final approvalsDefined = (approvalsText ?? '').trim().isNotEmpty;
  final timelineDefined = (timelineText ?? '').trim().isNotEmpty;
  if (projectId == null || projectId!.isEmpty) {
- return _PlanningSummaryCards(
+ return const _PlanningSummaryCards(
  stats: [
  _SummaryStatData('Planned Contracts', '—', 'No project selected',
- const Color(0xFFFFC812)),
+ Color(0xFFFFC812)),
  _SummaryStatData('Estimated Value', '—', 'Set in preview list',
- const Color(0xFF059669)),
+ Color(0xFF059669)),
  _SummaryStatData('Approval Readiness', '—', 'Define checkpoints',
- const Color(0xFFF59E0B)),
+ Color(0xFFF59E0B)),
  _SummaryStatData('Target Award Window', '—', 'Set timeline targets',
- const Color(0xFF7C3AED)),
+ Color(0xFF7C3AED)),
  ],
  );
  }
@@ -2624,8 +2612,7 @@ class _PlanningSectionCard extends StatelessWidget {
  required this.title,
  required this.child,
  this.subtitle,
- this.trailing,
- });
+ }) : trailing = null;
 
  final String title;
  final String? subtitle;
@@ -2790,17 +2777,16 @@ class _CollapsibleSectionCardState extends State<_CollapsibleSectionCard> {
  }
 }
 
-class _CollapsibleAiTextCard extends StatefulWidget {
- const _CollapsibleAiTextCard({
- required this.title,
- required this.noteKey,
- required this.sectionLabel,
- required this.hintText,
- this.subtitle,
- this.minLines = 3,
- this.maxLines = 8,
- this.initiallyExpanded = false,
- });
+class _CollapsibleAiTextCard extends StatefulWidget {  const _CollapsibleAiTextCard({
+    required this.title,
+    required this.noteKey,
+    required this.sectionLabel,
+    required this.hintText,
+    this.subtitle,
+    this.minLines = 3,
+    this.maxLines = 8,
+    this.initiallyExpanded = false,
+  });
 
  final String title;
  final String? subtitle;
@@ -2963,9 +2949,9 @@ class _ContractsPreviewSection extends StatelessWidget {
  builder: (context, snapshot) {
  final contracts = snapshot.data ?? const <ContractModel>[];
  if (contracts.isEmpty) {
- return Column(
+ return const Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text('No planned contracts yet.',
  style:
  TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
@@ -3079,9 +3065,9 @@ class _ContractsDataSection extends StatelessWidget {
  if (!hasContractData) {
  return const _EmptyContractsState();
  }
- return Column(
+ return const Column(
  crossAxisAlignment: CrossAxisAlignment.stretch,
- children: const [
+ children: [
  _ContractingNoteBanner(),
  ],
  );
@@ -3201,10 +3187,10 @@ class _EmptyContractsState extends StatelessWidget {
  color: Color(0xFFF59E0B)),
  ),
  const SizedBox(width: 14),
- Expanded(
+ const Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text('No contract data yet',
  style: TextStyle(
  fontSize: 14,
@@ -3609,10 +3595,10 @@ class _TimelineStep extends StatelessWidget {
  horizontal: 4, vertical: 2),
  child: Text(
  step.estimate,
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: const Color(0xFFFFC812),
+ color: Color(0xFFFFC812),
  decoration: TextDecoration.underline,
  ),
  ),
@@ -3706,7 +3692,7 @@ class _ContractMetricCard extends StatelessWidget {
  width: 42,
  height: 42,
  decoration: BoxDecoration(
- color: metric.accentColor.withOpacity(0.12),
+ color: metric.accentColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(14),
  ),
  child: Icon(metric.icon, color: metric.accentColor, size: 22),
@@ -3929,9 +3915,9 @@ class _StatusPill extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: color.withOpacity(0.32)),
+ border: Border.all(color: color.withValues(alpha: 0.32)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -4299,12 +4285,7 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
  }
 
  void _openContractingStatus() {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractingStatusScreen'),
- builder: (_) => const ContractingStatusScreen(),
- ),
- );
+ context.push('/contracting-status');
  }
 
  @override
@@ -4372,8 +4353,8 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Contract',
  ),
  ),
@@ -4856,7 +4837,7 @@ class _ContractingStatusScreenState extends State<ContractingStatusScreen> {
  child: ConstrainedBox(
  constraints: const BoxConstraints(maxWidth: 220),
  child: DropdownButtonFormField<String>(
- value: _selectedView,
+ initialValue: _selectedView,
  items: const [
  DropdownMenuItem(
  value: 'Overview', child: Text('Overview')),
@@ -4912,8 +4893,8 @@ class _ContractingStatusScreenState extends State<ContractingStatusScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Contract',
  ),
  ),
@@ -4933,12 +4914,7 @@ class ContractingSummaryScreen extends StatefulWidget {
  const ContractingSummaryScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractingSummaryScreen'),
- builder: (_) => const ContractingSummaryScreen(),
- ),
- );
+ context.push('/contracting-summary');
  }
 
  @override
@@ -4981,21 +4957,11 @@ class _ContractingSummaryScreenState extends State<ContractingSummaryScreen> {
  }
 
  void _openContractDetails() {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractDetailsScreen'),
- builder: (_) => const ContractDetailsScreen(),
- ),
- );
+ context.push('/contract-details');
  }
 
  void _openContractingStatus() {
- Navigator.of(context).push(
- MaterialPageRoute(
- settings: const RouteSettings(name: 'ContractingStatusScreen'),
- builder: (_) => const ContractingStatusScreen(),
- ),
- );
+ context.push('/contracting-status');
  }
 
  Future<void> _loadSummaryData() async {
@@ -5329,8 +5295,8 @@ class _ContractingSummaryScreenState extends State<ContractingSummaryScreen> {
  ],
  ),
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Contract',
  ),
  ),
@@ -5381,7 +5347,18 @@ class _ContractingSummaryOverviewCard extends StatelessWidget {
  style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
  ),
  const SizedBox(height: 24),
- DecoratedBox(
+ FullScreenTableWrapper(
+ title: 'Contracting Summary',
+ child: _buildSummaryTable(),
+ tableBuilder: (fsContext) => _buildSummaryTable(),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildSummaryTable() {
+ return DecoratedBox(
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(22),
  border: Border.all(color: const Color(0xFFE5E7EB)),
@@ -5394,8 +5371,8 @@ class _ContractingSummaryOverviewCard extends StatelessWidget {
  color: const Color(0xFFF9FAFB),
  padding: const EdgeInsets.symmetric(
  horizontal: 28, vertical: 18),
- child: Row(
- children: const [
+ child: const Row(
+ children: [
  _SummaryTableHeaderCell(label: 'Contract', flex: 20),
  _SummaryTableHeaderCell(label: 'Contractor', flex: 20),
  _SummaryTableHeaderCell(
@@ -5421,9 +5398,6 @@ class _ContractingSummaryOverviewCard extends StatelessWidget {
  ],
  ],
  ),
- ),
- ),
- ],
  ),
  );
  }
@@ -5481,19 +5455,19 @@ class _SummaryTableRow extends StatelessWidget {
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.center,
  children: [
- Expanded(flex: 20, child: Text(data.contract, style: primaryStyle)),
+ Expanded(flex: 20, child: WrappedText(data.contract, style: primaryStyle)),
  Expanded(
  flex: 20,
- child: Text(placeholderIfNeeded(data.contractor),
+ child: WrappedText(placeholderIfNeeded(data.contractor),
  style: secondaryStyle)),
  Expanded(
  flex: 20,
- child: Text(placeholderIfNeeded(data.method),
+ child: WrappedText(placeholderIfNeeded(data.method),
  style: secondaryStyle)),
  Expanded(
  flex: 16,
- child: Text(data.estimatedValue, style: secondaryStyle)),
- Expanded(flex: 14, child: Text(data.duration, style: secondaryStyle)),
+ child: WrappedText(data.estimatedValue, style: secondaryStyle)),
+ Expanded(flex: 14, child: WrappedText(data.duration, style: secondaryStyle)),
  Expanded(
  flex: 10,
  child: data.statusLabel != null
@@ -5915,7 +5889,18 @@ class _ContractingSummaryWarrantyCard extends StatelessWidget {
  style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
  ),
  const SizedBox(height: 24),
- DecoratedBox(
+ FullScreenTableWrapper(
+ title: 'Warranty & Support Documentation',
+ child: _buildWarrantyTable(),
+ tableBuilder: (fsContext) => _buildWarrantyTable(),
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _buildWarrantyTable() {
+ return DecoratedBox(
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(22),
  border: Border.all(color: const Color(0xFFE5E7EB)),
@@ -5928,8 +5913,8 @@ class _ContractingSummaryWarrantyCard extends StatelessWidget {
  color: const Color(0xFFF9FAFB),
  padding: const EdgeInsets.symmetric(
  horizontal: 28, vertical: 18),
- child: Row(
- children: const [
+ child: const Row(
+ children: [
  _WarrantyTableHeaderCell(label: 'Contract', flex: 24),
  _WarrantyTableHeaderCell(
  label: 'Warranty Period', flex: 18),
@@ -5955,9 +5940,6 @@ class _ContractingSummaryWarrantyCard extends StatelessWidget {
  ],
  ],
  ),
- ),
- ),
- ],
  ),
  );
  }
@@ -6002,15 +5984,15 @@ class _WarrantyTableRow extends StatelessWidget {
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.center,
  children: [
- Expanded(flex: 24, child: Text(data.contract, style: primaryStyle)),
+ Expanded(flex: 24, child: WrappedText(data.contract, style: primaryStyle)),
  Expanded(
  flex: 18,
- child: Text(data.warrantyPeriod, style: secondaryStyle)),
+ child: WrappedText(data.warrantyPeriod, style: secondaryStyle)),
  Expanded(
- flex: 18, child: Text(data.supportType, style: secondaryStyle)),
+ flex: 18, child: WrappedText(data.supportType, style: secondaryStyle)),
  Expanded(
  flex: 24,
- child: Text(data.contactInformation, style: secondaryStyle)),
+ child: WrappedText(data.contactInformation, style: secondaryStyle)),
  Expanded(
  flex: 16,
  child: data.documentLabel != null
@@ -6273,8 +6255,8 @@ class _ContractStatusOverview extends StatelessWidget {
  );
  }
 
- final double rightColumnWidth = 300;
- final double spacing = 24;
+ const double rightColumnWidth = 300;
+ const double spacing = 24;
  final double timelineWidth =
  constraints.maxWidth - rightColumnWidth - spacing;
 
@@ -6334,13 +6316,13 @@ class _ContractStatusTimelineCard extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Row(
+ const Row(
  mainAxisAlignment: MainAxisAlignment.spaceBetween,
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Column(
  crossAxisAlignment: CrossAxisAlignment.start,
- children: const [
+ children: [
  Text('Contract Status Timeline',
  style: TextStyle(
  fontSize: 18,
@@ -6351,7 +6333,7 @@ class _ContractStatusTimelineCard extends StatelessWidget {
  style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
  ],
  ),
- const _TimelineLegend(),
+ _TimelineLegend(),
  ],
  ),
  const SizedBox(height: 22),
@@ -6804,7 +6786,7 @@ class _ContractorsDirectorySection extends StatelessWidget {
  Column(
  crossAxisAlignment: CrossAxisAlignment.stretch,
  children: [
- _ContractorSearchField(),
+ const _ContractorSearchField(),
  const SizedBox(height: 12),
  _ContractorStatusDropdown(
  selectedStatus: selectedStatus, onChanged: onStatusChanged),
@@ -6875,7 +6857,7 @@ class _ContractorStatusDropdown extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  return DropdownButtonFormField<String>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  items: _ContractorsDirectorySection._statusFilters
  .map((status) => DropdownMenuItem(value: status, child: Text(status)))
  .toList(),
@@ -6918,13 +6900,35 @@ class _ContractorsTable extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final Widget table = Column(
+ return FullScreenTableWrapper(
+ title: 'Contractors',
+ child: _buildInlineView(),
+ tableBuilder: (fsContext) => _buildTableContent(),
+ );
+ }
+
+ Widget _buildInlineView() {
+ final Widget table = _buildTableContent();
+ if (isMobile) {
+ return SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: const BoxConstraints(minWidth: 960),
+ child: table,
+ ),
+ );
+ }
+ return table;
+ }
+
+ Widget _buildTableContent() {
+ return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Padding(
- padding: const EdgeInsets.only(bottom: 18),
+ const Padding(
+ padding: EdgeInsets.only(bottom: 18),
  child: Row(
- children: const [
+ children: [
  _ContractorsHeaderCell(label: 'CONTRACTOR', flex: 32),
  _ContractorsHeaderCell(label: 'LOCATION', flex: 18),
  _ContractorsHeaderCell(label: 'BID AMOUNT', flex: 16),
@@ -6948,18 +6952,6 @@ class _ContractorsTable extends StatelessWidget {
  }),
  ],
  );
-
- if (isMobile) {
- return SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: ConstrainedBox(
- constraints: const BoxConstraints(minWidth: 960),
- child: table,
- ),
- );
- }
-
- return table;
  }
 }
 
@@ -6990,13 +6982,13 @@ class _ContractorTableRow extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text(data.name,
+ WrappedText(data.name,
  style: const TextStyle(
  fontSize: 14,
  fontWeight: FontWeight.w700,
  color: Color(0xFF111827))),
  const SizedBox(height: 4),
- Text(data.role,
+ WrappedText(data.role,
  style: const TextStyle(
  fontSize: 12, color: Color(0xFF6B7280))),
  ],
@@ -7007,12 +6999,12 @@ class _ContractorTableRow extends StatelessWidget {
  ),
  Expanded(
  flex: 18,
- child: Text(data.location,
+ child: WrappedText(data.location,
  style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563))),
  ),
  Expanded(
  flex: 16,
- child: Text(data.bidAmount,
+ child: WrappedText(data.bidAmount,
  style: const TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w600,
@@ -7025,7 +7017,7 @@ class _ContractorTableRow extends StatelessWidget {
  ),
  Expanded(
  flex: 14,
- child: Text(data.submissionDate,
+ child: WrappedText(data.submissionDate,
  style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563))),
  ),
  Expanded(
@@ -7033,7 +7025,7 @@ class _ContractorTableRow extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text('${data.score}',
+ WrappedText('${data.score}',
  style: const TextStyle(
  fontSize: 14,
  fontWeight: FontWeight.w700,
@@ -7115,7 +7107,7 @@ class _ContractStatusChip extends StatelessWidget {
  child: Container(
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.14),
+ color: color.withValues(alpha: 0.14),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(label,
@@ -7380,7 +7372,7 @@ class _ContractExecutionSection extends StatelessWidget {
  ConstrainedBox(
  constraints: const BoxConstraints(maxWidth: 300),
  child: DropdownButtonFormField<String>(
- value: selectedContract,
+ initialValue: selectedContract,
  onChanged: (value) =>
  onContractChanged(value ?? selectedContract),
  items: availableContracts
@@ -7805,7 +7797,7 @@ class _ContractOverviewSummaryCard extends StatelessWidget {
  ),
  child: Text(
  contractId.isNotEmpty ? contractId : 'TBD',
- style: TextStyle(
+ style: const TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w600,
  color: Color(0xFF111827)),
@@ -7878,7 +7870,7 @@ class _ContractMilestoneCard extends StatelessWidget {
  Widget build(BuildContext context) {
  final Color background = data.emphasize
  ? const Color(0xFFFFF5F5)
- : data.accentColor.withOpacity(0.08);
+ : data.accentColor.withValues(alpha: 0.08);
  final Color textColor =
  data.emphasize ? const Color(0xFFB91C1C) : const Color(0xFF1F2937);
 
@@ -7887,7 +7879,7 @@ class _ContractMilestoneCard extends StatelessWidget {
  decoration: BoxDecoration(
  color: background,
  borderRadius: BorderRadius.circular(20),
- border: Border.all(color: data.accentColor.withOpacity(0.2)),
+ border: Border.all(color: data.accentColor.withValues(alpha: 0.2)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -8578,10 +8570,10 @@ class _UploadBidDocumentsCard extends StatelessWidget {
  color: Color(0x08000000), blurRadius: 14, offset: Offset(0, 10)),
  ],
  ),
- child: Column(
+ child: const Column(
  mainAxisSize: MainAxisSize.min,
  crossAxisAlignment: CrossAxisAlignment.center,
- children: const [
+ children: [
  Icon(Icons.cloud_upload_outlined, size: 44, color: Color(0xFFFFC812)),
  SizedBox(height: 16),
  Text(
@@ -8640,7 +8632,7 @@ class _ContractDocumentRow extends StatelessWidget {
  width: 44,
  height: 44,
  decoration: BoxDecoration(
- color: data.accentColor.withOpacity(0.12),
+ color: data.accentColor.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(14),
  ),
  child: Icon(data.icon, color: data.accentColor, size: 22),

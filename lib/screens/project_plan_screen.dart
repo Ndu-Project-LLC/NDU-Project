@@ -11,21 +11,23 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 class ProjectPlanScreen extends StatefulWidget {
   const ProjectPlanScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProjectPlanScreen()),
-    );
+    context.push('/project-plan');
   }
 
   @override
@@ -89,6 +91,10 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   bool _suspendOverviewSave = false;
   bool _suspendBudgetSave = false;
 
+  bool _autoPopulated = false;
+  bool _isAutoPopulating = false;
+  String? _carriedContext;
+
   static const String _kOverviewInitialized =
       'project_plan_overview_initialized';
   static const String _kResourcesInitialized =
@@ -132,7 +138,67 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       _loadTasks();
       _loadBudget();
       _loadRisks();
+      _autoPopulateIfNeeded();
     });
+  }
+
+  Future<void> _autoPopulateIfNeeded() async {
+    if (_autoPopulated || _isAutoPopulating) return;
+    _autoPopulated = true;
+    _isAutoPopulating = true;
+    if (mounted) setState(() {});
+
+    try {
+      // Pull real carried context for the banner.
+      final carried = await buildAccumulatedContext(context, 'project_plan');
+      if (mounted) setState(() => _carriedContext = carried);
+
+      // If overview already has content, don't seed.
+      if (_overviewObjectives.isNotEmpty ||
+          _overviewScope.isNotEmpty ||
+          _overviewMilestones.isNotEmpty) {
+        if (mounted) setState(() => _isAutoPopulating = false);
+        return;
+      }
+
+      final data = ProjectDataHelper.getData(context);
+      final seed = seedProjectPlan(data);
+      if (seed.isNotEmpty && mounted) {
+        final newMilestones = <_MilestoneEntry>[];
+        for (final r in seed.rows) {
+          if (r['kind'] == 'milestone') {
+            newMilestones.add(_MilestoneEntry(
+              id: DateTime.now().microsecondsSinceEpoch.toString(),
+              title: (r['name'] ?? '').toString(),
+              targetDate: (r['dueDate'] ?? '').toString(),
+              owner: (r['discipline'] ?? '').toString(),
+              status: 'Planned',
+              notes: 'Auto-seeded from ${r['source']}.',
+            ));
+          }
+        }
+        if (newMilestones.isNotEmpty && mounted) {
+          setState(() {
+            _overviewMilestones
+              ..clear()
+              ..addAll(newMilestones);
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Seeded ${newMilestones.length} milestone(s) from ${seed.source}.'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('ProjectPlan auto-populate error: $e');
+    } finally {
+      if (mounted) setState(() => _isAutoPopulating = false);
+    }
   }
 
   @override
@@ -239,6 +305,17 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                                 context, 'project_plan'),
                             onExportPdf: _exportPdf),
                         const SizedBox(height: 16),
+                        if (_isAutoPopulating)
+                          const AutoPopulatingIndicator(),
+                        if (_carriedContext != null &&
+                            _carriedContext!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: CarriedContextBanner(
+                              checkpoint: 'project_plan',
+                              contextText: _carriedContext!,
+                            ),
+                          ),
                         _buildHeader(isMobile),
                         const SizedBox(height: 24),
                         const PlanningAiNotesCard(
@@ -315,8 +392,8 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel: 'Project Plan',
                     ),
                   ),
@@ -435,21 +512,21 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                   color: Color(0xFF374151))),
         ),
         const SizedBox(width: 12),
-        Row(
+        const Row(
           children: [
-            const Icon(Icons.calendar_today_outlined,
+            Icon(Icons.calendar_today_outlined,
                 size: 14, color: Color(0xFF6B7280)),
-            const SizedBox(width: 6),
-            const Text('Start —',
+            SizedBox(width: 6),
+            Text('Start —',
                 style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
           ],
         ),
         const SizedBox(width: 12),
-        Row(
+        const Row(
           children: [
-            const Icon(Icons.flag_outlined, size: 14, color: Color(0xFF6B7280)),
-            const SizedBox(width: 6),
-            const Text('End —',
+            Icon(Icons.flag_outlined, size: 14, color: Color(0xFF6B7280)),
+            SizedBox(width: 6),
+            Text('End —',
                 style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
           ],
         ),
@@ -2047,7 +2124,9 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       children: [
         toolbar,
         const SizedBox(height: 12),
-        _EditableTable(
+        FullScreenTableWrapper(
+        title: 'Milestones',
+        child: _EditableTable(
           columns: columns,
           rows: [
             for (final entry in _overviewMilestones)
@@ -2103,6 +2182,64 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                 ],
               ),
           ],
+        ),
+        tableBuilder: (fsContext) => _EditableTable(
+          columns: columns,
+          rows: [
+            for (final entry in _overviewMilestones)
+              _EditableRow(
+                key: ValueKey(entry.id),
+                columns: columns,
+                cells: [
+                  _TextCell(
+                    value: entry.title,
+                    fieldKey: '${entry.id}_title',
+                    hintText: 'Milestone name',
+                    onChanged: (value) =>
+                        _updateMilestone(entry.copyWith(title: value)),
+                  ),
+                  _TextCell(
+                    value: entry.targetDate,
+                    fieldKey: '${entry.id}_target',
+                    hintText: 'YYYY-MM-DD',
+                    onChanged: (value) =>
+                        _updateMilestone(entry.copyWith(targetDate: value)),
+                  ),
+                  _TextCell(
+                    value: entry.owner,
+                    fieldKey: '${entry.id}_owner',
+                    hintText: 'Owner',
+                    onChanged: (value) =>
+                        _updateMilestone(entry.copyWith(owner: value)),
+                  ),
+                  _DropdownCell(
+                    value: entry.status,
+                    fieldKey: '${entry.id}_status',
+                    options: const [
+                      'Planned',
+                      'In progress',
+                      'At risk',
+                      'Complete'
+                    ],
+                    onChanged: (value) =>
+                        _updateMilestone(entry.copyWith(status: value)),
+                  ),
+                  _TextCell(
+                    value: entry.notes,
+                    fieldKey: '${entry.id}_notes',
+                    hintText: 'Notes',
+                    onChanged: (value) =>
+                        _updateMilestone(entry.copyWith(notes: value)),
+                  ),
+                  _DeleteCell(
+                    onPressed: () => _deleteMilestone(entry.id),
+                    itemName:
+                        'milestone "${entry.title.isEmpty ? 'Untitled' : entry.title}"',
+                  ),
+                ],
+              ),
+          ],
+        ),
         ),
       ],
     );
@@ -2176,7 +2313,9 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       children: [
         toolbar,
         const SizedBox(height: 12),
-        _EditableTable(
+        FullScreenTableWrapper(
+        title: 'Resource Plan',
+        child: _EditableTable(
           columns: columns,
           rows: [
             for (final entry in _resourcePlan)
@@ -2234,6 +2373,66 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                 ],
               ),
           ],
+        ),
+        tableBuilder: (fsContext) => _EditableTable(
+          columns: columns,
+          rows: [
+            for (final entry in _resourcePlan)
+              _EditableRow(
+                key: ValueKey(entry.id),
+                columns: columns,
+                cells: [
+                  _TextCell(
+                    value: entry.role,
+                    fieldKey: '${entry.id}_role',
+                    hintText: 'Role or skill',
+                    onChanged: (value) =>
+                        _updateResource(entry.copyWith(role: value)),
+                  ),
+                  _TextCell(
+                    value: entry.allocation,
+                    fieldKey: '${entry.id}_allocation',
+                    hintText: 'e.g., 0.5 FTE',
+                    onChanged: (value) =>
+                        _updateResource(entry.copyWith(allocation: value)),
+                  ),
+                  _TextCell(
+                    value: entry.startDate,
+                    fieldKey: '${entry.id}_start',
+                    hintText: 'YYYY-MM-DD',
+                    onChanged: (value) =>
+                        _updateResource(entry.copyWith(startDate: value)),
+                  ),
+                  _TextCell(
+                    value: entry.endDate,
+                    fieldKey: '${entry.id}_end',
+                    hintText: 'YYYY-MM-DD',
+                    onChanged: (value) =>
+                        _updateResource(entry.copyWith(endDate: value)),
+                  ),
+                  _TextCell(
+                    value: entry.owner,
+                    fieldKey: '${entry.id}_owner',
+                    hintText: 'Owner',
+                    onChanged: (value) =>
+                        _updateResource(entry.copyWith(owner: value)),
+                  ),
+                  _TextCell(
+                    value: entry.notes,
+                    fieldKey: '${entry.id}_notes',
+                    hintText: 'Notes',
+                    onChanged: (value) =>
+                        _updateResource(entry.copyWith(notes: value)),
+                  ),
+                  _DeleteCell(
+                    onPressed: () => _deleteResource(entry.id),
+                    itemName:
+                        'resource "${entry.role.isEmpty ? 'Untitled' : entry.role}"',
+                  ),
+                ],
+              ),
+          ],
+        ),
         ),
       ],
     );
@@ -2303,7 +2502,9 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       children: [
         toolbar,
         const SizedBox(height: 12),
-        _EditableTable(
+        FullScreenTableWrapper(
+        title: 'Vendors',
+        child: _EditableTable(
           columns: columns,
           rows: [
             for (final entry in _vendors)
@@ -2359,6 +2560,64 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                 ],
               ),
           ],
+        ),
+        tableBuilder: (fsContext) => _EditableTable(
+          columns: columns,
+          rows: [
+            for (final entry in _vendors)
+              _EditableRow(
+                key: ValueKey(entry.id),
+                columns: columns,
+                cells: [
+                  _TextCell(
+                    value: entry.name,
+                    fieldKey: '${entry.id}_name',
+                    hintText: 'Vendor name',
+                    onChanged: (value) =>
+                        _updateVendor(entry.copyWith(name: value)),
+                  ),
+                  _TextCell(
+                    value: entry.service,
+                    fieldKey: '${entry.id}_service',
+                    hintText: 'Service',
+                    onChanged: (value) =>
+                        _updateVendor(entry.copyWith(service: value)),
+                  ),
+                  _TextCell(
+                    value: entry.contact,
+                    fieldKey: '${entry.id}_contact',
+                    hintText: 'Contact',
+                    onChanged: (value) =>
+                        _updateVendor(entry.copyWith(contact: value)),
+                  ),
+                  _DropdownCell(
+                    value: entry.status,
+                    fieldKey: '${entry.id}_status',
+                    options: const [
+                      'Planned',
+                      'Contracted',
+                      'Active',
+                      'Complete'
+                    ],
+                    onChanged: (value) =>
+                        _updateVendor(entry.copyWith(status: value)),
+                  ),
+                  _TextCell(
+                    value: entry.notes,
+                    fieldKey: '${entry.id}_notes',
+                    hintText: 'Notes',
+                    onChanged: (value) =>
+                        _updateVendor(entry.copyWith(notes: value)),
+                  ),
+                  _DeleteCell(
+                    onPressed: () => _deleteVendor(entry.id),
+                    itemName:
+                        'vendor "${entry.name.isEmpty ? 'Untitled' : entry.name}"',
+                  ),
+                ],
+              ),
+          ],
+        ),
         ),
       ],
     );
@@ -2428,7 +2687,9 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       children: [
         toolbar,
         const SizedBox(height: 12),
-        _EditableTable(
+        FullScreenTableWrapper(
+        title: 'Tools',
+        child: _EditableTable(
           columns: columns,
           rows: [
             for (final entry in _tools)
@@ -2479,6 +2740,59 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                 ],
               ),
           ],
+        ),
+        tableBuilder: (fsContext) => _EditableTable(
+          columns: columns,
+          rows: [
+            for (final entry in _tools)
+              _EditableRow(
+                key: ValueKey(entry.id),
+                columns: columns,
+                cells: [
+                  _TextCell(
+                    value: entry.name,
+                    fieldKey: '${entry.id}_name',
+                    hintText: 'Tool or system',
+                    onChanged: (value) =>
+                        _updateTool(entry.copyWith(name: value)),
+                  ),
+                  _TextCell(
+                    value: entry.purpose,
+                    fieldKey: '${entry.id}_purpose',
+                    hintText: 'Purpose',
+                    onChanged: (value) =>
+                        _updateTool(entry.copyWith(purpose: value)),
+                  ),
+                  _TextCell(
+                    value: entry.owner,
+                    fieldKey: '${entry.id}_owner',
+                    hintText: 'Owner',
+                    onChanged: (value) =>
+                        _updateTool(entry.copyWith(owner: value)),
+                  ),
+                  _DropdownCell(
+                    value: entry.status,
+                    fieldKey: '${entry.id}_status',
+                    options: const ['Planned', 'In setup', 'Ready', 'Retired'],
+                    onChanged: (value) =>
+                        _updateTool(entry.copyWith(status: value)),
+                  ),
+                  _TextCell(
+                    value: entry.notes,
+                    fieldKey: '${entry.id}_notes',
+                    hintText: 'Notes',
+                    onChanged: (value) =>
+                        _updateTool(entry.copyWith(notes: value)),
+                  ),
+                  _DeleteCell(
+                    onPressed: () => _deleteTool(entry.id),
+                    itemName:
+                        'tool "${entry.name.isEmpty ? 'Untitled' : entry.name}"',
+                  ),
+                ],
+              ),
+          ],
+        ),
         ),
       ],
     );
@@ -2545,7 +2859,9 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       children: [
         toolbar,
         const SizedBox(height: 12),
-        _EditableTable(
+        FullScreenTableWrapper(
+        title: 'Tasks',
+        child: _EditableTable(
           columns: columns,
           rows: [
             for (final entry in _tasks)
@@ -2616,6 +2932,78 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
               ),
           ],
         ),
+        tableBuilder: (fsContext) => _EditableTable(
+          columns: columns,
+          rows: [
+            for (final entry in _tasks)
+              _EditableRow(
+                key: ValueKey(entry.id),
+                columns: columns,
+                cells: [
+                  _TextCell(
+                    value: entry.title,
+                    fieldKey: '${entry.id}_title',
+                    hintText: 'Task description',
+                    onChanged: (value) =>
+                        _updateTask(entry.copyWith(title: value)),
+                  ),
+                  _TextCell(
+                    value: entry.owner,
+                    fieldKey: '${entry.id}_owner',
+                    hintText: 'Owner',
+                    onChanged: (value) =>
+                        _updateTask(entry.copyWith(owner: value)),
+                  ),
+                  _TextCell(
+                    value: entry.startDate,
+                    fieldKey: '${entry.id}_start',
+                    hintText: 'YYYY-MM-DD',
+                    onChanged: (value) =>
+                        _updateTask(entry.copyWith(startDate: value)),
+                  ),
+                  _TextCell(
+                    value: entry.dueDate,
+                    fieldKey: '${entry.id}_due',
+                    hintText: 'YYYY-MM-DD',
+                    onChanged: (value) =>
+                        _updateTask(entry.copyWith(dueDate: value)),
+                  ),
+                  _DropdownCell(
+                    value: entry.status,
+                    fieldKey: '${entry.id}_status',
+                    options: const [
+                      'Not started',
+                      'In progress',
+                      'Blocked',
+                      'Complete'
+                    ],
+                    onChanged: (value) =>
+                        _updateTask(entry.copyWith(status: value)),
+                  ),
+                  _TextCell(
+                    value: entry.dependency,
+                    fieldKey: '${entry.id}_dependency',
+                    hintText: 'Dependency',
+                    onChanged: (value) =>
+                        _updateTask(entry.copyWith(dependency: value)),
+                  ),
+                  _TextCell(
+                    value: entry.notes,
+                    fieldKey: '${entry.id}_notes',
+                    hintText: 'Notes',
+                    onChanged: (value) =>
+                        _updateTask(entry.copyWith(notes: value)),
+                  ),
+                  _DeleteCell(
+                    onPressed: () => _deleteTask(entry.id),
+                    itemName:
+                        'task "${entry.title.isEmpty ? 'Untitled' : entry.title}"',
+                  ),
+                ],
+              ),
+          ],
+        ),
+        ),
       ],
     );
   }
@@ -2682,7 +3070,9 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       children: [
         toolbar,
         const SizedBox(height: 12),
-        _EditableTable(
+        FullScreenTableWrapper(
+        title: 'Budget',
+        child: _EditableTable(
           columns: columns,
           rows: [
             for (final entry in _budgetBreakdown)
@@ -2733,6 +3123,59 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                 ],
               ),
           ],
+        ),
+        tableBuilder: (fsContext) => _EditableTable(
+          columns: columns,
+          rows: [
+            for (final entry in _budgetBreakdown)
+              _EditableRow(
+                key: ValueKey(entry.id),
+                columns: columns,
+                cells: [
+                  _TextCell(
+                    value: entry.category,
+                    fieldKey: '${entry.id}_category',
+                    hintText: 'Category',
+                    onChanged: (value) =>
+                        _updateBudgetItem(entry.copyWith(category: value)),
+                  ),
+                  _TextCell(
+                    value: entry.estimate,
+                    fieldKey: '${entry.id}_estimate',
+                    hintText: 'Estimate',
+                    onChanged: (value) =>
+                        _updateBudgetItem(entry.copyWith(estimate: value)),
+                  ),
+                  _TextCell(
+                    value: entry.actual,
+                    fieldKey: '${entry.id}_actual',
+                    hintText: 'Actual',
+                    onChanged: (value) =>
+                        _updateBudgetItem(entry.copyWith(actual: value)),
+                  ),
+                  _TextCell(
+                    value: entry.variance,
+                    fieldKey: '${entry.id}_variance',
+                    hintText: 'Variance',
+                    onChanged: (value) =>
+                        _updateBudgetItem(entry.copyWith(variance: value)),
+                  ),
+                  _TextCell(
+                    value: entry.notes,
+                    fieldKey: '${entry.id}_notes',
+                    hintText: 'Notes',
+                    onChanged: (value) =>
+                        _updateBudgetItem(entry.copyWith(notes: value)),
+                  ),
+                  _DeleteCell(
+                    onPressed: () => _deleteBudgetItem(entry.id),
+                    itemName:
+                        'budget item "${entry.category.isEmpty ? 'Untitled' : entry.category}"',
+                  ),
+                ],
+              ),
+          ],
+        ),
         ),
       ],
     );
@@ -2810,7 +3253,9 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
       children: [
         toolbar,
         const SizedBox(height: 12),
-        _EditableTable(
+        FullScreenTableWrapper(
+        title: 'Risks',
+        child: _EditableTable(
           columns: columns,
           rows: [
             for (final entry in _risks)
@@ -2875,6 +3320,73 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                 ],
               ),
           ],
+        ),
+        tableBuilder: (fsContext) => _EditableTable(
+          columns: columns,
+          rows: [
+            for (final entry in _risks)
+              _EditableRow(
+                key: ValueKey(entry.id),
+                columns: columns,
+                cells: [
+                  _TextCell(
+                    value: entry.title,
+                    fieldKey: '${entry.id}_title',
+                    hintText: 'Risk description',
+                    onChanged: (value) =>
+                        _updateRisk(entry.copyWith(title: value)),
+                  ),
+                  _DropdownCell(
+                    value: entry.impact,
+                    fieldKey: '${entry.id}_impact',
+                    options: const ['Low', 'Medium', 'High'],
+                    onChanged: (value) =>
+                        _updateRisk(entry.copyWith(impact: value)),
+                  ),
+                  _DropdownCell(
+                    value: entry.probability,
+                    fieldKey: '${entry.id}_probability',
+                    options: const ['Low', 'Medium', 'High'],
+                    onChanged: (value) =>
+                        _updateRisk(entry.copyWith(probability: value)),
+                  ),
+                  _TextCell(
+                    value: entry.mitigation,
+                    fieldKey: '${entry.id}_mitigation',
+                    hintText: 'Mitigation plan',
+                    onChanged: (value) =>
+                        _updateRisk(entry.copyWith(mitigation: value)),
+                  ),
+                  _TextCell(
+                    value: entry.owner,
+                    fieldKey: '${entry.id}_owner',
+                    hintText: 'Owner',
+                    onChanged: (value) =>
+                        _updateRisk(entry.copyWith(owner: value)),
+                  ),
+                  _DropdownCell(
+                    value: entry.status,
+                    fieldKey: '${entry.id}_status',
+                    options: const ['Open', 'Mitigating', 'Watching', 'Closed'],
+                    onChanged: (value) =>
+                        _updateRisk(entry.copyWith(status: value)),
+                  ),
+                  _TextCell(
+                    value: entry.targetDate,
+                    fieldKey: '${entry.id}_target',
+                    hintText: 'YYYY-MM-DD',
+                    onChanged: (value) =>
+                        _updateRisk(entry.copyWith(targetDate: value)),
+                  ),
+                  _DeleteCell(
+                    onPressed: () => _deleteRisk(entry.id),
+                    itemName:
+                        'risk "${entry.title.isEmpty ? 'Untitled' : entry.title}"',
+                  ),
+                ],
+              ),
+          ],
+        ),
         ),
       ],
     );
@@ -3267,7 +3779,9 @@ class _KeyDeliverablesCard extends StatelessWidget {
             ),
           ),
           const Divider(height: 1, color: Color(0xFFE5E7EB)),
-          LayoutBuilder(
+          FullScreenTableWrapper(
+          title: 'Key Deliverables',
+          child: LayoutBuilder(
             builder: (context, constraints) {
               final mediaWidth = MediaQuery.of(context).size.width;
               final bool hasBoundedWidth =
@@ -3316,6 +3830,57 @@ class _KeyDeliverablesCard extends StatelessWidget {
                 ),
               );
             },
+          ),
+          tableBuilder: (fsContext) => LayoutBuilder(
+            builder: (context, constraints) {
+              final mediaWidth = MediaQuery.of(context).size.width;
+              final bool hasBoundedWidth =
+                  constraints.hasBoundedWidth && constraints.maxWidth.isFinite;
+              final double tableWidth =
+                  hasBoundedWidth ? constraints.maxWidth : mediaWidth;
+
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: tableWidth,
+                  child: DataTable(
+                    headingRowColor:
+                        WidgetStateProperty.all(const Color(0xFFF9FAFB)),
+                    headingTextStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF6B7280)),
+                    dataTextStyle:
+                        const TextStyle(fontSize: 13, color: Color(0xFF374151)),
+                    horizontalMargin: 28,
+                    columnSpacing: 48,
+                    columns: const [
+                      DataColumn(label: Text('ID')),
+                      DataColumn(label: Text('Deliverable')),
+                      DataColumn(label: Text('Phase')),
+                      DataColumn(label: Text('Due Date')),
+                      DataColumn(label: Text('Status')),
+                      DataColumn(label: Text('Owner')),
+                    ],
+                    rows: deliverables
+                        .map((d) => DataRow(
+                              cells: [
+                                DataCell(Text(d.id,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w500))),
+                                DataCell(Text(d.name)),
+                                DataCell(Text(d.phase)),
+                                DataCell(Text(d.dueDate)),
+                                DataCell(_StatusBadge(status: d.status)),
+                                DataCell(Text(d.owner)),
+                              ],
+                            ))
+                        .toList(),
+                  ),
+                ),
+              );
+            },
+          ),
           ),
           const SizedBox(height: 16),
         ],
@@ -3477,7 +4042,9 @@ class _CommunicationPlanCard extends StatelessWidget {
             ),
           ),
           const Divider(height: 1, color: Color(0xFFE5E7EB)),
-          LayoutBuilder(
+          FullScreenTableWrapper(
+          title: 'Communication Plan',
+          child: LayoutBuilder(
             builder: (context, constraints) {
               final mediaWidth = MediaQuery.of(context).size.width;
               final bool hasBoundedWidth =
@@ -3524,6 +4091,55 @@ class _CommunicationPlanCard extends StatelessWidget {
                 ),
               );
             },
+          ),
+          tableBuilder: (fsContext) => LayoutBuilder(
+            builder: (context, constraints) {
+              final mediaWidth = MediaQuery.of(context).size.width;
+              final bool hasBoundedWidth =
+                  constraints.hasBoundedWidth && constraints.maxWidth.isFinite;
+              final double tableWidth =
+                  hasBoundedWidth ? constraints.maxWidth : mediaWidth;
+
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: tableWidth,
+                  child: DataTable(
+                    headingRowColor:
+                        WidgetStateProperty.all(const Color(0xFFF9FAFB)),
+                    headingTextStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF6B7280)),
+                    dataTextStyle:
+                        const TextStyle(fontSize: 13, color: Color(0xFF374151)),
+                    horizontalMargin: 28,
+                    columnSpacing: 48,
+                    columns: const [
+                      DataColumn(label: Text('Meeting Type')),
+                      DataColumn(label: Text('Frequency')),
+                      DataColumn(label: Text('Attendees')),
+                      DataColumn(label: Text('Purpose')),
+                    ],
+                    rows: communications
+                        .map((c) => DataRow(
+                              cells: [
+                                DataCell(Text(c.meetingType,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600))),
+                                DataCell(Text(c.frequency)),
+                                DataCell(Text(c.attendees)),
+                                DataCell(SizedBox(
+                                    width: 300,
+                                    child: Text(c.purpose, softWrap: true))),
+                              ],
+                            ))
+                        .toList(),
+                  ),
+                ),
+              );
+            },
+          ),
           ),
           const SizedBox(height: 16),
         ],
@@ -3942,7 +4558,7 @@ class _LabeledDropdown extends StatelessWidget {
                 color: Color(0xFF374151))),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           items: options
               .map((option) =>
                   DropdownMenuItem(value: option, child: Text(option)))
@@ -4108,7 +4724,7 @@ class _DropdownCell extends StatelessWidget {
     final resolvedValue = options.contains(value) ? value : options.first;
     return DropdownButtonFormField<String>(
       key: ValueKey(fieldKey),
-      value: resolvedValue,
+      initialValue: resolvedValue,
       items: options
           .map((option) => DropdownMenuItem(value: option, child: Text(option)))
           .toList(),

@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
+import 'package:go_router/go_router.dart';
 
 /// Section 7 — Financial Closeout
 ///
@@ -23,9 +24,7 @@ class FinancialCloseoutScreen extends StatefulWidget {
   const FinancialCloseoutScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const FinancialCloseoutScreen()),
-    );
+    context.push('/financial-closeout');
   }
 
   @override
@@ -36,7 +35,8 @@ class FinancialCloseoutScreen extends StatefulWidget {
 class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _summaryController = TextEditingController();
-  final TextEditingController _reconciliationController = TextEditingController();
+  final TextEditingController _reconciliationController =
+      TextEditingController();
   final TextEditingController _analysisController = TextEditingController();
 
   bool _isLoading = true;
@@ -86,7 +86,8 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
       if (!mounted) return;
       setState(() {
         _summaryController.text = data['summary']?.toString() ?? '';
-        _reconciliationController.text = data['reconciliation']?.toString() ?? '';
+        _reconciliationController.text =
+            data['reconciliation']?.toString() ?? '';
         _analysisController.text = data['analysis']?.toString() ?? '';
         _notesController.text = data['notes']?.toString() ?? '';
         _isLoading = false;
@@ -244,7 +245,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
       // Project value as budget fallback
       if (approvedBudget == 0) {
         final projectValue = double.tryParse(
-                costData.projectValueAmount.replaceAll(RegExp(r'[^0-9.]'), ''));
+            costData.projectValueAmount.replaceAll(RegExp(r'[^0-9.]'), ''));
         if (projectValue != null && projectValue > 0) {
           approvedBudget = projectValue;
         }
@@ -301,12 +302,12 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
 
     final variance = approvedBudget - actualCost;
     final cpi = actualCost > 0 ? approvedBudget / actualCost : 1.0;
-    final utilization =
-        approvedBudget > 0 ? (actualCost / approvedBudget).clamp(0.0, 1.5) : 0.0;
+    final utilization = approvedBudget > 0
+        ? (actualCost / approvedBudget).clamp(0.0, 1.5)
+        : 0.0;
     final utilizationPct = (utilization * 100).round();
-    final variancePct = approvedBudget > 0
-        ? (variance / approvedBudget * 100).round()
-        : 0;
+    final variancePct =
+        approvedBudget > 0 ? (variance / approvedBudget * 100).round() : 0;
     final isUnderBudget = variance >= 0;
 
     final formatter = _compactCurrency;
@@ -323,7 +324,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
           completionPercent: utilization.clamp(0.0, 1.0),
           completionLabel: 'BUDGET USED',
           completionCaption:
-              '${utilizationPct}% of approved budget spent • ${isUnderBudget ? "under budget" : "over budget"}',
+              '$utilizationPct% of approved budget spent • ${isUnderBudget ? "under budget" : "over budget"}',
           kpiTiles: [
             LaunchKpiTile(
               label: 'Approved Budget',
@@ -345,14 +346,18 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
               icon: isUnderBudget
                   ? Icons.trending_up_outlined
                   : Icons.trending_down_outlined,
-              color: isUnderBudget ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+              color: isUnderBudget
+                  ? const Color(0xFF10B981)
+                  : const Color(0xFFEF4444),
               delta: '$variancePct% ${isUnderBudget ? "under" : "over"} budget',
             ),
             LaunchKpiTile(
               label: 'CPI',
               value: cpi.toStringAsFixed(2),
               icon: Icons.speed_outlined,
-              color: cpi >= 1.0 ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+              color: cpi >= 1.0
+                  ? const Color(0xFF10B981)
+                  : const Color(0xFFEF4444),
               delta: cpi >= 1.0 ? 'on / under budget' : 'over budget',
               sparkline: const [0.92, 0.96, 0.98, 1.01, 1.02, 1.04],
             ),
@@ -371,7 +376,11 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
                       title: 'Cost Breakdown by Solution / Category',
                       segments: segments.isEmpty
                           ? [
-                              (label: 'No cost data', value: 1, color: const Color(0xFFE5E7EB)),
+                              (
+                                label: 'No cost data',
+                                value: 1,
+                                color: const Color(0xFFE5E7EB)
+                              ),
                             ]
                           : segments,
                       centerLabel: 'TOTAL',
@@ -404,7 +413,11 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
                   title: 'Cost Breakdown by Solution / Category',
                   segments: segments.isEmpty
                       ? [
-                          (label: 'No cost data', value: 1, color: const Color(0xFFE5E7EB)),
+                          (
+                            label: 'No cost data',
+                            value: 1,
+                            color: const Color(0xFFE5E7EB)
+                          ),
                         ]
                       : segments,
                   centerLabel: 'TOTAL',
@@ -447,16 +460,17 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: Color(0xFFEFF6FF),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF3B82F6)),
+        border: Border.all(color: Color(0xFF3B82F6)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.account_balance_wallet, color: Color(0xFF1D4ED8), size: 22),
+              Icon(Icons.account_balance_wallet,
+                  color: Color(0xFF1D4ED8), size: 22),
               SizedBox(width: 10),
               Text(
                 'Finalize all financial activities',
@@ -473,7 +487,8 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
             'Finalize all financial activities and reconcile project costs with accounting. '
             'This section captures the financial summary, accounting reconciliation, and the final financial analysis '
             'including earned value, ROI, and lessons learned.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF1E40AF), height: 1.5),
+            style:
+                TextStyle(fontSize: 13, color: Color(0xFF1E40AF), height: 1.5),
           ),
         ],
       ),
@@ -495,7 +510,7 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -515,7 +530,8 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
           const SizedBox(height: 6),
           Text(
             description,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
+            style: const TextStyle(
+                fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -523,15 +539,17 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
             runSpacing: 6,
             children: hintItems
                 .map((h) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                        color: Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                        border: Border.all(color: Color(0xFFBFDBFE)),
                       ),
                       child: Text(
                         h,
-                        style: const TextStyle(fontSize: 11, color: Color(0xFF1E40AF)),
+                        style: const TextStyle(
+                            fontSize: 11, color: Color(0xFF1E40AF)),
                       ),
                     ))
                 .toList(),

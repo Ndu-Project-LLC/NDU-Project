@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/progress_quick_actions.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 /// Status Reports & Asks Tracking sub-page
 class StatusReportsWidget extends StatefulWidget {
   const StatusReportsWidget({
@@ -126,10 +127,10 @@ class _StatusReportsWidgetState extends State<StatusReportsWidget> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -200,16 +201,24 @@ class _StatusReportsWidgetState extends State<StatusReportsWidget> {
                     ],
                   ),
                 ),
-                ...List.generate(_reports.length, (index) {
-                  final report = _reports[index];
-                  final isLast = index == _reports.length - 1;
-                  return _StatusReportRowWidget(
-                    report: report,
-                    onChanged: (updated) => _update(index, updated),
-                    onDelete: () => _delete(index),
-                    showDivider: !isLast,
-                  );
-                }),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _reports.length,
+                  itemBuilder: (context, index) {
+                    final report = _reports[index];
+                    final isLast = index == _reports.length - 1;
+                    return RepaintBoundary(
+                      key: ValueKey('status_report_row_$index'),
+                      child: _StatusReportRowWidget(
+                        report: report,
+                        onChanged: (updated) => _update(index, updated),
+                        onDelete: () => _delete(index),
+                        showDivider: !isLast,
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
         ],
@@ -537,12 +546,12 @@ class _StatusReportRowWidgetState extends State<_StatusReportRowWidget> {
                             horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: _report.status == 'Sent'
-                              ? const Color(0xFF10B981).withOpacity(0.1)
+                              ? const Color(0xFF10B981).withValues(alpha: 0.1)
                               : _report.status == 'Draft'
                                   ? const Color(0xFFF59E0B)
-                                      .withOpacity(0.1)
+                                      .withValues(alpha: 0.1)
                                   : const Color(0xFF2563EB)
-                                      .withOpacity(0.1),
+                                      .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

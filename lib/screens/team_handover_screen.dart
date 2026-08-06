@@ -7,6 +7,7 @@ import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:go_router/go_router.dart';
 
 /// ═══════════════════════════════════════════════════════════════════════════
 /// TEAM HANDOVER CHECKLIST
@@ -19,9 +20,7 @@ class TeamHandoverScreen extends StatefulWidget {
   const TeamHandoverScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const TeamHandoverScreen()),
-    );
+    context.push('/team-handover');
   }
 
   @override
@@ -36,8 +35,10 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
   final Map<String, List<_ChecklistItem>> _checklist = {};
   final TextEditingController _summaryController = TextEditingController();
   final TextEditingController _teamMemberController = TextEditingController();
-  final TextEditingController _receivingMemberController = TextEditingController();
-  final TextEditingController _projectManagerController = TextEditingController();
+  final TextEditingController _receivingMemberController =
+      TextEditingController();
+  final TextEditingController _projectManagerController =
+      TextEditingController();
   final TextEditingController _dateController = TextEditingController();
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
@@ -83,8 +84,9 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
   void _initChecklist() {
     _checklist.clear();
     _defaultChecklist.forEach((category, items) {
-      _checklist[category] =
-          items.map((text) => _ChecklistItem(text: text, checked: false)).toList();
+      _checklist[category] = items
+          .map((text) => _ChecklistItem(text: text, checked: false))
+          .toList();
     });
   }
 
@@ -153,8 +155,9 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
     try {
       final checklistJson = <String, dynamic>{};
       _checklist.forEach((category, items) {
-        checklistJson[category] =
-            items.map((item) => {'text': item.text, 'checked': item.checked}).toList();
+        checklistJson[category] = items
+            .map((item) => {'text': item.text, 'checked': item.checked})
+            .toList();
       });
 
       await FirebaseFirestore.instance
@@ -242,8 +245,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
                         const SizedBox(height: 24),
                         ..._checklist.entries.map((entry) => Padding(
                               padding: const EdgeInsets.only(bottom: 20),
-                              child: _buildCategoryCard(
-                                  entry.key, entry.value),
+                              child: _buildCategoryCard(entry.key, entry.value),
                             )),
                         const SizedBox(height: 24),
                         _buildSummaryCard(),
@@ -253,8 +255,8 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
                       ],
                     ),
                   ),
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
                       activeItemLabel:
                           'Project Team Activities - Team Handover',
                     ),
@@ -274,11 +276,11 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [Color(0xFFFDF2F8), Color(0xFFFCE7F3)],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF9A8D4)),
+        border: Border.all(color: Color(0xFFF9A8D4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,7 +316,8 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
             'This streamlined version is methodology-neutral, making it suitable for '
             'Agile, Waterfall, and Hybrid projects by referring generically to '
             '"work packages, epics, or tasks" rather than prescribing a specific delivery approach.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF9D174D), height: 1.6),
+            style:
+                TextStyle(fontSize: 13, color: Color(0xFF9D174D), height: 1.6),
           ),
         ],
       ),
@@ -456,8 +459,8 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
                 onTap: () => _toggleItem(category, index),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: item.checked
                         ? const Color(0xFFF0FDF4)
@@ -567,9 +570,9 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
+        color: Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFCD34D)),
+        border: Border.all(color: Color(0xFFFCD34D)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

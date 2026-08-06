@@ -16,7 +16,6 @@ import 'package:ndu_project/utils/navigation_route_resolver.dart';
 import 'package:ndu_project/widgets/app_logo.dart';
 import 'package:ndu_project/widgets/compact_action_button.dart';
 import 'package:ndu_project/widgets/dashboard_metrics_cards.dart';
-import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 
 // The dashboard_metrics_cards import is retained intentionally so the
 // workspace keeps a stable import surface even though the executive
@@ -30,12 +29,7 @@ class ProjectWorkspaceDashboardScreen extends StatefulWidget {
   final bool isBasicPlan;
 
   static void open(BuildContext context, {bool isBasicPlan = false}) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            ProjectWorkspaceDashboardScreen(isBasicPlan: isBasicPlan),
-      ),
-    );
+    context.push('/project-workspace-dashboard', extra: ProjectWorkspaceDashboardScreen(isBasicPlan: isBasicPlan));
   }
 
   @override
@@ -188,9 +182,11 @@ class _ProjectWorkspaceDashboardScreenState
       if (!mounted) return;
       final screen = NavigationRouteResolver.resolveCheckpointToScreen(
         checkpoint.isEmpty ? 'initiation' : checkpoint, context);
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => screen ?? const InitiationPhaseScreen(),
-      ));
+      context.push(
+        NavigationRouteResolver.resolveCheckpointToUrl(
+            checkpoint.isEmpty ? 'initiation' : checkpoint),
+        extra: screen ?? const InitiationPhaseScreen(),
+      );
     } on TimeoutException {
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();
@@ -281,7 +277,6 @@ class _ProjectWorkspaceDashboardScreenState
           },
         ),
       ),
-      floatingActionButton: const KazAiChatBubble(),
     );
   }
 
@@ -706,7 +701,7 @@ class _ProjectWorkspaceDashboardScreenState
           Container(
             color: _surface,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-            child: Row(children: const [
+            child: const Row(children: [
               Expanded(flex: 3, child: _HeaderCell('Indicator')),
               Expanded(flex: 2, child: _HeaderCell('Status')),
               Expanded(flex: 2, child: _HeaderCell('Trend')),
@@ -774,10 +769,10 @@ class _ProjectWorkspaceDashboardScreenState
     }
     if (blockers.isEmpty) {
       blockers.addAll([
-        _Blocker('Vendor lead time slippage', 'Procurement · critical path', 'Raised 2 days ago', 'Critical'),
-        _Blocker('Stakeholder sign-off pending on Phase 2 spec', 'Scope · approvals', 'Due in 3 days', 'High'),
-        _Blocker('QA environment provisioning delayed', 'Quality · infrastructure', 'Due in 5 days', 'Medium'),
-        _Blocker('Budget reallocation request open', 'Budget · finance review', 'Open 1 week', 'Medium'),
+        const _Blocker('Vendor lead time slippage', 'Procurement · critical path', 'Raised 2 days ago', 'Critical'),
+        const _Blocker('Stakeholder sign-off pending on Phase 2 spec', 'Scope · approvals', 'Due in 3 days', 'High'),
+        const _Blocker('QA environment provisioning delayed', 'Quality · infrastructure', 'Due in 5 days', 'Medium'),
+        const _Blocker('Budget reallocation request open', 'Budget · finance review', 'Open 1 week', 'Medium'),
       ]);
     }
     return _sectionCard(
@@ -850,10 +845,10 @@ class _ProjectWorkspaceDashboardScreenState
     final entries = <_ActivityEntry>[
       _ActivityEntry(primary?.ownerName.isNotEmpty == true ? primary!.ownerName : 'A. Khan',
           'updated the milestone review checklist', '12m ago', _emerald),
-      _ActivityEntry('M. Rahman', 'approved Phase 2 quality gates', '1h ago', _accentDeep),
-      _ActivityEntry('J. Sarker', 'logged a new high-impact risk', '3h ago', _crimson),
-      _ActivityEntry('T. Pasha', 'revised the cost forecast for Q3', '5h ago', _gold),
-      _ActivityEntry('A. Khan', 'closed blocker on procurement vendor', '1d ago', _emerald),
+      const _ActivityEntry('M. Rahman', 'approved Phase 2 quality gates', '1h ago', _accentDeep),
+      const _ActivityEntry('J. Sarker', 'logged a new high-impact risk', '3h ago', _crimson),
+      const _ActivityEntry('T. Pasha', 'revised the cost forecast for Q3', '5h ago', _gold),
+      const _ActivityEntry('A. Khan', 'closed blocker on procurement vendor', '1d ago', _emerald),
     ];
     return _sectionCard(
       title: 'Activity Stream',
@@ -1039,7 +1034,7 @@ class _ProjectWorkspaceDashboardScreenState
               : 'Executive command center · last synced ${_nowLabel()}',
           style: const TextStyle(fontSize: 11.5, color: _muted, fontWeight: FontWeight.w600),
         )),
-        Text('NDU v2.0', style: const TextStyle(fontSize: 11, color: _mutedSoft,
+        const Text('NDU v2.0', style: TextStyle(fontSize: 11, color: _mutedSoft,
             fontWeight: FontWeight.w700, letterSpacing: 0.5)),
       ]),
     );
@@ -1178,7 +1173,7 @@ class _BarChartPainter extends CustomPainter {
 
     final gridPaint = Paint()..color = gridColor..strokeWidth = 1;
     final axisPaint = Paint()..color = gridColor..strokeWidth = 1.2;
-    canvas.drawLine(Offset(padLeft, padTop), Offset(padLeft, padTop + chartH), axisPaint);
+    canvas.drawLine(const Offset(padLeft, padTop), Offset(padLeft, padTop + chartH), axisPaint);
     canvas.drawLine(Offset(padLeft, padTop + chartH),
         Offset(size.width - padRight, padTop + chartH), axisPaint);
 

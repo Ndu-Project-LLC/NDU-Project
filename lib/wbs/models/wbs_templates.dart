@@ -26,7 +26,7 @@ class WBSTemplates {
         // AGILE — from "Agile Project WBS Guidance.docx"
         // ============================================================
         WBSFramework.agile: [
-          TemplateNode(
+          const TemplateNode(
             name: 'User Management',
             description: 'User lifecycle and identity management epic',
             children: [
@@ -36,7 +36,7 @@ class WBSTemplates {
               (name: 'User Roles and Permissions', description: 'Role-based access control'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Customer Management',
             description: 'Customer data and relationship management epic',
             children: [
@@ -45,7 +45,7 @@ class WBSTemplates {
               (name: 'Customer History', description: 'Activity history and audit trail'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Sales Pipeline',
             description: 'Opportunity tracking and sales forecasting epic',
             children: [
@@ -54,7 +54,7 @@ class WBSTemplates {
               (name: 'Forecasting', description: 'Revenue forecasting and pipeline analytics'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Reporting and Analytics',
             description: 'Dashboards and reporting epic',
             children: [
@@ -63,7 +63,7 @@ class WBSTemplates {
               (name: 'Export Functionality', description: 'CSV / PDF / Excel export'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Notifications',
             description: 'System and user notifications epic',
             children: [
@@ -78,7 +78,7 @@ class WBSTemplates {
         // WATERFALL_DELIVERABLE — Section 1: Deliverable-Based WBS
         // ============================================================
         WBSFramework.waterfallDeliverable: [
-          TemplateNode(
+          const TemplateNode(
             name: 'Site Preparation',
             description: 'Site readiness and ground works',
             children: [
@@ -87,7 +87,7 @@ class WBSTemplates {
               (name: 'Utilities Relocation', description: 'Relocate existing utilities'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Building Structure',
             description: 'Structural envelope and shell',
             children: [
@@ -96,7 +96,7 @@ class WBSTemplates {
               (name: 'Roof System', description: 'Roofing and waterproofing'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Process Systems',
             description: 'Mechanical and electrical process systems',
             children: [
@@ -105,7 +105,7 @@ class WBSTemplates {
               (name: 'Instrumentation System', description: 'Instrumentation and controls'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Commissioning Package',
             description: 'Testing and commissioning deliverables',
             children: [
@@ -114,7 +114,7 @@ class WBSTemplates {
               (name: 'Performance Validation', description: 'Performance and acceptance testing'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Handover Package',
             description: 'Closeout and handover deliverables',
             children: [
@@ -129,7 +129,7 @@ class WBSTemplates {
         // WATERFALL_DISCIPLINE — Section 2: Discipline-Based WBS
         // ============================================================
         WBSFramework.waterfallDiscipline: [
-          TemplateNode(
+          const TemplateNode(
             name: 'Civil',
             description: 'Civil engineering works',
             children: [
@@ -138,7 +138,7 @@ class WBSTemplates {
               (name: 'Underground Utilities', description: 'Underground drainage and utilities'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Structural',
             description: 'Structural engineering works',
             children: [
@@ -146,7 +146,7 @@ class WBSTemplates {
               (name: 'Platforms and Supports', description: 'Platforms, walkways, and supports'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Mechanical',
             description: 'Mechanical engineering works',
             children: [
@@ -154,7 +154,7 @@ class WBSTemplates {
               (name: 'Rotating Equipment', description: 'Pumps, compressors, and rotating machinery'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Piping',
             description: 'Piping engineering works',
             children: [
@@ -163,7 +163,7 @@ class WBSTemplates {
               (name: 'Pressure Testing', description: 'Hydrostatic and pneumatic testing'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Electrical',
             description: 'Electrical engineering works',
             children: [
@@ -172,7 +172,7 @@ class WBSTemplates {
               (name: 'Lighting', description: 'Lighting and small power'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Instrumentation & Controls',
             description: 'I&C engineering works',
             children: [
@@ -181,7 +181,7 @@ class WBSTemplates {
               (name: 'SCADA', description: 'SCADA and HMI implementation'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Commissioning',
             description: 'Commissioning discipline',
             children: [
@@ -196,7 +196,7 @@ class WBSTemplates {
         // WATERFALL_FUNCTIONAL — Section 3: Functional Area WBS
         // ============================================================
         WBSFramework.waterfallFunctional: [
-          TemplateNode(
+          const TemplateNode(
             name: 'Engineering',
             description: 'Engineering function',
             children: [
@@ -205,7 +205,7 @@ class WBSTemplates {
               (name: 'Calculations', description: 'Engineering calculations'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Procurement',
             description: 'Procurement function',
             children: [
@@ -214,7 +214,7 @@ class WBSTemplates {
               (name: 'Purchase Orders', description: 'Purchase order management'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Construction',
             description: 'Construction function',
             children: [
@@ -223,7 +223,7 @@ class WBSTemplates {
               (name: 'Equipment Installation', description: 'Equipment installation'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Quality',
             description: 'Quality function',
             children: [
@@ -232,7 +232,7 @@ class WBSTemplates {
               (name: 'Quality Documentation', description: 'Quality records and documentation'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Project Controls',
             description: 'Project controls function',
             children: [
@@ -247,7 +247,7 @@ class WBSTemplates {
         // WATERFALL_GEOGRAPHIC — Section 4: Geographic Location WBS
         // ============================================================
         WBSFramework.waterfallGeographic: [
-          TemplateNode(
+          const TemplateNode(
             name: 'East Region',
             description: 'Eastern region deployment',
             children: [
@@ -256,7 +256,7 @@ class WBSTemplates {
               (name: 'Philadelphia Site', description: 'Philadelphia site deployment'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Central Region',
             description: 'Central region deployment',
             children: [
@@ -265,7 +265,7 @@ class WBSTemplates {
               (name: 'Chicago Site', description: 'Chicago site deployment'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'West Region',
             description: 'Western region deployment',
             children: [
@@ -280,7 +280,7 @@ class WBSTemplates {
         // WATERFALL_PHASE — Section 5: Phase-Based WBS (Least Preferred)
         // ============================================================
         WBSFramework.waterfallPhase: [
-          TemplateNode(
+          const TemplateNode(
             name: 'Initiation',
             description: 'Project initiation phase',
             children: [
@@ -288,7 +288,7 @@ class WBSTemplates {
               (name: 'Project Charter', description: 'Project charter development'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Planning',
             description: 'Project planning phase',
             children: [
@@ -297,7 +297,7 @@ class WBSTemplates {
               (name: 'Risk Planning', description: 'Risk management planning'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Design',
             description: 'Design phase',
             children: [
@@ -306,7 +306,7 @@ class WBSTemplates {
               (name: 'Data Architecture', description: 'Data architecture and modeling'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Execution',
             description: 'Execution phase',
             children: [
@@ -315,7 +315,7 @@ class WBSTemplates {
               (name: 'Integration', description: 'System integration'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Testing',
             description: 'Testing phase',
             children: [
@@ -324,7 +324,7 @@ class WBSTemplates {
               (name: 'Defect Resolution', description: 'Defect resolution'),
             ],
           ),
-          TemplateNode(
+          const TemplateNode(
             name: 'Closeout',
             description: 'Closeout phase',
             children: [

@@ -6,6 +6,7 @@
 /// Loads change requests, audit trail, and baseline history from Firestore
 /// (users/{uid}/changeManagement/). Falls back to empty state if no data
 /// exists — does NOT seed phantom/demo data.
+library;
 
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -27,9 +28,9 @@ class ChangeManagementProvider extends ChangeNotifier {
   String? _loadError;
 
   // Contingency / Reserve tracking
-  double _totalContingency = 500000; // $500K default
+  final double _totalContingency = 500000; // $500K default
   double _usedContingency = 0;
-  double _totalReserve = 1000000; // $1M default
+  final double _totalReserve = 1000000; // $1M default
   double _usedReserve = 0;
 
   // Project BAC (Budget at Completion) — updated by applyToBaseline / rollbackBaseline
@@ -978,7 +979,7 @@ class ChangeManagementProvider extends ChangeNotifier {
   /// Convert a Firestore document to a CMChangeRequest.
   CMChangeRequest _crFromFirestore(String id, Map<String, dynamic> data) {
     // Parse impact dimensions
-    ImpactDimension _parseDim(String name, Map<String, dynamic>? d) {
+    ImpactDimension parseDim(String name, Map<String, dynamic>? d) {
       if (d == null) return ImpactDimension(name: name);
       return ImpactDimension(
         name: d['name'] as String? ?? name,
@@ -991,21 +992,21 @@ class ChangeManagementProvider extends ChangeNotifier {
 
     final impactData = data['impact'] as Map<String, dynamic>? ?? {};
     final dimensions = <String, ImpactDimension>{
-      'Scope': _parseDim('Scope', impactData['scope'] as Map<String, dynamic>?),
-      'Schedule': _parseDim('Schedule', impactData['schedule'] as Map<String, dynamic>?),
-      'Cost': _parseDim('Cost', impactData['cost'] as Map<String, dynamic>?),
-      'Resources': _parseDim('Resources', impactData['resources'] as Map<String, dynamic>?),
-      'Procurement': _parseDim('Procurement', impactData['procurement'] as Map<String, dynamic>?),
-      'Contracts': _parseDim('Contracts', impactData['contracts'] as Map<String, dynamic>?),
-      'Risks': _parseDim('Risks', impactData['risks'] as Map<String, dynamic>?),
-      'Quality': _parseDim('Quality', impactData['quality'] as Map<String, dynamic>?),
-      'Safety': _parseDim('Safety', impactData['safety'] as Map<String, dynamic>?),
-      'Stakeholders': _parseDim('Stakeholders', impactData['stakeholders'] as Map<String, dynamic>?),
-      'Funding': _parseDim('Funding', impactData['funding'] as Map<String, dynamic>?),
-      'Benefits': _parseDim('Benefits', impactData['benefits'] as Map<String, dynamic>?),
-      'Dependencies': _parseDim('Dependencies', impactData['dependencies'] as Map<String, dynamic>?),
-      'Interfaces': _parseDim('Interfaces', impactData['interfaces'] as Map<String, dynamic>?),
-      'Technical': _parseDim('Technical', impactData['technical'] as Map<String, dynamic>?),
+      'Scope': parseDim('Scope', impactData['scope'] as Map<String, dynamic>?),
+      'Schedule': parseDim('Schedule', impactData['schedule'] as Map<String, dynamic>?),
+      'Cost': parseDim('Cost', impactData['cost'] as Map<String, dynamic>?),
+      'Resources': parseDim('Resources', impactData['resources'] as Map<String, dynamic>?),
+      'Procurement': parseDim('Procurement', impactData['procurement'] as Map<String, dynamic>?),
+      'Contracts': parseDim('Contracts', impactData['contracts'] as Map<String, dynamic>?),
+      'Risks': parseDim('Risks', impactData['risks'] as Map<String, dynamic>?),
+      'Quality': parseDim('Quality', impactData['quality'] as Map<String, dynamic>?),
+      'Safety': parseDim('Safety', impactData['safety'] as Map<String, dynamic>?),
+      'Stakeholders': parseDim('Stakeholders', impactData['stakeholders'] as Map<String, dynamic>?),
+      'Funding': parseDim('Funding', impactData['funding'] as Map<String, dynamic>?),
+      'Benefits': parseDim('Benefits', impactData['benefits'] as Map<String, dynamic>?),
+      'Dependencies': parseDim('Dependencies', impactData['dependencies'] as Map<String, dynamic>?),
+      'Interfaces': parseDim('Interfaces', impactData['interfaces'] as Map<String, dynamic>?),
+      'Technical': parseDim('Technical', impactData['technical'] as Map<String, dynamic>?),
     };
 
     final impact = FullImpactAssessment(

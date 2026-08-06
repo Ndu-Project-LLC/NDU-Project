@@ -2,6 +2,7 @@
 ///
 /// World-class careers page with job listings, company culture,
 /// benefits, and application form — similar to Jira/Asana careers.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -46,11 +47,11 @@ class CareersPageScreen extends StatelessWidget {
             title: Row(children: [
               Container(width: 28, height: 28, decoration: BoxDecoration(gradient: const LinearGradient(colors: [_gold, Color(0xFFD97706)]), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.trending_up, color: _bg, size: 16)),
               const SizedBox(width: 8),
-              Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
-              Text(' Project', style: TextStyle(color: _gold, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
+              const Text('NDU', style: TextStyle(color: _textPrimary, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
+              const Text(' Project', style: TextStyle(color: _gold, fontSize: 16, fontWeight: FontWeight.w800, fontFamily: appFontFamily)),
             ]),
             actions: [
-              TextButton(onPressed: () => context.go('/landing'), child: Text('Back to Home', style: TextStyle(color: _textSecondary, fontSize: 13, fontFamily: appFontFamily))),
+              TextButton(onPressed: () => context.go('/landing'), child: const Text('Back to Home', style: TextStyle(color: _textSecondary, fontSize: 13, fontFamily: appFontFamily))),
               const SizedBox(width: 16),
             ],
           ),
@@ -61,11 +62,11 @@ class CareersPageScreen extends StatelessWidget {
               child: Center(child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 800),
                 child: Column(children: [
-                  Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), decoration: BoxDecoration(color: _green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: _green.withValues(alpha: 0.3))), child: Text('We\'re Hiring', style: TextStyle(color: _green, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: appFontFamily))),
+                  Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), decoration: BoxDecoration(color: _green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: _green.withValues(alpha: 0.3))), child: const Text('We\'re Hiring', style: TextStyle(color: _green, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: appFontFamily))),
                   const SizedBox(height: 24),
-                  Text('Join Our Mission', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 40, fontWeight: FontWeight.w800, letterSpacing: -1, fontFamily: appFontFamily)),
+                  const Text('Join Our Mission', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 40, fontWeight: FontWeight.w800, letterSpacing: -1, fontFamily: appFontFamily)),
                   const SizedBox(height: 16),
-                  Text('Help us build the future of project delivery. We\'re on a mission to ensure every project starts right and stays right.', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 16, height: 1.6, fontFamily: appFontFamily)),
+                  const Text('Help us build the future of project delivery. We\'re on a mission to ensure every project starts right and stays right.', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 16, height: 1.6, fontFamily: appFontFamily)),
                   const SizedBox(height: 40),
                 ],
               ))),
@@ -90,7 +91,7 @@ class CareersPageScreen extends StatelessWidget {
               child: Center(child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 800),
                 child: Column(children: [
-                  Text('Open Positions', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 28, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+                  const Text('Open Positions', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 28, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
                   const SizedBox(height: 32),
                   ...jobs.map((j) => _jobCard(j.$1, j.$2, j.$3, j.$4, j.$5)),
                 ]),
@@ -103,9 +104,9 @@ class CareersPageScreen extends StatelessWidget {
               child: Center(child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 600),
                 child: Column(children: [
-                  Text('Don\'t see your role?', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 24, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+                  const Text('Don\'t see your role?', textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 24, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
                   const SizedBox(height: 12),
-                  Text('Send us your resume and tell us how you\'d contribute to Ndu Project.', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
+                  const Text('Send us your resume and tell us how you\'d contribute to Ndu Project.', textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 15, fontFamily: appFontFamily)),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () => _launchUrl('mailto:contact@nduproject.com?subject=Career Application'),
@@ -123,7 +124,7 @@ class CareersPageScreen extends StatelessWidget {
   }
 
   Widget _cultureValue(String title, String desc, IconData icon, Color color) {
-    return Container(width: 200, margin: const EdgeInsets.symmetric(horizontal: 10), padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)), const SizedBox(height: 12), Text(title, textAlign: TextAlign.center, style: TextStyle(color: _textPrimary, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: appFontFamily)), const SizedBox(height: 6), Text(desc, textAlign: TextAlign.center, style: TextStyle(color: _textSecondary, fontSize: 11, fontFamily: appFontFamily))]));
+    return Container(width: 200, margin: const EdgeInsets.symmetric(horizontal: 10), padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: _surfaceCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: _border)), child: Column(children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: color, size: 20)), const SizedBox(height: 12), Text(title, textAlign: TextAlign.center, style: const TextStyle(color: _textPrimary, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: appFontFamily)), const SizedBox(height: 6), Text(desc, textAlign: TextAlign.center, style: const TextStyle(color: _textSecondary, fontSize: 11, fontFamily: appFontFamily))]));
   }
 
   Widget _jobCard(String title, String dept, String location, String type, IconData icon) {
@@ -131,11 +132,11 @@ class CareersPageScreen extends StatelessWidget {
       Container(width: 44, height: 44, decoration: BoxDecoration(color: _blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: _blue, size: 22)),
       const SizedBox(width: 16),
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: TextStyle(color: _textPrimary, fontSize: 15, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
+        Text(title, style: const TextStyle(color: _textPrimary, fontSize: 15, fontWeight: FontWeight.w700, fontFamily: appFontFamily)),
         const SizedBox(height: 4),
-        Row(children: [Text(dept, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily)), const SizedBox(width: 12), Icon(Icons.location_on_outlined, color: _textMuted, size: 12), const SizedBox(width: 4), Text(location, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily)), const SizedBox(width: 12), Icon(Icons.schedule, color: _textMuted, size: 12), const SizedBox(width: 4), Text(type, style: TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]),
+        Row(children: [Text(dept, style: const TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily)), const SizedBox(width: 12), const Icon(Icons.location_on_outlined, color: _textMuted, size: 12), const SizedBox(width: 4), Text(location, style: const TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily)), const SizedBox(width: 12), const Icon(Icons.schedule, color: _textMuted, size: 12), const SizedBox(width: 4), Text(type, style: const TextStyle(color: _textSecondary, fontSize: 12, fontFamily: appFontFamily))]),
       ])),
-      IconButton(onPressed: () => _launchUrl('mailto:contact@nduproject.com?subject=Application: $title'), icon: Icon(Icons.arrow_forward, color: _blue, size: 18)),
+      IconButton(onPressed: () => _launchUrl('mailto:contact@nduproject.com?subject=Application: $title'), icon: const Icon(Icons.arrow_forward, color: _blue, size: 18)),
     ]));
   }
 }

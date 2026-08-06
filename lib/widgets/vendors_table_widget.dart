@@ -43,34 +43,36 @@ class VendorsTableWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+            border: Border.all(color: Color(0xFFE5E7EB), width: 1),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: ResponsiveDataTableWrapper(
+          child: buildNduTableWithExpand(
+            context: context,
+            title: 'Vendors',
             minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 1100,
             maxHeight: 520,
-            child: buildNduDataTable(
-              context: context,
-              columnSpacing: 20,
-              horizontalMargin: 18,
-              headingRowHeight: 52,
-              dataRowMinHeight: 56,
-              dataRowMaxHeight: 72,
-              columns: const [
+            columnSpacing: 20,
+            horizontalMargin: 18,
+            headingRowHeight: 52,
+            dataRowMinHeight: 56,
+            dataRowMaxHeight: 72,
+            columns: const [
                 DataColumn(
                   label: _TableHeader('Vendor', icon: Icons.business_outlined),
                 ),
                 DataColumn(
-                  label: _TableHeader('Category', icon: Icons.category_outlined),
+                  label:
+                      _TableHeader('Category', icon: Icons.category_outlined),
                 ),
                 DataColumn(
-                  label: _TableHeader('Criticality', icon: Icons.signal_cellular_alt),
+                  label: _TableHeader('Criticality',
+                      icon: Icons.signal_cellular_alt),
                 ),
                 DataColumn(
                   label: _TableHeader('SLA', icon: Icons.verified_outlined),
@@ -82,7 +84,8 @@ class VendorsTableWidget extends StatelessWidget {
                   label: _TableHeader('Status', icon: Icons.circle_outlined),
                 ),
                 DataColumn(
-                  label: _TableHeader('Lead Time', icon: Icons.schedule_outlined),
+                  label:
+                      _TableHeader('Lead Time', icon: Icons.schedule_outlined),
                 ),
                 DataColumn(
                   label: _TableHeader('Actions', icon: Icons.more_horiz),
@@ -97,9 +100,7 @@ class VendorsTableWidget extends StatelessWidget {
                     if (states.contains(WidgetState.hovered)) {
                       return const Color(0xFFF0F7FF);
                     }
-                    return index.isOdd
-                        ? const Color(0xFFFAFCFF)
-                        : Colors.white;
+                    return index.isOdd ? const Color(0xFFFAFCFF) : Colors.white;
                   }),
                   cells: [
                     // Vendor Name
@@ -152,7 +153,6 @@ class VendorsTableWidget extends StatelessWidget {
                   ],
                 );
               }).toList(),
-            ),
           ),
         );
       },
@@ -263,9 +263,9 @@ class _VendorNameCell extends StatelessWidget {
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.5),
+        border: Border.all(color: Color(0xFFE2E8F0), width: 0.5),
       ),
       child: Center(
         child: Text(
@@ -364,10 +364,8 @@ class _CategoryCell extends StatelessWidget {
       items: _categoryIcons.keys
           .map((cat) => DropdownMenuItem(
                 value: cat,
-                child: _categoryPill(
-                    _categoryIcons[cat] ?? Icons.label_outline,
-                    _categoryColors[cat] ?? const Color(0xFF64748B),
-                    cat),
+                child: _categoryPill(_categoryIcons[cat] ?? Icons.label_outline,
+                    _categoryColors[cat] ?? const Color(0xFF64748B), cat),
               ))
           .toList(),
       onChanged: (v) {
@@ -407,9 +405,9 @@ class _CategoryCell extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.15), width: 0.5),
+        border: Border.all(color: color.withValues(alpha: 0.15), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -478,8 +476,7 @@ class _CriticalityCell extends StatelessWidget {
       items: ['High', 'Medium', 'Low']
           .map((crit) => DropdownMenuItem(
                 value: crit,
-                child: _criticalityBadge(
-                    _getColor(crit), _getIcon(crit), crit),
+                child: _criticalityBadge(_getColor(crit), _getIcon(crit), crit),
               ))
           .toList(),
       onChanged: (v) {
@@ -518,9 +515,9 @@ class _CriticalityCell extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2), width: 0.5),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -588,11 +585,15 @@ class _SlaCell extends StatelessWidget {
                 ),
               ),
               Text(
-                vendor.onTimeDelivery >= 0.8 ? 'On track' : vendor.onTimeDelivery >= 0.6 ? 'At risk' : 'Behind',
+                vendor.onTimeDelivery >= 0.8
+                    ? 'On track'
+                    : vendor.onTimeDelivery >= 0.6
+                        ? 'At risk'
+                        : 'Behind',
                 style: TextStyle(
                   fontSize: 9.5,
                   fontWeight: FontWeight.w600,
-                  color: perfColor.withOpacity(0.7),
+                  color: perfColor.withValues(alpha: 0.7),
                   letterSpacing: 0.2,
                 ),
               ),
@@ -606,7 +607,7 @@ class _SlaCell extends StatelessWidget {
                 Container(
                   height: 6,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
+                    color: Color(0xFFE2E8F0),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -619,7 +620,7 @@ class _SlaCell extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                       boxShadow: [
                         BoxShadow(
-                          color: perfColor.withOpacity(0.3),
+                          color: perfColor.withValues(alpha: 0.3),
                           blurRadius: 4,
                           offset: const Offset(0, 1),
                         ),
@@ -653,8 +654,8 @@ class _RatingCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rating = vendor.rating.toUpperCase();
-    final config = _ratingConfig[rating] ??
-        (const Color(0xFF9CA3AF), 'Unrated');
+    final config =
+        _ratingConfig[rating] ?? (const Color(0xFF9CA3AF), 'Unrated');
     final color = config.$1;
     final tooltip = config.$2;
 
@@ -664,9 +665,9 @@ class _RatingCell extends StatelessWidget {
         width: 30,
         height: 30,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.2), width: 1),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
         ),
         child: Center(
           child: Text(
@@ -708,9 +709,9 @@ class _StatusCell extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.06),
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.15), width: 0.5),
+        border: Border.all(color: color.withValues(alpha: 0.15), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -786,7 +787,7 @@ class _LeadTimeCell extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -1084,7 +1085,9 @@ class _ActionsCellState extends State<_ActionsCell> {
   }
 
   Widget _actionIcon(IconData icon,
-      {required Color color, required String tooltip, VoidCallback? onPressed}) {
+      {required Color color,
+      required String tooltip,
+      VoidCallback? onPressed}) {
     return IconButton(
       icon: Icon(icon, size: 16, color: color),
       onPressed: onPressed,

@@ -33,7 +33,7 @@ class DeliverableTimelineChart extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: CustomPaint(
         painter: _TimelinePainter(deliverables: deliverables),
@@ -70,7 +70,7 @@ class _TimelinePainter extends CustomPainter {
 
       // Calculate position (simplified - assumes date range)
       final daysDiff = dueDate.difference(now).inDays;
-      final maxDays = 90; // 3 months range
+      const maxDays = 90; // 3 months range
       final x = (daysDiff / maxDays * size.width).clamp(0.0, size.width);
 
       // Color based on status
@@ -159,7 +159,10 @@ class DonutChart extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                data.fold<double>(0, (sum, d) => sum + (d['value'] as num).toDouble()).toStringAsFixed(0),
+                data
+                    .fold<double>(
+                        0, (sum, d) => sum + (d['value'] as num).toDouble())
+                    .toStringAsFixed(0),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -252,7 +255,7 @@ class BarChart extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: CustomPaint(
         painter: _BarChartPainter(data: data),

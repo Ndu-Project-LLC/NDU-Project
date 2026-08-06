@@ -90,14 +90,14 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
 
  InputDecoration _inputDecoration(String label, ThemeData theme, ColorScheme colorScheme) {
  final borderRadius = BorderRadius.circular(12);
- final outlineColor = colorScheme.outline.withOpacity(theme.brightness == Brightness.light ? 0.2 : 0.4);
+ final outlineColor = colorScheme.outline.withValues(alpha: theme.brightness == Brightness.light ? 0.2 : 0.4);
  final labelStyle = theme.textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant);
 
  return InputDecoration(
  labelText: label,
  labelStyle: labelStyle,
  filled: true,
- fillColor: Color.alphaBlend(colorScheme.primary.withOpacity(0.04), colorScheme.surfaceContainerHighest.withOpacity(theme.brightness == Brightness.light ? 0.65 : 0.35)),
+ fillColor: Color.alphaBlend(colorScheme.primary.withValues(alpha: 0.04), colorScheme.surfaceContainerHighest.withValues(alpha: theme.brightness == Brightness.light ? 0.65 : 0.35)),
  border: OutlineInputBorder(borderRadius: borderRadius, borderSide: BorderSide(color: outlineColor)),
  enabledBorder: OutlineInputBorder(borderRadius: borderRadius, borderSide: BorderSide(color: outlineColor)),
  focusedBorder: OutlineInputBorder(borderRadius: borderRadius, borderSide: BorderSide(color: widget.accentColor, width: 1.5)),
@@ -129,7 +129,7 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  Container(
  width: 40,
  height: 40,
- decoration: BoxDecoration(color: widget.accentColor.withOpacity(0.12), shape: BoxShape.circle),
+ decoration: BoxDecoration(color: widget.accentColor.withValues(alpha: 0.12), shape: BoxShape.circle),
  child: Icon(widget.icon, color: widget.accentColor, size: 22),
  ),
  const SizedBox(width: 12),
@@ -184,7 +184,7 @@ class _AddSsherItemDialogState extends State<AddSsherItemDialog> {
  onPressed: () => Navigator.pop(context),
  style: OutlinedButton.styleFrom(
  foregroundColor: colorScheme.onSurfaceVariant,
- side: BorderSide(color: colorScheme.outline.withOpacity(0.4)),
+ side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.4)),
  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
  ),

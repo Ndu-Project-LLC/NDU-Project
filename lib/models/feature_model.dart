@@ -131,4 +131,11 @@ class Feature {
       percentComplete: toDouble(json['percentComplete']).clamp(0, 1),
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is Feature && other.id == id);
+
+  @override
+  int get hashCode => id.hashCode;
 }

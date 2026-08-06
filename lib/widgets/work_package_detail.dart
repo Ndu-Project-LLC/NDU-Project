@@ -303,7 +303,7 @@ class WorkPackageDetailView extends StatelessWidget {
                               margin: const EdgeInsets.only(bottom: 4),
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF9FAFB),
+                                color: Color(0xFFF9FAFB),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: AppSemanticColors.border,
@@ -357,7 +357,7 @@ class WorkPackageDetailView extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF9FAFB),
+                        color: Color(0xFFF9FAFB),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: AppSemanticColors.border),
                       ),
@@ -464,9 +464,9 @@ class _QuickStatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         label,
@@ -499,7 +499,7 @@ class _AccordionSection extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppSemanticColors.border),
       ),
@@ -547,9 +547,9 @@ class _WarningPanel extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFECFDF5),
+          color: Color(0xFFECFDF5),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFF10B981)),
+          border: Border.all(color: Color(0xFF10B981)),
         ),
         child: const Text(
           'No readiness warnings.',
@@ -566,9 +566,9 @@ class _WarningPanel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7ED),
+        color: Color(0xFFFFF7ED),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFF97316)),
+        border: Border.all(color: Color(0xFFF97316)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -612,7 +612,7 @@ class _PackageSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppSemanticColors.border),
       ),
@@ -1038,7 +1038,8 @@ class _DeliverableRow extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: _statusColor(deliverable.status).withOpacity(0.1),
+                  color:
+                      _statusColor(deliverable.status).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -1127,9 +1128,9 @@ class _traceChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

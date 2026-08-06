@@ -374,7 +374,7 @@ class SubscriptionPricingService {
           await _firestore.doc(_docPath).get();
       if (!snap.exists) return SubscriptionPricingConfig.defaults;
       return SubscriptionPricingConfig.fromFirestore(
-          snap.data() as Map<String, dynamic>?);
+          snap.data());
     } catch (e) {
       debugPrint('[SubscriptionPricingService] load error: $e');
       return SubscriptionPricingConfig.defaults;
@@ -398,7 +398,7 @@ class SubscriptionPricingService {
       return _firestore.doc(_docPath).snapshots().map((snap) {
         if (!snap.exists) return SubscriptionPricingConfig.defaults;
         return SubscriptionPricingConfig.fromFirestore(
-            snap.data() as Map<String, dynamic>?);
+            snap.data());
       });
     } catch (e) {
       debugPrint('[SubscriptionPricingService] watch error: $e');

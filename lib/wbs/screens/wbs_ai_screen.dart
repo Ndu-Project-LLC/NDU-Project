@@ -212,12 +212,12 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              const Row(
                 children: [
-                  const Icon(Icons.auto_awesome,
+                  Icon(Icons.auto_awesome,
                       color: LightModeColors.accent, size: 20),
-                  const SizedBox(width: 8),
-                  const Text('AI WBS Generator',
+                  SizedBox(width: 8),
+                  Text('AI WBS Generator',
                       style: TextStyle(
                           color: Color(0xFF1A1D1F),
                           fontSize: 20,
@@ -249,12 +249,12 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
               border: Border.all(
                   color: LightModeColors.accent.withValues(alpha: 0.4)),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                const Icon(Icons.warning_amber,
+                Icon(Icons.warning_amber,
                     color: LightModeColors.accent, size: 16),
-                const SizedBox(width: 8),
-                const Expanded(
+                SizedBox(width: 8),
+                Expanded(
                   child: Text(
                     'All AI-generated WBS nodes must be validated by a qualified SME before baseline.',
                     style: TextStyle(
@@ -381,15 +381,15 @@ class _WBSAIScreenState extends State<WBSAIScreen> {
           const SizedBox(height: 24),
           // Loading
           if (_loading)
-            Center(
+            const Center(
               child: Padding(
-                padding: const EdgeInsets.all(48),
+                padding: EdgeInsets.all(48),
                 child: Column(
                   children: [
-                    const CircularProgressIndicator(
+                    CircularProgressIndicator(
                         color: LightModeColors.accent),
-                    const SizedBox(height: 12),
-                    const Text('KAZ AI is analyzing similar projects...',
+                    SizedBox(height: 12),
+                    Text('KAZ AI is analyzing similar projects...',
                         style: TextStyle(
                             color: Color(0xFF6B7280), fontSize: 13)),
                   ],

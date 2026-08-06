@@ -23,6 +23,8 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 const Color _kBrandYellow = Color(0xFFFFC812);
 const Color _kFabYellow = Color(0xFFFBBF24);
@@ -98,9 +100,7 @@ class PlanningContractingScreen extends StatefulWidget {
  const PlanningContractingScreen({super.key});
 
  static void open(BuildContext context) {
- Navigator.of(context).push(
- MaterialPageRoute(builder: (_) => const PlanningContractingScreen()),
- );
+ context.push('/fep-contracts');
  }
 
  @override
@@ -191,8 +191,8 @@ class _PlanningContractingScreenState extends State<PlanningContractingScreen> {
  ),
  ],
  ),
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Contract Planning',
  ),
  ),
@@ -231,10 +231,7 @@ class _PlanningContractingScreenState extends State<PlanningContractingScreen> {
  }
 
  void _openProcurement() {
- Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const PlanningProcurementScreen()),
- );
+ context.push('/planning-procurement');
  }
 
  Future<void> _exportPdf() async {
@@ -536,9 +533,9 @@ class _StatusChip extends StatelessWidget {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
- color: color.withOpacity(0.12),
+ color: color.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: color.withOpacity(0.26)),
+ border: Border.all(color: color.withValues(alpha: 0.26)),
  ),
  child: Text(label,
  style: TextStyle(
@@ -706,11 +703,11 @@ class _OverviewTabState extends State<_OverviewTab> {
  },
  ),
  ),
- _SectionCard(
+ const _SectionCard(
  title: 'Approval Gates',
  subtitle:
  'Every package must complete PM review before sponsor approval and handoff.',
- child: const _ApprovalGateSummary(),
+ child: _ApprovalGateSummary(),
  ),
  ],
  );
@@ -772,10 +769,10 @@ class _ApprovalGateSummary extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return Wrap(
+ return const Wrap(
  spacing: 12,
  runSpacing: 12,
- children: const [
+ children: [
  _InlineInfoCard(
  title: 'PM Review',
  detail: 'Required for every package before sponsor approval.',
@@ -813,9 +810,9 @@ class _InlineInfoCard extends StatelessWidget {
  width: 260,
  padding: const EdgeInsets.all(14),
  decoration: BoxDecoration(
- color: color.withOpacity(0.08),
+ color: color.withValues(alpha: 0.08),
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: color.withOpacity(0.22)),
+ border: Border.all(color: color.withValues(alpha: 0.22)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1271,7 +1268,7 @@ void _showCreateContractDialog(BuildContext context, String? projectId) {
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: contractType,
+ initialValue: contractType,
  items: [
  'Not Sure',
  'Lump Sum (Fixed Price)',
@@ -1292,7 +1289,7 @@ void _showCreateContractDialog(BuildContext context, String? projectId) {
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: paymentType,
+ initialValue: paymentType,
  items: ['TBD', 'Monthly', 'Milestone-Based', 'Upfront']
  .map((v) => DropdownMenuItem(
  value: v,
@@ -1436,7 +1433,7 @@ Future<void> _showEditPackageDialog(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  DropdownButtonFormField<String?>(
- value: scopeOptions.any((item) => item.id == selectedScopeId)
+ initialValue: scopeOptions.any((item) => item.id == selectedScopeId)
  ? selectedScopeId
  : null,
  isExpanded: true,
@@ -1524,7 +1521,7 @@ Future<void> _showEditPackageDialog(
  Column(
  children: [
  DropdownButtonFormField<String>(
- value: selectedAwardStrategy,
+ initialValue: selectedAwardStrategy,
  isExpanded: true,
  items: const [
  DropdownMenuItem(
@@ -1544,7 +1541,7 @@ Future<void> _showEditPackageDialog(
  ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
- value: selectedContractType,
+ initialValue: selectedContractType,
  isExpanded: true,
  items: const [
  DropdownMenuItem(
@@ -1570,7 +1567,7 @@ Future<void> _showEditPackageDialog(
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedAwardStrategy,
+ initialValue: selectedAwardStrategy,
  isExpanded: true,
  items: const [
  DropdownMenuItem(
@@ -1592,7 +1589,7 @@ Future<void> _showEditPackageDialog(
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: selectedContractType,
+ initialValue: selectedContractType,
  isExpanded: true,
  items: const [
  DropdownMenuItem(
@@ -2547,7 +2544,7 @@ void _showRfpDialog(
  builder: (context, snap) {
  final packages = snap.data ?? const [];
  return DropdownButtonFormField<String>(
- value: linkedPackageId.isNotEmpty ? linkedPackageId : null,
+ initialValue: linkedPackageId.isNotEmpty ? linkedPackageId : null,
  isExpanded: true,
  items: packages
  .map((pkg) => DropdownMenuItem(
@@ -2575,7 +2572,7 @@ void _showRfpDialog(
  border: OutlineInputBorder())),
  const SizedBox(height: 14),
  DropdownButtonFormField<String>(
- value: rfqStatus,
+ initialValue: rfqStatus,
  isExpanded: true,
  items: const [
  DropdownMenuItem(value: 'Draft', child: Text('Draft')),
@@ -2797,7 +2794,7 @@ void _showRfpDialog(
  height: 20,
  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
  : Text(existingRfq == null ? 'Create' : 'Save',
- style: TextStyle(fontWeight: FontWeight.w600)),
+ style: const TextStyle(fontWeight: FontWeight.w600)),
  ),
  ],
  ),
@@ -3077,15 +3074,29 @@ class _EvaluationContractRow extends StatelessWidget {
  if (scores.isNotEmpty && criteria.isNotEmpty && ranking.isNotEmpty)
  Padding(
  padding: const EdgeInsets.only(bottom: 12),
+ child: FullScreenTableWrapper(
+ title: 'Vendor Comparison Sheet',
  child: _VendorComparisonTable(
  ranking: ranking,
  criteria: criteria,
  ),
+ tableBuilder: (fsContext) => _VendorComparisonTable(
+ ranking: ranking,
+ criteria: criteria,
+ ),
+ ),
  ),
  if (scores.isNotEmpty)
- _ScoreTable(
+ FullScreenTableWrapper(
+ title: 'Vendor Evaluation Scores',
+ child: _ScoreTable(
  scores: scores,
  criteria: criteria,
+ ),
+ tableBuilder: (fsContext) => _ScoreTable(
+ scores: scores,
+ criteria: criteria,
+ ),
  ),
  ],
  );
@@ -3152,7 +3163,7 @@ Future<void> _showEvaluationDialog(
  children: [
  if (rfqs.isNotEmpty)
  DropdownButtonFormField<String>(
- value: selectedRfqId.isNotEmpty ? selectedRfqId : null,
+ initialValue: selectedRfqId.isNotEmpty ? selectedRfqId : null,
  items: rfqs
  .map((rfq) => DropdownMenuItem(
  value: rfq.id,
@@ -3182,7 +3193,7 @@ Future<void> _showEvaluationDialog(
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: technicalGate,
+ initialValue: technicalGate,
  items: const [
  DropdownMenuItem(
  value: 'Pending Technical',
@@ -3291,7 +3302,7 @@ Future<void> _showEvaluationDialog(
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: pmReview,
+ initialValue: pmReview,
  items: const [
  DropdownMenuItem(
  value: 'Pending', child: Text('Pending')),
@@ -3311,7 +3322,7 @@ Future<void> _showEvaluationDialog(
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: sponsorApproval,
+ initialValue: sponsorApproval,
  items: const [
  DropdownMenuItem(
  value: 'Pending', child: Text('Pending')),
@@ -3507,9 +3518,9 @@ class _ScoreTable extends StatelessWidget {
  ),
  ...scores.map((s) => TableRow(children: [
  _TableCell(
- Text(s.vendorName, style: const TextStyle(fontSize: 12))),
+ WrappedText(s.vendorName, style: const TextStyle(fontSize: 12))),
  _TableCell(
- Text(
+ WrappedText(
  criteria
  .where((criterion) => criterion.id == s.criteriaId)
  .map((criterion) => criterion.name)
@@ -3517,10 +3528,10 @@ class _ScoreTable extends StatelessWidget {
  s.criteriaId,
  style: const TextStyle(fontSize: 12),
  )),
- _TableCell(Text(s.score.toStringAsFixed(1),
+ _TableCell(WrappedText(s.score.toStringAsFixed(1),
  style: const TextStyle(
  fontSize: 12, fontWeight: FontWeight.w600))),
- _TableCell(Text(s.notes,
+ _TableCell(WrappedText(s.notes,
  style:
  const TextStyle(fontSize: 12, color: Color(0xFF6B7280)))),
  ])),
@@ -3574,10 +3585,10 @@ class _VendorComparisonTable extends StatelessWidget {
  ],
  ),
  ...ranking.map((entry) => TableRow(children: [
- _TableCell(Text(entry.key,
+ _TableCell(WrappedText(entry.key,
  style: const TextStyle(
  fontSize: 12, fontWeight: FontWeight.w600))),
- _TableCell(Text(entry.value.toStringAsFixed(1),
+ _TableCell(WrappedText(entry.value.toStringAsFixed(1),
  style: const TextStyle(fontSize: 12))),
  ])),
  ],
@@ -3672,7 +3683,7 @@ class _EvaluationScoreEditor extends StatelessWidget {
  SizedBox(
  width: 170,
  child: DropdownButtonFormField<String>(
- value: screening.status,
+ initialValue: screening.status,
  items: const [
  DropdownMenuItem(
  value: 'Pending', child: Text('Pending')),
@@ -3938,15 +3949,15 @@ class _PaymentContractExpansion extends StatelessWidget {
  ],
  ),
  ...milestones.map((m) => TableRow(children: [
- _TableCell(Text(m.name,
+ _TableCell(WrappedText(m.name,
  style: const TextStyle(
  fontSize: 12, fontWeight: FontWeight.w500))),
- _TableCell(Text('\$${_formatCurrency(m.amount)}',
+ _TableCell(WrappedText('\$${_formatCurrency(m.amount)}',
  style: const TextStyle(fontSize: 12))),
- _TableCell(Text(
+ _TableCell(WrappedText(
  '${m.percentOfContract.toStringAsFixed(0)}%',
  style: const TextStyle(fontSize: 12))),
- _TableCell(Text('${m.retentionPercent.toStringAsFixed(0)}%',
+ _TableCell(WrappedText('${m.retentionPercent.toStringAsFixed(0)}%',
  style: const TextStyle(
  fontSize: 12, color: Color(0xFF6B7280)))),
  _TableCell(_StatusChip(
@@ -4061,11 +4072,11 @@ class _AdminContractCardState extends State<_AdminContractCard> {
  onChanged: (v) => _updateField(reportingFrequency: v),
  ),
  const SizedBox(height: 18),
- Align(
+ const Align(
  alignment: Alignment.centerLeft,
  child: Text(
  'Pre-Award Compliance Checklist',
- style: const TextStyle(
+ style: TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w700,
  color: Color(0xFF111827),
@@ -4325,11 +4336,11 @@ class _NegotiationContractCard extends StatelessWidget {
  ],
  ),
  ...items.map((item) => TableRow(children: [
- _TableCell(Text(item.item,
+ _TableCell(WrappedText(item.item,
  style: const TextStyle(fontSize: 12))),
- _TableCell(Text(item.ourPosition,
+ _TableCell(WrappedText(item.ourPosition,
  style: const TextStyle(fontSize: 12))),
- _TableCell(Text(item.theirPosition,
+ _TableCell(WrappedText(item.theirPosition,
  style: const TextStyle(
  fontSize: 12, color: Color(0xFF6B7280)))),
  _TableCell(_StatusChip(
@@ -4391,7 +4402,7 @@ Future<void> _showNegotiationDialog(
  children: [
  Expanded(
  child: DropdownButtonFormField<String>(
- value: authority,
+ initialValue: authority,
  items: const [
  DropdownMenuItem(value: 'Not Set', child: Text('Not Set')),
  DropdownMenuItem(
@@ -4414,7 +4425,7 @@ Future<void> _showNegotiationDialog(
  const SizedBox(width: 12),
  Expanded(
  child: DropdownButtonFormField<String>(
- value: status,
+ initialValue: status,
  items: const [
  DropdownMenuItem(
  value: 'Not Started', child: Text('Not Started')),
@@ -4589,9 +4600,16 @@ class _BudgetTabState extends State<_BudgetTab> {
  onChanged: (v) {},
  ),
  const SizedBox(height: 16),
- _BudgetEditableTable(
+ FullScreenTableWrapper(
+ title: 'Contract Budget (Editable)',
+ child: _BudgetEditableTable(
  contracts: filteredContracts,
  projectId: projectId,
+ ),
+ tableBuilder: (fsContext) => _BudgetEditableTable(
+ contracts: filteredContracts,
+ projectId: projectId,
+ ),
  ),
  ],
  ),
@@ -5194,7 +5212,7 @@ class _CriteriaRowState extends State<_CriteriaRow> {
  SizedBox(
  width: 120,
  child: DropdownButtonFormField<String>(
- value: widget.criterion.category,
+ initialValue: widget.criterion.category,
  isExpanded: true,
  isDense: true,
  decoration: const InputDecoration(

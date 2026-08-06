@@ -187,7 +187,7 @@ class _HeroHeader extends StatelessWidget {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
  decoration: BoxDecoration(
- color: accent.withOpacity(0.12),
+ color: accent.withValues(alpha: 0.12),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -326,7 +326,7 @@ class _MetricTile extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final Color badgeColor = accent.withOpacity(0.12);
+ final Color badgeColor = accent.withValues(alpha: 0.12);
  final Color trendColor = metric.trendIsPositive ? const Color(0xFF047857) : const Color(0xFFB91C1C);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
@@ -508,7 +508,7 @@ class _TimelineTile extends StatelessWidget {
  color: accent,
  shape: BoxShape.circle,
  boxShadow: [
- BoxShadow(color: accent.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 6)),
+ BoxShadow(color: accent.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 6)),
  ],
  ),
  ),
@@ -689,13 +689,13 @@ class _GlowPill extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final Color background = accent.withOpacity(0.12);
+ final Color background = accent.withValues(alpha: 0.12);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
  decoration: BoxDecoration(
  color: background,
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: accent.withOpacity(0.45)),
+ border: Border.all(color: accent.withValues(alpha: 0.45)),
  ),
  child: Text(
  label,

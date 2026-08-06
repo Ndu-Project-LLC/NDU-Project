@@ -38,14 +38,13 @@ import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
+import 'package:go_router/go_router.dart';
 
 class CostEstimateModuleScreen extends StatefulWidget {
   const CostEstimateModuleScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CostEstimateModuleScreen()),
-    );
+    context.push('/cost-estimate');
   }
 
   @override
@@ -137,7 +136,7 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   title: 'Cost Estimate Navigation',
                   subtitle: 'Navigate between cost estimate sections',
                   icon: Icons.attach_money_outlined,
-                  tabs: [
+                  tabs: const [
                     SectionTab(icon: Icons.dashboard_outlined, label: 'Cost Dashboard'),
                     SectionTab(icon: Icons.build_outlined, label: 'Builder'),
                     SectionTab(icon: Icons.description_outlined, label: 'BOE'),
@@ -183,13 +182,13 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   children: [
                     _CostDashboardTab(provider: provider),
                     const BuilderScreen(),
-                    BOEScreen(),
-                    AIAssistantScreen(),
-                    StakeholdersScreen(),
-                    AccountingScreen(),
-                    ReviewScreen(),
-                    BaselineScreen(),
-                    VarianceScreen(),
+                    const BOEScreen(),
+                    const AIAssistantScreen(),
+                    const StakeholdersScreen(),
+                    const AccountingScreen(),
+                    const ReviewScreen(),
+                    const BaselineScreen(),
+                    const VarianceScreen(),
                     const CostByWBSTab(),
                   ],
                 ),
@@ -400,7 +399,7 @@ class _CostDashboardTab extends StatelessWidget {
                               children: [
                                 Container(width: 8, height: 8, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF6366F1))),
                                 const SizedBox(width: 8),
-                                Text('${entry.key.label}', style: const TextStyle(color: _textPrimary, fontSize: 12, fontWeight: FontWeight.w500)),
+                                Text(entry.key.label, style: const TextStyle(color: _textPrimary, fontSize: 12, fontWeight: FontWeight.w500)),
                                 const SizedBox(width: 6),
                                 Text('(${entry.value.length})', style: const TextStyle(color: _textSecondary, fontSize: 11)),
                               ],
@@ -450,10 +449,10 @@ class _CostDashboardTab extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(children: [
-                        const Icon(Icons.trending_up, color: _textSecondary, size: 18),
-                        const SizedBox(width: 8),
-                        const Text('Mgmt Reserve', style: TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                      const Row(children: [
+                        Icon(Icons.trending_up, color: _textSecondary, size: 18),
+                        SizedBox(width: 8),
+                        Text('Mgmt Reserve', style: TextStyle(color: _textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
                       ]),
                       const SizedBox(height: 10),
                       Text('$currencySymbol${_fmt(t.managementReserve)}', style: const TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.bold, fontFeatures: [FontFeature.tabularFigures()])),

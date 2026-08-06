@@ -7,6 +7,7 @@
 /// NOTE: The z_ai_web_dev_sdk must be used server-side only. In a production
 /// Flutter app, this service would call a backend API endpoint that uses the
 /// SDK. For now, it returns deterministic fallback responses attributed to KAZ AI.
+library;
 
 import 'dart:math';
 

@@ -8,6 +8,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
@@ -94,8 +95,8 @@ class _OperationsControlScreenState extends State<OperationsControlScreen> {
  backgroundColor: Colors.grey[50],
  drawer: Drawer(
  width: sidebarWidth,
- child: SafeArea(
- child: const InitiationLikeSidebar(
+ child: const SafeArea(
+ child: InitiationLikeSidebar(
  activeItemLabel: 'Operations Control',
  ),
  ),
@@ -106,8 +107,8 @@ class _OperationsControlScreenState extends State<OperationsControlScreen> {
  Expanded(
  child: Stack(
  children: [
- MobileSidebarHamburger(
- sidebar: const InitiationLikeSidebar(
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
  activeItemLabel: 'Operations Control',
  ),
  ),
@@ -326,7 +327,7 @@ class _OperationsControlScreenState extends State<OperationsControlScreen> {
  }
 
  Widget controlAccountTable(List<ControlAccount> accounts) {
- return Container(
+ final tableBody = Container(
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
  color: Colors.white,
@@ -360,18 +361,18 @@ class _OperationsControlScreenState extends State<OperationsControlScreen> {
  children: [
  Expanded(
  flex: 2,
- child: Text(ca.title,
+ child: WrappedText(ca.title,
  style: const TextStyle(
  fontWeight: FontWeight.w600))),
  Expanded(
- child: Text('\$${ca.budgetAtCompletion.toStringAsFixed(0)}',
+ child: WrappedText('\$${ca.budgetAtCompletion.toStringAsFixed(0)}',
  style: const TextStyle(color: Color(0xFF6B7280)))),
  Expanded(
- child: Text('CPI: ${ca.cpi.toStringAsFixed(2)}',
+ child: WrappedText('CPI: ${ca.cpi.toStringAsFixed(2)}',
  style: TextStyle(
  fontWeight: FontWeight.w600, color: color))),
  Expanded(
- child: Text('EV: \$${ca.earnedValue.toStringAsFixed(0)}',
+ child: WrappedText('EV: \$${ca.earnedValue.toStringAsFixed(0)}',
  style: const TextStyle(color: Color(0xFF6B7280)))),
  Container(
  padding: const EdgeInsets.symmetric(
@@ -380,7 +381,7 @@ class _OperationsControlScreenState extends State<OperationsControlScreen> {
  color: color.withValues(alpha: 0.1),
  borderRadius: BorderRadius.circular(6),
  ),
- child: Text(ca.status.toUpperCase(),
+ child: WrappedText(ca.status.toUpperCase(),
  style: TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w600,
@@ -391,6 +392,78 @@ class _OperationsControlScreenState extends State<OperationsControlScreen> {
  );
  }),
  ],
+ ),
+ );
+
+ return FullScreenTableWrapper(
+ title: 'Control Accounts',
+ child: tableBody,
+ tableBuilder: (fsContext) => Container(
+ padding: const EdgeInsets.all(20),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text('Control Accounts',
+ style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+ const SizedBox(height: 16),
+ if (accounts.isEmpty)
+ const Text('No control accounts defined.',
+ style: TextStyle(color: Color(0xFF9CA3AF)))
+ else
+ ...accounts.map((ca) {
+ final color = ca.cpi >= 1.0
+ ? const Color(0xFF059669)
+ : ca.cpi >= 0.8
+ ? const Color(0xFFD97706)
+ : const Color(0xFFDC2626);
+ return Container(
+ margin: const EdgeInsets.only(bottom: 8),
+ padding: const EdgeInsets.all(12),
+ decoration: BoxDecoration(
+ color: const Color(0xFFF9FAFB),
+ borderRadius: BorderRadius.circular(10),
+ ),
+ child: Row(
+ children: [
+ Expanded(
+ flex: 2,
+ child: WrappedText(ca.title,
+ style: const TextStyle(
+ fontWeight: FontWeight.w600))),
+ Expanded(
+ child: WrappedText('\$${ca.budgetAtCompletion.toStringAsFixed(0)}',
+ style: const TextStyle(color: Color(0xFF6B7280)))),
+ Expanded(
+ child: WrappedText('CPI: ${ca.cpi.toStringAsFixed(2)}',
+ style: TextStyle(
+ fontWeight: FontWeight.w600, color: color))),
+ Expanded(
+ child: WrappedText('EV: \$${ca.earnedValue.toStringAsFixed(0)}',
+ style: const TextStyle(color: Color(0xFF6B7280)))),
+ Container(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 8, vertical: 4),
+ decoration: BoxDecoration(
+ color: color.withValues(alpha: 0.1),
+ borderRadius: BorderRadius.circular(6),
+ ),
+ child: WrappedText(ca.status.toUpperCase(),
+ style: TextStyle(
+ fontSize: 11,
+ fontWeight: FontWeight.w600,
+ color: color)),
+ ),
+ ],
+ ),
+ );
+ }),
+ ],
+ ),
  ),
  );
  }

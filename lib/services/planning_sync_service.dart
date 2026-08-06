@@ -167,20 +167,30 @@ class PlanningSyncService {
 
       switch (pkg.packageClassification) {
         case IntegratedWorkPackageService.procurementPackage:
-          for (final id in pkg.linkedEngineeringPackageIds) addIfPresent(id);
+          for (final id in pkg.linkedEngineeringPackageIds) {
+            addIfPresent(id);
+          }
           addIfPresent(pkg.parentPackageId);
         case IntegratedWorkPackageService.constructionCwp:
         case IntegratedWorkPackageService.implementationWorkPackage:
         case IntegratedWorkPackageService.agileIterationPackage:
-          for (final id in pkg.linkedEngineeringPackageIds) addIfPresent(id);
-          for (final id in pkg.linkedProcurementPackageIds) addIfPresent(id);
+          for (final id in pkg.linkedEngineeringPackageIds) {
+            addIfPresent(id);
+          }
+          for (final id in pkg.linkedProcurementPackageIds) {
+            addIfPresent(id);
+          }
           addIfPresent(pkg.parentPackageId);
         case IntegratedWorkPackageService.preCommissioningPackage:
           addIfPresent(pkg.parentPackageId);
-          for (final id in pkg.linkedEngineeringPackageIds) addIfPresent(id);
+          for (final id in pkg.linkedEngineeringPackageIds) {
+            addIfPresent(id);
+          }
         case IntegratedWorkPackageService.commissioningPackage:
           addIfPresent(pkg.parentPackageId);
-          for (final id in pkg.linkedEngineeringPackageIds) addIfPresent(id);
+          for (final id in pkg.linkedEngineeringPackageIds) {
+            addIfPresent(id);
+          }
         default:
           break;
       }

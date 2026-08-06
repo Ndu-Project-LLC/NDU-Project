@@ -52,9 +52,9 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +82,7 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
                 SizedBox(
                   width: 320,
                   child: DropdownButtonFormField<String>(
-                    value: selectedScopeId,
+                    initialValue: selectedScopeId,
                     decoration: const InputDecoration(
                       labelText: 'Procurement Scope',
                       isDense: true,
@@ -148,9 +148,9 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+                color: Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFD1D5DB)),
+                border: Border.all(color: Color(0xFFD1D5DB)),
               ),
               child: Text(
                 'Bidding is not required for "${selectedScopeName.trim().isEmpty ? 'this scope' : selectedScopeName.trim()}". The procurement workflow is greyed out for this selection.',
@@ -168,7 +168,7 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
+                border: Border.all(color: Color(0xFFE5E7EB)),
               ),
               child: const Text(
                 'No workflow steps yet. Add your first step to build the procurement cycle.',
@@ -176,22 +176,31 @@ class ProcurementWorkflowBuilder extends StatelessWidget {
               ),
             )
           else
-            Column(
-              children: [
-                for (var i = 0; i < workflowSteps.length; i++) ...[
-                  _ProcurementWorkflowStepRow(
-                    step: workflowSteps[i],
-                    index: i,
-                    onEdit: () => onEditWorkflowStep(workflowSteps[i]),
-                    onDelete: () => onDeleteWorkflowStep(workflowSteps[i].id),
-                    onMoveUp: i == 0 ? null : () => onMoveWorkflowStep(i, -1),
-                    onMoveDown: i == workflowSteps.length - 1
-                        ? null
-                        : () => onMoveWorkflowStep(i, 1),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: workflowSteps.length,
+              itemBuilder: (context, i) {
+                final step = workflowSteps[i];
+                return RepaintBoundary(
+                  key: ValueKey('workflow_step_$i'),
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: i == workflowSteps.length - 1 ? 0 : 8,
+                    ),
+                    child: _ProcurementWorkflowStepRow(
+                      step: step,
+                      index: i,
+                      onEdit: () => onEditWorkflowStep(step),
+                      onDelete: () => onDeleteWorkflowStep(step.id),
+                      onMoveUp: i == 0 ? null : () => onMoveWorkflowStep(i, -1),
+                      onMoveDown: i == workflowSteps.length - 1
+                          ? null
+                          : () => onMoveWorkflowStep(i, 1),
+                    ),
                   ),
-                  if (i != workflowSteps.length - 1) const SizedBox(height: 8),
-                ],
-              ],
+                );
+              },
             ),
           const SizedBox(height: 10),
           Wrap(
@@ -262,7 +271,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: Color(0xFFE5E7EB)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,7 +281,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
             height: 26,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFEFF6FF),
+              color: Color(0xFFEFF6FF),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(

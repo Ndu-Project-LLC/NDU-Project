@@ -8,22 +8,23 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/sidebar_accumulated_context.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
+import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:go_router/go_router.dart';
 class LessonsLearnedScreen extends StatefulWidget {
  const LessonsLearnedScreen({super.key});
 
  static Future<void> open(BuildContext context) {
- return Navigator.push(
- context,
- MaterialPageRoute(builder: (_) => const LessonsLearnedScreen()),
- );
+ return context.push('/lessons-learned');
  }
 
  @override
@@ -32,10 +33,15 @@ class LessonsLearnedScreen extends StatefulWidget {
 
 class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  final TextEditingController _searchController = TextEditingController();
+ bool _autoPopulated = false;
+ bool _isAutoPopulating = false;
+ String? _carriedContext;
+
  @override
  void initState() {
  super.initState();
  _searchController.addListener(_handleSearchChanged);
+ WidgetsBinding.instance.addPostFrameCallback((_) => _autoPopulateIfNeeded());
  }
 
  @override
@@ -47,6 +53,64 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
 
  void _handleSearchChanged() {
  setState(() {});
+ }
+
+ Future<void> _autoPopulateIfNeeded() async {
+ if (_autoPopulated || _isAutoPopulating) return;
+ _autoPopulated = true;
+ _isAutoPopulating = true;
+ if (mounted) setState(() {});
+
+ try {
+ final data = ProjectDataHelper.getData(context);
+ // If the user already has lessons learned, do nothing.
+ if (data.lessonsLearned.isNotEmpty) {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ return;
+ }
+
+ // Pull real carried context for display in the banner.
+ final carried = await buildAccumulatedContext(context, 'lessons_learned');
+ if (mounted) setState(() => _carriedContext = carried);
+
+ // Deterministic seed from real prior-phase data — never invents lessons.
+ // Seed pulls from FEP summary + project notes (NOT the current screen's
+ // lessonsLearned, which we already checked is empty).
+ final seed = seedLessonsLearned(data);
+ if (seed.isNotEmpty) {
+ final newItems = seed.rows.map((r) => LessonRecord(
+ lesson: (r['lesson'] ?? '').toString(),
+ category: (r['category'] ?? '').toString(),
+ type: (r['type'] ?? '').toString(),
+ phase: (r['phase'] ?? '').toString(),
+ status: (r['status'] ?? 'Draft').toString(),
+ submittedBy: (r['submittedBy'] ?? '').toString(),
+ notes: (r['notes'] ?? '').toString(),
+ impact: (r['impact'] ?? 'Medium').toString(),
+ highlight: r['highlight'] == true,
+ )).toList();
+
+ await ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: 'lessons_learned',
+ dataUpdater: (d) => d.copyWith(lessonsLearned: newItems),
+ );
+
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(
+ 'Seeded ${newItems.length} lesson(s) from ${seed.source}.'),
+ behavior: SnackBarBehavior.floating,
+ ),
+ );
+ }
+ }
+ } catch (e) {
+ debugPrint('LessonsLearned auto-populate error: $e');
+ } finally {
+ if (mounted) setState(() => _isAutoPopulating = false);
+ }
  }
 
  Future<void> _openLessonDialog([_LessonEntry? existing]) async {
@@ -264,6 +328,16 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  children: [
  PlanningPhaseHeader(title: 'Lessons Learned', onExportPdf: _exportPdf),
  const SizedBox(height: 24),
+ if (_isAutoPopulating)
+ const AutoPopulatingIndicator(),
+ if (_carriedContext != null && _carriedContext!.isNotEmpty)
+ Padding(
+ padding: const EdgeInsets.only(bottom: 16),
+ child: CarriedContextBanner(
+ checkpoint: 'lessons_learned',
+ contextText: _carriedContext!,
+ ),
+ ),
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Lessons Learned',
@@ -707,11 +781,12 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  const cellStyle = TextStyle(fontSize: 13, color: Colors.black87);
  const subStyle = TextStyle(fontSize: 12, color: Colors.black54);
 
+ Widget buildTable(BuildContext context) {
  return LayoutBuilder(
- builder: (context, constraints) {
+ builder: (bc, constraints) {
  final availableWidth = constraints.hasBoundedWidth
  ? constraints.maxWidth
- : MediaQuery.of(context).size.width;
+ : MediaQuery.of(bc).size.width;
  final tableWidth = math.max(960.0, availableWidth);
 
  return SingleChildScrollView(
@@ -788,10 +863,10 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  children: [
  Expanded(
  flex: 6,
- child: Text('${i + 1}', style: cellStyle)),
+ child: WrappedText('${i + 1}', style: cellStyle)),
  Expanded(
  flex: 32,
- child: Text(
+ child: WrappedText(
  entries[i].lesson,
  style: cellStyle.copyWith(
  fontWeight: FontWeight.w600),
@@ -802,15 +877,15 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  child: _statusPill(entries[i].type)),
  Expanded(
  flex: 14,
- child: Text(entries[i].category,
+ child: WrappedText(entries[i].category,
  style: cellStyle)),
  Expanded(
  flex: 14,
  child:
- Text(entries[i].phase, style: cellStyle)),
+ WrappedText(entries[i].phase, style: cellStyle)),
  Expanded(
  flex: 12,
- child: Text(
+ child: WrappedText(
  entries[i].impact,
  style: entries[i].impact == 'High'
  ? cellStyle.copyWith(
@@ -820,14 +895,14 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  ),
  Expanded(
  flex: 14,
- child: Text(entries[i].status,
+ child: WrappedText(entries[i].status,
  style: cellStyle)),
  Expanded(
  flex: 20,
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- Text(entries[i].submittedBy,
+ WrappedText(entries[i].submittedBy,
  style: cellStyle),
  ],
  ),
@@ -835,7 +910,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  Expanded(
  flex: 14,
  child:
- Text(entries[i].date, style: cellStyle)),
+ WrappedText(entries[i].date, style: cellStyle)),
  Expanded(
  flex: 10,
  child: Align(
@@ -889,6 +964,13 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  ),
  );
  },
+ );
+ }
+
+ return FullScreenTableWrapper(
+ title: 'Lessons Learned — Tasks',
+ child: buildTable(context),
+ tableBuilder: buildTable,
  );
  }
 

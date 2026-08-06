@@ -11,6 +11,8 @@ import 'package:ndu_project/widgets/front_end_planning_header.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/activity_log_panel.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
@@ -555,7 +557,7 @@ class _ProjectActivitiesLogScreenState
  Expanded(
  child: DropdownButtonFormField<
  ProjectActivityStatus>(
- value: selectedStatus,
+ initialValue: selectedStatus,
  decoration: const InputDecoration(
  labelText: 'Status',
  border: OutlineInputBorder(),
@@ -579,7 +581,7 @@ class _ProjectActivitiesLogScreenState
  Expanded(
  child: DropdownButtonFormField<
  ProjectApprovalStatus>(
- value: selectedApproval,
+ initialValue: selectedApproval,
  decoration: const InputDecoration(
  labelText: 'Approval',
  border: OutlineInputBorder(),
@@ -1890,7 +1892,9 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  );
  }
 
- return Container(
+ return Builder(builder: (bc) {
+  Widget buildTable(BuildContext ctx) {
+   return Container(
  width: double.infinity,
  decoration: BoxDecoration(
  color: Colors.white,
@@ -1906,11 +1910,10 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  scrollDirection: Axis.horizontal,
  child: SizedBox(
  width: 2160,
- child: DataTable(
+ child: buildNduDataTable(context: context, 
  horizontalMargin: 12,
  columnSpacing: 16,
- showBottomBorder: true,
- dataRowMinHeight: 56,
+  dataRowMinHeight: 56,
  dataRowMaxHeight: 74,
  headingTextStyle: const TextStyle(
  fontWeight: FontWeight.w700,
@@ -2056,6 +2059,13 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  ),
  ),
  );
+  }
+  return FullScreenTableWrapper(
+   title: 'Project Activities Log',
+   child: buildTable(bc),
+   tableBuilder: buildTable,
+  );
+ });
  }
 
  Widget _dataCell(

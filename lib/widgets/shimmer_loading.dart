@@ -100,15 +100,15 @@ class PageShimmerSkeleton extends StatelessWidget {
               // ── Header row (back + title) ──
               Row(
                 children: [
-                  ShimmerCircle(size: 36),
+                  const ShimmerCircle(size: 36),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ShimmerBone(width: 180, height: 20),
+                        const ShimmerBone(width: 180, height: 20),
                         const SizedBox(height: 8),
-                        ShimmerBone(width: 240, height: 14),
+                        const ShimmerBone(width: 240, height: 14),
                       ],
                     ),
                   ),
@@ -136,11 +136,12 @@ class PageShimmerSkeleton extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            ShimmerBone(width: 32, height: 32, borderRadius: 8),
+                            const ShimmerBone(
+                                width: 32, height: 32, borderRadius: 8),
                             const SizedBox(height: 12),
-                            ShimmerBone(width: 48, height: 22),
+                            const ShimmerBone(width: 48, height: 22),
                             const SizedBox(height: 6),
-                            ShimmerBone(width: 80, height: 12),
+                            const ShimmerBone(width: 80, height: 12),
                           ],
                         ),
                       ),
@@ -164,13 +165,13 @@ class PageShimmerSkeleton extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ShimmerBone(width: 140, height: 18),
+                        const ShimmerBone(width: 140, height: 18),
                         const SizedBox(height: 14),
-                        ShimmerBone(height: 12),
+                        const ShimmerBone(height: 12),
                         const SizedBox(height: 8),
-                        ShimmerBone(height: 12, width: 260),
+                        const ShimmerBone(height: 12, width: 260),
                         const SizedBox(height: 8),
-                        ShimmerBone(height: 12, width: 200),
+                        const ShimmerBone(height: 12, width: 200),
                         const SizedBox(height: 16),
                         // Table-like rows
                         ...List.generate(4, (rowIndex) {
@@ -178,13 +179,13 @@ class PageShimmerSkeleton extends StatelessWidget {
                             padding: const EdgeInsets.only(bottom: 10),
                             child: Row(
                               children: [
-                                ShimmerBone(
+                                const ShimmerBone(
                                     width: 80, height: 12, borderRadius: 4),
                                 const Spacer(),
-                                ShimmerBone(
+                                const ShimmerBone(
                                     width: 60, height: 12, borderRadius: 4),
                                 const Spacer(),
-                                ShimmerBone(
+                                const ShimmerBone(
                                     width: 90, height: 12, borderRadius: 4),
                               ],
                             ),
@@ -221,7 +222,7 @@ class SidebarShimmerSkeleton extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Logo area
-            ShimmerBone(width: 120, height: 28, borderRadius: 8),
+            const ShimmerBone(width: 120, height: 28, borderRadius: 8),
             const SizedBox(height: 28),
             // Nav items
             ...List.generate(8, (_) {
@@ -229,9 +230,9 @@ class SidebarShimmerSkeleton extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
                   children: [
-                    ShimmerCircle(size: 20),
+                    const ShimmerCircle(size: 20),
                     const SizedBox(width: 12),
-                    ShimmerBone(width: 100, height: 14, borderRadius: 4),
+                    const ShimmerBone(width: 100, height: 14, borderRadius: 4),
                   ],
                 ),
               );
@@ -410,7 +411,7 @@ class _ShimmerTransitionOverlayState extends State<ShimmerTransitionOverlay>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFFC812).withOpacity(0.4),
+                        color: const Color(0xFFFFC812).withValues(alpha: 0.4),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),

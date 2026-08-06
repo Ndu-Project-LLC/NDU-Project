@@ -19,7 +19,8 @@ class ProgramModel {
     required this.updatedAt,
   });
 
-  factory ProgramModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+  factory ProgramModel.fromFirestore(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     if (data == null) {
       // Handle null data gracefully - return empty program
@@ -33,7 +34,7 @@ class ProgramModel {
         updatedAt: DateTime.now(),
       );
     }
-    
+
     return ProgramModel(
       id: doc.id,
       name: data['name']?.toString() ?? '',

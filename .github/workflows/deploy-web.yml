@@ -1,0 +1,288 @@
+name: Promote Staging → Production (nduproject.com)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Trigger: manual dispatch only.
+# Builds the Flutter web app from the staging branch HEAD and deploys to the
+# `gh-pages` branch of THIS repo (Ndu-Project-LLC/NDU-Project), which serves
+# https://nduproject.com via GitHub Pages.
+#
+# This workflow uses the 'production' environment with required reviewers.
+# When triggered, GitHub sends an approval email to all configured reviewers.
+# The deploy will NOT proceed until a reviewer approves.
+#
+# Approval emails are sent to: chimmie@nduproject.com (and any other reviewers
+# configured on the 'production' environment).
+#
+# Usage:
+#   1. Go to Actions tab → "Promote Staging → Production (nduproject.com)"
+#   2. Click "Run workflow"
+#   3. Preflight checks (analyze + tests) run — if they fail, no approval email is sent
+#   4. If preflight passes, reviewer receives email, clicks "Review deployments", approves
+#   5. Build + deploy proceeds automatically after approval
+#
+# PREFLIGHT CHECKS run BEFORE the approval gate. This means reviewers are NEVER
+# asked to approve a broken build — if tests fail, the workflow stops before
+# the approval email is even sent. This guarantees a triggered production
+# deployment never fails after approval.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_promotion:
+        description: "Type 'promote' to confirm promotion to production (nduproject.com)"
+        required: true
+        default: ""
+        type: choice
+        options:
+          - ""
+          - "promote"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: promote-production-web
+  cancel-in-progress: false
+
+jobs:
+  # ── PRE-CHECK ─────────────────────────────────────────────────────────────
+  pre-check:
+    name: Pre-promotion check
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.info.outputs.sha }}
+      short: ${{ steps.info.outputs.short }}
+      date: ${{ steps.info.outputs.date }}
+    steps:
+      - name: Validate confirmation input
+        run: |
+          if [ "${{ inputs.confirm_promotion }}" != "promote" ]; then
+            echo "::error::Confirmation required — select 'promote' from the dropdown to proceed."
+            exit 1
+          fi
+          echo "✓ Confirmation accepted."
+
+      - name: Checkout staging branch
+        uses: actions/checkout@v4
+        with:
+          ref: staging
+
+      - name: Collect deployment info
+        id: info
+        run: |
+          STAGING_SHA=$(git rev-parse HEAD)
+          STAGING_SHORT="${STAGING_SHA:0:7}"
+          BUILD_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          {
+            echo "sha=$STAGING_SHA"
+            echo "short=$STAGING_SHORT"
+            echo "date=$BUILD_DATE"
+          } >> "$GITHUB_OUTPUT"
+          echo "Promoting staging SHA: $STAGING_SHORT"
+          echo "Build date: $BUILD_DATE"
+
+      - name: Display promotion summary
+        run: |
+          echo "============================================"
+          echo "  🚀 Promotion: staging → production"
+          echo "============================================"
+          echo "  Source:      staging branch @ ${{ steps.info.outputs.short }}"
+          echo "  Target:      nduproject.com (gh-pages)"
+          echo "  Date:        ${{ steps.info.outputs.date }}"
+          echo ""
+          echo "  ⏳ Waiting for reviewer approval..."
+          echo "  (Approver will receive email notification)"
+          echo "============================================"
+
+  # ── PREFLIGHT CHECKS (must pass BEFORE approval gate) ────────────────────
+  # Runs the full test suite + static analysis on the staging SHA that's about
+  # to be promoted. If any check fails, the workflow stops here — NO approval
+  # email is sent, and the production environment is never triggered.
+  preflight:
+    name: Preflight checks (analyze + test)
+    needs: pre-check
+    if: github.repository == 'Ndu-Project-LLC/NDU-Project'
+    runs-on: ubuntu-latest
+    env:
+      STAGING_SHA: ${{ needs.pre-check.outputs.sha }}
+      STAGING_SHORT: ${{ needs.pre-check.outputs.short }}
+    steps:
+      - name: Checkout staging SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.STAGING_SHA }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Preflight summary
+        run: |
+          echo "============================================"
+          echo "  🔍 Preflight checks — nduproject.com (production)"
+          echo "============================================"
+          echo "  Promoting SHA: ${{ env.STAGING_SHORT }}"
+          echo "  Triggered by:  @${{ github.actor }}"
+          echo "============================================"
+
+      - name: Required files present
+        run: |
+          set -eu
+          REQUIRED_FILES=(
+            "pubspec.yaml"
+            "lib/main.dart"
+            "web/index.html"
+            "analysis_options.yaml"
+          )
+          MISSING=0
+          for f in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Missing required file: $f"
+              MISSING=1
+            else
+              echo "✓ $f"
+            fi
+          done
+          if [ "$MISSING" -ne 0 ]; then
+            echo "::error::Preflight FAILED — required files missing. Approval gate NOT triggered."
+            exit 1
+          fi
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Flutter analyze (fatal on errors)
+        run: |
+          set -eu
+          echo "── flutter analyze ──"
+          # --no-fatal-infos + --no-fatal-warnings avoid breaking on style nits
+          # and unused-element warnings. Real ERRORS (undefined names, type
+          # mismatches, syntax errors) WILL still fail this step and block the deploy.
+          # (undefined names, type mismatches, unused imports marked as error)
+          # WILL fail this step and block the promotion.
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
+          echo "✓ flutter analyze passed"
+
+      - name: Flutter test (unit + widget)
+        run: |
+          set -eu
+          echo "── flutter test ──"
+          # Runs every test under test/ (excluding integration tests).
+          # If any test fails, approval gate is NOT triggered.
+          flutter test --no-pub --reporter expanded
+          echo "✓ flutter test passed"
+
+      - name: Preflight passed
+        if: success()
+        run: |
+          echo "============================================"
+          echo "  ✅ Preflight checks passed"
+          echo "  Triggering approval gate (production environment)..."
+          echo "============================================"
+
+  # ── BUILD & DEPLOY (gated by 'production' environment) ────────────────────
+  build-and-deploy:
+    name: Build + Deploy to production (requires approval)
+    needs: [pre-check, preflight]
+    # Only run on the NDU-Project repo (not on admin.nduproject.com repo)
+    # AND only if preflight checks passed (needs.preflight.result == 'success')
+    if: |
+      github.repository == 'Ndu-Project-LLC/NDU-Project' &&
+      needs.preflight.result == 'success'
+    # The 'production' environment must be configured with required reviewers.
+    # GitHub will pause here and send approval emails. Once approved, this job runs.
+    environment:
+      name: production
+      url: https://nduproject.com
+    runs-on: ubuntu-latest
+    env:
+      STAGING_SHA: ${{ needs.pre-check.outputs.sha }}
+      STAGING_SHORT: ${{ needs.pre-check.outputs.short }}
+    steps:
+      - name: Checkout staging SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.STAGING_SHA }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Build web (release, production)
+        env:
+          OPENAI_PROXY_API_KEY: ${{ secrets.OPENAI_PROXY_API_KEY }}
+          OPENAI_PROXY_ENDPOINT: ${{ secrets.OPENAI_PROXY_ENDPOINT }}
+        run: |
+          flutter build web --release --base-href "/" --no-tree-shake-icons \
+            --dart-define=OPENAI_PROXY_API_KEY=${OPENAI_PROXY_API_KEY} \
+            --dart-define=OPENAI_PROXY_ENDPOINT=${OPENAI_PROXY_ENDPOINT} \
+            --dart-define=ENVIRONMENT=production
+
+      - name: Preserve production CNAME + .nojekyll + SPA routing config
+        run: |
+          cd build/web
+          echo "nduproject.com" > CNAME
+          touch .nojekyll
+          if [ -f ../../staticwebapp.config.json ]; then
+            cp ../../staticwebapp.config.json ./staticwebapp.config.json
+            echo "✓ staticwebapp.config.json copied"
+          fi
+          echo "✓ CNAME = $(cat CNAME)"
+          echo "✓ .nojekyll created"
+
+      - name: Generate bundle size info
+        id: bundle
+        run: |
+          BUNDLE_SIZE=$(du -sh build/web/main.dart.js | cut -f1)
+          echo "size=$BUNDLE_SIZE" >> "$GITHUB_OUTPUT"
+          echo "Bundle size: $BUNDLE_SIZE"
+
+      - name: Deploy to gh-pages (nduproject.com)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          # Self-repo push — use ACCESS_TOKEN (PAT) for reliability
+          personal_token: ${{ secrets.ACCESS_TOKEN }}
+          publish_dir: build/web
+          publish_branch: gh-pages
+          keep_files: false
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: |
+            deploy: nduproject.com — promoted from staging ${{ env.STAGING_SHORT }}
+
+      - name: Deployment summary
+        run: |
+          echo "============================================"
+          echo "  ✅ Production deploy complete"
+          echo "============================================"
+          echo "  Source SHA:  ${{ env.STAGING_SHORT }}"
+          echo "  Built at:    ${{ needs.pre-check.outputs.date }}"
+          echo "  Bundle size: ${{ steps.bundle.outputs.size }}"
+          echo "  Target:      gh-pages (nduproject.com)"
+          echo ""
+          echo "  Live URL:    https://nduproject.com"
+          echo "  (Pages rebuild takes ~60-90s after push)"
+          echo "============================================"
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Production deploy complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Promoted from:** \`staging@${{ env.STAGING_SHORT }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Approved by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Bundle:** ${{ steps.bundle.outputs.size }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://nduproject.com/" >> $GITHUB_STEP_SUMMARY

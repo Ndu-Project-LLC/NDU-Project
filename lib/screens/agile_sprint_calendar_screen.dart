@@ -284,7 +284,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
                             context, 'agile_sprint_calendar'),
                         onExportPdf: _exportPdf),
                     const SizedBox(height: 32),
-                    Text(
+                    const Text(
                         'Define sprint duration, dates, and ceremony schedule.',
                         style: TextStyle(fontSize: 15, color: _kMuted)),
                     const SizedBox(height: 24),
@@ -312,10 +312,13 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
                             ? 'No sprints match "$_searchQuery".'
                             : 'No sprints defined. Create your first sprint.')
                       else
-                        ..._filteredSprints
-                            .asMap()
-                            .entries
-                            .map((e) => _buildSprintCard(e.key, e.value)),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _filteredSprints.length,
+                          itemBuilder: (context, i) =>
+                              _buildSprintCard(i, _filteredSprints[i]),
+                        ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -538,7 +541,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: const BorderSide(color: _kBorder),
+        side: BorderSide(color: _kBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -548,7 +551,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: _kAccent.withOpacity(0.1),
+                color: _kAccent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
@@ -570,7 +573,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
                           fontWeight: FontWeight.w600, fontSize: 14)),
                   const SizedBox(height: 2),
                   Text('$startStr – $endStr',
-                      style: TextStyle(fontSize: 12, color: _kMuted)),
+                      style: const TextStyle(fontSize: 12, color: _kMuted)),
                   const SizedBox(height: 2),
                   Text(
                     'Capacity $availableCapacity pts · Planned $plannedPoints pts${sprint.squadName.isNotEmpty ? ' · ${sprint.squadName}' : ''}',
@@ -585,7 +588,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(sprint.goal,
-                          style: TextStyle(fontSize: 12, color: _kMuted),
+                          style: const TextStyle(fontSize: 12, color: _kMuted),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                     ),
@@ -618,7 +621,8 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Center(
-        child: Text(message, style: TextStyle(color: _kMuted, fontSize: 15)),
+        child:
+            Text(message, style: const TextStyle(color: _kMuted, fontSize: 15)),
       ),
     );
   }
@@ -673,27 +677,35 @@ class _AssignFeaturesDialogState extends State<_AssignFeaturesDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.assigned.isNotEmpty) ...[
-              Text('Assigned to this sprint',
+              const Text('Assigned to this sprint',
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: _kHeadline)),
               const SizedBox(height: 8),
-              ...widget.assigned
-                  .map((f) => _buildFeatureTile(f, true))
-                  .toList(),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: widget.assigned.length,
+                itemBuilder: (context, i) =>
+                    _buildFeatureTile(widget.assigned[i], true),
+              ),
               const Divider(height: 24),
             ],
             if (widget.unassigned.isNotEmpty) ...[
-              Text('Unassigned features',
+              const Text('Unassigned features',
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: _kHeadline)),
               const SizedBox(height: 8),
-              ...widget.unassigned
-                  .map((f) => _buildFeatureTile(f, false))
-                  .toList(),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: widget.unassigned.length,
+                itemBuilder: (context, i) =>
+                    _buildFeatureTile(widget.unassigned[i], false),
+              ),
             ],
             if (widget.unassigned.isEmpty && widget.assigned.isEmpty)
               const Padding(
@@ -734,7 +746,7 @@ class _AssignFeaturesDialogState extends State<_AssignFeaturesDialog> {
           ),
           Text(
             '${feature.storyPointEstimate.toStringAsFixed(0)} pts',
-            style: TextStyle(fontSize: 11, color: _kMuted),
+            style: const TextStyle(fontSize: 11, color: _kMuted),
           ),
           const SizedBox(width: 8),
           SizedBox(

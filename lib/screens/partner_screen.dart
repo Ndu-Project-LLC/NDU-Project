@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:go_router/go_router.dart';
 
 class PartnerScreen extends StatelessWidget {
   const PartnerScreen({super.key});
 
   static void open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const PartnerScreen()),
-    );
+    context.push('/partner');
   }
 
   @override
@@ -82,9 +81,9 @@ class PartnerScreen extends StatelessWidget {
             color: const Color(0xFF10B981).withValues(alpha: 0.12),
             border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Icon(Icons.handshake, color: Color(0xFF34D399), size: 16),
               SizedBox(width: 8),
               Text('Partner With Ndu Project', style: TextStyle(color: Color(0xFF34D399), fontWeight: FontWeight.w700, fontSize: 14)),
@@ -129,10 +128,10 @@ class PartnerScreen extends StatelessWidget {
 
   Widget _whyPartner() {
     final items = [
-      _PItem(icon: Icons.expand, title: 'Expand Your Service Offerings', desc: 'Enhance your existing consulting or technology services with a modern AI-powered project delivery platform.'),
-      _PItem(icon: Icons.star, title: 'Deliver Greater Client Value', desc: 'Help clients improve project planning, reduce delivery risk, standardize processes, and increase project success rates.'),
-      _PItem(icon: Icons.monetization_on, title: 'Generate New Revenue Opportunities', desc: 'Create recurring revenue through implementation services, training, referrals, and strategic partnerships.'),
-      _PItem(icon: Icons.lightbulb, title: 'Co-Innovate', desc: 'Collaborate with our product team to shape future capabilities based on real customer needs.'),
+      const _PItem(icon: Icons.expand, title: 'Expand Your Service Offerings', desc: 'Enhance your existing consulting or technology services with a modern AI-powered project delivery platform.'),
+      const _PItem(icon: Icons.star, title: 'Deliver Greater Client Value', desc: 'Help clients improve project planning, reduce delivery risk, standardize processes, and increase project success rates.'),
+      const _PItem(icon: Icons.monetization_on, title: 'Generate New Revenue Opportunities', desc: 'Create recurring revenue through implementation services, training, referrals, and strategic partnerships.'),
+      const _PItem(icon: Icons.lightbulb, title: 'Co-Innovate', desc: 'Collaborate with our product team to shape future capabilities based on real customer needs.'),
     ];
     return LayoutBuilder(builder: (context, c) {
       final cols = c.maxWidth >= 800 ? 2 : 1;
@@ -146,12 +145,12 @@ class PartnerScreen extends StatelessWidget {
 
   Widget _partnershipOpportunities() {
     final opps = [
-      _POpp(title: 'Project Management Consulting Firms', desc: 'Help your clients establish repeatable delivery processes while leveraging Ndu Project as the technology platform.', tags: ['PM Consulting Firms', 'PMO Advisory Firms', 'Business Transformation Consultants', 'Digital Transformation Consultants'], color: const Color(0xFF3B82F6)),
-      _POpp(title: 'Technology & Systems Integrators', desc: 'Expand your implementation portfolio by integrating Ndu Project with your clients\' technology ecosystem.', tags: ['Microsoft 365', 'Jira', 'Monday.com', 'Asana', 'Salesforce', 'ERP systems', 'HR platforms'], color: const Color(0xFF8B5CF6)),
-      _POpp(title: 'Universities & Educational Institutions', desc: 'Prepare students and professionals with practical project delivery experience through classroom licensing, research collaboration, and workforce development.', tags: ['Student access', 'Faculty collaboration', 'Capstone projects', 'Certification preparation', 'Research initiatives'], color: const Color(0xFF10B981)),
-      _POpp(title: 'Government & Economic Development', desc: 'Support small businesses, nonprofits, and public agencies by providing access to structured project delivery tools.', tags: ['Small business support', 'Workforce development', 'Innovation hubs', 'Economic development', 'Public sector transformation'], color: const Color(0xFF06B6D4)),
-      _POpp(title: 'Industry Associations', desc: 'Deliver additional value to your members through project delivery resources, workshops, webinars, and preferred access.', tags: ['Construction Associations', 'Manufacturing Associations', 'Healthcare Organizations', 'Technology Councils', 'Chambers of Commerce'], color: const Color(0xFFF59E0B)),
-      _POpp(title: 'Startup Accelerators & Incubators', desc: 'Equip founders with structured project planning and execution capabilities to improve startup execution and investor readiness.', tags: ['Startup onboarding', 'Portfolio support', 'Workshops', 'Office hours', 'Mentor resources'], color: const Color(0xFFEC4899)),
+      const _POpp(title: 'Project Management Consulting Firms', desc: 'Help your clients establish repeatable delivery processes while leveraging Ndu Project as the technology platform.', tags: ['PM Consulting Firms', 'PMO Advisory Firms', 'Business Transformation Consultants', 'Digital Transformation Consultants'], color: Color(0xFF3B82F6)),
+      const _POpp(title: 'Technology & Systems Integrators', desc: 'Expand your implementation portfolio by integrating Ndu Project with your clients\' technology ecosystem.', tags: ['Microsoft 365', 'Jira', 'Monday.com', 'Asana', 'Salesforce', 'ERP systems', 'HR platforms'], color: Color(0xFF8B5CF6)),
+      const _POpp(title: 'Universities & Educational Institutions', desc: 'Prepare students and professionals with practical project delivery experience through classroom licensing, research collaboration, and workforce development.', tags: ['Student access', 'Faculty collaboration', 'Capstone projects', 'Certification preparation', 'Research initiatives'], color: Color(0xFF10B981)),
+      const _POpp(title: 'Government & Economic Development', desc: 'Support small businesses, nonprofits, and public agencies by providing access to structured project delivery tools.', tags: ['Small business support', 'Workforce development', 'Innovation hubs', 'Economic development', 'Public sector transformation'], color: Color(0xFF06B6D4)),
+      const _POpp(title: 'Industry Associations', desc: 'Deliver additional value to your members through project delivery resources, workshops, webinars, and preferred access.', tags: ['Construction Associations', 'Manufacturing Associations', 'Healthcare Organizations', 'Technology Councils', 'Chambers of Commerce'], color: Color(0xFFF59E0B)),
+      const _POpp(title: 'Startup Accelerators & Incubators', desc: 'Equip founders with structured project planning and execution capabilities to improve startup execution and investor readiness.', tags: ['Startup onboarding', 'Portfolio support', 'Workshops', 'Office hours', 'Mentor resources'], color: Color(0xFFEC4899)),
     ];
     return LayoutBuilder(builder: (context, c) {
       final cols = c.maxWidth >= 1000 ? 3 : (c.maxWidth >= 600 ? 2 : 1);
@@ -188,10 +187,10 @@ class PartnerScreen extends StatelessWidget {
 
   Widget _howWeWork() {
     final steps = [
-      _Step(num: '1', title: 'Connect', desc: 'Meet with our team to understand your goals and identify opportunities.'),
-      _Step(num: '2', title: 'Explore', desc: 'Review partnership models and determine the best fit.'),
-      _Step(num: '3', title: 'Onboard', desc: 'Receive training, resources, and access to the partner portal.'),
-      _Step(num: '4', title: 'Grow', desc: 'Collaborate on customer engagements, marketing initiatives, and product innovation.'),
+      const _Step(num: '1', title: 'Connect', desc: 'Meet with our team to understand your goals and identify opportunities.'),
+      const _Step(num: '2', title: 'Explore', desc: 'Review partnership models and determine the best fit.'),
+      const _Step(num: '3', title: 'Onboard', desc: 'Receive training, resources, and access to the partner portal.'),
+      const _Step(num: '4', title: 'Grow', desc: 'Collaborate on customer engagements, marketing initiatives, and product innovation.'),
     ];
     return LayoutBuilder(builder: (context, c) {
       final cols = c.maxWidth >= 800 ? 4 : (c.maxWidth >= 500 ? 2 : 1);
@@ -317,7 +316,7 @@ class PartnerScreen extends StatelessWidget {
 
 class _PItem {
   final IconData icon; final String title; final String desc; final Color color;
-  const _PItem({required this.icon, required this.title, required this.desc, this.color = const Color(0xFF3B82F6)});
+  const _PItem({required this.icon, required this.title, required this.desc}) : color = const Color(0xFF3B82F6);
 }
 
 class _POpp {

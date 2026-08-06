@@ -42,23 +42,23 @@ class AgileIterationTableWidget extends StatelessWidget {
             border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
             ],
           ),
-          child: ResponsiveDataTableWrapper(
+          child: buildNduTableWithExpand(
+            context: context,
+            title: 'Agile Iteration Tasks',
             minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 900,
             maxHeight: 560,
-            child: buildNduDataTable(
-              context: context,
-              columnSpacing: 24,
-              horizontalMargin: 20,
-              headingRowHeight: 56,
-              dataRowMinHeight: 52,
-              dataRowMaxHeight: 120,
-              columns: const [
+            columnSpacing: 24,
+            horizontalMargin: 20,
+            headingRowHeight: 56,
+            dataRowMinHeight: 52,
+            dataRowMaxHeight: 120,
+            columns: const [
                 DataColumn(
                   label: Center(
                     child: Text('User Story/Task',
@@ -168,7 +168,6 @@ class AgileIterationTableWidget extends StatelessWidget {
                   ],
                 );
               }).toList(),
-            ),
           ),
         );
       },
@@ -209,6 +208,14 @@ class _AgileTaskRowWidgetState extends State<_AgileTaskRowWidget> {
   AgileTask? _redoState;
   final _Debouncer _debouncer = _Debouncer();
   bool _isRegenerating = false;
+
+  @override
+  void dispose() {
+    // Cancel any pending debounced save Timer to prevent
+    // setState/fire-and-forget writes after the widget is unmounted.
+    _debouncer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

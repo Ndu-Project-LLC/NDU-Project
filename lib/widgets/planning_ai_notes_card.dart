@@ -10,6 +10,7 @@ import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+
 class PlanningAiNotesCard extends StatefulWidget {
   const PlanningAiNotesCard({
     super.key,
@@ -244,7 +245,7 @@ class _PlanningAiNotesCardState extends State<PlanningAiNotesCard> {
                     const Icon(Icons.undo, size: 18, color: Color(0xFF6B7280)),
               ),
               if (_saving)
-                _StatusChip(label: 'Saving...', color: const Color(0xFF64748B))
+                const _StatusChip(label: 'Saving...', color: Color(0xFF64748B))
               else if (savedAt != null)
                 _StatusChip(
                   label:
@@ -288,7 +289,8 @@ class _PlanningAiNotesCardState extends State<PlanningAiNotesCard> {
               ),
               filled: true,
               fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             ),
             style: const TextStyle(fontSize: 14),
           ),
@@ -322,7 +324,7 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: background ?? color.withOpacity(0.1),
+        color: background ?? color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(

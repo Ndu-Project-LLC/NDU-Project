@@ -95,6 +95,8 @@ jobs:
   build-and-deploy:
     name: Build + Deploy to production (requires approval)
     needs: pre-check
+    # Only run on the NDU-Project repo (not on admin.nduproject.com repo)
+    if: github.repository == 'Ndu-Project-LLC/NDU-Project'
     # The 'production' environment must be configured with required reviewers.
     # GitHub will pause here and send approval emails. Once approved, this job runs.
     environment:

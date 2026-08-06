@@ -60,7 +60,8 @@ jobs:
   build-and-deploy:
     name: Build Flutter web → staging.admin.nduproject.com
     needs: gate
-    if: needs.gate.outputs.should_skip != 'true'
+    # Only run on the admin.nduproject.com repo (not on NDU-Project repo)
+    if: needs.gate.outputs.should_skip != 'true' && github.repository == 'Ndu-Project-LLC/admin.nduproject.com'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

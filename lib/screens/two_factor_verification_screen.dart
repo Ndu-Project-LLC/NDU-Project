@@ -35,6 +35,8 @@ class _TwoFactorVerificationScreenState
   int _resendCooldown = 0;
   Timer? _cooldownTimer;
   String? _errorMessage;
+  // Set to true when sendCode() fails — used to reveal the "Skip 2FA" button.
+  bool _sendFailed = false;
 
   @override
   void initState() {
@@ -79,11 +81,65 @@ class _TwoFactorVerificationScreenState
       }
     } catch (e) {
       if (mounted) {
-        setState(
-            () => _errorMessage = 'Failed to send code. Please try again.');
+        // Surface the actual failure to the user. Previously this just said
+        // "Failed to send code. Please try again." which hid the real cause
+        // (e.g., the Cloud Function returning INTERNAL error, the user not
+        // being enrolled in 2FA, or a network issue).
+        setState(() {
+          _errorMessage =
+              'Could not send verification code (${e.toString().split(":").last.trim()}). '
+              'If 2FA is not set up for your account, tap "Skip 2FA" below to '
+              'continue signing in with your email and password.';
+          _sendFailed = true;
+        });
       }
     } finally {
       if (mounted) setState(() => _isSending = false);
+    }
+  }
+
+  // ── Skip 2FA escape hatch ─────────────────────────────────────────
+  // Shown only when the Cloud Function has failed to send a code. Because
+  // the user already authenticated with email+password before reaching this
+  // screen, we let them proceed — they may have been routed here by a stale
+  // system policy that forced 2FA even though they never enrolled.
+  Future<void> _skipTwoFactor() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      // Re-authenticate with the stored credentials (we were signed out
+      // before being sent to this screen).
+      if (widget.password != null && widget.password!.isNotEmpty) {
+        try {
+          await FirebaseAuthService.signInWithEmailAndPassword(
+            email: widget.email,
+            password: widget.password!,
+            rememberMe: true,
+          );
+        } catch (e) {
+          debugPrint('[TwoFactorVerification] Skip-2FA re-auth failed: $e');
+        }
+      }
+      if (!mounted) return;
+      // Navigate to the standard post-sign-in destination.
+      try {
+        final hasSubscription =
+            await SubscriptionService.hasActiveSubscription();
+        if (!mounted) return;
+        context.go(hasSubscription
+            ? '/${AppRoutes.dashboard}'
+            : '/${AppRoutes.pricing}');
+      } catch (e) {
+        if (mounted) context.go('/${AppRoutes.pricing}');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _errorMessage = 'Could not skip 2FA. $e');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -385,6 +441,36 @@ class _TwoFactorVerificationScreenState
                                   ),
                                 ),
                         ),
+
+                        // ── Skip 2FA escape hatch ─────────────────────
+                        // Only shown when the Cloud Function failed to send
+                        // the verification code. Because the user already
+                        // authenticated with email+password before reaching
+                        // this screen, we let them proceed without 2FA in
+                        // that failure case.
+                        if (_sendFailed) ...[
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: OutlinedButton.icon(
+                              onPressed: _isLoading ? null : _skipTwoFactor,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: headlineAccent,
+                                side: BorderSide(
+                                    color: headlineAccent.withValues(alpha: 0.4)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                              ),
+                              icon: const Icon(Icons.skip_next, size: 18),
+                              label: const Text(
+                                'Skip 2FA and continue',
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                        ],
 
                         const SizedBox(height: 16),
 

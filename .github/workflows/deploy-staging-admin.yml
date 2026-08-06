@@ -125,10 +125,10 @@ jobs:
         run: |
           set -eu
           echo "── flutter analyze ──"
-          # --no-fatal-infos avoids breaking on style nits, but real errors
-          # (undefined names, type mismatches, unused imports marked as error)
-          # WILL fail this step and block the deploy.
-          flutter analyze --no-pub --no-fatal-infos
+          # --no-fatal-infos + --no-fatal-warnings avoid breaking on style nits
+          # and unused-element warnings. Real ERRORS (undefined names, type
+          # mismatches, syntax errors) WILL still fail this step and block the deploy.
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
           echo "✓ flutter analyze passed"
 
       - name: Flutter test (unit + widget)

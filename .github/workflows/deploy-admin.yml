@@ -94,6 +94,8 @@ jobs:
   build-and-deploy:
     name: Build + Deploy to production (requires approval)
     needs: pre-check
+    # Only run on the admin.nduproject.com repo (not on NDU-Project repo)
+    if: github.repository == 'Ndu-Project-LLC/admin.nduproject.com'
     environment:
       name: production
       url: https://admin.nduproject.com

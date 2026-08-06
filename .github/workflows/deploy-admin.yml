@@ -16,8 +16,14 @@ name: Promote Staging → Production (admin.nduproject.com)
 # Usage:
 #   1. Go to Actions tab → "Promote Staging → Production (admin.nduproject.com)"
 #   2. Click "Run workflow"
-#   3. Reviewer receives email, clicks "Review deployments", approves
-#   4. Build + deploy proceeds automatically after approval
+#   3. Preflight checks (analyze + tests) run — if they fail, no approval email is sent
+#   4. If preflight passes, reviewer receives email, clicks "Review deployments", approves
+#   5. Build + deploy proceeds automatically after approval
+#
+# PREFLIGHT CHECKS run BEFORE the approval gate. This means reviewers are NEVER
+# asked to approve a broken build — if tests fail, the workflow stops before
+# the approval email is even sent. This guarantees a triggered production
+# deployment never fails after approval.
 # ─────────────────────────────────────────────────────────────────────────────
 
 on:
@@ -90,12 +96,99 @@ jobs:
           echo "  (Approver will receive email notification)"
           echo "============================================"
 
+  # ── PREFLIGHT CHECKS (must pass BEFORE approval gate) ────────────────────
+  # Runs the full test suite + static analysis on the staging SHA that's about
+  # to be promoted. If any check fails, the workflow stops here — NO approval
+  # email is sent, and the production environment is never triggered.
+  preflight:
+    name: Preflight checks (analyze + test)
+    needs: pre-check
+    if: github.repository == 'Ndu-Project-LLC/admin.nduproject.com'
+    runs-on: ubuntu-latest
+    env:
+      STAGING_SHA: ${{ needs.pre-check.outputs.sha }}
+      STAGING_SHORT: ${{ needs.pre-check.outputs.short }}
+    steps:
+      - name: Checkout staging SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.STAGING_SHA }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Preflight summary
+        run: |
+          echo "============================================"
+          echo "  🔍 Preflight checks — admin.nduproject.com (production)"
+          echo "============================================"
+          echo "  Promoting SHA: ${{ env.STAGING_SHORT }}"
+          echo "  Triggered by:  @${{ github.actor }}"
+          echo "============================================"
+
+      - name: Required files present
+        run: |
+          set -eu
+          REQUIRED_FILES=(
+            "pubspec.yaml"
+            "lib/main.dart"
+            "web/index.html"
+            "analysis_options.yaml"
+          )
+          MISSING=0
+          for f in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Missing required file: $f"
+              MISSING=1
+            else
+              echo "✓ $f"
+            fi
+          done
+          if [ "$MISSING" -ne 0 ]; then
+            echo "::error::Preflight FAILED — required files missing. Approval gate NOT triggered."
+            exit 1
+          fi
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Flutter analyze (fatal on errors)
+        run: |
+          set -eu
+          echo "── flutter analyze ──"
+          flutter analyze --no-pub --no-fatal-infos
+          echo "✓ flutter analyze passed"
+
+      - name: Flutter test (unit + widget)
+        run: |
+          set -eu
+          echo "── flutter test ──"
+          flutter test --no-pub --reporter expanded
+          echo "✓ flutter test passed"
+
+      - name: Preflight passed
+        if: success()
+        run: |
+          echo "============================================"
+          echo "  ✅ Preflight checks passed"
+          echo "  Triggering approval gate (production environment)..."
+          echo "============================================"
+
   # ── BUILD & DEPLOY (gated by 'production' environment) ────────────────────
   build-and-deploy:
     name: Build + Deploy to production (requires approval)
-    needs: pre-check
+    needs: [pre-check, preflight]
     # Only run on the admin.nduproject.com repo (not on NDU-Project repo)
-    if: github.repository == 'Ndu-Project-LLC/admin.nduproject.com'
+    # AND only if preflight checks passed (needs.preflight.result == 'success')
+    if: |
+      github.repository == 'Ndu-Project-LLC/admin.nduproject.com' &&
+      needs.preflight.result == 'success'
     environment:
       name: production
       url: https://admin.nduproject.com

@@ -741,6 +741,11 @@ class ProjectDataProvider extends ChangeNotifier {
   }
 
   /// Set the preferred solution
+  ///
+  /// Once a preferred solution is locked, all Business Case sections
+  /// become read-only (view-only, no AI generation) per spec. We set
+  /// `frontEndPlanning.businessCaseLocked = true` here so downstream
+  /// screens can guard their AI Generate buttons.
   Future<bool> setPreferredSolution(String solutionId,
       {String? checkpoint}) async {
     final solutionExists =
@@ -748,6 +753,18 @@ class ProjectDataProvider extends ChangeNotifier {
     if (!solutionExists) return false;
 
     _projectData.setPreferredSolution(solutionId);
+    // Lock the Business Case sections now that a preferred solution
+    // has been chosen. The dedicated IT/Infrastructure Considerations
+    // pages remain editable (they belong to the FEP, not the Business
+    // Case), but the Business Case workflow screens (Scope Statement,
+    // Potential Solutions, Risk Identification, Core Stakeholders,
+    // Initial Cost Estimate, Preferred Solution Analysis) become
+    // view-only.
+    _projectData = _projectData.copyWith(
+      frontEndPlanning: _projectData.frontEndPlanning.copyWith(
+        businessCaseLocked: true,
+      ),
+    );
     notifyListeners();
     if (checkpoint != null) {
       await saveToFirebase(checkpoint: checkpoint);

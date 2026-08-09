@@ -9,7 +9,6 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/project_framework_screen.dart';
 import 'package:ndu_project/screens/program_basics_screen.dart' show ProjectDetailsScreen;
 import 'package:ndu_project/screens/core_stakeholders_screen.dart';
-import 'package:ndu_project/screens/cost_analysis_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/front_end_planning_navigation.dart';
 import 'package:ndu_project/utils/charter_lock_helper.dart';
@@ -299,23 +298,61 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
    }
  }
 
- /// Navigate to the Business Case screen so the user can view / edit
- /// the preferred solution that supplies IT considerations and
- /// infrastructure to the charter.
+ /// Navigate to the Preferred Solution Analysis screen so the user can
+ /// view the preferred solution that supplies IT considerations and
+ /// infrastructure to the charter. The Business Case section is locked
+ /// once a preferred solution is selected, but the dedicated
+ /// IT Considerations / Infrastructure Considerations pages remain
+ /// editable — see [_navigateToITConsiderations] and
+ /// [_navigateToInfrastructureConsiderations].
   void _navigateToBusinessCase() {
     try {
-     final data = _projectData;
-     context.push('/cost-analysis', extra: CostAnalysisScreen(
-           notes: data?.notes ?? '',
-           solutions: const [],
-           businessCase: data?.businessCase ?? '',
-         ));
+     context.push('/preferred-solution-analysis');
    } catch (e) {
-     debugPrint('Could not navigate to Business Case: $e');
+     debugPrint('Could not navigate to Preferred Solution Analysis: $e');
      ScaffoldMessenger.of(context).showSnackBar(
        const SnackBar(
          content: Text(
-             'Business Case / Cost Analysis page is reachable from the sidebar under Initiation → Cost Analysis.'),
+             'Preferred Solution Analysis is reachable from the sidebar under Initiation → Preferred Solution Analysis.'),
+         duration: Duration(seconds: 4),
+       ),
+     );
+   }
+ }
+
+ /// Navigate to the IT Considerations page so the user can edit the
+ /// hardware / software / network requirements that feed the charter's
+ /// Technical & Procurement bento. IT Considerations remain editable
+ /// even when the Business Case is locked.
+ void _navigateToITConsiderations() {
+   try {
+     context.push('/it-considerations');
+   } catch (e) {
+     debugPrint('Could not navigate to IT Considerations: $e');
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(
+         content: Text(
+             'IT Considerations is reachable from the sidebar under Initiation → IT Considerations.'),
+         duration: Duration(seconds: 4),
+       ),
+     );
+   }
+ }
+
+ /// Navigate to the Infrastructure Considerations page so the user can
+ /// edit the physical-space / power-cooling / connectivity requirements
+ /// that feed the charter's Technical & Procurement bento.
+ /// Infrastructure Considerations remain editable even when the Business
+ /// Case is locked.
+ void _navigateToInfrastructureConsiderations() {
+   try {
+     context.push('/infrastructure-considerations');
+   } catch (e) {
+     debugPrint('Could not navigate to Infrastructure Considerations: $e');
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(
+         content: Text(
+             'Infrastructure Considerations is reachable from the sidebar under Initiation → Infrastructure Considerations.'),
          duration: Duration(seconds: 4),
        ),
      );
@@ -489,8 +526,12 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  // AI Generate intentionally removed — IT/Infrastructure comes from
  // the preferred solution (Business Case section, locked once a
  // preferred solution is selected). onEdit takes the user to view
- // the source.
+ // the preferred solution. onEditIT / onEditInfra let the user
+ // edit the dedicated IT/Infrastructure pages — those remain
+ // editable even when the Business Case is locked.
  onEdit: () => _navigateToBusinessCase(),
+ onEditIT: () => _navigateToITConsiderations(),
+ onEditInfra: () => _navigateToInfrastructureConsiderations(),
  ),
  const SizedBox(height: 24),
 

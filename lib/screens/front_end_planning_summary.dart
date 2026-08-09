@@ -7,6 +7,7 @@ import 'package:ndu_project/screens/home_screen.dart';
 
 import 'package:ndu_project/screens/front_end_planning_requirements_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/phase_transition_helper.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
@@ -221,6 +222,11 @@ class _FrontEndPlanningSummaryScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ // Business Case lock banner — shown when a preferred
+ // solution has been selected. In that state, AI generation
+ // on this screen is blocked (view-only).
+ BusinessCaseLockHelper.lockBanner(
+ ProjectDataHelper.getData(context)),
  _formattedNotesEditor(
  controller: _notes,
  hint: 'Input your notes here...',
@@ -1087,6 +1093,15 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
  Future<void> _handleGenerateAI(BuildContext context, String sectionLabel,
  String loadingKey, List<PlanningDashboardItem> currentList,
  {String? listKey, bool showNotice = false}) async {
+ // Business Case lock — once a preferred solution has been selected,
+ // the FEP Summary screen's AI generation is blocked (view-only).
+ if (BusinessCaseLockHelper.isBusinessCaseLocked(
+ ProjectDataHelper.getData(context))) {
+ if (context.mounted) {
+ BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+ }
+ return;
+ }
  setState(() => _generatingStates[loadingKey] = true);
 
  try {
@@ -1231,6 +1246,15 @@ class _PlanningCardsSectionState extends State<_PlanningCardsSection> {
 
  Future<void> _handleGenerateGoalsAI(BuildContext context, String sectionLabel,
  String loadingKey, List<ProjectGoal> currentList) async {
+ // Business Case lock — once a preferred solution has been selected,
+ // AI generation on the FEP Summary screen is blocked (view-only).
+ if (BusinessCaseLockHelper.isBusinessCaseLocked(
+ ProjectDataHelper.getData(context))) {
+ if (context.mounted) {
+ BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+ }
+ return;
+ }
  setState(() => _generatingStates[loadingKey] = true);
  try {
  final data = ProjectDataHelper.getData(context);

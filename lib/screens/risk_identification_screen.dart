@@ -755,6 +755,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
           ],
         ),
       ),
+      ),
       drawer: _buildMobileDrawer(),
       bottomNavigationBar: SafeArea(
         top: false,
@@ -802,7 +803,6 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
             ],
           ),
         ),
-      ),
       ),
     );
   }

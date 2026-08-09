@@ -17,7 +17,6 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
@@ -512,8 +511,9 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
-          transform: Matrix4.identity()
-            ..scale(_press && enabled ? 0.97 : 1.0),
+          transform: _press && enabled
+              ? Matrix4.diagonal3Values(0.97, 0.97, 1.0)
+              : Matrix4.identity(),
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 15),
           decoration: BoxDecoration(

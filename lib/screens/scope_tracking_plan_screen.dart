@@ -559,7 +559,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  onDeleted: (item) async {
  // Phase 1 hardening: confirm before delete + show success snackbar.
  // The Undo affordance is preserved via the snackbar action.
- final itemName = item.name.trim();
+ final itemName = item.scopeItem.trim();
  final didDelete = await confirmAndDelete(
    context,
    title: 'Delete scope item',

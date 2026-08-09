@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/content_text.dart';
 import 'package:ndu_project/widgets/business_case_header.dart';
 import 'package:ndu_project/widgets/business_case_navigation_buttons.dart';
+import 'package:ndu_project/widgets/ux_hardening_primitives.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // Removed AppLogo from header per request
 import 'package:ndu_project/screens/settings_screen.dart';
@@ -344,6 +345,15 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     _autoSaveTimer = Timer(const Duration(seconds: 2), _autoSave);
   }
 
+  /// Phase 1 hardening: flush any pending debounced save immediately.
+  /// Called by [UnsavedChangesGuard] when the user chooses "Save" before
+  /// navigating away. Cancels the debounce timer and runs _autoSave now.
+  Future<void> _flushSaveNow() async {
+    _autoSaveTimer?.cancel();
+    if (!_hasUnsavedChanges) return;
+    await _autoSave();
+  }
+
   /// Auto-save risks to Firebase
   Future<void> _autoSave() async {
     if (!mounted || _isSaving || !_hasUnsavedChanges) return;
@@ -642,18 +652,22 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-              child: Row(
-                children: [
-                  const Icon(Icons.workspaces_outline,
-                      size: 15, color: Color(0xFFFBBF24)),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'PROJECT WORKSPACE',
+      body: UnsavedChangesGuard(
+        isDirty: () => _hasUnsavedChanges || _autoSaveTimer?.isActive == true,
+        onSave: _flushSaveNow,
+        successMessage: 'Risks saved',
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.workspaces_outline,
+                        size: 15, color: Color(0xFFFBBF24)),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'PROJECT WORKSPACE',
                     style: TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w700,
@@ -788,6 +802,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

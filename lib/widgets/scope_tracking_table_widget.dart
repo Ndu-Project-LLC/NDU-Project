@@ -8,6 +8,7 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/inline_editable_text.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/ux_hardening_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
@@ -51,8 +52,7 @@ class ScopeTrackingTableWidget extends StatelessWidget {
               ),
             ],
           ),
-          child: buildNduTableWithExpand(
-            context: context,
+          child: ExpandableDataTable(
             title: 'Scope Tracking',
             minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 1000,
             maxHeight: 560,
@@ -61,6 +61,10 @@ class ScopeTrackingTableWidget extends StatelessWidget {
             headingRowHeight: 56,
             dataRowMinHeight: 52,
               dataRowMaxHeight: 120,
+              rowDetailBuilder: (index) {
+                if (index < 0 || index >= items.length) return null;
+                return _buildScopeItemDetailPanel(items[index]);
+              },
               columns: const [
                 DataColumn(
                   label: Center(
@@ -191,6 +195,188 @@ class ScopeTrackingTableWidget extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  /// Phase 1 hardening: expandable row detail panel for scope items.
+  /// Shown when the user taps the chevron on a row. Renders the item's
+  /// tracking notes, verification method/steps, cross-references, and
+  /// baseline metadata in a clean, readable layout.
+  Widget _buildScopeItemDetailPanel(ScopeTrackingItem item) {
+    final fmtDate = (DateTime? d) =>
+        d == null ? '—' : '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+    Widget detailRow(String label, String value, {IconData? icon}) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 14, color: const Color(0xFF6B7280)),
+              const SizedBox(width: 6),
+            ],
+            SizedBox(
+              width: 140,
+              child: Text(label,
+                  style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF6B7280),
+                      letterSpacing: 0.4)),
+            ),
+            Expanded(
+              child: Text(value.isEmpty ? '—' : value,
+                  style: const TextStyle(
+                      fontSize: 12.5, color: Color(0xFF1F2937), height: 1.4)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              const Icon(Icons.unfold_more_rounded,
+                  size: 16, color: Color(0xFF2563EB)),
+              const SizedBox(width: 8),
+              Text('Scope Item Detail',
+                  style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.2)),
+              const Spacer(),
+              if (item.isBaseline)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD1FAE5),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text('BASELINED',
+                      style: TextStyle(
+                          color: Color(0xFF065F46),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.6)),
+                ),
+            ],
+          ),
+          const Divider(height: 20, color: Color(0xFFE2E8F0)),
+          // Tracking notes
+          if (item.trackingNotes.trim().isNotEmpty)
+            detailRow('Tracking Notes', item.trackingNotes,
+                icon: Icons.note_alt_outlined)
+          else
+            detailRow('Tracking Notes', '',
+                icon: Icons.note_alt_outlined),
+          // Verification
+          detailRow('Verification Method', item.verificationMethod,
+              icon: Icons.verified_outlined),
+          if (item.verificationSteps.trim().isNotEmpty)
+            detailRow('Verification Steps', item.verificationSteps,
+                icon: Icons.checklist),
+          // Cross-references
+          const SizedBox(height: 4),
+          const Text('CROSS-REFERENCES',
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF94A3B8),
+                  letterSpacing: 1)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _detailChip('WBS', item.wbsId, const Color(0xFF2563EB)),
+              _detailChip('Requirement', item.requirementId, const Color(0xFF7C3AED)),
+              _detailChip('Schedule', item.scheduleActivityId, const Color(0xFF059669)),
+              _detailChip('CBS', item.cbsId, const Color(0xFFD97706)),
+              _detailChip('OBS', item.obsId, const Color(0xFF0891B2)),
+              _detailChip('Control Acct', item.controlAccountId, const Color(0xFF475569)),
+              if (item.epicId.isNotEmpty)
+                _detailChip('Epic', item.epicId, const Color(0xFF7C3AED)),
+              if (item.featureId.isNotEmpty)
+                _detailChip('Feature', item.featureId, const Color(0xFF9333EA)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Dates
+          Row(
+            children: [
+              Expanded(
+                  child: detailRow('Planned Start', fmtDate(item.plannedStartDate),
+                      icon: Icons.event_outlined)),
+              Expanded(
+                  child: detailRow('Planned End', fmtDate(item.plannedEndDate),
+                      icon: Icons.event_available_outlined)),
+            ],
+          ),
+          Row(
+            children: [
+              Expanded(
+                  child: detailRow('Actual Start', fmtDate(item.actualStartDate),
+                      icon: Icons.play_arrow_outlined)),
+              Expanded(
+                  child: detailRow('Actual End', fmtDate(item.actualEndDate),
+                      icon: Icons.done_all_outlined)),
+            ],
+          ),
+          // Progress
+          detailRow(
+              'Progress',
+              '${(item.percentComplete * 100).toStringAsFixed(0)}% complete (weight ${(item.weight * 100).toStringAsFixed(0)}%)',
+              icon: Icons.trending_up_outlined),
+          if (item.dependencies.isNotEmpty)
+            detailRow('Dependencies', item.dependencies.join(', '),
+                icon: Icons.link_outlined),
+          if (item.changeRequestId.isNotEmpty)
+            detailRow('Change Request', item.changeRequestId,
+                icon: Icons.compare_arrows_outlined),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailChip(String label, String value, Color color) {
+    final hasValue = value.trim().isNotEmpty;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: hasValue ? color.withValues(alpha: 0.10) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+            color: hasValue ? color.withValues(alpha: 0.30) : const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('$label: ',
+              style: TextStyle(
+                  color: hasValue ? color : const Color(0xFF94A3B8),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700)),
+          Text(hasValue ? value : '—',
+              style: TextStyle(
+                  color: hasValue ? const Color(0xFF1F2937) : const Color(0xFF94A3B8),
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600)),
+        ],
+      ),
     );
   }
 }

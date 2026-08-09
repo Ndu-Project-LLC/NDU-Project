@@ -19,6 +19,7 @@ import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/execution_phase_service.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/scope_tracking_table_widget.dart';
+import 'package:ndu_project/widgets/ux_hardening_primitives.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:provider/provider.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -555,21 +556,39 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ScopeTrackingTableWidget(
  items: _filteredItems,
  onUpdated: _updateItem,
- onDeleted: (item) {
- _deleteItem(item);
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: const Text('Scope item deleted'),
- action: SnackBarAction(
- label: 'Undo',
- onPressed: () {
- _addItem(item);
- },
- ),
- duration: const Duration(seconds: 5),
- ),
+ onDeleted: (item) async {
+ // Phase 1 hardening: confirm before delete + show success snackbar.
+ // The Undo affordance is preserved via the snackbar action.
+ final itemName = item.name.trim();
+ final didDelete = await confirmAndDelete(
+   context,
+   title: 'Delete scope item',
+   itemLabel: itemName.isEmpty ? null : itemName,
+   deleteCallback: () async {
+     _deleteItem(item);
+   },
+   successMessage: itemName.isEmpty
+       ? 'Scope item deleted'
+       : 'Scope item "$itemName" deleted',
+   successDuration: const Duration(seconds: 5),
  );
+ if (didDelete && mounted) {
+   // Replace the success snackbar with one that also offers Undo,
+   // matching the existing UX expectation.
+   ScaffoldMessenger.of(context)
+     ..hideCurrentSnackBar()
+     ..showSnackBar(
+       SnackBar(
+         content: const Text('Scope item deleted'),
+         action: SnackBarAction(
+           label: 'Undo',
+           onPressed: () {
+             _addItem(item);
+           },
+         ),
+         duration: const Duration(seconds: 5),
+       ),
+     );
  }
  },
  availableRoles: _availableRoles,

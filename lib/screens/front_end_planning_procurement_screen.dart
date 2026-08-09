@@ -5308,7 +5308,7 @@ class _FrontEndPlanningProcurementScreenState
  scaffoldKey: isMobile ? _scaffoldKey : null, onExportPdf: _exportPdf),
  Expanded(
  child: Container(
- color: const Color(0xFFF5F6FA),
+ color: Colors.white,
  child: SingleChildScrollView(
  padding:
  const EdgeInsets.symmetric(horizontal: 32, vertical: 32),

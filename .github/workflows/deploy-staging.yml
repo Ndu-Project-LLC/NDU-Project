@@ -157,11 +157,14 @@ jobs:
   build-and-deploy:
     name: Build Flutter web → staging.nduproject.com
     needs: [gate, preflight]
-    # Only run on the NDU-Project repo (not on admin.nduproject.com repo)
+    # Run on either the upstream NDU-Project repo OR the CHAMA18 fork — both
+    # are valid sources for staging.nduproject.com deployments.
+    # (Skip on admin.nduproject.com repo.)
     # AND only if preflight checks passed (needs.preflight.result == 'success')
     if: |
       needs.gate.outputs.should_skip != 'true' &&
-      github.repository == 'Ndu-Project-LLC/NDU-Project' &&
+      (github.repository == 'Ndu-Project-LLC/NDU-Project' ||
+       github.repository == 'CHAMA18/NDU-Project') &&
       needs.preflight.result == 'success'
     runs-on: ubuntu-latest
     steps:

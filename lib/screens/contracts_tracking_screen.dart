@@ -44,6 +44,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
   bool _hasSavedData = false;
   bool _autoGenerationTriggered = false;
   bool _isAutoGenerating = false;
+  bool _isGuideExpanded = true;
 
   List<_RenewalLaneData> _renewalLanes = [];
   List<_RiskSignalData> _riskSignals = [];
@@ -445,64 +446,98 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Contract control framework',
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF111827)),
+          InkWell(
+            onTap: () => setState(() => _isGuideExpanded = !_isGuideExpanded),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Contract control framework',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    _isGuideExpanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    size: 22,
+                    color: Color(0xFF6B7280),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 6),
-          const Text(
-            'Grounded in PMI PMBOK Conduct Procurements (12.2) and Control Procurements (12.3), '
-            'FIDIC contract conditions, and PRINCE2 procurement conventions. Effective contract '
-            'tracking ensures that scope, value, timelines, and compliance obligations remain '
-            'visible and actionable throughout the project lifecycle.',
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF6B7280),
-                height: 1.5),
-          ),
-          const SizedBox(height: 18),
-          Column(
-            children: [
-              _buildGuideCard(
-                Icons.gavel_outlined,
-                'Contract Lifecycle',
-                'Draft → Legal Review → Signed → Active → Renewal/Expiry. '
-                    'Each contract should be tracked from initiation through close-out. '
-                    'Set renewal alerts at 90/60/30-day intervals to avoid lapses.',
-                const Color(0xFF2563EB),
-              ),
-              const SizedBox(height: 12),
-              _buildGuideCard(
-                Icons.assignment_turned_in_outlined,
-                'Scope & SLA Compliance',
-                'Monitor vendor performance against contracted deliverables and service '
-                    'level agreements. Document scope changes through the Change Control '
-                    'process before amending contract terms.',
-                const Color(0xFF10B981),
-              ),
-              const SizedBox(height: 12),
-              _buildGuideCard(
-                Icons.attach_money_outlined,
-                'Financial Controls',
-                'Track committed value against actuals. Tie contract payments to verified '
-                    'milestones and deliverable acceptance. Maintain audit-ready records of '
-                    'all amendments, change orders, and payment approvals.',
-                const Color(0xFFF59E0B),
-              ),
-              const SizedBox(height: 12),
-              _buildGuideCard(
-                Icons.warning_amber_outlined,
-                'Risk & Renewal Signals',
-                'Flag contracts approaching expiry, those with unresolved disputes, or '
-                    'vendors failing SLA targets. Escalate risk signals to the project board '
-                    'when they exceed threshold tolerance levels.',
-                const Color(0xFFEF4444),
-              ),
-            ],
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: _isGuideExpanded
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Grounded in PMI PMBOK Conduct Procurements (12.2) and Control Procurements (12.3), '
+                        'FIDIC contract conditions, and PRINCE2 procurement conventions. Effective contract '
+                        'tracking ensures that scope, value, timelines, and compliance obligations remain '
+                        'visible and actionable throughout the project lifecycle.',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF6B7280),
+                            height: 1.5),
+                      ),
+                      const SizedBox(height: 18),
+                      Column(
+                        children: [
+                          _buildGuideCard(
+                            Icons.gavel_outlined,
+                            'Contract Lifecycle',
+                            'Draft → Legal Review → Signed → Active → Renewal/Expiry. '
+                                'Each contract should be tracked from initiation through close-out. '
+                                'Set renewal alerts at 90/60/30-day intervals to avoid lapses.',
+                            const Color(0xFF2563EB),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildGuideCard(
+                            Icons.assignment_turned_in_outlined,
+                            'Scope & SLA Compliance',
+                            'Monitor vendor performance against contracted deliverables and service '
+                                'level agreements. Document scope changes through the Change Control '
+                                'process before amending contract terms.',
+                            const Color(0xFF10B981),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildGuideCard(
+                            Icons.attach_money_outlined,
+                            'Financial Controls',
+                            'Track committed value against actuals. Tie contract payments to verified '
+                                'milestones and deliverable acceptance. Maintain audit-ready records of '
+                                'all amendments, change orders, and payment approvals.',
+                            const Color(0xFFF59E0B),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildGuideCard(
+                            Icons.warning_amber_outlined,
+                            'Risk & Renewal Signals',
+                            'Flag contracts approaching expiry, those with unresolved disputes, or '
+                                'vendors failing SLA targets. Escalate risk signals to the project board '
+                                'when they exceed threshold tolerance levels.',
+                            const Color(0xFFEF4444),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),

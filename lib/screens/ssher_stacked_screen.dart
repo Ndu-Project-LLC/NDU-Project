@@ -615,7 +615,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  PlanningPhaseHeader(
  title: 'SSHER',
  breadcrumbPhase: 'Planning Phase',
- breadcrumbTitle: 'SSHE Planning',
+ breadcrumbTitle: 'SSHER Hub',
  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'ssher'),
  onForward: () => PlanningPhaseNavigation.goToNext(context, 'ssher'),
  onExportPdf: _exportPdf,
@@ -644,7 +644,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  PlanningPhaseHeader(
  title: 'SSHER',
  breadcrumbPhase: 'Planning Phase',
- breadcrumbTitle: 'SSHE Planning',
+ breadcrumbTitle: 'SSHER Hub',
  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'ssher'),
  onForward: () => PlanningPhaseNavigation.goToNext(context, 'ssher'), onExportPdf: _exportPdf),
  Expanded(child: _buildMainContent(allowCsv)),
@@ -678,8 +678,8 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 0),
  child: InnerPageNavigationHint(
  pageId: 'ssher_stacked',
- pageTitle: 'SSHE Planning',
- description: 'Navigate between SSHE categories',
+ pageTitle: 'SSHER Hub',
+ description: 'Navigate between SSHER categories',
  currentSectionId: _selectedCategory.name,
  accentColor: _accentForCategory(_selectedCategory),
  sections: [
@@ -767,7 +767,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  child: Icon(Icons.chevron_right, size: 14, color: _Palette.onSurfaceVariant),
  ),
  const Text(
- 'SSHE Planning',
+ 'SSHER Hub',
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
@@ -795,9 +795,9 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  children: [
  Expanded(
  child: Text(
- 'SSHE Planning',
+ 'Safety, Security, Health, Environmental, and Regulatory (SSHER) Hub',
  style: TextStyle(
- fontSize: isMobile ? 24 : 28,
+ fontSize: isMobile ? 20 : 24,
  fontWeight: FontWeight.w700,
  color: _Palette.onBackground,
  letterSpacing: isMobile ? -0.02 : 0,
@@ -845,7 +845,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  ),
  const SizedBox(height: 10),
  Text(
- 'Identify and mitigate Safety, Security, Health, and Environmental risks for this project.',
+ 'Identify and plan for the Safety, Security, Health, Environmental, and Regulatory aspects required to support safe and compliant project delivery.',
  style: TextStyle(
  fontSize: isMobile ? 14 : 15,
  color: _Palette.onSurfaceVariant,

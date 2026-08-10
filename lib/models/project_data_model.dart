@@ -3544,6 +3544,26 @@ class SSHERData {
   String screen3Data;
   String screen4Data;
 
+  // Per-category AI-generated plan summaries (Safety Plan, Security Plan,
+  // Health Plan, Environment Plan, Regulatory Plan). Each is concise and
+  // tailored to the project context.
+  String safetyPlan;
+  String securityPlan;
+  String healthPlan;
+  String environmentPlan;
+  String regulatoryPlan;
+
+  // Tracks which SSHER category tabs the user has already visited during the
+  // current SSHER editing session. Persisted so the visit state survives a
+  // page reload / app restart. Each entry is the category name
+  // ('safety' | 'security' | 'health' | 'environment' | 'regulatory').
+  List<String> visitedCategories;
+
+  // Stakeholder review confirmation gate. When true the user has confirmed
+  // that the appropriate stakeholders have reviewed and aligned on the
+  // applicable SSHER sections, and the Next button is enabled.
+  bool reviewConfirmed;
+
   SSHERData({
     List<SafetyItem>? safetyItems,
     List<SsherEntry>? entries,
@@ -3551,8 +3571,16 @@ class SSHERData {
     this.screen2Data = '',
     this.screen3Data = '',
     this.screen4Data = '',
+    this.safetyPlan = '',
+    this.securityPlan = '',
+    this.healthPlan = '',
+    this.environmentPlan = '',
+    this.regulatoryPlan = '',
+    List<String>? visitedCategories,
+    this.reviewConfirmed = false,
   })  : safetyItems = safetyItems ?? [],
-        entries = entries ?? [];
+        entries = entries ?? [],
+        visitedCategories = visitedCategories ?? [];
 
   Map<String, dynamic> toJson() => {
         'safetyItems': safetyItems.map((s) => s.toJson()).toList(),
@@ -3561,6 +3589,13 @@ class SSHERData {
         'screen2Data': screen2Data,
         'screen3Data': screen3Data,
         'screen4Data': screen4Data,
+        'safetyPlan': safetyPlan,
+        'securityPlan': securityPlan,
+        'healthPlan': healthPlan,
+        'environmentPlan': environmentPlan,
+        'regulatoryPlan': regulatoryPlan,
+        'visitedCategories': visitedCategories,
+        'reviewConfirmed': reviewConfirmed,
       };
 
   factory SSHERData.fromJson(Map<String, dynamic> json) {
@@ -3577,6 +3612,16 @@ class SSHERData {
       screen2Data: json['screen2Data'] ?? '',
       screen3Data: json['screen3Data'] ?? '',
       screen4Data: json['screen4Data'] ?? '',
+      safetyPlan: json['safetyPlan'] ?? '',
+      securityPlan: json['securityPlan'] ?? '',
+      healthPlan: json['healthPlan'] ?? '',
+      environmentPlan: json['environmentPlan'] ?? '',
+      regulatoryPlan: json['regulatoryPlan'] ?? '',
+      visitedCategories: (json['visitedCategories'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      reviewConfirmed: json['reviewConfirmed'] ?? false,
     );
   }
 
@@ -3587,6 +3632,13 @@ class SSHERData {
     String? screen2Data,
     String? screen3Data,
     String? screen4Data,
+    String? safetyPlan,
+    String? securityPlan,
+    String? healthPlan,
+    String? environmentPlan,
+    String? regulatoryPlan,
+    List<String>? visitedCategories,
+    bool? reviewConfirmed,
   }) {
     return SSHERData(
       safetyItems: safetyItems ?? this.safetyItems,
@@ -3595,6 +3647,13 @@ class SSHERData {
       screen2Data: screen2Data ?? this.screen2Data,
       screen3Data: screen3Data ?? this.screen3Data,
       screen4Data: screen4Data ?? this.screen4Data,
+      safetyPlan: safetyPlan ?? this.safetyPlan,
+      securityPlan: securityPlan ?? this.securityPlan,
+      healthPlan: healthPlan ?? this.healthPlan,
+      environmentPlan: environmentPlan ?? this.environmentPlan,
+      regulatoryPlan: regulatoryPlan ?? this.regulatoryPlan,
+      visitedCategories: visitedCategories ?? this.visitedCategories,
+      reviewConfirmed: reviewConfirmed ?? this.reviewConfirmed,
     );
   }
 }
@@ -6932,6 +6991,12 @@ class StakeholderEntry {
   final String contactInfo;
   final String owner;
   final String notes;
+  /// AI-suggested matrix rating. One of: 'Keep Satisfied', 'Manage Closely',
+  /// 'Monitor', 'Keep Informed', or '' (empty = no suggestion yet). This is
+  /// independent of the manual influence/interest fields so the AI can
+  /// recommend a quadrant even before the user has set the manual values.
+  /// When applied, the manual influence/interest fields are updated to match.
+  final String aiSuggestedRating;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -6946,6 +7011,7 @@ class StakeholderEntry {
     required this.contactInfo,
     required this.owner,
     required this.notes,
+    this.aiSuggestedRating = '',
     required this.createdAt,
     required this.updatedAt,
   });
@@ -6963,9 +7029,27 @@ class StakeholderEntry {
       contactInfo: '',
       owner: '',
       notes: '',
+      aiSuggestedRating: '',
       createdAt: now,
       updatedAt: now,
     );
+  }
+
+  /// Returns the matrix rating derived from this stakeholder's influence
+  /// and interest values. Medium values are bucketed into the nearest
+  /// higher-attention quadrant so no stakeholder is hidden.
+  ///
+  /// Returns one of: 'Keep Satisfied', 'Manage Closely', 'Monitor',
+  /// 'Keep Informed'.
+  String get derivedMatrixRating {
+    final hi = influence == 'High';
+    final medI = influence == 'Medium';
+    final hiI = interest == 'High';
+    final medInt = interest == 'Medium';
+    if ((hi || medI) && (hiI || medInt)) return 'Manage Closely';
+    if ((hi || medI) && interest == 'Low') return 'Keep Satisfied';
+    if (influence == 'Low' && (hiI || medInt)) return 'Keep Informed';
+    return 'Monitor';
   }
 
   StakeholderEntry copyWith({
@@ -6978,6 +7062,7 @@ class StakeholderEntry {
     String? contactInfo,
     String? owner,
     String? notes,
+    String? aiSuggestedRating,
     DateTime? updatedAt,
   }) {
     return StakeholderEntry(
@@ -6991,6 +7076,7 @@ class StakeholderEntry {
       contactInfo: contactInfo ?? this.contactInfo,
       owner: owner ?? this.owner,
       notes: notes ?? this.notes,
+      aiSuggestedRating: aiSuggestedRating ?? this.aiSuggestedRating,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -7007,6 +7093,7 @@ class StakeholderEntry {
         'contactInfo': contactInfo,
         'owner': owner,
         'notes': notes,
+        'aiSuggestedRating': aiSuggestedRating,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
       };
@@ -7023,6 +7110,7 @@ class StakeholderEntry {
       contactInfo: json['contactInfo']?.toString() ?? '',
       owner: json['owner']?.toString() ?? '',
       notes: json['notes']?.toString() ?? '',
+      aiSuggestedRating: json['aiSuggestedRating']?.toString() ?? '',
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
     );
@@ -8592,6 +8680,57 @@ class QualityManagementData {
   final QualityDashboardConfig dashboardConfig;
   final QualityComputedSnapshot? computedSnapshot;
 
+  /// AI-generated Project Quality Management Plan narrative. Produced by
+  /// `OpenAiServiceSecure.generateQualityCategoryPlanSummary(category:'plan')`
+  /// using project type, framework, industry, location and scope.
+  final String qualityManagementPlan;
+
+  /// AI-generated Inspection & Test Plan (ITP) narrative. Produced by
+  /// `OpenAiServiceSecure.generateQualityCategoryPlanSummary(category:'inspection')`.
+  final String inspectionTestPlan;
+
+  /// AI-generated Quality Register / Log narrative covering
+  /// nonconformance & corrective action log structure. Produced by
+  /// `OpenAiServiceSecure.generateQualityCategoryPlanSummary(category:'register')`.
+  final String qualityRegisterLog;
+
+  /// AI-generated Quality Audit Plan narrative. Produced by
+  /// `OpenAiServiceSecure.generateQualityCategoryPlanSummary(category:'audit')`.
+  final String qualityAuditPlanSummary;
+
+  /// AI-generated Quality Metrics Dashboard narrative. Produced by
+  /// `OpenAiServiceSecure.generateQualityCategoryPlanSummary(category:'metrics')`.
+  final String qualityMetricsSummary;
+
+  /// AI-generated Quality Objectives & Acceptance Criteria narrative.
+  /// Produced by
+  /// `OpenAiServiceSecure.generateQualityCategoryPlanSummary(category:'objectives')`.
+  final String qualityObjectivesSummary;
+
+  /// AI Assistant insights keyed by category. Each value carries the
+  /// assistant's findings: missing requirements, recommended activities,
+  /// suggested standards, acceptance-criteria gaps, quality risks/KPIs,
+  /// with rationale tied back to project data.
+  /// Keys: 'plan','objectives','inspection','metrics','audit','register'.
+  final Map<String, String> aiInsights;
+
+  /// Sections the AI flagged as not applicable for this project type and the
+  /// user accepted to skip. Keys: same as aiInsights. True = skipped.
+  final Map<String, bool> skippedSections;
+
+  /// Sections the user has explicitly marked applicable. Default all true.
+  /// Keys: same as aiInsights. False = user-disabled.
+  final Map<String, bool> sectionApplicability;
+
+  /// True once the user has pressed "Track in Execution" and the planning
+  /// Quality data has been duplicated into the Execution Quality Tracking
+  /// store. Prevents auto re-seeding on every visit.
+  final bool trackedInExecution;
+
+  /// ISO timestamp (UTC) of the last sync to the Execution Quality Tracking
+  /// store. Empty when never synced.
+  final String lastTrackedInExecutionAt;
+
   QualityManagementData({
     required this.qualityPlan,
     required this.reviewCadence,
@@ -8611,7 +8750,20 @@ class QualityManagementData {
     required this.qualityChangeLog,
     required this.dashboardConfig,
     required this.computedSnapshot,
-  });
+    this.qualityManagementPlan = '',
+    this.inspectionTestPlan = '',
+    this.qualityRegisterLog = '',
+    this.qualityAuditPlanSummary = '',
+    this.qualityMetricsSummary = '',
+    this.qualityObjectivesSummary = '',
+    Map<String, String>? aiInsights,
+    Map<String, bool>? skippedSections,
+    Map<String, bool>? sectionApplicability,
+    this.trackedInExecution = false,
+    this.lastTrackedInExecutionAt = '',
+  })  : aiInsights = aiInsights ?? const {},
+        skippedSections = skippedSections ?? const {},
+        sectionApplicability = sectionApplicability ?? const {};
 
   factory QualityManagementData.empty() {
     return QualityManagementData(
@@ -8633,6 +8785,17 @@ class QualityManagementData {
       qualityChangeLog: [],
       dashboardConfig: QualityDashboardConfig.empty(),
       computedSnapshot: null,
+      qualityManagementPlan: '',
+      inspectionTestPlan: '',
+      qualityRegisterLog: '',
+      qualityAuditPlanSummary: '',
+      qualityMetricsSummary: '',
+      qualityObjectivesSummary: '',
+      aiInsights: {},
+      skippedSections: {},
+      sectionApplicability: {},
+      trackedInExecution: false,
+      lastTrackedInExecutionAt: '',
     );
   }
 
@@ -8655,6 +8818,17 @@ class QualityManagementData {
         'qualityChangeLog': qualityChangeLog.map((c) => c.toJson()).toList(),
         'dashboardConfig': dashboardConfig.toJson(),
         'computedSnapshot': computedSnapshot?.toJson(),
+        'qualityManagementPlan': qualityManagementPlan,
+        'inspectionTestPlan': inspectionTestPlan,
+        'qualityRegisterLog': qualityRegisterLog,
+        'qualityAuditPlanSummary': qualityAuditPlanSummary,
+        'qualityMetricsSummary': qualityMetricsSummary,
+        'qualityObjectivesSummary': qualityObjectivesSummary,
+        'aiInsights': aiInsights,
+        'skippedSections': skippedSections,
+        'sectionApplicability': sectionApplicability,
+        'trackedInExecution': trackedInExecution,
+        'lastTrackedInExecutionAt': lastTrackedInExecutionAt,
       };
 
   factory QualityManagementData.fromJson(Map<String, dynamic> json) {
@@ -8773,6 +8947,21 @@ class QualityManagementData {
           ? QualityComputedSnapshot.fromJson(
               Map<String, dynamic>.from(json['computedSnapshot'] as Map))
           : null,
+      qualityManagementPlan: json['qualityManagementPlan']?.toString() ?? '',
+      inspectionTestPlan: json['inspectionTestPlan']?.toString() ?? '',
+      qualityRegisterLog: json['qualityRegisterLog']?.toString() ?? '',
+      qualityAuditPlanSummary: json['qualityAuditPlanSummary']?.toString() ?? '',
+      qualityMetricsSummary: json['qualityMetricsSummary']?.toString() ?? '',
+      qualityObjectivesSummary:
+          json['qualityObjectivesSummary']?.toString() ?? '',
+      aiInsights: _parseStringMap(json['aiInsights']),
+      skippedSections: _parseBoolMap(json['skippedSections']),
+      sectionApplicability: _parseBoolMap(json['sectionApplicability']),
+      trackedInExecution: json['trackedInExecution'] is bool
+          ? json['trackedInExecution'] as bool
+          : (json['trackedInExecution']?.toString() == 'true'),
+      lastTrackedInExecutionAt:
+          json['lastTrackedInExecutionAt']?.toString() ?? '',
     );
   }
 
@@ -8795,6 +8984,17 @@ class QualityManagementData {
     List<QualityChangeEntry>? qualityChangeLog,
     QualityDashboardConfig? dashboardConfig,
     QualityComputedSnapshot? computedSnapshot,
+    String? qualityManagementPlan,
+    String? inspectionTestPlan,
+    String? qualityRegisterLog,
+    String? qualityAuditPlanSummary,
+    String? qualityMetricsSummary,
+    String? qualityObjectivesSummary,
+    Map<String, String>? aiInsights,
+    Map<String, bool>? skippedSections,
+    Map<String, bool>? sectionApplicability,
+    bool? trackedInExecution,
+    String? lastTrackedInExecutionAt,
   }) {
     return QualityManagementData(
       qualityPlan: qualityPlan ?? this.qualityPlan,
@@ -8815,8 +9015,44 @@ class QualityManagementData {
       qualityChangeLog: qualityChangeLog ?? this.qualityChangeLog,
       dashboardConfig: dashboardConfig ?? this.dashboardConfig,
       computedSnapshot: computedSnapshot ?? this.computedSnapshot,
+      qualityManagementPlan:
+          qualityManagementPlan ?? this.qualityManagementPlan,
+      inspectionTestPlan: inspectionTestPlan ?? this.inspectionTestPlan,
+      qualityRegisterLog: qualityRegisterLog ?? this.qualityRegisterLog,
+      qualityAuditPlanSummary:
+          qualityAuditPlanSummary ?? this.qualityAuditPlanSummary,
+      qualityMetricsSummary: qualityMetricsSummary ?? this.qualityMetricsSummary,
+      qualityObjectivesSummary:
+          qualityObjectivesSummary ?? this.qualityObjectivesSummary,
+      aiInsights: aiInsights ?? this.aiInsights,
+      skippedSections: skippedSections ?? this.skippedSections,
+      sectionApplicability: sectionApplicability ?? this.sectionApplicability,
+      trackedInExecution: trackedInExecution ?? this.trackedInExecution,
+      lastTrackedInExecutionAt:
+          lastTrackedInExecutionAt ?? this.lastTrackedInExecutionAt,
     );
   }
+}
+
+/// Parse a Map<String,String> from JSON, tolerating nested or non-string
+/// values by coercing to string. Used by QualityManagementData for the
+/// `aiInsights` field.
+Map<String, String> _parseStringMap(dynamic raw) {
+  if (raw is! Map) return <String, String>{};
+  return raw.map(
+    (key, value) => MapEntry(key.toString(), value?.toString() ?? ''),
+  );
+}
+
+/// Parse a Map<String,bool> from JSON. Used by QualityManagementData for the
+/// `skippedSections` and `sectionApplicability` maps.
+Map<String, bool> _parseBoolMap(dynamic raw) {
+  if (raw is! Map) return <String, bool>{};
+  return raw.map((key, value) {
+    if (value is bool) return MapEntry(key.toString(), value);
+    final s = value?.toString().toLowerCase() ?? '';
+    return MapEntry(key.toString(), s == 'true' || s == '1');
+  });
 }
 
 class Contractor {

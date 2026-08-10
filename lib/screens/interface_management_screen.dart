@@ -100,75 +100,117 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
                   activeItemLabel: 'Interface Management'),
             ),
             Expanded(
-              child: Stack(
+              child: Column(
                 children: [
-                  const MobileSidebarHamburger(
-                    sidebar: InitiationLikeSidebar(
-                      activeItemLabel: 'Interface Management',
-                    ),
+                  // ── Unified page header (matches other planning screens) ──
+                  // Adding this also resolves the "glitching" caused by the
+                  // page previously having no top-level header — the layout
+                  // now flows: Header → Scrollable content → KAZ bubble.
+                  PlanningPhaseHeader(
+                    title: 'Interface Management Plan',
+                    breadcrumbPhase: 'Planning Phase',
+                    breadcrumbTitle: 'Interface Management Plan',
+                    onBack: () => PlanningPhaseNavigation.goToPrevious(
+                        context, 'interface_management'),
+                    onForward: () => PlanningPhaseNavigation.goToNext(
+                        context, 'interface_management'),
+                    onExportPdf: _exportPdf,
                   ),
-                  SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding, vertical: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  Expanded(
+                    child: Stack(
                       children: [
-                        const SizedBox(height: 20),
-                        const PlanningAiNotesCard(
-                          title: 'Notes',
-                          sectionLabel: 'Interface Management',
-                          noteKey: 'planning_interface_management_notes',
-                          checkpoint: 'interface_management',
-                          description:
-                              'Summarize interface ownership, dependency risks, and governance cadence.',
+                        const MobileSidebarHamburger(
+                          sidebar: InitiationLikeSidebar(
+                            activeItemLabel: 'Interface Management',
+                          ),
                         ),
-                        const SizedBox(height: 24),
-                        const InterfacePlanCard(),
-                        const SizedBox(height: 24),
-                        _buildMetricsRow(),
-                        const SizedBox(height: 24),
-                        _buildTabBar(),
-                        const SizedBox(height: 16),
-                        InnerPageNavigationHint(
-                          pageId: 'interface_management',
-                          pageTitle: 'Interface Management',
-                          sections: _ImTab.values
-                              .map((tab) => InnerPageSection(
-                                    id: tab.name,
-                                    label: tab.label,
-                                    status: tab == _selectedTab
-                                        ? InnerPageSectionStatus.current
-                                        : InnerPageSectionStatus.available,
-                                    stepNumber: _ImTab.values.indexOf(tab) + 1,
-                                  ))
-                              .toList(),
-                          currentSectionId: _selectedTab.name,
-                          onSectionTap: (sectionId) {
-                            final tab = _ImTab.values
-                                .firstWhere((t) => t.name == sectionId);
-                            setState(() => _selectedTab = tab);
-                          },
+                        SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: horizontalPadding, vertical: 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 8),
+                              // ── Page title + description (header section) ──
+                              Text(
+                                'Interface Management Plan',
+                                style: TextStyle(
+                                  fontSize: isMobile ? 22 : 26,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF111827),
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Define how project interfaces will be identified, coordinated, and managed to ensure effective integration across stakeholders, organizations, systems, disciplines, and deliverables.',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF4B5563),
+                                  height: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              const PlanningAiNotesCard(
+                                title: 'Notes',
+                                sectionLabel: 'Interface Management',
+                                noteKey: 'planning_interface_management_notes',
+                                checkpoint: 'interface_management',
+                                description:
+                                    'Summarize interface ownership, dependency risks, and governance cadence.',
+                              ),
+                              const SizedBox(height: 24),
+                              const InterfacePlanCard(),
+                              const SizedBox(height: 24),
+                              _buildMetricsRow(),
+                              const SizedBox(height: 24),
+                              _buildTabBar(),
+                              const SizedBox(height: 16),
+                              InnerPageNavigationHint(
+                                pageId: 'interface_management',
+                                pageTitle: 'Interface Management',
+                                sections: _ImTab.values
+                                    .map((tab) => InnerPageSection(
+                                          id: tab.name,
+                                          label: tab.label,
+                                          status: tab == _selectedTab
+                                              ? InnerPageSectionStatus.current
+                                              : InnerPageSectionStatus.available,
+                                          stepNumber:
+                                              _ImTab.values.indexOf(tab) + 1,
+                                        ))
+                                    .toList(),
+                                currentSectionId: _selectedTab.name,
+                                onSectionTap: (sectionId) {
+                                  final tab = _ImTab.values
+                                      .firstWhere((t) => t.name == sectionId);
+                                  setState(() => _selectedTab = tab);
+                                },
+                              ),
+                              _buildTabContent(),
+                              const SizedBox(height: 24),
+                              LaunchPhaseNavigation(
+                                backLabel: PlanningPhaseNavigation.backLabel(
+                                    'interface_management'),
+                                nextLabel: PlanningPhaseNavigation.nextLabel(
+                                    'interface_management'),
+                                onBack: () =>
+                                    PlanningPhaseNavigation.goToPrevious(
+                                        context, 'interface_management'),
+                                onNext: () => PlanningPhaseNavigation.goToNext(
+                                    context, 'interface_management'),
+                              ),
+                              const SizedBox(height: 40),
+                            ],
+                          ),
                         ),
-                        _buildTabContent(),
-                        const SizedBox(height: 24),
-                        LaunchPhaseNavigation(
-                          backLabel: PlanningPhaseNavigation.backLabel(
-                              'interface_management'),
-                          nextLabel: PlanningPhaseNavigation.nextLabel(
-                              'interface_management'),
-                          onBack: () => PlanningPhaseNavigation.goToPrevious(
-                              context, 'interface_management'),
-                          onNext: () => PlanningPhaseNavigation.goToNext(
-                              context, 'interface_management'),
-                        ),
-                        const SizedBox(height: 40),
+                        const Positioned(
+                            right: 24,
+                            bottom: 24,
+                            child: KazAiChatBubble(positioned: false)),
                       ],
                     ),
                   ),
-                  const Positioned(
-                      right: 24,
-                      bottom: 24,
-                      child: KazAiChatBubble(positioned: false)),
                 ],
               ),
             ),
@@ -332,7 +374,7 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
     final projectData = ProjectDataHelper.getData(context);
     await PdfExportHelper.exportScreenPdf(
       context: context,
-      screenTitle: 'Interface Management',
+      screenTitle: 'Interface Management Plan',
       sections: [
         PdfSection.keyValue('Project Info', [
           {'Project Name': projectData.projectName ?? 'N/A'},
@@ -400,7 +442,7 @@ class _InterfacePlanCardState extends State<InterfacePlanCard> {
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
-      title: 'Interface Plan',
+      title: 'Interface Management Plan',
       subtitle:
           'Describe ownership, cadence, and risk handling so teams coordinate before handoffs.',
       child: Column(

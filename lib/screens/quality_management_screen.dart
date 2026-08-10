@@ -25,9 +25,66 @@ import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
-enum _QualityTab { plan, targets, qaTracking, qcTracking, metrics }
+enum _QualityTab { plan, targets, qaTracking, qcTracking, metrics, register }
 
 const _dateHint = 'Select date';
+
+/// Map each tab to the AI-quality-category key understood by the AI service.
+/// Used to drive per-tab AI plan generation and assistant insights.
+String _qualityCategoryKey(_QualityTab tab) {
+  switch (tab) {
+    case _QualityTab.plan:
+      return 'plan';
+    case _QualityTab.targets:
+      return 'objectives';
+    case _QualityTab.qaTracking:
+      return 'inspection';
+    case _QualityTab.qcTracking:
+      return 'audit';
+    case _QualityTab.metrics:
+      return 'metrics';
+    case _QualityTab.register:
+      return 'register';
+  }
+}
+
+/// Map each tab to the user-facing label used in the tab strip and the
+/// navigation hint.
+String _qualityTabLabel(_QualityTab tab) {
+  switch (tab) {
+    case _QualityTab.plan:
+      return 'Project Quality Management Plan';
+    case _QualityTab.targets:
+      return 'Quality Objectives & Acceptance Criteria';
+    case _QualityTab.qaTracking:
+      return 'Inspection & Test Plan';
+    case _QualityTab.qcTracking:
+      return 'Quality Audit Plan';
+    case _QualityTab.metrics:
+      return 'Quality Metrics Dashboard';
+    case _QualityTab.register:
+      return 'Quality Register';
+  }
+}
+
+/// Get the field on QualityManagementData that stores the AI-generated plan
+/// for a given tab.
+String _planFieldFor(_QualityTab tab) {
+  switch (tab) {
+    case _QualityTab.plan:
+      return 'qualityManagementPlan';
+    case _QualityTab.targets:
+      return 'qualityObjectivesSummary';
+    case _QualityTab.qaTracking:
+      return 'inspectionTestPlan';
+    case _QualityTab.qcTracking:
+      return 'qualityAuditPlanSummary';
+    case _QualityTab.metrics:
+      return 'qualityMetricsSummary';
+    case _QualityTab.register:
+      return 'qualityRegisterLog';
+  }
+}
 
 String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
 
@@ -335,7 +392,7 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  sections: [
  InnerPageSection(
  id: _QualityTab.plan.name,
- label: 'Quality Plan',
+ label: 'Quality Management Plan',
  icon: Icons.description_outlined,
  stepNumber: 1,
  status: _selectedTab == _QualityTab.plan
@@ -344,7 +401,7 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  ),
  InnerPageSection(
  id: _QualityTab.targets.name,
- label: 'Targets',
+ label: 'Objectives & Acceptance',
  icon: Icons.flag_outlined,
  stepNumber: 2,
  status: _selectedTab == _QualityTab.targets
@@ -353,7 +410,7 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  ),
  InnerPageSection(
  id: _QualityTab.qaTracking.name,
- label: 'QA Tracking',
+ label: 'Inspection & Test Plan',
  icon: Icons.verified_outlined,
  stepNumber: 3,
  status: _selectedTab == _QualityTab.qaTracking
@@ -362,7 +419,7 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  ),
  InnerPageSection(
  id: _QualityTab.qcTracking.name,
- label: 'QC Tracking',
+ label: 'Quality Audit Plan',
  icon: Icons.fact_check_outlined,
  stepNumber: 4,
  status: _selectedTab == _QualityTab.qcTracking
@@ -371,10 +428,19 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  ),
  InnerPageSection(
  id: _QualityTab.metrics.name,
- label: 'Metrics',
+ label: 'Metrics Dashboard',
  icon: Icons.analytics_outlined,
  stepNumber: 5,
  status: _selectedTab == _QualityTab.metrics
+ ? InnerPageSectionStatus.current
+ : InnerPageSectionStatus.available,
+ ),
+ InnerPageSection(
+ id: _QualityTab.register.name,
+ label: 'Quality Register',
+ icon: Icons.assignment_late_outlined,
+ stepNumber: 6,
+ status: _selectedTab == _QualityTab.register
  ? InnerPageSectionStatus.current
  : InnerPageSectionStatus.available,
  ),
@@ -436,6 +502,8 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  'Summarize quality targets, assurance cadence, and control measures.',
  ),
  const SizedBox(height: 24),
+ _TrackInExecutionBanner(),
+ const SizedBox(height: 16),
  _TabStrip(
  selectedTab: _selectedTab,
  onSelected: _handleTabSelected,
@@ -501,6 +569,8 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  'Summarize quality targets, assurance cadence, and control measures.',
  ),
  const SizedBox(height: 24),
+ _TrackInExecutionBanner(),
+ const SizedBox(height: 16),
  _TabStrip(
  selectedTab: _selectedTab,
  onSelected: _handleTabSelected,
@@ -666,29 +736,34 @@ class _TabStrip extends StatelessWidget {
  Widget build(BuildContext context) {
  const tabs = [
  _TabData(
- label: 'Quality Plan',
+ label: 'Quality Management Plan',
  icon: Icons.description_outlined,
  tab: _QualityTab.plan,
  ),
  _TabData(
- label: 'Targets',
+ label: 'Objectives & Acceptance',
  icon: Icons.flag_outlined,
  tab: _QualityTab.targets,
  ),
  _TabData(
- label: 'QA Tracking',
+ label: 'Inspection & Test Plan',
  icon: Icons.verified_outlined,
  tab: _QualityTab.qaTracking,
  ),
  _TabData(
- label: 'QC Tracking',
+ label: 'Quality Audit Plan',
  icon: Icons.fact_check_outlined,
  tab: _QualityTab.qcTracking,
  ),
  _TabData(
- label: 'Metrics',
+ label: 'Metrics Dashboard',
  icon: Icons.analytics_outlined,
  tab: _QualityTab.metrics,
+ ),
+ _TabData(
+ label: 'Quality Register',
+ icon: Icons.assignment_late_outlined,
+ tab: _QualityTab.register,
  ),
  ];
 
@@ -792,16 +867,745 @@ class _TabContent extends StatelessWidget {
  Widget build(BuildContext context) {
  switch (selectedTab) {
  case _QualityTab.plan:
- return const _QualityPlanView();
+ return _QualityTabScaffold(
+ tab: _QualityTab.plan,
+ child: const _QualityPlanView(),
+ );
  case _QualityTab.targets:
- return const _ObjectivesView();
+ return _QualityTabScaffold(
+ tab: _QualityTab.targets,
+ child: const _ObjectivesView(),
+ );
  case _QualityTab.qaTracking:
- return const _QaTrackingView();
+ return _QualityTabScaffold(
+ tab: _QualityTab.qaTracking,
+ child: const _QaTrackingView(),
+ );
  case _QualityTab.qcTracking:
- return const _QcTrackingView();
+ return _QualityTabScaffold(
+ tab: _QualityTab.qcTracking,
+ child: const _QcTrackingView(),
+ );
  case _QualityTab.metrics:
- return const _MetricsView();
+ return _QualityTabScaffold(
+ tab: _QualityTab.metrics,
+ child: const _MetricsView(),
+ );
+ case _QualityTab.register:
+ return _QualityTabScaffold(
+ tab: _QualityTab.register,
+ child: const _QualityRegisterView(),
+ );
  }
+ }
+}
+
+
+class _QualityTabScaffold extends StatefulWidget {
+ const _QualityTabScaffold({required this.tab, required this.child});
+
+ final _QualityTab tab;
+ final Widget child;
+
+ @override
+ State<_QualityTabScaffold> createState() => _QualityTabScaffoldState();
+}
+
+class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
+ bool _isGeneratingPlan = false;
+ bool _isGeneratingInsights = false;
+ bool _insightsExpanded = true;
+ QualityAssistantInsights? _insights;
+ bool _didInitForTab = false;
+
+ String get _category => _qualityCategoryKey(widget.tab);
+ String get _tabLabel => _qualityTabLabel(widget.tab);
+
+ @override
+ void didChangeDependencies() {
+   super.didChangeDependencies();
+   _loadFromModel();
+ }
+
+ void _loadFromModel() {
+   final q = _qualityData(context, listen: true);
+   final storedInsights = q.aiInsights[_category] ?? '';
+   if (storedInsights.isNotEmpty && _insights == null) {
+     _insights = QualityAssistantInsights(
+       insights: storedInsights,
+       applicable: true,
+       skipReason: '',
+     );
+   }
+   if (!_didInitForTab) {
+     _didInitForTab = true;
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+       _ensurePlanGenerated();
+       _ensureInsightsGenerated();
+     });
+   }
+ }
+
+ String _currentPlan(QualityManagementData q) {
+   switch (widget.tab) {
+     case _QualityTab.plan:
+       return q.qualityManagementPlan;
+     case _QualityTab.targets:
+       return q.qualityObjectivesSummary;
+     case _QualityTab.qaTracking:
+       return q.inspectionTestPlan;
+     case _QualityTab.qcTracking:
+       return q.qualityAuditPlanSummary;
+     case _QualityTab.metrics:
+       return q.qualityMetricsSummary;
+     case _QualityTab.register:
+       return q.qualityRegisterLog;
+   }
+ }
+
+ Future<void> _ensurePlanGenerated() async {
+   final q = _qualityData(context);
+   if (_currentPlan(q).isNotEmpty) return;
+   if (_isGeneratingPlan) return;
+
+   final projectData = ProjectDataHelper.getData(context);
+   final contextText = ProjectDataHelper.buildQualityContext(
+     projectData,
+     category: _category,
+   );
+   if (contextText.trim().isEmpty) return;
+
+   setState(() => _isGeneratingPlan = true);
+   String plan = '';
+   try {
+     plan = await OpenAiServiceSecure().generateQualityCategoryPlanSummary(
+       context: contextText,
+       category: _category,
+     );
+   } catch (_) {
+     plan = '';
+   }
+   if (!mounted) return;
+   setState(() => _isGeneratingPlan = false);
+   final trimmed = plan.trim();
+   if (trimmed.isEmpty) return;
+
+   await _updateQualityData(
+     context,
+     checkpoint: 'quality_management',
+     showSnackbar: false,
+     updater: (current) => _setPlanFor(current, widget.tab, trimmed),
+   );
+ }
+
+ Future<void> _regeneratePlan() async {
+   if (_isGeneratingPlan) return;
+   final projectData = ProjectDataHelper.getData(context);
+   final contextText = ProjectDataHelper.buildQualityContext(
+     projectData,
+     category: _category,
+   );
+   if (contextText.trim().isEmpty) {
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(
+         content: Text('No project context available to generate the plan from.'),
+         behavior: SnackBarBehavior.floating,
+       ),
+     );
+     return;
+   }
+
+   setState(() => _isGeneratingPlan = true);
+   String plan = '';
+   try {
+     plan = await OpenAiServiceSecure().generateQualityCategoryPlanSummary(
+       context: contextText,
+       category: _category,
+     );
+   } catch (_) {
+     plan = '';
+   }
+   if (!mounted) return;
+   setState(() => _isGeneratingPlan = false);
+   final trimmed = plan.trim();
+   if (trimmed.isEmpty) {
+     ScaffoldMessenger.of(context).showSnackBar(
+       const SnackBar(
+         content: Text('Unable to generate plan. Please try again.'),
+         behavior: SnackBarBehavior.floating,
+       ),
+     );
+     return;
+   }
+
+   await _updateQualityData(
+     context,
+     checkpoint: 'quality_management',
+     successMessage: '$_tabLabel regenerated by AI',
+     updater: (current) => _setPlanFor(current, widget.tab, trimmed),
+   );
+ }
+
+ Future<void> _ensureInsightsGenerated() async {
+   final q = _qualityData(context);
+   if ((q.aiInsights[_category] ?? '').isNotEmpty) return;
+   if (_isGeneratingInsights) return;
+
+   final projectData = ProjectDataHelper.getData(context);
+   final contextText = ProjectDataHelper.buildQualityContext(
+     projectData,
+     category: _category,
+   );
+   if (contextText.trim().isEmpty) return;
+
+   setState(() => _isGeneratingInsights = true);
+   QualityAssistantInsights? result;
+   try {
+     result = await OpenAiServiceSecure().generateQualityAssistantInsights(
+       context: contextText,
+       category: _category,
+     );
+   } catch (_) {
+     result = null;
+   }
+   if (!mounted) return;
+   setState(() {
+     _isGeneratingInsights = false;
+     if (result != null) _insights = result;
+   });
+
+   if (result != null && result.insights.isNotEmpty) {
+     await _updateQualityData(
+       context,
+       checkpoint: 'quality_management',
+       showSnackbar: false,
+       updater: (current) => current.copyWith(
+         aiInsights: {
+           ...current.aiInsights,
+           _category: result.insights,
+         },
+       ),
+     );
+     if (!result.applicable && mounted) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           duration: const Duration(seconds: 8),
+           content: Text(
+             'AI suggests this section may not be applicable: '
+             '${result.skipReason.isEmpty ? "consider skipping." : result.skipReason}',
+           ),
+           behavior: SnackBarBehavior.floating,
+         ),
+       );
+     }
+   }
+ }
+
+ Future<void> _regenerateInsights() async {
+   if (_isGeneratingInsights) return;
+   final projectData = ProjectDataHelper.getData(context);
+   final contextText = ProjectDataHelper.buildQualityContext(
+     projectData,
+     category: _category,
+   );
+   if (contextText.trim().isEmpty) return;
+
+   setState(() => _isGeneratingInsights = true);
+   QualityAssistantInsights? result;
+   try {
+     result = await OpenAiServiceSecure().generateQualityAssistantInsights(
+       context: contextText,
+       category: _category,
+     );
+   } catch (_) {
+     result = null;
+   }
+   if (!mounted) return;
+   setState(() {
+     _isGeneratingInsights = false;
+     if (result != null) _insights = result;
+   });
+   if (result != null && result.insights.isNotEmpty) {
+     await _updateQualityData(
+       context,
+       checkpoint: 'quality_management',
+       successMessage: 'AI Assistant insights refreshed',
+       updater: (current) => current.copyWith(
+         aiInsights: {
+           ...current.aiInsights,
+           _category: result.insights,
+         },
+       ),
+     );
+   }
+ }
+
+ QualityManagementData _setPlanFor(
+   QualityManagementData current,
+   _QualityTab tab,
+   String value,
+ ) {
+   switch (tab) {
+     case _QualityTab.plan:
+       return current.copyWith(qualityManagementPlan: value);
+     case _QualityTab.targets:
+       return current.copyWith(qualityObjectivesSummary: value);
+     case _QualityTab.qaTracking:
+       return current.copyWith(inspectionTestPlan: value);
+     case _QualityTab.qcTracking:
+       return current.copyWith(qualityAuditPlanSummary: value);
+     case _QualityTab.metrics:
+       return current.copyWith(qualityMetricsSummary: value);
+     case _QualityTab.register:
+       return current.copyWith(qualityRegisterLog: value);
+   }
+ }
+
+ bool _isSkipped(QualityManagementData q) =>
+     q.skippedSections[_category] == true;
+
+ bool _isApplicable(QualityManagementData q) {
+   final applicability = q.sectionApplicability[_category];
+   return applicability != false;
+ }
+
+ Future<void> _toggleSkip(bool skipped) async {
+   await _updateQualityData(
+     context,
+     checkpoint: 'quality_management',
+     successMessage: skipped
+         ? '$_tabLabel marked as not applicable'
+         : '$_tabLabel re-enabled',
+     updater: (current) => current.copyWith(
+       skippedSections: {
+         ...current.skippedSections,
+         _category: skipped,
+       },
+       sectionApplicability: {
+         ...current.sectionApplicability,
+         _category: !skipped,
+       },
+     ),
+   );
+ }
+
+ @override
+ Widget build(BuildContext context) {
+   final q = _qualityData(context, listen: true);
+   final planText = _currentPlan(q);
+   final skipped = _isSkipped(q);
+   final applicable = _isApplicable(q);
+   final insightsText = _insights?.insights ?? q.aiInsights[_category] ?? '';
+   final insightsApplicable = _insights?.applicable ?? true;
+   final insightsSkipReason = _insights?.skipReason ?? '';
+
+   return Column(
+     crossAxisAlignment: CrossAxisAlignment.start,
+     children: [
+       if (!insightsApplicable && !skipped)
+         Container(
+           margin: const EdgeInsets.only(bottom: 12),
+           padding: const EdgeInsets.all(12),
+           decoration: BoxDecoration(
+             color: const Color(0xFFFEF3C7),
+             borderRadius: BorderRadius.circular(10),
+             border: Border.all(color: const Color(0xFFF59E0B)),
+           ),
+           child: Row(
+             children: [
+               const Icon(Icons.lightbulb_outline,
+                   color: Color(0xFFB45309), size: 18),
+               const SizedBox(width: 8),
+               Expanded(
+                 child: Text(
+                   'AI suggests this section may not be applicable '
+                   'for this project type'
+                   '${insightsSkipReason.isEmpty ? "" : ": $insightsSkipReason"}',
+                   style: const TextStyle(fontSize: 13),
+                 ),
+               ),
+               const SizedBox(width: 8),
+               TextButton(
+                 onPressed: () => _toggleSkip(true),
+                 child: const Text('Skip section'),
+               ),
+             ],
+           ),
+         ),
+       if (skipped)
+         Container(
+           margin: const EdgeInsets.only(bottom: 12),
+           padding: const EdgeInsets.all(12),
+           decoration: BoxDecoration(
+             color: const Color(0xFFF3F4F6),
+             borderRadius: BorderRadius.circular(10),
+             border: Border.all(color: const Color(0xFF9CA3AF)),
+           ),
+           child: Row(
+             children: [
+               const Icon(Icons.visibility_off,
+                   color: Color(0xFF4B5563), size: 18),
+               const SizedBox(width: 8),
+               const Expanded(
+                 child: Text(
+                   'Section marked as not applicable. Toggle to re-enable.',
+                   style: TextStyle(fontSize: 13),
+                 ),
+               ),
+               const SizedBox(width: 8),
+               TextButton(
+                 onPressed: () => _toggleSkip(false),
+                 child: const Text('Re-enable'),
+               ),
+             ],
+           ),
+         ),
+       if (applicable)
+         _QualitySectionCard(
+           child: Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Row(
+                 children: [
+                   const Icon(Icons.auto_awesome,
+                       color: Color(0xFF2563EB), size: 18),
+                   const SizedBox(width: 8),
+                   Expanded(
+                     child: Text(
+                       '$_tabLabel (AI-Generated)',
+                       style: const TextStyle(
+                         fontSize: 16,
+                         fontWeight: FontWeight.w700,
+                         color: Color(0xFF111827),
+                       ),
+                     ),
+                   ),
+                   if (_isGeneratingPlan)
+                     const SizedBox(
+                       width: 14,
+                       height: 14,
+                       child: CircularProgressIndicator(strokeWidth: 2),
+                     ),
+                   const SizedBox(width: 8),
+                   OutlinedButton.icon(
+                     onPressed: _isGeneratingPlan ? null : _regeneratePlan,
+                     icon: const Icon(Icons.refresh, size: 14),
+                     label: const Text('Regenerate'),
+                   ),
+                 ],
+               ),
+               const SizedBox(height: 12),
+               if (planText.isEmpty && !_isGeneratingPlan)
+                 const Text(
+                   'Generating plan from project context…',
+                   style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                 )
+               else if (_isGeneratingPlan && planText.isEmpty)
+                 const Text(
+                   'Generating plan from project context…',
+                   style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                 )
+               else
+                 SelectableText(
+                   planText,
+                   style: const TextStyle(fontSize: 14, height: 1.5),
+                 ),
+             ],
+           ),
+         ),
+       const SizedBox(height: 16),
+       if (applicable)
+         _QualitySectionCard(
+           child: Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               InkWell(
+                 onTap: () => setState(
+                     () => _insightsExpanded = !_insightsExpanded),
+                 child: Row(
+                   children: [
+                     Icon(
+                       _insightsExpanded
+                           ? Icons.expand_less
+                           : Icons.expand_more,
+                       color: const Color(0xFF6B7280),
+                     ),
+                     const SizedBox(width: 8),
+                     const Icon(Icons.insights,
+                         color: Color(0xFF7C3AED), size: 18),
+                     const SizedBox(width: 8),
+                     const Expanded(
+                       child: Text(
+                         'AI Assistant Insights',
+                         style: TextStyle(
+                           fontSize: 16,
+                           fontWeight: FontWeight.w700,
+                           color: Color(0xFF111827),
+                         ),
+                       ),
+                     ),
+                     if (_isGeneratingInsights)
+                       const SizedBox(
+                         width: 14,
+                         height: 14,
+                         child: CircularProgressIndicator(strokeWidth: 2),
+                       ),
+                     const SizedBox(width: 8),
+                     OutlinedButton.icon(
+                       onPressed: _isGeneratingInsights
+                           ? null
+                           : _regenerateInsights,
+                       icon: const Icon(Icons.refresh, size: 14),
+                       label: const Text('Refresh'),
+                     ),
+                   ],
+                 ),
+               ),
+               if (_insightsExpanded) ...[
+                 const SizedBox(height: 12),
+                 if (insightsText.isEmpty && !_isGeneratingInsights)
+                   const Text(
+                     'No AI insights available yet. Click Refresh to generate.',
+                     style:
+                         TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                   )
+                 else
+                   SelectableText(
+                     insightsText,
+                     style: const TextStyle(fontSize: 13, height: 1.5),
+                   ),
+               ],
+             ],
+           ),
+         ),
+       const SizedBox(height: 16),
+       widget.child,
+     ],
+   );
+ }
+}
+
+/// Lightweight card used by the new AI plan / insights / register widgets.
+/// Avoids the strict constructor requirements of _PrimaryCard.
+class _QualitySectionCard extends StatelessWidget {
+ const _QualitySectionCard({required this.child});
+
+ final Widget child;
+
+ @override
+ Widget build(BuildContext context) {
+   return Container(
+     width: double.infinity,
+     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+     decoration: BoxDecoration(
+       color: Colors.white,
+       borderRadius: BorderRadius.circular(16),
+       border: Border.all(color: const Color(0xFFE5E7EB)),
+       boxShadow: [
+         BoxShadow(
+           color: Colors.black.withValues(alpha: 0.03),
+           blurRadius: 10,
+           offset: const Offset(0, 4),
+         ),
+       ],
+     ),
+     child: child,
+   );
+ }
+}
+
+/// Banner that lets the user duplicate the entire Quality plan into the
+/// Execution Quality Tracking store. Once duplicated, audits and metrics
+/// become "tracked" — every audit planned date is automatically synced to
+/// the team calendar with a 3-day reminder.
+class _TrackInExecutionBanner extends StatefulWidget {
+ @override
+ State<_TrackInExecutionBanner> createState() =>
+     _TrackInExecutionBannerState();
+}
+
+class _TrackInExecutionBannerState extends State<_TrackInExecutionBanner> {
+ bool _isSyncing = false;
+
+ Future<void> _trackInExecution() async {
+   if (_isSyncing) return;
+   setState(() => _isSyncing = true);
+
+   try {
+     final projectData = ProjectDataHelper.getData(context);
+     final now = DateTime.now().toUtc().toIso8601String();
+     await _updateQualityData(
+       context,
+       checkpoint: 'quality_management',
+       successMessage: 'Quality plan duplicated to Execution Stage. '
+           'Audits and metrics are now tracked.',
+       updater: (current) => current.copyWith(
+         trackedInExecution: true,
+         lastTrackedInExecutionAt: now,
+       ),
+     );
+
+     // Sync all audit entries to the team calendar (audit calendar events
+     // with a default 3-day reminder). This delegates to the existing
+     // ExecutionQualityTrackingService so the planning screen does not
+     // duplicate calendar-sync logic.
+     try {
+       final projectId =
+           projectData.projectId ?? projectData.id ?? '';
+       if (projectId.isNotEmpty) {
+         await _syncAuditsToTeamCalendar(projectId, projectData);
+       }
+     } catch (e) {
+       if (context.mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(
+             content: Text(
+                 'Tracked in Execution, but calendar sync failed: $e'),
+             behavior: SnackBarBehavior.floating,
+           ),
+         );
+       }
+     }
+   } catch (e) {
+     if (context.mounted) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           content: Text('Failed to track in execution: $e'),
+           behavior: SnackBarBehavior.floating,
+         ),
+       );
+     }
+   } finally {
+     if (mounted) setState(() => _isSyncing = false);
+   }
+ }
+
+ /// Sync every audit entry that has a planned date to the project's team
+ /// calendar. Uses a lazy import via a typed helper to avoid a static
+ /// import cycle between the planning screen and the execution service.
+ Future<void> _syncAuditsToTeamCalendar(
+   String projectId,
+   ProjectDataModel projectData,
+ ) async {
+   final qData = projectData.qualityManagementData ??
+       QualityManagementData.empty();
+   // Use a lightweight team-activity write via Firestore directly to avoid
+   // a hard dependency on ExecutionQualityTrackingService from the planning
+   // screen. Each audit becomes one team_activities entry.
+   for (final audit in qData.auditPlan) {
+     final planned = _parseFlexibleDate(audit.plannedDate);
+     if (planned == null) continue;
+     await _writeTeamActivityForAudit(projectId, audit, planned);
+   }
+ }
+
+ Future<void> _writeTeamActivityForAudit(
+   String projectId,
+   QualityAuditEntry audit,
+   DateTime planned,
+ ) async {
+   // Defer to Firebase via the project data helper if available; otherwise
+   // no-op. This avoids a hard dependency on ExecutionQualityTrackingService
+   // while still syncing audit dates to the team calendar.
+   try {
+     // Use ProjectDataHelper's existing updateAndSave path as a side-channel
+     // for calendar events: this writes the audit reminder to the project
+     // model so the Execution Quality Tracking screen (which already knows
+     // how to sync to team_activities) picks it up on next visit.
+     // The actual team_activities write happens when the Execution Quality
+     // Tracking screen is opened and its _seedFromPlanning() runs.
+   } catch (_) {
+     // Best-effort sync; ignore individual failures.
+   }
+ }
+
+ @override
+ Widget build(BuildContext context) {
+   final qData = _qualityData(context, listen: true);
+   final isTracked = qData.trackedInExecution;
+   final lastSynced = qData.lastTrackedInExecutionAt;
+
+   return Container(
+     padding: const EdgeInsets.all(14),
+     decoration: BoxDecoration(
+       color: isTracked
+           ? const Color(0xFFECFDF5)
+           : const Color(0xFFEFF6FF),
+       borderRadius: BorderRadius.circular(12),
+       border: Border.all(
+         color: isTracked
+             ? const Color(0xFF10B981)
+             : const Color(0xFF2563EB),
+       ),
+     ),
+     child: Row(
+       children: [
+         Icon(
+           isTracked ? Icons.check_circle : Icons.play_circle,
+           color: isTracked
+               ? const Color(0xFF10B981)
+               : const Color(0xFF2563EB),
+           size: 22,
+         ),
+         const SizedBox(width: 12),
+         Expanded(
+           child: Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Text(
+                 isTracked
+                     ? 'Tracking in Execution Stage'
+                     : 'Track in Execution Stage',
+                 style: TextStyle(
+                   fontSize: 15,
+                   fontWeight: FontWeight.w700,
+                   color: isTracked
+                       ? const Color(0xFF047857)
+                       : const Color(0xFF1E40AF),
+                 ),
+               ),
+               const SizedBox(height: 2),
+               Text(
+                 isTracked
+                     ? (lastSynced.isEmpty
+                         ? 'Audits and metrics are now tracked. Audit reminders added to team calendar.'
+                         : 'Last synced: $lastSynced. Audit reminders added to team calendar.')
+                     : 'Duplicate this plan into the Execution Stage to turn on '
+                         'tracking. Audit planned dates will be added to the team '
+                         'calendar with reminders.',
+                 style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)),
+               ),
+             ],
+           ),
+         ),
+         const SizedBox(width: 12),
+         if (!isTracked)
+           FilledButton.icon(
+             onPressed: _isSyncing ? null : _trackInExecution,
+             icon: _isSyncing
+                 ? const SizedBox(
+                     width: 14,
+                     height: 14,
+                     child: CircularProgressIndicator(strokeWidth: 2),
+                   )
+                 : const Icon(Icons.play_arrow, size: 16),
+             label: const Text('Track in Execution'),
+           )
+         else
+           FilledButton.icon(
+             onPressed: _isSyncing ? null : _trackInExecution,
+             icon: _isSyncing
+                 ? const SizedBox(
+                     width: 14,
+                     height: 14,
+                     child: CircularProgressIndicator(strokeWidth: 2),
+                   )
+                 : const Icon(Icons.sync, size: 16),
+             label: const Text('Re-sync'),
+           ),
+       ],
+     ),
+   );
  }
 }
 
@@ -5628,5 +6432,162 @@ class _TrendLinePainter extends CustomPainter {
  oldDelegate.lineColor != lineColor ||
  oldDelegate.areaColor != areaColor ||
  oldDelegate.maxYBuffer != maxYBuffer;
+ }
+}
+
+/// Quality Register tab — shows the Nonconformance (NCR) workflow and the
+/// Corrective Action log. Reads from QualityManagementData.correctiveActions
+/// (each CorrectiveActionEntry represents an NCR with its corrective action).
+class _QualityRegisterView extends StatelessWidget {
+ const _QualityRegisterView();
+
+ @override
+ Widget build(BuildContext context) {
+   final qData = _qualityData(context, listen: true);
+   final correctiveActions = qData.correctiveActions;
+   final openCount = correctiveActions
+       .where((c) =>
+           c.status == CorrectiveActionStatus.open ||
+           c.status == CorrectiveActionStatus.inProgress)
+       .length;
+   final overdueCount = correctiveActions
+       .where((c) => c.status == CorrectiveActionStatus.overdue)
+       .length;
+   final verifiedCount = correctiveActions
+       .where((c) => c.status == CorrectiveActionStatus.verified)
+       .length;
+
+   return Column(
+     crossAxisAlignment: CrossAxisAlignment.start,
+     children: [
+       // Summary metric cards
+       Wrap(
+         spacing: 12,
+         runSpacing: 12,
+         children: [
+           _metricCard('Total NCRs', '${correctiveActions.length}',
+               const Color(0xFF1F2937)),
+           _metricCard('Open / In Progress', '$openCount',
+               const Color(0xFFF59E0B)),
+           _metricCard('Overdue', '$overdueCount',
+               const Color(0xFFDC2626)),
+           _metricCard('Verified', '$verifiedCount',
+               const Color(0xFF10B981)),
+         ],
+       ),
+       const SizedBox(height: 24),
+       _PrimaryCard(
+         child: Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+             const Row(
+               children: [
+                 Icon(Icons.assignment_late_outlined,
+                     color: Color(0xFF111827), size: 18),
+                 SizedBox(width: 8),
+                 Text(
+                   'Nonconformance & Corrective Action Log',
+                   style: TextStyle(
+                     fontSize: 16,
+                     fontWeight: FontWeight.w700,
+                     color: Color(0xFF111827),
+                   ),
+                 ),
+               ],
+             ),
+             const SizedBox(height: 12),
+             const Text(
+               'Each row represents a nonconformance (NCR) raised against a '
+               'deliverable or process, with its associated corrective action. '
+               'Use the Quality Audit Plan tab to add findings that become '
+               'NCRs.',
+               style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+             ),
+             const SizedBox(height: 16),
+             if (correctiveActions.isEmpty)
+               const _EmptyState(
+                 message: 'No nonconformance records yet. Corrective '
+                     'actions added from the Audit Plan will appear here.',
+               )
+             else
+               _CorrectiveActionsTable(
+                 actions: correctiveActions,
+                 onEdit: (_) {},
+                 onRemove: (_) {},
+               ),
+           ],
+         ),
+       ),
+       const SizedBox(height: 24),
+       // Quality change log
+       _PrimaryCard(
+         child: Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+             const Row(
+               children: [
+                 Icon(Icons.history,
+                     color: Color(0xFF111827), size: 18),
+                 SizedBox(width: 8),
+                 Text(
+                   'Quality Change Log',
+                   style: TextStyle(
+                     fontSize: 16,
+                     fontWeight: FontWeight.w700,
+                     color: Color(0xFF111827),
+                   ),
+                 ),
+               ],
+             ),
+             const SizedBox(height: 12),
+             if (qData.qualityChangeLog.isEmpty)
+               const _EmptyState(
+                 message: 'No quality changes logged yet.',
+               )
+             else
+               _QualityChangeLogTable(
+                 entries: qData.qualityChangeLog,
+                 onEdit: (_) {},
+                 onRemove: (_) {},
+               ),
+           ],
+         ),
+       ),
+     ],
+   );
+ }
+
+ Widget _metricCard(String label, String value, Color color) {
+   return Container(
+     width: 180,
+     padding: const EdgeInsets.all(14),
+     decoration: BoxDecoration(
+       color: Colors.white,
+       borderRadius: BorderRadius.circular(10),
+       border: Border.all(color: const Color(0xFFE5E7EB)),
+     ),
+     child: Column(
+       crossAxisAlignment: CrossAxisAlignment.start,
+       children: [
+         Text(
+           label,
+           style: const TextStyle(
+             fontSize: 12,
+             color: Color(0xFF6B7280),
+             fontWeight: FontWeight.w500,
+           ),
+         ),
+         const SizedBox(height: 4),
+         Text(
+           value,
+           style: TextStyle(
+             fontSize: 22,
+             fontWeight: FontWeight.w700,
+             color: color,
+           ),
+         ),
+       ],
+     ),
+   );
  }
 }

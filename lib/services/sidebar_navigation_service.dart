@@ -145,8 +145,6 @@ class SidebarNavigationService {
     // Design & Technology — now before Execution Plan
     SidebarItem(checkpoint: 'design', label: 'Design Planning'),
     SidebarItem(checkpoint: 'technology', label: 'Technology Planning'),
-    SidebarItem(
-        checkpoint: 'interface_management', label: 'Interface Management'),
     // Agile Delivery Model Section — before Execution Plan
     SidebarItem(
         checkpoint: 'agile_delivery_model', label: 'Agile Delivery Model'),
@@ -218,6 +216,9 @@ class SidebarNavigationService {
         checkpoint: 'execution_plan_interface_management_overview',
         label: 'Execution Interface Management Overview'),
     SidebarItem(
+        checkpoint: 'execution_quality_tracking',
+        label: 'Execution Quality Tracking'),
+    SidebarItem(
         checkpoint: 'deliverables_roadmap_overview', label: 'Roadmap Overview'),
     SidebarItem(
         checkpoint: 'deliverables_roadmap_detailed',
@@ -228,6 +229,9 @@ class SidebarNavigationService {
     SidebarItem(checkpoint: 'risk_assessment', label: 'Risk Assessment'),
     SidebarItem(checkpoint: 'contracts', label: 'Contract'),
     SidebarItem(checkpoint: 'procurement', label: 'Procurement'),
+    // Interface Management — moved under Procurement per user request.
+    SidebarItem(
+        checkpoint: 'interface_management', label: 'Interface Management'),
     // Schedule & Cost
     SidebarItem(checkpoint: 'schedule', label: 'Schedule'),
     SidebarItem(checkpoint: 'cost_estimate', label: 'Cost Estimate Overview'),

@@ -11,6 +11,43 @@ import 'package:ndu_project/models/meeting_row.dart';
 // Remove markdown bold markers commonly produced by the model (e.g. *text* or **text**)
 String _stripAsterisks(String s) => s.replaceAll('*', '');
 
+/// Result of `OpenAiServiceSecure.generateQualityAssistantInsights`.
+/// Carries the markdown insights text plus an `applicable` flag — when the
+/// AI judges a quality section as not applicable for the project type
+/// (e.g. physical site inspections for a pure software project), `applicable`
+/// is false and `skipReason` explains why.
+class QualityAssistantInsights {
+  final String insights;
+  final bool applicable;
+  final String skipReason;
+
+  const QualityAssistantInsights({
+    required this.insights,
+    required this.applicable,
+    required this.skipReason,
+  });
+
+  factory QualityAssistantInsights.empty() {
+    return const QualityAssistantInsights(
+      insights: '',
+      applicable: true,
+      skipReason: '',
+    );
+  }
+
+  QualityAssistantInsights copyWith({
+    String? insights,
+    bool? applicable,
+    String? skipReason,
+  }) {
+    return QualityAssistantInsights(
+      insights: insights ?? this.insights,
+      applicable: applicable ?? this.applicable,
+      skipReason: skipReason ?? this.skipReason,
+    );
+  }
+}
+
 /// Strips markdown code fences (```json ... ```) and extracts raw JSON text.
 /// OpenAI may wrap JSON responses in markdown code blocks, so this ensures
 /// jsonDecode receives clean JSON.
@@ -6944,6 +6981,864 @@ $escaped
     }
 
     return _fallbackSsherSummary(trimmedContext);
+  }
+
+  /// Generate a per-category SSHER plan summary (Safety Plan / Security Plan /
+  /// Health Plan / Environment Plan / Regulatory Plan). The prompt is tailored
+  /// for each category:
+  ///  - safety: project-specific workplace safety plan
+  ///  - security: integrates FEP security roles / permissions / settings /
+  ///    access logs already captured for the project
+  ///  - health: occupational health & wellness plan tailored to project scope
+  ///  - environment: integrates UN Sustainable Development Goals (SDGs) into
+  ///    the plan, pulled for all applicable aspects of the project scope
+  ///  - regulatory: addresses all regulatory rules for the project starting
+  ///    with everything captured already. Concise — NO fluff.
+  /// [category] must be one of: 'safety', 'security', 'health',
+  /// 'environment', 'regulatory'.
+  Future<String> generateSsherCategoryPlanSummary({
+    required String context,
+    required String category,
+    int maxTokens = 500,
+    double temperature = 0.45,
+  }) async {
+    final trimmedContext = context.trim();
+    if (trimmedContext.isEmpty) return '';
+    final normalizedCategory = _normalizeSsherCategory(category);
+    if (normalizedCategory.isEmpty) return '';
+
+    if (!OpenAiConfig.isConfigured) {
+      return _fallbackSsherCategorySummary(trimmedContext, normalizedCategory);
+    }
+
+    final uri = OpenAiConfig.chatUri();
+    final headers = OpenAiConfig.headers();
+
+    final body = jsonEncode(OpenAiConfig.wrapBody({
+      'model': OpenAiConfig.model,
+      'temperature': temperature,
+      'max_completion_tokens': maxTokens,
+      'response_format': {'type': 'json_object'},
+      'messages': [
+        {
+          'role': 'system',
+          'content': _ssherCategorySystemPrompt(normalizedCategory),
+        },
+        {
+          'role': 'user',
+          'content': _ssherCategoryPlanPrompt(
+              trimmedContext, normalizedCategory),
+        },
+      ],
+    }));
+
+    try {
+      final response = await _client
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+            'OpenAI error ${response.statusCode}: ${response.body}');
+      }
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final content = OpenAiConfig.extractContent(data);
+      if (content.isNotEmpty) {
+        final parsed = _decodeJsonSafely(content);
+        final summary = parsed != null
+            ? (parsed['plan'] ?? parsed['summary'] ?? parsed['text'] ?? '')
+                .toString()
+                .trim()
+            : '';
+        if (summary.isNotEmpty) return summary;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('generateSsherCategoryPlanSummary failed: $e');
+      }
+    }
+
+    return _fallbackSsherCategorySummary(trimmedContext, normalizedCategory);
+  }
+
+  String _ssherCategorySystemPrompt(String category) {
+    switch (category) {
+      case 'safety':
+        return 'You are a Safety strategist. Produce a concise Safety Plan '
+            '(120-180 words) tailored to the project context. Cover workplace '
+            'hazard controls, PPE, emergency response, incident reporting, '
+            'and safety training. Always return ONLY valid JSON matching the '
+            'requested schema.';
+      case 'security':
+        return 'You are a Security strategist. Produce a concise Security '
+            'Plan (120-180 words) tailored to the project context. Integrate '
+            'physical security, cybersecurity, access control, surveillance, '
+            'and incident response. Reference actual security roles, '
+            'permissions, settings, and access logs captured in the project '
+            'context. Always return ONLY valid JSON matching the requested '
+            'schema.';
+      case 'health':
+        return 'You are an Occupational Health strategist. Produce a concise '
+            'Health Plan (120-180 words) tailored to the project context. '
+            'Cover occupational health monitoring, wellness programs, medical '
+            'surveillance, ergonomics, and mental health support. Always '
+            'return ONLY valid JSON matching the requested schema.';
+      case 'environment':
+        return 'You are an Environmental stewardship strategist. Produce a '
+            'concise Environment Plan (120-180 words) tailored to the project '
+            'context. Explicitly integrate relevant UN Sustainable Development '
+            'Goals (SDGs) into all applicable aspects of the project scope '
+            '(e.g. SDG 6 Clean Water, SDG 7 Affordable & Clean Energy, SDG 9 '
+            'Industry/Innovation, SDG 11 Sustainable Cities, SDG 12 Responsible '
+            'Consumption, SDG 13 Climate Action, SDG 15 Life on Land). Cover '
+            'waste, emissions, energy, water, biodiversity, and compliance. '
+            'Always return ONLY valid JSON matching the requested schema.';
+      case 'regulatory':
+        return 'You are a Regulatory compliance strategist. Produce a concise '
+            'Regulatory Plan (120-180 words) addressing all regulatory rules '
+            'that apply to the project, starting with everything already '
+            'captured in the project context. Be concise and concrete — NO '
+            'fluff, no filler, no marketing language. List the specific '
+            'permits, codes, standards, and approval bodies relevant to the '
+            'project type and location. Always return ONLY valid JSON matching '
+            'the requested schema.';
+      default:
+        return 'You are an SSHER strategist. Produce a concise plan '
+            '(120-180 words) tailored to the project context. Always return '
+            'ONLY valid JSON matching the requested schema.';
+    }
+  }
+
+  String _ssherCategoryPlanPrompt(String context, String category) {
+    final escaped = _escape(context);
+    final categoryLabel = _ssherCategoryLabel(category);
+    return '''
+Using the project inputs below, write a concise $categoryLabel for the project. The plan must be project-specific, grounded in the provided context, and reference actual project details (names, scope, location, regulatory environment) wherever possible. Length: 120-180 words.
+
+Return ONLY valid JSON with this exact structure:
+{
+  "plan": "Concise $categoryLabel text goes here."
+}
+
+Project context:
+"""
+$escaped
+"""
+''';
+  }
+
+  String _ssherCategoryLabel(String category) {
+    switch (category) {
+      case 'safety':
+        return 'Safety Plan';
+      case 'security':
+        return 'Security Plan';
+      case 'health':
+        return 'Health Plan';
+      case 'environment':
+        return 'Environment Plan';
+      case 'regulatory':
+        return 'Regulatory Plan';
+      default:
+        return 'Plan';
+    }
+  }
+
+  String _fallbackSsherCategorySummary(String context, String category) {
+    final projectName = _extractProjectName(context);
+    final assetName = projectName.isEmpty ? 'this project' : projectName;
+    switch (category) {
+      case 'safety':
+        return 'Safety Plan for $assetName prioritises hazard identification '
+            'and risk assessment across active work areas, mandatory PPE '
+            'compliance, and a documented emergency response procedure with '
+            'designated assembly points and trained wardens. Incident '
+            'reporting will follow a standardised workflow with root-cause '
+            'review for every recordable event. Weekly toolbox talks and '
+            'pre-task safety briefings will reinforce behavioural safety. '
+            'High-risk activities require a permit-to-work and a job hazard '
+            'analysis signed off by the responsible supervisor before '
+            'execution.';
+      case 'security':
+        return 'Security Plan for $assetName integrates the security roles, '
+            'permissions, settings, and access logs already captured for the '
+            'project. Physical access control will be enforced through badged '
+            'entry points and surveillance coverage at all critical zones. '
+            'Cybersecurity measures follow least-privilege permissions, '
+            'encrypted credential storage, and audited access to production '
+            'systems. Each permission scope is reviewed against the captured '
+            'security roles. Access log anomalies are triaged within 24 hours. '
+            'The plan is owned by the security lead and reviewed monthly.';
+      case 'health':
+        return 'Health Plan for $assetName focuses on occupational health '
+            'monitoring, wellness promotion, and medical surveillance. '
+            'Pre-deployment medical screening, periodic health checks, and '
+            'ergonomic assessments are scheduled per role risk profile. '
+            'Mental health support includes access to an employee assistance '
+            'programme and workload monitoring. First-aid stations are '
+            'positioned within five minutes of every work area, and trained '
+            'first-aiders are rostered on every shift.';
+      case 'environment':
+        return 'Environment Plan for $assetName aligns with the UN '
+            'Sustainable Development Goals: SDG 6 (water stewardship and '
+            'effluent quality), SDG 7 (energy efficiency and clean energy '
+            'where feasible), SDG 12 (responsible consumption and waste '
+            'reduction), SDG 13 (climate action via emissions tracking and '
+            'carbon footprint reduction targets), and SDG 15 (protection of '
+            'local biodiversity). Environmental impact assessments are '
+            'conducted at project milestones, waste streams are segregated for '
+            'recycling, and energy and water consumption are monitored against '
+            'baselines with monthly variance reporting.';
+      case 'regulatory':
+        return 'Regulatory Plan for $assetName addresses all applicable '
+            'regulatory rules captured for the project. Required permits and '
+            'approvals are tracked with assigned owners and statutory '
+            'deadlines. Applicable codes and standards are mapped to scope '
+            'items. Regulatory inspections are scheduled with corrective '
+            'action closure within agreed timeframes. Compliance evidence is '
+            'maintained in a centralised register, and any non-conformance is '
+            'logged, escalated to the responsible owner, and resolved before '
+            'project close-out.';
+      default:
+        return _fallbackSsherSummary(context);
+    }
+  }
+
+  // ===================================================================
+  // QUALITY MANAGEMENT — per-section AI plan summaries + AI Assistant
+  // ===================================================================
+  //
+  // Mirrors the SSHER pattern: a per-category plan generator that returns
+  // a markdown narrative for one section at a time, plus a separate
+  // "AI Assistant insights" generator that surfaces missing requirements,
+  // recommended activities, suggested standards, acceptance-criteria gaps,
+  // quality risks, and KPI recommendations — each explained with rationale
+  // tied back to the project data passed in via `context`.
+  //
+  // [category] must be one of:
+  //   'plan'        — Project Quality Management Plan
+  //   'objectives'  — Quality Objectives & Acceptance Criteria
+  //   'inspection'  — Inspection & Test Plan
+  //   'metrics'     — Quality Metrics Dashboard
+  //   'audit'       — Quality Audit Plan
+  //   'register'    — Quality Register & Nonconformance / Corrective Action Log
+  Future<String> generateQualityCategoryPlanSummary({
+    required String context,
+    required String category,
+    int maxTokens = 700,
+    double temperature = 0.45,
+  }) async {
+    final trimmedContext = context.trim();
+    if (trimmedContext.isEmpty) return '';
+    final normalizedCategory = _normalizeQualityCategory(category);
+    if (normalizedCategory.isEmpty) return '';
+
+    if (!OpenAiConfig.isConfigured) {
+      return _fallbackQualityCategorySummary(
+          trimmedContext, normalizedCategory);
+    }
+
+    final uri = OpenAiConfig.chatUri();
+    final headers = OpenAiConfig.headers();
+
+    final body = jsonEncode(OpenAiConfig.wrapBody({
+      'model': OpenAiConfig.model,
+      'temperature': temperature,
+      'max_completion_tokens': maxTokens,
+      'response_format': {'type': 'json_object'},
+      'messages': [
+        {
+          'role': 'system',
+          'content': _qualityCategorySystemPrompt(normalizedCategory),
+        },
+        {
+          'role': 'user',
+          'content':
+              _qualityCategoryPlanPrompt(trimmedContext, normalizedCategory),
+        },
+      ],
+    }));
+
+    try {
+      final response = await _client
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+            'OpenAI error ${response.statusCode}: ${response.body}');
+      }
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final content = OpenAiConfig.extractContent(data);
+      if (content.isNotEmpty) {
+        final parsed = _decodeJsonSafely(content);
+        final summary = parsed != null
+            ? (parsed['plan'] ??
+                    parsed['summary'] ??
+                    parsed['text'] ??
+                    parsed['narrative'] ??
+                    '')
+                .toString()
+                .trim()
+            : '';
+        if (summary.isNotEmpty) return summary;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('generateQualityCategoryPlanSummary failed: $e');
+      }
+    }
+
+    return _fallbackQualityCategorySummary(trimmedContext, normalizedCategory);
+  }
+
+  /// Generate AI Assistant insights for a Quality Management section.
+  /// Returns a markdown-formatted string covering:
+  ///   - Missing quality requirements (with rationale tied to project data)
+  ///   - Recommended quality activities based on project type
+  ///   - Suggested applicable standards & best practices
+  ///   - Gaps in acceptance criteria
+  ///   - Quality risks & likely sources of rework
+  ///   - Recommended quality KPIs
+  ///   - Applicability flag (the AI can declare this section "not applicable"
+  ///     for the project type, which the UI surfaces as a "Skip if not
+  ///     applicable" suggestion the user can accept)
+  ///
+  /// Output is parsed from JSON: `{ "insights": "...", "applicable": true }`.
+  Future<QualityAssistantInsights> generateQualityAssistantInsights({
+    required String context,
+    required String category,
+    int maxTokens = 900,
+    double temperature = 0.45,
+  }) async {
+    final trimmedContext = context.trim();
+    final normalizedCategory = _normalizeQualityCategory(category);
+    if (trimmedContext.isEmpty || normalizedCategory.isEmpty) {
+      return QualityAssistantInsights.empty();
+    }
+
+    if (!OpenAiConfig.isConfigured) {
+      return _fallbackQualityAssistantInsights(
+          trimmedContext, normalizedCategory);
+    }
+
+    final uri = OpenAiConfig.chatUri();
+    final headers = OpenAiConfig.headers();
+
+    final body = jsonEncode(OpenAiConfig.wrapBody({
+      'model': OpenAiConfig.model,
+      'temperature': temperature,
+      'max_completion_tokens': maxTokens,
+      'response_format': {'type': 'json_object'},
+      'messages': [
+        {
+          'role': 'system',
+          'content': _qualityAssistantSystemPrompt(normalizedCategory),
+        },
+        {
+          'role': 'user',
+          'content': _qualityAssistantPrompt(
+              trimmedContext, normalizedCategory),
+        },
+      ],
+    }));
+
+    try {
+      final response = await _client
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+            'OpenAI error ${response.statusCode}: ${response.body}');
+      }
+      final data =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final content = OpenAiConfig.extractContent(data);
+      if (content.isNotEmpty) {
+        final parsed = _decodeJsonSafely(content);
+        if (parsed != null) {
+          final insights = (parsed['insights'] ??
+                  parsed['summary'] ??
+                  parsed['text'] ??
+                  '')
+              .toString()
+              .trim();
+          final applicableRaw = parsed['applicable'];
+          final applicable = applicableRaw is bool
+              ? applicableRaw
+              : (applicableRaw?.toString().toLowerCase() != 'false');
+          final skipReason = (parsed['skipReason'] ??
+                  parsed['skip_reason'] ??
+                  parsed['notApplicableReason'] ??
+                  '')
+              .toString()
+              .trim();
+          return QualityAssistantInsights(
+            insights: insights,
+            applicable: applicable,
+            skipReason: skipReason,
+          );
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('generateQualityAssistantInsights failed: $e');
+      }
+    }
+
+    return _fallbackQualityAssistantInsights(trimmedContext, normalizedCategory);
+  }
+
+  String _normalizeQualityCategory(String category) {
+    final c = category.trim().toLowerCase();
+    const allowed = {
+      'plan',
+      'objectives',
+      'inspection',
+      'metrics',
+      'audit',
+      'register',
+    };
+    return allowed.contains(c) ? c : '';
+  }
+
+  String _qualityCategorySystemPrompt(String category) {
+    switch (category) {
+      case 'plan':
+        return 'You are a senior Quality Management strategist. Produce a '
+            'concise Project Quality Management Plan (180-260 words) tailored '
+            'to the project type, delivery framework (Agile / Waterfall / '
+            'Hybrid), industry, and site location provided. Cover quality '
+            'policy alignment, governance structure, roles & '
+            'responsibilities, quality activities across the project '
+            'lifecycle, and continuous improvement. Reference actual project '
+            'details (name, scope, location, regulatory environment) wherever '
+            'possible. Always return ONLY valid JSON matching the requested '
+            'schema.';
+      case 'objectives':
+        return 'You are a Quality Objectives & Acceptance Criteria strategist. '
+            'Produce a concise narrative (180-260 words) defining SMART '
+            'quality objectives and acceptance criteria tailored to the '
+            'project type and framework. For each objective, include the '
+            'measurable acceptance threshold and the verification method. '
+            'Reference actual project scope and goals wherever possible. '
+            'Always return ONLY valid JSON matching the requested schema.';
+      case 'inspection':
+        return 'You are an Inspection & Test Plan (ITP) strategist. Produce a '
+            'concise ITP narrative (180-260 words) covering inspection '
+            'hold/witness points, test methods, acceptance criteria, '
+            'responsible parties, and documentation requirements. Tailor the '
+            'ITP to the project type, framework, and industry — for software '
+            'projects include test automation gates; for construction '
+            'include material inspections and stage gates. Always return '
+            'ONLY valid JSON matching the requested schema.';
+      case 'metrics':
+        return 'You are a Quality Metrics Dashboard strategist. Produce a '
+            'concise narrative (180-260 words) defining the recommended '
+            'quality KPIs to track for this project (e.g. defect density, '
+            'first-pass yield, customer satisfaction, on-time delivery, '
+            'rework rate, NCR closure time, audit action closure rate). For '
+            'each KPI, include the formula/source, target value, and '
+            'reporting cadence. Tailor KPIs to the project type and '
+            'framework. Always return ONLY valid JSON matching the requested '
+            'schema.';
+      case 'audit':
+        return 'You are a Quality Audit Plan strategist. Produce a concise '
+            'audit plan narrative (180-260 words) covering audit types '
+            '(system / process / product / supplier), schedule, scope, lead '
+            'auditor, criteria, and reporting protocol. Reference the project '
+            'framework — Agile projects favour sprint-end quality reviews; '
+            'Waterfall favours stage-gate audits. Always return ONLY valid '
+            'JSON matching the requested schema.';
+      case 'register':
+        return 'You are a Quality Register & Nonconformance / Corrective '
+            'Action Log strategist. Produce a concise narrative (180-260 '
+            'words) describing the register structure, the nonconformance '
+            '(NCR) workflow (raise → triage → root cause → corrective & '
+            'preventive action → verify → close), and the corrective action '
+            'log fields (owner, due date, priority, status, verification). '
+            'Tailor to the project type — software projects use defect '
+            'tracking tools; construction uses site NCR forms. Always return '
+            'ONLY valid JSON matching the requested schema.';
+      default:
+        return 'You are a Quality Management strategist. Produce a concise '
+            'plan (180-260 words) tailored to the project context. Always '
+            'return ONLY valid JSON matching the requested schema.';
+    }
+  }
+
+  String _qualityAssistantSystemPrompt(String category) {
+    return 'You are the Ndu Project Delivery AI Quality Assistant. Your job '
+        'is to help the project team improve the "${_qualityCategoryLabel(category)}" '
+        'section of their Quality Management plan. '
+        'Analyse the provided project context (project type, framework, '
+        'industry, location, scope, and any already-captured quality data) '
+        'and surface: '
+        '(1) Missing quality requirements the team has not yet addressed; '
+        '(2) Recommended quality activities for this project type; '
+        '(3) Suggested applicable standards & best practices; '
+        '(4) Gaps in acceptance criteria (vague / missing / non-measurable); '
+        '(5) Quality risks & likely sources of rework; '
+        '(6) Recommended quality KPIs with target values. '
+        'For EVERY recommendation, explain the supporting project data and '
+        'best-practice rationale — no bare bullet lists without rationale. '
+        'If the section is genuinely not applicable for the project type '
+        '(e.g. physical site inspections for a pure software project), set '
+        '"applicable" to false and explain why in "skipReason". '
+        'Always return ONLY valid JSON matching the requested schema.';
+  }
+
+  String _qualityCategoryPlanPrompt(String context, String category) {
+    final escaped = _escape(context);
+    final label = _qualityCategoryLabel(category);
+    return '''
+Using the project inputs below, write a concise $label for the project. The plan must be project-specific, grounded in the provided context, and reference actual project details (name, scope, location, framework, industry) wherever possible. Length: 180-260 words.
+
+Return ONLY valid JSON with this exact structure:
+{
+  "plan": "Concise $label text goes here."
+}
+
+Project context:
+"""
+$escaped
+"""
+''';
+  }
+
+  String _qualityAssistantPrompt(String context, String category) {
+    final escaped = _escape(context);
+    final label = _qualityCategoryLabel(category);
+    return '''
+You are reviewing the "$label" section of the project's Quality Management plan. Below is the project context — including any existing captured quality data (standards, objectives, workflow controls, audit plan entries, corrective actions).
+
+Return ONLY valid JSON with this exact structure:
+{
+  "insights": "Markdown-formatted analysis. Use headings like ## Missing Requirements, ## Recommended Activities, ## Suggested Standards, ## Acceptance-Criteria Gaps, ## Quality Risks & Rework Sources, ## Recommended KPIs. Under each heading, list 2-5 items and for EACH item include a one-line rationale tied back to the project data above.",
+  "applicable": true,
+  "skipReason": ""
+}
+
+Set "applicable" to false ONLY if the section genuinely does not apply to this project type. When applicable=false, set "skipReason" to a one-sentence explanation and put a brief summary in "insights" instead of the full analysis.
+
+Project context:
+"""
+$escaped
+"""
+''';
+  }
+
+  String _qualityCategoryLabel(String category) {
+    switch (category) {
+      case 'plan':
+        return 'Project Quality Management Plan';
+      case 'objectives':
+        return 'Quality Objectives & Acceptance Criteria';
+      case 'inspection':
+        return 'Inspection & Test Plan';
+      case 'metrics':
+        return 'Quality Metrics Dashboard';
+      case 'audit':
+        return 'Quality Audit Plan';
+      case 'register':
+        return 'Quality Register & Nonconformance / Corrective Action Log';
+      default:
+        return 'Quality Management';
+    }
+  }
+
+  String _fallbackQualityCategorySummary(String context, String category) {
+    final projectName = _extractProjectName(context);
+    final assetName = projectName.isEmpty ? 'this project' : projectName;
+    final isSoftware =
+        context.toLowerCase().contains('software') ||
+            context.toLowerCase().contains('agile') ||
+            context.toLowerCase().contains('app');
+    final isConstruction =
+        context.toLowerCase().contains('construction') ||
+            context.toLowerCase().contains('civil') ||
+            context.toLowerCase().contains('infrastructure');
+
+    switch (category) {
+      case 'plan':
+        return 'Project Quality Management Plan for $assetName establishes '
+            'the quality policy, governance structure, and lifecycle quality '
+            'activities. A Quality Steering Committee chaired by the Project '
+            'Sponsor meets ${isSoftware ? 'every sprint' : 'monthly'} to '
+            'review quality metrics and approve stage-gate releases. The '
+            'Quality Assurance Lead owns the plan execution and reports '
+            'through the project manager. Quality activities span the full '
+            'lifecycle: requirements verification, design reviews, '
+            '${isSoftware ? 'code reviews and test automation' : isConstruction ? 'material inspections and stage-gate inspections' : 'process audits'}, '
+            'and acceptance testing. Continuous improvement is driven by '
+            'lessons-learned retrospectives at every major milestone, with '
+            'corrective actions tracked to closure in the Quality Register. '
+            'The plan aligns to ISO 9001 principles and any industry-specific '
+            'standards identified for $assetName.';
+      case 'objectives':
+        return 'Quality Objectives & Acceptance Criteria for $assetName are '
+            'defined per deliverable and per lifecycle stage. Each objective '
+            'is SMART: specific, measurable, achievable, relevant, and '
+            'time-bound. Acceptance criteria are stated as quantifiable '
+            'thresholds (e.g. ${isSoftware ? '"≥95% unit test coverage and zero critical defects at release"' : isConstruction ? '"concrete strength ≥30 MPa at 28 days with zero failed test cubes"' : '"first-pass yield ≥98%"'}). '
+            'Verification method is recorded per objective (inspection, test, '
+            'audit, or demonstration). Objectives are reviewed at every '
+            '${isSoftware ? 'sprint review' : 'stage gate'} and updated when '
+            'scope or risk profile changes. Acceptance criteria without a '
+            'measurable threshold are flagged for rework.';
+      case 'inspection':
+        return 'Inspection & Test Plan (ITP) for $assetName defines '
+            '${isSoftware ? 'unit, integration, system, and user-acceptance test gates with automation thresholds' : isConstruction ? 'material receiving inspections, in-process inspections, and final handover inspections' : 'process verification points and acceptance tests'} '
+            'across the deliverable lifecycle. Hold points require '
+            '${isSoftware ? 'lead developer sign-off' : 'qualified inspector sign-off'} '
+            'before downstream work proceeds. Witness points invite '
+            'stakeholder observation without blocking. Each inspection '
+            'records: reference standard, acceptance criteria, responsible '
+            'party, result, and traceable evidence. Defects found during '
+            'inspection are raised in the Quality Register and tracked via '
+            'the corrective action workflow. The ITP is reviewed and updated '
+            'at every ${isSoftware ? 'sprint planning' : 'stage gate'}.';
+      case 'metrics':
+        return 'Quality Metrics Dashboard for $assetName tracks KPIs '
+            'covering defect density, first-pass yield, on-time delivery, '
+            'customer satisfaction, NCR closure time, audit action closure '
+            'rate, and rework rate. Each KPI has a defined formula, source '
+            'data system, target value, and reporting cadence '
+            '(${isSoftware ? 'sprint-end' : 'monthly'}). Trend data is '
+            'visualised as time-series charts with control limits; '
+            'out-of-limit data triggers an exception review by the Quality '
+            'Steering Committee. Dashboard is editable so the team can add '
+            'project-specific KPIs as the project evolves.';
+      case 'audit':
+        return 'Quality Audit Plan for $assetName schedules system, '
+            'process, and deliverable audits across the project lifecycle. '
+            '${isSoftware ? 'Sprint-end quality reviews validate adherence to definition of done and acceptance criteria.' : isConstruction ? 'Stage-gate audits verify compliance with design specifications, ITPs, and safety requirements.' : 'Process audits verify adherence to the Project Quality Management Plan.'} '
+            'Each audit defines: scope, criteria, lead auditor, planned '
+            'date, completion date, findings, and result. Findings are '
+            'classified as major / minor / observation and tracked to '
+            'closure in the corrective action log. Audit schedule is '
+            'synced to the team calendar with a default 3-day reminder '
+            'before each planned audit date.';
+      case 'register':
+        return 'Quality Register for $assetName is the master log for '
+            'nonconformance (NCR) and corrective actions. Each NCR records: '
+            'unique ID, date raised, raised by, description, location, '
+            'severity, root cause, disposition (accept / rework / reject / '
+            'use-as-is with concession), corrective action owner, due date, '
+            'and verification. Corrective actions follow the '
+            'PDCA cycle: raise → triage → root-cause analysis → '
+            'corrective & preventive action → verify effectiveness → close. '
+            'Statuses track open / in-progress / verified / closed / overdue. '
+            '${isSoftware ? 'NCRs are typically raised from defect reports and code review findings.' : isConstruction ? 'NCRs are typically raised from site inspections, test failures, and audit findings.' : 'NCRs are typically raised from audit findings and process non-compliances.'} '
+            'The register is reviewed at every quality steering meeting.';
+      default:
+        return _fallbackQualityPlanSummary(context);
+    }
+  }
+
+  QualityAssistantInsights _fallbackQualityAssistantInsights(
+      String context, String category) {
+    final projectName = _extractProjectName(context);
+    final assetName = projectName.isEmpty ? 'this project' : projectName;
+    final isSoftware =
+        context.toLowerCase().contains('software') ||
+            context.toLowerCase().contains('agile') ||
+            context.toLowerCase().contains('app');
+
+    String insights;
+    bool applicable;
+    String skipReason;
+
+    switch (category) {
+      case 'plan':
+        applicable = true;
+        skipReason = '';
+        insights = '## Missing Requirements\n'
+            '- Quality policy statement is not yet captured for $assetName. '
+            'Add an explicit quality policy referencing ISO 9001 principles '
+            'and the project\'s industry-specific standards.\n'
+            '- Quality Steering Committee membership is not defined. Assign '
+            'sponsor, PM, QA Lead, and a customer representative.\n\n'
+            '## Recommended Activities\n'
+            '- Schedule a kick-off quality workshop with key stakeholders to '
+            'align on quality objectives and acceptance criteria.\n'
+            '- Define a "Definition of Done" applicable to every deliverable '
+            'before work starts.\n\n'
+            '## Suggested Standards\n'
+            '- ISO 9001 (Quality Management Systems) as the baseline.\n'
+            '- ${isSoftware ? 'ISO/IEC 25010 (Software Product Quality) for software deliverables.' : 'ISO 14001 (Environmental) and OHSAS 18001 (Health & Safety) for site-based projects.'}\n\n'
+            '## Acceptance-Criteria Gaps\n'
+            '- Several existing objectives lack measurable thresholds. '
+            'Convert vague terms ("high quality", "well tested") to '
+            'quantitative targets (e.g. ≥95% test coverage).\n\n'
+            '## Quality Risks & Rework Sources\n'
+            '- Late discovery of integration defects typically drives '
+            'expensive rework; mitigate with continuous integration tests.\n'
+            '- Unclear acceptance criteria are the leading cause of rework '
+            'at handover.\n\n'
+            '## Recommended KPIs\n'
+            '- Defect density (defects per KLOC or per deliverable unit).\n'
+            '- First-pass yield (% of deliverables accepted without rework).\n'
+            '- On-time delivery rate vs. baseline schedule.';
+        break;
+      case 'objectives':
+        applicable = true;
+        skipReason = '';
+        insights = '## Missing Requirements\n'
+            '- Acceptance criteria are missing for one or more existing '
+            'objectives. Each objective MUST have a measurable criterion.\n'
+            '- Owners are not assigned to every objective.\n\n'
+            '## Recommended Activities\n'
+            '- Run an acceptance-criteria writing workshop with the product '
+            'owner and QA lead.\n'
+            '- Link each objective to a WBS deliverable for traceability.\n\n'
+            '## Suggested Standards\n'
+            '- IEEE 830 (Software Requirements Specification) for '
+            '${isSoftware ? 'software' : 'engineering'} projects.\n'
+            '- ISO/IEC 25010 quality model for measurable attributes.\n\n'
+            '## Acceptance-Criteria Gaps\n'
+            '- "Works as expected" is not measurable — replace with a '
+            'specific pass/fail test or quantifiable threshold.\n'
+            '- Performance criteria often missing for time / load / scale.\n\n'
+            '## Quality Risks & Rework Sources\n'
+            '- Vague criteria force subjective judgements at acceptance, '
+            'causing rework and disputes.\n'
+            '- Missing performance criteria cause late discovery of '
+            'non-compliance under real-world load.\n\n'
+            '## Recommended KPIs\n'
+            '- % objectives with measurable acceptance criteria (target 100%).\n'
+            '- % objectives with assigned owner (target 100%).';
+        break;
+      case 'inspection':
+        applicable = true;
+        skipReason = '';
+        insights = '## Missing Requirements\n'
+            '- Hold points and witness points are not yet defined for every '
+            'critical deliverable. Add per-deliverable ITP entries.\n'
+            '- No responsible party assigned for inspection sign-off.\n\n'
+            '## Recommended Activities\n'
+            '- Walk the WBS and identify every deliverable that requires an '
+            'inspection gate.\n'
+            '- ${isSoftware ? 'Add automated test gates to the CI pipeline (build, unit, integration, regression).' : 'Add material receiving inspections and stage-gate sign-offs.'}\n\n'
+            '## Suggested Standards\n'
+            '- ${isSoftware ? 'IEEE 829 (Test Documentation) and ISO/IEC 25051 (Software Testing).' : 'ISO 17020 (Inspection Bodies) for inspection competence and ASTM standards for material tests.'}\n\n'
+            '## Acceptance-Criteria Gaps\n'
+            '- Some inspection criteria reference "passed inspection" without '
+            'quantitative thresholds.\n\n'
+            '## Quality Risks & Rework Sources\n'
+            '- Missing hold points allow downstream work to proceed on '
+            'unverified upstream deliverables — major source of rework.\n'
+            '${isSoftware ? '- Late integration tests reveal interface defects that are expensive to fix post-release.' : '- Uninspected material installed on site can force demolition and re-installation.'}\n\n'
+            '## Recommended KPIs\n'
+            '- Number of open NCRs raised from inspections per week.\n'
+            '- Average inspection-to-close time.';
+        break;
+      case 'metrics':
+        applicable = true;
+        skipReason = '';
+        insights = '## Missing Requirements\n'
+            '- KPIs are not yet defined for customer satisfaction or audit '
+            'closure rate — add both.\n'
+            '- No baseline values captured for trend comparison.\n\n'
+            '## Recommended Activities\n'
+            '- Define data sources and collection cadence per KPI.\n'
+            '- Add a project-specific KPI slot to the dashboard so the team '
+            'can add custom metrics as scope evolves.\n\n'
+            '## Suggested Standards\n'
+            '- ISO 10014 (Quality Management — Guidelines for Realizing '
+            'Financial & Economic Benefits).\n'
+            '- ISO 30414 (Human Capital Reporting) for team-related '
+            'quality metrics.\n\n'
+            '## Acceptance-Criteria Gaps\n'
+            '- Several KPIs lack a target value. Every KPI must have a '
+            'target.\n\n'
+            '## Quality Risks & Rework Sources\n'
+            '- Tracking only lagging indicators (defect counts) without '
+            'leading indicators (review coverage, test automation %) gives '
+            'late warnings of quality issues.\n\n'
+            '## Recommended KPIs\n'
+            '- Defect density per KLOC or per deliverable.\n'
+            '- First-pass yield (%).\n'
+            '- On-time delivery rate (%).\n'
+            '- NCR closure time (days, average).\n'
+            '- Audit action closure rate (%).';
+        break;
+      case 'audit':
+        applicable = true;
+        skipReason = '';
+        insights = '## Missing Requirements\n'
+            '- Audit plan is missing for one or more lifecycle stages. Add '
+            'an audit per stage gate or per sprint.\n'
+            '- No lead auditor assigned to existing audit entries.\n\n'
+            '## Recommended Activities\n'
+            '- ${isSoftware ? 'Schedule sprint-end quality reviews as light-touch audits.' : 'Schedule stage-gate audits aligned with construction milestones.'}\n'
+            '- Sync every audit planned date to the team calendar with a '
+            '3-day reminder.\n\n'
+            '## Suggested Standards\n'
+            '- ISO 19011 (Auditing Management Systems).\n'
+            '- ${isSoftware ? 'ISO/IEC 25051 for software quality assurance audits.' : 'ISO 9001 clause 9.2 for internal quality audits.'}\n\n'
+            '## Acceptance-Criteria Gaps\n'
+            '- Audit scope is sometimes missing — every audit entry must '
+            'have a defined scope.\n\n'
+            '## Quality Risks & Rework Sources\n'
+            '- Skipping audits to save time is a leading indicator of '
+            'quality escape — audits must be honoured even when the project '
+            'is under pressure.\n\n'
+            '## Recommended KPIs\n'
+            '- % audits completed on planned date (target ≥95%).\n'
+            '- Average audit finding closure time.\n'
+            '- % repeat findings (target ≤5%).';
+        break;
+      case 'register':
+        applicable = true;
+        skipReason = '';
+        insights = '## Missing Requirements\n'
+            '- Root cause is not captured for every existing NCR. Add a '
+            'root-cause field per entry.\n'
+            '- Verification step is missing — corrective actions cannot be '
+            'closed without verification.\n\n'
+            '## Recommended Activities\n'
+            '- Adopt a 5-Whys or Fishbone root-cause template for every NCR.\n'
+            '- ${isSoftware ? 'Wire the Quality Register to the defect tracking tool so dev-found bugs auto-create NCRs.' : 'Use site NCR forms with photo evidence and location pin.'}\n\n'
+            '## Suggested Standards\n'
+            '- ISO 9001 clause 10.2 (Nonconformity & Corrective Action).\n'
+            '- ${isSoftware ? 'IEEE 1044 (Software Anomalies Classification).' : 'ISO 10017 (Statistical Techniques for Quality).'}\n\n'
+            '## Acceptance-Criteria Gaps\n'
+            '- Some NCRs have no severity classification — every NCR must '
+            'be Minor / Major / Critical.\n\n'
+            '## Quality Risks & Rework Sources\n'
+            '- Closing NCRs without verification causes repeat defects — '
+            'leading source of recurring rework.\n'
+            '- NCRs raised late (after deliverable handover) typically cost '
+            '10× more to resolve than early-detected ones.\n\n'
+            '## Recommended KPIs\n'
+            '- NCR closure time (days, target ≤30).\n'
+            '- % NCRs closed with verification (target 100%).\n'
+            '- Repeat-defect rate (target ≤5%).';
+        break;
+      default:
+        applicable = true;
+        skipReason = '';
+        insights = 'No AI Assistant insights available for this section.';
+    }
+
+    return QualityAssistantInsights(
+      insights: insights,
+      applicable: applicable,
+      skipReason: skipReason,
+    );
+  }
+
+  String _fallbackQualityPlanSummary(String context) {
+    final projectName = _extractProjectName(context);
+    final assetName = projectName.isEmpty ? 'this project' : projectName;
+    return 'Project Quality Management Plan for $assetName establishes the '
+        'quality policy, governance structure, and lifecycle quality '
+        'activities. The plan aligns to ISO 9001 principles and any '
+        'industry-specific standards identified for the project. The Quality '
+        'Assurance Lead owns plan execution and reports through the project '
+        'manager. Continuous improvement is driven by lessons-learned '
+        'retrospectives at every major milestone.';
   }
 
   Future<List<SsherEntry>> generateSsherEntries({

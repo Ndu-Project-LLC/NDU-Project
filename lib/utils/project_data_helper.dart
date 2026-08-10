@@ -439,6 +439,55 @@ class ProjectDataHelper {
     w('Front End Planning – Contracting', fep.contractVendorQuotes);
     w('Front End Planning – Procurement', fep.procurement);
     w('Front End Planning – Security', fep.security);
+
+    // Structured security items captured on the Front End Planning – Security
+    // screen. These auto-feed the SSHER Security tab so the AI can reference
+    // the actual roles, permissions, settings, and access logs already
+    // defined for the project. Continuity from FEP → SSHER is enforced here.
+    if (fep.securityRoles.isNotEmpty) {
+      buf.writeln('Front End Planning – Security Roles:');
+      for (final role in fep.securityRoles) {
+        final name = role.name.trim();
+        final desc = role.description.trim();
+        if (name.isEmpty && desc.isEmpty) continue;
+        buf.writeln('- ${name.isEmpty ? 'Role' : name}: $desc');
+      }
+      buf.writeln();
+    }
+    if (fep.securityPermissions.isNotEmpty) {
+      buf.writeln('Front End Planning – Security Permissions:');
+      for (final perm in fep.securityPermissions) {
+        final resource = perm.resource.trim();
+        final scope = perm.scope.trim();
+        if (resource.isEmpty && scope.isEmpty) continue;
+        buf.writeln(
+            '- ${resource.isEmpty ? 'Resource' : resource} → ${scope.isEmpty ? 'n/a' : scope}');
+      }
+      buf.writeln();
+    }
+    if (fep.securitySettings.isNotEmpty) {
+      buf.writeln('Front End Planning – Security Settings:');
+      for (final setting in fep.securitySettings) {
+        final key = setting.key.trim();
+        final value = setting.value.trim();
+        if (key.isEmpty && value.isEmpty) continue;
+        buf.writeln('- $key = $value');
+      }
+      buf.writeln();
+    }
+    if (fep.securityAccessLogs.isNotEmpty) {
+      buf.writeln('Front End Planning – Security Access Logs:');
+      for (final log in fep.securityAccessLogs) {
+        final user = log.user.trim();
+        final action = log.action.trim();
+        final ts = log.timestamp.trim();
+        if (user.isEmpty && action.isEmpty) continue;
+        buf.writeln(
+            '- ${user.isEmpty ? 'Unknown user' : user} ${action.isEmpty ? '' : 'performed $action'}${ts.isEmpty ? '' : ' at $ts'}');
+      }
+      buf.writeln();
+    }
+
     w('Front End Planning – Allowance', fep.allowance);
     w('Front End Planning – Summary', fep.summary);
     w('Front End Planning – Technology', fep.technology);
@@ -460,6 +509,150 @@ class ProjectDataHelper {
     }
 
     return buf.toString().trim();
+  }
+
+  /// Build context for AI-generated Quality Management plans and AI
+  /// Assistant insights. Same as `buildFepContext` but enriched with the
+  /// site / project type / framework / industry / location fields the AI
+  /// needs to tailor quality plans per project. Also surfaces the existing
+  /// captured quality data (standards, objectives, audits, corrective
+  /// actions) so the AI Assistant can detect gaps against the current
+  /// state rather than against an empty plan.
+  ///
+  /// [category] is one of:
+  ///   'plan'        — Project Quality Management Plan
+  ///   'objectives'  — Quality Objectives & Acceptance Criteria
+  ///   'inspection'  — Inspection & Test Plan
+  ///   'metrics'     — Quality Metrics Dashboard
+  ///   'audit'       — Quality Audit Plan
+  ///   'register'    — Quality Register / Log (incl. NCR & Corrective Action)
+  static String buildQualityContext(
+    ProjectDataModel data, {
+    String? category,
+    String? sectionLabel,
+  }) {
+    final base = buildFepContext(data, sectionLabel: 'Quality Management');
+    final buf = StringBuffer(base)..writeln()..writeln();
+
+    void w(String label, String? value) {
+      final v = (value ?? '').trim();
+      if (v.isEmpty) return;
+      buf.writeln('$label:');
+      buf.writeln(v);
+      buf.writeln();
+    }
+
+    buf.writeln('Quality Project Profile');
+    buf.writeln('=======================');
+    w('Project Type (Category)', data.projectCategory);
+    w('Industry', data.projectIndustry);
+    w('Delivery Framework', data.overallFramework);
+    w('Country', data.country);
+    w('City', data.city);
+    w('Site Location', data.location);
+
+    // Existing captured quality data — used by the AI Assistant to detect
+    // gaps against the current state.
+    final q = data.qualityManagementData;
+    if (q.standards.isNotEmpty) {
+      buf.writeln('Existing Quality Standards:');
+      for (final s in q.standards) {
+        final name = s.name.trim();
+        if (name.isEmpty) continue;
+        buf.writeln('- $name (${s.source.isEmpty ? "n/a" : s.source})'
+            '${s.description.isEmpty ? "" : " — ${s.description}"}');
+      }
+      buf.writeln();
+    }
+    if (q.objectives.isNotEmpty) {
+      buf.writeln('Existing Quality Objectives & Acceptance Criteria:');
+      for (final o in q.objectives) {
+        final title = o.title.trim();
+        final criteria = o.acceptanceCriteria.trim();
+        if (title.isEmpty && criteria.isEmpty) continue;
+        buf.writeln('- Title: ${title.isEmpty ? "(untitled)" : title}');
+        if (criteria.isNotEmpty) buf.writeln('  Acceptance criteria: $criteria');
+        if (o.successMetric.isNotEmpty) {
+          buf.writeln('  Success metric: ${o.successMetric}');
+        }
+        if (o.targetValue.isNotEmpty) {
+          buf.writeln('  Target: ${o.targetValue}');
+        }
+      }
+      buf.writeln();
+    }
+    if (q.workflowControls.isNotEmpty) {
+      buf.writeln('Existing QA/QC Workflow Controls:');
+      for (final c in q.workflowControls) {
+        final name = c.name.trim();
+        final type = c.type == QualityWorkflowType.qa ? 'QA' : 'QC';
+        if (name.isEmpty) continue;
+        buf.writeln('- [$type] $name'
+            '${c.frequency.isEmpty ? "" : " (every ${c.frequency})"}');
+        if (c.method.isNotEmpty) buf.writeln('    Method: ${c.method}');
+        if (c.standardsReference.isNotEmpty) {
+          buf.writeln('    Standards ref: ${c.standardsReference}');
+        }
+      }
+      buf.writeln();
+    }
+    if (q.auditPlan.isNotEmpty) {
+      buf.writeln('Existing Audit Plan Entries:');
+      for (final a in q.auditPlan) {
+        final title = a.title.trim();
+        if (title.isEmpty) continue;
+        buf.writeln('- $title'
+            '${a.plannedDate.isEmpty ? "" : " | planned: ${a.plannedDate}"}'
+            '${a.owner.isEmpty ? "" : " | owner: ${a.owner}"}');
+      }
+      buf.writeln();
+    }
+    if (q.correctiveActions.isNotEmpty) {
+      buf.writeln('Existing Corrective Actions:');
+      for (final ca in q.correctiveActions) {
+        final title = ca.title.trim();
+        if (title.isEmpty) continue;
+        buf.writeln('- $title'
+            '${ca.dueDate.isEmpty ? "" : " | due: ${ca.dueDate}"}'
+            '${ca.owner.isEmpty ? "" : " | owner: ${ca.owner}"}');
+      }
+      buf.writeln();
+    }
+
+    // Inject category-specific guidance so the AI prompt is tightly scoped
+    // to the section the user is currently viewing.
+    final cat = (category ?? '').trim().toLowerCase();
+    if (cat.isNotEmpty) {
+      buf.writeln('Quality Section: ${_qualityCategoryLabel(cat)}');
+      buf.writeln(
+          'Focus the output on this section only. Reference the project type, framework, industry, and location above.');
+      buf.writeln();
+    }
+
+    if ((sectionLabel ?? '').isNotEmpty) {
+      buf.writeln('Target Section: ${sectionLabel!.trim()}');
+    }
+
+    return buf.toString().trim();
+  }
+
+  static String _qualityCategoryLabel(String category) {
+    switch (category) {
+      case 'plan':
+        return 'Project Quality Management Plan';
+      case 'objectives':
+        return 'Quality Objectives & Acceptance Criteria';
+      case 'inspection':
+        return 'Inspection & Test Plan';
+      case 'metrics':
+        return 'Quality Metrics Dashboard';
+      case 'audit':
+        return 'Quality Audit Plan';
+      case 'register':
+        return 'Quality Register & Nonconformance / Corrective Action Log';
+      default:
+        return 'Quality Management';
+    }
   }
 
   /// Build context for AI-generated Project Objective summaries.

@@ -2695,7 +2695,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           isDisabled: lockInterfaceManagement,
         ),
         _buildSubExpandableHeader(
-          'Agile Delivery Model',
+          'Agile Delivery',
           expanded: _agileWireframeExpanded,
           onTap: () => setState(() {
             _agileWireframeExpanded = !_agileWireframeExpanded;

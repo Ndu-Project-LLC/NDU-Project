@@ -6708,6 +6708,11 @@ class StaffingRequirement {
   String location;
   String employeeType; // e.g., Employee, Contractor
   String notes;
+  /// Whether this position will have access to the NDU Project Delivery
+  /// operating system platform. Feeds RACI suggestions for role
+  /// distribution. Defaults to false; AI suggestion logic and the
+  /// per-row toggle on the Staffing Plan can flip it to true.
+  bool nduProjectAccess;
 
   StaffingRequirement({
     String? id,
@@ -6723,6 +6728,7 @@ class StaffingRequirement {
     this.location = '',
     this.employeeType = 'Employee',
     this.notes = '',
+    this.nduProjectAccess = false,
   }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
 
   double get estimatedTotal => headcount * monthlyCost * plannedMonths;
@@ -6741,6 +6747,7 @@ class StaffingRequirement {
         'location': location,
         'employeeType': employeeType,
         'notes': notes,
+        'nduProjectAccess': nduProjectAccess,
       };
 
   factory StaffingRequirement.fromJson(Map<String, dynamic> json) {
@@ -6762,6 +6769,7 @@ class StaffingRequirement {
       location: json['location']?.toString() ?? '',
       employeeType: json['employeeType']?.toString() ?? 'Employee',
       notes: json['notes']?.toString() ?? '',
+      nduProjectAccess: json['nduProjectAccess'] == true,
     );
   }
 
@@ -6778,6 +6786,7 @@ class StaffingRequirement {
     String? location,
     String? employeeType,
     String? notes,
+    bool? nduProjectAccess,
   }) {
     return StaffingRequirement(
       id: id,
@@ -6793,6 +6802,7 @@ class StaffingRequirement {
       location: location ?? this.location,
       employeeType: employeeType ?? this.employeeType,
       notes: notes ?? this.notes,
+      nduProjectAccess: nduProjectAccess ?? this.nduProjectAccess,
     );
   }
 

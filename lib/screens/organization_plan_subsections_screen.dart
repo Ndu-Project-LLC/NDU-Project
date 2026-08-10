@@ -10,10 +10,14 @@ import 'package:ndu_project/screens/team_training_building_screen.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/services/raci_assignment_service.dart';
 import 'package:ndu_project/services/raci_matrix_seeder.dart';
+import 'package:ndu_project/services/subscription_service.dart';
+import 'package:ndu_project/services/subscription_pricing_service.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/staffing_reminder_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/user_model.dart';
 import 'package:ndu_project/widgets/premium_edit_dialog.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
@@ -55,12 +59,1798 @@ class OrganizationRolesResponsibilitiesScreen extends StatefulWidget {
       _OrganizationRolesResponsibilitiesScreenState();
 }
 
-/// Alias used by sidebar / router entries that refer to the "Staffing Plan"
-/// subsection. The Staffing Plan is rendered as the table view inside
-/// [OrganizationRolesResponsibilitiesScreen], so both route keys resolve to
-/// the same widget.
-class OrganizationStaffingPlanScreen extends OrganizationRolesResponsibilitiesScreen {
+/// Standalone screen for the "Staffing Plan" sidebar entry.
+///
+/// Renders the dedicated staffing plan table (not the Roles & Responsibilities
+/// card/table view) with all personnel allocation columns: Position, Name,
+/// Location, Employment (FT/PT), Category (Employee/Contractor), Start Date
+/// (Mobilization), Release Date, NDU Project Access, Status, and Actions.
+/// Also surfaces reminder banners (overdue / upcoming mobilizations and
+/// releases) and an AI suggestion engine that picks which positions should
+/// get NDU Project Delivery platform access based on the active subscription
+/// tier, the currently selected roles, and the project scope.
+class OrganizationStaffingPlanScreen extends StatefulWidget {
   const OrganizationStaffingPlanScreen({super.key});
+
+  @override
+  State<OrganizationStaffingPlanScreen> createState() =>
+      _OrganizationStaffingPlanScreenState();
+}
+
+/// ─────────────────────────────────────────────────────────────────────────
+/// Staffing Plan state — owns the staffing plan table, popup editor, AI
+/// suggestion engine for NDU Project Access, and reminder banners.
+/// ─────────────────────────────────────────────────────────────────────────
+class _OrganizationStaffingPlanScreenState
+    extends State<OrganizationStaffingPlanScreen> {
+  // Position title options reused from the Roles & Responsibilities bank
+  // (kept here locally so the dialog doesn't depend on the parent class).
+  static const List<String> _positionOptions = [
+    'Project Manager',
+    'Project Sponsor (Owner)',
+    'Program Manager',
+    'Product Owner',
+    'Scrum Master',
+    'Business Analyst',
+    'PMO Lead',
+    'PMO Manager',
+    'Delivery Manager',
+    'Operations Manager',
+    'Risk Manager',
+    'Quality Assurance Lead',
+    'Quality Lead',
+    'Change Manager',
+    'Stakeholder Manager',
+    'Planning Engineer',
+    'Project Coordinator',
+    'Portfolio Manager',
+    'SSHER Lead',
+    'Contracts Manager',
+    'Contracts Lead',
+    'Procurement Manager',
+    'Tech Lead',
+    'Lead Developer',
+    'Lead Designer',
+    'Engineering Manager',
+    'Technical Manager',
+    'Construction Manager',
+    'Startup Manager',
+    'Release Manager',
+    'Cost Lead',
+    'Cost Estimator',
+    'Schedule Lead',
+    'Scheduler',
+    'Test Lead',
+    'Technical Architect',
+    'Solutions Architect',
+    'Design Engineer',
+    'Data Specialist',
+    'Developer - Backend',
+    'Developer - Frontend',
+    'Business Manager',
+    'Project Engineer',
+    'Engineer',
+  ];
+  static const String _customPositionOption = 'Custom';
+
+  static const List<String> _employmentOptions = ['Full Time', 'Part Time'];
+  static const List<String> _categoryOptions = ['Employee', 'Contractor'];
+  static const List<String> _statusOptions = [
+    'Not Started',
+    'Open',
+    'Mobilized',
+    'Active',
+    'On Hold',
+    'Released',
+    'Hired',
+  ];
+
+  Future<void> _saveStaffing(
+      BuildContext context, List<StaffingRequirement> updated) async {
+    await ProjectDataHelper.saveAndNavigate(
+      context: context,
+      checkpoint: 'organization_staffing_plan',
+      saveInBackground: true,
+      nextScreenBuilder: () => const OrganizationStaffingPlanScreen(),
+      dataUpdater: (d) => d.copyWith(staffingRequirements: updated),
+    );
+    if (mounted) setState(() {});
+  }
+
+  // ── Add / Edit / Delete / Toggle ──────────────────────────────────────────
+
+  Future<void> _addStaffing(BuildContext context) async {
+    final projectData = ProjectDataHelper.getData(context);
+    final result = await showDialog<StaffingRequirement>(
+      context: context,
+      builder: (dialogContext) => _StaffingRequirementDialog(
+        title: 'Add Staffing Position',
+        requirement: StaffingRequirement(
+          // Auto-fill location from project location if available.
+          location: projectData.location,
+          status: 'Not Started',
+        ),
+        positionOptions: _positionOptions,
+        customPositionOption: _customPositionOption,
+        employmentOptions: _employmentOptions,
+        categoryOptions: _categoryOptions,
+        statusOptions: _statusOptions,
+        projectLocation: projectData.location,
+      ),
+    );
+    if (result == null) return;
+    final updated = [
+      ...ProjectDataHelper.getData(context).staffingRequirements,
+      result,
+    ];
+    await _saveStaffing(context, updated);
+  }
+
+  Future<void> _editStaffing(
+      BuildContext context, int index, StaffingRequirement req) async {
+    final projectData = ProjectDataHelper.getData(context);
+    final result = await showDialog<StaffingRequirement>(
+      context: context,
+      builder: (dialogContext) => _StaffingRequirementDialog(
+        title: 'Edit Staffing Position',
+        requirement: req,
+        positionOptions: _positionOptions,
+        customPositionOption: _customPositionOption,
+        employmentOptions: _employmentOptions,
+        categoryOptions: _categoryOptions,
+        statusOptions: _statusOptions,
+        projectLocation: projectData.location,
+      ),
+    );
+    if (result == null) return;
+    final updated =
+        List<StaffingRequirement>.from(projectData.staffingRequirements);
+    if (index >= 0 && index < updated.length) {
+      updated[index] = result;
+    }
+    await _saveStaffing(context, updated);
+  }
+
+  Future<void> _deleteStaffing(BuildContext context, int index) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove Position?'),
+        content: const Text(
+            'This will remove this row from the staffing plan. This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+                foregroundColor: Colors.white),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final updated = List<StaffingRequirement>.from(
+        ProjectDataHelper.getData(context).staffingRequirements);
+    if (index >= 0 && index < updated.length) {
+      updated.removeAt(index);
+    }
+    await _saveStaffing(context, updated);
+  }
+
+  Future<void> _toggleNduAccess(BuildContext context, int index, bool value) async {
+    final projectData = ProjectDataHelper.getData(context);
+    final updated =
+        List<StaffingRequirement>.from(projectData.staffingRequirements);
+    if (index < 0 || index >= updated.length) return;
+    updated[index] = updated[index].copyWith(nduProjectAccess: value);
+    await _saveStaffing(context, updated);
+  }
+
+  // ── AI Suggestion Engine ─────────────────────────────────────────────────
+  //
+  // Picks which positions should get NDU Project Delivery platform access
+  // based on the active subscription tier, the roles currently in the
+  // staffing plan, and the project scope. The recommendation is presented
+  // as a dialog with checkboxes the user can review + accept.
+
+  Future<void> _showNduSuggestionDialog(BuildContext context) async {
+    final projectData = ProjectDataHelper.getData(context);
+    final staffing = projectData.staffingRequirements;
+
+    // Resolve the active subscription tier (fallback to Project tier defaults
+    // if the user is offline or has no record yet).
+    SubscriptionTier? subTier;
+    try {
+      final sub = await SubscriptionService.getCurrentSubscription();
+      subTier = sub?.tier;
+    } catch (_) {
+      subTier = null;
+    }
+    final pricingTierId = subTier == SubscriptionTier.portfolio
+        ? PricingTierId.portfolio
+        : subTier == SubscriptionTier.program
+            ? PricingTierId.program
+            : subTier == SubscriptionTier.project
+                ? PricingTierId.project
+                : PricingTierId.basicProject;
+    final tierConfig = TierPricingConfig.defaults.firstWhere(
+      (t) => t.id == pricingTierId,
+      orElse: () => TierPricingConfig.defaultProject,
+    );
+
+    // Pre-flight: if there are no positions yet, suggest the canonical
+    // starter set for the project tier.
+    final bool emptyStaffing = staffing.isEmpty;
+    final List<StaffingRequirement> suggestedAdditions = emptyStaffing
+        ? _canonicalStarterSetForTier(pricingTierId)
+        : const [];
+
+    // Build suggestions for NDU access on existing rows.
+    // Priority: leadership / operational roles first, then by tier capacity.
+    final priorityTitles = [
+      'Project Manager',
+      'Project Sponsor (Owner)',
+      'Tech Lead',
+      'Lead Developer',
+      'Developer - Backend',
+      'Developer - Frontend',
+      'Quality Assurance Lead',
+      'Quality Lead',
+      'SSHER Lead',
+      'Contracts Lead',
+      'Contracts Manager',
+      'Procurement Manager',
+      'Engineering Manager',
+      'Technical Manager',
+      'Construction Manager',
+      'Planning Engineer',
+      'Schedule Lead',
+      'Cost Lead',
+      'Scrum Master',
+      'Product Owner',
+    ];
+    final int tierCapacity = tierConfig.includedUsers;
+    final int alreadyYes =
+        staffing.where((s) => s.nduProjectAccess).length;
+    final int slotsRemaining = tierCapacity - alreadyYes;
+
+    final suggestedIndices = <int>{};
+    if (slotsRemaining > 0) {
+      for (final title in priorityTitles) {
+        if (suggestedIndices.length >= slotsRemaining) break;
+        for (var i = 0; i < staffing.length; i++) {
+          if (suggestedIndices.contains(i)) continue;
+          if (staffing[i].nduProjectAccess) continue;
+          if (staffing[i].title.toLowerCase().contains(title.toLowerCase())) {
+            suggestedIndices.add(i);
+            break;
+          }
+        }
+      }
+    }
+
+    // Show the suggestion dialog.
+    if (!context.mounted) return;
+    final accepted = await showDialog<_NduSuggestionResult>(
+      context: context,
+      builder: (dialogContext) => _NduSuggestionDialog(
+        tierLabel: tierConfig.label,
+        tierCapacity: tierCapacity,
+        includedUsers: tierConfig.includedUsers,
+        maxUsers: tierConfig.maxUsers,
+        currentStaffing: staffing,
+        suggestedIndices: suggestedIndices,
+        suggestedAdditions: suggestedAdditions,
+        projectScope: _projectScopeSummary(projectData),
+      ),
+    );
+    if (accepted == null) return;
+
+    // Apply: 1) add the new positions (if any), 2) flip NDU access on
+    // the accepted indices.
+    final updated = List<StaffingRequirement>.from(staffing);
+    for (final addition in accepted.additions) {
+      updated.add(addition.copyWith(nduProjectAccess: true));
+    }
+    for (final idx in accepted.acceptedIndices) {
+      if (idx >= 0 && idx < updated.length) {
+        updated[idx] = updated[idx].copyWith(nduProjectAccess: true);
+      }
+    }
+    await _saveStaffing(context, updated);
+  }
+
+  /// Canonical starter set of staffing positions for a tier when the user
+  /// has nothing on the staffing plan yet. Based on the user's example:
+  /// Project Manager, SSHER Lead, Quality Person, Tech Lead, Developer,
+  /// Contracts Lead — capped to the tier's `includedUsers` count and
+  /// optionally extended to cover additional scope.
+  List<StaffingRequirement> _canonicalStarterSetForTier(PricingTierId tier) {
+    final int budget = tier == PricingTierId.basicProject
+        ? 1
+        : tier == PricingTierId.project
+            ? 7
+            : tier == PricingTierId.program
+                ? 12
+                : 24;
+    // The first six are the user's explicit example for a Regular Project.
+    // Higher tiers expand to add Coverage roles for broader scope.
+    // Notes carry the role description for display in the dialog.
+    final candidates = <StaffingRequirement>[
+      StaffingRequirement(
+          title: 'Project Manager',
+          notes: 'Overall project leadership, planning, and coordination.'),
+      StaffingRequirement(
+          title: 'SSHER Lead',
+          notes: 'Safety, Security, Health, Environmental, and Regulatory lead.'),
+      StaffingRequirement(
+          title: 'Quality Assurance Lead',
+          notes: 'Quality planning, QA/QC processes, and compliance.'),
+      StaffingRequirement(
+          title: 'Tech Lead',
+          notes: 'Technical leadership, architecture oversight.'),
+      StaffingRequirement(
+          title: 'Lead Developer',
+          notes: 'Development team leadership and code quality.'),
+      StaffingRequirement(
+          title: 'Contracts Lead',
+          notes: 'Contract administration, negotiation, compliance.'),
+      StaffingRequirement(
+          title: 'Procurement Manager',
+          notes: 'Procurement strategy, vendor selection, supply chain.'),
+      StaffingRequirement(
+          title: 'Planning Engineer',
+          notes: 'Project schedules, WBS, progress tracking.'),
+      StaffingRequirement(
+          title: 'Cost Lead',
+          notes: 'Cost estimation leadership and budget control.'),
+      StaffingRequirement(
+          title: 'Schedule Lead',
+          notes: 'Schedule planning, critical path analysis.'),
+      StaffingRequirement(
+          title: 'Construction Manager',
+          notes: 'On-site construction execution and field coordination.'),
+      StaffingRequirement(
+          title: 'Stakeholder Manager',
+          notes: 'Stakeholder engagement and communication.'),
+      StaffingRequirement(
+          title: 'Risk Manager',
+          notes: 'Risk identification, assessment, mitigation.'),
+      StaffingRequirement(
+          title: 'Change Manager',
+          notes: 'Change control process ownership.'),
+      StaffingRequirement(
+          title: 'Test Lead',
+          notes: 'Testing strategy, test plan ownership, QA execution.'),
+      StaffingRequirement(
+          title: 'Business Analyst',
+          notes: 'Requirements elicitation, analysis, documentation.'),
+      StaffingRequirement(
+          title: 'Technical Architect',
+          notes: 'System architecture design and technology selection.'),
+      StaffingRequirement(
+          title: 'Data Specialist',
+          notes: 'Data modeling, migration, analytics.'),
+      StaffingRequirement(
+          title: 'PMO Lead',
+          notes: 'Project Management Office oversight, governance.'),
+      StaffingRequirement(
+          title: 'Operations Manager',
+          notes: 'Day-to-day operations and resource allocation.'),
+      StaffingRequirement(
+          title: 'Engineering Manager',
+          notes: 'Engineering team leadership.'),
+      StaffingRequirement(
+          title: 'Technical Manager',
+          notes: 'Technical team management.'),
+      StaffingRequirement(
+          title: 'Release Manager',
+          notes: 'Release planning, deployment coordination.'),
+      StaffingRequirement(
+          title: 'Design Engineer',
+          notes: 'Engineering design and technical drawings.'),
+    ];
+    return candidates.take(budget).toList();
+  }
+
+  String _projectScopeSummary(ProjectDataModel data) {
+    final bits = <String>[];
+    if (data.projectName.trim().isNotEmpty) bits.add(data.projectName);
+    if (data.solutionTitle.trim().isNotEmpty) bits.add(data.solutionTitle);
+    if (data.location.trim().isNotEmpty) bits.add('Site: ${data.location}');
+    if (data.projectRoles.isNotEmpty) {
+      bits.add('${data.projectRoles.length} roles in Roles & Responsibilities');
+    }
+    if (data.deliverablesRoadmap.isNotEmpty) {
+      bits.add('${data.deliverablesRoadmap.length} deliverables on the roadmap');
+    }
+    return bits.isEmpty ? 'No project scope defined yet.' : bits.join(' • ');
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = AppBreakpoints.isMobile(context);
+    final horizontalPadding = isMobile ? 20.0 : 32.0;
+    final projectData = ProjectDataHelper.getData(context);
+    final staffing = projectData.staffingRequirements;
+
+    final totalPersonnel = staffing.fold<int>(
+        0, (sum, s) => sum + (s.headcount > 0 ? s.headcount : 1));
+    final nduAccessCount =
+        staffing.where((s) => s.nduProjectAccess).length;
+    final reminders = StaffingReminderHelper.generateReminders(staffing);
+
+    final metrics = <_MetricData>[
+      _MetricData('Total Positions', staffing.length.toString(),
+          const Color(0xFF3B82F6)),
+      _MetricData(
+          'Total Personnel', totalPersonnel.toString(), const Color(0xFF8B5CF6)),
+      _MetricData('NDU Access', nduAccessCount.toString(),
+          const Color(0xFF10B981)),
+      _MetricData('Active Reminders', reminders.length.toString(),
+          const Color(0xFFEF4444)),
+    ];
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DraggableSidebar(
+              openWidth: AppBreakpoints.sidebarWidth(context),
+              child: const InitiationLikeSidebar(
+                activeItemLabel: 'Organization Plan - Staffing Plan',
+              ),
+            ),
+            Expanded(
+              child: Stack(
+                children: [
+                  const MobileSidebarHamburger(
+                    sidebar: InitiationLikeSidebar(
+                      activeItemLabel: 'Organization Plan - Staffing Plan',
+                    ),
+                  ),
+                  SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding, vertical: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        PlanningPhaseHeader(
+                          title: 'Staffing Plan',
+                          onExportPdf: () =>
+                              _exportPlanningSubsectionPdf(context),
+                        ),
+                        const SizedBox(height: 16),
+                        _TopHeader(
+                          title: 'Staffing Plan',
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'organization_staffing_plan'),
+                          onNext: () => PlanningPhaseNavigation.goToNext(
+                              context, 'organization_staffing_plan'),
+                          onAdd: () => _addStaffing(context),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Reflect the planned allocation of project personnel '
+                          'by role and time to support resource planning, workload '
+                          'management, and successful project delivery.',
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B7280),
+                              height: 1.5),
+                        ),
+                        const SizedBox(height: 20),
+                        const PlanningAiNotesCard(
+                          title: 'Notes',
+                          sectionLabel: 'Staffing Plan',
+                          noteKey: 'planning_organization_staffing_plan',
+                          checkpoint: 'organization_staffing_plan',
+                          description:
+                              'Capture staffing assumptions, mobilization risks, '
+                              'and role coverage decisions.',
+                        ),
+                        const SizedBox(height: 24),
+                        _MetricsRow(metrics: metrics),
+                        const SizedBox(height: 20),
+                        if (reminders.isNotEmpty)
+                          _StaffingRemindersBanner(reminders: reminders),
+                        if (reminders.isNotEmpty)
+                          const SizedBox(height: 20),
+                        // AI suggestion banner
+                        _NduSuggestionBanner(
+                          tierLabel: _resolvedTierLabel(),
+                          onSuggest: () =>
+                              _showNduSuggestionDialog(context),
+                          onAddPosition: () => _addStaffing(context),
+                        ),
+                        const SizedBox(height: 20),
+                        // Table card
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: const Color(0xFFE5E7EB)),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x14000000),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                    16, 12, 12, 4),
+                                child: Row(
+                                  children: const [
+                                    Icon(Icons.table_rows_outlined,
+                                        size: 18,
+                                        color: Color(0xFF6B7280)),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Staffing Plan Table',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF111827),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              _StaffingPlanTable(
+                                requirements: staffing,
+                                onEdit: (i, req) =>
+                                    _editStaffing(context, i, req),
+                                onDelete: (i) => _deleteStaffing(context, i),
+                                onToggleNduAccess: (i, v) =>
+                                    _toggleNduAccess(context, i, v),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        LaunchPhaseNavigation(
+                          backLabel: PlanningPhaseNavigation.backLabel(
+                              'organization_staffing_plan'),
+                          nextLabel: PlanningPhaseNavigation.nextLabel(
+                              'organization_staffing_plan'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(
+                              context, 'organization_staffing_plan'),
+                          onNext: () => PlanningPhaseNavigation.goToNext(
+                              context, 'organization_staffing_plan'),
+                        ),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
+                  ),
+                  const Positioned(
+                    right: 24,
+                    bottom: 24,
+                    child: KazAiChatBubble(positioned: false),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _resolvedTierLabel() {
+    // The tier is per-user (subscription), not per-project. We surface a
+    // best-effort label for the banner; the dialog itself fetches the
+    // real subscription at click time.
+    return 'your active subscription tier';
+  }
+}
+
+/// Result returned by the NDU suggestion dialog.
+class _NduSuggestionResult {
+  final Set<int> acceptedIndices;
+  final List<StaffingRequirement> additions;
+  const _NduSuggestionResult({
+    required this.acceptedIndices,
+    required this.additions,
+  });
+}
+
+/// Banner above the staffing plan table that invites the user to click
+/// "AI Suggest NDU Access" — opens the suggestion dialog.
+class _NduSuggestionBanner extends StatelessWidget {
+  const _NduSuggestionBanner({
+    required this.tierLabel,
+    required this.onSuggest,
+    required this.onAddPosition,
+  });
+
+  final String tierLabel;
+  final VoidCallback onSuggest;
+  final VoidCallback onAddPosition;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFBFDBFE)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.auto_awesome, color: Color(0xFF2563EB), size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'AI Suggest NDU Project Access',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E3A8A),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'We\'ll suggest which positions should have access to the '
+                  'NDU Project Delivery operating system platform based on '
+                  '$tierLabel, the roles in your plan, and your project scope. '
+                  'You can review and adjust before applying.',
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFF4B5563), height: 1.4),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onAddPosition,
+                icon: const Icon(Icons.person_add_alt_1, size: 16),
+                label: const Text('Add Position'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF1E40AF),
+                  side: const BorderSide(color: Color(0xFFBFDBFE)),
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: onSuggest,
+                icon: const Icon(Icons.auto_awesome, size: 16),
+                label: const Text('AI Suggest NDU Access'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Banner that surfaces active staffing reminders (overdue mobilizations,
+/// upcoming releases, unfilled positions, etc.) generated by
+/// [StaffingReminderHelper].
+class _StaffingRemindersBanner extends StatelessWidget {
+  const _StaffingRemindersBanner({required this.reminders});
+
+  final List<StaffingReminder> reminders;
+
+  @override
+  Widget build(BuildContext context) {
+    final stats = StaffingReminderHelper.getReminderStats(reminders);
+    final criticalCount = stats['critical'] ?? 0;
+    final highCount = stats['high'] ?? 0;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: criticalCount > 0
+            ? const Color(0xFFFEF2F2)
+            : const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: criticalCount > 0
+              ? const Color(0xFFFECACA)
+              : const Color(0xFFFDE68A),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                criticalCount > 0
+                    ? Icons.notification_important
+                    : Icons.notifications_active,
+                color: criticalCount > 0
+                    ? const Color(0xFFDC2626)
+                    : const Color(0xFFD97706),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Staffing Reminders (${reminders.length})',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: criticalCount > 0
+                        ? const Color(0xFF991B1B)
+                        : const Color(0xFF92400E),
+                  ),
+                ),
+              ),
+              if (criticalCount > 0 || highCount > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: criticalCount > 0
+                        ? const Color(0xFFDC2626)
+                        : const Color(0xFFD97706),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '$criticalCount critical • $highCount high',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...reminders.take(5).map((r) => Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(r.typeIcon, size: 16, color: r.priorityColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        r.message,
+                        style: const TextStyle(
+                            fontSize: 12, color: Color(0xFF374151)),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+          if (reminders.length > 5)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 4),
+              child: Text(
+                '+ ${reminders.length - 5} more reminders',
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF6B7280),
+                    fontStyle: FontStyle.italic),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// AI Suggestion dialog — shows the user the recommended NDU Project Access
+/// picks and lets them review + accept.
+class _NduSuggestionDialog extends StatefulWidget {
+  const _NduSuggestionDialog({
+    required this.tierLabel,
+    required this.tierCapacity,
+    required this.includedUsers,
+    required this.maxUsers,
+    required this.currentStaffing,
+    required this.suggestedIndices,
+    required this.suggestedAdditions,
+    required this.projectScope,
+  });
+
+  final String tierLabel;
+  final int tierCapacity;
+  final int includedUsers;
+  final int maxUsers;
+  final List<StaffingRequirement> currentStaffing;
+  final Set<int> suggestedIndices;
+  final List<StaffingRequirement> suggestedAdditions;
+  final String projectScope;
+
+  @override
+  State<_NduSuggestionDialog> createState() => _NduSuggestionDialogState();
+}
+
+class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
+  late Set<int> _acceptedIndices;
+  late List<bool> _additionSelected;
+
+  @override
+  void initState() {
+    super.initState();
+    _acceptedIndices = {...widget.suggestedIndices};
+    _additionSelected =
+        List.filled(widget.suggestedAdditions.length, true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final alreadyYes =
+        widget.currentStaffing.where((s) => s.nduProjectAccess).length;
+    final acceptedCount = _acceptedIndices.length;
+    final additionsCount =
+        _additionSelected.where((b) => b).length;
+    final totalAfter = alreadyYes + acceptedCount + additionsCount;
+    final overTier = totalAfter > widget.tierCapacity;
+
+    return AlertDialog(
+      title: Row(
+        children: const [
+          Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text('AI Suggested NDU Project Access'),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 560,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Tier summary
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(8),
+                  border:
+                      Border.all(color: const Color(0xFFBFDBFE)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tier: ${widget.tierLabel}',
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Includes ${widget.includedUsers} user${widget.includedUsers == 1 ? '' : 's'} '
+                      '(max ${widget.maxUsers}). $alreadyYes role${alreadyYes == 1 ? '' : 's'} already '
+                      'have NDU access. After applying: $totalAfter role${totalAfter == 1 ? '' : 's'} will have access.',
+                      style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF4B5563)),
+                    ),
+                    if (overTier) ...[
+                      const SizedBox(height: 6),
+                      const Text(
+                        '⚠ Exceeds tier included capacity — additional users '
+                        'may incur add-on charges.',
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFFB45309),
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Project Scope',
+                style: TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.projectScope,
+                style: const TextStyle(
+                    fontSize: 12, color: Color(0xFF6B7280)),
+              ),
+              const SizedBox(height: 16),
+              if (widget.currentStaffing.isEmpty &&
+                  widget.suggestedAdditions.isEmpty) ...[
+                const Text(
+                  'No staffing positions yet, and no suggestions available. '
+                  'Add at least one position to begin.',
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF6B7280),
+                      fontStyle: FontStyle.italic),
+                ),
+              ],
+              if (widget.currentStaffing.isNotEmpty) ...[
+                const Text(
+                  'Existing Positions',
+                  style: TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 6),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 220),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: widget.currentStaffing.length,
+                    itemBuilder: (ctx, i) {
+                      final req = widget.currentStaffing[i];
+                      final hasAccess = req.nduProjectAccess;
+                      final suggested =
+                          widget.suggestedIndices.contains(i);
+                      final accepted = _acceptedIndices.contains(i);
+                      return CheckboxListTile(
+                        dense: true,
+                        value: hasAccess || accepted,
+                        onChanged: hasAccess
+                            ? null
+                            : (val) {
+                                setState(() {
+                                  if (val == true) {
+                                    _acceptedIndices.add(i);
+                                  } else {
+                                    _acceptedIndices.remove(i);
+                                  }
+                                });
+                              },
+                        title: Text(
+                          req.title.isEmpty ? 'Untitled Position' : req.title,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        subtitle: Text(
+                          hasAccess
+                              ? 'Already has access'
+                              : suggested
+                                  ? 'AI suggested${req.personName.isNotEmpty ? ' — ${req.personName}' : ''}'
+                                  : (req.personName.isNotEmpty
+                                      ? req.personName
+                                      : 'No name assigned'),
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: hasAccess
+                                  ? const Color(0xFF059669)
+                                  : suggested
+                                      ? const Color(0xFF2563EB)
+                                      : const Color(0xFF6B7280),
+                              fontWeight: hasAccess || suggested
+                                  ? FontWeight.w700
+                                  : FontWeight.w400),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+              if (widget.suggestedAdditions.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                const Text(
+                  'Suggested Additional Positions',
+                  style: TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Your tier allows more roles — consider adding these to '
+                  'cover additional scope. New positions will be created '
+                  'with NDU access = Yes.',
+                  style: TextStyle(
+                      fontSize: 11, color: Color(0xFF6B7280)),
+                ),
+                const SizedBox(height: 6),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 220),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: widget.suggestedAdditions.length,
+                    itemBuilder: (ctx, i) {
+                      final add = widget.suggestedAdditions[i];
+                      return CheckboxListTile(
+                        dense: true,
+                        value: _additionSelected[i],
+                        onChanged: (val) {
+                          setState(() {
+                            _additionSelected[i] = val ?? false;
+                          });
+                        },
+                        title: Text(
+                          add.title,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        subtitle: Text(
+                          add.notes.isEmpty
+                              ? 'New suggested position'
+                              : add.notes,
+                          style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF6B7280)),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, null),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton.icon(
+          onPressed: () {
+            final additions = <StaffingRequirement>[];
+            for (var i = 0; i < widget.suggestedAdditions.length; i++) {
+              if (_additionSelected[i]) {
+                additions.add(widget.suggestedAdditions[i]);
+              }
+            }
+            Navigator.pop(
+              context,
+              _NduSuggestionResult(
+                acceptedIndices: _acceptedIndices,
+                additions: additions,
+              ),
+            );
+          },
+          icon: const Icon(Icons.check, size: 16),
+          label: Text('Apply ($totalAfter role${totalAfter == 1 ? '' : 's'})'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2563EB),
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Popup editor for adding / editing a [StaffingRequirement]. Implements
+/// the typeable Name field with autocomplete from existing site users, the
+/// split Type column (Employment FT/PT + Category Employee/Contractor), the
+/// Start Date (Mobilization) and Release Date pickers, the NDU Project
+/// Access Yes/No toggle, and the location field (auto-fill from project
+/// location on add).
+class _StaffingRequirementDialog extends StatefulWidget {
+  const _StaffingRequirementDialog({
+    required this.title,
+    required this.requirement,
+    required this.positionOptions,
+    required this.customPositionOption,
+    required this.employmentOptions,
+    required this.categoryOptions,
+    required this.statusOptions,
+    required this.projectLocation,
+  });
+
+  final String title;
+  final StaffingRequirement requirement;
+  final List<String> positionOptions;
+  final String customPositionOption;
+  final List<String> employmentOptions;
+  final List<String> categoryOptions;
+  final List<String> statusOptions;
+  final String projectLocation;
+
+  @override
+  State<_StaffingRequirementDialog> createState() =>
+      _StaffingRequirementDialogState();
+}
+
+class _StaffingRequirementDialogState
+    extends State<_StaffingRequirementDialog> {
+  late String _selectedPosition;
+  late TextEditingController _customPositionCtrl;
+  late TextEditingController _nameCtrl;
+  late TextEditingController _locationCtrl;
+  late TextEditingController _notesCtrl;
+  late TextEditingController _monthlyCostCtrl;
+  late TextEditingController _plannedMonthsCtrl;
+  late String _employmentLabel; // Full Time / Part Time
+  late String _categoryLabel; // Employee / Contractor
+  late String _startDate;
+  late String _releaseDate;
+  late String _status;
+  late bool _nduAccess;
+  late int _headcount;
+
+  List<UserModel> _userSuggestions = const [];
+  bool _searching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final r = widget.requirement;
+    final hasPosition =
+        widget.positionOptions.contains(r.title);
+    _selectedPosition = hasPosition ? r.title : widget.customPositionOption;
+    _customPositionCtrl = TextEditingController(
+      text: _selectedPosition == widget.customPositionOption ? r.title : '',
+    );
+    _nameCtrl = TextEditingController(text: r.personName);
+    _locationCtrl = TextEditingController(text: r.location);
+    _notesCtrl = TextEditingController(text: r.notes);
+    _monthlyCostCtrl = TextEditingController(
+        text: r.monthlyCost > 0 ? r.monthlyCost.toStringAsFixed(0) : '');
+    _plannedMonthsCtrl = TextEditingController(
+        text: r.plannedMonths > 0 ? r.plannedMonths.toStringAsFixed(1) : '');
+    _employmentLabel = r.employmentType == 'PT' ? 'Part Time' : 'Full Time';
+    _categoryLabel = r.employeeType.trim().isEmpty
+        ? 'Employee'
+        : (widget.categoryOptions.contains(r.employeeType)
+            ? r.employeeType
+            : 'Employee');
+    _startDate = r.startDate;
+    _releaseDate = r.endDate;
+    _status = r.status.trim().isEmpty ? 'Not Started' : r.status;
+    _nduAccess = r.nduProjectAccess;
+    _headcount = r.headcount > 0 ? r.headcount : 1;
+  }
+
+  @override
+  void dispose() {
+    _customPositionCtrl.dispose();
+    _nameCtrl.dispose();
+    _locationCtrl.dispose();
+    _notesCtrl.dispose();
+    _monthlyCostCtrl.dispose();
+    _plannedMonthsCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _searchUsers(String query) async {
+    if (query.trim().length < 2) {
+      setState(() {
+        _userSuggestions = const [];
+        _searching = false;
+      });
+      return;
+    }
+    setState(() => _searching = true);
+    try {
+      final results = await UserService.searchUsers(query);
+      if (mounted) {
+        setState(() {
+          _userSuggestions = results;
+          _searching = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _userSuggestions = const [];
+          _searching = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _pickDate(bool isStart) async {
+    final now = DateTime.now();
+    final initial = isStart
+        ? (_parseDate(_startDate) ?? now)
+        : (_parseDate(_releaseDate) ?? now);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 10),
+    );
+    if (picked == null) return;
+    final formatted = DateFormat('yyyy-MM-dd').format(picked);
+    setState(() {
+      if (isStart) {
+        _startDate = formatted;
+      } else {
+        _releaseDate = formatted;
+      }
+    });
+  }
+
+  DateTime? _parseDate(String s) {
+    if (s.isEmpty) return null;
+    try {
+      return DateFormat('yyyy-MM-dd').parse(s);
+    } catch (_) {
+      try {
+        return DateTime.parse(s);
+      } catch (_) {
+        return null;
+      }
+    }
+  }
+
+  StaffingRequirement _buildResult() {
+    final titleValue = _selectedPosition == widget.customPositionOption
+        ? _customPositionCtrl.text.trim()
+        : _selectedPosition;
+    final employmentCode = _employmentLabel == 'Part Time' ? 'PT' : 'FT';
+    return StaffingRequirement(
+      id: widget.requirement.id,
+      title: titleValue,
+      headcount: _headcount,
+      monthlyCost:
+          double.tryParse(_monthlyCostCtrl.text.trim()) ?? 0,
+      plannedMonths:
+          double.tryParse(_plannedMonthsCtrl.text.trim()) ?? 0,
+      startDate: _startDate,
+      endDate: _releaseDate,
+      status: _status,
+      personName: _nameCtrl.text.trim(),
+      employmentType: employmentCode,
+      location: _locationCtrl.text.trim(),
+      employeeType: _categoryLabel,
+      notes: _notesCtrl.text.trim(),
+      nduProjectAccess: _nduAccess,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Icon(Icons.badge_outlined, color: Color(0xFF2563EB)),
+          const SizedBox(width: 8),
+          Expanded(child: Text(widget.title)),
+        ],
+      ),
+      content: SizedBox(
+        width: 560,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Position title
+              const _DialogLabel('Position'),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedPosition,
+                items: [
+                  ...widget.positionOptions,
+                  widget.customPositionOption,
+                ]
+                    .map((t) =>
+                        DropdownMenuItem(value: t, child: Text(t)))
+                    .toList(),
+                onChanged: (v) {
+                  if (v == null) return;
+                  setState(() => _selectedPosition = v);
+                },
+                decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    hintText: 'Select a position'),
+              ),
+              if (_selectedPosition == widget.customPositionOption) ...[
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _customPositionCtrl,
+                  decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      hintText: 'Enter custom position title'),
+                ),
+              ],
+              const SizedBox(height: 14),
+              // Name (typeable + autocomplete from site users)
+              const _DialogLabel('Name'),
+              TextField(
+                controller: _nameCtrl,
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                  hintText: 'Type a name — site members appear instantly',
+                  prefixIcon: const Icon(Icons.person_outline, size: 18),
+                  suffixIcon: _searching
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : null,
+                ),
+                onChanged: (value) {
+                  _searchUsers(value);
+                },
+              ),
+              if (_userSuggestions.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 180),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _userSuggestions.length,
+                    itemBuilder: (ctx, i) {
+                      final user = _userSuggestions[i];
+                      final alreadySelected =
+                          _nameCtrl.text.trim() == user.displayName;
+                      return ListTile(
+                        dense: true,
+                        leading: CircleAvatar(
+                          backgroundColor: const Color(0xFFE0E7FF),
+                          child: Text(
+                            (user.displayName.isNotEmpty
+                                    ? user.displayName[0]
+                                    : (user.email.isNotEmpty
+                                        ? user.email[0]
+                                        : '?'))
+                                .toUpperCase(),
+                            style: const TextStyle(
+                                color: Color(0xFF4338CA),
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        title: Text(user.displayName,
+                            style: const TextStyle(fontSize: 13)),
+                        subtitle: Text(user.email,
+                            style: const TextStyle(
+                                fontSize: 11, color: Color(0xFF6B7280))),
+                        trailing: alreadySelected
+                            ? const Icon(Icons.check, color: Color(0xFF059669))
+                            : const Icon(Icons.add_circle_outline,
+                                color: Color(0xFF2563EB)),
+                        onTap: () {
+                          setState(() {
+                            _nameCtrl.text = user.displayName;
+                            _userSuggestions = const [];
+                            if (_locationCtrl.text.trim().isEmpty) {
+                              _locationCtrl.text = widget.projectLocation;
+                            }
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ] else if (_nameCtrl.text.trim().isNotEmpty &&
+                  _nameCtrl.text.trim().length >= 2 &&
+                  !_searching) ...[
+                const SizedBox(height: 4),
+                const Text(
+                  'Not found on site? No problem — this name will be saved as-is. '
+                  'You can also add them later as a site member.',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF6B7280),
+                      fontStyle: FontStyle.italic),
+                ),
+              ],
+              const SizedBox(height: 14),
+              // Location + Headcount side by side
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _DialogLabel('Location'),
+                        TextField(
+                          controller: _locationCtrl,
+                          decoration: InputDecoration(
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                            hintText: 'e.g. Lusaka, Zambia',
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.my_location, size: 16),
+                              tooltip: 'Use project location',
+                              onPressed: () {
+                                setState(() {
+                                  _locationCtrl.text = widget.projectLocation;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 120,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _DialogLabel('Headcount'),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline,
+                                  size: 20),
+                              onPressed: _headcount <= 1
+                                  ? null
+                                  : () => setState(() => _headcount--),
+                            ),
+                            Text('$_headcount',
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700)),
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline,
+                                  size: 20),
+                              onPressed: () =>
+                                  setState(() => _headcount++),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              // Employment + Category side by side
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _DialogLabel('Employment'),
+                        DropdownButtonFormField<String>(
+                          initialValue: _employmentLabel,
+                          items: widget.employmentOptions
+                              .map((e) => DropdownMenuItem(
+                                  value: e, child: Text(e)))
+                              .toList(),
+                          onChanged: (v) {
+                            if (v == null) return;
+                            setState(() => _employmentLabel = v);
+                          },
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(), isDense: true),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _DialogLabel('Category'),
+                        DropdownButtonFormField<String>(
+                          initialValue: _categoryLabel,
+                          items: widget.categoryOptions
+                              .map((e) => DropdownMenuItem(
+                                  value: e, child: Text(e)))
+                              .toList(),
+                          onChanged: (v) {
+                            if (v == null) return;
+                            setState(() => _categoryLabel = v);
+                          },
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(), isDense: true),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              // Start Date + Release Date side by side
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _DialogLabel('Start Date (Mobilization)'),
+                        InkWell(
+                          onTap: () => _pickDate(true),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 14),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                  color: const Color(0xFFD1D5DB)),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.event,
+                                    size: 16, color: Color(0xFF6B7280)),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _startDate.isEmpty
+                                        ? 'Pick a date'
+                                        : _startDate,
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: _startDate.isEmpty
+                                            ? const Color(0xFF9CA3AF)
+                                            : const Color(0xFF111827)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _DialogLabel('Release Date'),
+                        InkWell(
+                          onTap: () => _pickDate(false),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 14),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                  color: const Color(0xFFD1D5DB)),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.event_busy,
+                                    size: 16, color: Color(0xFF6B7280)),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _releaseDate.isEmpty
+                                        ? 'Pick a date'
+                                        : _releaseDate,
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: _releaseDate.isEmpty
+                                            ? const Color(0xFF9CA3AF)
+                                            : const Color(0xFF111827)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              // NDU Access + Status side by side
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _DialogLabel('NDU Project Access'),
+                        InkWell(
+                          onTap: () => setState(() => _nduAccess = !_nduAccess),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _nduAccess
+                                  ? const Color(0xFFD1FAE5)
+                                  : const Color(0xFFF3F4F6),
+                              border: Border.all(
+                                  color: _nduAccess
+                                      ? const Color(0xFFA7F3D0)
+                                      : const Color(0xFFE5E7EB)),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _nduAccess
+                                      ? Icons.check_circle
+                                      : Icons.cancel,
+                                  size: 18,
+                                  color: _nduAccess
+                                      ? const Color(0xFF059669)
+                                      : const Color(0xFF6B7280),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _nduAccess ? 'Yes' : 'No',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: _nduAccess
+                                        ? const Color(0xFF059669)
+                                        : const Color(0xFF6B7280),
+                                  ),
+                                ),
+                                const Spacer(),
+                                const Text('Tap to toggle',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: Color(0xFF6B7280))),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _DialogLabel('Status'),
+                        DropdownButtonFormField<String>(
+                          initialValue: _status,
+                          items: widget.statusOptions
+                              .map((e) => DropdownMenuItem(
+                                  value: e, child: Text(e)))
+                              .toList(),
+                          onChanged: (v) {
+                            if (v == null) return;
+                            setState(() => _status = v);
+                          },
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder(), isDense: true),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              // Monthly Cost + Planned Months (kept for cost calcs, hidden from table)
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: const Text(
+                  'Cost & Duration (optional)',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+                subtitle: const Text(
+                  'Used for cost roll-ups on the Cost Estimate screen.',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                ),
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const _DialogLabel('Monthly Cost (USD)'),
+                            TextField(
+                              controller: _monthlyCostCtrl,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                  hintText: '0'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const _DialogLabel('Planned Months'),
+                            TextField(
+                              controller: _plannedMonthsCtrl,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  isDense: true,
+                                  hintText: '0.0'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const _DialogLabel('Notes'),
+                  TextField(
+                    controller: _notesCtrl,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        hintText: 'Optional notes — certifications, '
+                            'clearances, special conditions, etc.'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, null),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton.icon(
+          onPressed: () {
+            final result = _buildResult();
+            if (result.title.trim().isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Please enter a position title.')));
+              return;
+            }
+            Navigator.pop(context, result);
+          },
+          icon: const Icon(Icons.check, size: 16),
+          label: const Text('Save'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFFFC107),
+            foregroundColor: Colors.black,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DialogLabel extends StatelessWidget {
+  const _DialogLabel(this.text);
+  final String text;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        text,
+        style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF374151)),
+      ),
+    );
+  }
 }
 
 class _OrganizationRolesResponsibilitiesScreenState
@@ -1740,26 +3530,38 @@ class _StaffingPlanTable extends StatelessWidget {
     required this.requirements,
     required this.onEdit,
     required this.onDelete,
+    required this.onToggleNduAccess,
   });
 
   final List<StaffingRequirement> requirements;
   final void Function(int index, StaffingRequirement req) onEdit;
   final ValueChanged<int> onDelete;
+  /// Flips the per-row NDU Project Access flag (Yes ↔ No).
+  final void Function(int index, bool value) onToggleNduAccess;
 
   @override
   Widget build(BuildContext context) {
-    const rowPadding = EdgeInsets.symmetric(horizontal: 16, vertical: 14);
+    const rowPadding = EdgeInsets.symmetric(horizontal: 12, vertical: 14);
+    // ── New column set (Staffing Plan v2) ──
+    //   #   Position   Name   Location   Employment   Category
+    //   Start Date (Mobilization)   Release Date   NDU Access
+    //   Status   Actions
+    // "Person" → "Name", "Type" split into Employment + Category,
+    // "Est. Cost" repurposed for Start Date, "Load" repurposed for
+    // Release Date, "Timeline" removed (Start/Release are now separate),
+    // new "NDU Access" column with Yes/No toggle.
     const columns = <_StaffingColumnDef>[
-      _StaffingColumnDef('#', 72),
-      _StaffingColumnDef('Position', 220),
-      _StaffingColumnDef('Person', 180),
-      _StaffingColumnDef('Location', 170),
-      _StaffingColumnDef('Type', 170),
-      _StaffingColumnDef('Load', 140),
-      _StaffingColumnDef('Est. Cost', 150),
-      _StaffingColumnDef('Status', 150),
-      _StaffingColumnDef('Timeline', 180),
-      _StaffingColumnDef('Actions', 110),
+      _StaffingColumnDef('#', 56),
+      _StaffingColumnDef('Position', 200),
+      _StaffingColumnDef('Name', 180),
+      _StaffingColumnDef('Location', 150),
+      _StaffingColumnDef('Employment', 120),
+      _StaffingColumnDef('Category', 130),
+      _StaffingColumnDef('Start Date (Mobilization)', 160),
+      _StaffingColumnDef('Release Date', 140),
+      _StaffingColumnDef('NDU Project Access', 140),
+      _StaffingColumnDef('Status', 140),
+      _StaffingColumnDef('Actions', 100),
     ];
 
     final contentWidth =
@@ -1778,6 +3580,7 @@ class _StaffingPlanTable extends StatelessWidget {
             width: tableWidth,
             child: Column(
               children: [
+                // ── Header row ──
                 Container(
                   width: tableWidth,
                   padding: rowPadding,
@@ -1791,9 +3594,9 @@ class _StaffingPlanTable extends StatelessWidget {
                               column.label.toUpperCase(),
                               textAlign: TextAlign.center,
                               style: const TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8,
+                                letterSpacing: 0.6,
                                 color: Color(0xFF6B7280),
                               ),
                             ),
@@ -1802,31 +3605,59 @@ class _StaffingPlanTable extends StatelessWidget {
                         .toList(),
                   ),
                 ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: requirements.length,
-                  itemBuilder: (context, i) => Container(
+                // ── Data rows ──
+                if (requirements.isEmpty)
+                  Container(
                     width: tableWidth,
-                    padding: rowPadding,
-                    decoration: BoxDecoration(
-                      color: i.isEven ? Colors.white : const Color(0xFFF9FAFB),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 36),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
                       border: Border(
-                        top: BorderSide(
-                          color: const Color(0xFFE5E7EB),
-                          width: i == 0 ? 1 : 0.5,
+                        top: BorderSide(color: Color(0xFFE5E7EB)),
+                      ),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'No staffing positions yet. Click "+ Add Position" '
+                        'or "AI Suggest NDU Access" to begin.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF6B7280),
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
                     ),
-                    child: _StaffingTableRow(
-                      index: i,
-                      requirement: requirements[i],
-                      columns: columns,
-                      onEdit: () => onEdit(i, requirements[i]),
-                      onDelete: () => onDelete(i),
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: requirements.length,
+                    itemBuilder: (context, i) => Container(
+                      width: tableWidth,
+                      padding: rowPadding,
+                      decoration: BoxDecoration(
+                        color:
+                            i.isEven ? Colors.white : const Color(0xFFF9FAFB),
+                        border: Border(
+                          top: BorderSide(
+                            color: const Color(0xFFE5E7EB),
+                            width: i == 0 ? 1 : 0.5,
+                          ),
+                        ),
+                      ),
+                      child: _StaffingTableRow(
+                        index: i,
+                        requirement: requirements[i],
+                        columns: columns,
+                        onEdit: () => onEdit(i, requirements[i]),
+                        onDelete: () => onDelete(i),
+                        onToggleNduAccess: (value) =>
+                            onToggleNduAccess(i, value),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -1843,6 +3674,7 @@ class _StaffingTableRow extends StatelessWidget {
     required this.columns,
     required this.onEdit,
     required this.onDelete,
+    required this.onToggleNduAccess,
   });
 
   final int index;
@@ -1850,11 +3682,24 @@ class _StaffingTableRow extends StatelessWidget {
   final List<_StaffingColumnDef> columns;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final ValueChanged<bool> onToggleNduAccess;
 
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.simpleCurrency(decimalDigits: 0);
+    final employmentLabel = requirement.employmentType == 'PT'
+        ? 'Part Time'
+        : (requirement.employmentType == 'FT' ? 'Full Time' : '—');
+    final categoryLabel =
+        requirement.employeeType.trim().isEmpty ? '—' : requirement.employeeType;
+    final startLabel = requirement.startDate.trim().isEmpty
+        ? 'TBD'
+        : requirement.startDate;
+    final releaseLabel = requirement.endDate.trim().isEmpty
+        ? 'TBD'
+        : requirement.endDate;
+
     final cells = <Widget>[
+      // #
       Center(
         child: Text(
           '${index + 1}',
@@ -1866,40 +3711,47 @@ class _StaffingTableRow extends StatelessWidget {
           ),
         ),
       ),
+      // Position
       _StaffingTextCell(
         requirement.title.trim().isEmpty
             ? 'Untitled Position'
             : requirement.title,
         fontWeight: FontWeight.w700,
+        textAlign: TextAlign.center,
       ),
+      // Name (was "Person")
       _StaffingTextCell(
         requirement.personName.trim().isEmpty ? 'TBD' : requirement.personName,
+        textAlign: TextAlign.center,
       ),
+      // Location
       _StaffingTextCell(
         requirement.location.trim().isEmpty ? 'TBD' : requirement.location,
+        textAlign: TextAlign.center,
       ),
-      _StaffingTextCell(
-        '${requirement.employmentType} / ${requirement.employeeType}',
+      // Employment (Full Time / Part Time) — split from Type
+      _StaffingTextCell(employmentLabel, textAlign: TextAlign.center),
+      // Category (Employee / Contractor) — split from Type
+      _StaffingTextCell(categoryLabel, textAlign: TextAlign.center),
+      // Start Date (Mobilization) — repurposed from "Est. Cost"
+      _StaffingTextCell(startLabel, textAlign: TextAlign.center),
+      // Release Date — repurposed from "Load"
+      _StaffingTextCell(releaseLabel, textAlign: TextAlign.center),
+      // NDU Project Access (Yes / No)
+      Center(
+        child: _NduAccessToggle(
+          value: requirement.nduProjectAccess,
+          onChanged: onToggleNduAccess,
+        ),
       ),
-      _StaffingTextCell(
-        '${requirement.headcount} x ${requirement.plannedMonths.toStringAsFixed(1)} mo',
-      ),
-      _StaffingTextCell(
-        requirement.monthlyCost > 0 && requirement.plannedMonths > 0
-            ? currency.format(requirement.estimatedTotal)
-            : '—',
-        fontWeight: FontWeight.w700,
-      ),
+      // Status
       Center(
         child: _StaffingStatusPill(
           label:
               requirement.status.trim().isEmpty ? 'Open' : requirement.status,
         ),
       ),
-      _StaffingTextCell(
-        '${requirement.startDate.trim().isEmpty ? 'TBD' : requirement.startDate} -> ${requirement.endDate.trim().isEmpty ? 'TBD' : requirement.endDate}',
-        textAlign: TextAlign.center,
-      ),
+      // Actions
       Align(
         alignment: Alignment.topCenter,
         child: Row(
@@ -1929,7 +3781,7 @@ class _StaffingTableRow extends StatelessWidget {
     ];
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: List.generate(
         cells.length,
         (cellIndex) =>
@@ -1939,11 +3791,62 @@ class _StaffingTableRow extends StatelessWidget {
   }
 }
 
+/// Compact Yes/No pill toggle for the NDU Project Access column.
+/// Tap to flip. Yes → green, No → grey.
+class _NduAccessToggle extends StatelessWidget {
+  const _NduAccessToggle({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final yes = value;
+    final bgColor =
+        yes ? const Color(0xFFD1FAE5) : const Color(0xFFF3F4F6);
+    final fgColor =
+        yes ? const Color(0xFF059669) : const Color(0xFF6B7280);
+    return InkWell(
+      onTap: () => onChanged(!yes),
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: yes ? const Color(0xFFA7F3D0) : const Color(0xFFE5E7EB),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              yes ? Icons.check_circle : Icons.cancel,
+              size: 14,
+              color: fgColor,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              yes ? 'Yes' : 'No',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: fgColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _StaffingTextCell extends StatelessWidget {
   const _StaffingTextCell(
     this.text, {
     this.fontWeight = FontWeight.w500,
-    this.textAlign = TextAlign.left,
+    this.textAlign = TextAlign.center,
   });
 
   final String text;

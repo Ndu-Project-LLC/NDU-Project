@@ -302,7 +302,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  final double horizontalPadding = isMobile ? 20 : 24;
 
  return Scaffold(
- backgroundColor: const Color(0xFFF7F9FC),
+ backgroundColor: Colors.white,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,17 +323,6 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  children: [
  PlanningPhaseHeader(title: 'Scope Tracking Plan', onExportPdf: _exportPdf),
  const SizedBox(height: 16),
- _ScopeTrackingHeader(
- onBack: () =>
- PlanningPhaseNavigation.goToPrevious(
- context, 'scope_tracking_plan'),
- onForward: () =>
- PlanningPhaseNavigation.goToNext(
- context, 'scope_tracking_plan'),
- onRegenerateAll: _regenerateAllFromAi,
- isRegenerating: _isAutoGenerating,
- ),
- const SizedBox(height: 20),
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Scope Tracking Plan',
@@ -1455,135 +1444,6 @@ class _BaselineStatCard extends StatelessWidget {
  style: const TextStyle(
  fontSize: 11, color: Color(0xFF6B7280))),
  ],
- ),
- );
- }
-}
-
-class _ScopeTrackingHeader extends StatelessWidget {
- const _ScopeTrackingHeader({
- required this.onBack,
- required this.onForward,
- this.onRegenerateAll,
- this.isRegenerating = false,
- });
-
- final VoidCallback onBack;
- final VoidCallback onForward;
- final VoidCallback? onRegenerateAll;
- final bool isRegenerating;
-
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(18),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- boxShadow: const [
- BoxShadow(
- color: Color(0x0F000000), blurRadius: 10, offset: Offset(0, 6)),
- ],
- ),
- child: Row(
- children: [
- _RoundIconButton(
- icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
- const SizedBox(width: 10),
- _RoundIconButton(
- icon: Icons.arrow_forward_ios_rounded, onTap: onForward),
- const SizedBox(width: 16),
- const Expanded(
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- 'Scope Tracking Plan',
- style: TextStyle(
- fontSize: 22,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827)),
- ),
- SizedBox(height: 6),
- Text(
- 'Govern scope integrity, change control, and variance signals across delivery.',
- style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
- ),
- ],
- ),
- ),
- if (onRegenerateAll != null)
- Padding(
- padding: const EdgeInsets.only(right: 12),
- child: IconButton(
- onPressed: isRegenerating ? null : onRegenerateAll,
- icon: isRegenerating
- ? const SizedBox(
- width: 18,
- height: 18,
- child: CircularProgressIndicator(strokeWidth: 2),
- )
- : const Icon(Icons.auto_awesome),
- tooltip: 'Regenerate All Scope Items',
- style: IconButton.styleFrom(
- backgroundColor: const Color(0xFFFFF7ED),
- foregroundColor: const Color(0xFF9A3412),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- ),
- ),
- ),
- const SizedBox(width: 8),
- const _PlanStatusPill(label: 'Active'),
- ],
- ),
- );
- }
-}
-
-class _RoundIconButton extends StatelessWidget {
- const _RoundIconButton({required this.icon, this.onTap});
-
- final IconData icon;
- final VoidCallback? onTap;
-
- @override
- Widget build(BuildContext context) {
- return InkWell(
- onTap: onTap,
- borderRadius: BorderRadius.circular(16),
- child: Container(
- width: 34,
- height: 34,
- decoration: BoxDecoration(
- color: Colors.white,
- shape: BoxShape.circle,
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Icon(icon, size: 14, color: const Color(0xFF6B7280)),
- ),
- );
- }
-}
-
-class _PlanStatusPill extends StatelessWidget {
- const _PlanStatusPill({required this.label});
-
- final String label;
-
- @override
- Widget build(BuildContext context) {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
- decoration: BoxDecoration(
- color: const Color(0xFF10B981),
- borderRadius: BorderRadius.circular(999),
- ),
- child: Text(
- label,
- style: const TextStyle(
- fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
  ),
  );
  }

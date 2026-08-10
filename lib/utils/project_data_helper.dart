@@ -553,7 +553,7 @@ class ProjectDataHelper {
 
     // Existing captured quality data — used by the AI Assistant to detect
     // gaps against the current state.
-    final q = data.qualityManagementData;
+    final q = data.qualityManagementData ?? QualityManagementData.empty();
     if (q.standards.isNotEmpty) {
       buf.writeln('Existing Quality Standards:');
       for (final s in q.standards) {
@@ -1140,6 +1140,7 @@ class ProjectDataHelper {
     required String checkpoint,
     required ProjectDataModel Function(ProjectDataModel) dataUpdater,
     bool showSnackbar = true,
+    String? successMessage,
   }) async {
     final provider = Provider.of<ProjectDataProvider>(context, listen: false);
     provider.updateField(dataUpdater);
@@ -1156,10 +1157,10 @@ class ProjectDataHelper {
       );
     } else if (success && context.mounted && showSnackbar) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Data saved successfully'),
+        SnackBar(
+          content: Text(successMessage ?? 'Data saved successfully'),
           backgroundColor: Colors.green,
-          duration: Duration(seconds: 1),
+          duration: const Duration(seconds: 1),
         ),
       );
     }

@@ -100,11 +100,13 @@ Future<bool> _updateQualityData(
  required QualityManagementData Function(QualityManagementData current)
  updater,
  String? successMessage,
+ bool showSnackbar = false,
 }) async {
  final success = await ProjectDataHelper.updateAndSave(
  context: context,
  checkpoint: checkpoint,
- showSnackbar: false,
+ showSnackbar: showSnackbar,
+ successMessage: successMessage,
  dataUpdater: (data) {
  final current =
  data.qualityManagementData ?? QualityManagementData.empty();
@@ -993,7 +995,6 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
    await _updateQualityData(
      context,
      checkpoint: 'quality_management',
-     showSnackbar: false,
      updater: (current) => _setPlanFor(current, widget.tab, trimmed),
    );
  }
@@ -1075,14 +1076,14 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
    });
 
    if (result != null && result.insights.isNotEmpty) {
+     final newInsights = result.insights;
      await _updateQualityData(
        context,
        checkpoint: 'quality_management',
-       showSnackbar: false,
        updater: (current) => current.copyWith(
          aiInsights: {
            ...current.aiInsights,
-           _category: result.insights,
+           _category: newInsights,
          },
        ),
      );
@@ -1126,6 +1127,7 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
      if (result != null) _insights = result;
    });
    if (result != null && result.insights.isNotEmpty) {
+     final newInsights = result.insights;
      await _updateQualityData(
        context,
        checkpoint: 'quality_management',
@@ -1133,7 +1135,7 @@ class _QualityTabScaffoldState extends State<_QualityTabScaffold> {
        updater: (current) => current.copyWith(
          aiInsights: {
            ...current.aiInsights,
-           _category: result.insights,
+           _category: newInsights,
          },
        ),
      );
@@ -1450,8 +1452,7 @@ class _TrackInExecutionBannerState extends State<_TrackInExecutionBanner> {
      // ExecutionQualityTrackingService so the planning screen does not
      // duplicate calendar-sync logic.
      try {
-       final projectId =
-           projectData.projectId ?? projectData.id ?? '';
+       final projectId = projectData.projectId ?? '';
        if (projectId.isNotEmpty) {
          await _syncAuditsToTeamCalendar(projectId, projectData);
        }
@@ -3309,22 +3310,24 @@ class _MetricsViewState extends State<_MetricsView> {
 
 class _PrimaryCard extends StatelessWidget {
  const _PrimaryCard({
- required this.icon,
- required this.iconBackground,
- required this.iconColor,
- required this.title,
- required this.subtitle,
+ this.icon,
+ this.iconBackground,
+ this.iconColor,
+ this.title,
+ this.subtitle,
  required this.child,
  this.actions,
+ this.showHeader = true,
  });
 
- final IconData icon;
- final Color iconBackground;
- final Color iconColor;
- final String title;
- final String subtitle;
+ final IconData? icon;
+ final Color? iconBackground;
+ final Color? iconColor;
+ final String? title;
+ final String? subtitle;
  final Widget child;
  final List<Widget>? actions;
+ final bool showHeader;
 
  @override
  Widget build(BuildContext context) {
@@ -3346,9 +3349,11 @@ class _PrimaryCard extends StatelessWidget {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ if (showHeader && (title != null || subtitle != null || icon != null))
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ if (icon != null) ...[
  Container(
  width: 44,
  height: 44,
@@ -3359,21 +3364,25 @@ class _PrimaryCard extends StatelessWidget {
  child: Icon(icon, color: iconColor, size: 22),
  ),
  const SizedBox(width: 14),
+ ],
  Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ if (title != null)
  Text(
- title,
+ title!,
  style: const TextStyle(
  fontSize: 20,
  fontWeight: FontWeight.w700,
  color: Color(0xFF111827),
  ),
  ),
+ if (title != null && subtitle != null)
  const SizedBox(height: 6),
+ if (subtitle != null)
  Text(
- subtitle,
+ subtitle!,
  style: const TextStyle(
  fontSize: 14,
  fontWeight: FontWeight.w500,
@@ -3396,7 +3405,7 @@ class _PrimaryCard extends StatelessWidget {
  ],
  ],
  ),
- const SizedBox(height: 28),
+ if (showHeader) const SizedBox(height: 28),
  child,
  ],
  ),

@@ -17,6 +17,8 @@ import 'package:ndu_project/widgets/activity_log_panel.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
+import 'package:ndu_project/widgets/my_raci_assignments_panel.dart';
+
 class ProjectActivitiesLogScreen extends StatefulWidget {
  const ProjectActivitiesLogScreen({super.key});
 
@@ -880,6 +882,22 @@ class _ProjectActivitiesLogScreenState
  );
  },
  ),
+ const SizedBox(height: 16),
+ // ── My RACI Assignments ──
+ // Personal dashboard tile: surfaces the current user's RACI
+ // deliverables (Responsible / Approver / Reviewer / Consulted /
+ // Informed / Viewer). This is the "personal dashboards" half of
+ // the wiring the user called out:
+ //
+ //   "FYI, this role assignment is what will feed the project
+ //    activities log and personal dashboards for all project
+ //    activities throughout the site."
+ //
+ // The other half (feeding the activities log itself) is implemented
+ // in ProjectIntelligenceService._upsertRaciDeliverableActivities —
+ // each RACI assignment also generates a `ProjectActivity` row
+ // that appears in the table below.
+ const MyRaciAssignmentsPanel(),
  const SizedBox(height: 16),
  _FilterToolbar(
  searchController: _searchController,

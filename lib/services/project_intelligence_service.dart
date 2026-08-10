@@ -1,5 +1,6 @@
 import 'package:ndu_project/models/project_activity.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/services/raci_assignment_service.dart';
 
 /// Central orchestration utility that builds a unified, cross-phase
 /// activity log from structured project data.
@@ -320,6 +321,13 @@ class ProjectIntelligenceService {
     );
 
     _upsertExecutionActivities(
+      data: data,
+      now: now,
+      existingById: existingById,
+      upsert: upsert,
+    );
+
+    _upsertRaciDeliverableActivities(
       data: data,
       now: now,
       existingById: existingById,
@@ -665,6 +673,184 @@ class ProjectIntelligenceService {
         );
       }
     });
+  }
+
+  /// Generate one [ProjectActivity] per (deliverable row × role assignment)
+  /// from the approved RACI Deliverable Matrix. This is the wiring that
+  /// turns the matrix into a feed for the Project Activities Log and the
+  /// personal dashboards across every page in the site.
+  ///
+  /// - Only emits activities when the matrix is approved
+  ///   ([RaciApprovalStatus.isApproved] == true). Unapproved matrices are
+  ///   considered drafts and should not yet spawn activities.
+  /// - Activity id is deterministic: `activity_raci_<checkpoint>_<roleKey>`.
+  ///   This means re-running [rebuildActivityLog] is idempotent — the
+  ///   same assignment always maps to the same activity id, so user-set
+  ///   status / approval / due date are preserved across rebuilds (see
+  ///   [_mergeLifecycle]).
+  /// - Assignments are keyed by **role title** (lowercased) — never by
+  ///   person name. When the Staffing Plan swaps person A for person B on
+  ///   a given role, the new person automatically inherits every activity
+  ///   attached to that role on the next rebuild.
+  /// - Designation → activity status mapping:
+  ///     R (Responsible) → pending (active work to do)
+  ///     A (Approver)    → pending (sign-off required)
+  ///     RV (Reviewer)   → pending (review required)
+  ///     C (Consulted)   → pending (input solicited)
+  ///     I (Informed)    → acknowledged (one-way notification)
+  ///     V (Viewer)      → acknowledged (read-only visibility)
+  /// - Approval status is `locked` when the matrix is approved, so the
+  ///   generated activities inherit the matrix's approval authority and
+  ///   cannot be casually dismissed from the log.
+  static void _upsertRaciDeliverableActivities({
+    required ProjectDataModel data,
+    required DateTime now,
+    required Map<String, ProjectActivity> existingById,
+    required void Function(ProjectActivity draft) upsert,
+  }) {
+    // Only feed the log once the matrix is the live basis for execution.
+    // Draft matrices would create a flood of churn as the user experiments
+    // with different designations.
+    if (!RaciAssignmentService.instance.isMatrixApproved(data)) return;
+    if (data.raciDeliverableRows.isEmpty) return;
+
+    // Build a role lookup so we can resolve the role title from the
+    // assignment key (which is lowercased). We also pull the staffing
+    // requirement so we know the named person filling the role (if any).
+    final staffingByRole = <String, StaffingRequirement>{};
+    for (final s in data.staffingRequirements) {
+      final key = RaciAssignmentService.roleKey(s.title);
+      staffingByRole.putIfAbsent(key, () => s);
+    }
+    final roleDefByTitle = <String, RoleDefinition>{};
+    for (final r in data.projectRoles) {
+      final key = RaciAssignmentService.roleKey(r.title);
+      roleDefByTitle.putIfAbsent(key, () => r);
+    }
+
+    for (final row in data.raciDeliverableRows) {
+      if (row.checkpoint.isEmpty || row.label.isEmpty) continue;
+      final phase = row.phase.isNotEmpty
+          ? row.phase
+          : _phaseForSection(row.checkpoint);
+      final checkpointSlug = _slugToken(row.checkpoint);
+
+      for (final entry in row.assignments.entries) {
+        final roleKey = entry.key;
+        final designation = entry.value.trim().toUpperCase();
+        if (designation.isEmpty || !RaciDesignation.isValid(designation)) {
+          continue;
+        }
+
+        // Resolve role title (original casing) + named person.
+        final staff = staffingByRole[roleKey];
+        final roleDef = roleDefByTitle[roleKey];
+        final roleTitle = staff?.title.isNotEmpty == true
+            ? staff!.title
+            : (roleDef?.title.isNotEmpty == true
+                ? roleDef!.title
+                : roleKey);
+        final personName = (staff?.personName ?? '').trim();
+        final discipline = _disciplineForRole(roleTitle, staff, roleDef);
+
+        final id = 'activity_raci_${checkpointSlug}_$_slugToken(roleTitle)';
+        final designationLabel = RaciDesignation.label(designation);
+        final title = '${row.label} — $designationLabel';
+        final description = _buildRaciActivityDescription(
+          deliverableLabel: row.label,
+          roleTitle: roleTitle,
+          personName: personName,
+          designation: designation,
+          designationLabel: designationLabel,
+        );
+
+        upsert(
+          ProjectActivity(
+            id: id,
+            title: title,
+            description: description,
+            sourceSection: 'raci_matrix',
+            phase: phase,
+            discipline: discipline,
+            role: roleTitle,
+            assignedTo: personName.isNotEmpty ? personName : null,
+            applicableSections: <String>[
+              row.checkpoint,
+              'organization_raci_matrix',
+              'project_plan',
+            ],
+            dueDate: '',
+            // R / A / RV / C are active work — pending until the user
+            // moves them forward. I / V are read-only — pre-marked
+            // acknowledged since no action is required from the recipient.
+            status: (designation == RaciDesignation.informed ||
+                    designation == RaciDesignation.viewer)
+                ? ProjectActivityStatus.acknowledged
+                : ProjectActivityStatus.pending,
+            // Matrix-approved activities inherit "locked" status so they
+            // represent the authoritative execution basis and aren't
+            // accidentally demoted by ad-hoc edits in the log UI.
+            approvalStatus: ProjectApprovalStatus.locked,
+            createdAt: existingById[id]?.createdAt ?? now,
+            updatedAt: now,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Derive a discipline label for a role. Falls back to "Management" if
+  /// no signal is available — this keeps the activities log filter
+  /// populated even when the staffing plan doesn't carry discipline info.
+  static String _disciplineForRole(
+    String roleTitle,
+    StaffingRequirement? staff,
+    RoleDefinition? roleDef,
+  ) {
+    final workstream =
+        (staff?.employeeType ?? roleDef?.workstream ?? '').trim();
+    if (workstream.isNotEmpty) return workstream;
+    final title = roleTitle.toLowerCase();
+    if (title.contains('engineer') ||
+        title.contains('architect') ||
+        title.contains('developer')) {
+      return 'Engineering';
+    }
+    if (title.contains('quality') || title.contains('qa') || title.contains('test')) {
+      return 'Quality';
+    }
+    if (title.contains('contract') || title.contains('procurement')) {
+      return 'Procurement';
+    }
+    if (title.contains('schedule')) return 'Schedule';
+    if (title.contains('cost') || title.contains('finance')) return 'Finance';
+    if (title.contains('risk')) return 'Risk';
+    if (title.contains('change')) return 'Change';
+    if (title.contains('operation') || title.contains('hypercare')) {
+      return 'Operations';
+    }
+    return 'Management';
+  }
+
+  /// Build a human-readable description for a RACI-sourced activity.
+  /// Mentions the role, the named person (if any), the designation, and
+  /// what the designation means — so the activities log tile is
+  /// self-explanatory without needing to look up the matrix.
+  static String _buildRaciActivityDescription({
+    required String deliverableLabel,
+    required String roleTitle,
+    required String personName,
+    required String designation,
+    required String designationLabel,
+  }) {
+    final who = personName.isNotEmpty ? '$roleTitle ($personName)' : roleTitle;
+    final buffer = StringBuffer();
+    buffer.write('$who is $designationLabel for "$deliverableLabel".');
+    final meaning = RaciDesignation.description(designation);
+    if (meaning.isNotEmpty) {
+      buffer.write(' $meaning');
+    }
+    return buffer.toString();
   }
 
   static ProjectActivity _mergeLifecycle(

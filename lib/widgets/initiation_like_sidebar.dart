@@ -2116,6 +2116,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                 child: VoiceTextField(
                   controller: _searchController,
                   onChanged: (value) => setState(() => _searchQuery = value),
+                  // Search bar is for menu navigation — KAZ AI icon here would
+                  // duplicate the floating KAZ chat bubble (unified AI entry
+                  // point). Voice input (mic) is still available for hands-free
+                  // search. Docx import + text formatting don't apply to a
+                  // single-line search field either.
+                  enableKazAi: false,
+                  enableDocxImport: false,
+                  enableTextFormatting: false,
                   style: const TextStyle(
                       color: Color(0xFF1A1D1F),
                       fontSize: 14,

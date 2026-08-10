@@ -2574,6 +2574,22 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             onTap: _openQualityManagement,
             isActive: widget.activeItemLabel == 'Quality Management'),
         _buildSubExpandableHeader(
+          'Technology Planning',
+          expanded: _technologyPlanningExpanded,
+          onTap: () => setState(() {
+            _technologyPlanningExpanded = !_technologyPlanningExpanded;
+            _sharedTechnologyPlanningExpanded = _technologyPlanningExpanded;
+          }),
+          isActive: _activeIn(_technologyPlanningLabels),
+        ),
+        if (_technologyPlanningExpanded) ...[
+          _buildSubSubMenuItem(
+            'Technology Planning Overview',
+            onTap: _openTechnology,
+            isActive: widget.activeItemLabel == 'Technology Planning',
+          ),
+        ],
+        _buildSubExpandableHeader(
           'Design Planning',
           expanded: _designPlanningExpanded,
           onTap: () => setState(() {
@@ -2670,22 +2686,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             onTap: _openDesignWorkPackages,
             isActive:
                 widget.activeItemLabel == 'Design Planning - Work Packages',
-          ),
-        ],
-        _buildSubExpandableHeader(
-          'Technology Planning',
-          expanded: _technologyPlanningExpanded,
-          onTap: () => setState(() {
-            _technologyPlanningExpanded = !_technologyPlanningExpanded;
-            _sharedTechnologyPlanningExpanded = _technologyPlanningExpanded;
-          }),
-          isActive: _activeIn(_technologyPlanningLabels),
-        ),
-        if (_technologyPlanningExpanded) ...[
-          _buildSubSubMenuItem(
-            'Technology Planning Overview',
-            onTap: _openTechnology,
-            isActive: widget.activeItemLabel == 'Technology Planning',
           ),
         ],
         _buildSubMenuItem(

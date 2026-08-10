@@ -13,7 +13,7 @@ class DesignPhaseStableShell extends StatelessWidget {
     this.breadcrumbPhase,
     this.breadcrumbTitle,
     this.showExportPdf = true,
-    this.showAiAssist = true,
+    this.showAiAssist = false,
     this.onExportPdf,
     this.onAiAssist,
   });

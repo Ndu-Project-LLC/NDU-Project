@@ -101,15 +101,20 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  .toSet()
  .toList();
 
- if (mounted) {
+ if (!mounted) return;
  setState(() {
  _items = items;
  _availableRoles = roles;
  _isLoading = false;
  });
- }
 
+ // Defer auto-population to the next microtask so the empty state
+ // has a chance to render first. This eliminates the visible flicker
+ // where the screen would briefly show empty → loading → empty →
+ // seeded items all in one frame.
  if (!_autoPopulated && items.isEmpty) {
+ await Future.microtask(() {});
+ if (!mounted) return;
  await _autoPopulateFromPlanning(projectId);
  }
  } catch (e) {
@@ -313,16 +318,40 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  activeItemLabel: 'Scope Tracking Plan'),
  ),
  Expanded(
- child: Stack(
- children: [
- SingleChildScrollView(
- padding: EdgeInsets.symmetric(
- horizontal: horizontalPadding, vertical: 28),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- PlanningPhaseHeader(title: 'Scope Tracking Plan', onExportPdf: _exportPdf),
- const SizedBox(height: 16),
+ // ── Fixed page header (matches other planning screens) ──
+ // Keeping PlanningPhaseHeader OUTSIDE the scroll view
+ // resolves the "glitching" symptom: previously the header
+ // was inside the SingleChildScrollView, so it (a) scrolled
+ // away when the user scrolled down and (b) competed with
+ // the KazAiChatBubble's Positioned layout on every frame
+ // resize during async load — causing visible flicker.
+ PlanningPhaseHeader(
+ title: 'Scope Tracking Plan',
+ breadcrumbPhase: 'Planning Phase',
+ breadcrumbTitle: 'Scope Tracking Plan',
+ onBack: () => PlanningPhaseNavigation.goToPrevious(
+ context, 'scope_tracking_plan'),
+ onForward: () => PlanningPhaseNavigation.goToNext(
+ context, 'scope_tracking_plan'),
+ onExportPdf: _exportPdf,
+ ),
+ Expanded(
+ child: Stack(
+ children: [
+ const MobileSidebarHamburger(
+ sidebar: InitiationLikeSidebar(
+ activeItemLabel: 'Scope Tracking Plan',
+ ),
+ ),
+ SingleChildScrollView(
+ padding: EdgeInsets.symmetric(
+ horizontal: horizontalPadding, vertical: 20),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Scope Tracking Plan',
@@ -359,12 +388,19 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  ],
  ),
  ),
- const MobileSidebarHamburger(
- sidebar: InitiationLikeSidebar(
- activeItemLabel: 'Scope Tracking Plan',
+ // KAZ chat bubble as a leaf Positioned in the Stack —
+ // passing `positioned: false` so the bubble itself does
+ // NOT wrap itself in another Positioned (which would
+ // compete with the scroll view for layout on every
+ // frame resize during async load).
+ const Positioned(
+ right: 24,
+ bottom: 24,
+ child: KazAiChatBubble(positioned: false),
+ ),
+ ],
  ),
  ),
- const KazAiChatBubble(),
  ],
  ),
  ),

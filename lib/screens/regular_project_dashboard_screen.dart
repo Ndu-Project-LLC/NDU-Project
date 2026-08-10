@@ -24,6 +24,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -269,7 +270,11 @@ class _RegularProjectDashboardScreenState
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  SliverToBoxAdapter(child: _buildTopBar(displayName)),
+                  // Top bar is only rendered on mobile (native app). On web the
+                  // global app shell already provides branding/navigation, so we
+                  // hide the in-page top bar to avoid a duplicate navbar.
+                  if (!kIsWeb)
+                    SliverToBoxAdapter(child: _buildTopBar(displayName)),
                   SliverToBoxAdapter(
                     child: FadeTransition(
                       opacity: _heroFade,
@@ -348,7 +353,11 @@ class _RegularProjectDashboardScreenState
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: const _BottomMiniNav(activeIndex: 0),
+      // The bottom navigation bar is a mobile-only affordance. On web the
+      // global app shell handles primary navigation, so we omit the in-page
+      // bottom nav to avoid a duplicate navbar.
+      bottomNavigationBar:
+          kIsWeb ? null : const _BottomMiniNav(activeIndex: 0),
     );
   }
 
@@ -623,40 +632,88 @@ class _RegularProjectDashboardScreenState
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(28, 20, 28, 8),
-      child: Wrap(
-        spacing: 14,
-        runSpacing: 14,
-        children: [
-          _StatTile(
-            label: 'On Track',
-            value: '$onTrack',
-            sublabel: 'healthy workspaces',
-            color: _emerald,
-            icon: Icons.check_circle_rounded,
-          ),
-          _StatTile(
-            label: 'At Risk',
-            value: '$atRisk',
-            sublabel: 'need attention',
-            color: _amber,
-            icon: Icons.warning_amber_rounded,
-          ),
-          _StatTile(
-            label: 'Off Track',
-            value: '$offTrack',
-            sublabel: 'blocked / stalled',
-            color: _coral,
-            icon: Icons.error_outline_rounded,
-          ),
-          _StatTile(
-            label: 'Avg. Progress',
-            value: '${(avgProgress * 100).round()}%',
-            sublabel: 'across all workspaces',
-            color: _teal,
-            icon: Icons.trending_up_rounded,
-          ),
-        ],
-      ),
+      child: kIsWeb
+          ? Row(
+              children: [
+                Expanded(
+                  child: _StatTile(
+                    label: 'On Track',
+                    value: '$onTrack',
+                    sublabel: 'healthy workspaces',
+                    color: _emerald,
+                    icon: Icons.check_circle_rounded,
+                    expanded: true,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _StatTile(
+                    label: 'At Risk',
+                    value: '$atRisk',
+                    sublabel: 'need attention',
+                    color: _amber,
+                    icon: Icons.warning_amber_rounded,
+                    expanded: true,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _StatTile(
+                    label: 'Off Track',
+                    value: '$offTrack',
+                    sublabel: 'blocked / stalled',
+                    color: _coral,
+                    icon: Icons.error_outline_rounded,
+                    expanded: true,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _StatTile(
+                    label: 'Avg. Progress',
+                    value: '${(avgProgress * 100).round()}%',
+                    sublabel: 'across all workspaces',
+                    color: _teal,
+                    icon: Icons.trending_up_rounded,
+                    expanded: true,
+                  ),
+                ),
+              ],
+            )
+          : Wrap(
+              spacing: 14,
+              runSpacing: 14,
+              children: [
+                _StatTile(
+                  label: 'On Track',
+                  value: '$onTrack',
+                  sublabel: 'healthy workspaces',
+                  color: _emerald,
+                  icon: Icons.check_circle_rounded,
+                ),
+                _StatTile(
+                  label: 'At Risk',
+                  value: '$atRisk',
+                  sublabel: 'need attention',
+                  color: _amber,
+                  icon: Icons.warning_amber_rounded,
+                ),
+                _StatTile(
+                  label: 'Off Track',
+                  value: '$offTrack',
+                  sublabel: 'blocked / stalled',
+                  color: _coral,
+                  icon: Icons.error_outline_rounded,
+                ),
+                _StatTile(
+                  label: 'Avg. Progress',
+                  value: '${(avgProgress * 100).round()}%',
+                  sublabel: 'across all workspaces',
+                  color: _teal,
+                  icon: Icons.trending_up_rounded,
+                ),
+              ],
+            ),
     );
   }
 
@@ -943,18 +1000,23 @@ class _StatTile extends StatelessWidget {
   final String sublabel;
   final Color color;
   final IconData icon;
+  final bool expanded;
   const _StatTile({
     required this.label,
     required this.value,
     required this.sublabel,
     required this.color,
     required this.icon,
+    this.expanded = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
+      // On web we let the parent Row + Expanded drive the width so each card
+      // stretches to fill its share of the available horizontal space. On
+      // mobile we keep the fixed 200px width so the Wrap lays out cleanly.
+      width: expanded ? null : 200,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: _RegularProjectDashboardScreenState._surface,

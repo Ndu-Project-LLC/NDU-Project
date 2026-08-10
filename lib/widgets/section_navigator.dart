@@ -238,13 +238,16 @@ class SectionNavigator extends StatelessWidget {
           final isActive = i == activeIndex;
           return Padding(
             padding: EdgeInsets.only(right: i < tabs.length - 1 ? 8 : 0),
-            child: _TabPill(
-              icon: tab.icon,
-              label: tab.label,
-              badge: tab.badge,
-              isActive: isActive,
-              accentColor: accent,
-              onTap: () => _selectTab(i),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 180),
+              child: _TabPill(
+                icon: tab.icon,
+                label: tab.label,
+                badge: tab.badge,
+                isActive: isActive,
+                accentColor: accent,
+                onTap: () => _selectTab(i),
+              ),
             ),
           );
         }),
@@ -308,6 +311,7 @@ class _TabPill extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(
                 icon,
@@ -323,8 +327,12 @@ class _TabPill extends StatelessWidget {
                     fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
                     color: isActive ? Colors.white : const Color(0xFF1A1D1F),
                     fontFamily: appFontFamily,
+                    height: 1.25,
                   ),
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  softWrap: true,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.visible,
                 ),
               ),
               if (badge != null && badge! > 0) ...[

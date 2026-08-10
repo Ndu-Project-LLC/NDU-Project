@@ -2278,8 +2278,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                     style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black),
-                    maxLines: 2,
+                        color: Colors.black,
+                        height: 1.25),
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   );
                 },

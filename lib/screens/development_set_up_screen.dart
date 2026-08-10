@@ -314,7 +314,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  _DevToolItem(
  id: _newId(),
  tool: 'Jira',
- category: 'Project Mgmt',
+ category: 'Project Management',
  license: 'Premium',
  assignedUsers: '20 users',
  status: 'Active',

@@ -19,10 +19,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:ndu_project/services/activity_log_service.dart';
-import 'package:ndu_project/services/openai_service_secure.dart';
-import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:go_router/go_router.dart';
 // ─── Tab definitions ────────────────────────────────────────────────────────
 
 enum _ImTab {
@@ -283,95 +280,53 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
     );
   }
 
- Widget _buildTabContent() {
- return Container(
- width: double.infinity,
- padding: const EdgeInsets.all(18),
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Expanded(
- child: Text(
- _selectedTab.label,
- style: const TextStyle(
- fontSize: 22,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827),
- ),
- ),
- ),
- if (_selectedTab == _ImTab.register)
- CsvEnabledSectionHeader(
- tableTitle: 'Interface Register',
- columns: const [
- CsvColumnSpec(key: 'boundary', label: 'Boundary / Name', required: true),
- CsvColumnSpec(key: 'interfaceType', label: 'Interface Type', allowedValues: ['Technical', 'Contractual', 'Organizational', 'Physical', 'Procedural']),
- CsvColumnSpec(key: 'partyA', label: 'Party A (Source)', required: true),
- CsvColumnSpec(key: 'partyB', label: 'Party B (Target)', required: true),
- CsvColumnSpec(key: 'dataFlow', label: 'Data Flow Direction', allowedValues: ['Bidirectional', 'A to B', 'B to A']),
- CsvColumnSpec(key: 'protocol', label: 'Protocol', allowedValues: ['API', 'File Transfer', 'Manual', 'Email', 'Shared DB']),
- CsvColumnSpec(key: 'cadence', label: 'Cadence / Frequency', allowedValues: ['Daily', 'Weekly', 'Bi-weekly', 'Monthly', 'Quarterly', 'As Needed']),
- CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Active', 'Pending', 'Under Review', 'Approved', 'Closed', 'Resolved']),
- CsvColumnSpec(key: 'owner', label: 'Owner'),
- CsvColumnSpec(key: 'priority', label: 'Priority', allowedValues: ['High', 'Medium', 'Low']),
- CsvColumnSpec(key: 'criticality', label: 'Criticality', allowedValues: ['Critical', 'Major', 'Minor']),
- CsvColumnSpec(key: 'risk', label: 'Risk'),
- CsvColumnSpec(key: 'notes', label: 'Notes'),
- ],
- onImport: (rows) {
- final data = ProjectDataHelper.getData(context);
- final newEntries = rows.map((row) => InterfaceEntry(
- boundary: row['boundary'] ?? '',
- interfaceType: row['interfaceType'] ?? '',
- partyA: row['partyA'] ?? '',
- partyB: row['partyB'] ?? '',
- dataFlow: row['dataFlow'] ?? '',
- protocol: row['protocol'] ?? '',
- cadence: row['cadence'] ?? '',
- status: row['status'] ?? '',
- owner: row['owner'] ?? '',
- priority: row['priority'] ?? '',
- criticality: row['criticality'] ?? '',
- risk: row['risk'] ?? '',
- notes: row['notes'] ?? '',
- )).toList();
- ProjectDataHelper.updateAndSave(
- context: context,
- checkpoint: 'interface_management',
- showSnackbar: true,
- dataUpdater: (d) => d.copyWith(
- interfaceEntries: [...d.interfaceEntries, ...newEntries],
- ),
- );
- },
- onAdd: () => _InterfaceRegisterSection.showAddDialog(context),
- addLabel: 'Add Interface',
- ),
- ],
- ),
- const SizedBox(height: 16),
-  switch (_selectedTab) {
-    _ImTab.register => const _InterfaceRegisterSection(),
-    _ImTab.interfaceTypes => const _InterfaceTypesSection(),
-    _ImTab.responsibilities => const _ResponsibilitiesSection(),
-    _ImTab.coordination => const _CoordinationSection(),
-    _ImTab.dependencyMgmt => const _DependencyMgmtSection(),
-    _ImTab.risks => const _RisksDecisionsSection(),
-    _ImTab.monitoring => const _MonitoringSection(),
-    _ImTab.deliverables => const _DeliverablesSection(),
-    _ImTab.audit => const _AuditTrailSection(),
-  },
- ],
- ),
- );
- }
+  Widget _buildTabContent() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _selectedTab.label,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+              ),
+              if (_selectedTab == _ImTab.register)
+                ElevatedButton.icon(
+                  onPressed: () =>
+                      _InterfaceRegisterSection.showAddDialog(context),
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add Interface'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          switch (_selectedTab) {
+            _ImTab.register => const _InterfaceRegisterSection(),
+            _ImTab.architecture => const _ArchitectureSection(),
+            _ImTab.raci => const _RaciGovernanceSection(),
+            _ImTab.risks => const _RisksDecisionsSection(),
+            _ImTab.handoff => const _HandoffReadinessSection(),
+            _ImTab.maturity => const _MaturitySection(),
+            _ImTab.audit => const _AuditTrailSection(),
+          },
+        ],
+      ),
+    );
+  }
 
   Future<void> _exportPdf() async {
     final projectData = ProjectDataHelper.getData(context);
@@ -686,347 +641,6 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
           ),
         ],
       ),
-    ),
-  ),
- ],
- ],
- );
- }
-
- Widget _buildTableHeader() {
- const headerStyle = TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: Color(0xFF374151),
- );
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
- decoration: const BoxDecoration(
- color: Color(0xFFF8FAFC),
- border: Border.fromBorderSide(BorderSide(color: Color(0xFFE5E7EB))),
- borderRadius: BorderRadius.only(
- topLeft: Radius.circular(8),
- topRight: Radius.circular(8),
- ),
- ),
- child: Row(
- children: [
- const SizedBox(width: 36, child: Text('#', style: headerStyle, textAlign: TextAlign.center)),
- const SizedBox(width: 12),
-          const SizedBox(width: 200, child: Text('Boundary / Name', style: headerStyle, maxLines: 1, overflow: TextOverflow.ellipsis)),
- const SizedBox(width: 12),
-          const SizedBox(width: 110, child: Text('Type', style: headerStyle)),
-          const SizedBox(width: 12),
-          const SizedBox(width: 140, child: Text('Party A', style: headerStyle)),
-          const SizedBox(width: 12),
-          const SizedBox(width: 140, child: Text('Party B', style: headerStyle)),
-          const SizedBox(width: 12),
-          const SizedBox(width: 100, child: Text('Criticality', style: headerStyle, textAlign: TextAlign.center)),
-          const SizedBox(width: 12),
-          const SizedBox(width: 90, child: Text('Priority', style: headerStyle, textAlign: TextAlign.center)),
-          const SizedBox(width: 12),
-          const SizedBox(width: 100, child: Text('Status', style: headerStyle, textAlign: TextAlign.center)),
- const SizedBox(width: 12),
- const SizedBox(width: 80, child: Text('Actions', style: headerStyle, textAlign: TextAlign.center)),
- ],
- ),
- );
- }
-}
-
-class _ImportFromTechButton extends StatelessWidget {
- const _ImportFromTechButton({required this.count});
-
- final int count;
-
- @override
- Widget build(BuildContext context) {
- return OutlinedButton.icon(
- onPressed: () async {
- final data = ProjectDataHelper.getData(context);
- final entries = List<InterfaceEntry>.from(data.interfaceEntries);
- final extIntegrations = data.externalIntegrations;
- final logEntries = List<InterfaceChangeLogEntry>.from(data.interfaceChangeLog);
- final now = DateTime.now().toIso8601String();
-
- int added = 0;
- for (final ext in extIntegrations) {
- final name = ext['name']?.toString().trim() ?? '';
- if (name.isEmpty) continue;
- final alreadyExists = entries.any((e) =>
- e.boundary.trim().toLowerCase() == name.toLowerCase());
- if (alreadyExists) continue;
-
- final newEntry = InterfaceEntry(
- boundary: name,
- owner: ext['description']?.toString() ?? '',
- interfaceType: 'Technical',
- protocol: ext['connectionType']?.toString() ?? 'API',
- status: ext['status']?.toString().isNotEmpty == true
- ? ext['status'].toString()
- : 'Pending',
- notes: 'Imported from Technology Planning',
- );
- entries.add(newEntry);
- logEntries.add(InterfaceChangeLogEntry(
- interfaceId: newEntry.id,
- interfaceName: name,
- action: 'Imported',
- newValue: name,
- changedAt: now,
- ));
- added++;
- }
-
- if (added > 0) {
- await ProjectDataHelper.updateAndSave(
- context: context,
- checkpoint: 'interface_management',
- dataUpdater: (d) => d.copyWith(
- interfaceEntries: entries,
- interfaceChangeLog: logEntries,
- ),
- );
- if (context.mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content:
- Text('Imported $added interface(s) from Technology Planning')),
- );
- }
- }
- },
- icon: const Icon(Icons.download_outlined, size: 16),
- label: Text('Import $count from Technology Planning'),
- );
- }
-}
-
-class _InterfaceRegisterRow extends StatelessWidget {
- const _InterfaceRegisterRow({
- required this.index,
- required this.entry,
- });
-
- final int index;
- final InterfaceEntry entry;
-
- @override
- Widget build(BuildContext context) {
- final name = entry.boundary.trim().isNotEmpty
- ? entry.boundary.trim()
- : 'Unnamed';
-
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
- decoration: const BoxDecoration(
- border: Border(
- left: BorderSide(color: Color(0xFFE5E7EB)),
- right: BorderSide(color: Color(0xFFE5E7EB)),
- bottom: BorderSide(color: Color(0xFFE5E7EB)),
- ),
- ),
-  child: Row(
-    children: [
-      SizedBox(
-        width: 36,
-        child: Text('$index',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 200,
-        child: Row(
-          children: [
-            _HealthDot(entry: entry),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(name,
-                  maxLines: null,
-                  softWrap: true,
-                  overflow: TextOverflow.visible,
-                  style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w600)),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 110,
-        child: _TypeBadge(type: entry.interfaceType),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 140,
-        child: Text(entry.partyA.trim(),
-            maxLines: null,
-            softWrap: true,
-            overflow: TextOverflow.visible,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)))},
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 140,
-        child: Text(entry.partyB.trim(),
-            maxLines: null,
-            softWrap: true,
-            overflow: TextOverflow.visible,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)))},
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 100,
-        child: _CriticalityBadge(criticality: entry.criticality),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 90,
-        child: _PriorityBadge(priority: entry.priority),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 100,
-        child: _StatusBadge(label: entry.status),
-      ),
-      const SizedBox(width: 12),
-      SizedBox(
-        width: 80,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              tooltip: 'Edit',
-              onPressed: () =>
-                  _InterfaceEntryDialog.show(context, entry, const []),
-              icon: const Icon(Icons.edit_outlined, size: 16),
-            ),
-            IconButton(
-              tooltip: 'Delete',
-              onPressed: () => _deleteEntry(context, entry.id),
-              icon: const Icon(Icons.delete_outline,
-                  size: 16, color: Color(0xFFEF4444)),
-            ),
-          ],
-        ),
-      ),
-    ],
-  ),
- );
- }
-
- Future<void> _deleteEntry(BuildContext context, String id) async {
- final confirm = await showDialog<bool>(
- context: context,
- builder: (ctx) => AlertDialog(
- title: const Text('Remove interface entry'),
- content: const Text(
- 'This will delete the interface entry and remove it from AI context.'),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(ctx).pop(false),
- child: const Text('Cancel'),
- ),
- TextButton(
- onPressed: () => Navigator.of(ctx).pop(true),
- child: const Text('Delete'),
- ),
- ],
- ),
- );
- if (confirm != true) return;
-
- final data = ProjectDataHelper.getData(context);
- final entryToDelete = data.interfaceEntries.firstWhere((e) => e.id == id);
- final entries =
- data.interfaceEntries.where((e) => e.id != id).toList();
- final logEntries = List<InterfaceChangeLogEntry>.from(data.interfaceChangeLog);
- logEntries.add(InterfaceChangeLogEntry(
- interfaceId: entryToDelete.id,
- interfaceName: entryToDelete.boundary.trim().isNotEmpty ? entryToDelete.boundary.trim() : 'Unnamed',
- action: 'Deleted',
- oldValue: entryToDelete.boundary,
- changedAt: DateTime.now().toIso8601String(),
- ));
-  _removeInterfaceRiskFromGlobal(context: context, interfaceId: id);
-  await ProjectDataHelper.updateAndSave(
-    context: context,
-    checkpoint: 'interface_management',
-    dataUpdater: (d) => d.copyWith(
-      interfaceEntries: entries,
-      interfaceChangeLog: logEntries,
-    ),
-    showSnackbar: false,
-  );
-  unawaited(ActivityLogService.instance.logCheckpointActivity(
-    projectId: data.projectId ?? '',
-    checkpoint: 'interface_management',
-    action: 'Interface Deleted',
-    details: {
-      'interfaceId': id,
-      'interfaceName': entryToDelete.boundary,
-    },
-  ));
-  }
-}
-
-// ─── Risk Sync Helpers ───────────────────────────────────────────────────────
-
-const _kInterfaceRiskCategory = 'Interface';
-
-ExecutionRiskItem _interfaceEntryToRiskItem(InterfaceEntry entry) {
-  return ExecutionRiskItem(
-    id: 'iface_${entry.id}',
-    title: 'Interface Risk: ${entry.boundary.trim().isNotEmpty ? entry.boundary.trim() : entry.id}',
-    description: entry.risk.trim(),
-    category: _kInterfaceRiskCategory,
-    owner: entry.owner.trim(),
-    likelihoodScore: 0,
-    impactScore: 0,
-    probability: '',
-    impact: '',
-    riskScore: 0,
-    status: entry.status,
-    triggerEvents: '',
-    mitigationStrategy: '',
-    nextReview: '',
-    associatedMitigation: '',
-    createdAt: DateTime.now().toIso8601String(),
-    lastModified: DateTime.now().toIso8601String(),
-    controlAccountId: '',
-  );
-}
-
-void _syncInterfaceRiskToGlobal({
-  required BuildContext context,
-  required InterfaceEntry entry,
-  InterfaceEntry? oldEntry,
-}) {
-  final data = ProjectDataHelper.getData(context);
-  var riskItems = List<ExecutionRiskItem>.from(data.executionRiskItems);
-  final existingIdx = riskItems.indexWhere((r) => r.id == 'iface_${entry.id}');
-  final hasNewRisk = entry.risk.trim().isNotEmpty;
-
-  if (!hasNewRisk) {
-    if (existingIdx != -1) {
-      riskItems.removeAt(existingIdx);
-    }
-  } else {
-    final newItem = _interfaceEntryToRiskItem(entry);
-    if (existingIdx != -1) {
-      riskItems[existingIdx] = newItem;
-    } else {
-      riskItems.add(newItem);
-    }
-  }
-
-  if (existingIdx != -1 || hasNewRisk) {
-    ProjectDataHelper.updateAndSave(
-      context: context,
-      checkpoint: 'interface_management',
-      dataUpdater: (d) => d.copyWith(executionRiskItems: riskItems),
-      showSnackbar: false,
     );
   }
 
@@ -2720,63 +2334,65 @@ class _MaturityBar extends StatelessWidget {
   final Color bgColor;
   final String label;
 
- @override
- Widget build(BuildContext context) {
- return Container(
- margin: const EdgeInsets.only(bottom: 8),
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
- decoration: BoxDecoration(
- color: bgColor.withOpacity(0.3),
- borderRadius: BorderRadius.circular(8),
- border: Border.all(color: color.withOpacity(0.2)),
- ),
- child: Row(
- children: [
- Expanded(
- flex: 3,
- child: Text(name,
- maxLines: null,
- softWrap: true,
- overflow: TextOverflow.visible,
- style: const TextStyle(
- fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
- ),
- const SizedBox(width: 12),
- Expanded(
- flex: 5,
- child: ClipRRect(
- borderRadius: BorderRadius.circular(4),
- child: LinearProgressIndicator(
- value: score / 100,
- backgroundColor: const Color(0xFFE5E7EB),
- valueColor: AlwaysStoppedAnimation<Color>(color),
- minHeight: 8,
- ),
- ),
- ),
- const SizedBox(width: 12),
- SizedBox(
- width: 36,
- child: Text('$score',
- textAlign: TextAlign.right,
- style: TextStyle(
- fontSize: 13, fontWeight: FontWeight.w700, color: color)),
- ),
- const SizedBox(width: 8),
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
- decoration: BoxDecoration(
- color: Color.alphaBlend(color.withOpacity(0.15), Colors.white),
- borderRadius: BorderRadius.circular(4),
- ),
- child: Text(label,
- style: TextStyle(
- fontSize: 10, fontWeight: FontWeight.w600, color: color)),
- ),
- ],
- ),
- );
- }
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: bgColor.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF111827))),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 5,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: score / 100,
+                backgroundColor: const Color(0xFFE5E7EB),
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+                minHeight: 8,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 36,
+            child: Text('$score',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w700, color: color)),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color:
+                  Color.alphaBlend(color.withValues(alpha: 0.15), Colors.white),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -3005,144 +2621,43 @@ class _AuditTrailSection extends StatelessWidget {
     );
   }
 
- if (logEntries.isEmpty)
- const Padding(
- padding: EdgeInsets.only(top: 12),
- child: Text(
- 'No changes logged yet. Changes will appear here as you create, edit, or delete interface entries.',
- style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
- ),
- )
- else ...[
- // Header row
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
- decoration: const BoxDecoration(
- color: Color(0xFFF8FAFC),
- border: Border.fromBorderSide(BorderSide(color: Color(0xFFE5E7EB))),
- borderRadius: BorderRadius.only(
- topLeft: Radius.circular(8),
- topRight: Radius.circular(8),
- ),
- ),
- child: const Row(
- children: [
- SizedBox(width: 140, child: Text('Timestamp', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151)))),
- SizedBox(width: 12),
- Expanded(flex: 2, child: Text('Interface', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151)))),
- SizedBox(width: 12),
- SizedBox(width: 130, child: Text('Action', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151)))),
- SizedBox(width: 12),
- Expanded(flex: 2, child: Text('Field', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151)))),
- SizedBox(width: 12),
- Expanded(flex: 3, child: Text('Change', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151)))),
- ],
- ),
- ),
- // Log rows
- ...logEntries.map((entry) {
- final color = _actionColor(entry.action);
- final icon = _actionIcon(entry.action);
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
- decoration: const BoxDecoration(
- border: Border(
- left: BorderSide(color: Color(0xFFE5E7EB)),
- right: BorderSide(color: Color(0xFFE5E7EB)),
- bottom: BorderSide(color: Color(0xFFE5E7EB)),
- ),
- ),
- child: Row(
- children: [
- SizedBox(
- width: 140,
- child: Text(_formatTimestamp(entry.changedAt),
- style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
- ),
- const SizedBox(width: 12),
- Expanded(
- flex: 2,
- child: Text(entry.interfaceName.trim().isNotEmpty ? entry.interfaceName.trim() : 'Unnamed',
- maxLines: null,
- softWrap: true,
- overflow: TextOverflow.visible,
- style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
- ),
- const SizedBox(width: 12),
- SizedBox(
- width: 110,
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
- decoration: BoxDecoration(
- color: Color.alphaBlend(color.withOpacity(0.12), Colors.white),
- borderRadius: BorderRadius.circular(6),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(icon, size: 12, color: color),
- const SizedBox(width: 4),
- Flexible(
- child: Text(entry.action,
- maxLines: null,
- softWrap: true,
- overflow: TextOverflow.visible,
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w600,
- color: color)),
- ),
- ],
- ),
- ),
- ),
- const SizedBox(width: 12),
- Expanded(
- flex: 2,
- child: Text(entry.fieldName.trim().isNotEmpty ? entry.fieldName.trim() : '-',
- style: const TextStyle(fontSize: 11, color: Color(0xFF4B5563))),
- ),
- const SizedBox(width: 12),
- Expanded(
- flex: 3,
- child: _buildChangeValue(entry, color),
- ),
- ],
- ),
- );
- }),
- ],
- ],
- );
- }
-
- Widget _buildChangeValue(InterfaceChangeLogEntry entry, Color color) {
- if (entry.action == 'Created') {
- return Text(entry.newValue.trim().isNotEmpty ? entry.newValue.trim() : '-',
- style: TextStyle(fontSize: 11, color: color));
- }
- if (entry.action == 'Deleted') {
- return Text(entry.oldValue.trim().isNotEmpty ? entry.oldValue.trim() : '-',
- style: TextStyle(fontSize: 11, color: color));
- }
- // Updated / Status Changed / Imported
- final oldV = entry.oldValue.trim();
- final newV = entry.newValue.trim();
- if (oldV.isEmpty && newV.isEmpty) return const Text('-', style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)));
- return RichText(
- text: TextSpan(
- style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
- children: [
- if (oldV.isNotEmpty)
- TextSpan(text: oldV, style: const TextStyle(decoration: TextDecoration.lineThrough, color: Color(0xFF9CA3AF))),
- if (oldV.isNotEmpty && newV.isNotEmpty)
- const TextSpan(text: ' → '),
- if (newV.isNotEmpty)
- TextSpan(text: newV, style: TextStyle(fontWeight: FontWeight.w600, color: color)),
- ],
- ),
- );
- }
+  Widget _buildChangeValue(InterfaceChangeLogEntry entry, Color color) {
+    if (entry.action == 'Created') {
+      return Text(
+          entry.newValue.trim().isNotEmpty ? entry.newValue.trim() : '-',
+          style: TextStyle(fontSize: 11, color: color));
+    }
+    if (entry.action == 'Deleted') {
+      return Text(
+          entry.oldValue.trim().isNotEmpty ? entry.oldValue.trim() : '-',
+          style: TextStyle(fontSize: 11, color: color));
+    }
+    // Updated / Status Changed / Imported
+    final oldV = entry.oldValue.trim();
+    final newV = entry.newValue.trim();
+    if (oldV.isEmpty && newV.isEmpty) {
+      return const Text('-',
+          style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)));
+    }
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+        children: [
+          if (oldV.isNotEmpty)
+            TextSpan(
+                text: oldV,
+                style: const TextStyle(
+                    decoration: TextDecoration.lineThrough,
+                    color: Color(0xFF9CA3AF))),
+          if (oldV.isNotEmpty && newV.isNotEmpty) const TextSpan(text: ' → '),
+          if (newV.isNotEmpty)
+            TextSpan(
+                text: newV,
+                style: TextStyle(fontWeight: FontWeight.w600, color: color)),
+        ],
+      ),
+    );
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

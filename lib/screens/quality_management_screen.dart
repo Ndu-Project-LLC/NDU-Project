@@ -584,71 +584,11 @@ class _PageHeader extends StatelessWidget {
  ],
  ),
  ),
- const SizedBox(width: 16),
- _QualityIntelligenceButton(),
+ SizedBox(width: 16),
  ],
  ),
  ],
  );
- }
-}
-
-/// Quality Intelligence analysis button
-class _QualityIntelligenceButton extends StatelessWidget {
- @override
- Widget build(BuildContext context) {
-   return Material(
-     color: Colors.transparent,
-     child: InkWell(
-       onTap: () => _showQualityIntelligence(context),
-       borderRadius: BorderRadius.circular(12),
-       child: Container(
-         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-         decoration: BoxDecoration(
-           gradient: const LinearGradient(
-             colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-           ),
-           borderRadius: BorderRadius.circular(12),
-           boxShadow: [
-             BoxShadow(
-               color: const Color(0xFF6366F1).withOpacity(0.3),
-               blurRadius: 12,
-               offset: const Offset(0, 4),
-             ),
-           ],
-         ),
-         child: Row(
-           mainAxisSize: MainAxisSize.min,
-           children: [
-             const Icon(Icons.psychology_outlined, color: Colors.white, size: 20),
-             const SizedBox(width: 8),
-             const Text(
-               'AI Quality Analysis',
-               style: TextStyle(
-                 color: Colors.white,
-                 fontWeight: FontWeight.w600,
-                 fontSize: 14,
-               ),
-             ),
-           ],
-         ),
-       ),
-     ),
-   );
- }
-
- void _showQualityIntelligence(BuildContext context) {
-   final projectData = ProjectDataHelper.getData(context);
-   final qualityData = projectData.qualityManagementData ?? QualityManagementData.empty();
-
-   // Generate the report
-   final report = QualityIntelligenceService.generateFullReport(
-     projectData: projectData,
-     qualityData: qualityData,
-   );
-
-   // Show the dialog
-   QualityIntelligenceDialog.show(context, report);
  }
 }
 

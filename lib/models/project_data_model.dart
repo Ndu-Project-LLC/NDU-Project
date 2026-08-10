@@ -259,8 +259,6 @@ class ProjectDataModel {
   String projectCategory = '';
   String projectIndustry = '';
 
-  String get projectType => projectCategory;
-
   ProjectDataModel({
     this.projectName = '',
     this.solutionTitle = '',
@@ -1622,8 +1620,8 @@ class Milestone {
     this.references = '',
     this.comments = '',
   }) : id = (id == null || id.trim().isEmpty)
-          ? DateTime.now().microsecondsSinceEpoch.toString()
-          : id;
+            ? DateTime.now().microsecondsSinceEpoch.toString()
+            : id;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -6709,7 +6707,6 @@ class StaffingRequirement {
   String employmentType; // FT or PT
   String location;
   String employeeType; // e.g., Employee, Contractor
-  bool nduAccess;
   String notes;
 
   StaffingRequirement({
@@ -6725,30 +6722,26 @@ class StaffingRequirement {
     this.employmentType = 'FT',
     this.location = '',
     this.employeeType = 'Employee',
-    this.nduAccess = false,
     this.notes = '',
   }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
 
   double get estimatedTotal => headcount * monthlyCost * plannedMonths;
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'title': title,
-    'headcount': headcount,
-    'monthlyCost': monthlyCost,
-    'plannedMonths': plannedMonths,
-    'startDate': startDate,
-    'endDate': endDate,
-    'status': status,
-    'personName': personName,
-    'employmentType': employmentType,
-    'location': location,
-    'employeeType': employeeType,
-    'nduAccess': nduAccess,
-    'notes': notes,
-    'email': email,
-    'phone': phone,
-  };
+        'id': id,
+        'title': title,
+        'headcount': headcount,
+        'monthlyCost': monthlyCost,
+        'plannedMonths': plannedMonths,
+        'startDate': startDate,
+        'endDate': endDate,
+        'status': status,
+        'personName': personName,
+        'employmentType': employmentType,
+        'location': location,
+        'employeeType': employeeType,
+        'notes': notes,
+      };
 
   factory StaffingRequirement.fromJson(Map<String, dynamic> json) {
     return StaffingRequirement(
@@ -6768,7 +6761,6 @@ class StaffingRequirement {
       employmentType: json['employmentType']?.toString() ?? 'FT',
       location: json['location']?.toString() ?? '',
       employeeType: json['employeeType']?.toString() ?? 'Employee',
-      nduAccess: json['nduAccess'] as bool? ?? false,
       notes: json['notes']?.toString() ?? '',
     );
   }
@@ -6785,7 +6777,6 @@ class StaffingRequirement {
     String? employmentType,
     String? location,
     String? employeeType,
-    bool? nduAccess,
     String? notes,
   }) {
     return StaffingRequirement(
@@ -6801,7 +6792,6 @@ class StaffingRequirement {
       employmentType: employmentType ?? this.employmentType,
       location: location ?? this.location,
       employeeType: employeeType ?? this.employeeType,
-      nduAccess: nduAccess ?? this.nduAccess,
       notes: notes ?? this.notes,
     );
   }

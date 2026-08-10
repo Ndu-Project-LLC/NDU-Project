@@ -23,9 +23,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
-import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:go_router/go_router.dart';
+
 class ContractsTrackingScreen extends StatefulWidget {
   const ContractsTrackingScreen({super.key});
 
@@ -612,39 +611,19 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       );
     }
 
- return _PanelShell(
- title: 'Contract register',
- subtitle: 'Track scope, owners, and renewal milestones',
- trailing: CsvEnabledSectionHeader(
-   tableTitle: 'Contracts Register',
-   compact: true,
-   columns: const [
-     CsvColumnSpec(key: 'name', label: 'Contract Name', required: true),
-     CsvColumnSpec(key: 'contractorName', label: 'Vendor/Supplier', required: true),
-     CsvColumnSpec(key: 'contractType', label: 'Contract Type', allowedValues: ['Fixed Price', 'Time & Material', 'Cost Plus', 'Retainer', 'Purchase Order', 'Lump Sum', 'Unit Price']),
-     CsvColumnSpec(key: 'paymentType', label: 'Payment Type', allowedValues: ['Milestone-based', 'Monthly', 'On Completion', 'Advance Payment', 'Quarterly']),
-     CsvColumnSpec(key: 'estimatedValue', label: 'Contract Value'),
-     CsvColumnSpec(key: 'startDate', label: 'Start Date'),
-     CsvColumnSpec(key: 'endDate', label: 'End Date'),
-     CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Draft', 'Under Review', 'Active', 'On Hold', 'Completed', 'Terminated', 'Expired'], defaultValue: 'Draft'),
-     CsvColumnSpec(key: 'owner', label: 'Contract Owner'),
-     CsvColumnSpec(key: 'discipline', label: 'Discipline'),
-     CsvColumnSpec(key: 'description', label: 'Description'),
-     CsvColumnSpec(key: 'notes', label: 'Notes'),
-   ],
-   onImport: (rows) => _importContractsFromCsv(rows),
-   onAdd: () => _showAddContractDialog(context),
-   addLabel: 'Add Contract',
- ),
- child: StreamBuilder<List<ContractModel>>(
- stream: contractsStream,
- builder: (context, snapshot) {
- if (snapshot.connectionState == ConnectionState.waiting) {
- return const Center(
- child: Padding(
- padding: EdgeInsets.all(24.0),
- child: CircularProgressIndicator()));
- }
+    return _PanelShell(
+      title: 'Contract register',
+      subtitle: 'Track scope, owners, and renewal milestones',
+      child: RepaintBoundary(
+        child: StreamBuilder<List<ContractModel>>(
+          stream: contractsStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                  child: Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: CircularProgressIndicator()));
+            }
 
             if (snapshot.hasError) {
               return Center(
@@ -2153,89 +2132,17 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     }
   }
 
- /// Import contracts from CSV data via CsvEnabledSectionHeader
- Future<void> _importContractsFromCsv(List<Map<String, String>> rows) async {
-   final projectId = _projectId;
-   if (projectId == null || !mounted) {
-     return;
-   }
-
-   final user = FirebaseAuth.instance.currentUser;
-   if (user == null) return;
-
-   var successCount = 0;
-   var errorCount = 0;
-
-   for (final row in rows) {
-     try {
-       // Parse dates
-       DateTime? startDate;
-       DateTime? endDate;
-       if (row['startDate'] != null && row['startDate']!.isNotEmpty) {
-         startDate = DateTime.tryParse(row['startDate']!);
-       }
-       if (row['endDate'] != null && row['endDate']!.isNotEmpty) {
-         endDate = DateTime.tryParse(row['endDate']!);
-       }
-
-       // Parse value
-       double estimatedValue = 0.0;
-       if (row['estimatedValue'] != null && row['estimatedValue']!.isNotEmpty) {
-         estimatedValue = double.tryParse(row['estimatedValue']!) ?? 0.0;
-       }
-
-       await ContractService.createContract(
-         projectId: projectId,
-         name: row['name'] ?? '',
-         description: row['description'] ?? '',
-         contractType: row['contractType'] ?? 'Fixed Price',
-         paymentType: row['paymentType'] ?? 'Milestone-based',
-         status: row['status'] ?? 'Draft',
-         estimatedValue: estimatedValue,
-         startDate: startDate,
-         endDate: endDate,
-         scope: row['notes'] ?? '', // Use notes as scope summary
-         discipline: row['discipline'] ?? 'General',
-         notes: row['notes'] ?? '',
-         createdById: user.uid,
-         createdByEmail: user.email ?? '',
-         createdByName: user.displayName ?? user.email ?? 'Unknown',
-       );
-       successCount++;
-     } catch (e) {
-       debugPrint('Error importing contract from CSV: $e');
-       errorCount++;
-     }
-   }
-
-   if (mounted && successCount > 0) {
-     ScaffoldMessenger.of(context).showSnackBar(
-       SnackBar(
-         content: Text('Successfully imported $successCount contract(s)${errorCount > 0 ? ' ($errorCount failed)' : ''}'),
-         backgroundColor: Colors.green,
-       ),
-     );
-   } else if (mounted && errorCount > 0) {
-     ScaffoldMessenger.of(context).showSnackBar(
-       SnackBar(
-         content: Text('Failed to import $errorCount contract(s). Check the data format.'),
-         backgroundColor: Colors.red,
-       ),
-     );
-   }
- }
-
- void _showAddContractDialog(BuildContext context) {
- final projectId = _projectId;
- if (projectId == null) {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(
- content: Text('No project selected. Please open a project first.')),
- );
- return;
- }
- _showContractDialog(null, projectId);
- }
+  void _showAddContractDialog(BuildContext context) {
+    final projectId = _projectId;
+    if (projectId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('No project selected. Please open a project first.')),
+      );
+      return;
+    }
+    _showContractDialog(null, projectId);
+  }
 
   // ignore: unused_element
   void _showEditContractDialog(BuildContext context, ContractModel contract) {
@@ -2821,216 +2728,229 @@ class _ApprovalGateRowState extends State<_ApprovalGateRow> {
     final priorityColor = _priorityColor(c.priority);
     final deptColor = _deptColor(c.department);
 
- return MouseRegion(
- onEnter: (_) => Future.microtask(() {
- if (mounted) setState(() => _isHovering = true);
- }),
- onExit: (_) => Future.microtask(() {
- if (mounted) setState(() => _isHovering = false);
- }),
- child: Column(
- children: [
- Container(
- color: _isHovering ? const Color(0xFFF9FAFB) : Colors.white,
- padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
- child: Row(
- crossAxisAlignment: CrossAxisAlignment.center,
- children: [
- // Gate name + description
- Expanded(
- flex: 5,
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- c.gate.trim().isEmpty ? 'Untitled gate' : c.gate,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: Color(0xFF111827),
- ),
- ),
- if (c.description.trim().isNotEmpty) ...[
- const SizedBox(height: 4),
- Text(
- c.description,
- maxLines: null, softWrap: true,
- overflow: TextOverflow.visible,
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w500,
- color: Color(0xFF6B7280),
- height: 1.4,
- ),
- ),
- ],
- ],
- ),
- ),
- // Approver
- Expanded(
- flex: 3,
- child: Center(
- child: Text(
- c.approver.trim().isEmpty ? 'Unassigned' : c.approver,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: c.approver.trim().isEmpty
- ? const Color(0xFF9CA3AF)
- : const Color(0xFF334155),
- ),
- ),
- ),
- ),
- // Department
- SizedBox(
- width: 130,
- child: Center(
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
- decoration: BoxDecoration(
- color: deptColor.withOpacity(0.08),
- borderRadius: BorderRadius.circular(6),
- border: Border.all(color: deptColor.withOpacity(0.18)),
- ),
- child: Text(
- c.department,
- textAlign: TextAlign.center,
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w700,
- color: deptColor,
- ),
- ),
- ),
- ),
- ),
- // Priority
- SizedBox(
- width: 120,
- child: Center(
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
- decoration: BoxDecoration(
- color: priorityColor.withOpacity(0.08),
- borderRadius: BorderRadius.circular(6),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Container(
- width: 6,
- height: 6,
- decoration: BoxDecoration(
- color: priorityColor,
- shape: BoxShape.circle,
- ),
- ),
- const SizedBox(width: 6),
- Text(
- c.priority,
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w700,
- color: priorityColor,
- ),
- ),
- ],
- ),
- ),
- ),
- ),
- // Status
- SizedBox(
- width: 130,
- child: Center(
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
- decoration: BoxDecoration(
- color: statusColor.withOpacity(0.1),
- borderRadius: BorderRadius.circular(8),
- ),
- child: Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- Icon(_statusIcon(c.status), size: 13, color: statusColor),
- const SizedBox(width: 6),
- Flexible(
- child: Text(
- c.status,
- overflow: TextOverflow.ellipsis,
- style: TextStyle(
- fontSize: 10,
- fontWeight: FontWeight.w700,
- color: statusColor,
- ),
- ),
- ),
- ],
- ),
- ),
- ),
- ),
- // Target date
- SizedBox(
- width: 130,
- child: Center(
- child: Text(
- c.targetDate.trim().isEmpty ? '—' : c.targetDate,
- style: const TextStyle(
- fontSize: 11,
- fontWeight: FontWeight.w600,
- color: Color(0xFF475569),
- ),
- ),
- ),
- ),
- // Actions
- SizedBox(
- width: 60,
- child: _isHovering
- ? Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- IconButton(
- icon: const Icon(Icons.edit_outlined, size: 15, color: Color(0xFF64748B)),
- onPressed: widget.onEdit,
- tooltip: 'Edit',
- padding: EdgeInsets.zero,
- constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
- ),
- IconButton(
- icon: const Icon(Icons.delete_outline, size: 15, color: Color(0xFFEF4444)),
- onPressed: widget.onDelete,
- tooltip: 'Delete',
- padding: EdgeInsets.zero,
- constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
- ),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
- ],
- )
- : const SizedBox(width: 56),
- ),
- ],
- ),
- ),
- if (widget.showDivider)
- const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
- ],
- ),
- );
- }
+    return MouseRegion(
+      onEnter: (_) => Future.microtask(() {
+        if (mounted) setState(() => _isHovering = true);
+      }),
+      onExit: (_) => Future.microtask(() {
+        if (mounted) setState(() => _isHovering = false);
+      }),
+      child: Column(
+        children: [
+          Container(
+            color: _isHovering ? const Color(0xFFF9FAFB) : Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Gate name + description
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        c.gate.trim().isEmpty ? 'Untitled gate' : c.gate,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      if (c.description.trim().isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          c.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF6B7280),
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // Approver
+                Expanded(
+                  flex: 3,
+                  child: Center(
+                    child: Text(
+                      c.approver.trim().isEmpty ? 'Unassigned' : c.approver,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: c.approver.trim().isEmpty
+                            ? const Color(0xFF9CA3AF)
+                            : const Color(0xFF334155),
+                      ),
+                    ),
+                  ),
+                ),
+                // Department
+                SizedBox(
+                  width: 130,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: deptColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: deptColor.withValues(alpha: 0.18)),
+                      ),
+                      child: Text(
+                        c.department,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: deptColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Priority
+                SizedBox(
+                  width: 120,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: priorityColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: priorityColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            c.priority,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: priorityColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Status
+                SizedBox(
+                  width: 130,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(_statusIcon(c.status),
+                              size: 13, color: statusColor),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              c.status,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: statusColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Target date
+                SizedBox(
+                  width: 130,
+                  child: Center(
+                    child: Text(
+                      c.targetDate.trim().isEmpty ? '—' : c.targetDate,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF475569),
+                      ),
+                    ),
+                  ),
+                ),
+                // Actions
+                SizedBox(
+                  width: 60,
+                  child: _isHovering
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit_outlined,
+                                  size: 15, color: Color(0xFF64748B)),
+                              onPressed: widget.onEdit,
+                              tooltip: 'Edit',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                  minWidth: 28, minHeight: 28),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline,
+                                  size: 15, color: Color(0xFFEF4444)),
+                              onPressed: widget.onDelete,
+                              tooltip: 'Delete',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                  minWidth: 28, minHeight: 28),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'KAZ AI: Generating suggestions...'),
+                                      duration: Duration(seconds: 2)),
+                                );
+                              },
+                              icon: const Icon(Icons.auto_awesome,
+                                  size: 16, color: Color(0xFFF59E0B)),
+                              tooltip: 'KAZ AI',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 28),
+                            ),
+                          ],
+                        )
+                      : const SizedBox(width: 56),
+                ),
+              ],
+            ),
+          ),
+          if (widget.showDivider)
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
+        ],
+      ),
+    );
+  }
 }
 
 class _RenewalEntryRow extends StatefulWidget {

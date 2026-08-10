@@ -31,8 +31,9 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/integrated_work_package_service.dart';
-import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
-import 'package:ndu_project/widgets/design_planning_warnings.dart';
+import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 
 const Color _kSurface = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
@@ -694,122 +695,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  );
  });
  _queueSave();
-}
-
-/// Get AI-powered gap analysis warnings for specifications
-Future<List<String>> _getSpecWarnings() async {
- final warnings = <String>[];
- 
- // Check for specs without requirement mappings
- final unmappedSpecs = _document.specifications
-     .where((s) => s.attachedRequirementIds.isEmpty)
-     .toList();
- if (unmappedSpecs.isNotEmpty) {
-   warnings.add(
-     '${unmappedSpecs.length} specification(s) not mapped to any requirement.',
-   );
  }
- 
- // Check for specs without WBS/package mapping
- final unscopedSpecs = _document.specifications
-     .where((s) => s.subscopePackageId.isEmpty && s.wbsWorkPackageId.isEmpty)
-     .toList();
- if (unscopedSpecs.isNotEmpty) {
-   warnings.add(
-     '${unscopedSpecs.length} specification(s) not linked to any work package or scope.',
-   );
- }
- 
- // Check for requirements without spec coverage
- if (_document.requirements.isNotEmpty) {
-   final coveredReqIds = <String>{};
-   for (final spec in _document.specifications) {
-     coveredReqIds.addAll(spec.attachedRequirementIds);
-   }
-   final uncoveredReqs = _document.requirements.length - coveredReqIds.length;
-   if (uncoveredReqs > 0) {
-     warnings.add('$uncoveredReqs requirement(s) lack specification coverage.');
-   }
- }
- 
- return warnings;
-}
-
-/// Run AI suggestion for requirement mappings  
-Future<void> _runAiSuggestMappings() async {
- showDialog(
-   context: context,
-   barrierDismissible: false,
-   builder: (context) => const Center(child: CircularProgressIndicator()),
- );
- 
- try {
-   final suggestions = <_MappingSuggestion>[];
-   final unmappedSpecs = _document.specifications
-       .where((s) => s.attachedRequirementIds.isEmpty).toList();
-   
-   final mappedReqIds = <String>{};
-   for (final spec in _document.specifications) {
-     mappedReqIds.addAll(spec.attachedRequirementIds);
-   }
-   final unmappedReqs = _document.requirements
-       .where((r) => !mappedReqIds.contains(r.id)).toList();
-   
-   for (final spec in unmappedSpecs) {
-     for (final req in unmappedReqs) {
-       final specWords = spec.title.toLowerCase().split(' ');
-       final reqWords = req.title.toLowerCase().split(' ');
-       final commonWords = specWords.where((w) => w.length > 3 && reqWords.contains(w)).toList();
-       if (commonWords.isNotEmpty) {
-         suggestions.add(_MappingSuggestion(
-           sourceId: spec.id, sourceTitle: spec.title,
-           targetId: req.id, targetTitle: req.title,
-           confidence: (commonWords.length / specWords.length * 100).clamp(50, 95).toDouble(),
-         ));
-       }
-     }
-   }
-   
-   suggestions.sort((a, b) => b.confidence.compareTo(a.confidence));
-   Navigator.of(context).pop();
-   if (!mounted) return;
-   
-   if (suggestions.isEmpty) {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('No mapping suggestions found.'), backgroundColor: Colors.blue),
-     );
-     return;
-   }
-   
-   await showDialog(
-     context: context,
-     builder: (context) => _AiMappingSuggestionsDialog(
-       suggestions: suggestions,
-       onApply: (acceptedSuggestions) {
-         setState(() {
-           for (final suggestion in acceptedSuggestions) {
-             final idx = _document.specifications.indexWhere((s) => s.id == suggestion.sourceId);
-             if (idx >= 0) {
-               final spec = _document.specifications[idx];
-               if (!spec.attachedRequirementIds.contains(suggestion.targetId)) {
-                 spec.attachedRequirementIds.add(suggestion.targetId);
-                 spec.requirementMappingCount = spec.attachedRequirementIds.length;
-               }
-             }
-           }
-         });
-         _queueSave();
-       },
-     ),
-   );
- } catch (e) {
-   if (Navigator.of(context, rootNavigator: true).canPop()) Navigator.of(context, rootNavigator: true).pop();
-   if (!mounted) return;
-   ScaffoldMessenger.of(context).showSnackBar(
-     SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-   );
- }
-}
 
  void _addDeviation() {
  setState(() {
@@ -946,22 +832,8 @@ Future<void> _runAiSuggestMappings() async {
  child: buildNduDataTable(context: context, 
  columnSpacing: 30,
  dataRowMinHeight: 56,
- dataRowMaxHeight: double.infinity,
+ dataRowMaxHeight: 76,
  columns: const [
- // New columns at the beginning
- DataColumn(
- label: SizedBox(
- width: 90,
- child: Text('Code'))),
- DataColumn(
- label: SizedBox(
- width: 150,
- child: Text('Subscope Package'))),
- DataColumn(
- label: SizedBox(
- width: 80,
- child: Text('Coverage'))),
- // Original columns
  DataColumn(
  label: SizedBox(
  width: 220,
@@ -1000,38 +872,6 @@ Future<void> _runAiSuggestMappings() async {
  .map(
  (item) => DataRow(
  cells: [
- // Code cell
- DataCell(SizedBox(
- width: 90,
- child: Text(
- item.specCode.isNotEmpty ? item.specCode : '-',
- style: TextStyle(
- fontWeight: FontWeight.bold,
- color: Color(0xFF4154F1), // Indigo color for codes
- fontSize: 12,
- ),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
- ),
- )),
- // Subscope Package cell
- DataCell(SizedBox(
- width: 150,
- child: Text(
- item.subscopePackageTitle.isNotEmpty 
-     ? item.subscopePackageTitle 
-     : (item.wbsWorkPackageTitle.isNotEmpty ? item.wbsWorkPackageTitle : '-'),
- maxLines: 2,
- softWrap: true,
- overflow: TextOverflow.visible,
- ),
- )),
- // Coverage cell with visual indicator
- DataCell(SizedBox(
- width: 80,
- child: _buildCoverageIndicator(item.coveragePercent),
- )),
- // Original cells
  DataCell(SizedBox(
  width: 220,
  child: Text(
@@ -1305,44 +1145,6 @@ Future<void> _runAiSuggestMappings() async {
  String _pdfCellValue(String value) {
  final trimmed = value.trim();
  return trimmed.isEmpty ? '-' : trimmed;
- }
-
- /// Builds a visual coverage indicator with a progress bar and percentage text.
- /// Color coding: green (>=90%), orange (>=50%), red (>0%), grey (0%).
- Widget _buildCoverageIndicator(double coverage) {
-   Color color;
-   String text;
-   
-   if (coverage >= 0.9) {
-     color = Colors.green;
-     text = '${(coverage * 100).toInt()}%';
-   } else if (coverage >= 0.5) {
-     color = Colors.orange;
-     text = '${(coverage * 100).toInt()}%';
-   } else if (coverage > 0) {
-     color = Colors.red;
-     text = '${(coverage * 100).toInt()}%';
-   } else {
-     color = Colors.grey;
-     text = '0%';
-   }
-   
-   return Row(
-     mainAxisSize: MainAxisSize.min,
-     children: [
-       SizedBox(
-         width: 30,
-         child: LinearProgressIndicator(
-           value: coverage,
-           backgroundColor: color.withOpacity(0.2),
-           valueColor: AlwaysStoppedAnimation<Color>(color),
-           borderRadius: BorderRadius.circular(3),
-         ),
-       ),
-       SizedBox(width: 6),
-       Text(text, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
-     ],
-   );
  }
 
  String _buildSpecificationsPdfFilename() {
@@ -2771,44 +2573,6 @@ Future<void> _runAiSuggestMappings() async {
  ),
  ),
  ],
- // AI-Powered Gap Analysis Warnings
- FutureBuilder<List<String>>(
- future: _getSpecWarnings(),
- builder: (context, snapshot) {
- if (!snapshot.hasData || snapshot.data!.isEmpty) {
- return const SizedBox.shrink();
- }
- return DesignPlanningWarningsWidget(
- warnings: snapshot.data!.map((msg) => DesignPlanningWarning(
- id: msg.hashCode.toString(),
- message: msg,
- severity: msg.contains('not mapped') || msg.contains('not linked')
- ? WarningSeverity.warning
- : WarningSeverity.info,
- )).toList(),
- );
- },
- ),
-
- // Coverage Summary Card
- if (_document.specifications.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: CoverageSummaryCard(
- totalSpecs: _document.specifications.length,
- mappedToRequirements: _document.specifications
- .where((s) => s.attachedRequirementIds.isNotEmpty)
- .length,
- mappedToPackages: _document.specifications
- .where((s) =>
- s.subscopePackageId.isNotEmpty ||
- s.wbsWorkPackageId.isNotEmpty)
- .length,
- totalRequirements: _document.requirements.length,
- totalPackages: 0, // Would need to fetch from work packages
- ),
- ),
-
  Row(
  children: [
  const Text(
@@ -2858,12 +2622,7 @@ Future<void> _runAiSuggestMappings() async {
  ),
  const SizedBox(width: 4),
  _InlineAddButton(label: 'Add row', onPressed: _addSpecificationRow),
- const SizedBox(width: 4),
- IconButton(
- icon: Icon(Icons.auto_awesome, color: Color(0xFF4154F1)),
- tooltip: 'AI Suggest Mappings',
- onPressed: _runAiSuggestMappings,
- ),
+ ],
  ),
  const SizedBox(height: 8),
  _ActionButton(
@@ -5939,173 +5698,6 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Mapping suggestion model for AI-powered suggestions
-class _MappingSuggestion {
- final String sourceId;
- final String sourceTitle;
- final String targetId;
- final String targetTitle;
- final double confidence;
-
- const _MappingSuggestion({
-   required this.sourceId,
-   required this.sourceTitle,
-   required this.targetId,
-   required this.targetTitle,
-   required this.confidence,
- });
-}
-
-/// Dialog to display and manage AI mapping suggestions
-class _AiMappingSuggestionsDialog extends StatefulWidget {
- final List<_MappingSuggestion> suggestions;
- final void Function(List<_MappingSuggestion>) onApply;
-
- const _AiMappingSuggestionsDialog({
-   super.key,
-   required this.suggestions,
-   required this.onApply,
- });
-
- @override
- State<_AiMappingSuggestionsDialog> createState() => _AiMappingSuggestionsDialogState();
-}
-
-class _AiMappingSuggestionsDialogState extends State<_AiMappingSuggestionsDialog> {
- final Set<int> _selectedIndices = {};
-
- @override
- Widget build(BuildContext context) {
-   return AlertDialog(
-     title: Row(
-       children: [
-         Icon(Icons.auto_awesome, color: Color(0xFF4154F1)),
-         SizedBox(width: 8),
-         Text('AI Mapping Suggestions'),
-       ],
-     ),
-     content: SizedBox(
-       width: 500,
-       height: 350,
-       child: Column(
-         mainAxisSize: MainAxisSize.min,
-         crossAxisAlignment: CrossAxisAlignment.start,
-         children: [
-           Text(
-             '${widget.suggestions.length} suggestion(s) found based on title similarity:',
-             style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-           ),
-           SizedBox(height: 12),
-           Expanded(
-             child: ListView.builder(
-               itemCount: widget.suggestions.length,
-               itemBuilder: (context, index) {
-                 final suggestion = widget.suggestions[index];
-                 final isSelected = _selectedIndices.contains(index);
-                 return Card(
-                   margin: EdgeInsets.only(bottom: 8),
-                   color: isSelected ? Colors.blue.shade50 : null,
-                   child: InkWell(
-                     onTap: () {
-                       setState(() {
-                         if (isSelected) {
-                           _selectedIndices.remove(index);
-                         } else {
-                           _selectedIndices.add(index);
-                         }
-                       });
-                     },
-                     child: Padding(
-                       padding: EdgeInsets.all(12),
-                       child: Row(
-                         children: [
-                           Checkbox(
-                             value: isSelected,
-                             onChanged: (v) {
-                               setState(() {
-                                 if (v == true) {
-                                   _selectedIndices.add(index);
-                                 } else {
-                                   _selectedIndices.remove(index);
-                                 }
-                               });
-                             },
-                           ),
-                           Expanded(
-                             child: Column(
-                               crossAxisAlignment: CrossAxisAlignment.start,
-                               children: [
-                                 Text(
-                                   suggestion.sourceTitle,
-                                   style: TextStyle(fontWeight: FontWeight.w600),
-                                 ),
-                                 SizedBox(height: 4),
-                                 Row(
-                                   children: [
-                                     Icon(Icons.arrow_downward, size: 16, color: Colors.grey),
-                                     SizedBox(width: 4),
-                                     Expanded(
-                                       child: Text(
-                                         suggestion.targetTitle,
-                                         style: TextStyle(color: Colors.grey[700]),
-                                       ),
-                                     ),
-                                   ],
-                                 ),
-                               ],
-                             ),
-                           ),
-                           Container(
-                             padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                             decoration: BoxDecoration(
-                               color: _getConfidenceColor(suggestion.confidence).withOpacity(0.1),
-                               borderRadius: BorderRadius.circular(12),
-                             ),
-                             child: Text(
-                               '${suggestion.confidence.toInt()}%',
-                               style: TextStyle(
-                                 color: _getConfidenceColor(suggestion.confidence),
-                                 fontWeight: FontWeight.bold,
-                                 fontSize: 12,
-                               ),
-                             ),
-                           ),
-                         ],
-                       ),
-                     ),
-                   ),
-                 );
-               },
-             ),
-           ),
-         ],
-       ),
-     ),
-     actions: [
-       TextButton(
-         onPressed: () => Navigator.of(context).pop(),
-         child: Text('Cancel'),
-       ),
-       FilledButton.icon(
-         onPressed: _selectedIndices.isEmpty ? null : () {
-           final accepted = _selectedIndices.map((i) => widget.suggestions[i]).toList();
-           widget.onApply(accepted);
-           Navigator.of(context).pop();
-         },
-         icon: Icon(Icons.check, size: 18),
-         label: Text('Apply Selected (${_selectedIndices.length})'),
-       ),
-     ],
-   );
- }
-
- Color _getConfidenceColor(double confidence) {
-   if (confidence >= 80) return Colors.green;
-   if (confidence >= 60) return Colors.orange;
-   return Colors.red;
- }
 }
 
 class _UploadedDoc {

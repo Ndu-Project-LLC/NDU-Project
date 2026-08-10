@@ -1978,48 +1978,20 @@ Guidelines:
 - Use a pipe separator: name|description
 ''';
 
-      String result = '';
-      const maxRetries = 3;
-      for (int attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          if (mounted && attempt > 1) {
-            setState(() => _kazAiLoading = true);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                    'Retrying... (attempt $attempt/$maxRetries)'),
-                duration: const Duration(seconds: 2),
-                backgroundColor: const Color(0xFFF59E0B),
-              ),
-            );
-          }
-          result = await OpenAiServiceSecure().generateCompletion(
-            prompt,
-            maxTokens: 600,
-            temperature: 0.7,
-          );
-          break;
-        } catch (e) {
-          if (attempt == maxRetries) rethrow;
-          await Future.delayed(Duration(seconds: 2 * attempt));
-        }
-      }
+      final result = await OpenAiServiceSecure().generateCompletion(
+        prompt,
+        maxTokens: 600,
+        temperature: 0.7,
+      );
 
       if (!mounted) return;
 
       if (result.trim().isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('AI returned empty result'),
-              backgroundColor: const Color(0xFFEF4444),
-              action: SnackBarAction(
-                label: 'Try Again',
-                textColor: Colors.white,
-                onPressed: () =>
-                    _generateWithKazAi(context, provider, wbs),
-              ),
-            ),
+            const SnackBar(
+                content: Text('KAZ AI returned empty result'),
+                backgroundColor: Color(0xFFEF4444)),
           );
         }
         return;
@@ -2035,16 +2007,9 @@ Guidelines:
       if (lines.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Could not parse AI output'),
-              backgroundColor: const Color(0xFFEF4444),
-              action: SnackBarAction(
-                label: 'Try Again',
-                textColor: Colors.white,
-                onPressed: () =>
-                    _generateWithKazAi(context, provider, wbs),
-              ),
-            ),
+            const SnackBar(
+                content: Text('Could not parse KAZ AI output'),
+                backgroundColor: Color(0xFFEF4444)),
           );
         }
         return;
@@ -2058,98 +2023,16 @@ Guidelines:
           final name = parts[0].trim();
           final desc = parts.sublist(1).join('|').trim();
           if (name.isNotEmpty) {
-            final id = provider.addChildNode(wbs.level0.id, name, desc);
-            if (id.isNotEmpty) {
-              addedNodes.add((name: name, id: id, description: desc));
-            }
+            provider.addChildNode(wbs.level0.id, name, desc);
+            added++;
           }
         }
       }
 
-      if (mounted && addedNodes.isNotEmpty && wbs.framework.maxDepth >= 2) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text('Added $addedNodes.length ${fm.level1Label} node(s). Generating Level 2...'),
-            backgroundColor: const Color(0xFFF59E0B),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-
-        int l2Added = 0;
-        for (final node in addedNodes) {
-          final l2Prompt = '''
-You are a WBS expert. Generate 2-4 Level 2 ${fm.level2Label} children for the following Level 1 ${fm.level1Label}.
-
-Project: "${wbs.projectName}"
-Framework: ${fm.label}
-Level 1 Node: "${node.name}"
-Level 1 Description: "${node.description}"
-Level 2 label: ${fm.level2Label}
-Level 3 label: ${fm.level3Label}
-Methodology: ${wbs.methodology.label}
-${goalsContext}
-${planningGoalsContext}
-
-Output format: pipe-delimited list, one per line.
-Each line: NodeName|Description
-
-Guidelines:
-- Use deliverable-based names (nouns not verbs)
-- Be specific to the Level 1 node context
-- Suggest 2-4 children
-''';
-
-          String l2Result = '';
-          for (int attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-              l2Result = await OpenAiServiceSecure().generateCompletion(
-                l2Prompt,
-                maxTokens: 600,
-                temperature: 0.7,
-              );
-              break;
-            } catch (e) {
-              if (attempt == maxRetries) break;
-              await Future.delayed(Duration(seconds: 2 * attempt));
-            }
-          }
-
-          if (!mounted) return;
-
-          final l2Lines = l2Result
-              .split('\n')
-              .map((l) => l.trim())
-              .where((l) => l.isNotEmpty && l.contains('|'))
-              .toList();
-
-          for (final line in l2Lines) {
-            final parts = line.split('|');
-            if (parts.length >= 2) {
-              final childName = parts[0].trim();
-              final childDesc = parts.sublist(1).join('|').trim();
-              if (childName.isNotEmpty) {
-                provider.addChildNode(node.id, childName, childDesc);
-                l2Added++;
-              }
-            }
-          }
-        }
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  'Added $addedNodes.length ${fm.level1Label} + $l2Added ${fm.level2Label} nodes'),
-              backgroundColor: const Color(0xFF059669),
-            ),
-          );
-        }
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                Text('Added $addedNodes.length ${fm.level1Label} node(s)'),
+            content: Text('KAZ AI added $added ${fm.level1Label} node(s)'),
             backgroundColor: const Color(0xFF059669),
           ),
         );
@@ -2158,7 +2041,7 @@ Guidelines:
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('AI generation error: $e'),
+            content: Text('KAZ AI error: $e'),
             backgroundColor: const Color(0xFFEF4444),
           ),
         );

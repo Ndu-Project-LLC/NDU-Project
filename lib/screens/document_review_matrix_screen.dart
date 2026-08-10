@@ -12,8 +12,8 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
-import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:go_router/go_router.dart';
 const Color _kBackground = Color(0xFFF7F8FC);
 const Color _kAccent = Color(0xFFFFC812);
 const Color _kHeadline = Color(0xFF1A1D1F);
@@ -429,7 +429,6 @@ class _DocumentReviewMatrixScreenState
  ),
  child: Column(
  children: [
- _buildTableToolbar(),
  _buildTableHeader(),
  if (_filteredDocuments.isEmpty)
  _buildEmptyState()
@@ -437,55 +436,8 @@ class _DocumentReviewMatrixScreenState
  _buildTableRows(),
  ],
  ),
- );
- }
-
- /// Build the toolbar with CSV import and action buttons
- Widget _buildTableToolbar() {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
- decoration: BoxDecoration(
- border: Border(
- bottom: BorderSide(color: const Color(0xFFE5E7EB)),
  ),
- ),
- child: Row(
- children: [
- Expanded(
- child: Text(
- '${_filteredDocuments.length} Documents',
- style: TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w500,
- color: _kMuted,
- ),
- ),
- ),
- CsvEnabledSectionHeader(
- tableTitle: 'Document Review Matrix',
- columns: const [
- CsvColumnSpec(key: 'documentName', label: 'Document Name', required: true),
- CsvColumnSpec(key: 'description', label: 'Description'),
- CsvColumnSpec(key: 'phase', label: 'Phase', allowedValues: ['Initiation', 'Front-End Planning', 'Planning', 'Design', 'Execution', 'Launch']),
- CsvColumnSpec(key: 'category', label: 'Category', allowedValues: ['Governance', 'Requirements', 'Risk & Compliance', 'Execution', 'Technical', 'Quality', 'Contracts & Procurement', 'Schedule & Cost', 'Team & Stakeholders']),
- CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Not Started', 'Pending Review', 'Under Review', 'Changes Requested', 'Approved', 'Rejected']),
- CsvColumnSpec(key: 'reviewer', label: 'Primary Reviewer'),
- CsvColumnSpec(key: 'approver', label: 'Final Approver'),
- CsvColumnSpec(key: 'dueDate', label: 'Due Date'),
- CsvColumnSpec(key: 'version', label: 'Version'),
- CsvColumnSpec(key: 'comments', label: 'Comments/Feedback'),
- ],
- onImport: _handleCsvImport,
- compact: true,
- ),
- ],
- ),
- );
- }
-
- Widget _buildTableHeader() {
- return Container(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+ tableBuilder: (fsContext) => Container(
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(18),
@@ -493,194 +445,11 @@ class _DocumentReviewMatrixScreenState
  ),
  child: Column(
  children: [
- Icon(Icons.description_outlined,
- size: 64, color: _kMuted.withOpacity(0.5)),
- const SizedBox(height: 16),
- Text(
- 'No documents found',
- style: TextStyle(
- fontSize: 18,
- fontWeight: FontWeight.w500,
- color: _kMuted,
- ),
- ),
- const SizedBox(height: 8),
- Text(
- 'Try adjusting your filters or search terms',
- style: TextStyle(
- fontSize: 14,
- color: _kMuted,
- ),
- ),
- ],
- ),
- );
- }
-
- Widget _buildTableRows() {
- return Column(
- children: [
- for (var i = 0; i < _filteredDocuments.length; i++)
- _buildTableRow(_filteredDocuments[i], i),
- ],
- );
- }
-
- Widget _buildTableRow(DocumentReviewItem doc, int index) {
- final isEven = index.isEven;
- return InkWell(
- onTap: () => _showDocumentPreview(doc),
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
- decoration: BoxDecoration(
- color: doc.isOverdue
- ? Colors.red.withOpacity(0.05)
- : (isEven ? Colors.white : const Color(0xFFF9FAFB)),
- border: Border(
- top: BorderSide(
- color: const Color(0xFFE5E7EB),
- width: index == 0 ? 1 : 0.5,
- ),
- ),
- ),
- child: Row(
- children: [
- SizedBox(
- width: 50,
- child: Center(
- child: Text(
- '${index + 1}',
- style: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: Color(0xFF9CA3AF),
- ),
- ),
- ),
- ),
- Expanded(
- flex: 2,
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text(
- doc.documentName,
- style: TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w500,
- color: _kHeadline,
- ),
- ),
- if (doc.description.isNotEmpty)
- Text(
- doc.description,
- style: TextStyle(
- fontSize: 12,
- color: _kMuted,
- ),
- maxLines: null,
- softWrap: true,
- overflow: TextOverflow.visible,
- ),
- ],
- ),
- ),
- Expanded(child: Text(doc.phaseLabel, style: _cellStyle)),
- Expanded(child: Text(doc.categoryLabel, style: _cellStyle)),
- Expanded(child: _buildStatusChip(doc.status)),
- Expanded(
- child: Text(
- doc.primaryReviewerName ?? 'Unassigned',
- style: _cellStyle,
- ),
- ),
- Expanded(
- child: Text(
- doc.finalApproverName ?? 'Unassigned',
- style: _cellStyle,
- ),
- ),
- Expanded(
- child: Text(
- doc.reviewDueDate != null
- ? '${doc.reviewDueDate!.month}/${doc.reviewDueDate!.day}'
- : '-',
- style: _cellStyle.copyWith(
- color: doc.isOverdue ? Colors.red : null,
- ),
- ),
- ),
- Expanded(
- child: Center(
- child: Container(
- padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
- decoration: BoxDecoration(
- color: Colors.grey.withOpacity(0.1),
- borderRadius: BorderRadius.circular(12),
- ),
- child: Text('v${doc.version}'),
- ),
- ),
- ),
- SizedBox(
- width: 60,
- child: Row(
- mainAxisAlignment: MainAxisAlignment.center,
- children: [
- IconButton(
- icon: const Icon(Icons.visibility_outlined, size: 18),
- onPressed: () => _showDocumentPreview(doc),
- tooltip: 'Preview',
- ),
- PopupMenuButton<String>(
- icon: const Icon(Icons.more_vert, size: 18),
- onSelected: (action) => _handleMenuAction(action, doc),
- itemBuilder: (context) => [
- const PopupMenuItem(
- value: 'assign',
- child: Row(
- children: [
- Icon(Icons.person_add_outlined, size: 18),
- SizedBox(width: 12),
- Text('Assign Reviewer'),
- ],
- ),
- ),
- const PopupMenuItem(
- value: 'approve',
- child: Row(
- children: [
- Icon(Icons.check_circle_outline, size: 18),
- SizedBox(width: 12),
- Text('Approve'),
- ],
- ),
- ),
- const PopupMenuItem(
- value: 'reject',
- child: Row(
- children: [
- Icon(Icons.cancel_outlined, size: 18),
- SizedBox(width: 12),
- Text('Reject'),
- ],
- ),
- ),
- const PopupMenuItem(
- value: 'request_changes',
- child: Row(
- children: [
- Icon(Icons.edit_outlined, size: 18),
- SizedBox(width: 12),
- Text('Request Changes'),
- ],
- ),
- ),
- ],
- ),
- ],
- ),
- ),
+ _buildTableHeader(),
+ if (_filteredDocuments.isEmpty)
+ _buildEmptyState()
+ else
+ _buildTableRows(),
  ],
  ),
  ),
@@ -1133,172 +902,94 @@ class _DocumentReviewMatrixScreenState
     );
   }
 
- /// Handle CSV import callback - converts CSV rows to DocumentReviewItems and saves
- void _handleCsvImport(List<Map<String, String>> rows) {
- final projectId = _projectId;
- if (projectId == null) {
- ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('Error: Project ID not found')),
- );
- return;
- }
+  void _showReviewDialog(
+    DocumentReviewItem doc,
+    String title,
+    String actionLabel,
+    IconData icon,
+    Color color,
+    Future<bool> Function(String?) onSubmit,
+  ) {
+    final controller = TextEditingController();
 
- final newDocuments = <DocumentReviewItem>[];
- for (final row in rows) {
- final doc = _createDocumentFromCsvRow(row);
- newDocuments.add(doc);
- }
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(width: 12),
+            Text(title),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Document: ${doc.documentName}'),
+            const SizedBox(height: 16),
+            VoiceTextField(
+              controller: controller,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                hintText: 'Enter comments (optional)...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final success = await onSubmit(
+                  controller.text.isEmpty ? null : controller.text);
+              if (success && mounted) {
+                _loadData();
+                Navigator.of(context).pop();
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: color),
+            child: Text(actionLabel.toUpperCase()),
+          ),
+        ],
+      ),
+    );
+  }
 
- // Add new documents to existing list and save
- setState(() {
- _allDocuments = [..._allDocuments, ...newDocuments];
- _applyFilters();
- });
+  static const TextStyle _headerStyle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.8,
+    color: Color(0xFF6B7280),
+  );
 
- // Save to backend
- DocumentReviewService.instance.saveDocumentReviewMatrix(
- projectId: projectId,
- reviewItems: _allDocuments,
- ).then((success) {
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Successfully imported ${newDocuments.length} document(s)'),
- backgroundColor: Colors.green,
- ),
- );
- }
- }).catchError((e) {
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Error saving imported documents: $e'),
- backgroundColor: Colors.red,
- ),
- );
- }
- });
- }
+  static const TextStyle _cellStyle = TextStyle(
+    fontSize: 14,
+    color: Color(0xFF374151),
+  );
 
- /// Create a DocumentReviewItem from a CSV row map
- DocumentReviewItem _createDocumentFromCsvRow(Map<String, String> row) {
- // Parse phase enum
- DocumentPhase phase = DocumentPhase.planning;
- final phaseStr = row['phase']?.toLowerCase().replaceAll('-', '') ?? '';
- if (phaseStr.contains('initiation')) {
- phase = DocumentPhase.initiation;
- } else if (phaseStr.contains('frontend') || phaseStr.contains('frontend')) {
- phase = DocumentPhase.frontEndPlanning;
- } else if (phaseStr.contains('planning')) {
- phase = DocumentPhase.planning;
- } else if (phaseStr.contains('design')) {
- phase = DocumentPhase.design;
- } else if (phaseStr.contains('execution')) {
- phase = DocumentPhase.execution;
- } else if (phaseStr.contains('launch')) {
- phase = DocumentPhase.launch;
- }
-
- // Parse category enum
- DocumentCategory category = DocumentCategory.governance;
- final categoryStr = row['category']?.toLowerCase().replaceAll('&', '').replaceAll(' ', '') ?? '';
- if (categoryStr.contains('governance')) {
- category = DocumentCategory.governance;
- } else if (categoryStr.contains('requirements')) {
- category = DocumentCategory.requirements;
- } else if (categoryStr.contains('risk') || categoryStr.contains('compliance')) {
- category = DocumentCategory.riskCompliance;
- } else if (categoryStr.contains('execution')) {
- category = DocumentCategory.execution;
- } else if (categoryStr.contains('technical')) {
- category = DocumentCategory.technical;
- } else if (categoryStr.contains('quality')) {
- category = DocumentCategory.quality;
- } else if (categoryStr.contains('contract') || categoryStr.contains('procurement')) {
- category = DocumentCategory.contractsProcurement;
- } else if (categoryStr.contains('schedule') || categoryStr.contains('cost')) {
- category = DocumentCategory.scheduleCost;
- } else if (categoryStr.contains('team') || categoryStr.contains('stakeholder')) {
- category = DocumentCategory.teamStakeholders;
- }
-
- // Parse status enum
- ReviewStatus status = ReviewStatus.notStarted;
- final statusStr = row['status']?.toLowerCase().replaceAll(' ', '') ?? '';
- if (statusStr.contains('notstarted')) {
- status = ReviewStatus.notStarted;
- } else if (statusStr.contains('pending')) {
- status = ReviewStatus.pendingReview;
- } else if (statusStr.contains('underreview')) {
- status = ReviewStatus.underReview;
- } else if (statusStr.contains('changesrequested')) {
- status = ReviewStatus.changesRequested;
- } else if (statusStr.contains('approved')) {
- status = ReviewStatus.approved;
- } else if (statusStr.contains('rejected')) {
- status = ReviewStatus.rejected;
- }
-
- // Parse version
- int version = 1;
- if (row['version'] != null && row['version']!.isNotEmpty) {
- version = int.tryParse(row['version']!) ?? 1;
- }
-
- // Parse due date
- DateTime? reviewDueDate;
- if (row['dueDate'] != null && row['dueDate']!.isNotEmpty) {
- try {
- reviewDueDate = DateTime.parse(row['dueDate']!);
- } catch (e) {
- // Try common date formats
- try {
- final parts = row['dueDate']!.split('/');
- if (parts.length == 3) {
- reviewDueDate = DateTime(
- int.parse(parts[2]), // year
- int.parse(parts[0]), // month
- int.parse(parts[1]), // day
- );
- }
- } catch (_) {
- // Leave as null if parsing fails
- }
- }
- }
-
- return DocumentReviewItem(
- id: DateTime.now().microsecondsSinceEpoch.toString(),
- documentId: DateTime.now().microsecondsSinceEpoch.toString(),
- documentName: row['documentName'] ?? '',
- description: row['description'] ?? '',
- phase: phase,
- category: category,
- sourceCheckpoint: 'csv_import',
- status: status,
- primaryReviewerName: row['reviewer'],
- finalApproverName: row['approver'],
- reviewDueDate: reviewDueDate,
- reviewComments: row['comments'],
- version: version,
- lastUpdated: DateTime.now(),
- );
- }
-
- Future<void> _exportPdf() async {
- final projectData = ProjectDataHelper.getData(context);
- await PdfExportHelper.exportScreenPdf(
- context: context,
- screenTitle: 'Document Review Matrix',
- sections: [
- PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
- ]),
- PdfSection.text('Notes', projectData.planningNotes['planning_document_review_matrix_notes'] ?? 'No data recorded.'),
- ],
- );
- }
+  Future<void> _exportPdf() async {
+    final projectData = ProjectDataHelper.getData(context);
+    await PdfExportHelper.exportScreenPdf(
+      context: context,
+      screenTitle: 'Document Review Matrix',
+      sections: [
+        PdfSection.keyValue('Project Info', [
+          {'Project Name': projectData.projectName ?? 'N/A'},
+          {'Solution Title': projectData.solutionTitle ?? 'N/A'},
+        ]),
+        PdfSection.text(
+            'Notes',
+            projectData
+                    .planningNotes['planning_document_review_matrix_notes'] ??
+                'No data recorded.'),
+      ],
+    );
+  }
 }
 
 class _DocumentPreviewDialog extends StatelessWidget {

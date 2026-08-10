@@ -17,8 +17,8 @@ import 'package:ndu_project/widgets/activity_log_panel.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:ndu_project/widgets/my_raci_assignments_panel.dart';
+
 class ProjectActivitiesLogScreen extends StatefulWidget {
  const ProjectActivitiesLogScreen({super.key});
 
@@ -231,7 +231,7 @@ class _ProjectActivitiesLogScreenState
  title: Text(
  option,
  style: const TextStyle(fontSize: 13),
- overflow: TextOverflow.visible,
+ overflow: TextOverflow.ellipsis,
  ),
  onChanged: (_) {
  setModalState(() {
@@ -355,53 +355,6 @@ class _ProjectActivitiesLogScreenState
  );
  });
  await _persistActivityLog();
- }
-
- /// Import activities from CSV data.
- /// Each row in [rows] contains column keys matching the CsvColumnSpec definitions.
- Future<void> _importActivitiesFromCsv(List<Map<String, String>> rows) async {
- final now = DateTime.now();
- final provider = ProjectDataHelper.getProvider(context);
-
- final newActivities = <ProjectActivity>[];
- for (final row in rows) {
-   final activity = ProjectActivity(
-     id: 'activity_custom_${now.millisecondsSinceEpoch}_${newActivities.length}',
-     title: row['title']?.trim() ?? '',
-     description: row['description']?.trim() ?? '',
-     sourceSection: 'csv_import',
-     phase: row['phase']?.trim().isNotEmpty == true ? row['phase']!.trim() : 'Planning Phase',
-     discipline: row['discipline']?.trim().isNotEmpty == true ? row['discipline']!.trim() : 'Project Management',
-     role: row['role']?.trim().isNotEmpty == true ? row['role']!.trim() : 'Project Lead',
-     assignedTo: row['assignedTo']?.trim().isNotEmpty == true ? row['assignedTo']!.trim() : null,
-     dueDate: row['dueDate']?.trim() ?? '',
-     status: _parseProjectActivityStatus(row['status']),
-     approvalStatus: _parseProjectApprovalStatus(row['approvalStatus']),
-     createdAt: now,
-     updatedAt: now,
-   );
-   newActivities.add(activity);
- }
-
- provider.updateField((data) {
-   final existingActivities = List<ProjectActivity>.from(data.projectActivities);
-   final customActivities = List<ProjectActivity>.from(data.customProjectActivities)
-     ..addAll(newActivities);
-   
-   return data.copyWith(
-     projectActivities: existingActivities..addAll(newActivities),
-     customProjectActivities: customActivities,
-   );
- });
-
- await _persistActivityLog();
-
- if (!mounted) return;
- ScaffoldMessenger.of(context).showSnackBar(
-   SnackBar(
-     content: Text('Successfully imported ${newActivities.length} activity(ies).'),
-   ),
- );
  }
 
  Future<void> _deleteActivity(
@@ -842,32 +795,33 @@ class _ProjectActivitiesLogScreenState
  ),
  ),
  const SizedBox(width: 12),
- CsvEnabledSectionHeader(
- tableTitle: 'Project Activities Log',
- columns: [
- CsvColumnSpec(key: 'title', label: 'Title', required: true),
- CsvColumnSpec(key: 'description', label: 'Description', required: true),
- CsvColumnSpec(key: 'phase', label: 'Phase'),
- CsvColumnSpec(key: 'discipline', label: 'Discipline'),
- CsvColumnSpec(key: 'role', label: 'Role'),
- CsvColumnSpec(key: 'assignedTo', label: 'Assigned To'),
- CsvColumnSpec(key: 'dueDate', label: 'Due Date'),
- CsvColumnSpec(
- key: 'status', 
- label: 'Status', 
- allowedValues: ['pending', 'acknowledged', 'implemented', 'rejected', 'deferred'],
- defaultValue: 'pending',
+ OutlinedButton.icon(
+ onPressed: () => _openActivityEditor(
+ existing: null,
+ isCustom: true,
  ),
- CsvColumnSpec(
- key: 'approvalStatus', 
- label: 'Approval Status',
- allowedValues: ['draft', 'approved', 'locked'],
- defaultValue: 'draft',
+ icon: const Icon(Icons.add, size: 16),
+ label: const Text(
+ 'Add Activity',
+ style: TextStyle(
+ fontWeight: FontWeight.w700,
  ),
- ],
- onImport: (rows) => _importActivitiesFromCsv(rows),
- onAdd: () => _openActivityEditor(existing: null, isCustom: true),
- addLabel: 'Add Activity',
+ ),
+ style: OutlinedButton.styleFrom(
+ foregroundColor:
+ const Color(0xFF111827),
+ side: const BorderSide(
+ color: Color(0xFFD1D5DB),
+ ),
+ shape: RoundedRectangleBorder(
+ borderRadius:
+ BorderRadius.circular(10),
+ ),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 14,
+ vertical: 12,
+ ),
+ ),
  ),
  ],
  ),
@@ -1977,9 +1931,8 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  child: buildNduDataTable(context: context, 
  horizontalMargin: 12,
  columnSpacing: 16,
- showBottomBorder: true,
- dataRowMinHeight: 56,
- dataRowMaxHeight: double.infinity,
+  dataRowMinHeight: 56,
+ dataRowMaxHeight: 74,
  headingTextStyle: const TextStyle(
  fontWeight: FontWeight.w700,
  fontSize: 12,
@@ -2154,9 +2107,8 @@ class _ActivitiesTableState extends State<_ActivitiesTable> {
  padding: const EdgeInsets.symmetric(vertical: 4),
  child: Text(
  text,
- maxLines: null,
- overflow: TextOverflow.visible,
-              softWrap: true,
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis,
  ),
  ),
  ),
@@ -2356,7 +2308,7 @@ class _TableHeaderCell extends StatelessWidget {
  width: width,
  child: Text(
  label,
- overflow: TextOverflow.visible,
+ overflow: TextOverflow.ellipsis,
  ),
  );
  }

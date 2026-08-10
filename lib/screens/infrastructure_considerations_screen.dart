@@ -36,8 +36,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:ndu_project/widgets/csv_table_import_button.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
+import 'package:go_router/go_router.dart';
 
 enum _MissingInfrastructureAction { manual, autoFill, skip }
 
@@ -1163,63 +1162,12 @@ class _InfrastructureConsiderationsScreenState
  const SizedBox(height: 8),
  Column(children: List.generate(_solutions.length, (i) => _row(i))),
  ] else ...[
- Row(
-   children: [
-     const Text(
-       'Main Infrastructure Consideration for each potential solution',
-       style: TextStyle(
-         fontSize: 16,
-         fontWeight: FontWeight.w600,
-         color: Colors.black)),
-     const Spacer(),
-     CsvTableImportButton(
-       compact: true,
-       tableTitle: 'Infrastructure Considerations',
-       columns: [
-         CsvColumnSpec(key: 'component', label: 'Component/Asset', required: true, hint: 'Infrastructure component or asset name'),
-         CsvColumnSpec(key: 'type', label: 'Type', required: true, allowedValues: ['Server', 'Network', 'Storage', 'Database', 'Cloud Service', 'Security', 'Power/Cooling', 'Physical Space'], defaultValue: 'Server'),
-         CsvColumnSpec(key: 'capacity', label: 'Capacity/Specification', hint: 'e.g. 1TB, 32GB RAM, 1000 users'),
-         CsvColumnSpec(key: 'location', label: 'Location/Environment', hint: 'e.g. Data Center A, Cloud Region US-East'),
-         CsvColumnSpec(key: 'dependencies', label: 'Dependencies', hint: 'Comma-separated dependent systems'),
-         CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Operational', 'Planned', 'Under Procurement', 'Decommissioned', 'Needs Upgrade'], defaultValue: 'Planned'),
-         CsvColumnSpec(key: 'owner', label: 'Owner/Responsible', hint: 'Person or team responsible'),
-         CsvColumnSpec(key: 'costCenter', label: 'Cost Center/Budget', hint: 'Budget code or cost center'),
-       ],
-       onImport: (rows) {
-         setState(() {
-           for (final row in rows) {
-             // Create a formatted infrastructure entry from CSV data
-             final component = row['component'] ?? '';
-             final type = row['type'] ?? '';
-             final capacity = row['capacity'] ?? '';
-             final location = row['location'] ?? '';
-             final dependencies = row['dependencies'] ?? '';
-             final status = row['status'] ?? '';
-             final owner = row['owner'] ?? '';
-             final costCenter = row['costCenter'] ?? '';
-             
-             // Build infrastructure description from fields
-             final infraParts = <String>[];
-             if (type.isNotEmpty) infraParts.add('Type: $type');
-             if (capacity.isNotEmpty) infraParts.add('Capacity: $capacity');
-             if (location.isNotEmpty) infraParts.add('Location: $location');
-             if (dependencies.isNotEmpty) infraParts.add('Dependencies: $dependencies');
-             if (status.isNotEmpty) infraParts.add('Status: $status');
-             if (owner.isNotEmpty) infraParts.add('Owner: $owner');
-             if (costCenter.isNotEmpty) infraParts.add('Cost Center: $costCenter');
-             
-             final infraDescription = infraParts.join('; ');
-             
-             // Add new solution entry with infrastructure data
-             _solutions.add(AiSolutionItem(title: component, description: ''));
-             _infraControllers.add(RichTextEditingController(text: infraDescription));
-           }
-         });
-         _saveInfrastructureConsiderationsData();
-       },
-     ),
-   ],
- ),
+ const Text(
+ 'Main Infrastructure Consideration for each potential solution',
+ style: TextStyle(
+ fontSize: 16,
+ fontWeight: FontWeight.w600,
+ color: Colors.black)),
  const SizedBox(height: 6),
  Text('Reminder: update text within each box.',
  style: TextStyle(

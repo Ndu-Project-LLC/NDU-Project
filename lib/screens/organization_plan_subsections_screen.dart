@@ -8,7 +8,9 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/screens/team_training_building_screen.dart';
 import 'package:ndu_project/services/user_service.dart';
-import 'package:ndu_project/models/user_model.dart';
+import 'package:ndu_project/services/raci_assignment_service.dart';
+import 'package:ndu_project/services/raci_matrix_seeder.dart';
+import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -16,15 +18,8 @@ import 'package:ndu_project/widgets/premium_edit_dialog.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/utils/table_import_helper.dart';
-import 'package:ndu_project/models/rate_card.dart';
-import 'package:ndu_project/widgets/rate_card_management_dialog.dart';
-import 'package:ndu_project/utils/role_descriptions.dart';
-import 'package:ndu_project/services/openai_service_secure.dart';
-import 'package:ndu_project/providers/user_role_provider.dart';
-import 'package:ndu_project/models/user_role.dart';
-import 'package:ndu_project/utils/staffing_reminder_helper.dart';
+import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/raci_deliverable_matrix.dart';
 
 Future<void> _exportPlanningSubsectionPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
@@ -1008,1958 +1003,6 @@ class _OrganizationRaciMatrixScreenState
                 ? 'N/A'
                 : projectData.solutionTitle
           },
-        ]),
-        PdfSection.text(
-            'Notes',
-            projectData.planningNotes['organization_staffing_plan'] ??
-                'No data recorded.'),
-      ],
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted || _didAutoPopulate) return;
-      final provider = ProjectDataHelper.getProvider(context);
-      final roles = provider.projectData.projectRoles;
-      final requirements = provider.projectData.staffingRequirements;
-      if (roles.isNotEmpty) {
-        final roleTitles =
-            roles.map((r) => r.title.trim()).where((t) => t.isNotEmpty).toSet();
-
-        final filteredRequirements = requirements
-            .where((r) => roleTitles.contains(r.title.trim()))
-            .toList();
-
-        final existingTitles = filteredRequirements
-            .map((r) => r.title.trim())
-            .where((t) => t.isNotEmpty)
-            .toSet();
-
-        final newStaff = roles
-            .where((role) => !existingTitles.contains(role.title.trim()))
-            .map((role) => StaffingRequirement(
-                  title: role.title,
-                  startDate: 'TBD',
-                  endDate: 'TBD',
-                  employeeType: role.workstream == 'Engineering' ||
-                          role.workstream == 'Development'
-                      ? 'Contractor'
-                      : 'Employee',
-                ))
-            .toList();
-
-        final updated = [...filteredRequirements, ...newStaff];
-        if (updated.length != requirements.length || newStaff.isNotEmpty) {
-          await ProjectDataHelper.updateAndSave(
-            context: context,
-            checkpoint: 'organization_staffing_plan',
-            dataUpdater: (d) => d.copyWith(staffingRequirements: updated),
-            showSnackbar: false,
-          );
-        }
-        if (mounted) {
-          setState(() {
-            _didAutoPopulate = true;
-          });
-        }
-      } else {
-        _didAutoPopulate = true;
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final projectData = ProjectDataHelper.getData(context);
-    final requirements = projectData.staffingRequirements;
-    final isMobile = AppBreakpoints.isMobile(context);
-    final horizontalPadding = isMobile ? 20.0 : 32.0;
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            DraggableSidebar(
-              openWidth: AppBreakpoints.sidebarWidth(context),
-              child: const InitiationLikeSidebar(
-                activeItemLabel: 'Organization Plan - Staffing Plan',
-              ),
-            ),
-            Expanded(
-              child: Stack(
-                children: [
-                  MobileSidebarHamburger(
-                    sidebar: const InitiationLikeSidebar(
-                      activeItemLabel: 'Organization Plan - Staffing Plan',
-                    ),
-                  ),
-                  SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding, vertical: 24),
-                    child: DefaultTabController(
-                      length: 3,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                        const Text(
-                          'Reflect the planned allocation of project personnel by role and time to support resource planning, workload management, and successful project delivery.',
-                          style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-                        ),
-                        const SizedBox(height: 20),
-                        // Metrics row
-                        Row(
-                          children: [
-                            _MetricCard(
-                                label: 'Total Personnel',
-                                value: requirements
-                                    .fold<int>(0, (sum, r) => sum + r.headcount)
-                                    .toString(),
-                                accent: const Color(0xFFF59E0B)),
-                            const SizedBox(width: 16),
-                            _MetricCard(
-                                label: 'Positions',
-                                value: requirements.length.toString(),
-                                accent: const Color(0xFF8B5CF6)),
-                          ],
-                        ),
-                        
-                        // Staffing Reminders Alert Banner
-                        FutureBuilder<List<StaffingReminder>>(
-                          future: _loadReminders(),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-                            
-                            final reminders = snapshot.data!;
-                            final criticalCount = reminders
-                                .where((r) => r.priority == Priority.critical)
-                                .length;
-                            final highCount = reminders
-                                .where((r) => r.priority == Priority.high)
-                                .length;
-                            
-                            if (criticalCount == 0 && highCount == 0) {
-                              return const SizedBox.shrink();
-                            }
-                            
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 16),
-                              child: GestureDetector(
-                                onTap: () => _showRemindersDialog(reminders),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: criticalCount > 0
-                                        ? const Color(0xFFFEF2F2)
-                                        : const Color(0xFFFFFBEB),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: criticalCount > 0
-                                          ? const Color(0xFECACA)
-                                          : const Color(0xFFFDE68A),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        criticalCount > 0
-                                            ? Icons.warning_amber_rounded
-                                            : Icons.info_outline,
-                                        color: criticalCount > 0
-                                            ? const Color(0xFFDC2626)
-                                            : const Color(0xFFD97706),
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          '$criticalCount critical, $highCount high-priority staffing alert${(criticalCount + highCount) != 1 ? 's' : ''} require attention',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: criticalCount > 0
-                                                ? const Color(0xFF991B1B)
-                                                : const Color(0xFF92400E),
-                                          ),
-                                        ),
-                                      ),
-                                      const Icon(
-                                        Icons.arrow_forward_ios,
-                                        size: 16,
-                                        color: Color(0xFF6B7280),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        
-                        const SizedBox(height: 24),
-
-                        // Import & Template buttons
-                        Row(
-                          children: [
-                            FilledButton.icon(
-                              onPressed: _showImportDialog,
-                              icon: const Icon(Icons.upload_file_outlined,
-                                  size: 16),
-                              label: const Text('Import'),
-                              style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFF4338CA),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            OutlinedButton.icon(
-                              onPressed: _openPersonnelRates,
-                              icon: const Icon(Icons.attach_money, size: 16),
-                              label: const Text('Rates'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF059669),
-                                side:
-                                    const BorderSide(color: Color(0xFF059669)),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            OutlinedButton.icon(
-                              onPressed: _downloadTemplate,
-                              icon:
-                                  const Icon(Icons.download_outlined, size: 16),
-                              label: const Text('Download Template'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF6B7280),
-                                side:
-                                    const BorderSide(color: Color(0xFFE5E7EB)),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // AI Suggest Roles button
-                            OutlinedButton.icon(
-                              onPressed: _aiSuggestRoles,
-                              icon: const Icon(Icons.auto_awesome_outlined, size: 16),
-                              label: const Text('AI Suggest Roles'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF8B5CF6),
-                                side: const BorderSide(color: Color(0xFF8B5CF6)),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Tab Bar for Personnel | Timeline | Costs
-                        Container(
-                          margin: const EdgeInsets.only(top: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3F4F6),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: TabBar(
-                            labelColor: const Color(0xFF111827),
-                            unselectedLabelColor: const Color(0xFF6B7280),
-                            indicatorColor: const Color(0xFFFFC107),
-                            indicatorWeight: 3,
-                            indicatorSize: TabBarIndicatorSize.label,
-                            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-                            tabs: [
-                              const Tab(text: 'Personnel Table'),
-                              const Tab(text: 'Timeline'),
-                              Tab(child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('Costs '),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFFFFBEB),
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(color: const Color(0xFFFDE68A)),
-                                    ),
-                                    child: const Text('RESTRICTED', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFFD97706))),
-                                  ),
-                                ],
-                              )),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Tab Views
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.52,
-                          child: TabBarView(
-                            children: [
-                              // TAB 1: Personnel Table
-                              _buildPersonnelTabContent(context, requirements),
-                              
-                              // TAB 2: Timeline View
-                              _buildTimelineTabContent(requirements),
-                              
-                              // TAB 3: Cost View (Restricted)
-                              _buildCostTabContent(requirements),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        LaunchPhaseNavigation(
-                          backLabel: PlanningPhaseNavigation.backLabel(
-                              'organization_staffing_plan'),
-                          nextLabel: PlanningPhaseNavigation.nextLabel(
-                              'organization_staffing_plan'),
-                          onBack: () => PlanningPhaseNavigation.goToPrevious(
-                              context, 'organization_staffing_plan'),
-                          onNext: () => PlanningPhaseNavigation.goToNext(
-                              context, 'organization_staffing_plan'),
-                          onSkip: () => PlanningPhaseNavigation.goToSkip(
-                              context, 'organization_staffing_plan'),
-                          pageTitle: 'Organization Staffing Plan',
-                        ),
-                        const SizedBox(height: 40),
-                      ],
-                      ),
-                    ),
-                  ),
-                  const Positioned(
-                      right: 24,
-                      bottom: 24,
-                      child: KazAiChatBubble(positioned: false)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _editStaffing(BuildContext context, int index, StaffingRequirement req) {
-    final rootContext = context;
-    final titleController = TextEditingController(text: req.title);
-    final personController = TextEditingController(text: req.personName);
-    final locationController = TextEditingController(text: req.location);
-    final statusController = TextEditingController(text: req.status);
-    final startController = TextEditingController(text: req.startDate);
-    final endController = TextEditingController(text: req.endDate);
-    final headcountController =
-        TextEditingController(text: req.headcount.toString());
-    final monthlyCostController = TextEditingController(
-        text: req.monthlyCost == 0 ? '' : req.monthlyCost.toStringAsFixed(2));
-    final plannedMonthsController = TextEditingController(
-        text:
-            req.plannedMonths == 0 ? '' : req.plannedMonths.toStringAsFixed(1));
-    final notesController = TextEditingController(text: req.notes);
-    String empType = req.employmentType;
-    String employeeType = req.employeeType;
-    bool nduAccess = req.nduAccess;
-    
-    // Autocomplete state for name field
-    List<UserModel> _nameSuggestions = [];
-    bool _isSearchingName = false;
-    Timer? _nameSearchTimer;
-    final _nameFocusNode = FocusNode();
-
-    showDialog(
-      context: rootContext,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => PremiumEditDialog(
-          title: 'Edit Staffing Requirement',
-          icon: Icons.person_add_alt_1_outlined,
-          onSave: () async {
-            final updated = List<StaffingRequirement>.from(
-                ProjectDataHelper.getProvider(rootContext)
-                    .projectData
-                    .staffingRequirements);
-            updated[index] = req.copyWith(
-              title: titleController.text.trim(),
-              headcount: int.tryParse(headcountController.text.trim()) ?? 1,
-              monthlyCost:
-                  double.tryParse(monthlyCostController.text.trim()) ?? 0,
-              plannedMonths:
-                  double.tryParse(plannedMonthsController.text.trim()) ?? 0,
-              personName: personController.text.trim(),
-              location: locationController.text.trim(),
-              status: statusController.text.trim(),
-              startDate: startController.text.trim(),
-              endDate: endController.text.trim(),
-              employmentType: empType,
-              employeeType: employeeType,
-              nduAccess: nduAccess,
-              notes: notesController.text.trim(),
-            );
-            Navigator.pop(dialogContext);
-            await ProjectDataHelper.saveAndNavigate(
-              context: rootContext,
-              checkpoint: 'organization_staffing_plan',
-              saveInBackground: true,
-              nextScreenBuilder: () => const OrganizationStaffingPlanScreen(),
-              dataUpdater: (d) => d.copyWith(staffingRequirements: updated),
-            );
-            if (mounted) setState(() {});
-          },
-          children: [
-            PremiumEditDialog.fieldLabel('Job Title'),
-            PremiumEditDialog.textField(
-                controller: titleController, hint: 'e.g. Senior Developer'),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      PremiumEditDialog.fieldLabel('Headcount'),
-                      PremiumEditDialog.textField(
-                          controller: headcountController, hint: '1'),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      PremiumEditDialog.fieldLabel('Planned Months'),
-                      PremiumEditDialog.textField(
-                          controller: plannedMonthsController, hint: '6'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            PremiumEditDialog.fieldLabel('Monthly Rate'),
-            PremiumEditDialog.textField(
-                controller: monthlyCostController, hint: '2500'),
-            const SizedBox(height: 16),
-            PremiumEditDialog.fieldLabel('Name'),
-            _NameAutocompleteField(
-              controller: personController,
-              focusNode: _nameFocusNode,
-              suggestions: _nameSuggestions,
-              isSearching: _isSearchingName,
-              onTextChanged: (text) {
-                _nameSearchTimer?.cancel();
-                if (text.length < 2) {
-                  setDialogState(() {
-                    _nameSuggestions = [];
-                    _isSearchingName = false;
-                  });
-                  return;
-                }
-                setDialogState(() => _isSearchingName = true);
-                _nameSearchTimer = Timer(const Duration(milliseconds: 300), () async {
-                  try {
-                    final users = await UserService.searchUsers(text);
-                    if (context.mounted) {
-                      setDialogState(() {
-                        _nameSuggestions = users;
-                        _isSearchingName = false;
-                      });
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      setDialogState(() => _isSearchingName = false);
-                    }
-                  }
-                });
-              },
-              onSuggestionSelected: (user) {
-                personController.text = user.displayName;
-                setDialogState(() => _nameSuggestions = []);
-                _nameFocusNode.unfocus();
-              },
-              onClearSuggestions: () {
-                setDialogState(() => _nameSuggestions = []);
-              },
-            ),
-            const SizedBox(height: 16),
-            PremiumEditDialog.fieldLabel('Location'),
-            PremiumEditDialog.textField(
-                controller: locationController,
-                hint: 'e.g. Remote, Office, Site'),
-            const SizedBox(height: 16),
-            PremiumEditDialog.fieldLabel('NDU Platform Access'),
-            StatefulBuilder(
-              builder: (context, setDialogState) => SwitchListTile(
-                title: const Text('Grant access to NDU Project Delivery Platform'),
-                subtitle: Text(nduAccess ? 'User will have platform access' : 'No platform access'),
-                value: nduAccess,
-                onChanged: (v) => setDialogState(() => nduAccess = v),
-                activeColor: Color(0xFF059669),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      PremiumEditDialog.fieldLabel('Employment Type'),
-                      DropdownButtonFormField<String>(
-                        value: empType,
-                        items: ['Full Time', 'Part Time']
-                            .map((s) =>
-                                DropdownMenuItem(value: s, child: Text(s)))
-                            .toList(),
-                        onChanged: (v) => setDialogState(() => empType = v!),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      PremiumEditDialog.fieldLabel('Category'),
-                      DropdownButtonFormField<String>(
-                        value: employeeType,
-                        items: ['Employee', 'Contractor']
-                            .map((s) =>
-                                DropdownMenuItem(value: s, child: Text(s)))
-                            .toList(),
-                        onChanged: (v) =>
-                            setDialogState(() => employeeType = v!),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.grey[50],
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      PremiumEditDialog.fieldLabel('Status'),
-                      PremiumEditDialog.textField(
-                          controller: statusController, hint: 'e.g. Hired'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      PremiumEditDialog.fieldLabel('Mobilization Date'),
-                      PremiumEditDialog.textField(
-                          controller: startController, hint: 'Q1 2024'),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      PremiumEditDialog.fieldLabel('Release Date'),
-                      PremiumEditDialog.textField(
-                          controller: endController, hint: 'Q4 2024'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // AI Suggest Dates button
-            Row(
-              children: [
-                const Expanded(child: SizedBox()), // spacer
-                TextButton.icon(
-                  onPressed: () => _aiSuggestDates(req, startController, endController, setDialogState),
-                  icon: Icon(Icons.auto_awesome, size: 14, color: Color(0xFF8B5CF6)),
-                  label: Text('Suggest Dates', style: TextStyle(fontSize: 12, color: Color(0xFF8B5CF6))),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            PremiumEditDialog.fieldLabel('Cost / Sourcing Notes'),
-            PremiumEditDialog.textField(
-                controller: notesController,
-                hint: 'Assumptions, rate basis, sourcing notes'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _deleteStaffing(BuildContext context, int index) {
-    final rootContext = context;
-    showDialog(
-      context: rootContext,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Position'),
-        content: const Text(
-            'Are you sure you want to delete this staffing position?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () async {
-              final updated = List<StaffingRequirement>.from(
-                  ProjectDataHelper.getProvider(rootContext)
-                      .projectData
-                      .staffingRequirements);
-              updated.removeAt(index);
-              Navigator.pop(dialogContext);
-              await ProjectDataHelper.saveAndNavigate(
-                context: rootContext,
-                checkpoint: 'organization_staffing_plan',
-                saveInBackground: true,
-                nextScreenBuilder: () => const OrganizationStaffingPlanScreen(),
-                dataUpdater: (d) => d.copyWith(staffingRequirements: updated),
-              );
-              if (mounted) setState(() {});
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showImportDialog() async {
-    final headers = [
-      'Position',
-      'Headcount',
-      'Monthly Rate',
-      'Planned Months',
-      'Start Date',
-      'End Date',
-      'Status',
-      'Person',
-      'Employment',
-      'Location',
-      'Category',
-      'Notes'
-    ];
-    final sampleRows = [
-      [
-        'Project Manager',
-        '1',
-        '4000',
-        '6',
-        'Jan 2024',
-        'Jun 2024',
-        'Active',
-        '',
-        'FT',
-        'Office',
-        'Employee',
-        ''
-      ],
-      [
-        'Technical Lead',
-        '1',
-        '5000',
-        '8',
-        'Jan 2024',
-        'Aug 2024',
-        'Active',
-        '',
-        'FT',
-        'Office',
-        'Employee',
-        ''
-      ],
-      [
-        'Business Analyst',
-        '1',
-        '3500',
-        '4',
-        'Feb 2024',
-        'May 2024',
-        'Not Started',
-        '',
-        'PT',
-        'Remote',
-        'Contractor',
-        ''
-      ],
-    ];
-
-    final rows = await TableImportHelper.showImportDialog(
-      context,
-      tableTitle: 'Staffing Plan',
-      headers: headers,
-      sampleRows: sampleRows,
-    );
-
-    if (rows == null || rows.isEmpty || !mounted) return;
-
-    final newRequirements = <StaffingRequirement>[];
-    for (final parts in rows) {
-      newRequirements.add(StaffingRequirement(
-        title: parts.isNotEmpty ? parts[0] : '',
-        headcount: parts.length > 1 ? int.tryParse(parts[1]) ?? 1 : 1,
-        monthlyCost: parts.length > 2 ? double.tryParse(parts[2]) ?? 0 : 0,
-        plannedMonths: parts.length > 3 ? double.tryParse(parts[3]) ?? 0 : 0,
-        startDate: parts.length > 4 ? parts[4] : '',
-        endDate: parts.length > 5 ? parts[5] : '',
-        status: parts.length > 6 ? parts[6] : 'Not Started',
-        personName: parts.length > 7 ? parts[7] : '',
-        employmentType: parts.length > 8 ? parts[8] : 'FT',
-        location: parts.length > 9 ? parts[9] : '',
-        employeeType: parts.length > 10 ? parts[10] : 'Employee',
-        notes: parts.length > 11 ? parts[11] : '',
-      ));
-    }
-
-    if (newRequirements.isNotEmpty) {
-      final updated = List<StaffingRequirement>.from(
-        ProjectDataHelper.getProvider(context).projectData.staffingRequirements,
-      )..addAll(newRequirements);
-      await ProjectDataHelper.updateAndSave(
-        context: context,
-        checkpoint: 'organization_staffing_plan',
-        dataUpdater: (d) => d.copyWith(staffingRequirements: updated),
-      );
-      if (mounted) setState(() {});
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Imported ${newRequirements.length} positions'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-
-  void _downloadTemplate() {
-    TableImportHelper.downloadTemplate(
-      filename: 'staffing_plan_template.csv',
-      headers: [
-        'Position',
-        'Headcount',
-        'Monthly Rate',
-        'Planned Months',
-        'Start Date',
-        'End Date',
-        'Status',
-        'Person',
-        'Employment',
-        'Location',
-        'Category',
-        'Notes'
-      ],
-      sampleRows: [
-        [
-          'Project Manager',
-          '1',
-          '4000',
-          '6',
-          'Jan 2024',
-          'Jun 2024',
-          'Active',
-          '',
-          'FT',
-          'Office',
-          'Employee',
-          ''
-        ],
-        [
-          'Technical Lead',
-          '1',
-          '5000',
-          '8',
-          'Jan 2024',
-          'Aug 2024',
-          'Active',
-          '',
-          'FT',
-          'Office',
-          'Employee',
-          ''
-        ],
-        [
-          'Business Analyst',
-          '1',
-          '3500',
-          '4',
-          'Feb 2024',
-          'May 2024',
-          'Not Started',
-          '',
-          'PT',
-          'Remote',
-          'Contractor',
-          ''
-        ],
-      ],
-    );
-  }
-
-  // ==================== AI SUGGESTIONS METHODS ====================
-  
-  /// AI Suggest Roles - calls OpenAI to get role suggestions based on project context
-  Future<void> _aiSuggestRoles() async {
-    final projectData = ProjectDataHelper.getData(context);
-    
-    // Build context string for AI
-    final contextStr = '''
-Project: ${projectData.projectName}
-Solution: ${projectData.solutionTitle}
-Type: ${projectData.projectType ?? 'Regular'}
-Current Roles: ${projectData.staffingRequirements.map((r) => r.title).join(', ')}
-''';
-
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => const Center(child: CircularProgressIndicator()),
-    );
-    
-    try {
-      // Call OpenAI service for role suggestions
-      final suggestions = await OpenAIServiceSecure.generateStaffingRoleSuggestions(
-        context: contextStr,
-        maxSuggestions: 10,
-      );
-      
-      Navigator.pop(context); // Remove loading
-      
-      if (suggestions.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No role suggestions available'), behavior: SnackBarBehavior.floating),
-        );
-        return;
-      }
-      
-      // Show suggestions dialog for user to accept/reject
-      await _showRoleSuggestionsDialog(suggestions);
-      
-    } catch (e) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('AI suggestion failed: $e'), behavior: SnackBarBehavior.floating),
-      );
-    }
-  }
-  
-  /// Show dialog with AI-suggested roles for user to select which to add
-  Future<void> _showRoleSuggestionsDialog(List<String> suggestions) async {
-    final selected = <String>{};
-    
-    final result = await showDialog<List<String>>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.auto_awesome, color: Color(0xFF8B5CF6), size: 24),
-              SizedBox(width: 8),
-              Text('AI Role Suggestions'),
-            ],
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 300,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Select roles to add to your staffing plan:',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
-                ),
-                SizedBox(height: 12),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: suggestions.length,
-                    itemBuilder: (context, index) {
-                      final role = suggestions[index];
-                      final isSelected = selected.contains(role);
-                      return CheckboxListTile(
-                        title: Text(role, style: TextStyle(fontSize: 14)),
-                        value: isSelected,
-                        activeColor: Color(0xFF8B5CF6),
-                        onChanged: (value) {
-                          setDialogState(() {
-                            if (value == true) {
-                              selected.add(role);
-                            } else {
-                              selected.remove(role);
-                            }
-                          });
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, null),
-              child: Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: selected.isEmpty ? null : () => Navigator.pop(ctx, selected.toList()),
-              style: FilledButton.styleFrom(backgroundColor: Color(0xFF8B5CF6)),
-              child: Text('Add ${selected.length} Roles'),
-            ),
-          ],
-        ),
-      ),
-    );
-    
-    if (result != null && result.isNotEmpty && mounted) {
-      final newRoles = result.map((title) => StaffingRequirement(
-        title: title,
-        startDate: 'TBD',
-        endDate: 'TBD',
-        employeeType: 'Employee',
-      )).toList();
-      
-      final updated = List<StaffingRequirement>.from(
-        ProjectDataHelper.getProvider(context).projectData.staffingRequirements
-      )..addAll(newRoles);
-      
-      await ProjectDataHelper.updateAndSave(
-        context: context,
-        checkpoint: 'organization_staffing_plan',
-        dataUpdater: (d) => d.copyWith(staffingRequirements: updated),
-      );
-      
-      if (mounted) setState(() {});
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Added ${result.length} role(s)'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-  
-  /// AI Suggest Dates - suggests start/end dates based on project context and role type
-  void _aiSuggestDates(
-    StaffingRequirement req,
-    TextEditingController startController,
-    TextEditingController endController,
-    StateSetter setDialogState,
-  ) {
-    final projectData = ProjectDataHelper.getData(context);
-    final currentReqs = projectData.staffingRequirements;
-    
-    // Simple date suggestion logic based on role type
-    String suggestedStart = 'Q1 2025';
-    String suggestedEnd = 'Q4 2025';
-    
-    // Adjust based on role title patterns
-    final titleLower = req.title.toLowerCase();
-    if (titleLower.contains('manager') || titleLower.contains('lead')) {
-      suggestedStart = 'Q1 2025'; // PM/Leads start early
-      suggestedEnd = 'Q4 2025'; // Stay through project
-    } else if (titleLower.contains('developer') || titleLower.contains('engineer')) {
-      suggestedStart = 'Q1 2025';
-      suggestedEnd = 'Q3 2025'; // Core phase
-    } else if (titleLower.contains('qa') || titleLower.contains('test')) {
-      suggestedStart = 'Q2 2025'; // Start later
-      suggestedEnd = 'Q4 2025';
-    } else if (titleLower.contains('analyst')) {
-      suggestedStart = 'Q1 2025';
-      suggestedEnd = 'Q2 2025'; // Early phase
-    } else if (titleLower.contains('design') || titleLower.contains('ux')) {
-      suggestedStart = 'Q1 2025';
-      suggestedEnd = 'Q2 2025';
-    }
-    
-    // Look at existing dates for reference
-    if (currentReqs.isNotEmpty) {
-      final existingStarts = currentReqs
-          .where((r) => r.startDate != 'TBD' && r.startDate.isNotEmpty)
-          .map((r) => r.startDate)
-          .toList();
-      if (existingStarts.isNotEmpty) {
-        // Use earliest existing start as reference
-        suggestedStart = existingStarts.first;
-      }
-    }
-    
-    setDialogState(() {
-      startController.text = suggestedStart;
-      endController.text = suggestedEnd;
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Suggested dates: $suggestedStart → $suggestedEnd'),
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  // ==================== STAFFING REMINDERS ====================
-
-  /// Load reminders from staffing requirements
-  Future<List<StaffingReminder>> _loadReminders() async {
-    final projectData = ProjectDataHelper.getData(context);
-    return StaffingReminderHelper.generateReminders(projectData.staffingRequirements);
-  }
-
-  /// Show reminders dialog with all active staffing alerts
-  void _showRemindersDialog(List<StaffingReminder> reminders) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.notifications_active, color: Color(0xFFD97706)),
-            SizedBox(width: 8),
-            Text('Staffing Plan Reminders'),
-          ],
-        ),
-        content: SizedBox(
-          width: 500,
-          height: 400,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${reminders.length} item${reminders.length != 1 ? 's' : ''} need attention',
-                style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: reminders.length,
-                  itemBuilder: (context, index) {
-                    final reminder = reminders[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _ReminderCard(reminder: reminder),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Dismiss'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _addRemindersToCalendar(reminders);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFFC107),
-              foregroundColor: Colors.black,
-            ),
-            child: const Text('Add All to Calendar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Add reminders to team calendar as activities
-  void _addRemindersToCalendar(List<StaffingReminder> reminders) async {
-    final events = StaffingReminderHelper.toCalendarEvents(reminders);
-    
-    // Get current activities and add new ones
-    final provider = ProjectDataHelper.getProvider(context);
-    final currentActivities = List<TeamActivity>.from(
-      provider.projectData.teamActivities ?? [],
-    );
-    currentActivities.addAll(events);
-    
-    await ProjectDataHelper.updateAndSave(
-      context: context,
-      checkpoint: 'staffing_reminders',
-      dataUpdater: (d) => d.copyWith(teamActivities: currentActivities),
-    );
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${events.length} reminder${events.length != 1 ? 's' : ''} added to team calendar'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  // ==================== TAB CONTENT BUILDERS ====================
-  
-  /// Build the Personnel Table tab content
-  Widget _buildPersonnelTabContent(BuildContext context, List<StaffingRequirement> requirements) {
-    if (requirements.isEmpty) {
-      return const _SectionEmptyState(
-        title: 'No staffing positions yet',
-        message: 'Sync from defined roles or use "AI Suggest Roles" to populate this view.',
-        icon: Icons.group_outlined,
-      );
-    }
-    
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6)),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: _StaffingPlanTable(
-          requirements: requirements,
-          onEdit: (index, req) => _editStaffing(context, index, req),
-          onDelete: (index) => _deleteStaffing(context, index),
-        ),
-      ),
-    );
-  }
-  
-  /// Build the Timeline tab content (Gantt chart view)
-  Widget _buildTimelineTabContent(List<StaffingRequirement> requirements) {
-    return _StaffingGanttChart(requirements: requirements);
-  }
-  
-  /// Build the Cost tab content (with restricted access)
-  Widget _buildCostTabContent(List<StaffingRequirement> requirements) {
-    // Check user authorization - editors and above can view costs
-    bool isAuthorized = true; // Default to authorized for now
-    
-    try {
-      final userRole = UserRoleProvider.of(context)?.siteRole ?? SiteRole.user;
-      isAuthorized = userRole.level >= SiteRole.editor.level;
-    } catch (e) {
-      // If provider not found, default to restricted view
-      isAuthorized = false;
-    }
-    
-    if (!isAuthorized) {
-      return Center(
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          margin: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFFBEB),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFFDE68A), width: 2),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.lock_outline, size: 32, color: Color(0xFFDC2626)),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'RESTRICTED CONTENT',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF92400E),
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Cost information requires Editor-level access or higher.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Color(0xFFB45309)),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Please contact your project administrator for access.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Color(0xFFD97706)),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    
-    // Authorized cost view
-    if (requirements.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.attach_money_outlined, size: 64, color: Color(0xFFD1D5DB)),
-            SizedBox(height: 16),
-            Text(
-              'No cost data available',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF6B7280)),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Add staffing positions with rates to see cost breakdown',
-              style: TextStyle(fontSize: 14, color: Color(0xFF9CA3AF)),
-            ),
-          ],
-        ),
-      );
-    }
-    
-    // Calculate totals
-    double grandTotal = 0;
-    for (final req in requirements) {
-      grandTotal += req.estimatedTotal;
-    }
-    
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(Icons.account_balance_wallet_outlined, size: 20, color: Color(0xFF059669)),
-                SizedBox(width: 8),
-                Text(
-                  'Cost Breakdown',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1),
-          // Table header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: const Color(0xFFF9FAFB),
-            child: Row(
-              children: [
-                Expanded(flex: 3, child: Text('POSITION', style: _costHeaderStyle)),
-                Expanded(flex: 2, child: Text('MONTHLY RATE', style: _costHeaderStyle, textAlign: TextAlign.right)),
-                Expanded(flex: 1, child: Text('MONTHS', style: _costHeaderStyle, textAlign: TextAlign.center)),
-                Expanded(flex: 2, child: Text('TOTAL', style: _costHeaderStyle, textAlign: TextAlign.right)),
-              ],
-            ),
-          ),
-          // Table rows
-          ...requirements.asMap().entries.map((entry) {
-            final idx = entry.key;
-            final req = entry.value;
-            final total = req.estimatedTotal;
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: idx.isOdd ? const Color(0xFFF9FAFB) : Colors.white,
-                border: Border(top: BorderSide(color: Color(0xFFF3F4F6))),
-              ),
-              child: Row(
-                children: [
-                  Expanded(flex: 3, child: Text(req.title.isEmpty ? 'Untitled' : req.title, style: _costCellStyle, overflow: TextOverflow.ellipsis)),
-                  Expanded(flex: 2, child: Text('\$${req.monthlyCost.toStringAsFixed(0)}', style: _costCellStyle, textAlign: TextAlign.right)),
-                  Expanded(flex: 1, child: Text(req.plannedMonths.toStringAsFixed(1), style: _costCellStyle, textAlign: TextAlign.center)),
-                  Expanded(flex: 2, child: Text('\$${total.toStringAsFixed(0)}', style: _costCellStyle.copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
-                ],
-              ),
-            );
-          }),
-          Divider(height: 1),
-          // Grand total
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFECFDF5),
-              border: Border(top: BorderSide(color: Color(0xFF059669), width: 2)),
-            ),
-            child: Row(
-              children: [
-                Expanded(flex: 3, child: Text('GRAND TOTAL', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF065F46)))),
-                Expanded(flex: 2, child: SizedBox()),
-                Expanded(flex: 1, child: SizedBox()),
-                Expanded(flex: 2, child: Text('\$${grandTotal.toStringAsFixed(0)}', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF065F46)), textAlign: TextAlign.right)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  /// Cost table header style
-  static TextStyle get _costHeaderStyle => TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 0.8,
-    color: Color(0xFF6B7280),
-  );
-  
-  /// Cost table cell style
-  static TextStyle get _costCellStyle => TextStyle(
-    fontSize: 13,
-    color: Color(0xFF374151),
-  );
-}
-
-/// Timeline item card widget for Gantt-style display
-class _TimelineItemCard extends StatelessWidget {
-  const _TimelineItemCard({required this.requirement, required this.index});
-  
-  final StaffingRequirement requirement;
-  final int index;
-
-  @override
-  Widget build(BuildContext context) {
-    // Determine bar width based on duration (simplified)
-    double barWidth = 100;
-    if (requirement.plannedMonths > 0) {
-      barWidth = (requirement.plannedMonths * 30).clamp(40, 200).toDouble();
-    }
-    
-    // Determine color based on status
-    Color barColor = Color(0xFF8B5CF6);
-    if (requirement.status == 'Active') {
-      barColor = Color(0xFF10B981);
-    } else if (requirement.status == 'Hired' || requirement.status == 'Confirmed') {
-      barColor = Color(0xFF059669);
-    } else if (requirement.status == 'Not Started') {
-      barColor = Color(0xFF9CA3AF);
-    }
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: barColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: Text('${index + 1}', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: barColor)),
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  requirement.title.isEmpty ? 'Untitled Position' : requirement.title,
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF111827)),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (requirement.personName.isNotEmpty)
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFDBEAFE),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(requirement.personName, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF1E40AF))),
-                ),
-            ],
-          ),
-          SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(Icons.calendar_today_outlined, size: 14, color: Color(0xFF6B7280)),
-              SizedBox(width: 4),
-              Text(
-                '${requirement.startDate} → ${requirement.endDate}',
-                style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-              ),
-              SizedBox(width: 16),
-              Icon(Icons.schedule_outlined, size: 14, color: Color(0xFF6B7280)),
-              SizedBox(width: 4),
-              Text(
-                '${requirement.plannedMonths.toStringAsFixed(1)} months',
-                style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-              ),
-            ],
-          ),
-          SizedBox(height: 10),
-          // Duration bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: Container(
-              height: 8,
-              width: barWidth,
-              color: barColor.withOpacity(0.3),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: 1.0,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: barColor,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Gantt-style chart for visualizing staffing timeline
-class _StaffingGanttChart extends StatelessWidget {
-  const _StaffingGanttChart({required this.requirements});
-
-  final List<StaffingRequirement> requirements;
-
-  @override
-  Widget build(BuildContext context) {
-    if (requirements.isEmpty) {
-      return const _SectionEmptyState(
-        title: 'No timeline data',
-        message: 'Add positions with dates to see the Gantt chart.',
-        icon: Icons.bar_chart_outlined,
-      );
-    }
-
-    // Calculate date range from all requirements
-    final DateTime now = DateTime.now();
-    DateTime minDate = now;
-    DateTime maxDate = now.add(const Duration(days: 365));
-
-    // Parse dates and find range
-    for (final req in requirements) {
-      try {
-        if (req.startDate.isNotEmpty) {
-          final start = DateFormat('yyyy-MM-dd').parse(req.startDate);
-          if (start.isBefore(minDate)) minDate = start;
-        }
-        if (req.endDate.isNotEmpty) {
-          final end = DateFormat('yyyy-MM-dd').parse(req.endDate);
-          if (end.isAfter(maxDate)) maxDate = end;
-        }
-      } catch (e) {
-        /* skip invalid dates */
-      }
-    }
-
-    // Ensure at least 6 month window
-    if (_daysBetween(minDate, maxDate) < 180) {
-      maxDate = minDate.add(const Duration(days: 180));
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with title and legend
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(Icons.timeline, size: 20, color: Color(0xFF8B5CF6)),
-                SizedBox(width: 8),
-                Text(
-                  'Project Timeline Overview',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
-                ),
-                Spacer(),
-                _buildLegend(),
-              ],
-            ),
-          ),
-          Divider(height: 1),
-          // Header row with month labels
-          _buildGanttHeader(minDate, maxDate),
-          Divider(height: 1),
-          // Expanded scrollable area for bars
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: _buildGanttBody(minDate, maxDate),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Build the status legend
-  Widget _buildLegend() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _LegendItem(color: Color(0xFF10B981), label: 'Active'),
-        SizedBox(width: 12),
-        _LegendItem(color: Color(0xFF3B82F6), label: 'Hired'),
-        SizedBox(width: 12),
-        _LegendItem(color: Color(0xFFF59E0B), label: 'Released'),
-        SizedBox(width: 12),
-        _LegendItem(color: Color(0xFFD1D5DB), label: 'Open'),
-      ],
-    );
-  }
-
-  Widget _buildGanttHeader(DateTime minDate, DateTime maxDate) {
-    final monthWidth = 100.0; // pixels per month
-
-    return Container(
-      height: 40,
-      color: const Color(0xFFF9FAFB),
-      child: Row(
-        children: [
-          // Position label column (fixed width)
-          SizedBox(
-            width: 160,
-            child: Center(
-              child: Text(
-                'POSITION',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF6B7280)),
-              ),
-            ),
-          ),
-          // Month columns
-          ..._generateMonths(minDate, maxDate).map((month) => SizedBox(
-                width: monthWidth,
-                child: Center(
-                  child: Text(
-                    DateFormat('MMM yy').format(month),
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF6B7280)),
-                  ),
-                ),
-              )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGanttBody(DateTime minDate, DateTime maxDate) {
-    return Column(
-      children: requirements.asMap().entries.map((entry) {
-        final index = entry.key;
-        final req = entry.value;
-        return _GanttRow(
-          requirement: req,
-          index: index,
-          minDate: minDate,
-          maxDate: maxDate,
-        );
-      }).toList(),
-    );
-  }
-
-  List<DateTime> _generateMonths(DateTime minDate, DateTime maxDate) {
-    final months = <DateTime>[];
-    DateTime current = DateTime(minDate.year, minDate.month, 1);
-    while (!current.isAfter(maxDate)) {
-      months.add(current);
-      current = DateTime(current.year, current.month + 1, 1);
-    }
-    return months;
-  }
-
-  int _daysBetween(DateTime start, DateTime end) {
-    return end.difference(start).inDays;
-  }
-}
-
-/// Legend item widget
-class _LegendItem extends StatelessWidget {
-  const _LegendItem({required this.color, required this.label});
-
-  final Color color;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Color(0xFF6B7280)),
-        ),
-      ],
-    );
-  }
-}
-
-/// Single row in the Gantt chart representing one position
-class _GanttRow extends StatelessWidget {
-  const _GanttRow({
-    required this.requirement,
-    required this.index,
-    required this.minDate,
-    required this.maxDate,
-  });
-
-  final StaffingRequirement requirement;
-  final int index;
-  final DateTime minDate;
-  final DateTime maxDate;
-
-  @override
-  Widget build(BuildContext context) {
-    final totalDays = _daysBetween(minDate, maxDate).toDouble();
-    final monthWidth = 100.0;
-    final totalMonths = _monthsBetween(minDate, maxDate);
-    final totalWidth = (totalMonths * monthWidth).toDouble();
-
-    double? barStart;
-    double? barWidth;
-
-    try {
-      if (requirement.startDate.isNotEmpty && requirement.endDate.isNotEmpty) {
-        final start = DateFormat('yyyy-MM-dd').parse(requirement.startDate);
-        final end = DateFormat('yyyy-MM-dd').parse(requirement.endDate);
-
-        final startDaysFromMin = _daysBetween(minDate, start).toDouble();
-        final durationDays = _daysBetween(start, end).toDouble();
-
-        barStart = (startDaysFromMin / totalDays) * totalWidth;
-        barWidth = (durationDays / totalDays) * totalWidth;
-      }
-    } catch (e) {
-      // Invalid dates, no bar shown
-    }
-
-    final bool isEven = index.isEven;
-
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: isEven ? Colors.white : const Color(0xFFF9FAFB),
-        border: Border(bottom: BorderSide(color: const Color(0xFFE5E7EB), width: 0.5)),
-      ),
-      child: Row(
-        children: [
-          // Position name cell
-          SizedBox(
-            width: 160,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                children: [
-                  // Status indicator dot
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(requirement.status),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Tooltip(
-                      message: _buildTooltipText(),
-                      child: Text(
-                        requirement.title.trim().isEmpty ? 'Position ${index + 1}' : requirement.title,
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF374151)),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Gantt bar area
-          SizedBox(
-            width: totalWidth,
-            height: 48,
-            child: Stack(
-              children: [
-                // Today line
-                Positioned(
-                  left: _getTodayPosition(totalDays, totalWidth),
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 2,
-                    color: const Color(0xFFEF4444),
-                  ),
-                ),
-
-                // Today label (only on first row)
-                if (index == 0)
-                  Positioned(
-                    left: _getTodayPosition(totalDays, totalWidth) - 16,
-                    top: 0,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                      color: Color(0xFFEF4444),
-                      child: Text(
-                        'TODAY',
-                        style: TextStyle(fontSize: 7, fontWeight: FontWeight.w700, color: Colors.white),
-                      ),
-                    ),
-                  ),
-
-                // Duration bar (if dates valid)
-                if (barStart != null && barWidth != null)
-                  Positioned(
-                    left: barStart,
-                    top: 10,
-                    bottom: 10,
-                    width: barWidth!.clamp(4.0, totalWidth), // minimum 4px width
-                    child: Tooltip(
-                      message: _buildTooltipText(),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(requirement.status),
-                          borderRadius: BorderRadius.circular(4),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 2,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: barWidth! > 30
-                              ? Text(
-                                  requirement.personName.isNotEmpty
-                                      ? requirement.personName.split(' ').first
-                                      : '',
-                                  style: TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w600),
-                                  overflow: TextOverflow.ellipsis,
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // No date indicator
-                if (barStart == null && barWidth == null)
-                  Center(
-                    child: Text(
-                      'No dates set',
-                      style: TextStyle(fontSize: 10, color: Color(0xFF9CA3AF), fontStyle: FontStyle.italic),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _buildTooltipText() {
-    final buffer = StringBuffer();
-    buffer.writeln(requirement.title.isEmpty ? 'Untitled Position' : requirement.title);
-    if (requirement.personName.isNotEmpty) {
-      buffer.writeln('Person: ${requirement.personName}');
-    }
-    buffer.writeln('Status: ${requirement.status}');
-    if (requirement.startDate.isNotEmpty) {
-      buffer.write('Start: ${_formatDate(requirement.startDate)}');
-    }
-    if (requirement.endDate.isNotEmpty) {
-      buffer.write(' → End: ${_formatDate(requirement.endDate)}');
-    }
-    return buffer.toString().trim();
-  }
-
-  String _formatDate(String dateStr) {
-    try {
-      final date = DateFormat('yyyy-MM-dd').parse(dateStr);
-      return DateFormat('MMM d, yyyy').format(date);
-    } catch (e) {
-      return dateStr;
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    final s = status.toLowerCase();
-    if (s.contains('active') || s.contains('mobilized')) return const Color(0xFF10B981);
-    if (s.contains('hired') || s.contains('confirmed')) return const Color(0xFF3B82F6);
-    if (s.contains('released')) return const Color(0xFFF59E0B);
-    if (s.contains('not started') || s.contains('open')) return const Color(0xFFD1D5DB);
-    return const Color(0xFF8B5CF6); // Default purple
-  }
-
-  double _getTodayPosition(double totalDays, double totalWidth) {
-    final today = DateTime.now();
-    final daysFromStart = _daysBetween(minDate, today).toDouble();
-    return (daysFromStart / totalDays) * totalWidth;
-  }
-
-  int _daysBetween(DateTime start, DateTime end) {
-    return end.difference(start).inDays;
-  }
-
-  int _monthsBetween(DateTime start, DateTime end) {
-    return (end.year - start.year) * 12 + end.month - start.month;
-  }
-}
-
-/// Base Organisation Plan screen.
-/// Captures the project organization structure, staffing sources, working
-/// hours, location, and communication modes.
-class OrganizationBasePlanScreen extends StatefulWidget {
-  const OrganizationBasePlanScreen({super.key});
-
-  @override
-  State<OrganizationBasePlanScreen> createState() =>
-      _OrganizationBasePlanScreenState();
-}
-
-class _OrganizationBasePlanScreenState
-    extends State<OrganizationBasePlanScreen> {
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _staffingSourceController =
-      TextEditingController();
-  final TextEditingController _workingHoursController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _communicationController =
-      TextEditingController();
-  Timer? _saveDebounce;
-  bool _loaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
-  }
-
-  void _loadData() {
-    if (_loaded) return;
-    final data = ProjectDataHelper.getData(context);
-    _descriptionController.text = data.orgPlanDescription;
-    _staffingSourceController.text = data.orgStaffingSource;
-    _workingHoursController.text = data.orgWorkingHours;
-    _locationController.text = data.orgLocation;
-    _communicationController.text = data.orgCommunicationMode;
-    _loaded = true;
-
-    for (final c in [
-      _descriptionController,
-      _staffingSourceController,
-      _workingHoursController,
-      _locationController,
-      _communicationController,
-    ]) {
-      c.addListener(_onFieldChanged);
-    }
-  }
-
-  void _onFieldChanged() {
-    _saveDebounce?.cancel();
-    _saveDebounce = Timer(const Duration(milliseconds: 400), () {
-      if (mounted) _saveData();
-    });
-  }
-
-  void _saveData() {
-    if (!mounted) return;
-    ProjectDataHelper.getProvider(context).updateField(
-      (data) => data.copyWith(
-        orgPlanDescription: _descriptionController.text.trim(),
-        orgStaffingSource: _staffingSourceController.text.trim(),
-        orgWorkingHours: _workingHoursController.text.trim(),
-        orgLocation: _locationController.text.trim(),
-        orgCommunicationMode: _communicationController.text.trim(),
-      ),
-    );
-  }
-
-  Future<void> _exportPdf() async {
-    final projectData = ProjectDataHelper.getData(context);
-    await PdfExportHelper.exportScreenPdf(
-      context: context,
-      screenTitle: 'Base Organisation Plan',
-      sections: [
-        PdfSection.keyValue('Project Info', [
           {
             'Approval Status': projectData.raciApprovalStatus.isApproved
                 ? 'Approved by ${projectData.raciApprovalStatus.approverName}'
@@ -3707,17 +1750,16 @@ class _StaffingPlanTable extends StatelessWidget {
   Widget build(BuildContext context) {
     const rowPadding = EdgeInsets.symmetric(horizontal: 16, vertical: 14);
     const columns = <_StaffingColumnDef>[
-      _StaffingColumnDef('#', 50),
-      _StaffingColumnDef('Position', 180),
-      _StaffingColumnDef('Name', 140),
-      _StaffingColumnDef('Location', 130),
-      _StaffingColumnDef('Employment', 110),
-      _StaffingColumnDef('Category', 100),
-      _StaffingColumnDef('Start', 120),
-      _StaffingColumnDef('End', 120),
-      _StaffingColumnDef('NDU Access', 90),
-      _StaffingColumnDef('Status', 110),
-      _StaffingColumnDef('Actions', 80),
+      _StaffingColumnDef('#', 72),
+      _StaffingColumnDef('Position', 220),
+      _StaffingColumnDef('Person', 180),
+      _StaffingColumnDef('Location', 170),
+      _StaffingColumnDef('Type', 170),
+      _StaffingColumnDef('Load', 140),
+      _StaffingColumnDef('Est. Cost', 150),
+      _StaffingColumnDef('Status', 150),
+      _StaffingColumnDef('Timeline', 180),
+      _StaffingColumnDef('Actions', 110),
     ];
 
     final contentWidth =
@@ -3811,8 +1853,8 @@ class _StaffingTableRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currency = NumberFormat.simpleCurrency(decimalDigits: 0);
     final cells = <Widget>[
-      // # - Index number
       Center(
         child: Text(
           '${index + 1}',
@@ -3824,84 +1866,40 @@ class _StaffingTableRow extends StatelessWidget {
           ),
         ),
       ),
-      // Position - Title (bold)
       _StaffingTextCell(
         requirement.title.trim().isEmpty
             ? 'Untitled Position'
             : requirement.title,
         fontWeight: FontWeight.w700,
       ),
-      // Name - Person name
       _StaffingTextCell(
         requirement.personName.trim().isEmpty ? 'TBD' : requirement.personName,
       ),
-      // Location
       _StaffingTextCell(
         requirement.location.trim().isEmpty ? 'TBD' : requirement.location,
       ),
-      // Employment - FT/PT
       _StaffingTextCell(
-        requirement.employmentType.trim().isEmpty ? 'FT' : requirement.employmentType,
-        textAlign: TextAlign.center,
+        '${requirement.employmentType} / ${requirement.employeeType}',
       ),
-      // Category - Employee/Contractor
       _StaffingTextCell(
-        requirement.employeeType.trim().isEmpty ? 'Employee' : requirement.employeeType,
-        textAlign: TextAlign.center,
+        '${requirement.headcount} x ${requirement.plannedMonths.toStringAsFixed(1)} mo',
       ),
-      // Start date
       _StaffingTextCell(
-        requirement.startDate.trim().isEmpty ? 'TBD' : requirement.startDate,
-        textAlign: TextAlign.center,
+        requirement.monthlyCost > 0 && requirement.plannedMonths > 0
+            ? currency.format(requirement.estimatedTotal)
+            : '—',
+        fontWeight: FontWeight.w700,
       ),
-      // End date
-      _StaffingTextCell(
-        requirement.endDate.trim().isEmpty ? 'TBD' : requirement.endDate,
-        textAlign: TextAlign.center,
-      ),
-      // NDU Access indicator
-      Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: requirement.nduAccess
-                ? const Color(0xFFD1FAE5) // Green background
-                : const Color(0xFFF3F4F6), // Gray background
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                requirement.nduAccess ? Icons.check_circle : Icons.remove_circle_outline,
-                size: 14,
-                color: requirement.nduAccess
-                    ? const Color(0xFF059669) // Green
-                    : const Color(0xFF9CA3AF), // Gray
-              ),
-              const SizedBox(width: 4),
-              Text(
-                requirement.nduAccess ? 'Yes' : 'No',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: requirement.nduAccess
-                      ? const Color(0xFF059669)
-                      : const Color(0xFF6B7280),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      // Status pill
       Center(
         child: _StaffingStatusPill(
           label:
               requirement.status.trim().isEmpty ? 'Open' : requirement.status,
         ),
       ),
-      // Actions - Edit/Delete icons
+      _StaffingTextCell(
+        '${requirement.startDate.trim().isEmpty ? 'TBD' : requirement.startDate} -> ${requirement.endDate.trim().isEmpty ? 'TBD' : requirement.endDate}',
+        textAlign: TextAlign.center,
+      ),
       Align(
         alignment: Alignment.topCenter,
         child: Row(
@@ -3910,24 +1908,20 @@ class _StaffingTableRow extends StatelessWidget {
             IconButton(
               icon: const Icon(
                 Icons.edit_outlined,
-                size: 16,
+                size: 18,
                 color: Color(0xFF6B7280),
               ),
               tooltip: 'Edit position',
               onPressed: onEdit,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              padding: EdgeInsets.zero,
             ),
             IconButton(
               icon: const Icon(
                 Icons.delete_outline,
-                size: 16,
+                size: 18,
                 color: Color(0xFFEF4444),
               ),
               tooltip: 'Delete position',
               onPressed: onDelete,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              padding: EdgeInsets.zero,
             ),
           ],
         ),
@@ -4506,206 +2500,84 @@ class _SectionEmptyState extends StatelessWidget {
   }
 }
 
-/// Custom autocomplete text field for user name selection
-class _NameAutocompleteField extends StatelessWidget {
-  const _NameAutocompleteField({
-    required this.controller,
-    required this.focusNode,
-    required this.suggestions,
-    required this.isSearching,
-    required this.onTextChanged,
-    required this.onSuggestionSelected,
-    required this.onClearSuggestions,
+/// Entry in the role bank — maps a role title to a description and workstream.
+class _RoleBankEntry {
+  final String description;
+  final String workstream;
+
+  const _RoleBankEntry({
+    required this.description,
+    required this.workstream,
   });
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final List<UserModel> suggestions;
-  final bool isSearching;
-  final ValueChanged<String> onTextChanged;
-  final ValueChanged<UserModel> onSuggestionSelected;
-  final VoidCallback onClearSuggestions;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: controller,
-          focusNode: focusNode,
-          onChanged: onTextChanged,
-          onTap: () {
-            // Show suggestions again if there's text and we have cached results
-            if (controller.text.isNotEmpty && suggestions.isEmpty) {
-              onTextChanged(controller.text);
-            }
-          },
-          decoration: InputDecoration(
-            hintText: 'Type name or select...',
-            hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-            filled: true,
-            fillColor: Colors.grey[50],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF059669), width: 1.5),
-            ),
-            suffixIcon: isSearching
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : const Icon(Icons.person_search, size: 18, color: Color(0xFF6B7280)),
-          ),
-        ),
-        if (suggestions.isNotEmpty && focusNode.hasFocus)
-          Container(
-            constraints: const BoxConstraints(maxHeight: 200),
-            margin: const EdgeInsets.only(top: 4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              itemCount: suggestions.length,
-              separatorBuilder: (context, index) => Divider(
-                height: 1,
-                color: Colors.grey[200],
-                indent: 52,
-              ),
-              itemBuilder: (context, index) {
-                final user = suggestions[index];
-                return InkWell(
-                  onTap: () => onSuggestionSelected(user),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: const Color(0xFFE5E7EB),
-                          child: Text(
-                            user.displayName.isNotEmpty 
-                                ? user.displayName[0].toUpperCase() 
-                                : '?',
-                            style: const TextStyle(
-                              color: Color(0xFF6B7280),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                user.displayName,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF111827),
-                                ),
-                              ),
-                              Text(
-                                user.email,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF6B7280),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-      ],
-    );
-  }
 }
 
-/// Widget for displaying a single staffing reminder card
-class _ReminderCard extends StatelessWidget {
-  const _ReminderCard({required this.reminder});
+/// A single row in the Standard Roles picker dialog.
+/// Shows a checkbox + role name on the left, and a headcount stepper on the right
+/// that is enabled only when the checkbox is ticked.
+class _PredefinedRoleRow extends StatelessWidget {
+  const _PredefinedRoleRow({
+    required this.title,
+    required this.workstream,
+    required this.isSelected,
+    required this.enabled,
+    required this.headcount,
+    required this.onToggle,
+    required this.onHeadcountChanged,
+  });
 
-  final StaffingReminder reminder;
+  final String title;
+  final String workstream;
+  final bool isSelected;
+  final bool enabled;
+  final int headcount;
+  final ValueChanged<bool?>? onToggle;
+  final ValueChanged<int>? onHeadcountChanged;
 
   @override
   Widget build(BuildContext context) {
+    final alreadyAdded = !enabled && isSelected;
     return Container(
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: reminder.backgroundColor,
+        color: isSelected
+            ? const Color(0xFFFFFBEB)
+            : const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: reminder.borderColor, width: 1),
+        border: Border.all(
+          color: isSelected
+              ? const Color(0xFFFCD34D)
+              : const Color(0xFFE5E7EB),
+        ),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: reminder.priority == Priority.critical
-                  ? const Color(0xFFFEE2E2)
-                  : reminder.priority == Priority.high
-                      ? const Color(0xFFFEF3C7)
-                      : const Color(0xFFE0E7FF),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              reminder.typeIcon,
-              size: 18,
-              color: reminder.priorityColor,
-            ),
+          Checkbox(
+            value: isSelected,
+            onChanged: onToggle,
+            activeColor: const Color(0xFFF59E0B),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 4),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  reminder.message,
+                  title,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: reminder.priorityColor,
+                    fontWeight: FontWeight.w700,
+                    color: alreadyAdded
+                        ? const Color(0xFF9CA3AF)
+                        : const Color(0xFF111827),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
-                  _getTypeLabel(reminder.type),
+                  alreadyAdded ? 'Already added' : workstream,
                   style: const TextStyle(
                     fontSize: 11,
                     color: Color(0xFF6B7280),
@@ -4714,63 +2586,245 @@ class _ReminderCard extends StatelessWidget {
               ],
             ),
           ),
-          if (reminder.daysUntil > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: reminder.priority == Priority.critical
-                    ? const Color(0xFFFEE2E2)
-                    : reminder.priority == Priority.high
-                        ? const Color(0xFFFEF3C7)
-                        : const Color(0xFFECFDF5),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                '${reminder.daysUntil}d',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: reminder.priority == Priority.critical
-                      ? const Color(0xFFDC2626)
-                      : reminder.priority == Priority.high
-                          ? const Color(0xFFD97706)
-                          : const Color(0xFF059669),
-                ),
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEE2E2),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                '${reminder.daysUntil.abs()}d overdue',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFDC2626),
-                ),
-              ),
-            ),
+          const SizedBox(width: 12),
+          _CompactHeadcountStepper(
+            headcount: headcount,
+            enabled: isSelected && enabled,
+            onChanged: onHeadcountChanged,
+          ),
         ],
       ),
     );
   }
+}
 
-  String _getTypeLabel(ReminderType type) {
-    switch (type) {
-      case ReminderType.upcomingMobilization:
-        return 'Upcoming Mobilization';
-      case ReminderType.overdueMobilization:
-        return 'Overdue Mobilization';
-      case ReminderType.upcomingRelease:
-        return 'Upcoming Release';
-      case ReminderType.overdueRelease:
-        return 'Overdue Release';
-      case ReminderType.unfilledPosition:
-        return 'Unfilled Position';
+/// Compact headcount stepper used inside the Standard Roles dialog rows.
+class _CompactHeadcountStepper extends StatelessWidget {
+  const _CompactHeadcountStepper({
+    required this.headcount,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final int headcount;
+  final bool enabled;
+  final ValueChanged<int>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _stepButton(
+          icon: Icons.remove,
+          onTap: enabled
+              ? () {
+                  final next = headcount > 1 ? headcount - 1 : 1;
+                  onChanged?.call(next);
+                }
+              : null,
+        ),
+        const SizedBox(width: 4),
+        Container(
+          width: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          decoration: BoxDecoration(
+            color: enabled ? Colors.white : const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: enabled
+                  ? const Color(0xFFE5E7EB)
+                  : const Color(0xFFE5E7EB),
+            ),
+          ),
+          child: Text(
+            '$headcount',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: enabled
+                  ? const Color(0xFF111827)
+                  : const Color(0xFF9CA3AF),
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        _stepButton(
+          icon: Icons.add,
+          onTap: enabled
+              ? () {
+                  final next = headcount + 1;
+                  onChanged?.call(next);
+                }
+              : null,
+        ),
+      ],
+    );
+  }
+
+  Widget _stepButton({required IconData icon, required VoidCallback? onTap}) {
+    final active = onTap != null;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: active
+              ? const Color(0xFFFEF3C7)
+              : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: active
+                ? const Color(0xFFFCD34D)
+                : const Color(0xFFE5E7EB),
+          ),
+        ),
+        child: Icon(
+          icon,
+          size: 14,
+          color: active
+              ? const Color(0xFF92400E)
+              : const Color(0xFF9CA3AF),
+        ),
+      ),
+    );
+  }
+}
+
+/// Headcount stepper used inside the Add/Edit Role dialogs (larger variant).
+class _DialogHeadcountStepper extends StatefulWidget {
+  const _DialogHeadcountStepper({
+    required this.headcount,
+    required this.onChanged,
+  });
+
+  final int headcount;
+  final ValueChanged<int> onChanged;
+
+  @override
+  State<_DialogHeadcountStepper> createState() =>
+      _DialogHeadcountStepperState();
+}
+
+class _DialogHeadcountStepperState extends State<_DialogHeadcountStepper> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: '${widget.headcount}');
+  }
+
+  @override
+  void didUpdateWidget(covariant _DialogHeadcountStepper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final current = int.tryParse(_controller.text.trim()) ?? 1;
+    if (current != widget.headcount) {
+      _controller.text = '${widget.headcount}';
     }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFCD34D)),
+      ),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () {
+              final current =
+                  int.tryParse(_controller.text.trim()) ?? 1;
+              final next = current > 1 ? current - 1 : 1;
+              _controller.text = '$next';
+              widget.onChanged(next);
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFCD34D),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.remove,
+                size: 18,
+                color: Color(0xFF1F2933),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              controller: _controller,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827),
+              ),
+              decoration: const InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 8),
+              ),
+              onChanged: (value) {
+                final parsed = int.tryParse(value.trim());
+                if (parsed == null || parsed < 1) return;
+                widget.onChanged(parsed);
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            widget.headcount == 1 ? 'person' : 'people',
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF6B7280),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 12),
+          InkWell(
+            onTap: () {
+              final current =
+                  int.tryParse(_controller.text.trim()) ?? 1;
+              final next = current + 1;
+              _controller.text = '$next';
+              widget.onChanged(next);
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFCD34D),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.add,
+                size: 18,
+                color: Color(0xFF1F2933),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

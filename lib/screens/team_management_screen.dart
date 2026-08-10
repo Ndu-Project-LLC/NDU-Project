@@ -19,27 +19,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
-import 'package:ndu_project/utils/role_descriptions.dart';
-import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
-import 'package:ndu_project/widgets/csv_table_import_button.dart';
-import 'package:ndu_project/utils/csv_import_helper.dart';
-
-const Color _kAccent = Color(0xFFFFC107);
-const Color _kPrimaryText = Color(0xFF1E293B);
-const Color _kSecondaryText = Color(0xFF64748B);
-const Color _kBorderColor = Color(0xFFE2E8F0);
-const Color _kCardShadow = Color(0x14000000);
-const Color _kLightYellow = Color(0xFFFFF8E1);
-
-/// CSV column specifications for Team Member import
-const List<CsvColumnSpec> _teamMemberCsvColumns = [
-  CsvColumnSpec(key: 'name', label: 'Full Name', required: true, sampleValue: 'John Smith'),
-  CsvColumnSpec(key: 'role', label: 'Role', required: true, sampleValue: 'Project Manager'),
-  CsvColumnSpec(key: 'email', label: 'Work Email', hint: 'name@company.com', sampleValue: 'john.smith@company.com'),
-  CsvColumnSpec(key: 'responsibilities', label: 'Key Responsibilities', hint: 'Key responsibilities for this role', sampleValue: 'Overall project delivery, stakeholder management'),
-  CsvColumnSpec(key: 'reportsTo', label: 'Reports To', hint: 'Name or ID of supervisor (optional)'),
-];
-
+import 'package:go_router/go_router.dart';
 class TeamManagementScreen extends StatefulWidget {
  const TeamManagementScreen({super.key});
 
@@ -530,144 +510,94 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  );
  }
 
-  return SingleChildScrollView(
-  padding: const EdgeInsets.fromLTRB(32, 24, 32, 32),
-  child: Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-  PlanningPhaseHeader(title: 'Team Management', onExportPdf: _exportPdf),
-  const SizedBox(height: 20),
-  Row(
-  children: [
-  const Expanded(
-  child: Text(
-  'Manage roles and responsibilities',
-  style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-  ),
-  ),
-  OutlinedButton.icon(
-  onPressed: _openPersonnelRates,
-  icon: const Icon(Icons.attach_money, size: 16),
-  label: const Text('Rates'),
-  style: OutlinedButton.styleFrom(
-  foregroundColor: const Color(0xFF059669),
-  side: const BorderSide(color: Color(0xFF059669)),
-  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-  ),
-  ),
-  const SizedBox(width: 10),
-  CsvTableImportButton(
-    tableTitle: 'Team Members',
-    columns: _teamMemberCsvColumns,
-    onImport: (rows) async {
-      for (final row in rows) {
-        final member = TeamMember(
-          name: row['name'] ?? '',
-          role: row['role'] ?? '',
-          email: row['email'] ?? '',
-          responsibilities: row['responsibilities'] ?? '',
-          reportsTo: row['reportsTo'] ?? '',
-        );
-        await _persistMember(member);
-        // Update provider data
-        if (!mounted) return;
-        final currentMembers = context.read<ProjectDataProvider>().projectData.teamMembers;
-        final updated = [...currentMembers, member];
-        await ProjectDataHelper.updateAndSave(
-          context: context,
-          checkpoint: 'team_management',
-          dataUpdater: (data) => data.copyWith(teamMembers: updated),
-          showSnackbar: false,
-        );
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${rows.length} team member(s) imported successfully'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    },
-    compact: true,
-  ),
-  const SizedBox(width: 10),
-  ElevatedButton.icon(
-  onPressed: () => _openAddMemberDialog(members),
-  style: ElevatedButton.styleFrom(
-  backgroundColor: const Color(0xFFFFD700),
-  foregroundColor: const Color(0xFF111827),
-  elevation: 0,
-  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-  ),
-  icon: const Icon(Icons.add, size: 18),
-  label: const Text('Add New Member', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-  ),
-  ],
-  ),
-  const SizedBox(height: 24),
-  const PlanningAiNotesCard(
-  title: 'Notes',
-  sectionLabel: 'Team Management',
-  noteKey: 'planning_team_management_notes',
-  checkpoint: 'team_management',
-  description: 'Capture team structure, ownership, and role coverage.',
-  ),
-  const SizedBox(height: 24),
-  if (members.isNotEmpty) ...[
-  _OrgChartWidget(members: members),
-  const SizedBox(height: 24),
-  ],
-  if (members.isEmpty)
-  _EmptyStateCard(
-  title: 'No team members yet',
-  message: 'Add team members to define roles, responsibilities, and ownership.',
-  onAdd: () => _openAddMemberDialog(members),
-  )
-  else
-  GridView.builder(
-  shrinkWrap: true,
-  physics: const NeverScrollableScrollPhysics(),
-  itemCount: members.length,
-  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-  crossAxisCount: columns,
-  mainAxisSpacing: gap,
-  crossAxisSpacing: gap,
-  childAspectRatio: cardAspectRatio,
-  ),
-  itemBuilder: (context, index) => _TeamRoleCard(
-  member: members[index],
-  onEdit: () => _openEditMemberDialog(index, members[index], members),
-  onDelete: () => _deleteMember(index, members),
-  ),
-  ),
-  const SizedBox(height: 28),
-  Align(
-  alignment: Alignment.centerRight,
-  child: ElevatedButton(
-  onPressed: () => PlanningPhaseNavigation.goToNext(context, 'team_management'),
-  style: ElevatedButton.styleFrom(
-  backgroundColor: const Color(0xFFFFD700),
-  foregroundColor: const Color(0xFF111827),
-  elevation: 0,
-  padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-  ),
-  child: const Text('Next', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-  ),
-  ),
-  ],
-  ),
-  );
-  },
-  ),
-  ),
-  ],
-  ),
-  ),
-  );
+ // ── Tab 2: Mobilization ──────────────────────────────────────────────
+ Widget _buildMobilizationTab(List<TeamMember> members) {
+ if (_loadingPlan) {
+ return const Center(child: CircularProgressIndicator());
+ }
+ final overallProgress =
+ TeamManagementService.overallMobilizationProgress(_plan);
+ return SingleChildScrollView(
+ padding: const EdgeInsets.fromLTRB(32, 24, 32, 32),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ _SectionCard(
+ title: 'Team Mobilization Process',
+ icon: Icons.rocket_launch_outlined,
+ description:
+ 'Outline the process by which team members will be mobilized into the Execution phase. This plan triggers the "Mobilize team" aspect of Execution for each team member.',
+ child: _EditableTextBlock(
+ initialText: _plan.mobilizationProcess,
+ hint:
+ 'Describe the mobilization process: notification, access provisioning, kickoff scheduling, etc.',
+ aiSectionLabel: 'Team Mobilization Process',
+ onChanged: (text) => _updatePlan((p) =>
+ p.copyWith(mobilizationProcess: text)),
+ ),
+ ),
+ const SizedBox(height: 24),
+ _SectionCard(
+ title: 'Mobilization Progress',
+ icon: Icons.trending_up_outlined,
+ description:
+ 'Overall mobilization completion across all team members. Each member\'s checklist must be fully checked before they are mobilized for Execution.',
+ child: _ProgressIndicator(progress: overallProgress),
+ ),
+ const SizedBox(height: 24),
+ _SectionCard(
+ title: 'Member Mobilization Checklists',
+ icon: Icons.checklist_outlined,
+ description:
+ 'Each team member has an onboarding checklist. Complete all items to mobilize a member for the Execution phase.',
+ child: members.isEmpty
+ ? const _InfoText(
+ 'No team members yet. Add members on the Members tab first.')
+ : Column(
+ children: members.map((m) {
+ final mob = TeamManagementService
+ .getOrCreateMemberMobilization(
+ plan: _plan, memberId: m.id);
+ return _MemberChecklistCard(
+ member: m,
+ mobilization: mob,
+ onToggle: (itemIndex, checked) {
+ _updatePlan((p) {
+ final mobs = List<MemberMobilization>.from(
+ p.memberMobilizations);
+ final idx = mobs.indexWhere(
+ (mm) => mm.memberId == m.id);
+ if (idx == -1) {
+ mobs.add(mob);
+ }
+ final targetIdx = idx == -1 ? mobs.length - 1 : idx;
+ final checklist = List<MobilizationChecklistItem>.from(
+ mobs[targetIdx].checklist);
+ checklist[itemIndex] = checklist[itemIndex]
+ .copyWith(
+ isChecked: checked,
+ completedAt: checked
+ ? DateTime.now().toIso8601String()
+ : null,
+ );
+ mobs[targetIdx] = MemberMobilization(
+ memberId: m.id,
+ checklist: checklist,
+ mobilizedAt: checklist.every((c) => c.isChecked)
+ ? DateTime.now().toIso8601String()
+ : mobs[targetIdx].mobilizedAt,
+ );
+ return p.copyWith(memberMobilizations: mobs);
+ });
+ },
+ );
+ }).toList(),
+ ),
+ ),
+ ],
+ ),
+ );
+ }
 
  // ── Tab 3: Onboarding Documents ──────────────────────────────────────
  Widget _buildOnboardingTab(List<TeamMember> members) {

@@ -21,7 +21,6 @@ import 'package:ndu_project/widgets/section_navigator.dart';
 import 'package:ndu_project/widgets/context_banner.dart';
 import 'package:ndu_project/schedule/models/schedule_models.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
-import 'package:ndu_project/schedule/screens/setup_wizard_screen.dart';
 import 'package:ndu_project/schedule/screens/builder_screen.dart';
 import 'package:ndu_project/schedule/screens/gantt_screen.dart';
 import 'package:ndu_project/schedule/screens/list_view_screen.dart';
@@ -58,7 +57,44 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
   void initState() {
     super.initState();
     _tabController.addListener(_onTabChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _autoSyncAll());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _autoSetupFromProjectContext();
+      _autoSyncAll();
+    });
+  }
+
+  /// Auto-setup the schedule using the project's already-captured context
+  /// (project name + overall framework from the Project Framework screen).
+  ///
+  /// This SKIPS the 2-step Setup Wizard (which used to ask for project name
+  /// + delivery model / "methodology"). The methodology is already captured
+  /// upstream on the Project Framework screen, so re-asking here is redundant.
+  /// Falls back to 'WATERFALL' if the framework is somehow unset.
+  Future<void> _autoSetupFromProjectContext() async {
+    if (!mounted) return;
+    final provider = context.read<ScheduleProvider>();
+    if (provider.setupComplete && provider.schedule != null) return;
+
+    final data = ProjectDataHelper.getData(context, listen: false);
+    final projectName =
+        data.projectName.trim().isNotEmpty ? data.projectName.trim() : 'Project';
+    final frameworkRaw = (data.overallFramework ?? '').trim();
+    final deliveryModel = _normalizeDeliveryModel(frameworkRaw) ?? 'WATERFALL';
+
+    provider.setup(
+      projectName: projectName,
+      deliveryModel: deliveryModel,
+    );
+  }
+
+  /// Map the project's overallFramework value to the schedule delivery model
+  /// vocabulary (AGILE / WATERFALL / HYBRID). Returns null if unrecognized.
+  String? _normalizeDeliveryModel(String framework) {
+    final f = framework.toLowerCase();
+    if (f == 'agile') return 'AGILE';
+    if (f == 'waterfall') return 'WATERFALL';
+    if (f == 'hybrid') return 'HYBRID';
+    return null;
   }
 
   Future<void> _autoSyncAll() async {
@@ -94,10 +130,35 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
       builder: (context, provider, wbsProvider, costProvider, _) {
         final schedule = provider.schedule;
 
-        // Setup state — show the setup wizard (which itself uses
-        // ResponsiveScaffold so the sidebar stays visible).
+        // While auto-setup is in-flight (first frame), render a minimal
+        // loading placeholder instead of the Setup Wizard. The
+        // `_autoSetupFromProjectContext` post-frame callback will call
+        // `provider.setup()` synchronously, so this state only lasts one
+        // frame. We intentionally do NOT render `SetupWizardScreen` here
+        // — the wizard used to ask the user for project name + delivery
+        // model / methodology, but that information is already captured
+        // upstream on the Project Framework screen.
         if (schedule == null || !provider.setupComplete) {
-          return const SetupWizardScreen();
+          return ResponsiveScaffold(
+            activeItemLabel: 'Schedule',
+            appBarTitle: 'Schedule',
+            breadcrumbPhase: 'Planning Phase',
+            breadcrumbTitle: 'Schedule',
+            backgroundColor: Colors.white,
+            body: const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 12),
+                  Text(
+                    'Loading schedule…',
+                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
         // ---- Context banner data ----

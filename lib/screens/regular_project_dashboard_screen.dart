@@ -21,25 +21,21 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
-import 'package:ndu_project/screens/project_activities_log_screen.dart';
 import 'package:ndu_project/services/dashboard_metrics_service.dart';
-import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/services/project_service.dart';
 import 'package:ndu_project/utils/navigation_route_resolver.dart';
-import 'package:ndu_project/widgets/app_logo.dart';
-import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/utils/dashboard_palette.dart';
+import 'package:ndu_project/widgets/dashboard_header.dart';
 
 /// A world-class dashboard for REGULAR (basic plan) projects.
 ///
@@ -144,37 +140,6 @@ class _RegularProjectDashboardScreenState
     }
   }
 
-  Future<void> _handleLogout() async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Confirm Log Out'),
-        content: const Text('Are you sure you want to log out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _coral,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Log Out'),
-          ),
-        ],
-      ),
-    );
-    if (shouldLogout == true && mounted) {
-      await FirebaseAuthService.signOut();
-      if (mounted) context.go('/');
-    }
-  }
-
   Future<void> _openProject(ProjectRecord project) async {
     showDialog(
       context: context,
@@ -229,9 +194,10 @@ class _RegularProjectDashboardScreenState
   Widget build(BuildContext context) {
     NavigationContextService.instance.setLastClientDashboard('/dashboard');
     final user = FirebaseAuth.instance.currentUser;
-    final displayName = (user?.displayName ?? user?.email ?? 'there').split(' ').first;
 
-    return Scaffold(
+    return DashboardPaletteScope(
+      palette: DashboardPalette.forPlan(true),
+      child: Scaffold(
       backgroundColor: _canvas,
       body: SafeArea(
         child: StreamBuilder<List<ProjectRecord>>(
@@ -270,17 +236,20 @@ class _RegularProjectDashboardScreenState
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  // Top bar is only rendered on mobile (native app). On web the
-                  // global app shell already provides branding/navigation, so we
-                  // hide the in-page top bar to avoid a duplicate navbar.
-                  if (!kIsWeb)
-                    SliverToBoxAdapter(child: _buildTopBar(displayName)),
+                  // ── Shared hero header band (matches the Project Dashboard) ──
                   SliverToBoxAdapter(
                     child: FadeTransition(
                       opacity: _heroFade,
                       child: SlideTransition(
                         position: _heroSlide,
-                        child: _buildHero(projects.length, displayName),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(28, 20, 28, 8),
+                          child: DashboardHeader(
+                            isBasicPlan: true,
+                            onAddProject: _createNewProject,
+                            crumbLabel: 'Regular Projects workspace',
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -358,254 +327,6 @@ class _RegularProjectDashboardScreenState
       // bottom nav to avoid a duplicate navbar.
       bottomNavigationBar:
           kIsWeb ? null : const _BottomMiniNav(activeIndex: 0),
-    );
-  }
-
-  // ── Top bar ────────────────────────────────────────────────────────────────
-  Widget _buildTopBar(String displayName) {
-    final user = FirebaseAuth.instance.currentUser;
-    final initials = _initialsFor(displayName);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 20, 28, 8),
-      child: Row(
-        children: [
-          const AppLogo(height: 36),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'NDU Runway',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: _ink,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                Text(
-                  'Regular Projects · Basic plan workspace',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: _muted,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _kazAiPill(),
-          const SizedBox(width: 8),
-          _IconActionButton(
-            icon: Icons.fact_check_outlined,
-            label: 'Activity',
-            color: _amber,
-            onTap: () => ProjectActivitiesLogScreen.open(context),
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: _handleLogout,
-            borderRadius: BorderRadius.circular(40),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: _surfaceWarm,
-                borderRadius: BorderRadius.circular(40),
-                border: Border.all(color: _outline),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircleAvatar(
-                    radius: 14,
-                    backgroundColor: _tealSoft,
-                    child: Text(
-                      initials,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: _tealDeep,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(Icons.logout_rounded, size: 14, color: _muted),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// KAZ AI copilot pill — opens the KAZ AI chat.
-  Widget _kazAiPill() {
-    return InkWell(
-      onTap: () => KazAiChatBubble.openChat(context),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFFC812), Color(0xFFFF9800)],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: _tealDeep.withAlpha(35),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.auto_awesome_rounded,
-                size: 13, color: Color(0xFF1C1C1C)),
-            SizedBox(width: 5),
-            Text(
-              'KAZ AI',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.3,
-                color: Color(0xFF1C1C1C),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Hero ───────────────────────────────────────────────────────────────────
-  Widget _buildHero(int projectCount, String displayName) {
-    final hour = DateTime.now().hour;
-    final greeting = hour < 12
-        ? 'Good morning'
-        : hour < 17
-            ? 'Good afternoon'
-            : 'Good evening';
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFC812),
-              Color(0xFFFABD00),
-              Color(0xFFF59E0B),
-            ],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: _tealDeep.withAlpha(50),
-              blurRadius: 24,
-              offset: const Offset(0, 12),
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // Decorative circles
-            Positioned(
-              right: -40,
-              top: -40,
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF3D2E00).withAlpha(16),
-                ),
-              ),
-            ),
-            Positioned(
-              right: 20,
-              bottom: -30,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF3D2E00).withAlpha(12),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(28, 26, 28, 26),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$greeting, $displayName',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF5B4300),
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Your project runway awaits.',
-                    style: TextStyle(
-                      fontSize: 26,
-                      color: Color(0xFF2B1F00),
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                      height: 1.15,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Every great delivery starts with one clear next step. '
-                    'Pick a workspace below or start fresh — we\'ll guide you '
-                    'through initiation, planning, and launch.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF4A3A00),
-                      height: 1.55,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      _HeroStat(
-                        label: 'Active workspaces',
-                        value: '$projectCount',
-                        icon: Icons.folder_special_rounded,
-                      ),
-                      const SizedBox(width: 14),
-                      _HeroStat(
-                        label: 'Plan tier',
-                        value: 'Basic',
-                        icon: Icons.bolt_rounded,
-                      ),
-                      const SizedBox(width: 14),
-                      _HeroStat(
-                        label: 'Quota used',
-                        value: '${(projectCount / 10 * 100).round().clamp(0, 100)}%',
-                        icon: Icons.donut_small_rounded,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -924,74 +645,6 @@ class _RegularProjectDashboardScreenState
       ),
     );
   }
-
-  String _initialsFor(String name) {
-    final parts = name.split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
-    if (parts.isEmpty) return '?';
-    return parts
-        .take(2)
-        .map((p) => p[0].toUpperCase())
-        .join();
-  }
-}
-
-// ── Helper widgets ───────────────────────────────────────────────────────────
-
-class _HeroStat extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  const _HeroStat({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFF3D2E00).withAlpha(22),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF3D2E00).withAlpha(40)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 16, color: const Color(0xFF2B1F00)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    value,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF2B1F00),
-                    ),
-                  ),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Color(0xFF5B4300),
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _StatTile extends StatelessWidget {
@@ -1066,50 +719,6 @@ class _StatTile extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _IconActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  const _IconActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: color.withAlpha(15),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withAlpha(40)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -234,6 +234,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   static const Set<String> _projectServicesLabels = {
     'Scope Tracking Plan',
+    'Project Controls',
   };
 
   static const Set<String> _startUpPlanningLabels = {
@@ -1438,6 +1439,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openScopeTrackingPlan() {
     _navigateWithCheckpoint(
         'scope_tracking_plan', const ScopeTrackingPlanScreen());
+  }
+
+  void _openProjectControls() {
+    // Project Controls is a route-based module (uses go_router), so we push
+    // the named route rather than navigating via the checkpoint system.
+    context.push('/project-controls');
   }
 
   void _openChangeManagement() {
@@ -2876,6 +2883,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _buildSubSubMenuItem('Scope Tracking Plan',
               onTap: _openScopeTrackingPlan,
               isActive: widget.activeItemLabel == 'Scope Tracking Plan'),
+          _buildSubSubMenuItem('Project Controls',
+              onTap: _openProjectControls,
+              isActive: widget.activeItemLabel == 'Project Controls'),
         ],
         _buildSubMenuItem(
           'Change Management',

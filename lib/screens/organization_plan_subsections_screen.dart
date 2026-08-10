@@ -466,8 +466,8 @@ class _OrganizationStaffingPlanScreenState
     if (data.projectRoles.isNotEmpty) {
       bits.add('${data.projectRoles.length} roles in Roles & Responsibilities');
     }
-    if (data.deliverablesRoadmap.isNotEmpty) {
-      bits.add('${data.deliverablesRoadmap.length} deliverables on the roadmap');
+    if (data.raciDeliverableRows.isNotEmpty) {
+      bits.add('${data.raciDeliverableRows.length} deliverables on the RACI matrix');
     }
     return bits.isEmpty ? 'No project scope defined yet.' : bits.join(' • ');
   }

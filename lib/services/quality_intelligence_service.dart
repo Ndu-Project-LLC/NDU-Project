@@ -743,7 +743,14 @@ class QualityIntelligenceService {
     QualityManagementData qualityData,
   ) {
     final kpis = <QualityRecommendation>[];
-    final existingKpiNames = qualityData.customKpis.map((k) => k.name.toLowerCase()).toSet();
+    // QualityManagementData has no customKpis field — derive existing KPI
+    // names from the three fixed QualityMetrics so the recommender can
+    // still dedupe against the user's current state.
+    final existingKpiNames = <String>{
+      'defect density',
+      'customer satisfaction',
+      'on-time delivery',
+    };
 
     // Essential KPIs for any project
     final essentialKpis = [

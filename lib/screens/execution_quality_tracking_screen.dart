@@ -320,10 +320,6 @@ class _ExecutionQualityTrackingScreenState extends State<ExecutionQualityTrackin
             onNext: () => PlanningPhaseNavigation.goToNext(
               context, 'execution_quality_tracking',
             ),
-            onSkip: () => PlanningPhaseNavigation.goToSkip(
-              context, 'execution_quality_tracking',
-            ),
-            pageTitle: 'Quality Tracking',
           ),
         ],
       ),

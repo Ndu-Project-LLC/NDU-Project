@@ -108,16 +108,36 @@ class ExecutionQualityTrackingService {
       );
     }).toList();
 
-    // Convert KPIs to execution KPI entries
-    final kpiEntries = planningData.customKpis.map((kpi) {
-      final target = double.tryParse(kpi.targetValue) ?? 0;
-      return ExecutionKpiEntry(
-        kpiName: kpi.name,
-        kpiUnit: kpi.unit,
-        targetValue: target,
-        trend: kpi.trendDirection,
-      );
-    }).toList();
+    // Convert KPIs to execution KPI entries.
+    // NOTE: QualityManagementData does not expose a `customKpis` field —
+    // the previous implementation referenced a non-existent getter, which
+    // broke compilation. Seed execution KPI entries from the three fixed
+    // QualityMetrics (defect density, customer satisfaction, on-time
+    // delivery) when their target values are parseable.
+    final metrics = planningData.metrics;
+    final kpiEntries = <ExecutionKpiEntry>[
+      if (double.tryParse(metrics.defectDensity.value) != null)
+        ExecutionKpiEntry(
+          kpiName: 'Defect Density',
+          kpiUnit: metrics.defectDensity.unit,
+          targetValue: double.parse(metrics.defectDensity.value),
+          trend: metrics.defectDensity.trendDirection,
+        ),
+      if (double.tryParse(metrics.customerSatisfaction.value) != null)
+        ExecutionKpiEntry(
+          kpiName: 'Customer Satisfaction',
+          kpiUnit: metrics.customerSatisfaction.unit,
+          targetValue: double.parse(metrics.customerSatisfaction.value),
+          trend: metrics.customerSatisfaction.trendDirection,
+        ),
+      if (double.tryParse(metrics.onTimeDelivery.value) != null)
+        ExecutionKpiEntry(
+          kpiName: 'On-Time Delivery',
+          kpiUnit: metrics.onTimeDelivery.unit,
+          targetValue: double.parse(metrics.onTimeDelivery.value),
+          trend: metrics.onTimeDelivery.trendDirection,
+        ),
+    ];
 
     // Convert corrective actions
     final correctiveActions = planningData.correctiveActions.map((ca) {

@@ -64,16 +64,14 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
 
   static const int _savingIndicatorDuration = 1;
 
+  /// Fields shown on the "Delivery Model" tab.
+  /// (The old single-line "release strategy" field has been moved to its
+  /// own dedicated tab — see [_releaseFields] below.)
   static const List<_FieldConfig> _fields = [
     _FieldConfig(
       key: 'cadence',
       label: 'Sprint cadence & calendar',
       hint: 'Sprint length, ceremonies, and planning calendar.',
-    ),
-    _FieldConfig(
-      key: 'release',
-      label: 'Release strategy',
-      hint: 'Release waves, branching, and approval gates.',
     ),
     _FieldConfig(
       key: 'backlog',
@@ -99,6 +97,76 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     ),
   ];
 
+  /// Fields shown on the "Release Strategy" tab.
+  /// Defines how product increments will be planned, validated, and released
+  /// to deliver value throughout the project lifecycle. Persisted under the
+  /// `releaseStrategy` sub-map inside the `deliveryModel` document.
+  static const List<_FieldConfig> _releaseFields = [
+    _FieldConfig(
+      key: 'release_goals',
+      label: 'Release Goals',
+      hint: 'Business objectives and value to be delivered by this release '
+          '(e.g. target outcomes, KPIs, success measures).',
+      fullWidth: true,
+    ),
+    _FieldConfig(
+      key: 'release_cadence',
+      label: 'Release Cadence',
+      hint: 'Planned release frequency — every sprint, every few sprints, '
+          'or on demand. Include any fixed release windows or freeze periods.',
+      fullWidth: true,
+    ),
+    _FieldConfig(
+      key: 'release_scope',
+      label: 'Release Scope',
+      hint: 'Features or epics targeted for each release. Reference the source '
+          'epics/features and any in-scope vs out-of-scope exclusions.',
+      fullWidth: true,
+    ),
+    _FieldConfig(
+      key: 'release_criteria',
+      label: 'Release Criteria',
+      hint: 'Definition of Done, quality gates, testing requirements, and '
+          'approval/sign-off steps that must pass before a release ships.',
+      fullWidth: true,
+    ),
+    _FieldConfig(
+      key: 'deployment_strategy',
+      label: 'Deployment Strategy',
+      hint: 'How releases will be deployed — phased rollout, feature flags, '
+          'blue-green, canary, or full deployment. Note where applicable.',
+      fullWidth: true,
+    ),
+    _FieldConfig(
+      key: 'release_dependencies_risks',
+      label: 'Dependencies & Risks',
+      hint: 'Key dependencies, assumptions, and release risks. Capture '
+          'cross-team, vendor, and infrastructure dependencies.',
+      fullWidth: true,
+    ),
+    _FieldConfig(
+      key: 'rollback_recovery',
+      label: 'Rollback & Recovery',
+      hint: 'Approach for handling failed releases — rollback steps, '
+          'recovery time objectives, and decision-makers for rollback.',
+      fullWidth: true,
+    ),
+    _FieldConfig(
+      key: 'communication_training',
+      label: 'Communication & Training',
+      hint: 'Stakeholder notifications, user readiness, training plans, and '
+          'support team enablement before each release.',
+      fullWidth: true,
+    ),
+    _FieldConfig(
+      key: 'post_release_support',
+      label: 'Post-Release Support',
+      hint: 'Monitoring, feedback collection, issue resolution, and continuous '
+          'improvement activities after a release goes live.',
+      fullWidth: true,
+    ),
+  ];
+
   String? get _projectId {
     try {
       return ProjectDataInherited.maybeOf(context)?.projectData.projectId;
@@ -111,6 +179,9 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
   void initState() {
     super.initState();
     for (final f in _fields) {
+      _controllers[f.key] = TextEditingController();
+    }
+    for (final f in _releaseFields) {
       _controllers[f.key] = TextEditingController();
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
@@ -134,6 +205,15 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       if (!mounted) return;
       for (final f in _fields) {
         final value = data[f.key] as String? ?? '';
+        _controllers[f.key]?.text = value;
+        if (value.isNotEmpty) _recordFieldHistory(f.key, value);
+      }
+      // Release Strategy sub-fields are stored under a nested `releaseStrategy`
+      // map so they remain logically grouped together.
+      final releaseStrategy =
+          (data['releaseStrategy'] as Map<String, dynamic>?) ?? const {};
+      for (final f in _releaseFields) {
+        final value = releaseStrategy[f.key] as String? ?? '';
         _controllers[f.key]?.text = value;
         if (value.isNotEmpty) _recordFieldHistory(f.key, value);
       }
@@ -167,6 +247,13 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       for (final f in _fields) {
         data[f.key] = _controllers[f.key]?.text ?? '';
       }
+      // Persist Release Strategy fields as a nested map so they remain
+      // logically grouped and easy to export independently.
+      final releaseStrategy = <String, dynamic>{};
+      for (final f in _releaseFields) {
+        releaseStrategy[f.key] = _controllers[f.key]?.text ?? '';
+      }
+      data['releaseStrategy'] = releaseStrategy;
       data['framework'] = _selectedFramework;
       data['sprintLength'] = _selectedSprintLength;
       data['estimationMethod'] = _selectedEstimationMethod;
@@ -212,12 +299,21 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
         '- "sprintLength": "1 Week", "2 Weeks", "3 Weeks", or "4 Weeks"\n'
         '- "estimationMethod": "Story Points (Fibonacci)", "T-Shirt Sizes", "Ideal Days", etc.\n'
         '- "cadence": Sprint cadence & calendar (2-3 sentences)\n'
-        '- "release": Release strategy (2-3 sentences)\n'
         '- "backlog": Backlog governance (2-3 sentences)\n'
         '- "team": Team structure & roles (2-3 sentences)\n'
         '- "metrics": Metrics & reporting (2-3 sentences)\n'
-        '- "risks": Impediment & risk handling (2-3 sentences)',
-        maxTokens: 1200,
+        '- "risks": Impediment & risk handling (2-3 sentences)\n'
+        '- "releaseStrategy": an object with these sub-keys, each 2-3 sentences:\n'
+        '    * "release_goals": Business objectives and value to be delivered\n'
+        '    * "release_cadence": Planned release frequency (every sprint / every few sprints / on demand)\n'
+        '    * "release_scope": Features or epics targeted for each release\n'
+        '    * "release_criteria": Definition of Done, quality gates, testing, approvals\n'
+        '    * "deployment_strategy": Phased, feature flags, blue-green, canary, or full deployment\n'
+        '    * "release_dependencies_risks": Key dependencies, assumptions, release risks\n'
+        '    * "rollback_recovery": Approach for handling failed releases\n'
+        '    * "communication_training": Stakeholder notifications, user readiness, support plans\n'
+        '    * "post_release_support": Monitoring, feedback, issue resolution, continuous improvement',
+        maxTokens: 2400,
         temperature: 0.5,
       );
       final parsed = _parseAIResult(result);
@@ -239,10 +335,25 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           setState(() => _selectedEstimationMethod = em);
         }
       }
+      // Apply top-level string fields (framework/sprintLength/etc. handled
+      // above, plus the existing free-text fields like cadence/backlog/etc.).
       for (final entry in parsed.entries) {
+        if (entry.key == 'releaseStrategy') continue;
         if (_controllers.containsKey(entry.key)) {
-          _controllers[entry.key]?.text = entry.value;
-          _recordFieldHistory(entry.key, entry.value, isAi: true);
+          final value = entry.value.toString();
+          _controllers[entry.key]?.text = value;
+          _recordFieldHistory(entry.key, value, isAi: true);
+        }
+      }
+      // Apply the nested Release Strategy sub-map.
+      final releaseStrategyValue = parsed['releaseStrategy'];
+      if (releaseStrategyValue is Map) {
+        final releaseMap = Map<String, dynamic>.from(releaseStrategyValue);
+        for (final f in _releaseFields) {
+          final value = releaseMap[f.key]?.toString() ?? '';
+          if (value.isEmpty) continue;
+          _controllers[f.key]?.text = value;
+          _recordFieldHistory(f.key, value, isAi: true);
         }
       }
       _performSave();
@@ -256,7 +367,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     if (mounted) setState(() => _isGenerating = false);
   }
 
-  Map<String, String> _parseAIResult(String text) {
+  Map<String, dynamic> _parseAIResult(String text) {
     try {
       final start = text.indexOf('{');
       final end = text.lastIndexOf('}');
@@ -264,7 +375,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
       final jsonStr = text.substring(start, end + 1);
       final Map<String, dynamic> parsed =
           Map<String, dynamic>.from(jsonDecode(jsonStr) as Map);
-      return parsed.map((k, v) => MapEntry(k, v.toString()));
+      return parsed;
     } catch (e) {
       return {};
     }
@@ -353,8 +464,10 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
     final bool isMobile = AppBreakpoints.isMobile(context);
     final double hp = isMobile ? 20 : 40;
 
-    return Scaffold(
-      backgroundColor: _kBackground,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: _kBackground,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -439,15 +552,7 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                                 ],
                               ),
                             ),
-                          _buildFrameworkSelector(),
-                          const SizedBox(height: 20),
-                          if (_selectedFramework != 'Kanban')
-                            _buildSprintLengthSelector(),
-                          if (_selectedFramework != 'Kanban')
-                            const SizedBox(height: 20),
-                          _buildEstimationSelector(),
-                          const SizedBox(height: 24),
-                          ..._fields.map((f) => _buildField(f)),
+                          _buildTabs(),
                         ],
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(
@@ -475,6 +580,106 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           ],
         ),
       ),
+      ),
+    );
+  }
+
+  /// Two-tab layout for the Agile Delivery Model screen.
+  ///
+  ///  * **Delivery Model** — the original framework / sprint length /
+  ///    estimation / cadence / backlog / team / metrics / risks fields.
+  ///  * **Release Strategy** — the 9 typical sections that define how
+  ///    product increments will be planned, validated, and released to
+  ///    deliver value throughout the project lifecycle.
+  ///
+  /// Both tabs share the same auto-save pipeline — typing in either tab
+  /// triggers the same 500ms debounced save to Firestore.
+  Widget _buildTabs() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TabBar(
+          tabs: const [
+            Tab(text: 'Delivery Model'),
+            Tab(text: 'Release Strategy'),
+          ],
+          labelColor: _kAccent,
+          unselectedLabelColor: _kMuted,
+          indicatorColor: _kAccent,
+          indicatorSize: TabBarIndicatorSize.tab,
+          labelStyle:
+              const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: const TextStyle(fontSize: 14),
+          isScrollable: false,
+        ),
+        const SizedBox(height: 16),
+        // TabBarView needs bounded height — wrap in a SizedBox whose height
+        // adapts to viewport so it doesn't clip on long-form content.
+        SizedBox(
+          height: 720,
+          child: TabBarView(
+            children: [
+              SingleChildScrollView(
+                child: _buildDeliveryModelTab(),
+              ),
+              SingleChildScrollView(
+                child: _buildReleaseStrategyTab(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDeliveryModelTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFrameworkSelector(),
+        const SizedBox(height: 20),
+        if (_selectedFramework != 'Kanban') _buildSprintLengthSelector(),
+        if (_selectedFramework != 'Kanban') const SizedBox(height: 20),
+        _buildEstimationSelector(),
+        const SizedBox(height: 24),
+        ..._fields.map((f) => _buildField(f)),
+      ],
+    );
+  }
+
+  Widget _buildReleaseStrategyTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Intro paragraph that frames the purpose of this tab —
+        // matches the description in the spec ("Define how product
+        // increments will be planned, validated, and released…").
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFBEB),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFFDE68A)),
+          ),
+          child: const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline, size: 18, color: Color(0xFFD97706)),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Define how product increments will be planned, validated, '
+                  'and released to deliver value throughout the project lifecycle.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF92400E)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        ..._releaseFields.map((f) => _buildField(f)),
+      ],
     );
   }
 

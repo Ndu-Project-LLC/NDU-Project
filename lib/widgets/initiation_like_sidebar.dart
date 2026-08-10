@@ -256,7 +256,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Agile Delivery Model - Kanban Configuration',
     'Agile Delivery Model - Epics & Features',
     'Agile Delivery Model - Acceptance Criteria Planning',
-    'Agile Delivery Model - Sprint Calendar',
     'Agile Delivery Model - Agile Map Out',
     'Agile Delivery Model - Release Plan',
     'Agile Delivery Model - Metrics Planning',
@@ -2728,10 +2727,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openAgileAcceptanceCriteria,
               isActive: widget.activeItemLabel ==
                   'Agile Delivery Model - Acceptance Criteria Planning'),
-          _buildSubSubMenuItem('Sprint Cadence & Calendar',
-              onTap: _openAgileSprintCalendar,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Sprint Calendar'),
           _buildSubSubMenuItem('Agile Map Out',
               onTap: _openAgileMapOut,
               isActive: widget.activeItemLabel ==
@@ -3954,16 +3949,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: _openAgileAcceptanceCriteria,
           isActive: widget.activeItemLabel ==
               'Agile Delivery Model - Acceptance Criteria Planning'));
-    }
-    if ('sprint calendar'.contains(query) ||
-        'sprint cadence'.contains(query) ||
-        'sprint'.contains(query) ||
-        'iteration'.contains(query)) {
-      results.add(_buildMenuItem(
-          Icons.calendar_month_outlined, 'Sprint Cadence & Calendar',
-          onTap: _openAgileSprintCalendar,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Sprint Calendar'));
     }
     if ('release plan'.contains(query) ||
         'release'.contains(query) ||

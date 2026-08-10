@@ -226,17 +226,6 @@ class StaffingReminderHelper {
     return reminders;
   }
 
-  /// Convert reminders to TeamActivity entries for calendar integration
-  static List<TeamActivity> toCalendarEvents(List<StaffingReminder> reminders) {
-    return reminders.map((r) => TeamActivity(
-      title: r.message,
-      description: 'Staffing Plan Alert: ${r.positionTitle}',
-      postedBy: 'system',
-      date: r.targetDate,
-      category: 'Action Required',
-    )).toList();
-  }
-
   /// Get summary statistics for reminders
   static Map<String, int> getReminderStats(List<StaffingReminder> reminders) {
     return {

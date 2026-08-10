@@ -5,6 +5,7 @@
 
 library;
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,6 +22,13 @@ class WBSProvider extends ChangeNotifier {
   bool _isLoadingFromStorage = true;
   bool _viewModeSimple = false;
   String _activeProjectId = 'default';
+
+  /// Dedup guard for [ensureProjectLoaded] so concurrent callers (e.g. the
+  /// auto-sync on page load and a manual "Sync from WBS" button press firing
+  /// in the same frame) share a single underlying Firestore/SharedPreferences
+  /// read instead of racing each other.
+  Completer<void>? _projectLoadCompleter;
+  String? _loadingProjectId;
 
   WBS? get wbs => _wbs;
   bool get setupComplete => _setupComplete;
@@ -63,17 +71,70 @@ class WBSProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadProjectScopedStorage(String projectId) async {
-    if (projectId.isEmpty || projectId == 'default') return;
+  /// Ensures the WBS tree for [projectId] is loaded into [_wbs] before any
+  /// caller reads it. This is the entry point screens should call *before*
+  /// inspecting [wbs] — otherwise the provider may still hold a stale WBS
+  /// from a previously-active project (or `null` after a fresh app start with
+  /// no legacy storage).
+  ///
+  /// Behaviour:
+  /// - Awaits the initial legacy-storage load if it is still in flight
+  ///   (so we don't return `null` while the constructor's async load is
+  ///   pending).
+  /// - If the currently-loaded WBS already belongs to [projectId], returns
+  ///   immediately (no work, no notifyListeners).
+  /// - Otherwise delegates to [_loadProjectScopedStorage], which first
+  ///   tries Firestore, then falls back to project-scoped SharedPreferences,
+  ///   and finally (via the legacy-storage fallback) to the legacy
+  ///   `ndu_wbs_v2` entry if its `projectId` matches.
+  ///
+  /// Concurrent calls for the same [projectId] are coalesced via a
+  /// [Completer] so we never issue duplicate Firestore reads.
+  Future<void> ensureProjectLoaded(String projectId) async {
+    final pid = projectId.isEmpty ? 'default' : projectId;
 
-    final firestoreWbs = await WbsFirestoreService.loadWBS(projectId);
-    if (firestoreWbs != null) {
-      _wbs = firestoreWbs;
-      _setupComplete = true;
-      _activeProjectId = projectId;
-      notifyListeners();
-      _saveToStorage();
+    // Wait for the constructor's initial load so we don't race with it.
+    while (_isLoadingFromStorage) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+
+    // Already loaded for this project? Fast-path.
+    if (_activeProjectId == pid && _wbs != null && _wbs!.projectId == pid) {
       return;
+    }
+
+    // Coalesce concurrent loads for the same project.
+    if (_loadingProjectId == pid && _projectLoadCompleter != null) {
+      return _projectLoadCompleter!.future;
+    }
+
+    _loadingProjectId = pid;
+    _projectLoadCompleter = Completer<void>();
+    try {
+      await _loadProjectScopedStorage(pid);
+    } finally {
+      _projectLoadCompleter!.complete();
+      _projectLoadCompleter = null;
+      _loadingProjectId = null;
+    }
+  }
+
+  Future<void> _loadProjectScopedStorage(String projectId) async {
+    // Try Firestore first (source of truth for cross-device sync) for any
+    // real project ID. 'default' is the no-project fallback — skip Firestore
+    // for it (there's no Firestore doc for 'default') and go straight to
+    // legacy SharedPreferences fallback so existing single-project users
+    // don't lose their WBS.
+    if (projectId.isNotEmpty && projectId != 'default') {
+      final firestoreWbs = await WbsFirestoreService.loadWBS(projectId);
+      if (firestoreWbs != null) {
+        _wbs = firestoreWbs;
+        _setupComplete = true;
+        _activeProjectId = projectId;
+        notifyListeners();
+        _saveToStorage();
+        return;
+      }
     }
 
     try {
@@ -81,6 +142,30 @@ class WBSProvider extends ChangeNotifier {
       final key = _storageKeyForProject(projectId);
       final raw = prefs.getString(key);
       if (raw == null) {
+        // No project-scoped WBS — try legacy as a migration fallback.
+        // Only adopt the legacy WBS if its projectId matches the requested
+        // project (so we never leak a different project's WBS into the
+        // current project's context).
+        final legacyRaw = prefs.getString(_legacyStorageKey);
+        if (legacyRaw != null) {
+          final legacyData = jsonDecode(legacyRaw) as Map<String, dynamic>;
+          final legacyState =
+              legacyData['state'] as Map<String, dynamic>? ?? {};
+          if (legacyState['wbs'] != null) {
+            final legacyWbs =
+                _wbsFromJson(legacyState['wbs'] as Map<String, dynamic>);
+            if (legacyWbs.projectId == projectId) {
+              _wbs = legacyWbs;
+              _setupComplete =
+                  legacyState['setupComplete'] as bool? ?? false;
+              _viewModeSimple = legacyState['viewModeSimple'] as bool? ??
+                  _viewModeSimple;
+              _activeProjectId = projectId;
+              notifyListeners();
+              return;
+            }
+          }
+        }
         _wbs = null;
         _setupComplete = false;
         _activeProjectId = projectId;

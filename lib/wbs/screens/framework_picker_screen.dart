@@ -318,10 +318,14 @@ class _FrameworkPickerScreenState extends State<FrameworkPickerScreen> {
           projectData.projectName.trim().isNotEmpty
               ? projectData.projectName.trim()
               : 'Untitled Project';
+      final resolvedProjectId = projectData.projectId?.trim().isNotEmpty == true
+          ? projectData.projectId!.trim()
+          : 'default';
       context.read<WBSProvider>().setup(
             projectName: resolvedProjectName,
             framework: _framework!,
             methodology: _methodology!,
+            projectId: resolvedProjectId,
           );
     }
   }

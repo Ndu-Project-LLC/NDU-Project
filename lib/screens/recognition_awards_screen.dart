@@ -9,6 +9,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 /// ═══════════════════════════════════════════════════════════════════════════
 /// RECOGNITION & AWARDS
 /// ═══════════════════════════════════════════════════════════════════════════
@@ -141,6 +142,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
             onPressed: () {
               setState(() => _recognitions.removeAt(index));
               _saveData();
+              showDeleteSuccessSnackBar(context, itemLabel: 'Recognition');
               Navigator.of(ctx).pop();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),

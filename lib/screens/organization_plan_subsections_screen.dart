@@ -26,6 +26,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/widgets/raci_deliverable_matrix.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 Future<void> _exportPlanningSubsectionPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
   await PdfExportHelper.exportScreenPdf(
@@ -258,6 +259,7 @@ class _OrganizationStaffingPlanScreenState
       updated.removeAt(index);
     }
     await _saveStaffing(context, updated);
+      showDeleteSuccessSnackBar(context, itemLabel: 'Staffing');
   }
 
   Future<void> _toggleNduAccess(BuildContext context, int index, bool value) async {
@@ -2932,6 +2934,7 @@ class _OrganizationRolesResponsibilitiesScreenState
                       .projectData
                       .projectRoles);
               updatedRoles.removeAt(index);
+              showDeleteSuccessSnackBar(context, itemLabel: 'Role');
               Navigator.pop(dialogContext);
               await ProjectDataHelper.saveAndNavigate(
                 context: rootContext,

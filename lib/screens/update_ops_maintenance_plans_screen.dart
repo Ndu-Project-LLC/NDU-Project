@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class UpdateOpsMaintenancePlansScreen extends StatefulWidget {
   const UpdateOpsMaintenancePlansScreen({super.key});
 
@@ -1529,6 +1530,7 @@ class _UpdateOpsMaintenancePlansScreenState
   void _deleteCoverage(String id) {
     setState(() => _coverage.removeWhere((item) => item.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Coverage');
   }
 
   void _addSignal() {
@@ -1548,6 +1550,7 @@ class _UpdateOpsMaintenancePlansScreenState
   void _deleteSignal(String id) {
     setState(() => _signals.removeWhere((item) => item.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Signal');
   }
 
   void _addMaintenanceWindow() {
@@ -1570,6 +1573,7 @@ class _UpdateOpsMaintenancePlansScreenState
   void _deleteMaintenance(String id) {
     setState(() => _maintenanceWindows.removeWhere((item) => item.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Maintenance');
   }
 }
 

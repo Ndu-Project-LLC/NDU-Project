@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/web_utils_stub.dart'
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 enum _SsherCategory { safety, security, health, environment, regulatory }
 
 String _categoryKey(_SsherCategory category) => category.name;
@@ -639,6 +640,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  });
  await _saveEntries();
  }
+    showDeleteSuccessSnackBar(context, itemLabel: 'Ssher Entry');
  }
 
  Future<void> _editEntry(SsherEntry entry) async {

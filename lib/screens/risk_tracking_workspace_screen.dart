@@ -20,6 +20,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class RiskTrackingWorkspaceScreen extends StatefulWidget {
   const RiskTrackingWorkspaceScreen({super.key});
 
@@ -3108,16 +3109,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  void _deleteRisk(String id) {
  setState(() => _risks.removeWhere((r) => r.id == id));
  _saveToFirestore();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Risk');
  }
 
  void _deleteSignal(String id) {
  setState(() => _signals.removeWhere((s) => s.id == id));
  _saveToFirestore();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Signal');
  }
 
  void _deleteMitigation(String id) {
  setState(() => _mitigations.removeWhere((m) => m.id == id));
  _saveToFirestore();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Mitigation');
  }
 
  Future<void> _exportPdf() async {

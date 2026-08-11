@@ -27,6 +27,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class TransitionToProdTeamScreen extends StatefulWidget {
   const TransitionToProdTeamScreen({super.key});
 
@@ -667,6 +668,7 @@ class _TransitionToProdTeamScreenState
     if (!confirmed) return;
     setState(() => _teamRoster.removeAt(idx));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Team Member');
   }
 
   Future<void> _deleteHandoverItem(int idx) async {
@@ -677,6 +679,7 @@ class _TransitionToProdTeamScreenState
     if (!confirmed) return;
     setState(() => _handoverChecklist.removeAt(idx));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Handover Item');
   }
 
   Future<void> _deleteKnowledgeTransfer(int idx) async {
@@ -687,6 +690,7 @@ class _TransitionToProdTeamScreenState
     if (!confirmed) return;
     setState(() => _knowledgeTransfers.removeAt(idx));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Knowledge Transfer');
   }
 
   Future<void> _deleteApproval(int idx) async {
@@ -697,6 +701,7 @@ class _TransitionToProdTeamScreenState
     if (!confirmed) return;
     setState(() => _signOffs.removeAt(idx));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Approval');
   }
 
   void _scheduleSave() {

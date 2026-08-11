@@ -36,6 +36,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class DesignPhaseScreen extends StatefulWidget {
  const DesignPhaseScreen(
  {super.key, this.activeItemLabel = 'Design Management'});
@@ -4230,6 +4231,7 @@ Future<void> _loadProgress(String projectId) async {
  if (_nodes.isEmpty) return;
  final id = _nodes.last.id;
  _deleteArchitectureNode(id);
+    showDeleteSuccessSnackBar(context, itemLabel: 'Last Architecture Node');
  }
 
  void _deleteArchitectureNode(String id) {
@@ -4238,6 +4240,7 @@ Future<void> _loadProgress(String projectId) async {
  _edges.removeWhere((edge) => edge.fromId == id || edge.toId == id);
  });
  _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Architecture Node');
  }
 
  void _clearArchitectureCanvas() {

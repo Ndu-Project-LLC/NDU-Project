@@ -26,6 +26,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class TeamTrainingAndBuildingScreen extends StatefulWidget {
  const TeamTrainingAndBuildingScreen({super.key});
 
@@ -2085,6 +2086,7 @@ $notesText
  .projectData
  .trainingActivities,
  )..removeWhere((a) => a.id == activity.id);
+ showDeleteSuccessSnackBar(context, itemLabel: 'Activity');
  Navigator.pop(dialogContext);
  await _saveActivities(rootContext, updated);
  },

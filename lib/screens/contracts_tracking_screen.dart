@@ -25,6 +25,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class ContractsTrackingScreen extends StatefulWidget {
   const ContractsTrackingScreen({super.key});
 
@@ -1166,6 +1167,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     } catch (e) {
       debugPrint('Error deleting contract: $e');
     }
+      showDeleteSuccessSnackBar(context, itemLabel: 'Contract Model');
   }
 
   // ignore: unused_element
@@ -1820,6 +1822,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
   void _deleteRiskSignal(String id) {
     setState(() => _riskSignals.removeWhere((item) => item.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Risk Signal');
   }
 
   Future<void> _confirmDeleteRiskSignal(_RiskSignalData signal) async {

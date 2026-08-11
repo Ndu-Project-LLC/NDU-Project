@@ -22,6 +22,7 @@ import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class TechnicalDevelopmentScreen extends StatefulWidget {
  const TechnicalDevelopmentScreen({super.key});
 
@@ -2773,6 +2774,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() => _standardsChips.removeWhere((item) => item.id == chip.id));
  _scheduleSave();
  _logActivity('Deleted standards chip', details: {'itemId': chip.id});
+    showDeleteSuccessSnackBar(context, itemLabel: 'Chip Item');
  }
 
  Future<void> _openStandardsChipDialog({_ChipItem? existing}) async {

@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class TechnicalDebtManagementScreen extends StatefulWidget {
   const TechnicalDebtManagementScreen({super.key});
 
@@ -1782,6 +1783,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  await _upsertRemediationTracks(updated);
  if (!mounted) return;
  setState(() => _tracks = updated);
+    showDeleteSuccessSnackBar(context, itemLabel: 'Remediation Track');
  }
 
  Future<void> _deleteRootCause(int displayIndex, String label) async {
@@ -1798,6 +1800,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  await _upsertRootCauses(updated);
  if (!mounted) return;
  setState(() => _rootCauses = updated);
+    showDeleteSuccessSnackBar(context, itemLabel: 'Root Cause');
  }
 
  Future<void> _deleteOwner(int displayIndex, String label) async {
@@ -1814,6 +1817,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  await _upsertOwners(updated);
  if (!mounted) return;
  setState(() => _owners = updated);
+    showDeleteSuccessSnackBar(context, itemLabel: 'Owner');
  }
 
  List<RemediationTrack> _effectiveTracks() {

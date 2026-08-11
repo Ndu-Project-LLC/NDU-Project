@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class FinalizeProjectScreen extends StatefulWidget {
   const FinalizeProjectScreen({super.key});
 
@@ -1592,6 +1593,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
   void _deleteSnapshotMetric(String id) {
     setState(() => _snapshotMetrics.removeWhere((e) => e.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Snapshot Metric');
   }
 
   void _addChecklistItem() {
@@ -1620,6 +1622,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
   void _deleteChecklistItem(String id) {
     setState(() => _checklist.removeWhere((entry) => entry.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Checklist Item');
   }
 
   void _addSignOffItem() {
@@ -1648,6 +1651,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
   void _deleteSignOffItem(String id) {
     setState(() => _signOffs.removeWhere((entry) => entry.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Sign Off Item');
   }
 
   void _addInsight() {
@@ -1667,6 +1671,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
   void _deleteInsight(String id) {
     setState(() => _insights.removeWhere((entry) => entry.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Insight');
   }
 }
 

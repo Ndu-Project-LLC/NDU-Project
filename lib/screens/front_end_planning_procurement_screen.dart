@@ -37,6 +37,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 enum ProcurementScreenMode { fep, planning }
 
 enum _MissingProcurementAction {
@@ -645,6 +646,7 @@ class _FrontEndPlanningProcurementScreenState
  _workflowDraftSteps =
  _workflowDraftSteps.where((step) => step.id != stepId).toList();
  });
+    showDeleteSuccessSnackBar(context, itemLabel: 'Workflow Step From Draft');
  }
 
  void _moveWorkflowStepInDraft(int index, int direction) {

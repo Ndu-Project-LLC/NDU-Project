@@ -22,6 +22,7 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/openai/openai_config.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class StakeholderManagementScreen extends StatefulWidget {
   const StakeholderManagementScreen({super.key});
 
@@ -399,6 +400,7 @@ class _StakeholderManagementScreenState
             d.stakeholderEntries.where((e) => e.id != id).toList(),
       ),
     );
+      showDeleteSuccessSnackBar(context, itemLabel: 'Stakeholder');
   }
 
   void _addEngagementPlan() async {
@@ -442,6 +444,7 @@ class _StakeholderManagementScreenState
             d.engagementPlanEntries.where((e) => e.id != id).toList(),
       ),
     );
+      showDeleteSuccessSnackBar(context, itemLabel: 'Engagement Plan');
   }
 
   // ── Announcements persistence (Firestore subcollection) ─────────────
@@ -509,6 +512,7 @@ class _StakeholderManagementScreenState
         .collection('stakeholder_announcements')
         .doc(id)
         .delete();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Announcement');
   }
 
   /// Persist edits made to a [TeamMember] from the Project Team

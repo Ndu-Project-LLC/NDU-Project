@@ -24,6 +24,7 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -283,6 +284,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
       }
     });
     if (_selectedEpicId != null) _loadFeatures();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Epic');
   }
 
   void _addFeature() {
@@ -311,6 +313,7 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
         projectId: pid, epicId: _selectedEpicId!, featureId: feature.id);
     _featureControllers.remove(feature.id);
     setState(() => _features.removeAt(index));
+      showDeleteSuccessSnackBar(context, itemLabel: 'Feature');
   }
 
   Future<void> _generateEpics() async {

@@ -36,6 +36,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class PlanningProcurementV2Screen extends StatefulWidget {
  const PlanningProcurementV2Screen({super.key});
 
@@ -1887,6 +1888,7 @@ class _PlanningProcurementV2ScreenState
  _workflowDraftSteps =
  _workflowDraftSteps.where((step) => step.id != stepId).toList();
  });
+    showDeleteSuccessSnackBar(context, itemLabel: 'Workflow Step From Draft');
  }
 
  void _moveWorkflowStepInDraft(int index, int direction) {

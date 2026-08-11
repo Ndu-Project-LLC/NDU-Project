@@ -24,6 +24,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class ProjectPlanLevel1ScheduleScreen extends StatefulWidget {
  const ProjectPlanLevel1ScheduleScreen({super.key});
 
@@ -2050,6 +2051,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  });
  _syncToScheduleScreen();
  }
+    showDeleteSuccessSnackBar(context, itemLabel: 'Task');
  }
 
  @override

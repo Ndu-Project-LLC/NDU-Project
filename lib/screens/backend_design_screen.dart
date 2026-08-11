@@ -22,6 +22,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class BackendDesignScreen extends StatefulWidget {
  const BackendDesignScreen({super.key});
 
@@ -1380,6 +1381,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() => _components.removeWhere((entry) => entry.id == id));
  _scheduleSave();
  _logActivity('Deleted architecture component row', details: {'itemId': id});
+    showDeleteSuccessSnackBar(context, itemLabel: 'Component');
  }
 
  void _addQuickArchitectureComponent() {
@@ -1421,6 +1423,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() => _dataFlows.removeWhere((entry) => entry.id == id));
  _scheduleSave();
  _logActivity('Deleted data flow row', details: {'itemId': id});
+    showDeleteSuccessSnackBar(context, itemLabel: 'Data Flow');
  }
 
  Future<void> _addDesignDocument() => _openDesignDocumentDialog();
@@ -1437,6 +1440,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() => _designDocuments.removeWhere((entry) => entry.id == id));
  _scheduleSave();
  _logActivity('Deleted design document row', details: {'itemId': id});
+    showDeleteSuccessSnackBar(context, itemLabel: 'Design Document');
  }
 
  Future<void> _addEntity() => _openEntityDialog();
@@ -1452,6 +1456,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() => _entities.removeWhere((entry) => entry.id == id));
  _scheduleSave();
  _logActivity('Deleted data entity row', details: {'itemId': id});
+    showDeleteSuccessSnackBar(context, itemLabel: 'Entity');
  }
 
  void _addQuickDataEntity() {
@@ -2280,6 +2285,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() => _fields.removeWhere((entry) => entry.id == id));
  _scheduleSave();
  _logActivity('Deleted field row', details: {'itemId': id});
+    showDeleteSuccessSnackBar(context, itemLabel: 'Field');
  }
 
  // ─── Table Builders ────────────────────────────────────────────────────────

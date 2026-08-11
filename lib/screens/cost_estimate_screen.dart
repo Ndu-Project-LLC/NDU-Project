@@ -33,6 +33,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class CostEstimateScreen extends StatefulWidget {
   const CostEstimateScreen({super.key});
 
@@ -802,6 +803,7 @@ Current Cost Items: ${pd.costEstimateItems.map((e) => "${e.title} (${e.costType}
           .doc(item.id)
           .delete();
     }
+      showDeleteSuccessSnackBar(context, itemLabel: 'Item');
   }
 
   Future<void> _autoPopulateFromInitiationIfNeeded() async {

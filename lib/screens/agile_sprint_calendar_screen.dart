@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -252,6 +253,7 @@ class _AgileSprintCalendarScreenState extends State<AgileSprintCalendarScreen> {
     updatedList.removeAt(index);
     await RoadmapService.saveSprints(projectId: pid, sprints: updatedList);
     setState(() => _sprints = updatedList);
+      showDeleteSuccessSnackBar(context, itemLabel: 'Sprint');
   }
 
   @override

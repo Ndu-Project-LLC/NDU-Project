@@ -20,6 +20,7 @@ import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/utils/wbs_to_work_item_converter.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class ExecutionWorkPackagesScreen extends StatefulWidget {
   const ExecutionWorkPackagesScreen({super.key});
 
@@ -501,6 +502,7 @@ class _ExecutionWorkPackagesScreenState
       setState(() {});
       _showInfo('Work package deleted.');
     }
+      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
   }
 
   Future<void> _showWorkPackageDetail(WorkPackage wp) async {

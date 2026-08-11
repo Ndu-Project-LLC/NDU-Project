@@ -31,6 +31,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
 
@@ -1186,6 +1187,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       }
     });
     _handleActivityChanged();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Task');
   }
 
   Future<void> _validateSchedule() async {
@@ -1718,6 +1720,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _saveWorkPackages(data.workPackages);
       _showInfo('Work package deleted.');
     }
+      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
   }
 
   Future<void> _showWorkPackageDetail(WorkPackage wp) async {

@@ -33,6 +33,7 @@ import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 /// Front End Planning - Project Requirements page
 /// Implements the layout from the provided screenshot exactly:
 /// - Top notes field
@@ -1915,6 +1916,7 @@ class _FrontEndPlanningRequirementsScreenState
 
     // Update provider state and Firebase
     _commitAutoSave(showSnack: false);
+      showDeleteSuccessSnackBar(context, itemLabel: 'Item');
   }
 
   Widget _th(String text, TextStyle style) {

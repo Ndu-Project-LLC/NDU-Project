@@ -26,6 +26,7 @@ import 'package:ndu_project/widgets/csv_import_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/utils/download_helper.dart' as dl;
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class PlanningRequirementsScreen extends StatefulWidget {
  const PlanningRequirementsScreen({super.key});
 
@@ -790,6 +791,7 @@ $requirementsList
       }
     });
     _commitAutoSave(showSnack: false);
+      showDeleteSuccessSnackBar(context, itemLabel: 'Item');
   }
 
  List<RequirementItem> _buildRequirementItems() {

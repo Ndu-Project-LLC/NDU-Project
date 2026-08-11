@@ -16,6 +16,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class RiskTrackingScreen extends StatefulWidget {
   const RiskTrackingScreen({super.key});
 
@@ -1829,6 +1830,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
  onPressed: () {
  setState(() => _escalations.removeWhere((e) => e.id == esc.id));
+ showDeleteSuccessSnackBar(context, itemLabel: 'Escalation Readiness');
  Navigator.of(context).pop();
  },
  child: const Text('Delete'),
@@ -2153,6 +2155,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
  onPressed: () {
  setState(() => _risks.removeWhere((r) => r.id == risk.id));
+ showDeleteSuccessSnackBar(context, itemLabel: 'Risk Item');
  Navigator.of(context).pop();
  },
  child: const Text('Delete'),
@@ -2472,6 +2475,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
  onPressed: () {
  setState(() => _plans.removeWhere((p) => p.id == plan.id));
+ showDeleteSuccessSnackBar(context, itemLabel: 'Mitigation Plan');
  Navigator.of(context).pop();
  },
  child: const Text('Delete'),
@@ -2744,6 +2748,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
  onPressed: () {
  setState(() => _signals.removeWhere((s) => s.id == signal.id));
+ showDeleteSuccessSnackBar(context, itemLabel: 'Risk Signal');
  Navigator.of(context).pop();
  },
  child: const Text('Delete'),

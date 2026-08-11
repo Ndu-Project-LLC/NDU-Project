@@ -2185,8 +2185,11 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     final paymentTypeController =
         TextEditingController(text: contract?.paymentType ?? '');
     var selectedStatus = contract?.status ?? 'Draft';
-    final estimatedValueController =
-        TextEditingController(text: contract?.estimatedValue.toString() ?? '0');
+    var selectedStartPhase = contract?.contractStartPhase ?? 'Not Sure';
+    final estimatedValueController = TextEditingController(
+        text: contract?.estimatedValue != null && contract!.estimatedValue > 0
+            ? contract.estimatedValue.toStringAsFixed(0)
+            : '');
     // Key Terms (scope) - use AutoBulletTextController
     final scopeController =
         contract?.scope != null && contract!.scope.isNotEmpty
@@ -2238,6 +2241,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                     controller: nameController,
                     decoration: const InputDecoration(
                       labelText: 'Vendor/Party Name *',
+                      hintText: 'Required — contractor, supplier, or party name',
                       isDense: true,
                     ),
                   ),
@@ -2245,7 +2249,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   VoiceTextField(
                     controller: descriptionController,
                     decoration: const InputDecoration(
-                      labelText: 'Description *',
+                      labelText: 'Description (optional)',
                       isDense: true,
                     ),
                     maxLines: 2,
@@ -2256,7 +2260,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         ? null
                         : contractTypeController.text,
                     decoration: const InputDecoration(
-                      labelText: 'Contract Type *',
+                      labelText: 'Contract Type',
                       isDense: true,
                     ),
                     items: const [
@@ -2282,7 +2286,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   VoiceTextField(
                     controller: paymentTypeController,
                     decoration: const InputDecoration(
-                      labelText: 'Payment Type *',
+                      labelText: 'Payment Type',
                       isDense: true,
                     ),
                   ),
@@ -2290,7 +2294,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   DropdownButtonFormField<String>(
                     value: selectedStatus.isEmpty ? null : selectedStatus,
                     decoration: const InputDecoration(
-                      labelText: 'Status *',
+                      labelText: 'Status',
                       isDense: true,
                     ),
                     items: const [
@@ -2313,16 +2317,46 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   VoiceTextField(
                     controller: estimatedValueController,
                     decoration: const InputDecoration(
-                      labelText: 'Total Value *',
-                      hintText: 'e.g., 1000000',
+                      labelText: 'Total Value (optional)',
+                      hintText: 'e.g., 1000000 — leave blank if unknown',
                       isDense: true,
                     ),
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 12),
+                  // Phase for Contract Start — indicates which project phase
+                  // the contract is expected to kick off in. May not be known
+                  // in initiation; can be left as 'Not Sure' for bidding.
+                  DropdownButtonFormField<String>(
+                    value: selectedStartPhase,
+                    decoration: const InputDecoration(
+                      labelText: 'Phase for Contract Start',
+                      isDense: true,
+                    ),
+                    items: const [
+                      'Not Sure',
+                      'Initiation',
+                      'Planning',
+                      'Design',
+                      'Execution',
+                      'Launch',
+                      'Post-Launch',
+                    ]
+                        .map((phase) => DropdownMenuItem(
+                              value: phase,
+                              child: Text(phase,
+                                  style: const TextStyle(fontSize: 13)),
+                            ))
+                        .toList(),
+                    onChanged: (v) {
+                      setDialogState(
+                          () => selectedStartPhase = v ?? 'Not Sure');
+                    },
+                  ),
+                  const SizedBox(height: 12),
                   ListTile(
                     title: Text(
-                        'Effective Date: ${startDate != null ? DateFormat('MMM dd, yyyy').format(startDate!) : 'Not set'}'),
+                        'Effective Date: ${startDate != null ? DateFormat('MMM dd, yyyy').format(startDate!) : 'Not set (optional)'}'),
                     trailing: const Icon(Icons.calendar_today, size: 18),
                     onTap: () async {
                       final date = await showDatePicker(
@@ -2336,7 +2370,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   ),
                   ListTile(
                     title: Text(
-                        'Expiry Date: ${endDate != null ? DateFormat('MMM dd, yyyy').format(endDate!) : 'Not set'}'),
+                        'Expiry Date: ${endDate != null ? DateFormat('MMM dd, yyyy').format(endDate!) : 'Not set (optional)'}'),
                     trailing: const Icon(Icons.calendar_today, size: 18),
                     onTap: () async {
                       final date = await showDatePicker(
@@ -2387,13 +2421,13 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  if (nameController.text.isEmpty ||
-                      descriptionController.text.isEmpty ||
-                      startDate == null ||
-                      endDate == null) {
+                  // Only the name is required — dates, value, and contractor
+                  // are all optional so the contract can be saved in early
+                  // phases when those details are not yet known.
+                  if (nameController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                          content: Text('Please fill in all required fields')),
+                          content: Text('Please enter a Vendor/Party Name.')),
                     );
                     return;
                   }
@@ -2413,13 +2447,14 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         paymentType: paymentTypeController.text.trim(),
                         status: selectedStatus,
                         estimatedValue: estimatedValue,
-                        startDate: startDate!,
-                        endDate: endDate!,
+                        startDate: startDate,
+                        endDate: endDate,
                         scope: scopeController.text.trim(),
                         discipline: disciplineController.text.trim(),
                         notes: notesController.text.trim().isEmpty
                             ? null
                             : notesController.text.trim(),
+                        contractStartPhase: selectedStartPhase,
                       );
                       // Sync to Progress Tracking budget
                       final updatedContract = ContractModel(
@@ -2431,11 +2466,12 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         paymentType: paymentTypeController.text.trim(),
                         status: selectedStatus,
                         estimatedValue: estimatedValue,
-                        startDate: startDate!,
-                        endDate: endDate!,
+                        startDate: startDate,
+                        endDate: endDate,
                         scope: scopeController.text.trim(),
                         discipline: disciplineController.text.trim(),
                         notes: notesController.text.trim(),
+                        contractStartPhase: selectedStartPhase,
                         createdById: contract.createdById,
                         createdByEmail: contract.createdByEmail,
                         createdByName: contract.createdByName,
@@ -2452,11 +2488,13 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         paymentType: paymentTypeController.text.trim(),
                         status: selectedStatus,
                         estimatedValue: estimatedValue,
-                        startDate: startDate!,
-                        endDate: endDate!,
+                        startDate: startDate,
+                        endDate: endDate,
                         scope: scopeController.text.trim(),
                         discipline: disciplineController.text.trim(),
+                        contractorName: nameController.text.trim(),
                         notes: notesController.text.trim(),
+                        contractStartPhase: selectedStartPhase,
                         createdById: user?.uid ?? '',
                         createdByEmail: user?.email ?? '',
                         createdByName: user?.displayName ??

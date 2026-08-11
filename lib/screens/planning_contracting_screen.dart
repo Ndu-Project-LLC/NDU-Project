@@ -1228,9 +1228,12 @@ void _showCreateContractDialog(BuildContext context, String? projectId) {
  final valueCtrl = TextEditingController();
  final scopeCtrl = TextEditingController();
  final disciplineCtrl = TextEditingController();
+ final contractorCtrl = TextEditingController();
  String contractType = 'Not Sure';
  String paymentType = 'TBD';
+ String contractStartPhase = 'Not Sure';
  bool isSaving = false;
+ String? valueError;
 
  showDialog(
  context: context,
@@ -1238,7 +1241,7 @@ void _showCreateContractDialog(BuildContext context, String? projectId) {
  builder: (dCtx, setDialog) => AlertDialog(
  title: const Text('Create Contract'),
  content: SizedBox(
- width: MediaQuery.of(dCtx).size.width > 600 ? 520 : null,
+ width: MediaQuery.of(dCtx).size.width > 600 ? 560 : null,
  child: SingleChildScrollView(
  child: Column(
  mainAxisSize: MainAxisSize.min,
@@ -1257,12 +1260,47 @@ void _showCreateContractDialog(BuildContext context, String? projectId) {
  border: OutlineInputBorder())),
  const SizedBox(height: 14),
  VoiceTextField(
+ controller: contractorCtrl,
+ decoration: const InputDecoration(
+ labelText: 'Contractor (optional)',
+ hintText: 'Leave blank if not yet identified',
+ border: OutlineInputBorder())),
+ const SizedBox(height: 14),
+ VoiceTextField(
  controller: valueCtrl,
  keyboardType: TextInputType.number,
- decoration: const InputDecoration(
- labelText: 'Estimated Value',
+ decoration: InputDecoration(
+ labelText: 'Estimated Value *',
  prefixText: '\$',
- border: OutlineInputBorder())),
+ hintText: 'Required in planning phase',
+ border: const OutlineInputBorder(),
+ errorText: valueError)),
+ const SizedBox(height: 14),
+ // Phase for Contract Start — indicates which project phase the
+ // contract is expected to kick off in. In planning, this should be
+ // confirmed after the bid process.
+ DropdownButtonFormField<String>(
+ initialValue: contractStartPhase,
+ items: const [
+ 'Not Sure',
+ 'Initiation',
+ 'Planning',
+ 'Design',
+ 'Execution',
+ 'Launch',
+ 'Post-Launch'
+ ]
+ .map((v) => DropdownMenuItem(
+ value: v,
+ child: Text(v,
+ style: const TextStyle(fontSize: 13))))
+ .toList(),
+ onChanged: (v) =>
+ setDialog(() => contractStartPhase = v ?? 'Not Sure'),
+ decoration: const InputDecoration(
+ labelText: 'Phase for Contract Start',
+ border: OutlineInputBorder()),
+ ),
  const SizedBox(height: 14),
  Row(
  children: [
@@ -1337,6 +1375,18 @@ void _showCreateContractDialog(BuildContext context, String? projectId) {
  onPressed: () async {
  if (isSaving) return;
  if (nameCtrl.text.trim().isEmpty) return;
+
+ // In planning phase, the bid process has been executed so the
+ // contract value is required.
+ final valueText = valueCtrl.text.trim();
+ final parsedValue = double.tryParse(valueText);
+ if (parsedValue == null || parsedValue <= 0) {
+ setDialog(() => valueError =
+ 'A positive contract value is required in planning phase.');
+ return;
+ }
+ setDialog(() => valueError = null);
+
  setDialog(() => isSaving = true);
  try {
  final user = FirebaseAuth.instance.currentUser;
@@ -1347,9 +1397,11 @@ void _showCreateContractDialog(BuildContext context, String? projectId) {
  contractType: contractType,
  paymentType: paymentType,
  status: 'Not Started',
- estimatedValue: double.tryParse(valueCtrl.text) ?? 0.0,
+ estimatedValue: parsedValue,
  scope: scopeCtrl.text.trim(),
  discipline: disciplineCtrl.text.trim(),
+ contractorName: contractorCtrl.text.trim(),
+ contractStartPhase: contractStartPhase,
  createdById: user?.uid ?? '',
  createdByEmail: user?.email ?? '',
  createdByName: user?.displayName ?? '',

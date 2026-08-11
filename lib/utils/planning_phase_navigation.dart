@@ -439,7 +439,8 @@ class PlanningPhaseNavigation {
   }
 
   static SidebarItem? _previousSidebarItem(String currentId) {
-    return SidebarNavigationService.instance.getPreviousItem(currentId);
+    return SidebarNavigationService.instance
+        .getPreviousAccessibleItem(currentId);
   }
 
   static Widget? resolvePreviousScreen(BuildContext context, String currentId) {

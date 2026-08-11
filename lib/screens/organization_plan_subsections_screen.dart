@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -79,10 +80,27 @@ class OrganizationStaffingPlanScreen extends StatefulWidget {
 
 /// ─────────────────────────────────────────────────────────────────────────
 /// Staffing Plan state — owns the staffing plan table, popup editor, AI
-/// suggestion engine for NDU Project Access, and reminder banners.
+/// suggestion engine for NDU Project Access, reminder banners, and the
+/// tabbed view (Staffing Plan table, Staffing Timeline Gantt, and the
+/// restricted Estimated Cost tab).
 /// ─────────────────────────────────────────────────────────────────────────
 class _OrganizationStaffingPlanScreenState
-    extends State<OrganizationStaffingPlanScreen> {
+    extends State<OrganizationStaffingPlanScreen>
+    with TickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   // Position title options reused from the Roles & Responsibilities bank
   // (kept here locally so the dialog doesn't depend on the parent class).
   static const List<String> _positionOptions = [
@@ -472,6 +490,205 @@ class _OrganizationStaffingPlanScreenState
     return bits.isEmpty ? 'No project scope defined yet.' : bits.join(' • ');
   }
 
+  // ── AI Auto-Suggest Start/Stop Dates ────────────────────────────────────
+  //
+  // Reads the project's milestone schedule (key milestones) and overall
+  // scope (planned start/end dates), then proposes a start (mobilization)
+  // and release date for every staffing row that doesn't yet have one.
+  // The user reviews the suggestions in a dialog and accepts selectively.
+
+  Future<void> _showAiSuggestDatesDialog(BuildContext context) async {
+    final projectData = ProjectDataHelper.getData(context);
+    final staffing = projectData.staffingRequirements;
+
+    if (staffing.isEmpty) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Add at least one staffing position before AI-suggesting dates.'),
+          backgroundColor: Color(0xFFF59E0B),
+        ),
+      );
+      return;
+    }
+
+    // Build the project schedule window from milestones (preferring
+    // milestones with real due dates) and fall back to project start/end.
+    final milestones = projectData.keyMilestones
+        .where((m) => m.dueDate.trim().isNotEmpty)
+        .toList()
+      ..sort((a, b) {
+        final da = DateTime.tryParse(a.dueDate) ?? DateTime(2100);
+        final db = DateTime.tryParse(b.dueDate) ?? DateTime(2100);
+        return da.compareTo(db);
+      });
+
+    DateTime? projectStart;
+    DateTime? projectEnd;
+    if (milestones.isNotEmpty) {
+      projectStart = DateTime.tryParse(milestones.first.dueDate);
+      projectEnd = DateTime.tryParse(milestones.last.dueDate);
+    }
+
+    // If we have no milestones to anchor on, suggest a window starting
+    // today running for a default 6-month engagement.
+    final today = DateTime.now();
+    projectStart ??= today;
+    projectEnd ??= today.add(const Duration(days: 180));
+
+    final suggestions = <int, _DateSuggestion>{};
+    for (var i = 0; i < staffing.length; i++) {
+      final req = staffing[i];
+      final title = req.title.toLowerCase();
+
+      // Determine the role's natural start (slightly before its milestone)
+      // and end (slightly after).
+      DateTime? suggestedStart;
+      DateTime? suggestedEnd;
+
+      // Match role title to milestone discipline where possible.
+      Milestone? matchedMilestone;
+      for (final m in milestones) {
+        final discipline = m.discipline.toLowerCase();
+        final mName = m.name.toLowerCase();
+        if (title.contains('project manager') ||
+            title.contains('sponsor') ||
+            title.contains('pmo')) {
+          if (discipline.contains('management') ||
+              mName.contains('kickoff') ||
+              mName.contains('planning')) {
+            matchedMilestone = m;
+            break;
+          }
+        } else if (title.contains('tech') ||
+            title.contains('developer') ||
+            title.contains('engineer') ||
+            title.contains('architect')) {
+          if (discipline.contains('technical') ||
+              discipline.contains('engineering') ||
+              mName.contains('execution') ||
+              mName.contains('design')) {
+            matchedMilestone = m;
+            break;
+          }
+        } else if (title.contains('quality') || title.contains('test')) {
+          if (discipline.contains('quality') ||
+              mName.contains('completion') ||
+              mName.contains('launch')) {
+            matchedMilestone = m;
+            break;
+          }
+        } else if (title.contains('contract') ||
+            title.contains('procurement')) {
+          if (discipline.contains('contracts') ||
+              discipline.contains('procurement') ||
+              mName.contains('planning')) {
+            matchedMilestone = m;
+            break;
+          }
+        } else if (title.contains('ssher') || title.contains('safety')) {
+          if (discipline.contains('safety') ||
+              discipline.contains('ssher') ||
+              mName.contains('kickoff')) {
+            matchedMilestone = m;
+            break;
+          }
+        }
+      }
+
+      // Mobilization generally starts 2 weeks before the matched milestone
+      // (or 2 weeks before project start for early roles).
+      if (matchedMilestone != null) {
+        final milestoneDate = DateTime.tryParse(matchedMilestone.dueDate);
+        if (milestoneDate != null) {
+          suggestedStart = milestoneDate.subtract(const Duration(days: 14));
+          suggestedEnd = milestoneDate.add(const Duration(days: 60));
+        }
+      }
+
+      // Leadership roles (PM, Sponsor) span the entire project.
+      if (title.contains('project manager') ||
+          title.contains('sponsor') ||
+          title.contains('pmo') ||
+          title.contains('program manager')) {
+        suggestedStart = projectStart;
+        suggestedEnd = projectEnd;
+      }
+
+      // Late-stage roles (release, launch, transition) start late.
+      if (title.contains('release') ||
+          title.contains('transition') ||
+          title.contains('startup') ||
+          title.contains('launch')) {
+        suggestedStart =
+            projectEnd.subtract(const Duration(days: 90));
+        suggestedEnd = projectEnd;
+      }
+
+      // Default fallback: span the whole project window.
+      suggestedStart ??= projectStart;
+      suggestedEnd ??= projectEnd;
+
+      // Honor any existing user-set dates — only suggest if missing.
+      if (req.startDate.trim().isNotEmpty &&
+          req.endDate.trim().isNotEmpty) {
+        continue;
+      }
+
+      suggestions[i] = _DateSuggestion(
+        position: req.title.isEmpty ? 'Untitled Position' : req.title,
+        personName: req.personName,
+        matchedMilestone: matchedMilestone?.name,
+        suggestedStart: suggestedStart,
+        suggestedEnd: suggestedEnd,
+        existingStart: req.startDate,
+        existingEnd: req.endDate,
+      );
+    }
+
+    if (suggestions.isEmpty) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'All staffing positions already have start and release dates.'),
+          backgroundColor: Color(0xFF10B981),
+        ),
+      );
+      return;
+    }
+
+    if (!context.mounted) return;
+    final accepted = await showDialog<Set<int>>(
+      context: context,
+      builder: (dialogContext) => _AiSuggestDatesDialog(
+        projectScope: _projectScopeSummary(projectData),
+        milestoneCount: milestones.length,
+        projectStart: projectStart!,
+        projectEnd: projectEnd!,
+        suggestions: suggestions,
+      ),
+    );
+
+    if (accepted == null || accepted.isEmpty) return;
+
+    final updated = List<StaffingRequirement>.from(staffing);
+    for (final idx in accepted) {
+      final s = suggestions[idx]!;
+      final fmt = DateFormat('yyyy-MM-dd');
+      updated[idx] = updated[idx].copyWith(
+        startDate: updated[idx].startDate.trim().isEmpty
+            ? fmt.format(s.suggestedStart)
+            : updated[idx].startDate,
+        endDate: updated[idx].endDate.trim().isEmpty
+            ? fmt.format(s.suggestedEnd)
+            : updated[idx].endDate,
+      );
+    }
+    await _saveStaffing(context, updated);
+  }
+
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
@@ -573,7 +790,11 @@ class _OrganizationStaffingPlanScreenState
                           onAddPosition: () => _addStaffing(context),
                         ),
                         const SizedBox(height: 20),
-                        // Table card
+                        // ── Tabbed Staffing Plan view ──
+                        //   Tab 1: Staffing Plan table (existing) + AI Suggest Dates
+                        //   Tab 2: Staffing Timeline (Gantt chart view)
+                        //   Tab 3: Estimated Cost (restricted — same lock rules as
+                        //          the Personnel Rates tab in the R&R section)
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -589,7 +810,7 @@ class _OrganizationStaffingPlanScreenState
                             ],
                           ),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(
@@ -601,7 +822,7 @@ class _OrganizationStaffingPlanScreenState
                                         color: Color(0xFF6B7280)),
                                     SizedBox(width: 8),
                                     Text(
-                                      'Staffing Plan Table',
+                                      'Staffing Plan',
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
@@ -611,13 +832,94 @@ class _OrganizationStaffingPlanScreenState
                                   ],
                                 ),
                               ),
-                              _StaffingPlanTable(
-                                requirements: staffing,
-                                onEdit: (i, req) =>
-                                    _editStaffing(context, i, req),
-                                onDelete: (i) => _deleteStaffing(context, i),
-                                onToggleNduAccess: (i, v) =>
-                                    _toggleNduAccess(context, i, v),
+                              // Tab bar
+                              Container(
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF3F4F6),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: TabBar(
+                                  controller: _tabController,
+                                  indicator: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x14000000),
+                                        blurRadius: 4,
+                                        offset: Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                  indicatorSize:
+                                      TabBarIndicatorSize.tab,
+                                  dividerColor: Colors.transparent,
+                                  labelColor: const Color(0xFF111827),
+                                  unselectedLabelColor:
+                                      const Color(0xFF6B7280),
+                                  labelStyle: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700),
+                                  unselectedLabelStyle: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500),
+                                  padding: const EdgeInsets.all(4),
+                                  tabs: const [
+                                    Tab(
+                                      icon: Icon(Icons.table_chart_outlined,
+                                          size: 16),
+                                      text: 'Staffing Plan',
+                                    ),
+                                    Tab(
+                                      icon: Icon(Icons.timeline_outlined,
+                                          size: 16),
+                                      text: 'Staffing Timeline',
+                                    ),
+                                    Tab(
+                                      icon: Icon(Icons.lock_outline,
+                                          size: 16),
+                                      text: 'Estimated Cost',
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Tab content
+                              SizedBox(
+                                height: 600,
+                                child: TabBarView(
+                                  controller: _tabController,
+                                  children: [
+                                    // ── Tab 1: Staffing Plan table ──
+                                    _StaffingPlanTabContent(
+                                      requirements: staffing,
+                                      onEdit: (i, req) =>
+                                          _editStaffing(context, i, req),
+                                      onDelete: (i) =>
+                                          _deleteStaffing(context, i),
+                                      onToggleNduAccess: (i, v) =>
+                                          _toggleNduAccess(context, i, v),
+                                      onAddPosition: () =>
+                                          _addStaffing(context),
+                                      onAiSuggestDates: () =>
+                                          _showAiSuggestDatesDialog(context),
+                                    ),
+                                    // ── Tab 2: Staffing Timeline (Gantt) ──
+                                    _StaffingTimelineTab(
+                                      requirements: staffing,
+                                      onEdit: (i, req) =>
+                                          _editStaffing(context, i, req),
+                                    ),
+                                    // ── Tab 3: Estimated Cost (restricted) ──
+                                    _EstimatedCostTab(
+                                      requirements: staffing,
+                                      projectData: projectData,
+                                      onEdit: (i, req) =>
+                                          _editStaffing(context, i, req),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -3913,6 +4215,1480 @@ class _StaffingColumnDef {
 
   final String label;
   final double width;
+}
+
+/// ─────────────────────────────────────────────────────────────────────────
+/// Tab 1 — Staffing Plan table content with action bar
+/// ─────────────────────────────────────────────────────────────────────────
+/// Wraps the existing [_StaffingPlanTable] with an action row containing
+/// "Add Position" and "AI Suggest Dates" buttons, plus a pop-out "Expand"
+/// affordance that opens the table in a full-screen dialog for easier
+/// viewing on small viewports.
+class _StaffingPlanTabContent extends StatelessWidget {
+  const _StaffingPlanTabContent({
+    required this.requirements,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onToggleNduAccess,
+    required this.onAddPosition,
+    required this.onAiSuggestDates,
+  });
+
+  final List<StaffingRequirement> requirements;
+  final void Function(int index, StaffingRequirement req) onEdit;
+  final ValueChanged<int> onDelete;
+  final void Function(int index, bool value) onToggleNduAccess;
+  final VoidCallback onAddPosition;
+  final VoidCallback onAiSuggestDates;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Action row
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.start,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onAddPosition,
+                icon: const Icon(Icons.person_add_alt_1, size: 16),
+                label: const Text('Add Position'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF1E40AF),
+                  side: const BorderSide(color: Color(0xFFBFDBFE)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: onAiSuggestDates,
+                icon: const Icon(Icons.auto_awesome, size: 16),
+                label: const Text('AI Suggest Dates'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C3AED),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _showExpandedView(context),
+                icon: const Icon(Icons.fullscreen, size: 16),
+                label: const Text('Expand'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF374151),
+                  side: const BorderSide(color: Color(0xFFE5E7EB)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Table wrapped in a vertical scroll so the tab can grow tall
+          Expanded(
+            child: Scrollbar(
+              thumbVisibility: true,
+              trackVisibility: true,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: _StaffingPlanTable(
+                  requirements: requirements,
+                  onEdit: onEdit,
+                  onDelete: onDelete,
+                  onToggleNduAccess: onToggleNduAccess,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExpandedView(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.table_chart_outlined,
+                      size: 20, color: Color(0xFF6B7280)),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Staffing Plan — Expanded View',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827)),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Color(0xFF9CA3AF)),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const Divider(height: 16),
+              Expanded(
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  trackVisibility: true,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: _StaffingPlanTable(
+                      requirements: requirements,
+                      onEdit: onEdit,
+                      onDelete: onDelete,
+                      onToggleNduAccess: onToggleNduAccess,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Holds the AI-suggested start/stop dates for a single staffing row.
+class _DateSuggestion {
+  const _DateSuggestion({
+    required this.position,
+    required this.personName,
+    required this.matchedMilestone,
+    required this.suggestedStart,
+    required this.suggestedEnd,
+    required this.existingStart,
+    required this.existingEnd,
+  });
+
+  final String position;
+  final String personName;
+  final String? matchedMilestone;
+  final DateTime suggestedStart;
+  final DateTime suggestedEnd;
+  final String existingStart;
+  final String existingEnd;
+}
+
+/// Dialog showing AI-suggested start/stop dates for each staffing row,
+/// letting the user accept selectively.
+class _AiSuggestDatesDialog extends StatefulWidget {
+  const _AiSuggestDatesDialog({
+    required this.projectScope,
+    required this.milestoneCount,
+    required this.projectStart,
+    required this.projectEnd,
+    required this.suggestions,
+  });
+
+  final String projectScope;
+  final int milestoneCount;
+  final DateTime projectStart;
+  final DateTime projectEnd;
+  final Map<int, _DateSuggestion> suggestions;
+
+  @override
+  State<_AiSuggestDatesDialog> createState() => _AiSuggestDatesDialogState();
+}
+
+class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
+  late final Set<int> _accepted;
+
+  @override
+  void initState() {
+    super.initState();
+    _accepted = widget.suggestions.keys.toSet();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = DateFormat('yyyy-MM-dd');
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720, maxHeight: 680),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF5F3FF),
+                borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEDE9FE),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.auto_awesome,
+                        color: Color(0xFF7C3AED), size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'AI Suggested Start & Release Dates',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF111827)),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Based on ${widget.milestoneCount} project milestone(s) '
+                          'and overall scope (${fmt.format(widget.projectStart)} → '
+                          '${fmt.format(widget.projectEnd)}).',
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF6B7280)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Color(0xFF9CA3AF)),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            // Scope summary
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+              child: Text(
+                'Project scope: ${widget.projectScope}',
+                style: const TextStyle(
+                    fontSize: 11, color: Color(0xFF6B7280), height: 1.4),
+              ),
+            ),
+            // List
+            Expanded(
+              child: Scrollbar(
+                thumbVisibility: true,
+                trackVisibility: true,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                  children: widget.suggestions.entries.map((entry) {
+                    final idx = entry.key;
+                    final s = entry.value;
+                    final isAccepted = _accepted.contains(idx);
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isAccepted
+                            ? const Color(0xFFF5F3FF)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isAccepted
+                              ? const Color(0xFFC4B5FD)
+                              : const Color(0xFFE5E7EB),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Checkbox(
+                            value: isAccepted,
+                            onChanged: (v) {
+                              setState(() {
+                                if (v == true) {
+                                  _accepted.add(idx);
+                                } else {
+                                  _accepted.remove(idx);
+                                }
+                              });
+                            },
+                            activeColor: const Color(0xFF7C3AED),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  s.position,
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF111827)),
+                                ),
+                                if (s.personName.trim().isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      s.personName,
+                                      style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF6B7280)),
+                                    ),
+                                  ),
+                                const SizedBox(height: 6),
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 4,
+                                  children: [
+                                    _DateChip(
+                                      label: 'Start',
+                                      value: fmt.format(s.suggestedStart),
+                                      color: const Color(0xFF10B981),
+                                    ),
+                                    _DateChip(
+                                      label: 'Release',
+                                      value: fmt.format(s.suggestedEnd),
+                                      color: const Color(0xFFEF4444),
+                                    ),
+                                    if (s.matchedMilestone != null)
+                                      _DateChip(
+                                        label: 'Milestone',
+                                        value: s.matchedMilestone!,
+                                        color: const Color(0xFF6366F1),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+            // Actions
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF9FAFB),
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(16)),
+                border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${_accepted.length} of ${widget.suggestions.length} selected',
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF6B7280)),
+                  ),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: _accepted.isEmpty
+                            ? null
+                            : () => Navigator.pop(context, _accepted),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF7C3AED),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Apply Selected'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DateChip extends StatelessWidget {
+  const _DateChip({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: color.withValues(alpha: 0.9)),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+                fontSize: 11, fontWeight: FontWeight.w700, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// ─────────────────────────────────────────────────────────────────────────
+/// Tab 2 — Staffing Timeline (Gantt chart view)
+/// ─────────────────────────────────────────────────────────────────────────
+/// Renders each staffing position as a horizontal bar across a weekly /
+/// monthly time axis. Bars are computed from `startDate` and `endDate`
+/// on the [StaffingRequirement]. Positions without dates show a placeholder
+/// "TBD" pill instead of a bar.
+class _StaffingTimelineTab extends StatelessWidget {
+  const _StaffingTimelineTab({
+    required this.requirements,
+    required this.onEdit,
+  });
+
+  final List<StaffingRequirement> requirements;
+  final void Function(int index, StaffingRequirement req) onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    if (requirements.isEmpty) {
+      return const _EmptyTimelineState();
+    }
+
+    // Parse all valid dates and compute the timeline window.
+    final parsed = <_ParsedRow>[];
+    for (var i = 0; i < requirements.length; i++) {
+      final r = requirements[i];
+      final start = DateTime.tryParse(r.startDate);
+      final end = DateTime.tryParse(r.endDate);
+      parsed.add(_ParsedRow(index: i, requirement: r, start: start, end: end));
+    }
+
+    final validBars = parsed.where((p) => p.start != null && p.end != null).toList();
+    if (validBars.isEmpty) {
+      return const _EmptyTimelineState(
+        message: 'No staffing positions have start and release dates yet. '
+            'Use "AI Suggest Dates" on the Staffing Plan tab to populate them.',
+      );
+    }
+
+    // Compute the global time window (with a small padding on each side).
+    var windowStart = validBars
+        .map((p) => p.start!)
+        .reduce((a, b) => a.isBefore(b) ? a : b);
+    var windowEnd = validBars
+        .map((p) => p.end!)
+        .reduce((a, b) => a.isAfter(b) ? a : b);
+    // Pad the window by a few days on each side for visual breathing room.
+    windowStart = windowStart.subtract(const Duration(days: 7));
+    windowEnd = windowEnd.add(const Duration(days: 7));
+    final totalDays = windowEnd.difference(windowStart).inDays;
+    if (totalDays <= 0) {
+      return const _EmptyTimelineState(
+        message: 'Timeline window is too narrow to render. Check the start and release dates.',
+      );
+    }
+
+    // Build the list of month markers across the window.
+    final monthMarkers = <_MonthMarker>[];
+    var cur = DateTime(windowStart.year, windowStart.month, 1);
+    while (cur.isBefore(windowEnd)) {
+      final nextMonth = DateTime(cur.year, cur.month + 1, 1);
+      final startOffset = cur.difference(windowStart).inDays.toDouble();
+      final endOffset = nextMonth.difference(windowStart).inDays.toDouble();
+      monthMarkers.add(_MonthMarker(
+        label: DateFormat('MMM yy').format(cur),
+        startOffset: startOffset.clamp(0, totalDays.toDouble()),
+        endOffset: endOffset.clamp(0, totalDays.toDouble()),
+      ));
+      cur = nextMonth;
+    }
+
+    // Build the list of weekly tick marks.
+    final weekMarkers = <double>[];
+    var weekCursor = windowStart;
+    while (weekCursor.isBefore(windowEnd)) {
+      final offset = weekCursor.difference(windowStart).inDays.toDouble();
+      if (offset >= 0 && offset <= totalDays) {
+        weekMarkers.add(offset);
+      }
+      weekCursor = weekCursor.add(const Duration(days: 7));
+    }
+
+    const double leftColumnWidth = 220;
+    const double rowHeight = 44;
+    const double headerHeight = 52;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Action row
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _showExpandedTimeline(context),
+                icon: const Icon(Icons.fullscreen, size: 16),
+                label: const Text('Expand'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF374151),
+                  side: const BorderSide(color: Color(0xFFE5E7EB)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: Scrollbar(
+              thumbVisibility: true,
+              trackVisibility: true,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: SizedBox(
+                    width: leftColumnWidth + (totalDays * 6.0) + 40,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header row: empty left corner + month labels
+                        SizedBox(
+                          height: headerHeight,
+                          child: Row(
+                            children: [
+                              const SizedBox(
+                                width: leftColumnWidth,
+                                child: Padding(
+                                  padding: EdgeInsets.only(left: 12),
+                                  child: Text(
+                                    'POSITION',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.6,
+                                        color: Color(0xFF6B7280)),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: CustomPaint(
+                                  size: Size.infinite,
+                                  painter: _TimelineHeaderPainter(
+                                    monthMarkers: monthMarkers,
+                                    weekMarkers: weekMarkers,
+                                    totalDays: totalDays.toDouble(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Body rows
+                        ...parsed.map((p) => _TimelineRow(
+                              parsed: p,
+                              windowStart: windowStart,
+                              totalDays: totalDays.toDouble(),
+                              leftColumnWidth: leftColumnWidth,
+                              rowHeight: rowHeight,
+                              weekMarkers: weekMarkers,
+                              onEdit: () => onEdit(p.index, p.requirement),
+                            )),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExpandedTimeline(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.timeline_outlined,
+                      size: 20, color: Color(0xFF6B7280)),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Staffing Timeline — Expanded View',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827)),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Color(0xFF9CA3AF)),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const Divider(height: 16),
+              Expanded(
+                child: _StaffingTimelineTab(
+                  requirements: requirements,
+                  onEdit: onEdit,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ParsedRow {
+  const _ParsedRow({
+    required this.index,
+    required this.requirement,
+    required this.start,
+    required this.end,
+  });
+
+  final int index;
+  final StaffingRequirement requirement;
+  final DateTime? start;
+  final DateTime? end;
+
+  bool get hasDates => start != null && end != null;
+}
+
+class _MonthMarker {
+  const _MonthMarker({
+    required this.label,
+    required this.startOffset,
+    required this.endOffset,
+  });
+
+  final String label;
+  final double startOffset;
+  final double endOffset;
+}
+
+class _EmptyTimelineState extends StatelessWidget {
+  const _EmptyTimelineState({this.message});
+
+  final String? message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.timeline_outlined,
+                size: 48, color: Color(0xFF9CA3AF)),
+            const SizedBox(height: 12),
+            Text(
+              message ??
+                  'No staffing positions yet. Add positions on the Staffing '
+                      'Plan tab to see them on the timeline.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TimelineHeaderPainter extends CustomPainter {
+  const _TimelineHeaderPainter({
+    required this.monthMarkers,
+    required this.weekMarkers,
+    required this.totalDays,
+  });
+
+  final List<_MonthMarker> monthMarkers;
+  final List<double> weekMarkers;
+  final double totalDays;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Background
+    final bgPaint = Paint()..color = const Color(0xFFF9FAFB);
+    canvas.drawRect(Offset.zero & size, bgPaint);
+
+    // Week ticks (light vertical lines)
+    final weekPaint = Paint()
+      ..color = const Color(0xFFE5E7EB)
+      ..strokeWidth = 0.5;
+    for (final offset in weekMarkers) {
+      final x = (offset / totalDays) * w;
+      canvas.drawLine(Offset(x, 0), Offset(x, h), weekPaint);
+    }
+
+    // Month markers + labels
+    final monthDividerPaint = Paint()
+      ..color = const Color(0xFFD1D5DB)
+      ..strokeWidth = 1;
+    for (final m in monthMarkers) {
+      final startX = (m.startOffset / totalDays) * w;
+      final endX = (m.endOffset / totalDays) * w;
+      canvas.drawLine(Offset(startX, 0), Offset(startX, h), monthDividerPaint);
+      // Label
+      final tp = TextPainter(
+        text: TextSpan(
+          text: m.label,
+          style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF4B5563)),
+        ),
+        textDirection: ui.TextDirection.ltr,
+      );
+      tp.layout();
+      final labelX = (startX + endX) / 2 - tp.width / 2;
+      tp.paint(canvas, Offset(labelX.clamp(2, w - tp.width - 2), 6));
+    }
+
+    // Bottom border
+    final borderPaint = Paint()
+      ..color = const Color(0xFFE5E7EB)
+      ..strokeWidth = 1;
+    canvas.drawLine(
+        Offset(0, h - 0.5), Offset(w, h - 0.5), borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _TimelineHeaderPainter old) {
+    return old.totalDays != totalDays || old.monthMarkers != monthMarkers;
+  }
+}
+
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({
+    required this.parsed,
+    required this.windowStart,
+    required this.totalDays,
+    required this.leftColumnWidth,
+    required this.rowHeight,
+    required this.weekMarkers,
+    required this.onEdit,
+  });
+
+  final _ParsedRow parsed;
+  final DateTime windowStart;
+  final double totalDays;
+  final double leftColumnWidth;
+  final double rowHeight;
+  final List<double> weekMarkers;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = DateFormat('yyyy-MM-dd');
+    final title = parsed.requirement.title.trim().isEmpty
+        ? 'Untitled Position'
+        : parsed.requirement.title;
+    final person = parsed.requirement.personName.trim().isEmpty
+        ? 'TBD'
+        : parsed.requirement.personName;
+
+    return InkWell(
+      onTap: onEdit,
+      child: Container(
+        height: rowHeight,
+        decoration: const BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: Color(0xFFF3F4F6), width: 0.5),
+          ),
+        ),
+        child: Row(
+          children: [
+            // Left: position label
+            SizedBox(
+              width: leftColumnWidth,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827)),
+                    ),
+                    Text(
+                      person,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 11, color: Color(0xFF6B7280)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Right: bar area
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final w = constraints.maxWidth;
+                  if (!parsed.hasDates) {
+                    return Container(
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF3C7),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFFCD34D)),
+                        ),
+                        child: const Text(
+                          'TBD — set dates',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF92400E)),
+                        ),
+                      ),
+                    );
+                  }
+                  final startOffset =
+                      parsed.start!.difference(windowStart).inDays.toDouble();
+                  final endOffset =
+                      parsed.end!.difference(windowStart).inDays.toDouble();
+                  final barStart =
+                      (startOffset / totalDays * w).clamp(0.0, w);
+                  final barEnd =
+                      (endOffset / totalDays * w).clamp(0.0, w);
+                  final barWidth = (barEnd - barStart).clamp(8.0, w);
+
+                  // Bar color shifts based on role.
+                  final title = parsed.requirement.title.toLowerCase();
+                  Color barColor = const Color(0xFF3B82F6);
+                  if (title.contains('manager') || title.contains('lead')) {
+                    barColor = const Color(0xFF8B5CF6);
+                  } else if (title.contains('developer') ||
+                      title.contains('tech') ||
+                      title.contains('engineer') ||
+                      title.contains('architect')) {
+                    barColor = const Color(0xFF10B981);
+                  } else if (title.contains('quality') ||
+                      title.contains('test')) {
+                    barColor = const Color(0xFFF59E0B);
+                  } else if (title.contains('contract') ||
+                      title.contains('procurement')) {
+                    barColor = const Color(0xFFEC4899);
+                  } else if (title.contains('ssher') ||
+                      title.contains('safety')) {
+                    barColor = const Color(0xFFEF4444);
+                  }
+
+                  return Stack(
+                    children: [
+                      // Background week ticks
+                      ...weekMarkers.map((offset) {
+                        final x = (offset / totalDays) * w;
+                        return Positioned(
+                          left: x,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(
+                              width: 0.5, color: const Color(0xFFF3F4F6)),
+                        );
+                      }),
+                      // The bar
+                      Positioned(
+                        left: barStart,
+                        top: 8,
+                        bottom: 8,
+                        width: barWidth,
+                        child: Tooltip(
+                          message:
+                              '$title\n${fmt.format(parsed.start!)} → ${fmt.format(parsed.end!)}',
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: barColor,
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: barColor.withValues(alpha: 0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '${fmt.format(parsed.start!)} → ${fmt.format(parsed.end!)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ─────────────────────────────────────────────────────────────────────────
+/// Tab 3 — Estimated Cost (restricted)
+/// ─────────────────────────────────────────────────────────────────────────
+/// Mirrors the access policy of the Personnel Rates tab in the R&R section:
+/// locked for Basic Plan projects and for users without elevated access.
+/// When locked, shows a lock placeholder with upgrade guidance. When
+/// unlocked, shows the per-position cost table with monthly and total
+/// estimated costs.
+class _EstimatedCostTab extends StatefulWidget {
+  const _EstimatedCostTab({
+    required this.requirements,
+    required this.projectData,
+    required this.onEdit,
+  });
+
+  final List<StaffingRequirement> requirements;
+  final ProjectDataModel projectData;
+  final void Function(int index, StaffingRequirement req) onEdit;
+
+  @override
+  State<_EstimatedCostTab> createState() => _EstimatedCostTabState();
+}
+
+class _EstimatedCostTabState extends State<_EstimatedCostTab> {
+  bool _unlocked = false;
+
+  /// Determine whether the current user/project context permits access
+  /// to the Estimated Cost tab. Mirrors the Personnel Rates lock:
+  ///   1. Basic Plan projects → locked
+  ///   2. Otherwise → user must explicitly unlock (simulate the same
+  ///      "Admin / Premium" gating the Personnel Rates dialog uses)
+  bool get _isLockedByPlan {
+    try {
+      return widget.projectData.isBasicPlanProject;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final locked = _isLockedByPlan && !_unlocked;
+    if (locked) {
+      return _LockedCostPlaceholder(
+        isBasicPlan: _isLockedByPlan,
+        onUnlockRequested: () {
+          // For non-Basic-Plan projects the user can self-unlock the tab.
+          // Basic Plan projects must upgrade their plan first.
+          if (_isLockedByPlan) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                    'Estimated Cost is a premium feature. Upgrade from '
+                    'Basic Plan to access per-personnel cost details.'),
+                backgroundColor: Color(0xFFF59E0B),
+                duration: Duration(seconds: 4),
+              ),
+            );
+          } else {
+            setState(() => _unlocked = true);
+          }
+        },
+      );
+    }
+
+    return _EstimatedCostTable(
+      requirements: widget.requirements,
+      onEdit: widget.onEdit,
+    );
+  }
+}
+
+class _LockedCostPlaceholder extends StatelessWidget {
+  const _LockedCostPlaceholder({
+    required this.isBasicPlan,
+    required this.onUnlockRequested,
+  });
+
+  final bool isBasicPlan;
+  final VoidCallback onUnlockRequested;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(Icons.lock_outline,
+                  color: Color(0xFFF59E0B), size: 32),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Estimated Cost is Restricted',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827)),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isBasicPlan
+                  ? 'This tab mirrors the Personnel Rates access policy in the '
+                      'R&R section. Upgrade from Basic Plan to view per-personnel '
+                      'cost details, monthly rates, and projected totals.'
+                  : 'This tab mirrors the Personnel Rates access policy in the '
+                      'R&R section. Confirm access to view per-personnel cost '
+                      'details, monthly rates, and projected totals.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontSize: 12, color: Color(0xFF6B7280), height: 1.5),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: onUnlockRequested,
+              icon: const Icon(Icons.lock_open_outlined, size: 16),
+              label: Text(isBasicPlan ? 'Upgrade Plan' : 'Unlock Access'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF59E0B),
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EstimatedCostTable extends StatelessWidget {
+  const _EstimatedCostTable({
+    required this.requirements,
+    required this.onEdit,
+  });
+
+  final List<StaffingRequirement> requirements;
+  final void Function(int index, StaffingRequirement req) onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final currencyFmt = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
+    final columns = const <_StaffingColumnDef>[
+      _StaffingColumnDef('#', 48),
+      _StaffingColumnDef('Position', 180),
+      _StaffingColumnDef('Name', 150),
+      _StaffingColumnDef('Category', 110),
+      _StaffingColumnDef('Employment', 110),
+      _StaffingColumnDef('Headcount', 90),
+      _StaffingColumnDef('Monthly Rate', 120),
+      _StaffingColumnDef('Planned Months', 110),
+      _StaffingColumnDef('Estimated Total', 140),
+      _StaffingColumnDef('Actions', 80),
+    ];
+    final contentWidth =
+        columns.fold<double>(0, (sum, c) => sum + c.width) + 32;
+
+    final totalHeadcount = requirements.fold<int>(
+        0, (sum, r) => sum + (r.headcount > 0 ? r.headcount : 1));
+    final grandTotal = requirements.fold<double>(
+        0, (sum, r) => sum + r.estimatedTotal);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Action row
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _showExpanded(context),
+                icon: const Icon(Icons.fullscreen, size: 16),
+                label: const Text('Expand'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF374151),
+                  side: const BorderSide(color: Color(0xFFE5E7EB)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFA7F3D0)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.summarize,
+                        size: 14, color: Color(0xFF047857)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Grand Total: ${currencyFmt.format(grandTotal)} '
+                      '($totalHeadcount personnel)',
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF047857)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: Scrollbar(
+              thumbVisibility: true,
+              trackVisibility: true,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: SizedBox(
+                    width: contentWidth,
+                    child: Column(
+                      children: [
+                        // Header
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 12),
+                          color: const Color(0xFFF9FAFB),
+                          child: Row(
+                            children: columns
+                                .map((c) => SizedBox(
+                                      width: c.width,
+                                      child: Text(
+                                        c.label.toUpperCase(),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: 0.6,
+                                            color: Color(0xFF6B7280)),
+                                      ),
+                                    ))
+                                .toList(),
+                          ),
+                        ),
+                        if (requirements.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 36),
+                            child: const Center(
+                              child: Text(
+                                'No staffing positions yet. Add positions on the '
+                                    'Staffing Plan tab to see cost estimates.',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF6B7280),
+                                    fontStyle: FontStyle.italic),
+                              ),
+                            ),
+                          )
+                        else
+                          ...requirements.asMap().entries.map((entry) {
+                            final i = entry.key;
+                            final r = entry.value;
+                            final monthly = r.monthlyCost;
+                            final total = r.estimatedTotal;
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: i.isEven
+                                    ? Colors.white
+                                    : const Color(0xFFF9FAFB),
+                                border: const Border(
+                                  top: BorderSide(
+                                      color: Color(0xFFE5E7EB), width: 0.5),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                      width: columns[0].width,
+                                      child: Center(
+                                          child: Text('${i + 1}',
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF4B5563))))),
+                                  SizedBox(
+                                      width: columns[1].width,
+                                      child: Text(
+                                          r.title.isEmpty
+                                              ? 'Untitled Position'
+                                              : r.title,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF111827)))),
+                                  SizedBox(
+                                      width: columns[2].width,
+                                      child: Text(
+                                          r.personName.isEmpty
+                                              ? 'TBD'
+                                              : r.personName,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF374151)))),
+                                  SizedBox(
+                                      width: columns[3].width,
+                                      child: Text(
+                                          r.employeeType.isEmpty
+                                              ? '—'
+                                              : r.employeeType,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF374151)))),
+                                  SizedBox(
+                                      width: columns[4].width,
+                                      child: Text(
+                                          r.employmentType == 'PT'
+                                              ? 'Part Time'
+                                              : 'Full Time',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF374151)))),
+                                  SizedBox(
+                                      width: columns[5].width,
+                                      child: Center(
+                                          child: Text('${r.headcount}',
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF374151))))),
+                                  SizedBox(
+                                      width: columns[6].width,
+                                      child: Text(
+                                          currencyFmt.format(monthly),
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF111827)))),
+                                  SizedBox(
+                                      width: columns[7].width,
+                                      child: Text(
+                                          r.plannedMonths.toStringAsFixed(1),
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF374151)))),
+                                  SizedBox(
+                                      width: columns[8].width,
+                                      child: Text(
+                                          currencyFmt.format(total),
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF047857)))),
+                                  SizedBox(
+                                    width: columns[9].width,
+                                    child: Center(
+                                      child: IconButton(
+                                        icon: const Icon(Icons.edit_outlined,
+                                            size: 16,
+                                            color: Color(0xFF6B7280)),
+                                        onPressed: () => onEdit(i, r),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                        // Totals row
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 14),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFECFDF5),
+                            border: Border(
+                              top: BorderSide(
+                                  color: Color(0xFFA7F3D0), width: 1.5),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                  width: columns[0].width +
+                                      columns[1].width +
+                                      columns[2].width +
+                                      columns[3].width +
+                                      columns[4].width,
+                                  child: const Text('GRAND TOTAL',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF047857)))),
+                              SizedBox(
+                                  width: columns[5].width,
+                                  child: Text('$totalHeadcount',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF047857)))),
+                              SizedBox(width: columns[6].width),
+                              SizedBox(width: columns[7].width),
+                              SizedBox(
+                                  width: columns[8].width,
+                                  child: Text(currencyFmt.format(grandTotal),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF047857)))),
+                              SizedBox(width: columns[9].width),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExpanded(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.payments_outlined,
+                      size: 20, color: Color(0xFF6B7280)),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Estimated Cost — Expanded View',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827)),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Color(0xFF9CA3AF)),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const Divider(height: 16),
+              Expanded(
+                child: _EstimatedCostTable(
+                  requirements: requirements,
+                  onEdit: onEdit,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _TopHeader extends StatelessWidget {

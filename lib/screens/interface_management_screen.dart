@@ -86,9 +86,17 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final isMobile = AppBreakpoints.isMobile(context);
-    // Reduced horizontal padding so cards/tables can extend closer to the
-    // viewport edges on wide screens. Mobile stays at 16 for thumb reach.
+    // Horizontal padding for the scrollable content. We reserve extra room
+    // on the RIGHT so cards/buttons never sit under the floating KAZ AI
+    // chat bubble (which is Positioned at right: 24, bottom: 24 with a
+    // 64x64 hit-target plus shadow).
+    // Mobile stays at 16 for thumb reach.
     final horizontalPadding = isMobile ? 16.0 : 24.0;
+    // 64 (bubble) + 24 (right) + 16 (breathing room) = 104 px reserved on
+    // the right edge on desktop so content never underlaps the FAB.
+    final rightReservation = isMobile ? 0.0 : 104.0;
+    // Extra bottom padding so the last card can scroll clear of the bubble.
+    final bottomPadding = isMobile ? 24.0 : 120.0;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -127,8 +135,11 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
                           ),
                         ),
                         SingleChildScrollView(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: horizontalPadding, vertical: 24),
+                          padding: EdgeInsets.only(
+                              left: horizontalPadding,
+                              right: horizontalPadding + rightReservation,
+                              top: 24,
+                              bottom: bottomPadding),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

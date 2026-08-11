@@ -33,6 +33,7 @@ import 'package:ndu_project/screens/it_considerations_screen.dart';
 import 'package:ndu_project/screens/infrastructure_considerations_screen.dart';
 import 'package:ndu_project/screens/core_stakeholders_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
+import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/access_policy.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
@@ -354,6 +355,15 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   /// solutions using the project context. Shows a loading SnackBar while
   /// generating and a success SnackBar when complete.
   Future<void> _aiAssist() async {
+    // Business Case lock — once a preferred solution has been selected,
+    // this screen is view-only. Block AI generation.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+      }
+      return;
+    }
     if (_isGenerating) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -545,6 +555,12 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
 
   Future<void> _autoPopulateForNewProject(
       {required bool hasExistingData}) async {
+    // Business Case lock — when a preferred solution has been selected,
+    // this screen is view-only. Skip auto-population entirely.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      return;
+    }
     if (widget.solutions.isEmpty) {
       return;
     }
@@ -2084,6 +2100,11 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // Business Case lock banner — shown when a preferred
+                  // solution has been selected. In that state, this
+                  // screen is view-only (no AI generation, no edits).
+                  BusinessCaseLockHelper.lockBanner(
+                      ProjectDataHelper.getData(context)),
                   Padding(
                     padding: EdgeInsets.fromLTRB(horizontalPadding,
                         horizontalPadding, horizontalPadding, 0),
@@ -2127,6 +2148,9 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                               },
                               isLoading: _isGeneratingValue,
                               tooltip: 'Regenerate all cost analysis content',
+                              isLocked:
+                                  BusinessCaseLockHelper.isBusinessCaseLocked(
+                                      ProjectDataHelper.getData(context)),
                             ),
                           ],
                         ),
@@ -8132,6 +8156,15 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   Future<void> _populateCategoriesFromAi({int? targetSolution}) async {
+    // Business Case lock — view-only when a preferred solution is selected.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+        setState(() => _isGenerating = false);
+      }
+      return;
+    }
     if (_isGenerating) return;
     if (!mounted) return;
     setState(() {
@@ -8620,6 +8653,15 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   Future<void> _generateSavingsSuggestions({bool showFeedback = true}) async {
+    // Business Case lock — view-only when a preferred solution is selected.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+        setState(() => _isSavingsGenerating = false);
+      }
+      return;
+    }
     if (_isSavingsGenerating) return;
     final activeIndex = _activeSolutionIndex();
     final eligible = _benefitLineItems
@@ -8697,6 +8739,15 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     bool showFeedback = true,
     bool persist = true,
   }) async {
+    // Business Case lock — view-only when a preferred solution is selected.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+        setState(() => _isGeneratingValue = false);
+      }
+      return;
+    }
     if (_isGeneratingValue) return;
     final targetIndex = solutionIndex ?? _activeSolutionIndex();
     final scopedSolution = _solutionAt(targetIndex);
@@ -9018,6 +9069,14 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     bool showFeedback = true,
     bool persist = true,
   }) async {
+    // Business Case lock — view-only when a preferred solution is selected.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+      }
+      return;
+    }
     final solution = _solutionAt(index);
     if (solution == null || _solutionLoading.contains(index)) return;
     if (!mounted) return;
@@ -9074,6 +9133,15 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   Future<void> _generateCostBreakdown() async {
+    // Business Case lock — view-only when a preferred solution is selected.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+        setState(() => _isGenerating = false);
+      }
+      return;
+    }
     if (_isGenerating) return;
     if (!mounted) return;
     setState(() {
@@ -9101,6 +9169,14 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
   }
 
   Future<void> _regenerateAllCostAnalysis() async {
+    // Business Case lock — view-only when a preferred solution is selected.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+      }
+      return;
+    }
     // Regenerate all AI-derived sections to keep the page synchronized.
     for (int i = 0; i < _rowsPerSolution.length; i++) {
       await _generateProjectValue(

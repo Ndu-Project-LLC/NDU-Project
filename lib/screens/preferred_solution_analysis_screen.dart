@@ -31,6 +31,7 @@ import 'package:ndu_project/screens/infrastructure_considerations_screen.dart';
 import 'package:ndu_project/screens/core_stakeholders_screen.dart';
 import 'package:ndu_project/screens/cost_analysis_screen.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/widgets/select_project_kaz_button.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
@@ -253,6 +254,16 @@ class _PreferredSolutionAnalysisScreenState
   }
 
   Future<void> _loadAnalysis() async {
+    // Business Case lock — once a preferred solution has been selected,
+    // this screen is view-only. Block AI generation.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+        setState(() => _isLoading = false);
+      }
+      return;
+    }
     if (!mounted) return;
     setState(() {
       _isLoading = true;
@@ -1091,6 +1102,11 @@ class _PreferredSolutionAnalysisScreenState
           ),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Business Case lock banner — shown when a preferred
+            // solution has been selected. In that state, this
+            // screen is view-only (no AI generation, no edits).
+            BusinessCaseLockHelper.lockBanner(
+                ProjectDataHelper.getData(context)),
             // Breadcrumbs
             _buildBreadcrumbs(),
             const SizedBox(height: 16),
@@ -1818,6 +1834,14 @@ class _PreferredSolutionAnalysisScreenState
   }
 
   Future<void> _regenerateAllAnalysis() async {
+    // Business Case lock — view-only when a preferred solution is selected.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+      }
+      return;
+    }
     setState(() => _isLoading = true);
     try {
       await _loadExistingDataAndAnalysis();
@@ -2032,7 +2056,11 @@ class _PreferredSolutionAnalysisScreenState
                 _error ?? 'Unable to refresh analysis details right now.',
                 style: const TextStyle(fontSize: 13, color: Colors.red))),
         TextButton(
-            onPressed: _isLoading ? null : _loadAnalysis,
+            onPressed: (_isLoading ||
+                    BusinessCaseLockHelper.isBusinessCaseLocked(
+                        ProjectDataHelper.getData(context)))
+                ? null
+                : _loadAnalysis,
             child: const Text('Retry')),
       ]),
     );

@@ -47,7 +47,6 @@ class _SpecializedDesignScreenState extends State<SpecializedDesignScreen> {
  List<_ComplianceRow> _complianceRows = [];
  List<_ReviewGateRow> _reviewGates = [];
  bool _frameworkGuideExpanded = false;
- String? _isKazAiLoadingRowId;
 
  static const List<String> _statusOptions = [
  'Ready',
@@ -538,67 +537,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)));
  }
 
- Widget _crudButtons(VoidCallback onEdit, VoidCallback onDelete, {VoidCallback? onKazAi, String? kazAiRowId}) {
- return SizedBox(width: 88, child: Row(mainAxisSize: MainAxisSize.min, children: [
- Tooltip(
- message: 'KAZ AI – Auto-fill this row',
- child: InkWell(
- onTap: onKazAi,
- child: kazAiRowId != null && _isKazAiLoadingRowId == kazAiRowId
- ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFFF59E0B)))
- : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)),
- ),
- ),
- const SizedBox(width: 4),
+ Widget _crudButtons(VoidCallback onEdit, VoidCallback onDelete) {
+ return SizedBox(width: 56, child: Row(mainAxisSize: MainAxisSize.min, children: [
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16), onPressed: onEdit, padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: onDelete, padding: EdgeInsets.zero, constraints: const BoxConstraints()),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
  ]));
  }
 
  // ─── KAZ AI helpers ─────────────────────────────────────────────
-
- Future<void> _kazAiAutoFillRow({
- required String rowId,
- required String label,
- required String contextHint,
- required void Function(String field, String value) onResult,
- }) async {
- if (_isKazAiLoadingRowId != null) return;
- setState(() => _isKazAiLoadingRowId = rowId);
- try {
- final ai = OpenAiServiceSecure();
- final result = await ai.generateCompletion(
- 'Based on this project context, generate a $label for a specialized design $contextHint.\n\nProvide a concise, specific, actionable response (1-2 sentences). Return ONLY the text content (no JSON, no markdown headers).',
- maxTokens: 200,
- temperature: 0.6,
- );
- final cleaned = result.trim();
- if (cleaned.isNotEmpty && mounted) {
- onResult(label, cleaned);
- _scheduleSave();
- }
- } catch (e) {
- debugPrint('KAZ AI row generation failed: $e');
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('KAZ AI generation failed: $e'), backgroundColor: const Color(0xFFDC2626)),
- );
- }
- } finally {
- if (mounted) setState(() => _isKazAiLoadingRowId = null);
- }
- }
 
  Future<void> _kazAiGenerateField({
  required String label,
@@ -714,13 +660,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(flex: 5, child: Text(row.decision, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280), height: 1.4))),
  SizedBox(width: 120, child: Text(row.owner, style: const TextStyle(fontSize: 12, color: Color(0xFF475569)))),
  SizedBox(width: 130, child: _buildStatusTag(row.status)),
- _crudButtons(() => _showSecurityDialog(existing: row), () => _confirmDelete(() { setState(() => _securityRows.remove(row)); _scheduleSave(); }), onKazAi: () => _kazAiAutoFillRow(
- rowId: row.pattern, label: 'security pattern', contextHint: 'security control',
- onResult: (field, value) {
- final idx = _securityRows.indexOf(row);
- if (idx != -1) setState(() { _securityRows[idx].decision = value; });
- },
- ), kazAiRowId: row.pattern),
+ _crudButtons(() => _showSecurityDialog(existing: row), () => _confirmDelete(() { setState(() => _securityRows.remove(row)); _scheduleSave(); })),
  ]);
  }),
  ]),
@@ -779,13 +719,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(flex: 5, child: Text(row.focus, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280), height: 1.4))),
  SizedBox(width: 130, child: Text(row.sla, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0EA5E9)))),
  SizedBox(width: 130, child: _buildStatusTag(row.status)),
- _crudButtons(() => _showPerformanceDialog(existing: row), () => _confirmDelete(() { setState(() => _performanceRows.remove(row)); _scheduleSave(); }), onKazAi: () => _kazAiAutoFillRow(
- rowId: row.hotspot, label: 'performance focus', contextHint: 'performance hotspot',
- onResult: (field, value) {
- final idx = _performanceRows.indexOf(row);
- if (idx != -1) setState(() { _performanceRows[idx].focus = value; });
- },
- ), kazAiRowId: row.hotspot),
+ _crudButtons(() => _showPerformanceDialog(existing: row), () => _confirmDelete(() { setState(() => _performanceRows.remove(row)); _scheduleSave(); })),
  ]);
  }),
  ]),
@@ -844,13 +778,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  SizedBox(width: 150, child: Text(row.system, style: const TextStyle(fontSize: 12, color: Color(0xFF475569)))),
  SizedBox(width: 120, child: Text(row.owner, style: const TextStyle(fontSize: 12, color: Color(0xFF475569)))),
  SizedBox(width: 130, child: _buildStatusTag(row.status)),
- _crudButtons(() => _showIntegrationDialog(existing: row), () => _confirmDelete(() { setState(() => _integrationRows.remove(row)); _scheduleSave(); }), onKazAi: () => _kazAiAutoFillRow(
- rowId: row.flow, label: 'integration system', contextHint: 'integration flow',
- onResult: (field, value) {
- final idx = _integrationRows.indexOf(row);
- if (idx != -1) setState(() { _integrationRows[idx].system = value; });
- },
- ), kazAiRowId: row.flow),
+ _crudButtons(() => _showIntegrationDialog(existing: row), () => _confirmDelete(() { setState(() => _integrationRows.remove(row)); _scheduleSave(); })),
  ]);
  }),
  ]),
@@ -911,13 +839,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(flex: 4, child: Text(row.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280), height: 1.4))),
  SizedBox(width: 120, child: Text(row.owner, style: const TextStyle(fontSize: 12, color: Color(0xFF475569)))),
  SizedBox(width: 130, child: _buildComplianceStatusTag(row.status)),
- _crudButtons(() => _showComplianceDialog(existing: row), () => _confirmDelete(() { setState(() => _complianceRows.removeWhere((r) => r.id == row.id)); _scheduleSave(); }), onKazAi: () => _kazAiAutoFillRow(
- rowId: row.id, label: 'compliance description', contextHint: 'compliance standard',
- onResult: (field, value) {
- final idx = _complianceRows.indexWhere((r) => r.id == row.id);
- if (idx != -1) setState(() { _complianceRows[idx].description = value; });
- },
- ), kazAiRowId: row.id),
+ _crudButtons(() => _showComplianceDialog(existing: row), () => _confirmDelete(() { setState(() => _complianceRows.removeWhere((r) => r.id == row.id)); _scheduleSave(); })),
  ]);
  }),
  ]),
@@ -987,13 +909,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  SizedBox(width: 130, child: Text(row.approver, style: const TextStyle(fontSize: 12, color: Color(0xFF475569)))),
  SizedBox(width: 110, child: _buildPriorityTag(row.priority)),
  SizedBox(width: 130, child: _buildReviewGateStatusTag(row.status)),
- _crudButtons(() => _showReviewGateDialog(existing: row), () => _confirmDelete(() { setState(() => _reviewGates.removeWhere((g) => g.id == row.id)); _scheduleSave(); }), onKazAi: () => _kazAiAutoFillRow(
- rowId: row.id, label: 'review gate description', contextHint: 'review gate',
- onResult: (field, value) {
- final idx = _reviewGates.indexWhere((g) => g.id == row.id);
- if (idx != -1) setState(() { _reviewGates[idx].description = value; });
- },
- ), kazAiRowId: row.id),
+ _crudButtons(() => _showReviewGateDialog(existing: row), () => _confirmDelete(() { setState(() => _reviewGates.removeWhere((g) => g.id == row.id)); _scheduleSave(); })),
  ]);
  }),
  ]),

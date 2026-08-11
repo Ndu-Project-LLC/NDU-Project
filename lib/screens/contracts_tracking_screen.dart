@@ -44,6 +44,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
   bool _hasSavedData = false;
   bool _autoGenerationTriggered = false;
   bool _isAutoGenerating = false;
+  bool _isGuideExpanded = true;
 
   List<_RenewalLaneData> _renewalLanes = [];
   List<_RiskSignalData> _riskSignals = [];
@@ -445,64 +446,98 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Contract control framework',
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF111827)),
+          InkWell(
+            onTap: () => setState(() => _isGuideExpanded = !_isGuideExpanded),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Contract control framework',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    _isGuideExpanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    size: 22,
+                    color: Color(0xFF6B7280),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 6),
-          const Text(
-            'Grounded in PMI PMBOK Conduct Procurements (12.2) and Control Procurements (12.3), '
-            'FIDIC contract conditions, and PRINCE2 procurement conventions. Effective contract '
-            'tracking ensures that scope, value, timelines, and compliance obligations remain '
-            'visible and actionable throughout the project lifecycle.',
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF6B7280),
-                height: 1.5),
-          ),
-          const SizedBox(height: 18),
-          Column(
-            children: [
-              _buildGuideCard(
-                Icons.gavel_outlined,
-                'Contract Lifecycle',
-                'Draft → Legal Review → Signed → Active → Renewal/Expiry. '
-                    'Each contract should be tracked from initiation through close-out. '
-                    'Set renewal alerts at 90/60/30-day intervals to avoid lapses.',
-                const Color(0xFF2563EB),
-              ),
-              const SizedBox(height: 12),
-              _buildGuideCard(
-                Icons.assignment_turned_in_outlined,
-                'Scope & SLA Compliance',
-                'Monitor vendor performance against contracted deliverables and service '
-                    'level agreements. Document scope changes through the Change Control '
-                    'process before amending contract terms.',
-                const Color(0xFF10B981),
-              ),
-              const SizedBox(height: 12),
-              _buildGuideCard(
-                Icons.attach_money_outlined,
-                'Financial Controls',
-                'Track committed value against actuals. Tie contract payments to verified '
-                    'milestones and deliverable acceptance. Maintain audit-ready records of '
-                    'all amendments, change orders, and payment approvals.',
-                const Color(0xFFF59E0B),
-              ),
-              const SizedBox(height: 12),
-              _buildGuideCard(
-                Icons.warning_amber_outlined,
-                'Risk & Renewal Signals',
-                'Flag contracts approaching expiry, those with unresolved disputes, or '
-                    'vendors failing SLA targets. Escalate risk signals to the project board '
-                    'when they exceed threshold tolerance levels.',
-                const Color(0xFFEF4444),
-              ),
-            ],
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: _isGuideExpanded
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Grounded in PMI PMBOK Conduct Procurements (12.2) and Control Procurements (12.3), '
+                        'FIDIC contract conditions, and PRINCE2 procurement conventions. Effective contract '
+                        'tracking ensures that scope, value, timelines, and compliance obligations remain '
+                        'visible and actionable throughout the project lifecycle.',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF6B7280),
+                            height: 1.5),
+                      ),
+                      const SizedBox(height: 18),
+                      Column(
+                        children: [
+                          _buildGuideCard(
+                            Icons.gavel_outlined,
+                            'Contract Lifecycle',
+                            'Draft → Legal Review → Signed → Active → Renewal/Expiry. '
+                                'Each contract should be tracked from initiation through close-out. '
+                                'Set renewal alerts at 90/60/30-day intervals to avoid lapses.',
+                            const Color(0xFF2563EB),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildGuideCard(
+                            Icons.assignment_turned_in_outlined,
+                            'Scope & SLA Compliance',
+                            'Monitor vendor performance against contracted deliverables and service '
+                                'level agreements. Document scope changes through the Change Control '
+                                'process before amending contract terms.',
+                            const Color(0xFF10B981),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildGuideCard(
+                            Icons.attach_money_outlined,
+                            'Financial Controls',
+                            'Track committed value against actuals. Tie contract payments to verified '
+                                'milestones and deliverable acceptance. Maintain audit-ready records of '
+                                'all amendments, change orders, and payment approvals.',
+                            const Color(0xFFF59E0B),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildGuideCard(
+                            Icons.warning_amber_outlined,
+                            'Risk & Renewal Signals',
+                            'Flag contracts approaching expiry, those with unresolved disputes, or '
+                                'vendors failing SLA targets. Escalate risk signals to the project board '
+                                'when they exceed threshold tolerance levels.',
+                            const Color(0xFFEF4444),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
@@ -2150,8 +2185,11 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
     final paymentTypeController =
         TextEditingController(text: contract?.paymentType ?? '');
     var selectedStatus = contract?.status ?? 'Draft';
-    final estimatedValueController =
-        TextEditingController(text: contract?.estimatedValue.toString() ?? '0');
+    var selectedStartPhase = contract?.contractStartPhase ?? 'Not Sure';
+    final estimatedValueController = TextEditingController(
+        text: contract?.estimatedValue != null && contract!.estimatedValue > 0
+            ? contract.estimatedValue.toStringAsFixed(0)
+            : '');
     // Key Terms (scope) - use AutoBulletTextController
     final scopeController =
         contract?.scope != null && contract!.scope.isNotEmpty
@@ -2203,6 +2241,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                     controller: nameController,
                     decoration: const InputDecoration(
                       labelText: 'Vendor/Party Name *',
+                      hintText: 'Required — contractor, supplier, or party name',
                       isDense: true,
                     ),
                   ),
@@ -2210,7 +2249,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   VoiceTextField(
                     controller: descriptionController,
                     decoration: const InputDecoration(
-                      labelText: 'Description *',
+                      labelText: 'Description (optional)',
                       isDense: true,
                     ),
                     maxLines: 2,
@@ -2221,7 +2260,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         ? null
                         : contractTypeController.text,
                     decoration: const InputDecoration(
-                      labelText: 'Contract Type *',
+                      labelText: 'Contract Type',
                       isDense: true,
                     ),
                     items: const [
@@ -2247,7 +2286,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   VoiceTextField(
                     controller: paymentTypeController,
                     decoration: const InputDecoration(
-                      labelText: 'Payment Type *',
+                      labelText: 'Payment Type',
                       isDense: true,
                     ),
                   ),
@@ -2255,7 +2294,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   DropdownButtonFormField<String>(
                     value: selectedStatus.isEmpty ? null : selectedStatus,
                     decoration: const InputDecoration(
-                      labelText: 'Status *',
+                      labelText: 'Status',
                       isDense: true,
                     ),
                     items: const [
@@ -2278,16 +2317,46 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   VoiceTextField(
                     controller: estimatedValueController,
                     decoration: const InputDecoration(
-                      labelText: 'Total Value *',
-                      hintText: 'e.g., 1000000',
+                      labelText: 'Total Value (optional)',
+                      hintText: 'e.g., 1000000 — leave blank if unknown',
                       isDense: true,
                     ),
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 12),
+                  // Phase for Contract Start — indicates which project phase
+                  // the contract is expected to kick off in. May not be known
+                  // in initiation; can be left as 'Not Sure' for bidding.
+                  DropdownButtonFormField<String>(
+                    value: selectedStartPhase,
+                    decoration: const InputDecoration(
+                      labelText: 'Phase for Contract Start',
+                      isDense: true,
+                    ),
+                    items: const [
+                      'Not Sure',
+                      'Initiation',
+                      'Planning',
+                      'Design',
+                      'Execution',
+                      'Launch',
+                      'Post-Launch',
+                    ]
+                        .map((phase) => DropdownMenuItem(
+                              value: phase,
+                              child: Text(phase,
+                                  style: const TextStyle(fontSize: 13)),
+                            ))
+                        .toList(),
+                    onChanged: (v) {
+                      setDialogState(
+                          () => selectedStartPhase = v ?? 'Not Sure');
+                    },
+                  ),
+                  const SizedBox(height: 12),
                   ListTile(
                     title: Text(
-                        'Effective Date: ${startDate != null ? DateFormat('MMM dd, yyyy').format(startDate!) : 'Not set'}'),
+                        'Effective Date: ${startDate != null ? DateFormat('MMM dd, yyyy').format(startDate!) : 'Not set (optional)'}'),
                     trailing: const Icon(Icons.calendar_today, size: 18),
                     onTap: () async {
                       final date = await showDatePicker(
@@ -2301,7 +2370,7 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                   ),
                   ListTile(
                     title: Text(
-                        'Expiry Date: ${endDate != null ? DateFormat('MMM dd, yyyy').format(endDate!) : 'Not set'}'),
+                        'Expiry Date: ${endDate != null ? DateFormat('MMM dd, yyyy').format(endDate!) : 'Not set (optional)'}'),
                     trailing: const Icon(Icons.calendar_today, size: 18),
                     onTap: () async {
                       final date = await showDatePicker(
@@ -2352,13 +2421,13 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  if (nameController.text.isEmpty ||
-                      descriptionController.text.isEmpty ||
-                      startDate == null ||
-                      endDate == null) {
+                  // Only the name is required — dates, value, and contractor
+                  // are all optional so the contract can be saved in early
+                  // phases when those details are not yet known.
+                  if (nameController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                          content: Text('Please fill in all required fields')),
+                          content: Text('Please enter a Vendor/Party Name.')),
                     );
                     return;
                   }
@@ -2378,13 +2447,14 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         paymentType: paymentTypeController.text.trim(),
                         status: selectedStatus,
                         estimatedValue: estimatedValue,
-                        startDate: startDate!,
-                        endDate: endDate!,
+                        startDate: startDate,
+                        endDate: endDate,
                         scope: scopeController.text.trim(),
                         discipline: disciplineController.text.trim(),
                         notes: notesController.text.trim().isEmpty
                             ? null
                             : notesController.text.trim(),
+                        contractStartPhase: selectedStartPhase,
                       );
                       // Sync to Progress Tracking budget
                       final updatedContract = ContractModel(
@@ -2396,11 +2466,12 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         paymentType: paymentTypeController.text.trim(),
                         status: selectedStatus,
                         estimatedValue: estimatedValue,
-                        startDate: startDate!,
-                        endDate: endDate!,
+                        startDate: startDate,
+                        endDate: endDate,
                         scope: scopeController.text.trim(),
                         discipline: disciplineController.text.trim(),
                         notes: notesController.text.trim(),
+                        contractStartPhase: selectedStartPhase,
                         createdById: contract.createdById,
                         createdByEmail: contract.createdByEmail,
                         createdByName: contract.createdByName,
@@ -2417,11 +2488,13 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
                         paymentType: paymentTypeController.text.trim(),
                         status: selectedStatus,
                         estimatedValue: estimatedValue,
-                        startDate: startDate!,
-                        endDate: endDate!,
+                        startDate: startDate,
+                        endDate: endDate,
                         scope: scopeController.text.trim(),
                         discipline: disciplineController.text.trim(),
+                        contractorName: nameController.text.trim(),
                         notes: notesController.text.trim(),
+                        contractStartPhase: selectedStartPhase,
                         createdById: user?.uid ?? '',
                         createdByEmail: user?.email ?? '',
                         createdByName: user?.displayName ??

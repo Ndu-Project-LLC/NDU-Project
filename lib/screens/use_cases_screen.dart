@@ -150,10 +150,10 @@ class UseCasesScreen extends StatelessWidget {
 
   Widget _industryGrid(BuildContext context, bool isDesktop) {
     final industries = [
-      const _Industry(icon: Icons.bolt, name: 'Energy', demo: 'Solar Farm Expansion', color: Color(0xFFF59E0B), highlights: ['Business Case', 'WBS', 'Procurement', 'Contractor Mgmt', 'Schedule', 'Risk Register', 'Exec Dashboard']),
+      const _Industry(icon: Icons.bolt, name: 'Energy', demo: 'Solar Farm Expansion', color: Color(0xFFF59E0B), highlights: ['Business Case', 'WBS', 'Procurement', 'Contractor Management', 'Schedule', 'Risk Register', 'Executive Dashboard']),
       const _Industry(icon: Icons.computer, name: 'Information Technology', demo: 'AI Customer Support Platform', color: Color(0xFF3B82F6), highlights: ['Business Case', 'Frontend Planning', 'Sprint Planning', 'Kanban Board', 'Burndown Charts', 'Release Planning']),
       const _Industry(icon: Icons.local_hospital, name: 'Healthcare', demo: 'Hospital Imaging Center Construction', color: Color(0xFFEF4444), highlights: ['Regulatory Planning', 'Equipment Procurement', 'Construction Tracking', 'Budget Control', 'Commissioning']),
-      const _Industry(icon: Icons.school, name: 'Education', demo: 'University Mobile Student App', color: Color(0xFF10B981), highlights: ['Product Discovery', 'Sprint Planning', 'Stakeholder Mgmt', 'UAT']),
+      const _Industry(icon: Icons.school, name: 'Education', demo: 'University Mobile Student App', color: Color(0xFF10B981), highlights: ['Product Discovery', 'Sprint Planning', 'Stakeholder Management', 'UAT']),
       const _Industry(icon: Icons.factory, name: 'Manufacturing', demo: 'Smart Manufacturing Transformation', color: Color(0xFF8B5CF6), highlights: ['Facility Upgrades', 'IoT Integration', 'ERP Integration', 'Agile Software Delivery']),
       const _Industry(icon: Icons.account_balance, name: 'Government', demo: 'City Infrastructure Modernization', color: Color(0xFF06B6D4), highlights: ['Capital Planning', 'Procurement', 'Public Stakeholders', 'Executive Reporting']),
     ];

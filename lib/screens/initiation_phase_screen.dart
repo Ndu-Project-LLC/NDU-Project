@@ -28,6 +28,8 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/business_case_header.dart';
 import 'package:ndu_project/widgets/business_case_navigation_buttons.dart';
+import 'package:ndu_project/widgets/skip_business_case_dialog.dart';
+import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/select_project_kaz_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -484,6 +486,65 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
 
  void _retryBusinessSuggestions() =>
  _fetchBusinessSuggestions(_businessCaseController.text.trim());
+
+ /// Post-skip handler — called by [SkipBusinessCaseAffordance] after the
+ /// user confirms the skip in [SkipBusinessCaseDialog].
+ ///
+ /// Responsibilities:
+ ///   1. Refresh local controllers so the Scope Statement field shows
+ ///      the project description the user just entered in the dialog
+ ///      (the dialog writes to `projectDescription` and `notes`, which
+ ///      mirror the Scope Statement field).
+ ///   2. Trigger a rebuild so the [BusinessCaseSkippedBanner] replaces
+ ///      the [SkipBusinessCaseAffordance].
+ ///   3. Navigate to the FEP Summary screen — the first FEP
+ ///      documentation page — because the user's description is now the
+ ///      basis for FEP documentation developments with AI KAZ.
+ Future<void> _handleSkipBusinessCasePressed() async {
+   if (!mounted) return;
+
+   // Refresh local controllers so any downstream rebuild reflects the
+   // newly-saved description (the dialog writes to `projectDescription`
+   // and `notes`, which mirror the Scope Statement field).
+   final provider = ProjectDataHelper.getProvider(context);
+   final updatedData = provider.projectData;
+   if (updatedData.projectDescription.isNotEmpty &&
+       _businessCaseController.text.trim().isEmpty) {
+     _businessCaseController.text = updatedData.projectDescription;
+   }
+   if (updatedData.notes.isNotEmpty &&
+       _notesController.text.trim().isEmpty) {
+     _notesController.text = updatedData.notes;
+   }
+
+   setState(() {});
+
+   // Navigate to the FEP Summary screen — the first FEP documentation
+   // page. The user's project description is now the AI KAZ context
+   // for every FEP screen downstream.
+   if (mounted) {
+     FrontEndPlanningSummaryScreen.open(context);
+   }
+ }
+
+ /// Manual entry point for opening the Skip Business Case dialog from
+ /// other UI surfaces (e.g. an action button in the header). Persists
+ /// any in-progress notes/scope statement text first so the dialog's
+ /// pre-fill logic sees the latest content.
+ Future<void> _openSkipBusinessCaseDialog() async {
+   FocusScope.of(context).unfocus();
+   if (!mounted) return;
+
+   final provider = ProjectDataHelper.getProvider(context);
+   provider.updateInitiationData(
+     notes: _notesController.text.trim(),
+     businessCase: _businessCaseController.text.trim(),
+   );
+
+   final skipped = await SkipBusinessCaseDialog.show(context);
+   if (!mounted || !skipped) return;
+   await _handleSkipBusinessCasePressed();
+ }
 
  Future<void> _handleNextPressed() async {
  final notes = _notesController.text.trim();
@@ -1631,6 +1692,16 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ // Skip Business Case status / affordance — surfaces the "skip the
+ // whole Business Case workflow" entry point (or, if already skipped,
+ // tells the user their description is now the basis for FEP with AI
+ // KAZ and lets them refine it).
+ BusinessCaseSkippedBanner(onAfterUpdate: () {
+   if (mounted) setState(() {});
+ }),
+ SkipBusinessCaseAffordance(
+   onAfterSkip: _handleSkipBusinessCasePressed,
+ ),
  const Text(
  'Notes',
  style: TextStyle(
@@ -2010,6 +2081,16 @@ class _InitiationPhaseScreenState extends State<InitiationPhaseScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ // Skip Business Case status / affordance — surfaces the "skip the
+ // whole Business Case workflow" entry point (or, if already skipped,
+ // tells the user their description is now the basis for FEP with AI
+ // KAZ and lets them refine it).
+ BusinessCaseSkippedBanner(onAfterUpdate: () {
+   if (mounted) setState(() {});
+ }),
+ SkipBusinessCaseAffordance(
+   onAfterSkip: _handleSkipBusinessCasePressed,
+ ),
  // Notes section
  const EditableContentText(
  contentKey: 'business_case_notes_heading',

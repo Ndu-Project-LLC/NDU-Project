@@ -158,11 +158,41 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
     setState(() => _isSyncing = true);
     try {
       final wbsProvider = context.read<WBSProvider>();
+      // CRITICAL: ensure the WBS for *this* project is loaded before reading
+      // it. Without this, the WBSProvider may still hold a stale WBS from a
+      // previously-visited project (or null after a fresh app start), causing
+      // false "No WBS found" errors or, worse, syncing the wrong project's
+      // WBS tree into the current project's Firestore.
+      await wbsProvider.ensureProjectLoaded(pid);
+      if (!mounted) return;
       final wbs = wbsProvider.wbs;
       if (wbs == null) {
         if (mounted && !silentIfNoWbs) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No WBS found. Create a WBS first.')),
+            const SnackBar(
+              content: Text(
+                  'No WBS found for this project. Open the WBS module from the sidebar to create one first, then return here and click "Sync from WBS".'),
+              duration: Duration(seconds: 6),
+            ),
+          );
+        }
+        return;
+      }
+      // Defensive: never sync a WBS whose projectId doesn't match the
+      // currently-active project — that would create Epic/Feature/Story
+      // records under the wrong project in Firestore.
+      if (wbs.projectId.isNotEmpty &&
+          wbs.projectId != 'default' &&
+          wbs.projectId != pid) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'WBS project mismatch: WBS belongs to "${wbs.projectId}" but the active project is "$pid". Re-open the WBS module to load the correct project.'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: const Color(0xFFB45309),
+              duration: const Duration(seconds: 7),
+            ),
           );
         }
         return;
@@ -171,8 +201,10 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
         if (mounted && !silentIfNoWbs) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text(
-                    'WBS is set to Waterfall. Switch to Agile or Hybrid to sync.')),
+              content: Text(
+                  'WBS methodology is Waterfall — Epics/Features/Stories only apply to Agile or Hybrid. Open the WBS module to switch methodology.'),
+              duration: Duration(seconds: 6),
+            ),
           );
         }
         return;
@@ -207,7 +239,12 @@ class _AgileEpicsFeaturesScreenState extends State<AgileEpicsFeaturesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sync failed: $e')),
+          SnackBar(
+            content: Text('Sync failed: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFFB91C1C),
+            duration: const Duration(seconds: 8),
+          ),
         );
       }
     }

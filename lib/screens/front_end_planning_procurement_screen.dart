@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -3914,6 +3915,7 @@ class _FrontEndPlanningProcurementScreenState
  context: context,
  title: 'Procurement Needs',
  minWidth: 820,
+ maxHeight: 320,
  columnSpacing: 24,
  horizontalMargin: 18,
  headingRowHeight: 48,
@@ -4006,6 +4008,103 @@ class _FrontEndPlanningProcurementScreenState
  );
  }
  }
+
+ // ─── Preferred Solution follow-through ────────────────────────────────
+ // Pull Risks, IT (technologies), Infrastructure, and initial cost
+ // estimate items from the selected preferred solution so procurement
+ // has full context for what to source. These are appended (not
+ // deduplicated against existing needs) because they represent
+ // solution-specific scope that the procurement team must action.
+ final psa = data.preferredSolutionAnalysis;
+ SolutionAnalysisItem? selectedSolution;
+ if (psa != null && psa.isSelectionFinalized) {
+ final byId = psa.selectedSolutionId;
+ final byIndex = psa.selectedSolutionIndex;
+ final byTitle = psa.selectedSolutionTitle;
+ if (byId != null && byId.isNotEmpty) {
+ selectedSolution = psa.solutionAnalyses.firstWhere(
+ (s) => s.solutionTitle == byTitle,
+ orElse: () => psa.solutionAnalyses.first,
+ );
+ } else if (byIndex != null &&
+ byIndex >= 0 &&
+ byIndex < psa.solutionAnalyses.length) {
+ selectedSolution = psa.solutionAnalyses[byIndex];
+ } else if (byTitle != null && byTitle.isNotEmpty) {
+ selectedSolution = psa.solutionAnalyses.firstWhere(
+ (s) => s.solutionTitle == byTitle,
+ orElse: () => psa.solutionAnalyses.first,
+ );
+ }
+ }
+
+ if (selectedSolution != null) {
+ // Risks → procurement needs (mitigation may require purchases)
+ for (final risk in selectedSolution.risks) {
+ addNeed(
+ name: risk,
+ source: 'Preferred Solution · Risks',
+ priorityHint: 'high',
+ );
+ }
+ // IT / Technologies → procurement needs
+ for (final tech in selectedSolution.technologies) {
+ addNeed(
+ name: tech,
+ source: 'Preferred Solution · IT',
+ priorityHint: 'medium',
+ );
+ }
+ // Infrastructure → procurement needs
+ for (final infra in selectedSolution.infrastructure) {
+ addNeed(
+ name: infra,
+ source: 'Preferred Solution · Infrastructure',
+ priorityHint: 'medium',
+ );
+ }
+ // Initial cost estimate items → procurement needs (with cost)
+ for (final cost in selectedSolution.costs) {
+ final needName = cost.item.trim().isNotEmpty
+ ? cost.item.trim()
+ : cost.description.trim();
+ if (needName.isEmpty) continue;
+ final trimmed = needName;
+ final key = trimmed.toLowerCase();
+ if (seen.contains(key)) continue;
+ seen.add(key);
+ // Don't run through addNeed because we have an explicit cost.
+ needs.add(
+ _ProcurementNeed(
+ name: trimmed,
+ source: 'Preferred Solution · Cost Estimate',
+ quantity: 1,
+ estimatedCost: cost.estimatedCost,
+ priority: cost.estimatedCost >= 100000 ? 'High' : 'Medium',
+ ),
+ );
+ }
+ // Also include the IT/Infrastructure consideration text blobs if
+ // they exist (free-form notes from the preferred solution analysis).
+ final itText = selectedSolution.itConsiderationText?.trim() ?? '';
+ if (itText.isNotEmpty) {
+ addNeed(
+ name: itText,
+ source: 'Preferred Solution · IT Considerations',
+ priorityHint: 'medium',
+ );
+ }
+ final infraText =
+ selectedSolution.infraConsiderationText?.trim() ?? '';
+ if (infraText.isNotEmpty) {
+ addNeed(
+ name: infraText,
+ source: 'Preferred Solution · Infrastructure Considerations',
+ priorityHint: 'medium',
+ );
+ }
+ }
+ // ─── End preferred solution follow-through ────────────────────────────
 
  return needs;
  }
@@ -5308,10 +5407,15 @@ class _FrontEndPlanningProcurementScreenState
  scaffoldKey: isMobile ? _scaffoldKey : null, onExportPdf: _exportPdf),
  Expanded(
  child: Container(
- color: const Color(0xFFF5F6FA),
+ color: Colors.white,
+ child: Scrollbar(
+ thumbVisibility: true,
+ trackVisibility: true,
  child: SingleChildScrollView(
- padding:
- const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+ padding: EdgeInsets.symmetric(
+ horizontal: isMobile ? 16 : 24,
+ vertical: 32,
+ ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -5363,13 +5467,6 @@ class _FrontEndPlanningProcurementScreenState
  ),
  ],
  const SizedBox(height: 32),
- _ProcurementTabBar(
- selectedTab: _selectedTab,
- onSelected: _handleTabSelected,
- tabsWithErrors: _tabsWithErrors,
- disabledTabs: _tabsWithRestrictedAccess,
- ),
- const SizedBox(height: 16),
  InnerPageNavigationHint(
  pageId: _isPlanningMode ? 'planning_procurement' : 'fep_procurement',
  pageTitle: 'Procurement',
@@ -5411,6 +5508,7 @@ class _FrontEndPlanningProcurementScreenState
  _buildNextSectionButton(),
  const SizedBox(height: 40),
  ],
+ ),
  ),
  ),
  ),
@@ -5754,164 +5852,6 @@ class _ProcurementPlanCard extends StatelessWidget {
  }
 }
 
-class _ProcurementTabBar extends StatelessWidget {
- const _ProcurementTabBar(
- {required this.selectedTab,
- required this.onSelected,
- required this.tabsWithErrors,
- required this.disabledTabs});
-
- final _ProcurementTab selectedTab;
- final ValueChanged<_ProcurementTab> onSelected;
- final Set<_ProcurementTab> tabsWithErrors;
- final Set<_ProcurementTab> disabledTabs;
-
- @override
- Widget build(BuildContext context) {
- const tabs = _ProcurementTab.values;
- return Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFE2E8F0)),
- ),
- padding: const EdgeInsets.all(6),
- child: LayoutBuilder(
- builder: (context, constraints) {
- final isCompact = constraints.maxWidth < 960;
- if (isCompact) {
- return SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: Row(
- children: [
- for (final tab in tabs)
- Padding(
- padding: const EdgeInsets.symmetric(horizontal: 4),
- child: SizedBox(
- width: 160,
- child: _TabButton(
- label: tab.label,
- selected: tab == selectedTab,
- hasError: tabsWithErrors.contains(tab),
- disabled: disabledTabs.contains(tab),
- onTap: () => onSelected(tab),
- ),
- ),
- ),
- ],
- ),
- );
- }
-
- final double tabWidth =
- (constraints.maxWidth - (tabs.length - 1) * 8) / tabs.length;
- return Row(
- children: [
- for (final tab in tabs) ...[
- SizedBox(
- width: tabWidth,
- child: _TabButton(
- label: tab.label,
- selected: tab == selectedTab,
- hasError: tabsWithErrors.contains(tab),
- disabled: disabledTabs.contains(tab),
- onTap: () => onSelected(tab),
- ),
- ),
- if (tab != tabs.last) const SizedBox(width: 8),
- ],
- ],
- );
- },
- ),
- );
- }
-}
-
-class _TabButton extends StatelessWidget {
- const _TabButton(
- {required this.label,
- required this.selected,
- required this.onTap,
- this.hasError = false,
- this.disabled = false});
-
- final String label;
- final bool selected;
- final VoidCallback onTap;
- final bool hasError;
- final bool disabled;
-
- @override
- Widget build(BuildContext context) {
- return AnimatedContainer(
- duration: const Duration(milliseconds: 180),
- curve: Curves.easeOut,
- decoration: BoxDecoration(
- color: disabled
- ? const Color(0xFFF8FAFC)
- : (selected ? Colors.white : Colors.transparent),
- borderRadius: BorderRadius.circular(12),
- border: Border.all(
- color: disabled
- ? const Color(0xFFE2E8F0)
- : (selected
- ? const Color(0xFF2563EB)
- : (hasError
- ? const Color(0xFFEF4444)
- : Colors.transparent)),
- width: 1.2),
- boxShadow: selected && !disabled
- ? const [
- BoxShadow(
- color: Color(0x0C1D4ED8),
- offset: Offset(0, 6),
- blurRadius: 12,
- ),
- ]
- : null,
- ),
- child: InkWell(
- borderRadius: BorderRadius.circular(12),
- onTap: onTap,
- child: Padding(
- padding: const EdgeInsets.symmetric(vertical: 14),
- child: Center(
- child: Row(
- mainAxisAlignment: MainAxisAlignment.center,
- mainAxisSize: MainAxisSize.min,
- children: [
- if (disabled) ...[
- const Icon(
- Icons.lock_outline_rounded,
- size: 14,
- color: Color(0xFF94A3B8),
- ),
- const SizedBox(width: 6),
- ],
- Text(
- label,
- style: TextStyle(
- fontSize: 14,
- fontWeight: FontWeight.w600,
- color: disabled
- ? const Color(0xFF94A3B8)
- : (selected
- ? const Color(0xFF1D4ED8)
- : (hasError
- ? const Color(0xFFB91C1C)
- : const Color(0xFF475569))),
- ),
- ),
- ],
- ),
- ),
- ),
- ),
- );
- }
-}
-
 class _ContractScopeManagementSection extends StatelessWidget {
  const _ContractScopeManagementSection({
  required this.scopes,
@@ -5945,7 +5885,7 @@ class _ContractScopeManagementSection extends StatelessWidget {
  children: [
  const Expanded(
  child: Text(
- 'Contract Scope Management',
+ 'Vendor Scope Management',
  style: TextStyle(
  fontSize: 18,
  fontWeight: FontWeight.w700,
@@ -7350,6 +7290,14 @@ class _ProcurementStrategiesSection extends StatelessWidget {
 
  Widget _buildStrategiesTable(List<ProcurementStrategyModel> strategies) {
  Widget buildTable() {
+ return LayoutBuilder(
+ builder: (context, constraints) {
+ // Use a flexible minimum width so the table always fills the
+ // available content area. On narrow viewports it still scrolls
+ // horizontally; on wide viewports it stretches edge-to-edge.
+ final minWidth = constraints.maxWidth.isFinite
+ ? math.max(constraints.maxWidth, 920.0)
+ : 920.0;
  return Container(
  decoration: BoxDecoration(
  color: Colors.white,
@@ -7362,18 +7310,18 @@ class _ProcurementStrategiesSection extends StatelessWidget {
  child: SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
- constraints: const BoxConstraints(minWidth: 920),
+ constraints: BoxConstraints(minWidth: minWidth),
  child: Table(
  border: const TableBorder(
  horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
  verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
  ),
  columnWidths: const {
- 0: FixedColumnWidth(260),
- 1: FixedColumnWidth(230),
- 2: FixedColumnWidth(170),
- 3: FixedColumnWidth(140),
- 4: FixedColumnWidth(120),
+ 0: FlexColumnWidth(2.6),
+ 1: FlexColumnWidth(2.3),
+ 2: FlexColumnWidth(1.7),
+ 3: FlexColumnWidth(1.4),
+ 4: FlexColumnWidth(1.2),
  },
  children: [
  const TableRow(
@@ -7449,6 +7397,8 @@ class _ProcurementStrategiesSection extends StatelessWidget {
  ),
  ),
  ),
+ );
+ },
  );
  }
 
@@ -7587,6 +7537,14 @@ class _StrategiesSection extends StatelessWidget {
 
  Widget _buildScopeItemsTable(List<ProcurementItemModel> items) {
  Widget buildTable() {
+ return LayoutBuilder(
+ builder: (context, constraints) {
+ // Use a flexible minimum width so the table always fills the
+ // available content area. On narrow viewports it still scrolls
+ // horizontally; on wide viewports it stretches edge-to-edge.
+ final minWidth = constraints.maxWidth.isFinite
+ ? math.max(constraints.maxWidth, 1160.0)
+ : 1160.0;
  return Container(
  decoration: BoxDecoration(
  color: Colors.white,
@@ -7599,7 +7557,7 @@ class _StrategiesSection extends StatelessWidget {
  child: SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
- constraints: const BoxConstraints(minWidth: 1160),
+ constraints: BoxConstraints(minWidth: minWidth),
  child: Table(
  border: const TableBorder(
  horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
@@ -7607,13 +7565,13 @@ class _StrategiesSection extends StatelessWidget {
  ),
  columnWidths: const {
  0: FixedColumnWidth(50),
- 1: FixedColumnWidth(230),
- 2: FixedColumnWidth(290),
- 3: FixedColumnWidth(200),
- 4: FixedColumnWidth(140),
- 5: FixedColumnWidth(150),
- 6: FixedColumnWidth(150),
- 7: FixedColumnWidth(140),
+ 1: FlexColumnWidth(2.3),
+ 2: FlexColumnWidth(2.9),
+ 3: FlexColumnWidth(2.0),
+ 4: FlexColumnWidth(1.4),
+ 5: FlexColumnWidth(1.5),
+ 6: FlexColumnWidth(1.5),
+ 7: FlexColumnWidth(1.4),
  },
  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
  children: [
@@ -7654,6 +7612,8 @@ class _StrategiesSection extends StatelessWidget {
  ),
  ),
  ),
+ );
+ },
  );
  }
 
@@ -8157,14 +8117,32 @@ class _VendorGrid extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
+ final isMobile = AppBreakpoints.isMobile(context);
+ // Use LayoutBuilder to compute a responsive cross-axis count so cards
+ // are never too narrow on wide screens nor too wide on tablets.
+ return LayoutBuilder(
+ builder: (context, constraints) {
+ final double maxCardWidth = isMobile ? 180 : 320;
+ final int crossAxisCount =
+ (constraints.maxWidth / maxCardWidth).floor().clamp(1, 4);
+ const double crossAxisSpacing = 16;
+ const double mainAxisSpacing = 16;
+ // Each card sizes its own height based on content. We provide a
+ // generous mainAxisExtent ceiling so cards don't clip the rating
+ // stars / actions menu on vendors that have full status + rating.
+ final double mainAxisExtent = isMobile ? 220 : 240;
+
  return GridView.builder(
  shrinkWrap: true,
  physics: const NeverScrollableScrollPhysics(),
- gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
- crossAxisCount: 3,
- childAspectRatio: 3.2,
- mainAxisSpacing: 16,
- crossAxisSpacing: 16,
+ gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+ crossAxisCount: crossAxisCount,
+ crossAxisSpacing: crossAxisSpacing,
+ mainAxisSpacing: mainAxisSpacing,
+ // Fixed height ensures the checkbox, name, category, status,
+ // rating, contact, and actions menu all fit inside the card
+ // border without clipping.
+ mainAxisExtent: mainAxisExtent,
  ),
  itemCount: vendors.length,
  itemBuilder: (_, index) {
@@ -8175,31 +8153,40 @@ class _VendorGrid extends StatelessWidget {
  borderRadius: BorderRadius.circular(16),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  ),
- padding: const EdgeInsets.all(20),
+ padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ // Top row: checkbox right-aligned (compact)
  Align(
  alignment: Alignment.centerRight,
+ child: SizedBox(
+ height: 28,
+ width: 28,
  child: Checkbox(
  value: selectedVendorIds.contains(vendor.id),
  onChanged: (value) =>
  onToggleSelected(vendor.id, value ?? false),
  ),
  ),
+ ),
+ // Name + contact cell
  _VendorNameCell(vendor: vendor),
- const SizedBox(height: 8),
+ const SizedBox(height: 6),
  Text(vendor.category,
- style:
- const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
- const SizedBox(height: 8),
+ style: const TextStyle(
+ fontSize: 13, color: Color(0xFF6B7280))),
+ const SizedBox(height: 6),
  _VendorStatusPill(status: vendor.status),
  const SizedBox(height: 6),
  Text(
  vendor.contactLabel,
- style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+ style: const TextStyle(
+ fontSize: 12, color: Color(0xFF64748B)),
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
  ),
- const SizedBox(height: 8),
+ const SizedBox(height: 6),
  _RatingStars(rating: vendor.ratingScore),
  const Spacer(),
  Row(
@@ -8214,6 +8201,8 @@ class _VendorGrid extends StatelessWidget {
  ),
  ],
  ),
+ );
+ },
  );
  },
  );

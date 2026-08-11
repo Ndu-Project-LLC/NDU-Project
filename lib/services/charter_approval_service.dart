@@ -27,9 +27,11 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/models/user_model.dart';
+import 'package:ndu_project/services/team_invitation_service.dart';
 
 /// The resolved charter approver.
 class ResolvedApprover {
@@ -96,6 +98,20 @@ class CharterApprovalService {
   ///
   /// [allUsers] should come from `UserService.watchAllUsers()` (or a
   /// one-shot `get()` on the same collection).
+  ///
+  /// Resolution order (per user spec):
+  ///   1. Named sponsor that maps to a registered user (matched by
+  ///      email, display name, OR the currently signed-in user if
+  ///      their display name / email matches the named sponsor).
+  ///   2. Named project manager that maps to a registered user (same
+  ///      matching rules).
+  ///   3. The currently signed-in user, if their display name matches
+  ///      the named sponsor or PM (covers the case where the user just
+  ///      added themselves as PM but the users collection hasn't
+  ///      refreshed yet).
+  ///   4. Fallback: highest-role user on the site — first admin,
+  ///      then first active user. This is the "suggest a sponsor
+  ///      based on the highest role-based authority" behaviour.
   static ResolvedApprover resolveApprover({
     required ProjectDataModel data,
     required List<UserModel> allUsers,
@@ -104,9 +120,19 @@ class CharterApprovalService {
     final managerName = data.charterProjectManagerName.trim();
     final sponsorEmail = data.charterEmail.trim();
 
-    // 1. Try to match the named sponsor against registered users.
+    // Currently signed-in user — used to recognise the case where the
+    // user just added themselves as PM/sponsor but the users
+    // collection hasn't refreshed yet.
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUserName =
+        (currentUser?.displayName ?? '').trim();
+    final currentUserEmail = (currentUser?.email ?? '').trim();
+
+    // 1. Try to match the named sponsor against registered users,
+    //    including the currently signed-in user.
     if (sponsorName.isNotEmpty) {
-      final match = _findUserByName(allUsers, sponsorName);
+      final match = _findUserByName(allUsers, sponsorName) ??
+          _matchCurrentUser(sponsorName, currentUserName, currentUserEmail);
       if (match != null) {
         return ResolvedApprover(
           name: match.displayName.isNotEmpty ? match.displayName : match.email,
@@ -132,9 +158,11 @@ class CharterApprovalService {
       }
     }
 
-    // 2. Try to match the named project manager.
+    // 2. Try to match the named project manager, including the
+    //    currently signed-in user.
     if (managerName.isNotEmpty) {
-      final match = _findUserByName(allUsers, managerName);
+      final match = _findUserByName(allUsers, managerName) ??
+          _matchCurrentUser(managerName, currentUserName, currentUserEmail);
       if (match != null) {
         return ResolvedApprover(
           name: match.displayName.isNotEmpty ? match.displayName : match.email,
@@ -148,7 +176,8 @@ class CharterApprovalService {
     }
 
     // 3. Fallback: highest-role user on the site.
-    // Prefer admins, then any active user.
+    // Prefer admins, then any active user. This is the "suggest a
+    // sponsor based on the highest role-based authority" behaviour.
     final admins = allUsers.where((u) => u.isAdmin && u.isActive).toList();
     if (admins.isNotEmpty) {
       final admin = admins.first;
@@ -175,8 +204,121 @@ class CharterApprovalService {
       );
     }
 
-    // 4. No users at all — return empty.
+    // 4. Last resort: if the currently signed-in user is available,
+    //    use them as the sponsor fallback. This covers the case where
+    //    the users collection is empty or unreachable but the user is
+    //    clearly signed in.
+    if (currentUserName.isNotEmpty || currentUserEmail.isNotEmpty) {
+      return ResolvedApprover(
+        name: currentUserName.isNotEmpty ? currentUserName : currentUserEmail,
+        email: currentUserEmail,
+        role: 'Project Owner (signed-in user)',
+        isRegisteredUser: true,
+        isFallback: true,
+        uid: currentUser?.uid,
+      );
+    }
+
+    // 5. No users at all — return empty.
     return ResolvedApprover.empty;
+  }
+
+  /// Match the named sponsor/PM against the currently signed-in user.
+  /// Returns a synthetic [UserModel] if the name or email matches, so
+  /// the caller can treat it as a registered user. This covers the
+  /// case where the user just added themselves as PM but the users
+  /// collection hasn't refreshed yet (the bug where the bottom bar
+  /// shows "Pending Assignment (Project Owner)" right after the user
+  /// adds themselves and approves the charter).
+  static UserModel? _matchCurrentUser(
+      String name, String currentUserName, String currentUserEmail) {
+    final needle = name.toLowerCase().trim();
+    if (needle.isEmpty) return null;
+    if (currentUserName.toLowerCase().trim() == needle ||
+        currentUserEmail.toLowerCase().trim() == needle ||
+        currentUserEmail.toLowerCase().split('@').first == needle) {
+      return UserModel(
+        uid: FirebaseAuth.instance.currentUser?.uid ?? '',
+        email: currentUserEmail,
+        displayName: currentUserName,
+        isActive: true,
+        isAdmin: false,
+        createdAt: DateTime.now(),
+      );
+    }
+    return null;
+  }
+
+  /// Suggest a sponsor based on the highest role-based authority
+  /// currently on the site. Returns the resolved approver (admin
+  /// preferred, then active user, then signed-in user).
+  ///
+  /// Use this when the user hasn't named a sponsor yet but needs one
+  /// to approve the charter. The caller can also call
+  /// [inviteExternalSponsor] to invite a sponsor who isn't already a
+  /// site user.
+  static ResolvedApprover suggestSponsor({
+    required List<UserModel> allUsers,
+  }) {
+    final admins = allUsers.where((u) => u.isAdmin && u.isActive).toList();
+    if (admins.isNotEmpty) {
+      final admin = admins.first;
+      return ResolvedApprover(
+        name: admin.displayName.isNotEmpty ? admin.displayName : admin.email,
+        email: admin.email,
+        role: 'Site Administrator (suggested sponsor)',
+        isRegisteredUser: true,
+        isFallback: true,
+        uid: admin.uid,
+      );
+    }
+    final activeUsers = allUsers.where((u) => u.isActive).toList();
+    if (activeUsers.isNotEmpty) {
+      final user = activeUsers.first;
+      return ResolvedApprover(
+        name: user.displayName.isNotEmpty ? user.displayName : user.email,
+        email: user.email,
+        role: 'Active User (suggested sponsor)',
+        isRegisteredUser: true,
+        isFallback: true,
+        uid: user.uid,
+      );
+    }
+    // Signed-in user fallback.
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final name = (currentUser?.displayName ?? '').trim();
+    final email = (currentUser?.email ?? '').trim();
+    if (name.isNotEmpty || email.isNotEmpty) {
+      return ResolvedApprover(
+        name: name.isNotEmpty ? name : email,
+        email: email,
+        role: 'Project Owner (signed-in user)',
+        isRegisteredUser: true,
+        isFallback: true,
+        uid: currentUser?.uid,
+      );
+    }
+    return ResolvedApprover.empty;
+  }
+
+  /// Invite an external sponsor to join the project. Sends an
+  /// invitation email via [TeamInvitationService] so the sponsor can
+  /// sign in and approve the charter.
+  ///
+  /// Returns the result message from the team invitation service.
+  /// Throws if the email fails to send.
+  static Future<String> inviteExternalSponsor({
+    required String email,
+    String? sponsorName,
+    String? projectName,
+    String? inviteLink,
+  }) async {
+    return await TeamInvitationService.sendInvitation(
+      email: email,
+      inviterName: sponsorName,
+      projectName: projectName ?? 'NDU Project',
+      inviteLink: inviteLink,
+    );
   }
 
   /// Try to find a registered user by display name (case-insensitive,

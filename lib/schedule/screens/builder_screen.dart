@@ -43,6 +43,7 @@ import 'package:ndu_project/models/project_data_model.dart'
     hide ScheduleActivity;
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
 
 class BuilderScreen extends StatefulWidget {
   const BuilderScreen({super.key});
@@ -424,128 +425,169 @@ class _BuilderScreenState extends State<BuilderScreen> {
                 0, (s, l) => s + _effectiveScheduleBuilderLineTotal(l))
             : 0.0;
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.folder_open,
-                                color: LightModeColors.accent, size: 20),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(schedule.projectName,
-                                  style: const TextStyle(
-                                      color: Color(0xFF1A1D1F),
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold),
-                                  overflow: TextOverflow.ellipsis),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${schedule.basis.deliveryModel} · ${root.children.length} Level 1 activities · Status: ${schedule.status.label}',
-                          style: const TextStyle(
-                              color: Color(0xFF6B7280), fontSize: 13),
-                        ),
-                      ],
-                    ),
+              // ═══════════════════════════════════════════════════════════════
+              // TREASURY HERO BAND — world-class command surface
+              // ═══════════════════════════════════════════════════════════════
+              TreasuryHeroBand(
+                eyebrow: 'SCHEDULE · BUILDER',
+                title: schedule.projectName,
+                subtitle:
+                    '${schedule.basis.deliveryModel} delivery · ${root.children.length} Level 1 activities · ${schedule.status.label}',
+                statusLabel: schedule.isLocked
+                    ? 'LOCKED'
+                    : (root.children.isEmpty ? 'EMPTY' : 'DRAFT'),
+                statusLive: !schedule.isLocked && root.children.isNotEmpty,
+                contextChips: [
+                  TreasuryHeroChip(
+                    icon: Icons.account_tree_outlined,
+                    label: 'WBS Nodes',
+                    value: wbsCounts != null
+                        ? '${wbsCounts.level1 + wbsCounts.level2 + 1}'
+                        : '—',
                   ),
-                  const SizedBox(width: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _ActionChip(
-                        icon: Icons.add,
-                        label: 'Add Activity',
-                        primary: true,
-                        enabled: !schedule.isLocked,
-                        onTap: () =>
-                            _showAddDialog(context, provider, root.id, 1),
-                      ),
-                      _ActionChip(
-                        icon: Icons.date_range,
-                        label: 'Setup Timeline',
-                        enabled: !schedule.isLocked,
-                        onTap: () =>
-                            _showTimelineSetupDialog(context, provider, root),
-                      ),
-                      _ActionChip(
-                        icon: Icons.upload_outlined,
-                        label: 'Import by Methodology',
-                        enabled: !schedule.isLocked,
-                        onTap: () => _showImportInfo(context),
-                      ),
-                      _ActionChip(
-                        icon: Icons.work_outline,
-                        label: 'From Work Packages',
-                        enabled: !schedule.isLocked,
-                        onTap: () => _createActivitiesFromPackages(),
-                      ),
-                      if (schedule.basis.deliveryModel == 'AGILE' ||
-                          schedule.basis.deliveryModel == 'HYBRID')
-                        _ActionChip(
-                          icon: Icons.auto_stories,
-                          label: 'Import Agile Stories',
-                          enabled: !schedule.isLocked,
-                          onTap: () => _importStories(),
-                        ),
-                      _ActionChip(
-                        icon: Icons.calculate_outlined,
-                        label: 'Run CPM',
-                        enabled: !schedule.isLocked,
-                        onTap: () => _runCpm(),
-                      ),
-                      _ActionChip(
-                        icon: Icons.download_outlined,
-                        label: 'Export',
-                        onTap: () => _exportSchedule(context, schedule),
-                      ),
-                    ],
+                  TreasuryHeroChip(
+                    icon: Icons.attach_money,
+                    label: 'Cost Estimate',
+                    value: estimate != null
+                        ? formatCurrency(costTotal, currency)
+                        : '—',
+                  ),
+                  TreasuryHeroChip(
+                    icon: Icons.calendar_month_outlined,
+                    label: 'Timeline',
+                    value: root.startDate != null && root.endDate != null
+                        ? '${DateFormat('MMM d').format(root.startDate!)} — ${DateFormat('MMM d, y').format(root.endDate!)}'
+                        : 'Not set',
+                  ),
+                  TreasuryHeroChip(
+                    icon: Icons.flag_outlined,
+                    label: 'Activities',
+                    value: '${root.children.length}',
                   ),
                 ],
+                actions: [
+                  TreasuryHeroAction(
+                    icon: Icons.add_rounded,
+                    label: 'Add Activity',
+                    primary: true,
+                    onTap: schedule.isLocked
+                        ? () {}
+                        : () => _showAddDialog(context, provider, root.id, 1),
+                  ),
+                  if (!schedule.isLocked)
+                    TreasuryHeroAction(
+                      icon: Icons.date_range_rounded,
+                      label: 'Setup Timeline',
+                      primary: false,
+                      onTap: () =>
+                          _showTimelineSetupDialog(context, provider, root),
+                    ),
+                ],
               ),
-              const SizedBox(height: 16),
-              // Help / level-convention card
+              const SizedBox(height: 14),
+              // —— Secondary action row (overflow actions) ——
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE4E7EC)),
+                  color: TreasuryTokens.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: TreasuryTokens.hairline),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-                child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Icon(Icons.lightbulb_outline,
-                        size: 16, color: LightModeColors.accent),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Schedule levels: L0=Project · L1=Major Deliverable · L2=Epic/Sub-Deliverable · L3=EWP/Procurement/CWP · L4=Activity/Story · L5–8=Task. Waterfall/Hybrid schedules should be built from integrated work packages; Agile schedules should be built from story-level AgileTask items.',
-                        style: TextStyle(
-                            color: Color(0xFF495057),
-                            fontSize: 12,
-                            height: 1.5),
+                    _TreasuryActionPill(
+                      icon: Icons.upload_outlined,
+                      label: 'Import by Methodology',
+                      enabled: !schedule.isLocked,
+                      onTap: () => _showImportInfo(context),
+                    ),
+                    _TreasuryActionPill(
+                      icon: Icons.work_outline,
+                      label: 'From Work Packages',
+                      enabled: !schedule.isLocked,
+                      onTap: () => _createActivitiesFromPackages(),
+                    ),
+                    if (schedule.basis.deliveryModel == 'AGILE' ||
+                        schedule.basis.deliveryModel == 'HYBRID')
+                      _TreasuryActionPill(
+                        icon: Icons.auto_stories_outlined,
+                        label: 'Import Agile Stories',
+                        enabled: !schedule.isLocked,
+                        onTap: () => _importStories(),
                       ),
+                    _TreasuryActionPill(
+                      icon: Icons.calculate_outlined,
+                      label: 'Run CPM',
+                      enabled: !schedule.isLocked,
+                      onTap: () => _runCpm(),
+                    ),
+                    _TreasuryActionPill(
+                      icon: Icons.download_outlined,
+                      label: 'Export',
+                      enabled: true,
+                      onTap: () => _exportSchedule(context, schedule),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-              // "Drawing from" context banner — shows the upstream WBS and
-              // Cost Estimate data this builder is consuming.
+              const SizedBox(height: 18),
+              // ═══════════════════════════════════════════════════════════════
+              // TREASURY KPI STRIP — at-a-glance schedule vitals
+              // ═══════════════════════════════════════════════════════════════
+              TreasuryKpiStrip(
+                kpis: _buildScheduleKpis(
+                    root, schedule, costTotal, currency, estimate),
+              ),
+              const SizedBox(height: 20),
+              // ═══════════════════════════════════════════════════════════════
+              // SCHEDULE LEVELS CONVENTION CARD
+              // ═══════════════════════════════════════════════════════════════
+              TreasurySectionCard(
+                title: 'Schedule Level Convention',
+                subtitle: 'How activity levels map to your delivery model',
+                trailing: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: TreasuryTokens.brandSoft,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: TreasuryTokens.brand.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.layers_outlined,
+                          size: 12, color: TreasuryTokens.brandDeep),
+                      const SizedBox(width: 5),
+                      Text('L0 — L8',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: TreasuryTokens.brandDeep,
+                              letterSpacing: 0.6)),
+                    ],
+                  ),
+                ),
+                child: const _TreasuryLevelLegend(),
+              ),
+              const SizedBox(height: 14),
+              // ═══════════════════════════════════════════════════════════════
+              // DRAWING FROM CONTEXT BANNER
+              // ═══════════════════════════════════════════════════════════════
               _DrawingFromBanner(
                 wbs: wbs,
                 wbsCounts: wbsCounts,
@@ -553,22 +595,60 @@ class _BuilderScreenState extends State<BuilderScreen> {
                 currency: currency,
                 hasEstimate: estimate != null,
               ),
-              const SizedBox(height: 24),
-              // Timeline Visualization
-              const SizedBox(height: 8),
+              const SizedBox(height: 22),
+              // ═══════════════════════════════════════════════════════════════
+              // PROJECT TIMELINE (Gantt)
+              // ═══════════════════════════════════════════════════════════════
               _TimelineVisualization(
                 activities: [root, ...root.children],
                 provider: provider,
                 isLocked: schedule.isLocked,
               ),
-              const SizedBox(height: 24),
-              // Live activity tree
-              const Text('Activity Tree',
-                  style: TextStyle(
-                      color: Color(0xFF1A1D1F),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 22),
+              // ═══════════════════════════════════════════════════════════════
+              // ACTIVITY TREE
+              // ═══════════════════════════════════════════════════════════════
+              Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: TreasuryTokens.brandSoft,
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(
+                          color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+                    ),
+                    child: Icon(Icons.account_tree_rounded,
+                        size: 16, color: TreasuryTokens.brandDeep),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text('Activity Tree',
+                      style: TextStyle(
+                          color: TreasuryTokens.ink,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.1)),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: TreasuryTokens.surfaceAlt,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: TreasuryTokens.hairline),
+                    ),
+                    child: Text(
+                        '${root.children.length} L1 · ${_countTotalActivities(root)} total',
+                        style: const TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: TreasuryTokens.muted,
+                            letterSpacing: 0.3)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
               _ActivityNode(
                   activity: root,
                   isRoot: true,
@@ -578,32 +658,41 @@ class _BuilderScreenState extends State<BuilderScreen> {
                   activity: child,
                   provider: provider,
                   isLocked: schedule.isLocked)),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               // Sample activity table (preview of what Gantt/List will show)
               _SampleActivityTable(schedule: schedule),
-              const SizedBox(height: 24),
-              // Footer note
+              const SizedBox(height: 14),
+              // Footer note — Treasury info card
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: LightModeColors.accent.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(8),
+                  color: TreasuryTokens.infoSoft,
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                      color: LightModeColors.accent.withValues(alpha: 0.3)),
+                      color: TreasuryTokens.info.withValues(alpha: 0.22)),
                 ),
-                child: const Row(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline,
-                        size: 16, color: LightModeColors.accent),
-                    SizedBox(width: 8),
-                    Expanded(
+                    Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        color: TreasuryTokens.info.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: Icon(Icons.tips_and_updates_outlined,
+                          size: 15, color: TreasuryTokens.info),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
                       child: Text(
                         'The table above shows a sample schedule for reference. Add your own activities via the Add Activity button to populate the Gantt and List View tabs. Each row maps to an EWP, CWP, or activity in your delivery model.',
                         style: TextStyle(
-                            color: Color(0xFF495057),
+                            color: TreasuryTokens.inkSoft,
                             fontSize: 12,
-                            height: 1.5),
+                            height: 1.55,
+                            fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
@@ -614,6 +703,92 @@ class _BuilderScreenState extends State<BuilderScreen> {
         );
       },
     );
+  }
+
+  /// Build the 4-KPI strip for the schedule builder.
+  List<TreasuryKpiSpec> _buildScheduleKpis(
+    ScheduleActivity root,
+    Schedule schedule,
+    double costTotal,
+    String currency,
+    CostEstimate? estimate,
+  ) {
+    final totalActivities = _countTotalActivities(root);
+    final l1Count = root.children.length;
+    final hasTimeline = root.startDate != null && root.endDate != null;
+    final timelineSpan =
+        hasTimeline ? root.endDate!.difference(root.startDate!).inDays : 0;
+    // Domain breakdown
+    final domainCounts = <int, int>{};
+    void walk(ScheduleActivity a) {
+      domainCounts[a.domain.color] =
+          (domainCounts[a.domain.color] ?? 0) + 1;
+      for (final c in a.children) {
+        walk(c);
+      }
+    }
+    walk(root);
+    final topDomainColor = domainCounts.entries.isNotEmpty
+        ? domainCounts.entries
+            .reduce((a, b) => a.value >= b.value ? a : b)
+            .key
+        : ScheduleDomain.engineering.color;
+    return [
+      TreasuryKpiSpec(
+        label: 'Total Activities',
+        value: treasuryFmt(totalActivities.toDouble()),
+        sub: '$l1Count Level 1 · ${totalActivities - l1Count} nested',
+        icon: Icons.account_tree_rounded,
+        tint: TreasuryTokens.brandDeep,
+        tintSoft: TreasuryTokens.brandSoft,
+      ),
+      TreasuryKpiSpec(
+        label: 'Timeline Span',
+        value: hasTimeline ? '$timelineSpan d' : '—',
+        sub: hasTimeline
+            ? '${DateFormat('MMM d').format(root.startDate!)} → ${DateFormat('MMM d').format(root.endDate!)}'
+            : 'Setup timeline to begin',
+        icon: Icons.calendar_month_rounded,
+        tint: const Color(0xFF6366F1),
+        tintSoft: TreasuryTokens.infoSoft,
+      ),
+      TreasuryKpiSpec(
+        label: 'Cost Budget',
+        value:
+            estimate != null ? formatCurrency(costTotal, currency) : '—',
+        sub: estimate != null ? 'From Cost Estimate' : 'No estimate linked',
+        icon: Icons.attach_money_rounded,
+        tint: TreasuryTokens.success,
+        tintSoft: TreasuryTokens.successSoft,
+      ),
+      TreasuryKpiSpec(
+        label: 'Top Domain',
+        value: _domainLabelFromColor(topDomainColor),
+        sub: '${domainCounts.length} domains active',
+        icon: Icons.hub_outlined,
+        tint: const Color(0xFFEC4899),
+        tintSoft: const Color(0xFFFCE7F3),
+      ),
+    ];
+  }
+
+  /// Count total activities in the tree (root + all descendants).
+  int _countTotalActivities(ScheduleActivity root) {
+    int count = 1;
+    for (final c in root.children) {
+      count += _countTotalActivities(c);
+    }
+    return count;
+  }
+
+  /// Map a domain color back to a short label for the KPI tile.
+  String _domainLabelFromColor(int color) {
+    for (final d in ScheduleDomain.values) {
+      if (d.color == color) {
+        return d.name[0].toUpperCase() + d.name.substring(1);
+      }
+    }
+    return 'Mixed';
   }
 
   /// Mirror of [ComputeUtils] effective line total so the schedule builder
@@ -1039,6 +1214,142 @@ class _ActionChip extends StatelessWidget {
   }
 }
 
+/// Treasury-styled secondary action pill — used for the overflow action row
+/// (Import by Methodology, From Work Packages, Run CPM, Export, etc.).
+class _TreasuryActionPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _TreasuryActionPill({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.enabled = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final disabled = !enabled;
+    return Opacity(
+      opacity: disabled ? 0.5 : 1.0,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: disabled ? null : onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: disabled
+                  ? TreasuryTokens.surfaceAlt
+                  : TreasuryTokens.surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: disabled
+                    ? TreasuryTokens.hairlineSoft
+                    : TreasuryTokens.hairline,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon,
+                    size: 14,
+                    color: disabled
+                        ? TreasuryTokens.mutedSoft
+                        : TreasuryTokens.inkSoft),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: disabled
+                        ? TreasuryTokens.mutedSoft
+                        : TreasuryTokens.ink,
+                    letterSpacing: 0.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Treasury-styled schedule level legend — L0 through L8 with color dots.
+class _TreasuryLevelLegend extends StatelessWidget {
+  const _TreasuryLevelLegend();
+
+  static const _levels = [
+    ('L0', 'Project', Icons.flag_outlined),
+    ('L1', 'Major Deliverable', Icons.view_module_outlined),
+    ('L2', 'Epic / Sub-Deliverable', Icons.category_outlined),
+    ('L3', 'EWP / Procurement / CWP', Icons.inventory_2_outlined),
+    ('L4', 'Activity / Story', Icons.checklist_outlined),
+    ('L5—8', 'Task', Icons.task_outlined),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Schedule levels: L0=Project · L1=Major Deliverable · L2=Epic/Sub-Deliverable · L3=EWP/Procurement/CWP · L4=Activity/Story · L5–8=Task. Waterfall/Hybrid schedules should be built from integrated work packages; Agile schedules should be built from story-level AgileTask items.',
+          style: TextStyle(
+            color: TreasuryTokens.inkSoft,
+            fontSize: 12,
+            height: 1.55,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 10,
+          runSpacing: 8,
+          children: _levels.map((lvl) {
+            return Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: TreasuryTokens.surfaceAlt,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: TreasuryTokens.hairline),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(lvl.$3, size: 13, color: TreasuryTokens.brandDeep),
+                  const SizedBox(width: 6),
+                  Text(lvl.$1,
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: TreasuryTokens.ink,
+                          fontFamily: appFontFamily,
+                          letterSpacing: 0.3)),
+                  const SizedBox(width: 6),
+                  Text(lvl.$2,
+                      style: const TextStyle(
+                          fontSize: 11,
+                          color: TreasuryTokens.muted,
+                          fontWeight: FontWeight.w500)),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+}
+
 /// A single activity node in the live tree.
 class _ActivityNode extends StatelessWidget {
   final ScheduleActivity activity;
@@ -1097,17 +1408,20 @@ class _ActivityNode extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        border: Border.all(color: const Color(0xFFE4E7EC)),
-        borderRadius: BorderRadius.circular(12),
+        color: TreasuryTokens.surfaceAlt,
+        border: Border.all(color: TreasuryTokens.hairline),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: const Color(0xFF6B7280)),
+          Icon(icon, size: 12, color: TreasuryTokens.muted),
           const SizedBox(width: 4),
           Text(label,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+              style: const TextStyle(
+                  fontSize: 10.5,
+                  color: TreasuryTokens.inkSoft,
+                  fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -1115,67 +1429,111 @@ class _ActivityNode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final domainColor = Color(activity.domain.color);
     return GestureDetector(
       onTap: () => _showActivityEditDialog(context),
       child: Container(
-        margin: EdgeInsets.only(bottom: 6, left: isRoot ? 0 : 24),
-        padding: const EdgeInsets.all(10),
+        margin: EdgeInsets.only(bottom: 8, left: isRoot ? 0 : 24),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          color: TreasuryTokens.surface,
+          borderRadius: BorderRadius.circular(12),
           border: Border(
-            left: BorderSide(color: Color(activity.domain.color), width: 3),
-            top: const BorderSide(color: Color(0xFFE4E7EC), width: 1),
-            right: const BorderSide(color: Color(0xFFE4E7EC), width: 1),
-            bottom: const BorderSide(color: Color(0xFFE4E7EC), width: 1),
+            left: BorderSide(color: domainColor, width: 3),
+            top: const BorderSide(color: TreasuryTokens.hairline, width: 1),
+            right: const BorderSide(color: TreasuryTokens.hairline, width: 1),
+            bottom: const BorderSide(color: TreasuryTokens.hairline, width: 1),
           ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+            BoxShadow(
+              color: domainColor.withValues(alpha: 0.06),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+              spreadRadius: -4,
             ),
           ],
         ),
         child: Row(
           children: [
+            // Domain icon tile
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              width: 30,
+              height: 30,
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: const Color(0xFFE4E7EC)),
+                color: domainColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: domainColor.withValues(alpha: 0.28)),
               ),
-              child: Text(activity.code,
-                  style: const TextStyle(
-                      color: Color(0xFF495057),
-                      fontSize: 11,
-                      fontFamily: appFontFamily,
-                      fontWeight: FontWeight.bold)),
+              child: Icon(
+                  isRoot
+                      ? Icons.flag_rounded
+                      : (activity.type == ActivityType.summary
+                          ? Icons.folder_outlined
+                          : Icons.task_alt_rounded),
+                  size: 15,
+                  color: domainColor),
             ),
-            const SizedBox(width: 8),
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                  color: Color(activity.domain.color), shape: BoxShape.circle),
-            ),
+            const SizedBox(width: 10),
+            // Code chip
+            if (activity.code.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: TreasuryTokens.surfaceAlt,
+                  borderRadius: BorderRadius.circular(5),
+                  border: Border.all(color: TreasuryTokens.hairline),
+                ),
+                child: Text(activity.code,
+                    style: const TextStyle(
+                        color: TreasuryTokens.inkSoft,
+                        fontSize: 10.5,
+                        fontFamily: appFontFamily,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.3)),
+              )
+            else
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                    color: domainColor, shape: BoxShape.circle),
+              ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(activity.name,
                   style: const TextStyle(
-                      color: Color(0xFF1A1D1F),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600),
+                      color: TreasuryTokens.ink,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700),
                   overflow: TextOverflow.ellipsis),
             ),
             if (formatDuration(activity.duration, activity.durationUnit) != '—')
               Padding(
                 padding: const EdgeInsets.only(left: 8),
-                child: Text(
-                    formatDuration(activity.duration, activity.durationUnit),
-                    style: const TextStyle(
-                        color: Color(0xFF6B7280), fontSize: 11)),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: TreasuryTokens.infoSoft,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: TreasuryTokens.info.withValues(alpha: 0.22)),
+                  ),
+                  child: Text(
+                      formatDuration(activity.duration, activity.durationUnit),
+                      style: const TextStyle(
+                          color: TreasuryTokens.info,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          fontFeatures: [FontFeature.tabularFigures()])),
+                ),
               ),
             // Dependency type chips
             if (activity.dependencies.isNotEmpty)
@@ -1183,18 +1541,21 @@ class _ActivityNode extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 4),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 1),
+                          horizontal: 5, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDF4),
-                        borderRadius: BorderRadius.circular(3),
-                        border: Border.all(color: const Color(0xFFBBF7D0)),
+                        color: TreasuryTokens.successSoft,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                            color: TreasuryTokens.success
+                                .withValues(alpha: 0.35)),
                       ),
                       child: Text(
                         dep.type.short,
                         style: const TextStyle(
-                            color: Color(0xFF166534),
+                            color: Color(0xFF047857),
                             fontSize: 9,
-                            fontWeight: FontWeight.w600),
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3),
                       ),
                     ),
                   )),
@@ -1204,18 +1565,21 @@ class _ActivityNode extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 8),
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFECFDF5),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: const Color(0xFFA7F3D0)),
+                    color: TreasuryTokens.successSoft,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: TreasuryTokens.success
+                            .withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     'Start: ${activity.startDate!.month}/${activity.startDate!.day}/${activity.startDate!.year.toString().substring(2)}',
                     style: const TextStyle(
-                        color: Color(0xFF065F46),
+                        color: Color(0xFF047857),
                         fontSize: 10,
-                        fontWeight: FontWeight.w600),
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: [FontFeature.tabularFigures()]),
                   ),
                 ),
               ),
@@ -1224,18 +1588,21 @@ class _ActivityNode extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 4),
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: const Color(0xFFFDE68A)),
+                    color: TreasuryTokens.warningSoft,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                        color: TreasuryTokens.warning
+                            .withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     'End: ${activity.endDate!.month}/${activity.endDate!.day}/${activity.endDate!.year.toString().substring(2)}',
                     style: const TextStyle(
-                        color: Color(0xFF92400E),
+                        color: Color(0xFFB45309),
                         fontSize: 10,
-                        fontWeight: FontWeight.w600),
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: [FontFeature.tabularFigures()]),
                   ),
                 ),
               ),
@@ -1243,7 +1610,7 @@ class _ActivityNode extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 8),
                 child: SizedBox(
-                  width: 240,
+                  width: 260,
                   child: Wrap(
                     spacing: 6,
                     runSpacing: 6,
@@ -1257,8 +1624,10 @@ class _ActivityNode extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 8),
                 child: Text(
                   'Epic: ${activity.agileEpicTitle!}${activity.agileFeatureTitle != null && activity.agileFeatureTitle!.isNotEmpty ? ' · Feature: ${activity.agileFeatureTitle!}' : ''}',
-                  style:
-                      const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                  style: const TextStyle(
+                      fontSize: 11,
+                      color: TreasuryTokens.muted,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             if (!isRoot && !isLocked) ...[
@@ -2359,40 +2728,63 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE4E7EC)),
+        color: TreasuryTokens.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: TreasuryTokens.hairline),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: TreasuryTokens.brand.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+            spreadRadius: -6,
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Header ──
+          // ── Treasury Header ──
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(6),
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
-                    color: LightModeColors.accent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
+                    color: TreasuryTokens.brandSoft,
+                    borderRadius: BorderRadius.circular(9),
+                    border: Border.all(
+                        color: TreasuryTokens.brand.withValues(alpha: 0.3)),
                   ),
-                  child: const Icon(Icons.timeline,
-                      size: 16, color: LightModeColors.accent),
+                  child: Icon(Icons.timeline_rounded,
+                      size: 17, color: TreasuryTokens.brandDeep),
                 ),
                 const SizedBox(width: 10),
-                const Text('Project Timeline',
-                    style: TextStyle(
-                        color: Color(0xFF1A1D1F),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700)),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Project Timeline',
+                        style: TextStyle(
+                            color: TreasuryTokens.ink,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.1)),
+                    const SizedBox(height: 2),
+                    Text(
+                        '$totalDays-day span · ${months.length} month markers',
+                        style: const TextStyle(
+                            color: TreasuryTokens.muted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500)),
+                  ],
+                ),
                 const Spacer(),
                 if (!widget.isLocked)
                   _TimelineKazAiButton(
@@ -2400,24 +2792,33 @@ class _TimelineVisualizationState extends State<_TimelineVisualization> {
                 const SizedBox(width: 8),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE4E7EC)),
+                    color: TreasuryTokens.surfaceAlt,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: TreasuryTokens.hairline),
                   ),
-                  child: Text(
-                    '${DateFormat('MMM d').format(rangeStart)} — ${DateFormat('MMM d, y').format(rangeEnd)}',
-                    style: const TextStyle(
-                        color: Color(0xFF6B7280),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.date_range_rounded,
+                          size: 12, color: TreasuryTokens.muted),
+                      const SizedBox(width: 5),
+                      Text(
+                        '${DateFormat('MMM d').format(rangeStart)} — ${DateFormat('MMM d, y').format(rangeEnd)}',
+                        style: const TextStyle(
+                            color: TreasuryTokens.inkSoft,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            fontFeatures: [FontFeature.tabularFigures()]),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(color: Color(0xFFE4E7EC), height: 1),
+          const Divider(color: TreasuryTokens.hairline, height: 1),
           // ── Month header ──
           SizedBox(
             height: 28,
@@ -3103,24 +3504,35 @@ class _DrawingFromBanner extends StatelessWidget {
     if (parts.isEmpty) {
       // Nothing to draw from yet — show a gentle hint instead.
       return Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: LightModeColors.accent.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(8),
-          border:
-              Border.all(color: LightModeColors.accent.withValues(alpha: 0.25)),
+          color: TreasuryTokens.warningSoft,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: TreasuryTokens.warning.withValues(alpha: 0.25)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.info_outline,
-                size: 16, color: LightModeColors.accent.withValues(alpha: 0.9)),
-            const SizedBox(width: 8),
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: TreasuryTokens.warning.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.info_outline,
+                  size: 16, color: TreasuryTokens.warning),
+            ),
+            const SizedBox(width: 10),
             const Expanded(
               child: Text(
                 'No WBS or Cost Estimate data found yet. Set up the WBS and Cost Estimate modules first to enrich the schedule context.',
                 style: TextStyle(
-                    color: Color(0xFF495057), fontSize: 12, height: 1.5),
+                    color: TreasuryTokens.inkSoft,
+                    fontSize: 12,
+                    height: 1.55,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -3128,42 +3540,148 @@ class _DrawingFromBanner extends StatelessWidget {
       );
     }
 
+    // Build context chips for the data sources
+    final chips = <Widget>[];
+    if (hasWbs) {
+      chips.add(_DrawingFromChip(
+        icon: Icons.account_tree_outlined,
+        label: 'WBS',
+        value: '$l1Count $l1Label · $l2Count $l2Label',
+        tint: TreasuryTokens.info,
+        tintSoft: TreasuryTokens.infoSoft,
+      ));
+    }
+    if (hasEstimate) {
+      chips.add(_DrawingFromChip(
+        icon: Icons.attach_money_rounded,
+        label: 'Cost Estimate',
+        value: formatCurrency(costTotal, currency),
+        tint: TreasuryTokens.success,
+        tintSoft: TreasuryTokens.successSoft,
+      ));
+    }
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: LightModeColors.accent.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(8),
-        border:
-            Border.all(color: LightModeColors.accent.withValues(alpha: 0.25)),
+        color: TreasuryTokens.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: TreasuryTokens.hairline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.input,
-              size: 16, color: LightModeColors.accent.withValues(alpha: 0.9)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: const TextStyle(
-                    color: Color(0xFF495057),
-                    fontSize: 12,
-                    height: 1.5,
-                    fontFamily: appFontFamily),
-                children: [
-                  const TextSpan(
-                    text: 'Drawing from: ',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  TextSpan(text: parts.join(' and ')),
-                  const TextSpan(
-                    text:
-                        ' — activities you add here should map to WBS nodes and consume the cost budget above.',
-                    style: TextStyle(color: Color(0xFF6B7280)),
-                  ),
-                ],
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: TreasuryTokens.brandSoft,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: TreasuryTokens.brand.withValues(alpha: 0.3)),
+                ),
+                child: Icon(Icons.input_rounded,
+                    size: 15, color: TreasuryTokens.brandDeep),
               ),
-            ),
+              const SizedBox(width: 10),
+              const Text('Drawing from',
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: TreasuryTokens.muted,
+                      letterSpacing: 0.8)),
+              const SizedBox(width: 8),
+              const Text('—',
+                  style: TextStyle(
+                      fontSize: 11, color: TreasuryTokens.mutedSoft)),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Activities you add here should map to WBS nodes and consume the cost budget above.',
+                  style: TextStyle(
+                      color: TreasuryTokens.muted,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: chips,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Treasury-styled context chip used inside the DrawingFromBanner.
+class _DrawingFromChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color tint;
+  final Color tintSoft;
+
+  const _DrawingFromChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.tint,
+    required this.tintSoft,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: tintSoft,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: tint.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: tint),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  color: tint.withValues(alpha: 0.85),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: TreasuryTokens.ink,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -23,6 +23,7 @@ import 'package:ndu_project/screens/it_considerations_screen.dart';
 import 'package:ndu_project/screens/infrastructure_considerations_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/screens/preferred_solution_analysis_screen.dart';
+import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
@@ -191,7 +192,11 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  );
  });
  // Only auto-generate if we have actual solutions (not empty placeholder)
- if (widget.solutions.isNotEmpty) {
+ // AND the Business Case is not locked (i.e. no preferred solution
+ // selected yet). When locked, this screen is view-only.
+ if (widget.solutions.isNotEmpty &&
+     !BusinessCaseLockHelper.isBusinessCaseLocked(
+         ProjectDataHelper.getData(context))) {
  _generateStakeholders();
  }
  });
@@ -765,6 +770,11 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ // Business Case lock banner — shown when a preferred
+ // solution has been selected. In that state, this
+ // screen is view-only (no AI generation, no edits).
+ BusinessCaseLockHelper.lockBanner(
+ ProjectDataHelper.getData(context)),
  // Page Header row with title + regenerate button
  Row(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -807,6 +817,8 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  },
  isLoading: _isGenerating,
  tooltip: 'Regenerate all stakeholders',
+ isLocked: BusinessCaseLockHelper.isBusinessCaseLocked(
+ ProjectDataHelper.getData(context)),
  ),
  ],
  ),
@@ -1880,6 +1892,14 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
 
  Future<void> _regenerateSingleStakeholderField(
  TextEditingController controller, int index, bool isInternal) async {
+ // Business Case lock — view-only when a preferred solution is selected.
+ if (BusinessCaseLockHelper.isBusinessCaseLocked(
+ ProjectDataHelper.getData(context))) {
+ if (mounted) {
+ BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+ }
+ return;
+ }
  final provider = ProjectDataHelper.getProvider(context);
  final messenger = ScaffoldMessenger.of(context);
  try {
@@ -1933,6 +1953,16 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  }
 
  Future<void> _generateStakeholders() async {
+ // Business Case lock — once a preferred solution has been selected,
+ // this screen is view-only. Block AI generation.
+ if (BusinessCaseLockHelper.isBusinessCaseLocked(
+ ProjectDataHelper.getData(context))) {
+ if (mounted) {
+ BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+ setState(() => _isGenerating = false);
+ }
+ return;
+ }
  if (_isGenerating) return;
  final messenger = ScaffoldMessenger.of(context);
  setState(() {

@@ -7,6 +7,8 @@ import 'package:ndu_project/widgets/ai_regenerate_undo_buttons.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
+import 'package:ndu_project/widgets/csv_table_import_button.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -183,6 +185,28 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  },
  ),
  const SizedBox(width: 8),
+ CsvTableImportButton(
+ tableTitle: 'Technology Inventory',
+ columns: [
+ CsvColumnSpec(key: 'name', label: 'Technology Name', required: true),
+ CsvColumnSpec(key: 'category', label: 'Category', required: true, allowedValues: ['Language', 'Framework', 'Database', 'Tool', 'Platform', 'Service']),
+ CsvColumnSpec(key: 'version', label: 'Version'),
+ CsvColumnSpec(key: 'vendor', label: 'Vendor'),
+ CsvColumnSpec(key: 'licenseType', label: 'License Type', allowedValues: ['Open Source', 'Commercial', 'Freeware', 'Subscription', 'Enterprise']),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Active', 'Deprecated', 'Evaluation', 'Planned', 'Retired']),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'notes', label: 'Notes'),
+ ],
+ onImport: (rows) async {
+ setState(() {
+ for (final row in rows) {
+ _items.add(Map<String, dynamic>.from(row));
+ }
+ });
+ await _save();
+ },
+ ),
+ const SizedBox(width: 8),
  ElevatedButton(onPressed: _openAddDialog, child: const Text('Add')),
  ])
  ]),
@@ -195,6 +219,29 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  onRegenerate: _seedFromAi,
  onUndo: () { _undoSeed(); },
  onRedo: () { _redoSeed(); },
+ ),
+ const SizedBox(width: 8),
+ CsvTableImportButton(
+ tableTitle: 'Technology Inventory',
+ columns: [
+ CsvColumnSpec(key: 'name', label: 'Technology Name', required: true),
+ CsvColumnSpec(key: 'category', label: 'Category', required: true, allowedValues: ['Language', 'Framework', 'Database', 'Tool', 'Platform', 'Service']),
+ CsvColumnSpec(key: 'version', label: 'Version'),
+ CsvColumnSpec(key: 'vendor', label: 'Vendor'),
+ CsvColumnSpec(key: 'licenseType', label: 'License Type', allowedValues: ['Open Source', 'Commercial', 'Freeware', 'Subscription', 'Enterprise']),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: ['Active', 'Deprecated', 'Evaluation', 'Planned', 'Retired']),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'notes', label: 'Notes'),
+ ],
+ onImport: (rows) async {
+ setState(() {
+ for (final row in rows) {
+ _items.add(Map<String, dynamic>.from(row));
+ }
+ });
+ await _save();
+ },
+ compact: true,
  ),
  const SizedBox(width: 8),
  ElevatedButton(onPressed: _openAddDialog, child: const Text('Add')),
@@ -224,10 +271,20 @@ class _TechnologyInventoryScreenState extends State<TechnologyInventoryScreen> {
  ],
  rows: _items.map((it) {
  return DataRow(cells: [
- DataCell(Center(child: Text(it['name'] ?? ''))),
+ DataCell(Center(child: Text(it['name'] ?? '', maxLines: null, softWrap: true, overflow: TextOverflow.visible))),
  DataCell(
- Center(child: Text(it['category'] ?? ''))),
- DataCell(Center(child: Text(it['notes'] ?? ''))),
+ Center(child: Text(it['category'] ?? '', maxLines: null, softWrap: true, overflow: TextOverflow.visible))),
+ DataCell(
+                                      SizedBox(
+                                        width: 200,
+                                        child: Text(
+                                          it['notes'] ?? '',
+                                          maxLines: null,
+                                          softWrap: true,
+                                          overflow: TextOverflow.visible,
+                                        ),
+                                      ),
+                                    ),
  ]);
  }).toList(),
  ),

@@ -234,6 +234,12 @@ jobs:
             --dart-define=OPENAI_PROXY_ENDPOINT=${OPENAI_PROXY_ENDPOINT} \
             --dart-define=ENVIRONMENT=production
 
+      - name: Stamp build version (cache-busting)
+        run: |
+          python scripts/stamp_build_version.py
+          STAMP=$(grep -oE "var NDU_BUILD = '[^']+'" build/web/index.html | head -1)
+          echo "Stamped NDU_BUILD = $STAMP"
+
       - name: Preserve production CNAME + .nojekyll + SPA routing config
         run: |
           cd build/web

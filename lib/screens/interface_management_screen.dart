@@ -86,7 +86,9 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final isMobile = AppBreakpoints.isMobile(context);
-    final horizontalPadding = isMobile ? 20.0 : 32.0;
+    // Reduced horizontal padding so cards/tables can extend closer to the
+    // viewport edges on wide screens. Mobile stays at 16 for thumb reach.
+    final horizontalPadding = isMobile ? 16.0 : 24.0;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -100,75 +102,117 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
                   activeItemLabel: 'Interface Management'),
             ),
             Expanded(
-              child: Stack(
+              child: Column(
                 children: [
-                  const MobileSidebarHamburger(
-                    sidebar: InitiationLikeSidebar(
-                      activeItemLabel: 'Interface Management',
-                    ),
+                  // ── Unified page header (matches other planning screens) ──
+                  // Adding this also resolves the "glitching" caused by the
+                  // page previously having no top-level header — the layout
+                  // now flows: Header → Scrollable content → KAZ bubble.
+                  PlanningPhaseHeader(
+                    title: 'Interface Management Plan',
+                    breadcrumbPhase: 'Planning Phase',
+                    breadcrumbTitle: 'Interface Management Plan',
+                    onBack: () => PlanningPhaseNavigation.goToPrevious(
+                        context, 'interface_management'),
+                    onForward: () => PlanningPhaseNavigation.goToNext(
+                        context, 'interface_management'),
+                    onExportPdf: _exportPdf,
                   ),
-                  SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding, vertical: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  Expanded(
+                    child: Stack(
                       children: [
-                        const SizedBox(height: 20),
-                        const PlanningAiNotesCard(
-                          title: 'Notes',
-                          sectionLabel: 'Interface Management',
-                          noteKey: 'planning_interface_management_notes',
-                          checkpoint: 'interface_management',
-                          description:
-                              'Summarize interface ownership, dependency risks, and governance cadence.',
+                        const MobileSidebarHamburger(
+                          sidebar: InitiationLikeSidebar(
+                            activeItemLabel: 'Interface Management',
+                          ),
                         ),
-                        const SizedBox(height: 24),
-                        const InterfacePlanCard(),
-                        const SizedBox(height: 24),
-                        _buildMetricsRow(),
-                        const SizedBox(height: 24),
-                        _buildTabBar(),
-                        const SizedBox(height: 16),
-                        InnerPageNavigationHint(
-                          pageId: 'interface_management',
-                          pageTitle: 'Interface Management',
-                          sections: _ImTab.values
-                              .map((tab) => InnerPageSection(
-                                    id: tab.name,
-                                    label: tab.label,
-                                    status: tab == _selectedTab
-                                        ? InnerPageSectionStatus.current
-                                        : InnerPageSectionStatus.available,
-                                    stepNumber: _ImTab.values.indexOf(tab) + 1,
-                                  ))
-                              .toList(),
-                          currentSectionId: _selectedTab.name,
-                          onSectionTap: (sectionId) {
-                            final tab = _ImTab.values
-                                .firstWhere((t) => t.name == sectionId);
-                            setState(() => _selectedTab = tab);
-                          },
+                        SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: horizontalPadding, vertical: 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 8),
+                              // ── Page title + description (header section) ──
+                              Text(
+                                'Interface Management Plan',
+                                style: TextStyle(
+                                  fontSize: isMobile ? 22 : 26,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF111827),
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Define how project interfaces will be identified, coordinated, and managed to ensure effective integration across stakeholders, organizations, systems, disciplines, and deliverables.',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF4B5563),
+                                  height: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              const PlanningAiNotesCard(
+                                title: 'Notes',
+                                sectionLabel: 'Interface Management',
+                                noteKey: 'planning_interface_management_notes',
+                                checkpoint: 'interface_management',
+                                description:
+                                    'Summarize interface ownership, dependency risks, and governance cadence.',
+                              ),
+                              const SizedBox(height: 24),
+                              const InterfacePlanCard(),
+                              const SizedBox(height: 24),
+                              _buildMetricsRow(),
+                              const SizedBox(height: 24),
+                              _buildTabBar(),
+                              const SizedBox(height: 16),
+                              InnerPageNavigationHint(
+                                pageId: 'interface_management',
+                                pageTitle: 'Interface Management',
+                                sections: _ImTab.values
+                                    .map((tab) => InnerPageSection(
+                                          id: tab.name,
+                                          label: tab.label,
+                                          status: tab == _selectedTab
+                                              ? InnerPageSectionStatus.current
+                                              : InnerPageSectionStatus.available,
+                                          stepNumber:
+                                              _ImTab.values.indexOf(tab) + 1,
+                                        ))
+                                    .toList(),
+                                currentSectionId: _selectedTab.name,
+                                onSectionTap: (sectionId) {
+                                  final tab = _ImTab.values
+                                      .firstWhere((t) => t.name == sectionId);
+                                  setState(() => _selectedTab = tab);
+                                },
+                              ),
+                              _buildTabContent(),
+                              const SizedBox(height: 24),
+                              LaunchPhaseNavigation(
+                                backLabel: PlanningPhaseNavigation.backLabel(
+                                    'interface_management'),
+                                nextLabel: PlanningPhaseNavigation.nextLabel(
+                                    'interface_management'),
+                                onBack: () =>
+                                    PlanningPhaseNavigation.goToPrevious(
+                                        context, 'interface_management'),
+                                onNext: () => PlanningPhaseNavigation.goToNext(
+                                    context, 'interface_management'),
+                              ),
+                              const SizedBox(height: 40),
+                            ],
+                          ),
                         ),
-                        _buildTabContent(),
-                        const SizedBox(height: 24),
-                        LaunchPhaseNavigation(
-                          backLabel: PlanningPhaseNavigation.backLabel(
-                              'interface_management'),
-                          nextLabel: PlanningPhaseNavigation.nextLabel(
-                              'interface_management'),
-                          onBack: () => PlanningPhaseNavigation.goToPrevious(
-                              context, 'interface_management'),
-                          onNext: () => PlanningPhaseNavigation.goToNext(
-                              context, 'interface_management'),
-                        ),
-                        const SizedBox(height: 40),
+                        const Positioned(
+                            right: 24,
+                            bottom: 24,
+                            child: KazAiChatBubble(positioned: false)),
                       ],
                     ),
                   ),
-                  const Positioned(
-                      right: 24,
-                      bottom: 24,
-                      child: KazAiChatBubble(positioned: false)),
                 ],
               ),
             ),
@@ -199,44 +243,73 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
     final openCount = entries.where((e) => _isOpenStatus(e.status)).length;
     final techLinkCount = extIntegrations.length;
 
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        _MetricCard(
-            label: 'Total Interfaces',
-            value: '$activeInterfaces',
-            accent: const Color(0xFF2563EB)),
-        _MetricCard(
-            label: 'Critical',
-            value: '$criticalCount',
-            accent: const Color(0xFFEF4444)),
-        _MetricCard(
-            label: 'Owners',
-            value: '$ownerCount',
-            accent: const Color(0xFF10B981)),
-        _MetricCard(
-            label: 'Open Issues',
-            value: '$openCount',
-            accent: const Color(0xFFF59E0B)),
-        _MetricCard(
-            label: 'Tech Integrations',
-            value: '$techLinkCount',
-            accent: const Color(0xFF8B5CF6),
-            tooltip: 'From Technology Planning'),
-        _MetricCard(
-            label: 'At Risk',
-            value:
-                '${entries.where((e) => _calculateHealth(e) == 'red').length}',
-            accent: const Color(0xFFEF4444),
-            tooltip: 'Critical + open status or blocker risk'),
-        _MetricCard(
-            label: 'Healthy',
-            value:
-                '${entries.where((e) => _calculateHealth(e) == 'green').length}',
-            accent: const Color(0xFF10B981),
-            tooltip: 'Approved/resolved/closed'),
-      ],
+    final cards = <_MetricCard>[
+      _MetricCard(
+          label: 'Total Interfaces',
+          value: '$activeInterfaces',
+          accent: const Color(0xFF2563EB)),
+      _MetricCard(
+          label: 'Critical',
+          value: '$criticalCount',
+          accent: const Color(0xFFEF4444)),
+      _MetricCard(
+          label: 'Owners',
+          value: '$ownerCount',
+          accent: const Color(0xFF10B981)),
+      _MetricCard(
+          label: 'Open Issues',
+          value: '$openCount',
+          accent: const Color(0xFFF59E0B)),
+      _MetricCard(
+          label: 'Tech Integrations',
+          value: '$techLinkCount',
+          accent: const Color(0xFF8B5CF6),
+          tooltip: 'From Technology Planning'),
+      _MetricCard(
+          label: 'At Risk',
+          value:
+              '${entries.where((e) => _calculateHealth(e) == 'red').length}',
+          accent: const Color(0xFFEF4444),
+          tooltip: 'Critical + open status or blocker risk'),
+      _MetricCard(
+          label: 'Healthy',
+          value:
+              '${entries.where((e) => _calculateHealth(e) == 'green').length}',
+          accent: const Color(0xFF10B981),
+          tooltip: 'Approved/resolved/closed'),
+    ];
+
+    // On wide screens, lay the metric cards out in a single Row with each
+    // card Expanded to fill equal shares of the available width — eliminating
+    // the right-side whitespace the previous Wrap left on desktop. On narrow
+    // viewports, fall back to Wrap so cards reflow to multiple rows.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const cardMinWidth = 160.0;
+        const gap = 12.0;
+        // How many cards can fit on one row at min width?
+        final perRow = ((constraints.maxWidth + gap) / (cardMinWidth + gap))
+            .floor()
+            .clamp(1, cards.length);
+        final wouldAllFit = perRow >= cards.length;
+        if (wouldAllFit) {
+          return Row(
+            children: [
+              for (var i = 0; i < cards.length; i++) ...[
+                if (i > 0) const SizedBox(width: gap),
+                Expanded(child: cards[i]),
+              ],
+            ],
+          );
+        }
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: cards
+              .map((c) => SizedBox(width: cardMinWidth, child: c))
+              .toList(),
+        );
+      },
     );
   }
 
@@ -332,7 +405,7 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
     final projectData = ProjectDataHelper.getData(context);
     await PdfExportHelper.exportScreenPdf(
       context: context,
-      screenTitle: 'Interface Management',
+      screenTitle: 'Interface Management Plan',
       sections: [
         PdfSection.keyValue('Project Info', [
           {'Project Name': projectData.projectName ?? 'N/A'},
@@ -400,7 +473,7 @@ class _InterfacePlanCardState extends State<InterfacePlanCard> {
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
-      title: 'Interface Plan',
+      title: 'Interface Management Plan',
       subtitle:
           'Describe ownership, cadence, and risk handling so teams coordinate before handoffs.',
       child: Column(
@@ -449,7 +522,7 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final child = Container(
-      width: 170,
+      width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -537,109 +610,211 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
   }
 
   Widget _buildFilterBar() {
+    final hasActiveFilters = _searchQuery.trim().isNotEmpty ||
+        _typeFilter != 'All' ||
+        _statusFilter != 'All' ||
+        _priorityFilter != 'All';
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          SizedBox(
-            width: 220,
-            child: VoiceTextField(
-              onChanged: (v) => setState(() => _searchQuery = v),
-              decoration: InputDecoration(
-                prefixIcon:
-                    Icon(Icons.search, size: 18, color: Color(0xFF9CA3AF)),
-                hintText: 'Search interfaces...',
-                hintStyle: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                isDense: true,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Wide layout: search expands to fill, dropdowns fixed width on the
+          // right, optional "Clear" button at the far right when filters are
+          // active. Threshold = search min (240) + 3 dropdowns (150 each) +
+          // gaps (12*4) + clear button (~96) ≈ 830px.
+          const wideThreshold = 820.0;
+          if (constraints.maxWidth >= wideThreshold) {
+            return Row(
+              children: [
+                Expanded(
+                  child: VoiceTextField(
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search,
+                          size: 18, color: Color(0xFF9CA3AF)),
+                      hintText:
+                          'Search by boundary, party, owner, or notes…',
+                      hintStyle: const TextStyle(
+                          fontSize: 13, color: Color(0xFF9CA3AF)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      isDense: true,
+                    ),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _buildFilterDropdown(
+                  label: 'Type',
+                  value: _typeFilter,
+                  items: const ['All', ..._kInterfaceTypes],
+                  onChanged: (v) {
+                    if (v != null) setState(() => _typeFilter = v);
+                  },
+                ),
+                const SizedBox(width: 12),
+                _buildFilterDropdown(
+                  label: 'Status',
+                  value: _statusFilter,
+                  items: const ['All', ..._kStatuses],
+                  onChanged: (v) {
+                    if (v != null) setState(() => _statusFilter = v);
+                  },
+                ),
+                const SizedBox(width: 12),
+                _buildFilterDropdown(
+                  label: 'Priority',
+                  value: _priorityFilter,
+                  items: const ['All', ..._kPriorities],
+                  onChanged: (v) {
+                    if (v != null) setState(() => _priorityFilter = v);
+                  },
+                ),
+                if (hasActiveFilters) ...[
+                  const SizedBox(width: 12),
+                  _buildClearButton(),
+                ],
+              ],
+            );
+          }
+          // Narrow layout: wrap items naturally so they reflow on mobile.
+          return Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: 260,
+                child: VoiceTextField(
+                  onChanged: (v) => setState(() => _searchQuery = v),
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search,
+                        size: 18, color: Color(0xFF9CA3AF)),
+                    hintText: 'Search interfaces…',
+                    hintStyle: const TextStyle(
+                        fontSize: 12, color: Color(0xFF9CA3AF)),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 8),
+                    isDense: true,
+                  ),
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
-              style: const TextStyle(fontSize: 12),
-            ),
-          ),
-          SizedBox(
-            width: 140,
-            child: DropdownButtonFormField<String>(
-              initialValue: _typeFilter,
-              decoration: InputDecoration(
-                labelText: 'Type',
-                labelStyle: TextStyle(fontSize: 11),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                isDense: true,
+              SizedBox(
+                width: 150,
+                child: _buildFilterDropdown(
+                  label: 'Type',
+                  value: _typeFilter,
+                  items: const ['All', ..._kInterfaceTypes],
+                  onChanged: (v) {
+                    if (v != null) setState(() => _typeFilter = v);
+                  },
+                ),
               ),
-              style: const TextStyle(fontSize: 12),
-              items: ['All', ..._kInterfaceTypes]
-                  .map((s) => DropdownMenuItem(
-                      value: s,
-                      child: Text(s, style: const TextStyle(fontSize: 12))))
-                  .toList(),
-              onChanged: (v) {
-                if (v != null) setState(() => _typeFilter = v);
-              },
-            ),
-          ),
-          SizedBox(
-            width: 140,
-            child: DropdownButtonFormField<String>(
-              initialValue: _statusFilter,
-              decoration: InputDecoration(
-                labelText: 'Status',
-                labelStyle: TextStyle(fontSize: 11),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                isDense: true,
+              SizedBox(
+                width: 150,
+                child: _buildFilterDropdown(
+                  label: 'Status',
+                  value: _statusFilter,
+                  items: const ['All', ..._kStatuses],
+                  onChanged: (v) {
+                    if (v != null) setState(() => _statusFilter = v);
+                  },
+                ),
               ),
-              style: const TextStyle(fontSize: 12),
-              items: ['All', ..._kStatuses]
-                  .map((s) => DropdownMenuItem(
-                      value: s,
-                      child: Text(s, style: const TextStyle(fontSize: 12))))
-                  .toList(),
-              onChanged: (v) {
-                if (v != null) setState(() => _statusFilter = v);
-              },
-            ),
-          ),
-          SizedBox(
-            width: 140,
-            child: DropdownButtonFormField<String>(
-              initialValue: _priorityFilter,
-              decoration: InputDecoration(
-                labelText: 'Priority',
-                labelStyle: TextStyle(fontSize: 11),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                isDense: true,
+              SizedBox(
+                width: 150,
+                child: _buildFilterDropdown(
+                  label: 'Priority',
+                  value: _priorityFilter,
+                  items: const ['All', ..._kPriorities],
+                  onChanged: (v) {
+                    if (v != null) setState(() => _priorityFilter = v);
+                  },
+                ),
               ),
-              style: const TextStyle(fontSize: 12),
-              items: ['All', ..._kPriorities]
-                  .map((s) => DropdownMenuItem(
-                      value: s,
-                      child: Text(s, style: const TextStyle(fontSize: 12))))
-                  .toList(),
-              onChanged: (v) {
-                if (v != null) setState(() => _priorityFilter = v);
-              },
-            ),
-          ),
-        ],
+              if (hasActiveFilters) _buildClearButton(),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// Builds a styled dropdown for a filter field. Used inside the filter bar
+  /// so all dropdowns share consistent visual treatment.
+  Widget _buildFilterDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        isDense: true,
+      ),
+      style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+      dropdownColor: Colors.white,
+      items: items
+          .map((s) => DropdownMenuItem(
+              value: s,
+              child: Text(s,
+                  style: const TextStyle(fontSize: 13),
+                  overflow: TextOverflow.ellipsis)))
+          .toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  /// "Clear" pill button shown in the filter bar when any filter is active.
+  /// Resets all filters back to their defaults.
+  Widget _buildClearButton() {
+    return InkWell(
+      onTap: () => setState(() {
+        _searchQuery = '';
+        _typeFilter = 'All';
+        _statusFilter = 'All';
+        _priorityFilter = 'All';
+      }),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFEF3C7),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.filter_alt_off_outlined,
+                size: 14, color: Color(0xFFB45309)),
+            SizedBox(width: 6),
+            Text('Clear filters',
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFB45309))),
+          ],
+        ),
       ),
     );
   }
@@ -704,23 +879,43 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
               style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
             ),
           )
-        else ...[
-          // Table header
-          _buildTableHeader(),
-          // Table rows
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: entries.length,
-            itemBuilder: (context, index) {
-              final entry = entries[index];
-              return _InterfaceRegisterRow(
-                index: index + 1,
-                entry: entry,
+        else
+          // Wrap the table in a horizontal scroll with a minimum width floor
+          // so columns never overflow on narrow viewports — instead, the user
+          // scrolls horizontally. On wide viewports the table fills the
+          // available width thanks to the Expanded "Boundary / Name" column.
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const minTableWidth = 980.0;
+              final needsScroll = constraints.maxWidth < minTableWidth;
+              final table = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTableHeader(),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: entries.length,
+                    itemBuilder: (context, index) {
+                      final entry = entries[index];
+                      return _InterfaceRegisterRow(
+                        index: index + 1,
+                        entry: entry,
+                      );
+                    },
+                  ),
+                ],
+              );
+              if (!needsScroll) return table;
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: minTableWidth,
+                  child: table,
+                ),
               );
             },
           ),
-        ],
       ],
     );
   }
@@ -1635,44 +1830,58 @@ class _RaciGovernanceSection extends StatelessWidget {
               style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
             ),
           )
-        else ...[
-          // Header
-          _buildRaciHeader(),
-          // Tooltip row
-          const Padding(
-            padding: EdgeInsets.only(bottom: 4),
-            child: Row(
-              children: [
-                SizedBox(width: 10),
-                Expanded(
-                  flex: 3,
-                  child: Text('',
-                      style: TextStyle(
-                          fontSize: 10, color: Color(0xFF9CA3AF))),
-                ),
-                SizedBox(width: 8),
-                _RaciTooltipBadge(
-                    label: 'R', tip: 'Responsible — does the work'),
-                SizedBox(width: 8),
-                _RaciTooltipBadge(
-                    label: 'A', tip: 'Accountable — owns the outcome'),
-                SizedBox(width: 8),
-                _RaciTooltipBadge(
-                    label: 'C', tip: 'Consulted — provides input'),
-                SizedBox(width: 8),
-                _RaciTooltipBadge(
-                    label: 'I', tip: 'Informed — kept up to date'),
-              ],
-            ),
+        else
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const minTableWidth = 560.0;
+              final needsScroll = constraints.maxWidth < minTableWidth;
+              final table = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildRaciHeader(),
+                  // Tooltip row
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      children: [
+                        SizedBox(width: 10),
+                        Expanded(
+                          flex: 3,
+                          child: Text('',
+                              style: TextStyle(
+                                  fontSize: 10, color: Color(0xFF9CA3AF))),
+                        ),
+                        SizedBox(width: 8),
+                        _RaciTooltipBadge(
+                            label: 'R', tip: 'Responsible — does the work'),
+                        SizedBox(width: 8),
+                        _RaciTooltipBadge(
+                            label: 'A', tip: 'Accountable — owns the outcome'),
+                        SizedBox(width: 8),
+                        _RaciTooltipBadge(
+                            label: 'C', tip: 'Consulted — provides input'),
+                        SizedBox(width: 8),
+                        _RaciTooltipBadge(
+                            label: 'I', tip: 'Informed — kept up to date'),
+                      ],
+                    ),
+                  ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: entries.length,
+                    itemBuilder: (context, index) =>
+                        _buildRaciRow(entries[index]),
+                  ),
+                ],
+              );
+              if (!needsScroll) return table;
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(width: minTableWidth, child: table),
+              );
+            },
           ),
-          // Rows
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: entries.length,
-            itemBuilder: (context, index) => _buildRaciRow(entries[index]),
-          ),
-        ],
 
         const SizedBox(height: 32),
 
@@ -1873,6 +2082,179 @@ class _RisksDecisionsSection extends StatelessWidget {
     final decisionEntries =
         entries.where((e) => e.notes.trim().isNotEmpty).toList();
 
+    // Build the two cards once so they can be reused in either the wide
+    // (side-by-side Row with Expanded) or narrow (stacked Column) layout
+    // without duplicating their contents.
+    final dependencyRisksCard = _SectionSubcard(
+      title: 'Dependency Risks',
+      subtitle: 'Critical issues to resolve before baseline freeze.',
+      child: riskEntries.isEmpty
+          ? const Text(
+              'Record interface risks so teams can address blockers early.',
+              style:
+                  TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Risk summary
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _RiskCountChip(
+                          label: 'Critical',
+                          count: riskEntries
+                              .where((e) =>
+                                  e.criticality.toLowerCase() ==
+                                  'critical')
+                              .length,
+                          color: const Color(0xFFEF4444)),
+                      _RiskCountChip(
+                          label: 'Major',
+                          count: riskEntries
+                              .where((e) =>
+                                  e.criticality.toLowerCase() ==
+                                  'major')
+                              .length,
+                          color: const Color(0xFFF59E0B)),
+                      _RiskCountChip(
+                          label: 'Minor',
+                          count: riskEntries
+                              .where((e) =>
+                                  e.criticality.toLowerCase() ==
+                                  'minor')
+                              .length,
+                          color: const Color(0xFF6B7280)),
+                    ],
+                  ),
+                ),
+                // Risk items sorted by criticality
+                ..._sortedByCriticality(riskEntries).map((entry) {
+                  final name = entry.boundary.trim().isNotEmpty
+                      ? entry.boundary.trim()
+                      : 'Interface';
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          size: 16,
+                          color: _isCriticalRisk(entry.risk)
+                              ? const Color(0xFFEF4444)
+                              : const Color(0xFFF59E0B),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                crossAxisAlignment:
+                                    WrapCrossAlignment.center,
+                                children: [
+                                  Text(name,
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF111827))),
+                                  if (entry.interfaceType
+                                      .trim()
+                                      .isNotEmpty)
+                                    _TypeBadge(
+                                        type: entry.interfaceType),
+                                  if (entry.dataFlow
+                                      .trim()
+                                      .isNotEmpty)
+                                    Text('(${entry.dataFlow.trim()})',
+                                        style: const TextStyle(
+                                            fontSize: 10,
+                                            color:
+                                                Color(0xFF9CA3AF))),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(entry.risk.trim(),
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF374151),
+                                      height: 1.4)),
+                              if (entry.criticality.trim().isNotEmpty)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.only(top: 4),
+                                  child: _CriticalityBadge(
+                                      criticality: entry.criticality),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+    );
+
+    final decisionLogCard = _SectionSubcard(
+      title: 'Decision Log',
+      subtitle: 'Recent interface decisions and approvals.',
+      child: decisionEntries.isEmpty
+          ? const Text(
+              'Add notes to capture decisions, approvals, and alignment.',
+              style:
+                  TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+            )
+          : Column(
+              children: decisionEntries.map((entry) {
+                final name = entry.boundary.trim().isNotEmpty
+                    ? entry.boundary.trim()
+                    : 'Interface note';
+                final timestamp = entry.lastSync.trim().isNotEmpty
+                    ? entry.lastSync.trim()
+                    : 'Recent';
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.check_circle_outline,
+                          size: 16, color: Color(0xFF10B981)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            Text('$name ($timestamp)',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF111827))),
+                            const SizedBox(height: 2),
+                            Text(entry.notes.trim(),
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF374151),
+                                    height: 1.4)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1881,187 +2263,30 @@ class _RisksDecisionsSection extends StatelessWidget {
           style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5),
         ),
         const SizedBox(height: 20),
-        Wrap(
-          spacing: 24,
-          runSpacing: 24,
-          children: [
-            SizedBox(
-              width: isMobile
-                  ? double.infinity
-                  : (MediaQuery.of(context).size.width - 200) / 2 - 48,
-              child: _SectionSubcard(
-                title: 'Dependency Risks',
-                subtitle: 'Critical issues to resolve before baseline freeze.',
-                child: riskEntries.isEmpty
-                    ? const Text(
-                        'Record interface risks so teams can address blockers early.',
-                        style:
-                            TextStyle(color: Color(0xFF6B7280), fontSize: 12),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Risk summary
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              children: [
-                                _RiskCountChip(
-                                    label: 'Critical',
-                                    count: riskEntries
-                                        .where((e) =>
-                                            e.criticality.toLowerCase() ==
-                                            'critical')
-                                        .length,
-                                    color: const Color(0xFFEF4444)),
-                                const SizedBox(width: 8),
-                                _RiskCountChip(
-                                    label: 'Major',
-                                    count: riskEntries
-                                        .where((e) =>
-                                            e.criticality.toLowerCase() ==
-                                            'major')
-                                        .length,
-                                    color: const Color(0xFFF59E0B)),
-                                const SizedBox(width: 8),
-                                _RiskCountChip(
-                                    label: 'Minor',
-                                    count: riskEntries
-                                        .where((e) =>
-                                            e.criticality.toLowerCase() ==
-                                            'minor')
-                                        .length,
-                                    color: const Color(0xFF6B7280)),
-                              ],
-                            ),
-                          ),
-                          // Risk items sorted by criticality
-                          ..._sortedByCriticality(riskEntries).map((entry) {
-                            final name = entry.boundary.trim().isNotEmpty
-                                ? entry.boundary.trim()
-                                : 'Interface';
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(
-                                    Icons.warning_amber_rounded,
-                                    size: 16,
-                                    color: _isCriticalRisk(entry.risk)
-                                        ? const Color(0xFFEF4444)
-                                        : const Color(0xFFF59E0B),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Text(name,
-                                                style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF111827))),
-                                            const SizedBox(width: 8),
-                                            if (entry.interfaceType
-                                                .trim()
-                                                .isNotEmpty)
-                                              _TypeBadge(
-                                                  type: entry.interfaceType),
-                                            const SizedBox(width: 6),
-                                            if (entry.dataFlow
-                                                .trim()
-                                                .isNotEmpty)
-                                              Text('(${entry.dataFlow.trim()})',
-                                                  style: const TextStyle(
-                                                      fontSize: 10,
-                                                      color:
-                                                          Color(0xFF9CA3AF))),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(entry.risk.trim(),
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Color(0xFF374151),
-                                                height: 1.4)),
-                                        if (entry.criticality.trim().isNotEmpty)
-                                          Padding(
-                                            padding:
-                                                const EdgeInsets.only(top: 4),
-                                            child: _CriticalityBadge(
-                                                criticality: entry.criticality),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-              ),
-            ),
-            SizedBox(
-              width: isMobile
-                  ? double.infinity
-                  : (MediaQuery.of(context).size.width - 200) / 2 - 48,
-              child: _SectionSubcard(
-                title: 'Decision Log',
-                subtitle: 'Recent interface decisions and approvals.',
-                child: decisionEntries.isEmpty
-                    ? const Text(
-                        'Add notes to capture decisions, approvals, and alignment.',
-                        style:
-                            TextStyle(color: Color(0xFF6B7280), fontSize: 12),
-                      )
-                    : Column(
-                        children: decisionEntries.map((entry) {
-                          final name = entry.boundary.trim().isNotEmpty
-                              ? entry.boundary.trim()
-                              : 'Interface note';
-                          final timestamp = entry.lastSync.trim().isNotEmpty
-                              ? entry.lastSync.trim()
-                              : 'Recent';
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(Icons.check_circle_outline,
-                                    size: 16, color: Color(0xFF10B981)),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text('$name ($timestamp)',
-                                          style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color: Color(0xFF111827))),
-                                      const SizedBox(height: 2),
-                                      Text(entry.notes.trim(),
-                                          style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Color(0xFF374151),
-                                              height: 1.4)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ),
-              ),
-            ),
-          ],
+        // Wide screens: cards side-by-side, each Expanded to fill half the
+        // available width (no right-side whitespace). Narrow screens: stack.
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (!isMobile && constraints.maxWidth >= 720) {
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: dependencyRisksCard),
+                    const SizedBox(width: 24),
+                    Expanded(child: decisionLogCard),
+                  ],
+                ),
+              );
+            }
+            return Column(
+              children: [
+                dependencyRisksCard,
+                const SizedBox(height: 24),
+                decisionLogCard,
+              ],
+            );
+          },
         ),
       ],
     );
@@ -2470,153 +2695,172 @@ class _AuditTrailSection extends StatelessWidget {
               style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
             ),
           )
-        else ...[
-          // Header row
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF8FAFC),
-              border:
-                  Border.fromBorderSide(BorderSide(color: Color(0xFFE5E7EB))),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
-            ),
-            child: const Row(
-              children: [
-                SizedBox(
-                    width: 140,
-                    child: Text('Timestamp',
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151)))),
-                SizedBox(width: 12),
-                Expanded(
-                    flex: 2,
-                    child: Text('Interface',
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151)))),
-                SizedBox(width: 12),
-                SizedBox(
-                    width: 130,
-                    child: Text('Action',
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151)))),
-                SizedBox(width: 12),
-                Expanded(
-                    flex: 2,
-                    child: Text('Field',
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151)))),
-                SizedBox(width: 12),
-                Expanded(
-                    flex: 3,
-                    child: Text('Change',
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF374151)))),
-              ],
-            ),
-          ),
-          // Log rows
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: logEntries.length,
-            itemBuilder: (context, index) {
-              final entry = logEntries[index];
-              final color = _actionColor(entry.action);
-              final icon = _actionIcon(entry.action);
-              return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    left: BorderSide(color: Color(0xFFE5E7EB)),
-                    right: BorderSide(color: Color(0xFFE5E7EB)),
-                    bottom: BorderSide(color: Color(0xFFE5E7EB)),
+        else
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const minTableWidth = 760.0;
+              final needsScroll = constraints.maxWidth < minTableWidth;
+              final table = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header row
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF8FAFC),
+                      border: Border.fromBorderSide(
+                          BorderSide(color: Color(0xFFE5E7EB))),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8),
+                      ),
+                    ),
+                    child: const Row(
+                      children: [
+                        SizedBox(
+                            width: 140,
+                            child: Text('Timestamp',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF374151)))),
+                        SizedBox(width: 12),
+                        Expanded(
+                            flex: 2,
+                            child: Text('Interface',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF374151)))),
+                        SizedBox(width: 12),
+                        SizedBox(
+                            width: 130,
+                            child: Text('Action',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF374151)))),
+                        SizedBox(width: 12),
+                        Expanded(
+                            flex: 2,
+                            child: Text('Field',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF374151)))),
+                        SizedBox(width: 12),
+                        Expanded(
+                            flex: 3,
+                            child: Text('Change',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF374151)))),
+                      ],
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 140,
-                      child: Text(_formatTimestamp(entry.changedAt),
-                          style: const TextStyle(
-                              fontSize: 11, color: Color(0xFF6B7280))),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                          entry.interfaceName.trim().isNotEmpty
-                              ? entry.interfaceName.trim()
-                              : 'Unnamed',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF111827))),
-                    ),
-                    const SizedBox(width: 12),
-                    SizedBox(
-                      width: 110,
-                      child: Container(
+                  // Log rows
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: logEntries.length,
+                    itemBuilder: (context, index) {
+                      final entry = logEntries[index];
+                      final color = _actionColor(entry.action);
+                      final icon = _actionIcon(entry.action);
+                      return Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Color.alphaBlend(
-                              color.withValues(alpha: 0.12), Colors.white),
-                          borderRadius: BorderRadius.circular(6),
+                            horizontal: 10, vertical: 10),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            left: BorderSide(color: Color(0xFFE5E7EB)),
+                            right: BorderSide(color: Color(0xFFE5E7EB)),
+                            bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                          ),
                         ),
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(icon, size: 12, color: color),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(entry.action,
+                            SizedBox(
+                              width: 140,
+                              child: Text(_formatTimestamp(entry.changedAt),
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF6B7280))),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                  entry.interfaceName.trim().isNotEmpty
+                                      ? entry.interfaceName.trim()
+                                      : 'Unnamed',
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                      fontSize: 10,
+                                  style: const TextStyle(
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: color)),
+                                      color: Color(0xFF111827))),
+                            ),
+                            const SizedBox(width: 12),
+                            SizedBox(
+                              width: 110,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Color.alphaBlend(
+                                      color.withValues(alpha: 0.12),
+                                      Colors.white),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(icon, size: 12, color: color),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(entry.action,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: color)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                  entry.fieldName.trim().isNotEmpty
+                                      ? entry.fieldName.trim()
+                                      : '-',
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF4B5563))),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 3,
+                              child: _buildChangeValue(entry, color),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                          entry.fieldName.trim().isNotEmpty
-                              ? entry.fieldName.trim()
-                              : '-',
-                          style: const TextStyle(
-                              fontSize: 11, color: Color(0xFF4B5563))),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 3,
-                      child: _buildChangeValue(entry, color),
-                    ),
-                  ],
-                ),
+                      );
+                    },
+                  ),
+                ],
+              );
+              if (!needsScroll) return table;
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(width: minTableWidth, child: table),
               );
             },
           ),
-        ],
       ],
     );
   }
@@ -2718,19 +2962,42 @@ class _HandoffReadinessSection extends StatelessWidget {
         notReady++;
       }
     }
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        _ReadinessSummaryCard(
-            label: 'Ready', count: ready, color: const Color(0xFF10B981)),
-        _ReadinessSummaryCard(
-            label: 'Partial', count: partial, color: const Color(0xFFF59E0B)),
-        _ReadinessSummaryCard(
-            label: 'Not Ready',
-            count: notReady,
-            color: const Color(0xFFEF4444)),
-      ],
+    final cards = <Widget>[
+      _ReadinessSummaryCard(
+          label: 'Ready', count: ready, color: const Color(0xFF10B981)),
+      _ReadinessSummaryCard(
+          label: 'Partial', count: partial, color: const Color(0xFFF59E0B)),
+      _ReadinessSummaryCard(
+          label: 'Not Ready', count: notReady, color: const Color(0xFFEF4444)),
+    ];
+    // On wide screens, lay the summary cards out in a single Row with each
+    // card Expanded — eliminating right-side whitespace. On narrow screens,
+    // Wrap so cards reflow to multiple rows.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const cardMinWidth = 160.0;
+        const gap = 12.0;
+        final perRow = ((constraints.maxWidth + gap) / (cardMinWidth + gap))
+            .floor()
+            .clamp(1, cards.length);
+        if (perRow >= cards.length) {
+          return Row(
+            children: [
+              for (var i = 0; i < cards.length; i++) ...[
+                if (i > 0) const SizedBox(width: gap),
+                Expanded(child: cards[i]),
+              ],
+            ],
+          );
+        }
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: cards
+              .map((c) => SizedBox(width: cardMinWidth, child: c))
+              .toList(),
+        );
+      },
     );
   }
 
@@ -2857,7 +3124,7 @@ class _ReadinessSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 150,
+      width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,

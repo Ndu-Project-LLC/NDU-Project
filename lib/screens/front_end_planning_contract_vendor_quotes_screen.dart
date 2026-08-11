@@ -1420,7 +1420,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  builder: (dialogContext) => AlertDialog(
  title: const Text('Start Scope Process?'),
  content: Text(
- 'Commence contracting activities for "${item.name.trim().isEmpty ? 'this scope' : item.name.trim()}" now?',
+ 'Commence procurement activities for "${item.name.trim().isEmpty ? 'this scope' : item.name.trim()}" now?',
  ),
  actions: [
  TextButton(
@@ -1475,7 +1475,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  builder: (dialogContext) => AlertDialog(
  title: const Text('Firestore Permission Required'),
  content: const Text(
- 'This project cannot write to Contract Scope Management in Firestore yet. Continue locally for now and sync later?',
+ 'This project cannot write to Vendor Scope Management in Firestore yet. Continue locally for now and sync later?',
  ),
  actions: [
  TextButton(
@@ -1649,7 +1649,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  child: Row(
  children: [
  _buildManagementTabButton(
- label: 'Contract Scope Management',
+ label: 'Vendor Scope Management',
  tab: _ContractingManagementTab.scopeManagement,
  enabled: true,
  ),
@@ -5369,7 +5369,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  _buildContractingWorkflowSection(items),
  const SizedBox(height: 20),
  const Text(
- 'Contract Scope Management',
+ 'Vendor Scope Management',
  style: TextStyle(
  fontSize: 16,
  fontWeight: FontWeight.w800,
@@ -5920,7 +5920,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const SizedBox(height: 32),
  _SectionHeader(
- title: 'Contract Scope Management',
+ title: 'Vendor Scope Management',
  subtitle:
  'Commence scope processes with role-based authority. Contracting Templates, Contract Tracking, and Reports remain locked until a scope process starts.',
  actionLabel: 'Approved Contractors',

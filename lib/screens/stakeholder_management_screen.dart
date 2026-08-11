@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
@@ -13,6 +14,7 @@ import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/stakeholder_announcement.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -37,7 +39,10 @@ class _StakeholderManagementScreenState
   // 0 = Stakeholders (default — must be the first thing the user sees so
   //    they can review/auto-populate the stakeholder register before
   //    diving into per-group engagement plans).
-  // 1 = Engagement Plans
+  // 1 = Stakeholder Mapping (AI-suggested ratings per stakeholder with
+  //    color-coded cells indicating where they land on the influence /
+  //    interest matrix).
+  // 2 = Engagement Plans
   int _activeTabIndex = 0;
 
   final _stakeholderSaveDebounce = _Debouncer();
@@ -58,6 +63,15 @@ class _StakeholderManagementScreenState
   /// no stakeholder is hidden by the filter.
   String _matrixFilter = 'all';
 
+  // ── Announcements (4th tab) ──────────────────────────────────────────
+  // Announcements live in their own Firestore subcollection
+  // (projects/{id}/stakeholder_announcements) so they can grow
+  // independently of the project doc and don't bloat the doc size.
+  List<StakeholderAnnouncement> _announcements = [];
+  bool _loadingAnnouncements = true;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      _announcementsSub;
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +82,7 @@ class _StakeholderManagementScreenState
       if (_hasAttemptedAutoPopulate) return;
       _hasAttemptedAutoPopulate = true;
       _maybeAutoPopulateStakeholders();
+      _subscribeToAnnouncements();
     });
   }
 
@@ -76,6 +91,7 @@ class _StakeholderManagementScreenState
     _stakeholderSaveDebounce.dispose();
     _planSaveDebounce.dispose();
     _pageScrollController.dispose();
+    _announcementsSub?.cancel();
     super.dispose();
   }
 
@@ -141,6 +157,12 @@ class _StakeholderManagementScreenState
             context, 'stakeholder_management'),
         onForward: () =>
             PlanningPhaseNavigation.goToNext(context, 'stakeholder_management'),
+        // Export PDF is intentionally hidden from the header because the
+        // header row sits visually above the sidebar zone (its Wrap row
+        // starts at the left edge of the screen, directly over the
+        // sidebar's column). The button is relocated to the Engagement
+        // Section toolbar so it never extends into the sidebar zone.
+        showExportPdf: false,
         onExportPdf: _exportPdf);
 
     final scrollableContent = SingleChildScrollView(
@@ -195,6 +217,10 @@ class _StakeholderManagementScreenState
                   onDelete: _deleteStakeholder,
                 ),
               ),
+              mappingTable: _StakeholderMappingTable(
+                entries: projectData.stakeholderEntries,
+                onChanged: _updateStakeholder,
+              ),
               planTable: FullScreenTableWrapper(
                 title: 'Engagement Plans',
                 child: _EngagementPlansTable(
@@ -210,13 +236,24 @@ class _StakeholderManagementScreenState
                   onDelete: _deleteEngagementPlan,
                 ),
               ),
-              onAdd:
-                  _activeTabIndex == 0 ? _addStakeholder : _addEngagementPlan,
+              onAdd: _activeTabIndex == 0
+                  ? _addStakeholder
+                  : (_activeTabIndex == 1
+                      ? _addStakeholder
+                      : (_activeTabIndex == 3
+                          ? () {}
+                          : _addEngagementPlan)),
               onSearch: (v) => setState(() => _searchQuery = v),
               onAiReview: _aiReviewStakeholders,
+              onAiSuggestRatings: _aiSuggestRatings,
+              onExportPdf: _exportPdf,
               matrixFilter: _matrixFilter,
               onMatrixFilterChanged: (v) =>
                   setState(() => _matrixFilter = v),
+              announcements: _announcements,
+              loadingAnnouncements: _loadingAnnouncements,
+              onSaveAnnouncement: _saveAnnouncement,
+              onDeleteAnnouncement: _deleteAnnouncement,
             ),
             const SizedBox(height: 32),
             // ── Project Team Communication Roster ─────────────────────────
@@ -405,6 +442,73 @@ class _StakeholderManagementScreenState
             d.engagementPlanEntries.where((e) => e.id != id).toList(),
       ),
     );
+  }
+
+  // ── Announcements persistence (Firestore subcollection) ─────────────
+  //
+  // Announcements are stored in
+  //   projects/{projectId}/stakeholder_announcements/{announcementId}
+  //
+  // We use a real-time StreamSubscription so the feed updates live when
+  // another user (or another tab) creates / edits / deletes an
+  // announcement. This mirrors how the project doc itself is reactive
+  // via the ProjectDataProvider.
+  void _subscribeToAnnouncements() {
+    final provider = ProjectDataHelper.getProvider(context);
+    final projectId = provider.projectData.projectId;
+    if (projectId == null || projectId.isEmpty) {
+      setState(() => _loadingAnnouncements = false);
+      return;
+    }
+    _announcementsSub = FirebaseFirestore.instance
+        .collection('projects')
+        .doc(projectId)
+        .collection('stakeholder_announcements')
+        .snapshots()
+        .listen(
+      (snapshot) {
+        if (!mounted) return;
+        final items = snapshot.docs
+            .map((doc) =>
+                StakeholderAnnouncement.fromJson(doc.data()))
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        setState(() {
+          _announcements = items;
+          _loadingAnnouncements = false;
+        });
+      },
+      onError: (e) {
+        debugPrint('Announcements stream error: $e');
+        if (!mounted) return;
+        setState(() => _loadingAnnouncements = false);
+      },
+    );
+  }
+
+  Future<void> _saveAnnouncement(StakeholderAnnouncement a) async {
+    final provider = ProjectDataHelper.getProvider(context);
+    final projectId = provider.projectData.projectId;
+    if (projectId == null || projectId.isEmpty) return;
+    final updated = a.copyWith(updatedAt: DateTime.now());
+    await FirebaseFirestore.instance
+        .collection('projects')
+        .doc(projectId)
+        .collection('stakeholder_announcements')
+        .doc(updated.id)
+        .set(updated.toJson(), SetOptions(merge: true));
+  }
+
+  Future<void> _deleteAnnouncement(String id) async {
+    final provider = ProjectDataHelper.getProvider(context);
+    final projectId = provider.projectData.projectId;
+    if (projectId == null || projectId.isEmpty) return;
+    await FirebaseFirestore.instance
+        .collection('projects')
+        .doc(projectId)
+        .collection('stakeholder_announcements')
+        .doc(id)
+        .delete();
   }
 
   /// Persist edits made to a [TeamMember] from the Project Team
@@ -1168,6 +1272,242 @@ nothing to add or remove, write "None" under that heading.''';
     );
   }
 
+  /// Calls the AI to suggest a matrix rating (Keep Satisfied / Manage
+  /// Closely / Monitor / Keep Informed) for each stakeholder based on
+  /// project context and each stakeholder's role/organization. The
+  /// suggestion is stored on `aiSuggestedRating` and the manual
+  /// influence/interest fields are also updated so the matrix display
+  /// and the Stakeholder Mapping tab stay in sync.
+  Future<void> _aiSuggestRatings() async {
+    final projectData = ProjectDataHelper.getProvider(context).projectData;
+    final entries = projectData.stakeholderEntries;
+
+    if (entries.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Add at least one stakeholder before running AI rating suggestions.')));
+      return;
+    }
+
+    if (!OpenAiConfig.isConfigured) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('AI not configured'),
+          content: const Text(
+              'OpenAI is not configured for this project, so AI rating '
+              'suggestions are unavailable. You can still set ratings '
+              'manually using the dropdown in the Stakeholder Mapping tab.'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK')),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Dialog(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+              SizedBox(width: 16),
+              Text('Suggesting ratings with AI…'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final projectName =
+        projectData.projectName.isEmpty ? '(unnamed)' : projectData.projectName;
+    final solutionTitle = projectData.preferredSolution?.title ?? '(none)';
+    final objective = projectData.projectGoals.isEmpty
+        ? '(not defined)'
+        : projectData.projectGoals
+            .map((g) => g.name.isEmpty ? g.description : g.name)
+            .where((s) => s.isNotEmpty)
+            .join('; ');
+
+    final stakeholderList = entries
+        .asMap()
+        .entries
+        .map((e) => '${e.key + 1}. ${e.value.name}'
+            '${e.value.organization.isNotEmpty ? ' (${e.value.organization})' : ''}'
+            '${e.value.role.isNotEmpty ? ' — ${e.value.role}' : ''}'
+            '${e.value.notes.isNotEmpty ? ' | notes: ${e.value.notes}' : ''}')
+        .join('\n');
+
+    final prompt = '''You are a senior project stakeholder analyst. For each
+stakeholder listed below, recommend one of the four standard influence /
+interest matrix designations:
+
+- "Manage Closely" — high influence, high interest (key players; engage
+  regularly and co-create)
+- "Keep Satisfied" — high influence, low interest (powerful but passive;
+  keep them supportive with targeted updates)
+- "Keep Informed" — low influence, high interest (interested but limited
+  power; update regularly so they stay supportive)
+- "Monitor" — low influence, low interest (monitor for changes; minimal
+  effort)
+
+Project context:
+- Project name: $projectName
+- Preferred solution: $solutionTitle
+- Project objective: $objective
+
+Stakeholder register:
+$stakeholderList
+
+Return your recommendations in this exact format (one line per
+stakeholder, no markdown, no extra prose):
+
+<stakeholder name> | <Manage Closely | Keep Satisfied | Keep Informed | Monitor> | <one short reason>
+
+Use the stakeholder's name exactly as it appears above. If two
+stakeholders have the same name, also append the organization in
+parentheses to disambiguate.''';
+
+    String aiResponse;
+    try {
+      final service = OpenAiServiceSecure();
+      aiResponse = await service.generateCompletion(prompt, maxTokens: 1500);
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop(); // dismiss loading dialog
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('AI rating suggestion failed: $e')),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pop(); // dismiss loading dialog
+    if (!mounted) return;
+
+    // Parse the AI response into a map of stakeholder name → suggested rating.
+    final suggestions = <String, String>{};
+    for (final line in aiResponse.split('\n')) {
+      final t = line.trim();
+      if (t.isEmpty) continue;
+      if (t.startsWith('- ') || t.startsWith('• ')) {
+        // Skip list bullet markers; the actual content is after.
+      }
+      final parts = t.split('|').map((s) => s.trim()).toList();
+      if (parts.length < 2) continue;
+      final name = parts[0];
+      final rating = parts[1];
+      // Normalize the rating to one of the four canonical values.
+      final lower = rating.toLowerCase();
+      String normalized;
+      if (lower.contains('manage closely')) {
+        normalized = 'Manage Closely';
+      } else if (lower.contains('keep satisfied')) {
+        normalized = 'Keep Satisfied';
+      } else if (lower.contains('keep informed')) {
+        normalized = 'Keep Informed';
+      } else if (lower.contains('monitor')) {
+        normalized = 'Monitor';
+      } else {
+        continue; // Skip unrecognized ratings.
+      }
+      suggestions[name] = normalized;
+    }
+
+    if (suggestions.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'AI returned no rating suggestions. Try again or set ratings manually.')));
+      return;
+    }
+
+    // Apply suggestions to the stakeholder entries. We update both
+    // `aiSuggestedRating` and the manual influence/interest fields so the
+    // matrix display, the Stakeholder Mapping tab, and the filter dropdown
+    // all stay in sync.
+    final updatedEntries = <StakeholderEntry>[];
+    int appliedCount = 0;
+    for (final entry in entries) {
+      // Try exact name match first, then case-insensitive, then with
+      // organization appended.
+      String? suggested;
+      if (suggestions.containsKey(entry.name)) {
+        suggested = suggestions[entry.name]!;
+      } else {
+        final lowerName = entry.name.toLowerCase();
+        for (final key in suggestions.keys) {
+          if (key.toLowerCase() == lowerName) {
+            suggested = suggestions[key]!;
+            break;
+          }
+        }
+      }
+      if (suggested == null) {
+        updatedEntries.add(entry);
+        continue;
+      }
+      appliedCount++;
+      // Map the suggested rating back to influence/interest so the
+      // matrix and filter dropdown stay consistent with the suggestion.
+      String influence;
+      String interest;
+      switch (suggested) {
+        case 'Manage Closely':
+          influence = 'High';
+          interest = 'High';
+          break;
+        case 'Keep Satisfied':
+          influence = 'High';
+          interest = 'Low';
+          break;
+        case 'Keep Informed':
+          influence = 'Low';
+          interest = 'High';
+          break;
+        case 'Monitor':
+        default:
+          influence = 'Low';
+          interest = 'Low';
+          break;
+      }
+      updatedEntries.add(entry.copyWith(
+        aiSuggestedRating: suggested,
+        influence: influence,
+        interest: interest,
+        updatedAt: DateTime.now(),
+      ));
+    }
+
+    await ProjectDataHelper.updateAndSave(
+      context: context,
+      checkpoint: 'stakeholder_management',
+      dataUpdater: (d) => d.copyWith(stakeholderEntries: updatedEntries),
+    );
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            'AI suggested ratings for $appliedCount of ${entries.length} '
+            'stakeholder(s). Review and adjust as needed.'),
+      ),
+    );
+  }
+
   Future<void> _exportPdf() async {
     final projectData = ProjectDataHelper.getDataListening(context);
 
@@ -1571,27 +1911,87 @@ class _LevelDistributionCard extends StatelessWidget {
   }
 }
 
-class _InfluenceInterestMatrix extends StatelessWidget {
+class _InfluenceInterestMatrix extends StatefulWidget {
   const _InfluenceInterestMatrix({required this.stakeholders});
 
   final List<StakeholderEntry> stakeholders;
 
   @override
+  State<_InfluenceInterestMatrix> createState() =>
+      _InfluenceInterestMatrixState();
+}
+
+class _InfluenceInterestMatrixState extends State<_InfluenceInterestMatrix> {
+  /// Per-quadrant sort mode. Keys are the four rating labels
+  /// ('Keep Satisfied', 'Manage Closely', 'Monitor', 'Keep Informed').
+  /// Values: 'name_asc', 'name_desc', 'org_asc', 'role_asc'.
+  final Map<String, String> _sortModes = {
+    'Keep Satisfied': 'name_asc',
+    'Manage Closely': 'name_asc',
+    'Monitor': 'name_asc',
+    'Keep Informed': 'name_asc',
+  };
+
+  /// Per-quadrant expanded state. When true, the quadrant shows all
+  /// stakeholders in a scrollable list (with a sort dropdown). When false,
+  /// it shows just a count and the first few chips.
+  final Map<String, bool> _expanded = {
+    'Keep Satisfied': false,
+    'Manage Closely': false,
+    'Monitor': false,
+    'Keep Informed': false,
+  };
+
+  List<StakeholderEntry> _sorted(
+      String rating, List<StakeholderEntry> list) {
+    final sorted = [...list];
+    final mode = _sortModes[rating] ?? 'name_asc';
+    int cmp(StakeholderEntry a, StakeholderEntry b) {
+      switch (mode) {
+        case 'name_desc':
+          return b.name.toLowerCase().compareTo(a.name.toLowerCase());
+        case 'org_asc':
+          return a.organization.toLowerCase().compareTo(
+                  b.organization.toLowerCase());
+        case 'role_asc':
+          return a.role.toLowerCase().compareTo(b.role.toLowerCase());
+        case 'name_asc':
+        default:
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      }
+    }
+
+    sorted.sort(cmp);
+    return sorted;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final hHighILow = stakeholders
-        .where((s) => s.influence == 'High' && s.interest == 'Low')
-        .toList();
-    final hHighIHigh = stakeholders
-        .where((s) => s.influence == 'High' && s.interest == 'High')
-        .toList();
-    final hLowILow = stakeholders
-        .where((s) => s.influence == 'Low' && s.interest == 'Low')
-        .toList();
-    final hLowIHigh = stakeholders
-        .where((s) => s.influence == 'Low' && s.interest == 'High')
-        .toList();
-    // NOTE: Medium/keep-informed/monitor buckets were previously computed here
-    // but unused in the UI.
+    // Bucket stakeholders by derived matrix rating. This fixes the previous
+    // bug where Medium influence/interest values were silently dropped from
+    // the matrix display. We use the same bucketing logic as the filter
+    // dropdown (Medium → nearest higher-attention quadrant) so the matrix
+    // and the filter always agree.
+    final keepSatisfied = <StakeholderEntry>[];
+    final manageClosely = <StakeholderEntry>[];
+    final monitor = <StakeholderEntry>[];
+    final keepInformed = <StakeholderEntry>[];
+    for (final s in widget.stakeholders) {
+      switch (s.derivedMatrixRating) {
+        case 'Keep Satisfied':
+          keepSatisfied.add(s);
+          break;
+        case 'Manage Closely':
+          manageClosely.add(s);
+          break;
+        case 'Monitor':
+          monitor.add(s);
+          break;
+        case 'Keep Informed':
+          keepInformed.add(s);
+          break;
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1639,7 +2039,7 @@ class _InfluenceInterestMatrix extends StatelessWidget {
                       label: 'Keep Satisfied',
                       color: const Color(0xFFEFF6FF), // Blue
                       accentColor: const Color(0xFF3B82F6),
-                      stakeholders: hHighILow,
+                      stakeholders: _sorted('Keep Satisfied', keepSatisfied),
                     ),
                   ),
                   Expanded(
@@ -1647,7 +2047,8 @@ class _InfluenceInterestMatrix extends StatelessWidget {
                       label: 'Manage Closely (Key Players)',
                       color: const Color(0xFFFEF2F2), // Red
                       accentColor: const Color(0xFFEF4444),
-                      stakeholders: hHighIHigh,
+                      stakeholders:
+                          _sorted('Manage Closely', manageClosely),
                     ),
                   ),
                 ],
@@ -1661,7 +2062,7 @@ class _InfluenceInterestMatrix extends StatelessWidget {
                       label: 'Monitor (Minimal Effort)',
                       color: const Color(0xFFF9FAFB), // Grey
                       accentColor: const Color(0xFF6B7280),
-                      stakeholders: hLowILow,
+                      stakeholders: _sorted('Monitor', monitor),
                     ),
                   ),
                   Expanded(
@@ -1669,7 +2070,7 @@ class _InfluenceInterestMatrix extends StatelessWidget {
                       label: 'Keep Informed',
                       color: const Color(0xFFECFDF5), // Green
                       accentColor: const Color(0xFF10B981),
-                      stakeholders: hLowIHigh,
+                      stakeholders: _sorted('Keep Informed', keepInformed),
                     ),
                   ),
                 ],
@@ -1714,14 +2115,30 @@ class _InfluenceInterestMatrix extends StatelessWidget {
     );
   }
 
+  /// Resolve the canonical rating key from the (possibly longer) quadrant
+  /// label so we can look up sort/expand state.
+  String _ratingKeyFor(String label) {
+    if (label.startsWith('Manage Closely')) return 'Manage Closely';
+    if (label.startsWith('Keep Satisfied')) return 'Keep Satisfied';
+    if (label.startsWith('Monitor')) return 'Monitor';
+    if (label.startsWith('Keep Informed')) return 'Keep Informed';
+    return label;
+  }
+
   Widget _matrixQuadrant({
     required String label,
     required Color color,
     required Color accentColor,
     required List<StakeholderEntry> stakeholders,
   }) {
+    final ratingKey = _ratingKeyFor(label);
+    final isExpanded = _expanded[ratingKey] ?? false;
+    final sortMode = _sortModes[ratingKey] ?? 'name_asc';
+
     return Container(
-      height: 140,
+      // When expanded, the quadrant grows tall enough to show the full list.
+      // Otherwise, the original 140px height is preserved.
+      height: isExpanded ? 320 : 140,
       margin: const EdgeInsets.all(4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1752,8 +2169,106 @@ class _InfluenceInterestMatrix extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              // Count badge
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${stakeholders.length}',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: accentColor),
+                ),
+              ),
             ],
           ),
+          // Sort + expand controls (only render when there are stakeholders).
+          if (stakeholders.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                // Sort dropdown
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                          color: accentColor.withValues(alpha: 0.15)),
+                    ),
+                    child: DropdownButton<String>(
+                      value: sortMode,
+                      underline: const SizedBox(),
+                      isDense: true,
+                      isExpanded: true,
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: accentColor),
+                      icon: Icon(Icons.sort, size: 12, color: accentColor),
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'name_asc', child: Text('Sort: Name A→Z')),
+                        DropdownMenuItem(
+                            value: 'name_desc', child: Text('Sort: Name Z→A')),
+                        DropdownMenuItem(
+                            value: 'org_asc',
+                            child: Text('Sort: Organization')),
+                        DropdownMenuItem(
+                            value: 'role_asc', child: Text('Sort: Role')),
+                      ],
+                      onChanged: (v) {
+                        if (v == null) return;
+                        setState(() => _sortModes[ratingKey] = v);
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                // Expand / collapse toggle
+                InkWell(
+                  onTap: () =>
+                      setState(() => _expanded[ratingKey] = !isExpanded),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isExpanded
+                              ? Icons.unfold_less
+                              : Icons.unfold_more,
+                          size: 12,
+                          color: accentColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isExpanded ? 'Show less' : 'Show all',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: accentColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 10),
           Expanded(
             child: stakeholders.isEmpty
@@ -1766,15 +2281,26 @@ class _InfluenceInterestMatrix extends StatelessWidget {
                           color: accentColor.withValues(alpha: 0.5)),
                     ),
                   )
-                : SingleChildScrollView(
-                    child: Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: stakeholders
-                          .map((s) => _stakeholderChip(s, accentColor))
-                          .toList(),
-                    ),
-                  ),
+                : isExpanded
+                    ? ListView(
+                        padding: EdgeInsets.zero,
+                        children: stakeholders
+                            .map((s) => Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 3),
+                                  child: _stakeholderChip(s, accentColor),
+                                ))
+                            .toList(),
+                      )
+                    : SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: stakeholders
+                              .map((s) => _stakeholderChip(s, accentColor))
+                              .toList(),
+                        ),
+                      ),
           ),
         ],
       ),
@@ -1857,26 +2383,46 @@ class _EngagementSection extends StatelessWidget {
     required this.activeTabIndex,
     required this.onTabChanged,
     required this.stakeholderTable,
+    required this.mappingTable,
     required this.planTable,
     required this.onAdd,
     required this.onSearch,
     required this.onAiReview,
+    required this.onAiSuggestRatings,
+    required this.onExportPdf,
     required this.matrixFilter,
     required this.onMatrixFilterChanged,
+    required this.announcements,
+    required this.loadingAnnouncements,
+    required this.onSaveAnnouncement,
+    required this.onDeleteAnnouncement,
   });
 
   final int activeTabIndex;
   final ValueChanged<int> onTabChanged;
   final Widget stakeholderTable;
+  final Widget mappingTable;
   final Widget planTable;
   final VoidCallback onAdd;
   final ValueChanged<String> onSearch;
   final VoidCallback onAiReview;
+  final VoidCallback onAiSuggestRatings;
+  final VoidCallback onExportPdf;
   final String matrixFilter;
   final ValueChanged<String> onMatrixFilterChanged;
 
+  // ── Announcements tab (index 3) ─────────────────────────────────────
+  final List<StakeholderAnnouncement> announcements;
+  final bool loadingAnnouncements;
+  final Future<void> Function(StakeholderAnnouncement) onSaveAnnouncement;
+  final Future<void> Function(String) onDeleteAnnouncement;
+
   @override
   Widget build(BuildContext context) {
+    // The Announcements tab (index 3) has its own composer UI + template
+    // picker, so we hide the standard search/add/export toolbar when it
+    // is active. The other three tabs share the standard toolbar.
+    final bool isAnnouncementsTab = activeTabIndex == 3;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1894,7 +2440,9 @@ class _EngagementSection extends StatelessWidget {
             child: Row(
               children: [
                 _tabButton(title: 'Stakeholders', index: 0),
-                _tabButton(title: 'Engagement Plans', index: 1),
+                _tabButton(title: 'Stakeholder Mapping', index: 1),
+                _tabButton(title: 'Engagement Plans', index: 2),
+                _tabButton(title: 'Announcements', index: 3),
               ],
             ),
           ),
@@ -1903,128 +2451,192 @@ class _EngagementSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Toolbar row 1: search + add ──
-                Row(
-                  children: [
-                    Expanded(
-                      child: _SearchField(
-                        enabled: true,
-                        value: '', // Managed externally now
-                        onChanged: onSearch,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      onPressed: onAdd,
-                      icon: const Icon(Icons.add),
-                      label: Text(
-                          activeTabIndex == 0 ? 'Add stakeholder' : 'Add plan'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFD84D),
-                        foregroundColor: const Color(0xFF1F2937),
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                  ],
-                ),
-                // ── Toolbar row 2: matrix filter + AI review (stakeholders tab only) ──
-                if (activeTabIndex == 0) ...[
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
+                // ── Toolbar row 1: search + add + export PDF ──
+                // Export PDF lives here (right side of the toolbar) instead
+                // of in the PlanningPhaseHeader because the header's Wrap
+                // row visually sits above the sidebar zone. Moving the
+                // button into the Engagement Section toolbar keeps it out
+                // of the sidebar column entirely.
+                //
+                // The Announcements tab (index 3) has its own composer +
+                // template picker UI, so the standard search/add/export
+                // toolbar is hidden when that tab is active.
+                if (!isAnnouncementsTab) ...[
+                  Row(
                     children: [
-                      // Matrix quarter filter
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
-                          borderRadius: BorderRadius.circular(10),
-                          border:
-                              Border.all(color: const Color(0xFFE5E7EB)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.filter_list,
-                                size: 16, color: Color(0xFF6B7280)),
-                            const SizedBox(width: 8),
-                            const Text('Filter by matrix quarter:',
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF6B7280))),
-                            const SizedBox(width: 8),
-                            DropdownButton<String>(
-                              value: matrixFilter,
-                              underline: const SizedBox(),
-                              isDense: true,
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF111827)),
-                              items: const [
-                                DropdownMenuItem(
-                                    value: 'all',
-                                    child: Text('All stakeholders')),
-                                DropdownMenuItem(
-                                    value: 'manage_closely',
-                                    child: Text(
-                                        'Manage Closely (High influence / High interest)')),
-                                DropdownMenuItem(
-                                    value: 'keep_satisfied',
-                                    child: Text(
-                                        'Keep Satisfied (High influence / Low interest)')),
-                                DropdownMenuItem(
-                                    value: 'keep_informed',
-                                    child: Text(
-                                        'Keep Informed (Low influence / High interest)')),
-                                DropdownMenuItem(
-                                    value: 'monitor',
-                                    child: Text(
-                                        'Monitor (Low influence / Low interest)')),
-                              ],
-                              onChanged: (v) {
-                                if (v != null) onMatrixFilterChanged(v);
-                              },
-                            ),
-                          ],
+                      Expanded(
+                        child: _SearchField(
+                          enabled: true,
+                          value: '', // Managed externally now
+                          onChanged: onSearch,
                         ),
                       ),
-                      // AI review stakeholders
-                      ElevatedButton.icon(
-                        onPressed: onAiReview,
-                        icon: const Icon(Icons.auto_awesome,
-                            size: 16, color: Color(0xFF1F2937)),
-                        label: const Text('AI Review Stakeholders',
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: onExportPdf,
+                        icon: const Icon(Icons.picture_as_pdf_outlined,
+                            size: 18),
+                        label: const Text('Export PDF',
                             style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1F2937))),
+                                fontSize: 13, fontWeight: FontWeight.w600)),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF1F2937),
+                          side: const BorderSide(color: Color(0xFFE5E7EB)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: onAdd,
+                        icon: const Icon(Icons.add),
+                        label: Text(activeTabIndex == 2
+                            ? 'Add plan'
+                            : 'Add stakeholder'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFC107),
+                          backgroundColor: const Color(0xFFFFD84D),
                           foregroundColor: const Color(0xFF1F2937),
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
+                              horizontal: 18, vertical: 14),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
                     ],
                   ),
+                  // ── Toolbar row 2: matrix filter + AI buttons ──
+                  // The matrix filter + AI Review buttons only show on the
+                  // Stakeholders tab. On the Stakeholder Mapping tab we show
+                  // the AI Suggest Ratings button instead. The Engagement
+                  // Plans tab shows nothing here.
+                  if (activeTabIndex == 0 || activeTabIndex == 1) ...[
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (activeTabIndex == 0) ...[
+                          // Matrix quarter filter
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF9FAFB),
+                              borderRadius: BorderRadius.circular(10),
+                              border:
+                                  Border.all(color: const Color(0xFFE5E7EB)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.filter_list,
+                                    size: 16, color: Color(0xFF6B7280)),
+                                const SizedBox(width: 8),
+                                const Text('Filter by matrix quarter:',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF6B7280))),
+                                const SizedBox(width: 8),
+                                DropdownButton<String>(
+                                  value: matrixFilter,
+                                  underline: const SizedBox(),
+                                  isDense: true,
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF111827)),
+                                  items: const [
+                                    DropdownMenuItem(
+                                        value: 'all',
+                                        child: Text('All stakeholders')),
+                                    DropdownMenuItem(
+                                        value: 'manage_closely',
+                                        child: Text(
+                                            'Manage Closely (High influence / High interest)')),
+                                    DropdownMenuItem(
+                                        value: 'keep_satisfied',
+                                        child: Text(
+                                            'Keep Satisfied (High influence / Low interest)')),
+                                    DropdownMenuItem(
+                                        value: 'keep_informed',
+                                        child: Text(
+                                            'Keep Informed (Low influence / High interest)')),
+                                    DropdownMenuItem(
+                                        value: 'monitor',
+                                        child: Text(
+                                            'Monitor (Low influence / Low interest)')),
+                                  ],
+                                  onChanged: (v) {
+                                    if (v != null) onMatrixFilterChanged(v);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          // AI review stakeholders
+                          ElevatedButton.icon(
+                            onPressed: onAiReview,
+                            icon: const Icon(Icons.auto_awesome,
+                                size: 16, color: Color(0xFF1F2937)),
+                            label: const Text('AI Review Stakeholders',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1F2937))),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFFC107),
+                              foregroundColor: const Color(0xFF1F2937),
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                        ],
+                        if (activeTabIndex == 1)
+                          // AI suggest ratings (Stakeholder Mapping tab)
+                          ElevatedButton.icon(
+                            onPressed: onAiSuggestRatings,
+                            icon: const Icon(Icons.auto_awesome,
+                                size: 16, color: Color(0xFF1F2937)),
+                            label: const Text('AI Suggest Ratings',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1F2937))),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFFC107),
+                              foregroundColor: const Color(0xFF1F2937),
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 24),
                 ],
-                const SizedBox(height: 24),
                 IndexedStack(
                   index: activeTabIndex,
                   children: [
                     stakeholderTable,
+                    mappingTable,
                     planTable,
+                    _AnnouncementsTab(
+                      announcements: announcements,
+                      loading: loadingAnnouncements,
+                      onSave: onSaveAnnouncement,
+                      onDelete: onDeleteAnnouncement,
+                    ),
                   ],
                 ),
               ],
@@ -2225,6 +2837,318 @@ class _StakeholdersTable extends StatelessWidget {
             ],
           ),
       ],
+    );
+  }
+}
+
+/// Color-coded mapping table — groups each stakeholder into one of the
+/// four influence/interest matrix designations (Manage Closely / Keep
+/// Satisfied / Keep Informed / Monitor). Each rating cell is colored to
+/// match the matrix quadrant:
+///   - Manage Closely → red/pink
+///   - Keep Satisfied  → blue
+///   - Keep Informed   → green
+///   - Monitor         → gray
+/// The rating shown is the AI suggestion if one exists, otherwise the
+/// rating derived from the stakeholder's manual influence/interest values.
+/// The user can override either by editing the dropdown directly in
+/// this tab or by running "AI Suggest Ratings" (button in the toolbar
+/// above this table).
+class _StakeholderMappingTable extends StatelessWidget {
+  const _StakeholderMappingTable({
+    required this.entries,
+    required this.onChanged,
+  });
+
+  final List<StakeholderEntry> entries;
+  final ValueChanged<StakeholderEntry> onChanged;
+
+  /// Quadrant color palette — must stay in sync with
+  /// [_InfluenceInterestMatrix._matrixQuadrant].
+  static const Map<String, _QuadrantPalette> _palettes = {
+    'Manage Closely': _QuadrantPalette(
+        name: 'Manage Closely',
+        bg: Color(0xFFFEF2F2),
+        accent: Color(0xFFEF4444),
+        description: 'High influence / High interest'),
+    'Keep Satisfied': _QuadrantPalette(
+        name: 'Keep Satisfied',
+        bg: Color(0xFFEFF6FF),
+        accent: Color(0xFF3B82F6),
+        description: 'High influence / Low interest'),
+    'Keep Informed': _QuadrantPalette(
+        name: 'Keep Informed',
+        bg: Color(0xFFECFDF5),
+        accent: Color(0xFF10B981),
+        description: 'Low influence / High interest'),
+    'Monitor': _QuadrantPalette(
+        name: 'Monitor',
+        bg: Color(0xFFF9FAFB),
+        accent: Color(0xFF6B7280),
+        description: 'Low influence / Low interest'),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    if (entries.isEmpty) {
+      return _SectionEmptyState(
+        title: 'No stakeholders to map',
+        message: 'Add stakeholders on the Stakeholders tab first, then use '
+            '"AI Suggest Ratings" to auto-classify them into matrix quadrants.',
+        icon: Icons.grid_view_outlined,
+      );
+    }
+
+    final columns = [
+      const _TableColumnDef('#', 56),
+      const _TableColumnDef('Stakeholder', 200),
+      const _TableColumnDef('Organization', 150),
+      const _TableColumnDef('Role/Title', 160),
+      const _TableColumnDef('Influence', 110),
+      const _TableColumnDef('Interest', 110),
+      const _TableColumnDef('Suggested Rating', 220),
+      const _TableColumnDef('Source', 130),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Quadrant legend — color swatches with their labels.
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: _palettes.values.map((p) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: p.bg,
+                      border: Border.all(color: p.accent, width: 1.5),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${p.name} (${p.description})',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: p.accent),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _EditableTable(
+          columns: columns,
+          rows: [
+            for (int index = 0; index < entries.length; index++)
+              _EditableRow(
+                key: ValueKey('mapping_${entries[index].id}'),
+                columns: columns,
+                cells: _buildRowCells(index, entries[index]),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildRowCells(int index, StakeholderEntry entry) {
+    // Use the AI-suggested rating if available, otherwise derive from
+    // the manual influence/interest values.
+    final rating = entry.aiSuggestedRating.isNotEmpty
+        ? entry.aiSuggestedRating
+        : entry.derivedMatrixRating;
+    final palette = _palettes[rating] ?? _palettes['Monitor']!;
+    final source = entry.aiSuggestedRating.isNotEmpty ? 'AI' : 'Manual';
+
+    return [
+      _IndexCell(number: index + 1),
+      _TextCell(
+        value: entry.name,
+        fieldKey: 'mapping_${entry.id}_name',
+        hintText: 'Name',
+        onChanged: (value) => onChanged(entry.copyWith(name: value)),
+      ),
+      _TextCell(
+        value: entry.organization,
+        fieldKey: 'mapping_${entry.id}_organization',
+        hintText: 'Organization',
+        onChanged: (value) => onChanged(entry.copyWith(organization: value)),
+      ),
+      _TextCell(
+        value: entry.role,
+        fieldKey: 'mapping_${entry.id}_role',
+        hintText: 'Role/Title',
+        onChanged: (value) => onChanged(entry.copyWith(role: value)),
+      ),
+      _DropdownCell(
+        value: entry.influence,
+        fieldKey: 'mapping_${entry.id}_influence',
+        options: const ['High', 'Medium', 'Low'],
+        onChanged: (value) => onChanged(entry.copyWith(
+            influence: value, updatedAt: DateTime.now())),
+      ),
+      _DropdownCell(
+        value: entry.interest,
+        fieldKey: 'mapping_${entry.id}_interest',
+        options: const ['High', 'Medium', 'Low'],
+        onChanged: (value) => onChanged(entry.copyWith(
+            interest: value, updatedAt: DateTime.now())),
+      ),
+      // Color-coded suggested rating cell — a dropdown that lets the
+      // user override the rating. Selecting a new rating updates both
+      // the aiSuggestedRating and the manual influence/interest so the
+      // matrix, filter, and this tab stay in sync.
+      _RatingCell(
+        rating: rating,
+        palette: palette,
+        onChanged: (newRating) {
+          String influence;
+          String interest;
+          switch (newRating) {
+            case 'Manage Closely':
+              influence = 'High';
+              interest = 'High';
+              break;
+            case 'Keep Satisfied':
+              influence = 'High';
+              interest = 'Low';
+              break;
+            case 'Keep Informed':
+              influence = 'Low';
+              interest = 'High';
+              break;
+            case 'Monitor':
+            default:
+              influence = 'Low';
+              interest = 'Low';
+              break;
+          }
+          onChanged(entry.copyWith(
+            aiSuggestedRating: newRating,
+            influence: influence,
+            interest: interest,
+            updatedAt: DateTime.now(),
+          ));
+        },
+      ),
+      _SourceCell(source: source),
+    ];
+  }
+}
+
+/// Quadrant color palette descriptor.
+class _QuadrantPalette {
+  const _QuadrantPalette({
+    required this.name,
+    required this.bg,
+    required this.accent,
+    required this.description,
+  });
+
+  final String name;
+  final Color bg;
+  final Color accent;
+  final String description;
+}
+
+/// Color-coded rating cell. The cell's background color matches the
+/// matrix quadrant the rating falls in.
+class _RatingCell extends StatelessWidget {
+  const _RatingCell({
+    required this.rating,
+    required this.palette,
+    required this.onChanged,
+  });
+
+  final String rating;
+  final _QuadrantPalette palette;
+  final ValueChanged<String> onChanged;
+
+  static const _options = [
+    'Manage Closely',
+    'Keep Satisfied',
+    'Keep Informed',
+    'Monitor',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      decoration: BoxDecoration(
+        color: palette.bg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: palette.accent.withValues(alpha: 0.4)),
+      ),
+      child: DropdownButton<String>(
+        value: _options.contains(rating) ? rating : 'Monitor',
+        underline: const SizedBox(),
+        isExpanded: true,
+        isDense: true,
+        icon: Icon(Icons.arrow_drop_down, color: palette.accent, size: 18),
+        style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: palette.accent),
+        items: _options
+            .map((option) => DropdownMenuItem(
+                  value: option,
+                  child: Text(option),
+                ))
+            .toList(),
+        onChanged: (value) {
+          if (value != null) onChanged(value);
+        },
+      ),
+    );
+  }
+}
+
+/// Small badge showing whether the rating was AI-suggested or set
+/// manually.
+class _SourceCell extends StatelessWidget {
+  const _SourceCell({required this.source});
+
+  final String source;
+
+  @override
+  Widget build(BuildContext context) {
+    final isAi = source == 'AI';
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isAi
+              ? const Color(0xFFFFC107).withValues(alpha: 0.15)
+              : const Color(0xFFE5E7EB),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          source,
+          style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: isAi
+                  ? const Color(0xFFB45309)
+                  : const Color(0xFF6B7280)),
+        ),
+      ),
     );
   }
 }
@@ -3695,6 +4619,904 @@ class _SiteAccessCell extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Announcements tab (4th tab of _EngagementSection)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Per user spec: "A fourth tab should be included here for Announcements
+// and should have announcement templates that can be used for each
+// Engagement Plan/level including the project team section."
+//
+// Layout:
+//   1. Template picker — chips grouped by audience level (5 groups).
+//      Tapping a chip pre-fills the composer with the template's subject
+//      and body, but the user can still tailor before saving.
+//   2. Composer — title, audience, channel, status, body, Save / Cancel.
+//      Collapsed by default; expands when "New Announcement" is tapped
+//      or a template chip is picked.
+//   3. Saved announcements feed — list of cards showing title, audience
+//      pill, channel pill, status pill, created date, body preview,
+//      edit / delete actions.
+//
+// All state is local to the widget except persistence, which is delegated
+// to the parent via onSave / onDelete callbacks (Firestore subcollection).
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class _AnnouncementsTab extends StatefulWidget {
+  const _AnnouncementsTab({
+    required this.announcements,
+    required this.loading,
+    required this.onSave,
+    required this.onDelete,
+  });
+
+  final List<StakeholderAnnouncement> announcements;
+  final bool loading;
+  final Future<void> Function(StakeholderAnnouncement) onSave;
+  final Future<void> Function(String) onDelete;
+
+  @override
+  State<_AnnouncementsTab> createState() => _AnnouncementsTabState();
+}
+
+class _AnnouncementsTabState extends State<_AnnouncementsTab> {
+  bool _composerOpen = false;
+  bool _isEditing = false;
+  String _editingId = '';
+
+  final _titleController = TextEditingController();
+  final _bodyController = TextEditingController();
+  String _audienceLevel = 'Manage Closely';
+  String _channel = 'Email';
+  String _status = 'Draft';
+  String _templateId = '';
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _bodyController.dispose();
+    super.dispose();
+  }
+
+  void _openComposerForNew() {
+    setState(() {
+      _isEditing = false;
+      _editingId = '';
+      _templateId = '';
+      _titleController.clear();
+      _bodyController.clear();
+      _audienceLevel = 'Manage Closely';
+      _channel = 'Email';
+      _status = 'Draft';
+      _composerOpen = true;
+    });
+  }
+
+  void _openComposerForEdit(StakeholderAnnouncement a) {
+    setState(() {
+      _isEditing = true;
+      _editingId = a.id;
+      _templateId = a.templateId;
+      _titleController.text = a.title;
+      _bodyController.text = a.body;
+      _audienceLevel = a.audienceLevel;
+      _channel = a.channel;
+      _status = a.status;
+      _composerOpen = true;
+    });
+  }
+
+  void _closeComposer() {
+    setState(() => _composerOpen = false);
+  }
+
+  void _applyTemplate(StakeholderAnnouncementTemplate t) {
+    setState(() {
+      _isEditing = false;
+      _editingId = '';
+      _templateId = t.id;
+      _titleController.text = t.subject;
+      _bodyController.text = t.body;
+      _audienceLevel = t.audienceLevel;
+      _channel = t.channel;
+      _status = 'Draft';
+      _composerOpen = true;
+    });
+  }
+
+  Future<void> _save() async {
+    final title = _titleController.text.trim();
+    final body = _bodyController.text.trim();
+    if (title.isEmpty && body.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Add a title or body before saving the announcement.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    final announcement = StakeholderAnnouncement(
+      id: _isEditing ? _editingId : null,
+      title: title.isEmpty ? '(Untitled announcement)' : title,
+      body: body,
+      audienceLevel: _audienceLevel,
+      channel: _channel,
+      status: _status,
+      templateId: _templateId,
+    );
+    await widget.onSave(announcement);
+    if (!mounted) return;
+    _closeComposer();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_isEditing
+            ? 'Announcement updated.'
+            : 'Announcement saved as $_status.'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF059669),
+      ),
+    );
+  }
+
+  Future<void> _delete(StakeholderAnnouncement a) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete announcement?'),
+        content: Text(
+            'This will permanently delete "${a.title.isEmpty ? '(Untitled)' : a.title}".'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await widget.onDelete(a.id);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Announcement deleted.'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.loading) {
+      return const Padding(
+        padding: EdgeInsets.all(48),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Header row: title + New Announcement button ──
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Stakeholder Announcements',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Templates for each engagement level (Manage Closely, '
+                    'Keep Satisfied, Keep Informed, Monitor) and the Project '
+                    'Team section. Pick a template to seed the composer, then '
+                    'tailor before saving.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton.icon(
+              onPressed:
+                  _composerOpen ? null : _openComposerForNew,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('New Announcement',
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFD84D),
+                foregroundColor: const Color(0xFF1F2937),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 18, vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // ── Template picker (always visible) ──
+        _AnnouncementTemplatePicker(
+          onPick: _applyTemplate,
+        ),
+
+        const SizedBox(height: 20),
+
+        // ── Composer (collapsible) ──
+        if (_composerOpen) ...[
+          _AnnouncementComposer(
+            titleController: _titleController,
+            bodyController: _bodyController,
+            audienceLevel: _audienceLevel,
+            channel: _channel,
+            status: _status,
+            isEditing: _isEditing,
+            onAudienceLevelChanged: (v) =>
+                setState(() => _audienceLevel = v),
+            onChannelChanged: (v) => setState(() => _channel = v),
+            onStatusChanged: (v) => setState(() => _status = v),
+            onSave: _save,
+            onCancel: _closeComposer,
+          ),
+          const SizedBox(height: 20),
+        ],
+
+        // ── Saved announcements feed ──
+        if (widget.announcements.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: const Color(0xFFE5E7EB), style: BorderStyle.solid),
+            ),
+            child: Column(
+              children: [
+                const Icon(Icons.campaign_outlined,
+                    size: 36, color: Color(0xFF9CA3AF)),
+                const SizedBox(height: 12),
+                const Text(
+                  'No announcements yet',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF6B7280)),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Pick a template above or tap "New Announcement" to compose one.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          )
+        else
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  '${widget.announcements.length} announcement${widget.announcements.length == 1 ? '' : 's'}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+              ),
+              ...widget.announcements.map(
+                (a) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _AnnouncementCard(
+                    announcement: a,
+                    onEdit: () => _openComposerForEdit(a),
+                    onDelete: () => _delete(a),
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+/// Template picker — renders one section per audience level, with each
+/// section listing its templates as pickable chips. Tapping a chip calls
+/// `onPick(template)` which seeds the parent composer.
+class _AnnouncementTemplatePicker extends StatelessWidget {
+  const _AnnouncementTemplatePicker({required this.onPick});
+
+  final void Function(StakeholderAnnouncementTemplate) onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.style_outlined,
+                  size: 18, color: Color(0xFF6B7280)),
+              const SizedBox(width: 8),
+              const Text(
+                'Announcement Templates',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                '— tap to seed the composer',
+                style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...kStakeholderAnnouncementAudienceLevels.map(
+            (level) => _AudienceTemplateGroup(
+              audienceLevel: level,
+              templates:
+                  StakeholderAnnouncementTemplates.forAudience(level),
+              onPick: onPick,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AudienceTemplateGroup extends StatelessWidget {
+  const _AudienceTemplateGroup({
+    required this.audienceLevel,
+    required this.templates,
+    required this.onPick,
+  });
+
+  final String audienceLevel;
+  final List<StakeholderAnnouncementTemplate> templates;
+  final void Function(StakeholderAnnouncementTemplate) onPick;
+
+  static const Map<String, Color> _audienceColors = {
+    'Manage Closely': Color(0xFFEF4444),
+    'Keep Satisfied': Color(0xFF3B82F6),
+    'Keep Informed': Color(0xFF10B981),
+    'Monitor': Color(0xFF6B7280),
+    'Project Team': Color(0xFF8B5CF6),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    if (templates.isEmpty) return const SizedBox.shrink();
+    final color = _audienceColors[audienceLevel] ?? const Color(0xFF6B7280);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration:
+                    BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                audienceLevel,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '(${templates.length})',
+                style: const TextStyle(
+                    fontSize: 11, color: Color(0xFF9CA3AF)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: templates
+                .map(
+                  (t) => ActionChip(
+                    label: Text(t.title,
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w600)),
+                    avatar: const Icon(Icons.description_outlined,
+                        size: 14, color: Color(0xFF6B7280)),
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFFE5E7EB)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    onPressed: () => onPick(t),
+                    tooltip: t.useCase,
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The composer — title, audience, channel, status, body, Save / Cancel.
+class _AnnouncementComposer extends StatelessWidget {
+  const _AnnouncementComposer({
+    required this.titleController,
+    required this.bodyController,
+    required this.audienceLevel,
+    required this.channel,
+    required this.status,
+    required this.isEditing,
+    required this.onAudienceLevelChanged,
+    required this.onChannelChanged,
+    required this.onStatusChanged,
+    required this.onSave,
+    required this.onCancel,
+  });
+
+  final TextEditingController titleController;
+  final TextEditingController bodyController;
+  final String audienceLevel;
+  final String channel;
+  final String status;
+  final bool isEditing;
+  final ValueChanged<String> onAudienceLevelChanged;
+  final ValueChanged<String> onChannelChanged;
+  final ValueChanged<String> onStatusChanged;
+  final VoidCallback onSave;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: const Color(0xFFFFD84D), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.edit_note,
+                    color: Color(0xFFB45309), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  isEditing
+                      ? 'Edit announcement'
+                      : 'Compose new announcement',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: onCancel,
+                icon: const Icon(Icons.close, size: 16),
+                label: const Text('Cancel',
+                    style: TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Title row
+          TextField(
+            controller: titleController,
+            decoration: const InputDecoration(
+              labelText: 'Subject / Title',
+              labelStyle: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+              hintText: 'e.g., Weekly Status — Project Alpha (Week 12)',
+              hintStyle: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderSide: BorderSide(color: Color(0xFFFFD84D), width: 1.5),
+              ),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+            style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+          ),
+          const SizedBox(height: 12),
+          // Audience / Channel / Status row
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _DropdownField(
+                label: 'Audience',
+                value: audienceLevel,
+                items: kStakeholderAnnouncementAudienceLevels,
+                onChanged: onAudienceLevelChanged,
+              ),
+              _DropdownField(
+                label: 'Channel',
+                value: channel,
+                items: kStakeholderAnnouncementChannels,
+                onChanged: onChannelChanged,
+              ),
+              _DropdownField(
+                label: 'Status',
+                value: status,
+                items: kStakeholderAnnouncementStatuses,
+                onChanged: onStatusChanged,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Body
+          TextField(
+            controller: bodyController,
+            maxLines: 10,
+            minLines: 6,
+            decoration: const InputDecoration(
+              labelText: 'Body',
+              labelStyle: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+              hintText: 'Compose the announcement body. Use {{placeholders}} '
+                  'for variables you will replace before sending.',
+              hintStyle: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+              alignLabelWithHint: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderSide: BorderSide(color: Color(0xFFFFD84D), width: 1.5),
+              ),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+            style: TextStyle(
+                fontSize: 13,
+                color: const Color(0xFF111827),
+                fontFamily: bodyController.text.isEmpty ? null : 'monospace',
+                height: 1.5),
+          ),
+          const SizedBox(height: 16),
+          // Actions
+          Row(
+            children: [
+              const Spacer(),
+              OutlinedButton(
+                onPressed: onCancel,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF6B7280),
+                  side: const BorderSide(color: Color(0xFFE5E7EB)),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 18, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('Cancel',
+                    style: TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600)),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: onSave,
+                icon: const Icon(Icons.check, size: 16),
+                label: Text(isEditing ? 'Save Changes' : 'Save Announcement',
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFD84D),
+                  foregroundColor: const Color(0xFF1F2937),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Compact dropdown with label — used inside the composer for audience,
+/// channel, and status.
+class _DropdownField extends StatelessWidget {
+  const _DropdownField({
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final List<String> items;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('$label:',
+              style: const TextStyle(
+                  fontSize: 12, color: Color(0xFF6B7280))),
+          const SizedBox(width: 8),
+          DropdownButton<String>(
+            value: value,
+            underline: const SizedBox(),
+            isDense: true,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF111827)),
+            items: items
+                .map((item) => DropdownMenuItem(
+                      value: item,
+                      child: Text(item),
+                    ))
+                .toList(),
+            onChanged: (v) {
+              if (v != null) onChanged(v);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A saved announcement card in the feed.
+class _AnnouncementCard extends StatelessWidget {
+  const _AnnouncementCard({
+    required this.announcement,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final StakeholderAnnouncement announcement;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  static const Map<String, Color> _audienceColors = {
+    'Manage Closely': Color(0xFFFEE2E2),
+    'Keep Satisfied': Color(0xFFDBEAFE),
+    'Keep Informed': Color(0xFFD1FAE5),
+    'Monitor': Color(0xFFF3F4F6),
+    'Project Team': Color(0xFFEDE9FE),
+  };
+
+  static const Map<String, Color> _audienceTextColors = {
+    'Manage Closely': Color(0xFF991B1B),
+    'Keep Satisfied': Color(0xFF1E40AF),
+    'Keep Informed': Color(0xFF065F46),
+    'Monitor': Color(0xFF374151),
+    'Project Team': Color(0xFF5B21B6),
+  };
+
+  static const Map<String, Color> _statusColors = {
+    'Draft': Color(0xFFF3F4F6),
+    'Scheduled': Color(0xFFFEF3C7),
+    'Sent': Color(0xFFD1FAE5),
+  };
+
+  static const Map<String, Color> _statusTextColors = {
+    'Draft': Color(0xFF4B5563),
+    'Scheduled': Color(0xFF92400E),
+    'Sent': Color(0xFF065F46),
+  };
+
+  String _formatDate(DateTime d) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${d.year}-${two(d.month)}-${two(d.day)} '
+        '${two(d.hour)}:${two(d.minute)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final a = announcement;
+    final audienceBg =
+        _audienceColors[a.audienceLevel] ?? const Color(0xFFF3F4F6);
+    final audienceFg =
+        _audienceTextColors[a.audienceLevel] ?? const Color(0xFF374151);
+    final statusBg = _statusColors[a.status] ?? const Color(0xFFF3F4F6);
+    final statusFg = _statusTextColors[a.status] ?? const Color(0xFF4B5563);
+    final bodyPreview = a.body.isEmpty
+        ? '(no body)'
+        : (a.body.length > 180 ? '${a.body.substring(0, 180)}…' : a.body);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  a.title.isEmpty ? '(Untitled announcement)' : a.title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_outlined,
+                    size: 18, color: Color(0xFF6B7280)),
+                tooltip: 'Edit',
+                splashRadius: 18,
+              ),
+              IconButton(
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline,
+                    size: 18, color: Color(0xFFEF4444)),
+                tooltip: 'Delete',
+                splashRadius: 18,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              _Pill(
+                label: a.audienceLevel,
+                backgroundColor: audienceBg,
+                foregroundColor: audienceFg,
+              ),
+              _Pill(
+                label: a.channel,
+                backgroundColor: const Color(0xFFF3F4F6),
+                foregroundColor: const Color(0xFF374151),
+              ),
+              _Pill(
+                label: a.status,
+                backgroundColor: statusBg,
+                foregroundColor: statusFg,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: SelectableText(
+              bodyPreview,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF4B5563),
+                height: 1.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.schedule_outlined,
+                  size: 12, color: Color(0xFF9CA3AF)),
+              const SizedBox(width: 4),
+              Text(
+                'Created ${_formatDate(a.createdAt)}'
+                '${a.updatedAt != null ? ' · Updated ${_formatDate(a.updatedAt!)}' : ''}',
+                style: const TextStyle(
+                    fontSize: 11, color: Color(0xFF9CA3AF)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+  });
+
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: foregroundColor,
         ),
       ),
     );

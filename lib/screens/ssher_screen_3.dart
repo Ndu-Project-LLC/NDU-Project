@@ -136,7 +136,7 @@ class _SsherScreen3State extends State<SsherScreen3> {
  width: sidebarWidth,
  child: const SafeArea(
  child: InitiationLikeSidebar(
- activeItemLabel: 'SSHE Planning',
+ activeItemLabel: 'SSHER',
  showHeader: true,
  ),
  ),
@@ -148,7 +148,7 @@ class _SsherScreen3State extends State<SsherScreen3> {
  PlanningPhaseHeader(
  title: 'SSHER',
  breadcrumbPhase: 'Planning Phase',
- breadcrumbTitle: 'SSHE Planning',
+ breadcrumbTitle: 'SSHER Hub',
  onBack: () => Navigator.maybePop(context), onExportPdf: _exportPdf),
  Expanded(
  child: SingleChildScrollView(
@@ -172,7 +172,7 @@ class _SsherScreen3State extends State<SsherScreen3> {
  PlanningPhaseHeader(
  title: 'SSHER',
  breadcrumbPhase: 'Planning Phase',
- breadcrumbTitle: 'SSHE Planning',
+ breadcrumbTitle: 'SSHER Hub',
  onBack: () => Navigator.maybePop(context), onExportPdf: _exportPdf),
  Expanded(
  child: Row(
@@ -180,7 +180,7 @@ class _SsherScreen3State extends State<SsherScreen3> {
  DraggableSidebar(
  openWidth: sidebarWidth,
  child: const InitiationLikeSidebar(
- activeItemLabel: 'SSHE Planning',
+ activeItemLabel: 'SSHER',
  ),
  ),
  Expanded(

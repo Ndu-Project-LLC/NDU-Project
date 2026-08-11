@@ -51,6 +51,12 @@ jobs:
             --dart-define=OPENAI_PROXY_API_KEY=${OPENAI_PROXY_API_KEY} \
             --dart-define=OPENAI_PROXY_ENDPOINT=${OPENAI_PROXY_ENDPOINT}
 
+      - name: Stamp build version (cache-busting)
+        run: |
+          python scripts/stamp_build_version.py
+          STAMP=$(grep -oE "var NDU_BUILD = '[^']+'" build/web/index.html | head -1)
+          echo "Stamped NDU_BUILD = $STAMP"
+
       - name: Add SPA routing config (if present)
         run: |
           if [ -f staticwebapp.config.json ]; then

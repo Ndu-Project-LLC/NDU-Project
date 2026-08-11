@@ -234,6 +234,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
 
   static const Set<String> _projectServicesLabels = {
     'Scope Tracking Plan',
+    'Project Controls',
   };
 
   static const Set<String> _startUpPlanningLabels = {
@@ -256,10 +257,31 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     'Agile Delivery Model - Kanban Configuration',
     'Agile Delivery Model - Epics & Features',
     'Agile Delivery Model - Acceptance Criteria Planning',
-    'Agile Delivery Model - Sprint Calendar',
     'Agile Delivery Model - Agile Map Out',
     'Agile Delivery Model - Release Plan',
     'Agile Delivery Model - Metrics Planning',
+  };
+
+  /// All sidebar labels that should keep the "Design Planning" parent header
+  /// highlighted + expanded. Mirrors the 15 in-screen sections defined in
+  /// `design_planning_screen.dart` (`_sectionOrder`).
+  static const Set<String> _designPlanningLabels = {
+    'Design Planning',
+    'Design Planning - Project Overview',
+    'Design Planning - Design Overview',
+    'Design Planning - Design Specifications',
+    'Design Planning - Deviations',
+    'Design Planning - Requirements Mapping',
+    'Design Planning - Architecture Basis',
+    'Design Planning - UI/UX Basis',
+    'Design Planning - Technical Basis',
+    'Design Planning - Constraints & Assumptions',
+    'Design Planning - Risks & Mitigation',
+    'Design Planning - Dependencies',
+    'Design Planning - Decision Log',
+    'Design Planning - Validation',
+    'Design Planning - Approvals',
+    'Design Planning - Work Packages',
   };
 
   static const Set<String> _projectPlanLabels = {
@@ -443,6 +465,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   static bool? _sharedCostEstimateExpanded;
   static bool? _sharedProjectServicesExpanded;
   static bool? _sharedAgileWireframeExpanded;
+  static bool? _sharedDesignPlanningExpanded;
   static double _sharedScrollOffset = 0;
 
   bool _initiationExpanded = _sharedInitiationExpanded ?? true;
@@ -472,6 +495,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   late bool _costEstimateExpanded = _sharedCostEstimateExpanded ?? false;
   late bool _projectServicesExpanded = _sharedProjectServicesExpanded ?? false;
   late bool _agileWireframeExpanded = _sharedAgileWireframeExpanded ?? false;
+  late bool _designPlanningExpanded = _sharedDesignPlanningExpanded ?? false;
   late final ScrollController _scrollController =
       ScrollController(initialScrollOffset: _sharedScrollOffset);
 
@@ -545,6 +569,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     expandIf(_agileWireframeLabels, _agileWireframeExpanded, () {
       _agileWireframeExpanded = true;
       _sharedAgileWireframeExpanded = true;
+    });
+    expandIf(_designPlanningLabels, _designPlanningExpanded, () {
+      _designPlanningExpanded = true;
+      _sharedDesignPlanningExpanded = true;
     });
     expandIf(_projectPlanLabels, _projectPlanExpanded, () {
       _projectPlanExpanded = true;
@@ -1017,6 +1045,161 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     _navigateWithCheckpoint('design', const DesignPlanningScreen());
   }
 
+  // ─── Design Planning sub-page navigation ───────────────────────────────────
+  // Each helper deep-links into a specific section of the Design Planning
+  // screen by passing `initialSectionId` (matches `_sectionOrder` in
+  // `design_planning_screen.dart`) and a unique `activeItemLabel` so the
+  // sidebar highlights the right sub-bar page.
+  void _openDesignProjectOverview() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'overview',
+        activeItemLabel: 'Design Planning - Project Overview',
+      ),
+    );
+  }
+
+  void _openDesignDesignOverview() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'design_overview',
+        activeItemLabel: 'Design Planning - Design Overview',
+      ),
+    );
+  }
+
+  void _openDesignSpecifications() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'design_specifications_workspace',
+        activeItemLabel: 'Design Planning - Design Specifications',
+      ),
+    );
+  }
+
+  void _openDesignDeviations() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'deviations',
+        activeItemLabel: 'Design Planning - Deviations',
+      ),
+    );
+  }
+
+  void _openDesignRequirementsMapping() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'requirements',
+        activeItemLabel: 'Design Planning - Requirements Mapping',
+      ),
+    );
+  }
+
+  void _openDesignArchitectureBasis() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'architecture',
+        activeItemLabel: 'Design Planning - Architecture Basis',
+      ),
+    );
+  }
+
+  void _openDesignUiUxBasis() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'uiux',
+        activeItemLabel: 'Design Planning - UI/UX Basis',
+      ),
+    );
+  }
+
+  void _openDesignTechnicalBasis() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'technical',
+        activeItemLabel: 'Design Planning - Technical Basis',
+      ),
+    );
+  }
+
+  void _openDesignConstraintsAssumptions() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'constraints',
+        activeItemLabel: 'Design Planning - Constraints & Assumptions',
+      ),
+    );
+  }
+
+  void _openDesignRisksMitigation() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'risks',
+        activeItemLabel: 'Design Planning - Risks & Mitigation',
+      ),
+    );
+  }
+
+  void _openDesignDependencies() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'dependencies',
+        activeItemLabel: 'Design Planning - Dependencies',
+      ),
+    );
+  }
+
+  void _openDesignDecisionLog() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'decisions',
+        activeItemLabel: 'Design Planning - Decision Log',
+      ),
+    );
+  }
+
+  void _openDesignValidation() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'validation',
+        activeItemLabel: 'Design Planning - Validation',
+      ),
+    );
+  }
+
+  void _openDesignApprovals() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'approvals',
+        activeItemLabel: 'Design Planning - Approvals',
+      ),
+    );
+  }
+
+  void _openDesignWorkPackages() {
+    _navigateWithCheckpoint(
+      'design',
+      const DesignPlanningScreen(
+        initialSectionId: 'work_packages',
+        activeItemLabel: 'Design Planning - Work Packages',
+      ),
+    );
+  }
+
   void _openDesignManagement() {
     _navigateWithCheckpoint('design_management',
         const DesignPhaseScreen(activeItemLabel: 'Design Management'));
@@ -1256,6 +1439,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   void _openScopeTrackingPlan() {
     _navigateWithCheckpoint(
         'scope_tracking_plan', const ScopeTrackingPlanScreen());
+  }
+
+  void _openProjectControls() {
+    // Project Controls is a route-based module (uses go_router), so we push
+    // the named route rather than navigating via the checkpoint system.
+    context.push('/project-controls');
   }
 
   void _openChangeManagement() {
@@ -2096,8 +2285,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                     style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black),
-                    maxLines: 2,
+                        color: Colors.black,
+                        height: 1.25),
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   );
                 },
@@ -2116,6 +2306,19 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                 child: VoiceTextField(
                   controller: _searchController,
                   onChanged: (value) => setState(() => _searchQuery = value),
+                  // Search bar is for menu navigation only — disable every
+                  // editor action so VoiceTextField renders as a plain
+                  // TextField (no Open Editor button above-right, no inline
+                  // suffix icons, no formatting toolbar). The KAZ AI sparkle
+                  // would duplicate the floating KAZ chat bubble (the unified
+                  // AI entry point); docx import + text formatting don't
+                  // apply to a single-line search query; and the mic /
+                  // Open-Editor affordance belongs on content fields, not a
+                  // menu filter.
+                  enableKazAi: false,
+                  enableVoice: false,
+                  enableDocxImport: false,
+                  enableTextFormatting: false,
                   style: const TextStyle(
                       color: Color(0xFF1A1D1F),
                       fontSize: 14,
@@ -2382,9 +2585,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         _buildSubMenuItem('Quality Management',
             onTap: _openQualityManagement,
             isActive: widget.activeItemLabel == 'Quality Management'),
-        _buildSubMenuItem('Design Planning',
-            onTap: _openDesign,
-            isActive: widget.activeItemLabel == 'Design Planning'),
         _buildSubExpandableHeader(
           'Technology Planning',
           expanded: _technologyPlanningExpanded,
@@ -2401,6 +2601,105 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             isActive: widget.activeItemLabel == 'Technology Planning',
           ),
         ],
+        _buildSubExpandableHeader(
+          'Design Planning',
+          expanded: _designPlanningExpanded,
+          onTap: () => setState(() {
+            _designPlanningExpanded = !_designPlanningExpanded;
+            _sharedDesignPlanningExpanded = _designPlanningExpanded;
+          }),
+          isActive: _activeIn(_designPlanningLabels),
+        ),
+        if (_designPlanningExpanded) ...[
+          _buildSubSubMenuItem(
+            'Project Overview',
+            onTap: _openDesignProjectOverview,
+            isActive:
+                widget.activeItemLabel == 'Design Planning - Project Overview',
+          ),
+          _buildSubSubMenuItem(
+            'Design Overview',
+            onTap: _openDesignDesignOverview,
+            isActive:
+                widget.activeItemLabel == 'Design Planning - Design Overview',
+          ),
+          _buildSubSubMenuItem(
+            'Design Specifications',
+            onTap: _openDesignSpecifications,
+            isActive: widget.activeItemLabel ==
+                'Design Planning - Design Specifications',
+          ),
+          _buildSubSubMenuItem(
+            'Deviations',
+            onTap: _openDesignDeviations,
+            isActive:
+                widget.activeItemLabel == 'Design Planning - Deviations',
+          ),
+          _buildSubSubMenuItem(
+            'Requirements Mapping',
+            onTap: _openDesignRequirementsMapping,
+            isActive: widget.activeItemLabel ==
+                'Design Planning - Requirements Mapping',
+          ),
+          _buildSubSubMenuItem(
+            'Architecture Basis',
+            onTap: _openDesignArchitectureBasis,
+            isActive: widget.activeItemLabel ==
+                'Design Planning - Architecture Basis',
+          ),
+          _buildSubSubMenuItem(
+            'UI/UX Basis',
+            onTap: _openDesignUiUxBasis,
+            isActive:
+                widget.activeItemLabel == 'Design Planning - UI/UX Basis',
+          ),
+          _buildSubSubMenuItem(
+            'Technical Basis',
+            onTap: _openDesignTechnicalBasis,
+            isActive:
+                widget.activeItemLabel == 'Design Planning - Technical Basis',
+          ),
+          _buildSubSubMenuItem(
+            'Constraints & Assumptions',
+            onTap: _openDesignConstraintsAssumptions,
+            isActive: widget.activeItemLabel ==
+                'Design Planning - Constraints & Assumptions',
+          ),
+          _buildSubSubMenuItem(
+            'Risks & Mitigation',
+            onTap: _openDesignRisksMitigation,
+            isActive:
+                widget.activeItemLabel == 'Design Planning - Risks & Mitigation',
+          ),
+          _buildSubSubMenuItem(
+            'Dependencies',
+            onTap: _openDesignDependencies,
+            isActive:
+                widget.activeItemLabel == 'Design Planning - Dependencies',
+          ),
+          _buildSubSubMenuItem(
+            'Decision Log',
+            onTap: _openDesignDecisionLog,
+            isActive:
+                widget.activeItemLabel == 'Design Planning - Decision Log',
+          ),
+          _buildSubSubMenuItem(
+            'Validation',
+            onTap: _openDesignValidation,
+            isActive: widget.activeItemLabel == 'Design Planning - Validation',
+          ),
+          _buildSubSubMenuItem(
+            'Approvals',
+            onTap: _openDesignApprovals,
+            isActive: widget.activeItemLabel == 'Design Planning - Approvals',
+          ),
+          _buildSubSubMenuItem(
+            'Work Packages',
+            onTap: _openDesignWorkPackages,
+            isActive:
+                widget.activeItemLabel == 'Design Planning - Work Packages',
+          ),
+        ],
         _buildSubMenuItem(
           'Interface Management',
           onTap: lockInterfaceManagement ? null : _openInterfaceManagement,
@@ -2408,7 +2707,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           isDisabled: lockInterfaceManagement,
         ),
         _buildSubExpandableHeader(
-          'Agile Delivery Model',
+          'Agile Delivery',
           expanded: _agileWireframeExpanded,
           onTap: () => setState(() {
             _agileWireframeExpanded = !_agileWireframeExpanded;
@@ -2441,10 +2740,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openAgileAcceptanceCriteria,
               isActive: widget.activeItemLabel ==
                   'Agile Delivery Model - Acceptance Criteria Planning'),
-          _buildSubSubMenuItem('Sprint Cadence & Calendar',
-              onTap: _openAgileSprintCalendar,
-              isActive: widget.activeItemLabel ==
-                  'Agile Delivery Model - Sprint Calendar'),
           _buildSubSubMenuItem('Agile Map Out',
               onTap: _openAgileMapOut,
               isActive: widget.activeItemLabel ==
@@ -2593,6 +2888,9 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           _buildSubSubMenuItem('Scope Tracking Plan',
               onTap: _openScopeTrackingPlan,
               isActive: widget.activeItemLabel == 'Scope Tracking Plan'),
+          _buildSubSubMenuItem('Project Controls',
+              onTap: _openProjectControls,
+              isActive: widget.activeItemLabel == 'Project Controls'),
         ],
         _buildSubMenuItem(
           'Change Management',
@@ -3468,7 +3766,152 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       results.add(_buildMenuItem(
           Icons.design_services_outlined, 'Design Planning',
           onTap: _openDesign,
-          isActive: widget.activeItemLabel == 'Design Planning'));
+          isActive: _activeIn(_designPlanningLabels)));
+    }
+    // Design Planning sub-pages — discoverable via their own keywords.
+    if ('project overview'.contains(query) ||
+        'overview'.contains(query) ||
+        'project summary'.contains(query)) {
+      results.add(_buildMenuItem(Icons.design_services_outlined,
+          'Design Planning · Project Overview',
+          onTap: _openDesignProjectOverview,
+          isActive:
+              widget.activeItemLabel == 'Design Planning - Project Overview'));
+    }
+    if ('design overview'.contains(query) ||
+        'design approach'.contains(query) ||
+        'design execution'.contains(query)) {
+      results.add(_buildMenuItem(Icons.design_services_outlined,
+          'Design Planning · Design Overview',
+          onTap: _openDesignDesignOverview,
+          isActive:
+              widget.activeItemLabel == 'Design Planning - Design Overview'));
+    }
+    if ('design specifications'.contains(query) ||
+        'specifications'.contains(query) ||
+        'design specs'.contains(query) ||
+        'spec'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.design_services_outlined,
+          'Design Planning · Design Specifications',
+          onTap: _openDesignSpecifications,
+          isActive: widget.activeItemLabel ==
+              'Design Planning - Design Specifications'));
+    }
+    if ('deviations'.contains(query) ||
+        'deviation'.contains(query) ||
+        'design deviation'.contains(query)) {
+      results.add(_buildMenuItem(Icons.design_services_outlined,
+          'Design Planning · Deviations',
+          onTap: _openDesignDeviations,
+          isActive:
+              widget.activeItemLabel == 'Design Planning - Deviations'));
+    }
+    if ('requirements mapping'.contains(query) ||
+        'requirements'.contains(query) ||
+        'spec mapping'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.design_services_outlined,
+          'Design Planning · Requirements Mapping',
+          onTap: _openDesignRequirementsMapping,
+          isActive: widget.activeItemLabel ==
+              'Design Planning - Requirements Mapping'));
+    }
+    if ('architecture basis'.contains(query) ||
+        'architecture'.contains(query) ||
+        'design architecture'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.design_services_outlined,
+          'Design Planning · Architecture Basis',
+          onTap: _openDesignArchitectureBasis,
+          isActive: widget.activeItemLabel ==
+              'Design Planning - Architecture Basis'));
+    }
+    if ('ui ux basis'.contains(query) ||
+        'ui/ux'.contains(query) ||
+        'ux basis'.contains(query) ||
+        'ui basis'.contains(query)) {
+      results.add(_buildMenuItem(Icons.design_services_outlined,
+          'Design Planning · UI/UX Basis',
+          onTap: _openDesignUiUxBasis,
+          isActive:
+              widget.activeItemLabel == 'Design Planning - UI/UX Basis'));
+    }
+    if ('technical basis'.contains(query) ||
+        'technical design'.contains(query) ||
+        'technical foundation'.contains(query)) {
+      results.add(_buildMenuItem(Icons.design_services_outlined,
+          'Design Planning · Technical Basis',
+          onTap: _openDesignTechnicalBasis,
+          isActive:
+              widget.activeItemLabel == 'Design Planning - Technical Basis'));
+    }
+    if ('constraints'.contains(query) ||
+        'assumptions'.contains(query) ||
+        'constraints and assumptions'.contains(query) ||
+        'constraints & assumptions'.contains(query)) {
+      results.add(_buildMenuItem(
+          Icons.design_services_outlined,
+          'Design Planning · Constraints & Assumptions',
+          onTap: _openDesignConstraintsAssumptions,
+          isActive: widget.activeItemLabel ==
+              'Design Planning - Constraints & Assumptions'));
+    }
+    if ('risks'.contains(query) ||
+        'risk mitigation'.contains(query) ||
+        'mitigation'.contains(query) ||
+        'design risks'.contains(query)) {
+      results.add(_buildMenuItem(Icons.design_services_outlined,
+          'Design Planning · Risks & Mitigation',
+          onTap: _openDesignRisksMitigation,
+          isActive:
+              widget.activeItemLabel == 'Design Planning - Risks & Mitigation'));
+    }
+    if ('dependencies'.contains(query) ||
+        'dependency'.contains(query) ||
+        'design dependencies'.contains(query)) {
+      results.add(_buildMenuItem(Icons.design_services_outlined,
+          'Design Planning · Dependencies',
+          onTap: _openDesignDependencies,
+          isActive:
+              widget.activeItemLabel == 'Design Planning - Dependencies'));
+    }
+    if ('decision log'.contains(query) ||
+        'decisions'.contains(query) ||
+        'design decisions'.contains(query) ||
+        'adr'.contains(query)) {
+      results.add(_buildMenuItem(Icons.design_services_outlined,
+          'Design Planning · Decision Log',
+          onTap: _openDesignDecisionLog,
+          isActive:
+              widget.activeItemLabel == 'Design Planning - Decision Log'));
+    }
+    if ('validation'.contains(query) ||
+        'design validation'.contains(query) ||
+        'verify design'.contains(query)) {
+      results.add(_buildMenuItem(Icons.design_services_outlined,
+          'Design Planning · Validation',
+          onTap: _openDesignValidation,
+          isActive: widget.activeItemLabel == 'Design Planning - Validation'));
+    }
+    if ('approvals'.contains(query) ||
+        'approval'.contains(query) ||
+        'sign off'.contains(query) ||
+        'design approval'.contains(query)) {
+      results.add(_buildMenuItem(Icons.design_services_outlined,
+          'Design Planning · Approvals',
+          onTap: _openDesignApprovals,
+          isActive: widget.activeItemLabel == 'Design Planning - Approvals'));
+    }
+    if ('work packages'.contains(query) ||
+        'work package'.contains(query) ||
+        'wbs'.contains(query) ||
+        'design work'.contains(query)) {
+      results.add(_buildMenuItem(Icons.design_services_outlined,
+          'Design Planning · Work Packages',
+          onTap: _openDesignWorkPackages,
+          isActive:
+              widget.activeItemLabel == 'Design Planning - Work Packages'));
     }
     if ('technology'.contains(query)) {
       results.add(_buildMenuItem(Icons.computer_outlined, 'Technology Planning',
@@ -3522,16 +3965,6 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           onTap: _openAgileAcceptanceCriteria,
           isActive: widget.activeItemLabel ==
               'Agile Delivery Model - Acceptance Criteria Planning'));
-    }
-    if ('sprint calendar'.contains(query) ||
-        'sprint cadence'.contains(query) ||
-        'sprint'.contains(query) ||
-        'iteration'.contains(query)) {
-      results.add(_buildMenuItem(
-          Icons.calendar_month_outlined, 'Sprint Cadence & Calendar',
-          onTap: _openAgileSprintCalendar,
-          isActive: widget.activeItemLabel ==
-              'Agile Delivery Model - Sprint Calendar'));
     }
     if ('release plan'.contains(query) ||
         'release'.contains(query) ||

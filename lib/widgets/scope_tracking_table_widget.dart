@@ -11,7 +11,51 @@ import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
-/// Custom Scope Tracking Table with inline editing, CRUD actions, and AI capabilities
+/// Column flex weights — proportional widths that distribute content evenly
+/// across the available table width. The exact pixel width of each column is
+/// derived from these weights at runtime via [FlexColumnWidth] inside a
+/// [Table] widget, so the table fills its container with no orphaned wide
+/// column and no squished right-edge cluster.
+const List<double> _kScopeColumnFlex = [
+  2.6, // Scope Item / Deliverable
+  1.0, // Status
+  1.2, // Owner
+  1.2, // Verification
+  2.0, // Verification Steps
+  1.8, // Tracking Notes
+  1.1, // Actions
+];
+
+const List<String> _kScopeColumnLabels = [
+  'Scope Item/Deliverable',
+  'Status',
+  'Owner',
+  'Verification',
+  'Verification Steps',
+  'Tracking Notes',
+  'Actions',
+];
+
+/// Minimum column widths (in dp) — used as a floor so cells never collapse
+/// below their content's natural fit. When the available container width is
+/// less than the sum of these minima, horizontal scrolling kicks in.
+const List<double> _kScopeColumnMinWidth = [
+  180, // Scope Item / Deliverable
+  96,  // Status
+  120, // Owner
+  120, // Verification
+  160, // Verification Steps
+  140, // Tracking Notes
+  112, // Actions
+];
+
+/// Custom Scope Tracking Table with inline editing, CRUD actions, and AI capabilities.
+///
+/// Uses [Table] + [FlexColumnWidth] (rather than [DataTable]) so column widths
+/// are distributed proportionally across the full available width. This avoids
+/// the default `DataTable` behaviour where one column (usually the last)
+/// absorbs all leftover horizontal space — producing the uneven, squished-right
+/// layout previously visible on this table.
 class ScopeTrackingTableWidget extends StatelessWidget {
   const ScopeTrackingTableWidget({
     super.key,
@@ -35,162 +79,199 @@ class ScopeTrackingTableWidget extends StatelessWidget {
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final headingColor =
+        isDark ? const Color(0xFF1F2937) : const Color(0xFFF5F8FC);
+    final dividerColor =
+        isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB);
+    final headingStyle = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+      letterSpacing: 0.2,
+    );
+
     return LayoutBuilder(
       builder: (context, constraints) {
+        final availableWidth =
+            constraints.maxWidth > 0 ? constraints.maxWidth : 1200.0;
+        final minTotalWidth =
+            _kScopeColumnMinWidth.reduce((a, b) => a + b);
+        final useHorizontalScroll = availableWidth < minTotalWidth;
+        final tableWidth =
+            useHorizontalScroll ? minTotalWidth : availableWidth;
+
+        final columnWidths = <int, TableColumnWidth>{
+          for (var i = 0; i < _kScopeColumnFlex.length; i++)
+            i: useHorizontalScroll
+                ? FixedColumnWidth(_kScopeColumnMinWidth[i])
+                : FlexColumnWidth(_kScopeColumnFlex[i]),
+        };
+
+        final headerRow = TableRow(
+          decoration: BoxDecoration(
+            color: headingColor,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          children: [
+            for (var i = 0; i < _kScopeColumnLabels.length; i++)
+              _ScopeHeaderCell(
+                label: _kScopeColumnLabels[i],
+                style: headingStyle,
+              ),
+          ],
+        );
+
+        final dataRows = items.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          final isOdd = index.isOdd;
+          final rowColor = isDark
+              ? (isOdd ? const Color(0xFF10151D) : const Color(0xFF151922))
+              : (isOdd ? const Color(0xFFFAFCFF) : Colors.white);
+          return TableRow(
+            decoration: BoxDecoration(color: rowColor),
+            children: [
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.scopeItem,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.implementationStatus,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.owner,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.verificationMethod,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.verificationSteps,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.trackingNotes,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.actions,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+            ],
+          );
+        }).toList();
+
+        final table = Table(
+          columnWidths: columnWidths,
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          border: TableBorder(
+            top: BorderSide(color: dividerColor, width: 0.8),
+            bottom: BorderSide(color: dividerColor, width: 0.8),
+            horizontalInside:
+                BorderSide(color: dividerColor.withOpacity(0.6), width: 0.6),
+          ),
+          children: [headerRow, ...dataRows],
+        );
+
+        // Table needs a bounded width so FlexColumnWidth can compute. We
+        // wrap it in a SizedBox with the resolved width. If the available
+        // width is below the minimum threshold we keep the wider SizedBox and
+        // wrap it in a horizontal scroll view so the user can pan.
+        final sizedTable = SizedBox(
+          width: tableWidth,
+          child: table,
+        );
+
+        Widget tableHost = sizedTable;
+        if (useHorizontalScroll) {
+          tableHost = SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: sizedTable,
+          );
+        }
+
+        // Cap vertical height and enable vertical scroll when rows exceed the
+        // visible viewport. Mirrors the prior `maxHeight: 560` behaviour.
+        tableHost = ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 560),
+          child: Scrollbar(
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              child: tableHost,
+            ),
+          ),
+        );
+
         return Container(
           width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Colors.black.withOpacity(0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
             ],
           ),
-          child: buildNduTableWithExpand(
-            context: context,
-            title: 'Scope Tracking',
-            minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 1000,
-            maxHeight: 560,
-            columnSpacing: 20,
-            horizontalMargin: 16,
-            headingRowHeight: 56,
-            dataRowMinHeight: 52,
-              dataRowMaxHeight: 120,
-              columns: const [
-                DataColumn(
-                  label: Center(
-                    child: Text('Scope Item/Deliverable',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Status',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Owner',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Verification',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Verification Steps',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Tracking Notes',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Actions',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-              ],
-              rows: items.map((item) {
-                return DataRow(
-                  cells: [
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.scopeItem,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.implementationStatus,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.owner,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.verificationMethod,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.verificationSteps,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.trackingNotes,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.actions,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                  ],
-                );
-              }).toList(),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: tableHost,
           ),
         );
       },
+    );
+  }
+}
+
+/// Header cell — left-aligned, padded, single-line with ellipsis fallback so
+/// longer labels (e.g. "Verification Steps") never wrap awkwardly.
+class _ScopeHeaderCell extends StatelessWidget {
+  const _ScopeHeaderCell({required this.label, required this.style});
+
+  final String label;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          label,
+          style: style,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
     );
   }
 }
@@ -235,12 +316,6 @@ class _ScopeTrackingRowWidgetState extends State<_ScopeTrackingRowWidget> {
     'UAT',
     'Stakeholder Review',
   ];
-
-  @override
-  void dispose() {
-    _debouncer.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -574,7 +649,7 @@ class _StatusPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
+          color: color.withOpacity(0.12),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(

@@ -18,6 +18,8 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/csv_enabled_section_header.dart';
+import 'package:ndu_project/utils/csv_import_helper.dart';
 
 
 class TechnicalDevelopmentScreen extends StatefulWidget {
@@ -682,8 +684,33 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _PanelShell(
  title: 'Workstream register',
  subtitle: 'Track build workstreams, ownership, and sprint progress',
- trailing: _actionButton(Icons.add, 'Add workstream',
- onPressed: () => _showWorkstreamDialog()),
+ trailing: CsvEnabledSectionHeader(
+ tableTitle: 'Workstream Register',
+ columns: [
+ CsvColumnSpec(key: 'title', label: 'Workstream', required: true),
+ CsvColumnSpec(key: 'subtitle', label: 'Description'),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: _workstreamStatusOptions),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'progress', label: 'Progress (%)', defaultValue: '0'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _workstreams.add(_WorkstreamItem(
+ id: DateTime.now().microsecondsSinceEpoch.toString(),
+ title: row['title'] ?? '',
+ subtitle: row['subtitle'] ?? '',
+ status: row['status'] ?? 'In planning',
+ owner: row['owner'] ?? '',
+ progress: int.tryParse(row['progress'] ?? '0') ?? 0,
+ ));
+ }
+ });
+ },
+ onAdd: () => _showWorkstreamDialog(),
+ addLabel: 'Add workstream',
+ compact: true,
+ ),
  child: _workstreams.isEmpty
  ? _buildEmptyState('No workstreams added yet.',
  () => _showWorkstreamDialog())
@@ -818,8 +845,31 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  title: 'Component build register',
  subtitle:
  'Track deliverables across software modules, fabrication packages, and site build items',
- trailing: _actionButton(Icons.add, 'Add component',
- onPressed: () => _showBuildComponentDialog()),
+ trailing: CsvEnabledSectionHeader(
+ tableTitle: 'Component Build Register',
+ columns: [
+ CsvColumnSpec(key: 'name', label: 'Component', required: true),
+ CsvColumnSpec(key: 'owner', label: 'Owner'),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: _buildStatusOptions),
+ CsvColumnSpec(key: 'type', label: 'Type', allowedValues: ['Software', 'Hardware', 'Infrastructure', 'Documentation', 'Testing']),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _buildComponents.add(_BuildComponentRow(
+ id: DateTime.now().microsecondsSinceEpoch.toString(),
+ name: row['name'] ?? '',
+ owner: row['owner'] ?? '',
+ status: row['status'] ?? 'In Progress',
+ type: row['type'] ?? 'Software',
+ ));
+ }
+ });
+ },
+ onAdd: () => _showBuildComponentDialog(),
+ addLabel: 'Add component',
+ compact: true,
+ ),
  child: _buildComponents.isEmpty
  ? _buildEmptyState('No components added yet.',
  () => _showBuildComponentDialog())
@@ -911,8 +961,29 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  title: 'Integration & interface realization',
  subtitle:
  'Live connection checks between build components, services, and physical systems',
- trailing: _actionButton(Icons.add, 'Add integration',
- onPressed: () => _showIntegrationDialog()),
+ trailing: CsvEnabledSectionHeader(
+ tableTitle: 'Integration Register',
+ columns: [
+ CsvColumnSpec(key: 'label', label: 'Interface', required: true),
+ CsvColumnSpec(key: 'description', label: 'Description'),
+ CsvColumnSpec(key: 'status', label: 'Status', allowedValues: _integrationStatusOptions),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _integrations.add(_IntegrationRow(
+ id: DateTime.now().microsecondsSinceEpoch.toString(),
+ label: row['label'] ?? '',
+ description: row['description'] ?? '',
+ status: row['status'] ?? 'Pending',
+ ));
+ }
+ });
+ },
+ onAdd: () => _showIntegrationDialog(),
+ addLabel: 'Add integration',
+ compact: true,
+ ),
  child: _integrations.isEmpty
  ? _buildEmptyState('No integrations added yet.',
  () => _showIntegrationDialog())
@@ -959,8 +1030,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(
  flex: 3,
  child: Text(item.description,
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
+ maxLines: null, softWrap: true, overflow: TextOverflow.visible,
  style: const TextStyle(
  fontSize: 11, color: Color(0xFF6B7280))),
  ),
@@ -1001,8 +1071,29 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  title: 'Defect & issue tracker',
  subtitle:
  'Current build blockers, production exceptions, and technical rework items',
- trailing: _actionButton(Icons.add, 'Add issue',
- onPressed: () => _showIssueDialog()),
+ trailing: CsvEnabledSectionHeader(
+ tableTitle: 'Defect & Issue Register',
+ columns: [
+ CsvColumnSpec(key: 'title', label: 'Issue', required: true),
+ CsvColumnSpec(key: 'severity', label: 'Severity', allowedValues: _severityOptions),
+ CsvColumnSpec(key: 'detail', label: 'Detail/Description'),
+ ],
+ onImport: (rows) {
+ setState(() {
+ for (final row in rows) {
+ _issues.add(_IssueRow(
+ id: DateTime.now().microsecondsSinceEpoch.toString(),
+ title: row['title'] ?? '',
+ detail: row['detail'] ?? '',
+ severity: row['severity'] ?? 'Medium',
+ ));
+ }
+ });
+ },
+ onAdd: () => _showIssueDialog(),
+ addLabel: 'Add issue',
+ compact: true,
+ ),
  child: _issues.isEmpty
  ? _buildEmptyState('No issues added yet.',
  () => _showIssueDialog())
@@ -1049,8 +1140,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(
  flex: 3,
  child: Text(item.detail,
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
+ maxLines: null, softWrap: true, overflow: TextOverflow.visible,
  style: const TextStyle(
  fontSize: 11, color: Color(0xFF6B7280))),
  ),
@@ -1241,8 +1331,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(
  flex: 3,
  child: Text(signal.description,
- maxLines: 2,
- overflow: TextOverflow.ellipsis,
+ maxLines: null, softWrap: true, overflow: TextOverflow.visible,
  style: const TextStyle(
  fontSize: 11,
  color: Color(0xFF6B7280))),

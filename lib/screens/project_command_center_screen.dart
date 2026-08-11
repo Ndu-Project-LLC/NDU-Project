@@ -26,18 +26,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/screens/initiation_phase_screen.dart';
-import 'package:ndu_project/screens/project_activities_log_screen.dart';
 import 'package:ndu_project/services/dashboard_metrics_service.dart';
-import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/services/project_service.dart';
+import 'package:ndu_project/utils/dashboard_palette.dart';
 import 'package:ndu_project/utils/navigation_route_resolver.dart';
-import 'package:ndu_project/widgets/app_logo.dart';
-import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
+import 'package:ndu_project/widgets/dashboard_header.dart';
 
 /// World-class command center for standard (non-basic-plan) projects.
 ///
@@ -127,35 +124,6 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
     }
   }
 
-  Future<void> _handleLogout() async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text('Confirm Log Out'),
-        content: const Text('Are you sure you want to log out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _crimson,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Log Out'),
-          ),
-        ],
-      ),
-    );
-    if (shouldLogout == true && mounted) {
-      await FirebaseAuthService.signOut();
-      if (mounted) context.go('/');
-    }
-  }
-
   Future<void> _openProject(ProjectRecord project) async {
     showDialog(
       context: context,
@@ -211,10 +179,12 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
     NavigationContextService.instance.setLastClientDashboard('/dashboard');
     final user = FirebaseAuth.instance.currentUser;
 
-    return Scaffold(
-      backgroundColor: _canvas,
-      body: SafeArea(
-        child: StreamBuilder<List<ProjectRecord>>(
+    return DashboardPaletteScope(
+      palette: DashboardPalette.forPlan(false),
+      child: Scaffold(
+        backgroundColor: _canvas,
+        body: SafeArea(
+          child: StreamBuilder<List<ProjectRecord>>(
           stream: user == null
               ? Stream.value(const <ProjectRecord>[])
               : ProjectService.streamProjects(
@@ -242,7 +212,17 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
-                  SliverToBoxAdapter(child: _buildCockpitHeader()),
+                  // ── Shared hero header band (matches the Regular Project dashboard) ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(28, 20, 28, 8),
+                      child: DashboardHeader(
+                        isBasicPlan: false,
+                        onAddProject: _createNewProject,
+                        crumbLabel: 'Command center overview',
+                      ),
+                    ),
+                  ),
                   SliverToBoxAnchor(child: _buildCommandBar()),
                   if (_loading)
                     const SliverToBoxAdapter(
@@ -303,216 +283,6 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
             style: TextStyle(fontWeight: FontWeight.w700)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
-    );
-  }
-
-  /// KAZ AI copilot pill — opens the KAZ AI chat.
-  Widget _kazAiPill() {
-    return InkWell(
-      onTap: () => KazAiChatBubble.openChat(context),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFF241A00),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFFFE9A8).withAlpha(70)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF241A00).withAlpha(35),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.auto_awesome_rounded,
-                size: 13, color: Color(0xFFF4B400)),
-            SizedBox(width: 5),
-            Text(
-              'KAZ AI',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.3,
-                color: Color(0xFFF4B400),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Cockpit header (gold band with logo + status) ───────────────────────
-  Widget _buildCockpitHeader() {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName =
-        (user?.displayName ?? user?.email ?? 'Commander').split(' ').first;
-    final initials = displayName.isNotEmpty
-        ? displayName[0].toUpperCase()
-        : '?';
-
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFF4B400),
-            Color(0xFFE8A000),
-            Color(0xFFD97706),
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Decorative grid pattern
-          Positioned.fill(
-            child: CustomPaint(painter: _GridPatternPainter()),
-          ),
-          // Glowing orb
-          Positioned(
-            right: -60,
-            top: -60,
-            child: Container(
-              width: 220,
-              height: 220,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    _blue.withAlpha(60),
-                    _blue.withAlpha(0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 22, 24, 22),
-            child: Row(
-              children: [
-                const AppLogo(height: 34),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          const Text(
-                            'COMMAND CENTER',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF241A00),
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: _emerald.withAlpha(30),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                  color: _emerald.withAlpha(80)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 5,
-                                  height: 5,
-                                  decoration: const BoxDecoration(
-                                    color: _emerald,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: _emerald,
-                                        blurRadius: 6,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Text(
-                                  'LIVE',
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    color: _emerald,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.8,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Active workspaces · $displayName',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: const Color(0xFF241A00).withAlpha(200),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _kazAiPill(),
-                const SizedBox(width: 8),
-                _CommandIcon(
-                  icon: Icons.fact_check_outlined,
-                  label: 'Activity',
-                  onTap: () => ProjectActivitiesLogScreen.open(context),
-                ),
-                const SizedBox(width: 8),
-                InkWell(
-                  onTap: _handleLogout,
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF241A00).withAlpha(16),
-                      borderRadius: BorderRadius.circular(10),
-                      border:
-                          Border.all(color: const Color(0xFF241A00).withAlpha(34)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircleAvatar(
-                          radius: 12,
-                          backgroundColor: _blueSoft,
-                          child: Text(
-                            initials,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF241A00),
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.logout_rounded,
-                            size: 14, color: Color(0xFF241A00)),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1134,48 +904,6 @@ class SliverToBoxAnchor extends SliverToBoxAdapter {
 
 // ── Helper widgets ───────────────────────────────────────────────────────────
 
-class _CommandIcon extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  const _CommandIcon({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFF241A00).withAlpha(16),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFF241A00).withAlpha(34)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: const Color(0xFF241A00)),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF241A00),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _FilterChip extends StatelessWidget {
   final String label;
   final bool isSelected;
@@ -1658,25 +1386,6 @@ class _ProjectCommandCard extends StatelessWidget {
 }
 
 // ── Custom painters ─────────────────────────────────────────────────────────
-
-class _GridPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withAlpha(8)
-      ..strokeWidth = 0.5;
-    const spacing = 32.0;
-    for (var x = 0.0; x < size.width; x += spacing) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-    for (var y = 0.0; y < size.height; y += spacing) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 class _SparklinePainter extends CustomPainter {
   final List<double> data;

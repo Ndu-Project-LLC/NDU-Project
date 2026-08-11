@@ -56,7 +56,24 @@ const String _kSectionProgressNotesKey = 'planning_design_section_progress';
 enum _SectionProgressState { pending, complete, notApplicable }
 
 class DesignPlanningScreen extends StatefulWidget {
-  const DesignPlanningScreen({super.key});
+  const DesignPlanningScreen({
+    super.key,
+    this.initialSectionId,
+    this.activeItemLabel,
+  });
+
+  /// Optional section id to land on when the screen opens (e.g.
+  /// 'architecture', 'work_packages'). When null the screen picks the first
+  /// unresolved section (existing guided-flow behaviour). When provided the
+  /// matching section is expanded and treated as active on first build,
+  /// enabling deep links from the sidebar sub-pages.
+  final String? initialSectionId;
+
+  /// Optional sidebar active item label. When null the screen reports
+  /// 'Design Planning' to the sidebar so the parent header stays highlighted.
+  /// When provided (e.g. 'Design Planning - Architecture Basis') the matching
+  /// sidebar sub-page is highlighted instead.
+  final String? activeItemLabel;
 
   static void open(BuildContext context) {
     context.push('/design-planning');
@@ -331,12 +348,24 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  }
 
  _sectionProgress = progress;
- _activeSectionId = _sectionOrder
- .firstWhere(
- (section) => !_isSectionResolved(section.id),
- orElse: () => _sectionOrder.first,
- )
- .id;
+ // Resolve the initial active section.
+ //
+ // 1. If the caller passed an `initialSectionId` that maps to a known
+ //    section, land on it directly (sidebar deep-link).
+ // 2. Otherwise keep the existing guided-flow behaviour: jump to the first
+ //    unresolved section, or fall back to the very first section.
+ final requestedSectionId = widget.initialSectionId?.trim();
+ final hasValidInitialSection = requestedSectionId != null &&
+     requestedSectionId.isNotEmpty &&
+     _sectionOrder.any((section) => section.id == requestedSectionId);
+ _activeSectionId = hasValidInitialSection
+     ? requestedSectionId!
+     : _sectionOrder
+         .firstWhere(
+           (section) => !_isSectionResolved(section.id),
+           orElse: () => _sectionOrder.first,
+         )
+         .id;
  _sectionExpanded = {
  for (final section in _sectionOrder)
  section.id: section.id == _activeSectionId,
@@ -1852,7 +1881,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  final isMobile = AppBreakpoints.isMobile(context);
 
  return ResponsiveScaffold(
- activeItemLabel: 'Design Planning',
+ activeItemLabel: widget.activeItemLabel ?? 'Design Planning',
  floatingActionButton: const KazAiChatBubble(positioned: false),
  body: Column(
  children: [

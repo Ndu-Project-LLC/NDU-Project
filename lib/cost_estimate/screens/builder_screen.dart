@@ -1,22 +1,29 @@
 library;
 
-/// Builder Screen — the main cost estimate builder with 4 sub-tabs.
+/// Builder Screen — Treasury-treated cost estimate builder with 4 sub-tabs.
+///
+/// Design language:
+///   "The Treasury" — premium, calm, light-mode executive cockpit built on
+///   the NDU brand yellow (#FFC812) + amber (#D97706) gradient. Generous
+///   whitespace, tabular figures everywhere, hairline borders, layered soft
+///   shadows, and a bento-style composition.
 ///
 /// Tabs: Direct Costs, Indirect Costs, SSHER & Quality, Additional Elements.
 /// Shows cost lines grouped by category with add/edit/delete + live totals
-/// sidebar.
+/// sidebar (TotalsPanel).
 ///
 /// Rendered inside the Cost Estimate module's [ResponsiveScaffold] body —
-/// no Scaffold of its own. Light-mode (white) theme.
+/// no Scaffold of its own.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/widgets/totals_panel.dart';
 import 'package:ndu_project/cost_estimate/widgets/add_line_dialog.dart';
+import 'package:ndu_project/cost_estimate/widgets/treasury_components.dart';
+import 'package:ndu_project/services/user_preferences_service.dart';
 
 class BuilderScreen extends StatefulWidget {
   const BuilderScreen({super.key});
@@ -62,10 +69,27 @@ class _BuilderScreenState extends State<BuilderScreen>
     ]),
   ];
 
+  // Tab accent tints — warm Treasury palette progression
+  static const _tabTints = <Color>[
+    Color(0xFFD97706), // Direct — amber (brand deep)
+    Color(0xFF8B5CF6), // Indirect — violet
+    Color(0xFFEC4899), // SSHER & Quality — pink
+    Color(0xFF06B6D4), // Additional — cyan
+  ];
+  static const _tabTintsSoft = <Color>[
+    Color(0xFFFFF3E0),
+    Color(0xFFF4EEFF),
+    Color(0xFFFCE7F3),
+    Color(0xFFCFFAFE),
+  ];
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) setState(() {});
+    });
   }
 
   @override
@@ -86,348 +110,216 @@ class _BuilderScreenState extends State<BuilderScreen>
             provider.currentRole == RBACRole.admin;
         final canEditNow = canEdit && !isBaselined;
 
-        return Column(
-          children: [
-            // Sub-tab bar for cost categories (below the main Section Navigator)
-            Container(
-              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Row(
-                children: [
-                  const Text(
-                    'Cost Categories:',
-                    style: TextStyle(
-                      color: Color(0xFF9CA3AF),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.0,
+        final currencySymbol = UserPreferencesService.currencySymbolSync;
+        final tabIndex = _tabController.index;
+        final tabCategories = _subTabs[tabIndex].$2;
+        final tabLines = estimate.lines
+            .where((l) => tabCategories.contains(l.category))
+            .toList();
+        final tabTotal = tabLines.fold(0.0, (a, l) => a + l.total);
+        final totalLines = estimate.lines.length;
+        final grandTotal = estimate.totals.costBaseline;
+
+        return Container(
+          color: TreasuryTokens.canvas,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── 1. Hero command band ─────────────────────────────────
+                TreasuryHeroBand(
+                  eyebrow: 'COST ESTIMATE · BUILDER',
+                  title: 'Cost Line Builder',
+                  subtitle:
+                      '$totalLines lines · ${estimate.className.label} · $currencySymbol${treasuryFmt(grandTotal)} baseline',
+                  statusLabel: isBaselined
+                      ? 'Baselined v${estimate.baseline?.version ?? 1}'
+                      : 'Draft — open for edits',
+                  statusLive: isBaselined,
+                  contextChips: [
+                    TreasuryHeroChip(
+                      icon: Icons.flag_outlined,
+                      label: 'Project',
+                      value: estimate.projectName,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9FAFB),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFE4E7EC)),
+                    TreasuryHeroChip(
+                      icon: Icons.layers_outlined,
+                      label: 'Active Tab',
+                      value: _subTabs[tabIndex].$1,
+                    ),
+                    TreasuryHeroChip(
+                      icon: Icons.shield_outlined,
+                      label: 'Class',
+                      value: estimate.className.label,
+                    ),
+                  ],
+                  actions: [
+                    if (canEditNow)
+                      TreasuryHeroAction(
+                        icon: Icons.add_rounded,
+                        label: 'Add line',
+                        primary: true,
+                        onTap: () => _showAddLineDialog(context, provider,
+                            tabCategories.isNotEmpty
+                                ? tabCategories.first
+                                : CostCategory.labor),
                       ),
-                      child: TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                dividerColor: Colors.transparent,
-                indicator: BoxDecoration(
-                  color: LightModeColors.accent,
-                  borderRadius: BorderRadius.circular(8),
+                  ],
                 ),
-                labelColor: LightModeColors.lightOnPrimary,
-                unselectedLabelColor: const Color(0xFF6B7280),
-                labelStyle: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w600),
-                unselectedLabelStyle: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w500),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                labelPadding:
-                    const EdgeInsets.symmetric(horizontal: 12),
-                tabs: _subTabs.map((t) => Tab(text: t.$1)).toList(),
-                      ),
+                const SizedBox(height: 22),
+
+                // ── 2. Premium KPI strip ─────────────────────────────────
+                TreasuryKpiStrip(
+                  kpis: [
+                    TreasuryKpiSpec(
+                      label: 'Tab Total',
+                      value:
+                          '$currencySymbol${treasuryFmt(tabTotal)}',
+                      sub: '${tabLines.length} lines in this tab',
+                      icon: Icons.account_balance_wallet_outlined,
+                      tint: _tabTints[tabIndex],
+                      tintSoft: _tabTintsSoft[tabIndex],
                     ),
-                  ),
+                    TreasuryKpiSpec(
+                      label: 'Estimate Total',
+                      value:
+                          '$currencySymbol${treasuryFmt(grandTotal)}',
+                      sub: 'All categories combined',
+                      icon: Icons.shield_outlined,
+                      tint: const Color(0xFFD97706),
+                      tintSoft: const Color(0xFFFFF3E0),
+                    ),
+                    TreasuryKpiSpec(
+                      label: 'Total Lines',
+                      value: '$totalLines',
+                      sub: 'Itemised cost lines',
+                      icon: Icons.list_alt_rounded,
+                      tint: const Color(0xFF10B981),
+                      tintSoft: const Color(0xFFE7F8F0),
+                    ),
+                    TreasuryKpiSpec(
+                      label: 'Avg / Line',
+                      value: totalLines > 0
+                          ? '$currencySymbol${treasuryFmt(grandTotal / totalLines)}'
+                          : '${currencySymbol}0',
+                      sub: 'Mean cost across estimate',
+                      icon: Icons.analytics_outlined,
+                      tint: const Color(0xFF6366F1),
+                      tintSoft: const Color(0xFFEEF0FF),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 22),
+
+                // ── 3. Treasury sub-tab bar ──────────────────────────────
+                _TreasurySubTabBar(
+                  controller: _tabController,
+                  tabs: _subTabs.map((t) => t.$1).toList(),
+                  tints: _tabTints,
+                  tintsSoft: _tabTintsSoft,
+                  counts: _subTabs
+                      .map((t) => estimate.lines
+                          .where((l) => t.$2.contains(l.category))
+                          .length)
+                      .toList(),
+                ),
+                if (isBaselined) ...[
+                  const SizedBox(height: 14),
+                  _BaselinedNotice(version: estimate.baseline?.version ?? 1,
+                      remaining: estimate.baseline?.rebaselineRemaining ?? 0),
                 ],
-              ),
-            ),
-            // Baselined warning
-            if (isBaselined)
-              Container(
-                margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: LightModeColors.accent.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: LightModeColors.accent.withValues(alpha: 0.3)),
-                ),
-                child: Row(
+                const SizedBox(height: 18),
+
+                // ── 4. Two-column: lines list + totals sidebar ──────────
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.lock,
-                        color: LightModeColors.accent, size: 18),
-                    const SizedBox(width: 8),
+                    // Lines column
                     Expanded(
-                      child: Text(
-                        'Estimate is baselined (v${estimate.baseline?.version}). Edits create variance entries. Re-baselines remaining: ${estimate.baseline?.rebaselineRemaining}',
-                        style: const TextStyle(
-                            color: Color(0xFF495057), fontSize: 12),
+                      child: _buildLinesColumn(
+                        context,
+                        provider,
+                        estimate,
+                        tabCategories,
+                        tabLines,
+                        tabTotal,
+                        canEditNow,
+                        currencySymbol,
+                        tabIndex,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    // Totals sidebar
+                    SizedBox(
+                      width: 320,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 0),
+                        child: TotalsPanel(),
                       ),
                     ),
                   ],
                 ),
-              ),
-            // Main content
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: _subTabs
-                    .map((t) => _buildTabContent(
-                        context, provider, estimate, t.$2, canEditNow))
-                    .toList(),
-              ),
+                const SizedBox(height: 8),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
   }
 
-  Widget _buildTabContent(
+  Widget _buildLinesColumn(
     BuildContext context,
     CostEstimateProvider provider,
     CostEstimate estimate,
     List<CostCategory> categories,
+    List<CostLine> lines,
+    double tabTotal,
     bool canEditNow,
+    String currencySymbol,
+    int tabIndex,
   ) {
-    final lines = estimate.lines
-        .where((l) => categories.contains(l.category))
-        .toList();
-    final tabTotal = lines.fold(0.0, (a, l) => a + l.total);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Lines column
-        Expanded(
-          child: Column(
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _subTabs[_tabController.index].$1,
-                          style: const TextStyle(
-                            color: Color(0xFF1A1D1F),
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          '${lines.length} lines · ${formatCurrency(tabTotal, estimate.currency)}',
-                          style: const TextStyle(
-                              color: Color(0xFF6B7280), fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    if (canEditNow)
-                      FilledButton.icon(
-                        onPressed: () => _showAddLineDialog(context, provider,
-                            categories.isNotEmpty ? categories.first : CostCategory.labor),
-                        icon: const Icon(Icons.add, size: 16),
-                        label: const Text('Add line'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: LightModeColors.accent,
-                          foregroundColor: LightModeColors.lightOnPrimary,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              // Lines list
-              Expanded(
-                child: lines.isEmpty
-                    ? _buildEmptyState(context, canEditNow, () =>
-                        _showAddLineDialog(context, provider,
-                            categories.isNotEmpty ? categories.first : CostCategory.labor))
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: lines.length,
-                        itemBuilder: (ctx, i) =>
-                            _buildLineRow(context, provider, lines[i], canEditNow),
-                      ),
-              ),
-            ],
-          ),
-        ),
-        // Totals sidebar
-        const SizedBox(
-          width: 300,
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: TotalsPanel(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLineRow(BuildContext context, CostEstimateProvider provider,
-      CostLine line, bool canEdit) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE4E7EC)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Icon
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: LightModeColors.accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.receipt_long,
-                color: LightModeColors.accent, size: 18),
-          ),
-          const SizedBox(width: 12),
-          // Description + meta
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return TreasurySectionCard(
+      title: _subTabs[tabIndex].$1,
+      subtitle:
+          '${lines.length} ${lines.length == 1 ? "line" : "lines"} · $currencySymbol${treasuryFmt(tabTotal)}',
+      trailing: canEditNow
+          ? TreasuryPrimaryButton(
+              icon: Icons.add_rounded,
+              label: 'Add line',
+              onPressed: () => _showAddLineDialog(context, provider,
+                  categories.isNotEmpty ? categories.first : CostCategory.labor),
+            )
+          : null,
+      child: lines.isEmpty
+          ? TreasuryEmptyState(
+              icon: Icons.receipt_long_rounded,
+              title: 'No ${_subTabs[tabIndex].$1.toLowerCase()} yet',
+              body:
+                  'Add your first cost line in this category. The totals sidebar updates live as you build out the estimate.',
+              ctaLabel: canEditNow ? 'Add first line' : null,
+              onCta: canEditNow
+                  ? () => _showAddLineDialog(context, provider,
+                      categories.isNotEmpty ? categories.first : CostCategory.labor)
+                  : null,
+            )
+          : Column(
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        line.description,
-                        style: const TextStyle(
-                          color: Color(0xFF1A1D1F),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                for (final line in lines)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _TreasuryLineRow(
+                      line: line,
+                      currencySymbol: currencySymbol,
+                      canEdit: canEditNow,
+                      onEdit: () => _showAddLineDialog(
+                          context, provider, line.category, line),
+                      onDelete: () => provider.removeLine(line.id),
                     ),
-                    if (line.aiGenerated) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'AI',
-                          style: TextStyle(
-                            color: Color(0xFF3B82F6),
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                    if (!line.inSchedule) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: LightModeColors.accent.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'Not in schedule',
-                          style: TextStyle(
-                            color: Color(0xFFD97706),
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${line.category.label} · ${line.basisSource.label}',
-                  style: const TextStyle(
-                      color: Color(0xFF6B7280), fontSize: 11),
-                ),
+                  ),
               ],
             ),
-          ),
-          // Total
-          Text(
-            formatCurrency(line.total, 'USD'),
-            style: const TextStyle(
-              color: Color(0xFF1A1D1F),
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          // Actions
-          if (canEdit) ...[
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.edit,
-                  size: 14, color: Color(0xFF6B7280)),
-              onPressed: () => _showAddLineDialog(context, provider, line.category, line),
-              constraints: const BoxConstraints(),
-              padding: EdgeInsets.zero,
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline,
-                  size: 14, color: Color(0xFFB91C1C)),
-              onPressed: () => provider.removeLine(line.id),
-              constraints: const BoxConstraints(),
-              padding: EdgeInsets.zero,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(
-      BuildContext context, bool canAdd, VoidCallback onAdd) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.receipt_long,
-              color: Color(0xFF9CA3AF), size: 48),
-          const SizedBox(height: 16),
-          const Text(
-            'No cost lines yet',
-            style: TextStyle(
-                color: Color(0xFF1A1D1F),
-                fontSize: 15,
-                fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Add your first cost line. The totals sidebar updates live.',
-            style: TextStyle(color: Color(0xFF6B7280), fontSize: 13),
-          ),
-          if (canAdd) ...[
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('Add first line'),
-              style: FilledButton.styleFrom(
-                backgroundColor: LightModeColors.accent,
-                foregroundColor: LightModeColors.lightOnPrimary,
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 
@@ -442,6 +334,415 @@ class _BuilderScreenState extends State<BuilderScreen>
       builder: (ctx) => AddLineDialog(
         defaultCategory: defaultCategory,
         editingLine: editing,
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TREASURY SUB-TAB BAR — pill-style with active accent tint
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _TreasurySubTabBar extends StatelessWidget {
+  const _TreasurySubTabBar({
+    required this.controller,
+    required this.tabs,
+    required this.tints,
+    required this.tintsSoft,
+    required this.counts,
+  });
+  final TabController controller;
+  final List<String> tabs;
+  final List<Color> tints;
+  final List<Color> tintsSoft;
+  final List<int> counts;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: TreasuryTokens.surfaceAlt,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: TreasuryTokens.hairline),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < tabs.length; i++) ...[
+            if (i > 0) const SizedBox(width: 4),
+            Expanded(
+              child: _TreasurySubTabPill(
+                label: tabs[i],
+                count: counts[i],
+                tint: tints[i],
+                tintSoft: tintsSoft[i],
+                active: controller.index == i,
+                onTap: () {
+                  controller.animateTo(i);
+                },
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TreasurySubTabPill extends StatelessWidget {
+  const _TreasurySubTabPill({
+    required this.label,
+    required this.count,
+    required this.tint,
+    required this.tintSoft,
+    required this.active,
+    required this.onTap,
+  });
+  final String label;
+  final int count;
+  final Color tint;
+  final Color tintSoft;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: active ? tint : Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                      color: tint.withValues(alpha: 0.30),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                    color: active
+                        ? Colors.white
+                        : TreasuryTokens.inkSoft,
+                    letterSpacing: 0.1,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: active
+                      ? Colors.white.withValues(alpha: 0.25)
+                      : tintSoft,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '$count',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: active
+                        ? Colors.white
+                        : tint,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BASELINED NOTICE — Treasury-styled inline banner
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _BaselinedNotice extends StatelessWidget {
+  const _BaselinedNotice({required this.version, required this.remaining});
+  final int version;
+  final int remaining;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: TreasuryTokens.warningSoft,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: TreasuryTokens.warning.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: TreasuryTokens.warning.withValues(alpha: 0.20),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.lock_rounded,
+                size: 15, color: TreasuryTokens.warning),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Estimate is baselined (v$version)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: TreasuryTokens.ink,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Edits create variance entries. Re-baselines remaining: $remaining',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: TreasuryTokens.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TREASURY LINE ROW — premium card for each cost line
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _TreasuryLineRow extends StatelessWidget {
+  const _TreasuryLineRow({
+    required this.line,
+    required this.currencySymbol,
+    required this.canEdit,
+    required this.onEdit,
+    required this.onDelete,
+  });
+  final CostLine line;
+  final String currencySymbol;
+  final bool canEdit;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: TreasuryTokens.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: TreasuryTokens.hairline),
+      ),
+      child: Row(
+        children: [
+          // Icon tile
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: TreasuryTokens.brandSoft,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: TreasuryTokens.brand.withValues(alpha: 0.20),
+              ),
+            ),
+            child: Icon(Icons.receipt_long_rounded,
+                size: 18, color: TreasuryTokens.brandDeep),
+          ),
+          const SizedBox(width: 12),
+          // Description + meta
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        line.description,
+                        style: const TextStyle(
+                          color: TreasuryTokens.ink,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (line.aiGenerated) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3B82F6)
+                              .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: const Color(0xFF3B82F6)
+                                .withValues(alpha: 0.35),
+                          ),
+                        ),
+                        child: const Text(
+                          'AI',
+                          style: TextStyle(
+                            color: Color(0xFF3B82F6),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (!line.inSchedule) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: TreasuryTokens.warningSoft,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: TreasuryTokens.warning
+                                .withValues(alpha: 0.35),
+                          ),
+                        ),
+                        child: const Text(
+                          'NOT IN SCHEDULE',
+                          style: TextStyle(
+                            color: Color(0xFFB45309),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.label_outline,
+                        size: 11,
+                        color: TreasuryTokens.mutedSoft),
+                    const SizedBox(width: 4),
+                    Text(
+                      line.category.label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: TreasuryTokens.muted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Icon(Icons.source_outlined,
+                        size: 11,
+                        color: TreasuryTokens.mutedSoft),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        line.basisSource.label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: TreasuryTokens.muted,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Total
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              '$currencySymbol${formatCurrency(line.total, 'USD')}',
+              style: const TextStyle(
+                color: TreasuryTokens.ink,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          if (canEdit) ...[
+            const SizedBox(width: 8),
+            _IconAction(
+              icon: Icons.edit_outlined,
+              onTap: onEdit,
+              tint: TreasuryTokens.muted,
+            ),
+            const SizedBox(width: 4),
+            _IconAction(
+              icon: Icons.delete_outline,
+              onTap: onDelete,
+              tint: const Color(0xFFDC2626),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _IconAction extends StatelessWidget {
+  const _IconAction({
+    required this.icon,
+    required this.onTap,
+    required this.tint,
+  });
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color tint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: tint.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 28,
+          height: 28,
+          alignment: Alignment.center,
+          child: Icon(icon, size: 15, color: tint),
+        ),
       ),
     );
   }

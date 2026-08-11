@@ -29,6 +29,8 @@ import 'package:ndu_project/screens/preferred_solution_analysis_screen.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/access_policy.dart';
+import 'package:ndu_project/utils/business_case_lock_helper.dart';
+import 'package:ndu_project/widgets/skip_business_case_dialog.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/rich_text_editing_controller.dart';
@@ -458,6 +460,16 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  }
 
  Future<void> _generateInitialSolutions() async {
+ // Business Case lock — once a preferred solution has been selected,
+ // this screen is view-only. Block AI generation.
+ if (BusinessCaseLockHelper.isBusinessCaseLocked(
+ ProjectDataHelper.getData(context))) {
+ if (mounted) {
+ BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+ setState(() => _isLoadingSolutions = false);
+ }
+ return;
+ }
  // If API is not configured, skip directly to fallback
  if (!OpenAiConfig.isConfigured) {
  _applyFallback('AI service not configured. Add content manually.');
@@ -1458,6 +1470,42 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ // Business Case lock banner — shown when a preferred
+ // solution has been selected. In that state, this screen
+ // is view-only (no AI generation, no inline edits).
+ BusinessCaseLockHelper.lockBanner(
+ ProjectDataHelper.getData(context)),
+ // Skip Business Case affordance — only visible when the
+ // Business Case is NOT already locked. Lets users who already
+ // know the solution skip the workflow and provide a robust
+ // project description instead.
+ if (!BusinessCaseLockHelper.isBusinessCaseLocked(
+ ProjectDataHelper.getData(context))) ...[
+ Align(
+ alignment: Alignment.centerRight,
+ child: TextButton.icon(
+ onPressed: () async {
+ final skipped = await SkipBusinessCaseDialog.show(context);
+ if (skipped && mounted) {
+ setState(() {});
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Business Case skipped. Continue to FEP documentation.'),
+ duration: Duration(seconds: 3),
+ ),
+ );
+ }
+ },
+ icon: const Icon(Icons.fast_forward_rounded, size: 18),
+ label: const Text('Skip Business Case'),
+ style: TextButton.styleFrom(
+ foregroundColor: const Color(0xFFD97706),
+ ),
+ ),
+ ),
+ const SizedBox(height: 8),
+ ],
  const EditableContentText(
  contentKey: 'potential_solutions_phase_title',
  fallback: 'Potential Solutions',
@@ -1899,6 +1947,11 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  }
 
  Widget _buildEmptyState() {
+ // If the Business Case is locked (a preferred solution has been
+ // selected), the user cannot generate new solutions. Show a
+ // view-only message instead of the Generate button.
+ final isLocked = BusinessCaseLockHelper.isBusinessCaseLocked(
+ ProjectDataHelper.getData(context));
  return Center(
  child: Column(
  mainAxisSize: MainAxisSize.min,
@@ -1910,11 +1963,14 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
  ),
  const SizedBox(height: 6),
- const Text(
- 'Add your own or let AI suggest options.',
- style: TextStyle(fontSize: 12, color: Colors.grey),
+ Text(
+ isLocked
+ ? 'Business Case is locked. Add solutions before selecting a preferred solution.'
+ : 'Add your own or let AI suggest options.',
+ style: const TextStyle(fontSize: 12, color: Colors.grey),
  ),
  const SizedBox(height: 16),
+ if (!isLocked)
  Wrap(
  spacing: 12,
  children: [
@@ -1933,6 +1989,32 @@ ${contextScan.trim().isEmpty ? 'No additional project context available.' : cont
  ),
  ],
  ),
+ if (!isLocked) ...[
+ const SizedBox(height: 12),
+ TextButton.icon(
+ onPressed: () async {
+ final skipped = await SkipBusinessCaseDialog.show(context);
+ if (skipped && mounted) {
+ // After skipping, the Business Case is locked. Navigate
+ // forward to the FEP Summary so the user can continue
+ // building FEP documentation from their description.
+ setState(() {});
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Business Case skipped. Continue to FEP documentation.'),
+ duration: Duration(seconds: 3),
+ ),
+ );
+ }
+ },
+ icon: const Icon(Icons.fast_forward_rounded, size: 18),
+ label: const Text('Skip Business Case (I already know the solution)'),
+ style: TextButton.styleFrom(
+ foregroundColor: const Color(0xFFD97706),
+ ),
+ ),
+ ],
  ],
  ),
  );

@@ -7,15 +7,20 @@ class PageRegenerateAllButton extends StatelessWidget {
     super.key,
     required this.onRegenerateAll,
     this.isLoading = false,
+    this.isLocked = false,
     this.tooltip = 'Regenerate all AI content on this page',
   });
 
   final VoidCallback onRegenerateAll;
   final bool isLoading;
+  final bool isLocked;
   final String tooltip;
 
   @override
   Widget build(BuildContext context) {
+    // When the Business Case is locked (preferred solution selected),
+    // hide the Regenerate All button entirely — the page is view-only.
+    if (isLocked) return const SizedBox.shrink();
     return IconButton(
       icon: isLoading
           ? const SizedBox(

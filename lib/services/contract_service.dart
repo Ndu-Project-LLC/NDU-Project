@@ -116,6 +116,12 @@ class ContractModel {
   final String? procurementHandoffStatus;
   final DateTime? procurementIssuedAt;
   final String? procurementRfqId;
+  /// Phase of the project when this contract is expected to start.
+  /// Options: 'Not Sure', 'Initiation', 'Planning', 'Design',
+  /// 'Execution', 'Launch', 'Post-Launch'.
+  /// In initiation phase this may be a rough estimate; in planning it should
+  /// be confirmed after the bid process.
+  final String? contractStartPhase;
 
   const ContractModel({
     required this.id,
@@ -183,6 +189,7 @@ class ContractModel {
     this.procurementHandoffStatus,
     this.procurementIssuedAt,
     this.procurementRfqId,
+    this.contractStartPhase,
   });
 
   Map<String, dynamic> toMap() {
@@ -276,6 +283,8 @@ class ContractModel {
       if (procurementIssuedAt != null)
         'procurementIssuedAt': Timestamp.fromDate(procurementIssuedAt!),
       if (procurementRfqId != null) 'procurementRfqId': procurementRfqId,
+      if (contractStartPhase != null)
+        'contractStartPhase': contractStartPhase,
     };
   }
 
@@ -425,6 +434,7 @@ class ContractModel {
       procurementHandoffStatus: ns(data['procurementHandoffStatus']),
       procurementIssuedAt: parseTs(data['procurementIssuedAt']),
       procurementRfqId: ns(data['procurementRfqId']),
+      contractStartPhase: ns(data['contractStartPhase']),
     );
   }
 }
@@ -449,7 +459,9 @@ class ContractService {
     DateTime? endDate,
     required String scope,
     required String discipline,
+    String contractorName = '',
     String notes = '',
+    String? contractStartPhase,
     required String createdById,
     required String createdByEmail,
     required String createdByName,
@@ -467,9 +479,10 @@ class ContractService {
       endDate: endDate,
       scope: scope,
       discipline: discipline,
-      contractorName: '',
+      contractorName: contractorName,
       owner: '',
       notes: notes,
+      contractStartPhase: contractStartPhase,
       createdById: createdById,
       createdByEmail: createdByEmail,
       createdByName: createdByName,
@@ -514,7 +527,9 @@ class ContractService {
     DateTime? endDate,
     String? scope,
     String? discipline,
+    String? contractorName,
     String? notes,
+    String? contractStartPhase,
   }) async {
     final updateData = <String, dynamic>{
       'updatedAt': FieldValue.serverTimestamp(),
@@ -543,7 +558,11 @@ class ContractService {
     }
     if (scope != null) updateData['scope'] = scope;
     if (discipline != null) updateData['discipline'] = discipline;
+    if (contractorName != null) updateData['contractorName'] = contractorName;
     if (notes != null) updateData['notes'] = notes;
+    if (contractStartPhase != null) {
+      updateData['contractStartPhase'] = contractStartPhase;
+    }
 
     await _contractsCol(projectId).doc(contractId).update(updateData);
   }

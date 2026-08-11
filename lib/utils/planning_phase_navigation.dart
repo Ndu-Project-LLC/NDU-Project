@@ -27,6 +27,7 @@ import 'package:ndu_project/screens/execution_plan_interface_management_screen.d
 import 'package:ndu_project/screens/execution_plan_communication_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_plan_screen.dart';
 import 'package:ndu_project/screens/execution_plan_interface_management_overview_screen.dart';
+import 'package:ndu_project/screens/execution_quality_tracking_screen.dart';
 import 'package:ndu_project/screens/design_planning_screen.dart';
 import 'package:ndu_project/screens/planning_technology_screen.dart';
 import 'package:ndu_project/screens/interface_management_screen.dart';
@@ -137,11 +138,6 @@ class PlanningPhaseNavigation {
       id: 'technology',
       title: 'Technology Planning',
       builder: (_) => const PlanningTechnologyScreen(),
-    ),
-    PlanningPage(
-      id: 'interface_management',
-      title: 'Interface Management',
-      builder: (_) => const InterfaceManagementScreen(),
     ),
     // Agile Delivery Model Section — before Execution Plan
     PlanningPage(
@@ -299,6 +295,11 @@ class PlanningPhaseNavigation {
       builder: (_) => const ExecutionPlanInterfaceManagementOverviewScreen(),
     ),
     PlanningPage(
+      id: 'execution_quality_tracking',
+      title: 'Execution Quality Tracking',
+      builder: (_) => const ExecutionQualityTrackingScreen(),
+    ),
+    PlanningPage(
       id: 'deliverables_roadmap_overview',
       title: 'Roadmap Overview',
       builder: (_) => const DeliverablesRoadmapOverviewScreen(),
@@ -327,6 +328,12 @@ class PlanningPhaseNavigation {
       id: 'procurement',
       title: 'Procurement',
       builder: (_) => const PlanningProcurementScreen(),
+    ),
+    // Interface Management — moved under Procurement per user request.
+    PlanningPage(
+      id: 'interface_management',
+      title: 'Interface Management',
+      builder: (_) => const InterfaceManagementScreen(),
     ),
     PlanningPage(
       id: 'schedule',

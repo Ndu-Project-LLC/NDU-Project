@@ -168,20 +168,19 @@ class _GanttPainter extends CustomPainter {
       final p = projects[i];
       final y = chartTop + (i * rowHeight) + 8;
 
-      // Project name label
+      // Project name label — allow up to 2 lines, with ellipsis as a last resort.
       final namePaint = TextPainter(
         text: TextSpan(
-          text: p.projectName.length > 16
-              ? '${p.projectName.substring(0, 16)}…'
-              : p.projectName,
+          text: p.projectName,
           style: const TextStyle(
             color: Color(0xFF334155),
             fontSize: 11.5,
             fontWeight: FontWeight.w600,
+            height: 1.2,
           ),
         ),
         textDirection: TextDirection.ltr,
-        maxLines: 1,
+        maxLines: 2,
         ellipsis: '…',
       )..layout(maxWidth: labelWidth);
       namePaint.paint(canvas, Offset(8, y + 4));

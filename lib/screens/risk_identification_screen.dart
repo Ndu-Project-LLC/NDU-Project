@@ -23,9 +23,11 @@ import 'package:ndu_project/widgets/admin_edit_toggle.dart';
 import 'package:ndu_project/widgets/content_text.dart';
 import 'package:ndu_project/widgets/business_case_header.dart';
 import 'package:ndu_project/widgets/business_case_navigation_buttons.dart';
+import 'package:ndu_project/widgets/ux_hardening_primitives.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // Removed AppLogo from header per request
 import 'package:ndu_project/screens/settings_screen.dart';
+import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/utils/text_sanitizer.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
@@ -279,8 +281,11 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
         final projectData = ProjectDataHelper.getData(context);
         if (projectData.solutionRisks.isNotEmpty) {
           _loadSavedRisks(projectData.solutionRisks);
-    } else if (_solutions.isNotEmpty) {
-      // Auto-generate risks for all solutions on first load
+    } else if (_solutions.isNotEmpty &&
+        !BusinessCaseLockHelper.isBusinessCaseLocked(projectData)) {
+      // Auto-generate risks for all solutions on first load — but only
+      // if the Business Case is NOT locked (i.e. no preferred solution
+      // has been selected yet).
       _generateRisks(showSuccessSnack: false);
     }
       } catch (e) {
@@ -342,6 +347,15 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     setState(() => _hasUnsavedChanges = true);
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer(const Duration(seconds: 2), _autoSave);
+  }
+
+  /// Phase 1 hardening: flush any pending debounced save immediately.
+  /// Called by [UnsavedChangesGuard] when the user chooses "Save" before
+  /// navigating away. Cancels the debounce timer and runs _autoSave now.
+  Future<void> _flushSaveNow() async {
+    _autoSaveTimer?.cancel();
+    if (!_hasUnsavedChanges) return;
+    await _autoSave();
   }
 
   /// Auto-save risks to Firebase
@@ -435,6 +449,16 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
   }
 
   Future<void> _generateRisks({bool showSuccessSnack = true}) async {
+    // Business Case lock — once a preferred solution has been selected,
+    // this screen is view-only. Block AI generation.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+        setState(() => _isGenerating = false);
+      }
+      return;
+    }
     if (_isGenerating) return;
     setState(() {
       _isGenerating = true;
@@ -642,18 +666,22 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-              child: Row(
-                children: [
-                  const Icon(Icons.workspaces_outline,
-                      size: 15, color: Color(0xFFFBBF24)),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'PROJECT WORKSPACE',
+      body: UnsavedChangesGuard(
+        isDirty: () => _hasUnsavedChanges || _autoSaveTimer?.isActive == true,
+        onSave: _flushSaveNow,
+        successMessage: 'Risks saved',
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.workspaces_outline,
+                        size: 15, color: Color(0xFFFBBF24)),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'PROJECT WORKSPACE',
                     style: TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w700,
@@ -740,6 +768,7 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
             ),
           ],
         ),
+      ),
       ),
       drawer: _buildMobileDrawer(),
       bottomNavigationBar: SafeArea(
@@ -1366,6 +1395,11 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Business Case lock banner — shown when a preferred
+                  // solution has been selected. In that state, this
+                  // screen is view-only (no AI generation, no edits).
+                  BusinessCaseLockHelper.lockBanner(
+                      ProjectDataHelper.getData(context)),
                   const EditableContentText(
                     contentKey: 'risk_identification_notes_heading',
                     fallback: 'Notes',
@@ -1444,6 +1478,8 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                         },
                         isLoading: _isGenerating,
                         tooltip: 'Regenerate all risks',
+                        isLocked: BusinessCaseLockHelper.isBusinessCaseLocked(
+                            ProjectDataHelper.getData(context)),
                       ),
                     ],
                   ),
@@ -2030,6 +2066,14 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
 
   Future<void> _regenerateSingleRisk(TextEditingController controller,
       int solutionIndex, int riskIndex, String solutionTitle) async {
+    // Business Case lock — view-only when a preferred solution is selected.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+      }
+      return;
+    }
     try {
       final solution = _solutions[solutionIndex];
       final provider = ProjectDataHelper.getProvider(context);
@@ -2073,6 +2117,12 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
   /// Build KAZ AI suggestion button inline
   Widget _buildKazAiButton(TextEditingController controller, int solutionIndex,
       int riskIndex, String solutionTitle) {
+    // Business Case lock — hide the KAZ AI button entirely when a
+    // preferred solution has been selected (view-only mode).
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      return const SizedBox.shrink();
+    }
     final scheme = Theme.of(context).colorScheme;
     return Tooltip(
       message: 'Get KAZ AI suggestions',
@@ -2113,6 +2163,14 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
   /// Show KAZ AI suggestions dialog
   Future<void> _showKazAiSuggestions(TextEditingController controller,
       int solutionIndex, int riskIndex, String solutionTitle) async {
+    // Business Case lock — view-only when a preferred solution is selected.
+    if (BusinessCaseLockHelper.isBusinessCaseLocked(
+        ProjectDataHelper.getData(context))) {
+      if (mounted) {
+        BusinessCaseLockHelper.showLockedToast(context, action: 'generate');
+      }
+      return;
+    }
     final existingRisks = _getExistingRisksForSolution(solutionIndex);
 
     // Show loading dialog

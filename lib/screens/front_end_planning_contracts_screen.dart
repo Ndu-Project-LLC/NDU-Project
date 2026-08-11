@@ -654,10 +654,13 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  final TextEditingController _scopeController = TextEditingController();
  final TextEditingController _disciplineController = TextEditingController();
  final TextEditingController _notesController = TextEditingController();
+ final TextEditingController _contractorNameController =
+ TextEditingController();
 
  String _contractType = 'Not Sure';
  String _paymentType = 'Not Sure';
  String _status = 'Not Started';
+ String _contractStartPhase = 'Not Sure';
  DateTime? _startDate;
  DateTime? _endDate;
 
@@ -670,16 +673,23 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  if (contract == null) return;
  _contractNameController.text = contract.name;
  _descriptionController.text = contract.description;
- _estimatedValueController.text = contract.estimatedValue.toStringAsFixed(0);
+ _estimatedValueController.text = contract.estimatedValue > 0
+ ? contract.estimatedValue.toStringAsFixed(0)
+ : '';
  _scopeController.text = contract.scope;
  _disciplineController.text = contract.discipline;
  _notesController.text = contract.notes;
+ _contractorNameController.text = contract.contractorName;
  _contractType = contract.contractType.isNotEmpty
  ? contract.contractType
  : _contractType;
  _paymentType =
  contract.paymentType.isNotEmpty ? contract.paymentType : _paymentType;
  _status = contract.status.isNotEmpty ? contract.status : _status;
+ _contractStartPhase =
+ (contract.contractStartPhase ?? '').isNotEmpty
+ ? contract.contractStartPhase!
+ : _contractStartPhase;
  _startDate = contract.startDate;
  _endDate = contract.endDate;
  }
@@ -692,6 +702,7 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  _scopeController.dispose();
  _disciplineController.dispose();
  _notesController.dispose();
+ _contractorNameController.dispose();
  super.dispose();
  }
 
@@ -779,7 +790,9 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  endDate: _endDate,
  scope: _scopeController.text.trim(),
  discipline: _disciplineController.text.trim(),
+ contractorName: _contractorNameController.text.trim(),
  notes: _notesController.text.trim(),
+ contractStartPhase: _contractStartPhase,
  );
  } else {
  await ContractService.createContract(
@@ -794,7 +807,9 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  endDate: _endDate,
  scope: _scopeController.text.trim(),
  discipline: _disciplineController.text.trim(),
+ contractorName: _contractorNameController.text.trim(),
  notes: _notesController.text.trim(),
+ contractStartPhase: _contractStartPhase,
  createdById: user.uid,
  createdByEmail: user.email ?? '',
  createdByName: user.displayName ?? (user.email ?? 'User'),
@@ -1103,16 +1118,17 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  ),
  ),
  _LabeledField(
- label: 'Estimated Value (\$)',
+ label: 'Estimated Value (\$) — optional',
  child: _ContractTextField(
  controller: _estimatedValueController,
- hintText: 'e.g. 150000',
+ hintText: 'e.g. 150000 (leave blank if unknown)',
  keyboardType: TextInputType.number,
  validator: (v) {
  final t = v?.trim() ?? '';
+ if (t.isEmpty) return null; // optional in initiation
  final d = double.tryParse(t);
  if (d == null || d <= 0) {
- return 'Enter a valid amount';
+ return 'Enter a valid amount or leave blank';
  }
  return null;
  },
@@ -1124,20 +1140,58 @@ class _CreateContractScreenState extends State<CreateContractScreen> {
  height: AppBreakpoints.isMobile(context)
  ? 18
  : 24),
+ // Phase for Contract Start — lets the user indicate which project phase
+ // the contract is expected to kick off in. In initiation the exact dates
+ // may be unknown, so a phase estimate is the most useful signal.
+ _LabeledField(
+ label: 'Phase for Contract Start',
+ child: _ContractDropdownField(
+ value: _contractStartPhase,
+ items: const [
+ 'Not Sure',
+ 'Initiation',
+ 'Planning',
+ 'Design',
+ 'Execution',
+ 'Launch',
+ 'Post-Launch'
+ ],
+ onChanged: (value) => setState(() =>
+ _contractStartPhase = value ?? _contractStartPhase),
+ ),
+ ),
+ SizedBox(
+ height: AppBreakpoints.isMobile(context)
+ ? 18
+ : 24),
+ // Optional Contractor field — may not be known in initiation phase.
+ // If known, it can be added; if not, left blank for the bidding process.
+ _LabeledField(
+ label: 'Contractor (optional)',
+ child: _ContractTextField(
+ controller: _contractorNameController,
+ hintText:
+ 'Leave blank if contractor is not yet identified',
+ ),
+ ),
+ SizedBox(
+ height: AppBreakpoints.isMobile(context)
+ ? 18
+ : 24),
  _ResponsiveRow(
  spacing: AppBreakpoints.isMobile(context)
  ? 16
  : 24,
  children: [
  _LabeledField(
- label: 'Start Date',
+ label: 'Start Date (optional)',
  child: _ContractDateField(
  displayText: _formattedDate(_startDate),
  onTap: () => _pickDate(isStart: true),
  ),
  ),
  _LabeledField(
- label: 'End Date',
+ label: 'End Date (optional)',
  child: _ContractDateField(
  displayText: _formattedDate(_endDate),
  onTap: () => _pickDate(isStart: false),

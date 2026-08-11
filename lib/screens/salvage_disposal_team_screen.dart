@@ -205,7 +205,7 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
  lastUpdated: '5 hrs ago',
  ),
  _ComplianceRegulationRow(
- regulation: 'ISO 14001:2015 (Environmental Mgmt)',
+ regulation: 'ISO 14001:2015 (Environmental Management)',
  category: 'Environmental',
  complianceStatus: 'Conditional',
  complianceScore: 82,
@@ -237,7 +237,7 @@ class _SalvageDisposalTeamScreenState extends State<SalvageDisposalTeamScreen> {
  lastUpdated: '3 hrs ago',
  ),
  _ComplianceRegulationRow(
- regulation: 'ISO 45001:2018 (OH&S Mgmt)',
+ regulation: 'ISO 45001:2018 (OH&S Management)',
  category: 'Health',
  complianceStatus: 'Compliant',
  complianceScore: 91,

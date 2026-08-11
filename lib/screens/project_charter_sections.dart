@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +8,7 @@ import 'package:ndu_project/models/user_model.dart';
 import 'package:ndu_project/services/charter_approval_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/charter_tech_proc_helper.dart';
 import 'package:ndu_project/widgets/expandable_text.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -377,6 +379,7 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
 
  final data = widget.data!;
  final hasManager = data.charterProjectManagerName.isNotEmpty;
+ final hasSponsor = data.charterProjectSponsorName.isNotEmpty;
 
  final items = [
  _MetaInfoItem(
@@ -389,8 +392,20 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  iconFgColor: const Color(0xFF636262),
  onTap: hasManager ? null : () => _showAssignManagerDialog(data),
  ),
- // Ref-ID removed per user request — the charter no longer displays
- // an internal reference ID badge in the meta info row.
+ // Sponsor card — system suggests the highest role-based authority
+ // (admin, then active user, then signed-in user) as the sponsor.
+ // The user can also invite an external sponsor via the team
+ // invitation flow (sends an email).
+ _MetaInfoItem(
+ icon: Icons.workspace_premium_outlined,
+ label: 'Project Sponsor',
+ value: hasSponsor
+ ? data.charterProjectSponsorName
+ : 'Assign Sponsor',
+ iconBgColor: const Color(0xFFFEF3C7),
+ iconFgColor: const Color(0xFFB45309),
+ onTap: () => _showAssignSponsorDialog(data),
+ ),
  _MetaInfoItem(
  icon: Icons.calendar_today_outlined,
  label: 'Start Date',
@@ -416,6 +431,331 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  String _formatDate(DateTime? date) {
  if (date == null) return 'Not Provided';
  return DateFormat('MMM d, yyyy').format(date);
+ }
+
+ Future<void> _showAssignSponsorDialog(ProjectDataModel data) async {
+ final nameController = TextEditingController(
+ text: data.charterProjectSponsorName,
+ );
+ final emailController = TextEditingController(
+ text: data.charterEmail,
+ );
+ final formKey = GlobalKey<FormState>();
+ ResolvedApprover? suggested;
+ List<UserModel> allUsers = const [];
+ bool loadingSuggestion = true;
+ bool inviting = false;
+
+ // Load users and compute the suggested sponsor in the background.
+ Future<void> loadSuggestion = () async {
+   try {
+     final snap = await FirebaseFirestore.instance
+         .collection('users')
+         .limit(200)
+         .get();
+     allUsers =
+         snap.docs.map((d) => UserModel.fromJson(d.data())).toList();
+     suggested =
+         CharterApprovalService.suggestSponsor(allUsers: allUsers);
+   } catch (e) {
+     debugPrint('Sponsor suggestion load failed: $e');
+     suggested = null;
+   }
+   loadingSuggestion = false;
+ }();
+
+ final result = await showDialog<Map<String, String>>(
+ context: context,
+ builder: (dialogContext) {
+   return StatefulBuilder(
+     builder: (dialogContext, setDialogState) {
+       return AlertDialog(
+         shape: RoundedRectangleBorder(
+             borderRadius: BorderRadius.circular(20)),
+         title: Row(
+           children: [
+             Container(
+               padding: const EdgeInsets.all(8),
+               decoration: BoxDecoration(
+                 color: const Color(0xFFFEF3C7),
+                 borderRadius: BorderRadius.circular(10),
+               ),
+               child: const Icon(Icons.workspace_premium_outlined,
+                   color: Color(0xFFB45309), size: 24),
+             ),
+             const SizedBox(width: 12),
+             const Text('Assign Project Sponsor'),
+           ],
+         ),
+         content: SizedBox(
+           width: 440,
+           child: Form(
+             key: formKey,
+             child: Column(
+               mainAxisSize: MainAxisSize.min,
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                 const Text(
+                   'A sponsor must be identified before the charter '
+                   'can be approved. The system suggests the highest '
+                   'role-based authority on the site. You can accept '
+                   'the suggestion, enter a different sponsor, or '
+                   'invite an external sponsor via email.',
+                   style: TextStyle(color: Colors.grey, fontSize: 12),
+                 ),
+                 const SizedBox(height: 14),
+                 // Suggested sponsor banner
+                 if (loadingSuggestion)
+                   const Padding(
+                     padding: EdgeInsets.symmetric(vertical: 8),
+                     child: Row(
+                       children: [
+                         SizedBox(
+                           width: 14,
+                           height: 14,
+                           child: CircularProgressIndicator(strokeWidth: 2),
+                         ),
+                         SizedBox(width: 8),
+                         Text('Finding suggested sponsor…',
+                             style: TextStyle(fontSize: 12)),
+                       ],
+                     ),
+                   )
+                 else if (suggested != null &&
+                     suggested!.name.isNotEmpty &&
+                     suggested!.name != 'Pending Assignment')
+                   Container(
+                     padding: const EdgeInsets.all(10),
+                     decoration: BoxDecoration(
+                       color: const Color(0xFFEFF6FF),
+                       borderRadius: BorderRadius.circular(8),
+                       border: Border.all(
+                           color: const Color(0xFF005BB3)
+                               .withValues(alpha: 0.2)),
+                     ),
+                     child: Row(
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                         const Icon(Icons.lightbulb_outline,
+                             size: 16, color: Color(0xFF005BB3)),
+                         const SizedBox(width: 8),
+                         Expanded(
+                           child: Column(
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                               const Text(
+                                 'Suggested Sponsor (highest role-based authority):',
+                                 style: TextStyle(
+                                     fontSize: 11,
+                                     fontWeight: FontWeight.w700,
+                                     color: Color(0xFF005BB3)),
+                               ),
+                               const SizedBox(height: 2),
+                               Text(
+                                 '${suggested!.name} — ${suggested!.role}',
+                                 style: const TextStyle(fontSize: 12),
+                               ),
+                               const SizedBox(height: 6),
+                               Align(
+                                 alignment: Alignment.centerRight,
+                                 child: TextButton.icon(
+                                   onPressed: () {
+                                     setDialogState(() {
+                                       nameController.text =
+                                           suggested!.name;
+                                       emailController.text =
+                                           suggested!.email;
+                                     });
+                                   },
+                                   icon: const Icon(Icons.check, size: 14),
+                                   label: const Text('Use Suggested',
+                                       style: TextStyle(fontSize: 11)),
+                                   style: TextButton.styleFrom(
+                                     foregroundColor:
+                                         const Color(0xFF005BB3),
+                                     padding: const EdgeInsets.symmetric(
+                                         horizontal: 8, vertical: 2),
+                                     minimumSize: Size.zero,
+                                     tapTargetSize:
+                                         MaterialTapTargetSize.shrinkWrap,
+                                   ),
+                                 ),
+                               ),
+                             ],
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+                 const SizedBox(height: 14),
+                 TextFormField(
+                   controller: nameController,
+                   autofocus: true,
+                   decoration: InputDecoration(
+                     labelText: 'Sponsor Name',
+                     hintText: 'e.g. Jane Doe',
+                     border: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(12)),
+                     filled: true,
+                     fillColor: Colors.grey[50],
+                   ),
+                   validator: (value) {
+                     if (value == null || value.trim().isEmpty) {
+                       return 'Please enter a sponsor name';
+                     }
+                     if (value.trim().length < 2) {
+                       return 'Name must be at least 2 characters';
+                     }
+                     return null;
+                   },
+                 ),
+                 const SizedBox(height: 12),
+                 TextFormField(
+                   controller: emailController,
+                   decoration: InputDecoration(
+                     labelText: 'Email (optional — used to send approval request)',
+                     hintText: 'e.g. jane.doe@company.com',
+                     border: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(12)),
+                     filled: true,
+                     fillColor: Colors.grey[50],
+                   ),
+                 ),
+               ],
+             ),
+           ),
+         ),
+         actions: [
+           TextButton(
+             onPressed: inviting
+                 ? null
+                 : () => Navigator.of(dialogContext).pop(),
+             child: const Text('Cancel'),
+           ),
+           // Invite an external sponsor via email (sends a project
+           // manager invitation so they can sign in and approve).
+           OutlinedButton.icon(
+             onPressed: inviting
+                 ? null
+                 : () async {
+                     final email = emailController.text.trim();
+                     if (email.isEmpty || !email.contains('@')) {
+                       ScaffoldMessenger.of(dialogContext).showSnackBar(
+                         const SnackBar(
+                           content: Text(
+                               'Enter a valid email to invite an external sponsor.'),
+                           backgroundColor: Color(0xFFD97706),
+                         ),
+                       );
+                       return;
+                     }
+                     setDialogState(() => inviting = true);
+                     try {
+                       final msg =
+                           await CharterApprovalService.inviteExternalSponsor(
+                         email: email,
+                         sponsorName: nameController.text.trim(),
+                         projectName: data.projectName,
+                       );
+                       if (dialogContext.mounted) {
+                         ScaffoldMessenger.of(dialogContext).showSnackBar(
+                           SnackBar(
+                             content: Text(msg),
+                             backgroundColor: Colors.green,
+                           ),
+                         );
+                       }
+                     } catch (e) {
+                       if (dialogContext.mounted) {
+                         ScaffoldMessenger.of(dialogContext).showSnackBar(
+                           SnackBar(
+                             content: Text(
+                                 'Failed to send sponsor invitation: $e'),
+                             backgroundColor: Colors.red,
+                           ),
+                         );
+                       }
+                     } finally {
+                       if (dialogContext.mounted) {
+                         setDialogState(() => inviting = false);
+                       }
+                     }
+                   },
+             icon: inviting
+                 ? const SizedBox(
+                     width: 14,
+                     height: 14,
+                     child: CircularProgressIndicator(strokeWidth: 2),
+                   )
+                 : const Icon(Icons.person_add_alt_outlined, size: 16),
+             label: const Text('Invite Sponsor via Email'),
+           ),
+           ElevatedButton(
+             onPressed: () {
+               if (formKey.currentState?.validate() ?? false) {
+                 Navigator.of(dialogContext).pop({
+                   'name': nameController.text.trim(),
+                   'email': emailController.text.trim(),
+                 });
+               }
+             },
+             style: ElevatedButton.styleFrom(
+               backgroundColor: const Color(0xFFFFC812),
+               foregroundColor: Colors.black,
+               shape: RoundedRectangleBorder(
+                   borderRadius: BorderRadius.circular(12)),
+             ),
+             child: const Text('Assign'),
+           ),
+         ],
+       );
+     },
+   );
+ },
+ );
+
+ // Ensure the background load completes (harmless if it already has).
+ await loadSuggestion;
+
+ if (result == null) return;
+
+ // Persist the sponsor assignment to Firestore via ProjectDataHelper
+ try {
+ await ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: 'project_charter',
+ dataUpdater: (current) => current.copyWith(
+ charterProjectSponsorName: result['name']!,
+ charterEmail: result['email']!.isNotEmpty
+ ? result['email']
+ : current.charterEmail,
+ ),
+ showSnackbar: false,
+ );
+
+ if (mounted) {
+ setState(() {});
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(
+ '${result['name']} assigned as Project Sponsor'),
+ backgroundColor: Colors.green,
+ ),
+ );
+ }
+ } catch (e) {
+ if (mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text('Failed to assign sponsor: $e'),
+ backgroundColor: Colors.red,
+ ),
+ );
+ }
+ } finally {
+ nameController.dispose();
+ emailController.dispose();
+ }
  }
 
  Future<void> _showAssignManagerDialog(ProjectDataModel data) async {
@@ -1492,271 +1832,643 @@ class CharterRisks extends StatelessWidget {
 
 // ─── 6. Technical & Procurement Bento ───
 
-class CharterTechnicalProcurementBento extends StatelessWidget {
- final ProjectDataModel? data;
- final VoidCallback? onGenerate;
- /// When provided, shows a "View / Edit Source" button that takes the
- /// user back to the Business Case section (read-only after the
- /// preferred solution is locked).
- final VoidCallback? onEdit;
+class CharterTechnicalProcurementBento extends StatefulWidget {
+  final ProjectDataModel? data;
+  final VoidCallback? onGenerate;
+  /// When provided, shows a "View Preferred Solution" button that
+  /// takes the user to the Preferred Solution Analysis screen (the
+  /// source of truth for the preferred solution). The Business Case
+  /// section is read-only after the preferred solution is locked.
+  final VoidCallback? onEdit;
 
- const CharterTechnicalProcurementBento(
- {super.key, required this.data, this.onGenerate, this.onEdit});
+  /// When a preferred solution is locked, IT considerations and
+  /// Infrastructure text shown in the charter are sourced from the
+  /// preferred solution's SolutionAnalysisItem. The Business Case
+  /// itself is locked, but the user can still update the charter's
+  /// wording directly — [onSaveITOverride] / [onSaveInfraOverride]
+  /// are called with the new text when the user edits a section
+  /// inline. When the override is empty, the charter falls back to
+  /// the preferred-solution text.
+  final void Function(String text)? onSaveITOverride;
+  final void Function(String text)? onSaveInfraOverride;
 
- @override
- Widget build(BuildContext context) {
- if (data == null) return const SizedBox();
+  /// Clear the charter-side override so the section reverts to the
+  /// preferred-solution text.
+  final VoidCallback? onClearITOverride;
+  final VoidCallback? onClearInfraOverride;
 
- final it = data!.itConsiderationsData;
- final infra = data!.infrastructureConsiderationsData;
- final vendorCount = data!.vendors.length;
- final contractCount = data!.contractors.length;
+  const CharterTechnicalProcurementBento({
+    super.key,
+    required this.data,
+    this.onGenerate,
+    this.onEdit,
+    this.onSaveITOverride,
+    this.onSaveInfraOverride,
+    this.onClearITOverride,
+    this.onClearInfraOverride,
+  });
 
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- sectionTitleWithIcon(
- Icons.precision_manufacturing_outlined, 'Technical & Procurement'),
- // AI Generate removed per user request — IT considerations and
- // Infrastructure come from the preferred solution (Business Case
- // section, which is locked once the preferred solution is selected).
- if (onEdit != null)
- TextButton.icon(
- onPressed: onEdit,
- icon: const Icon(Icons.edit_outlined, size: 16),
- label: const Text('View / Edit Source',
- style: TextStyle(fontSize: 12)),
- style: TextButton.styleFrom(
- padding:
- const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
- minimumSize: Size.zero,
- tapTargetSize: MaterialTapTargetSize.shrinkWrap,
- ),
- ),
- ],
- ),
- const SizedBox(height: 16),
- LayoutBuilder(
- builder: (context, constraints) {
- final isWide = constraints.maxWidth >= 768;
- return isWide
- ? Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- // IT + Infrastructure card
- Expanded(
- child: _buildTechCard(it, infra),
- ),
- const SizedBox(width: 12),
- // Contracts + Procurement side by side
- Expanded(
- child: Column(
- children: [
- _buildStatCard(
- 'Contracts',
- contractCount,
- 'Contracts Pending',
- Icons.description_outlined,
- BrandColors.primary,
- BrandColors.primaryFixed,
- ),
- const SizedBox(height: 12),
- _buildStatCard(
- 'Procurement',
- vendorCount,
- 'Items Identified',
- Icons.inventory_2_outlined,
- BrandColors.tertiary,
- BrandColors.tertiaryFixed,
- ),
- ],
- ),
- ),
- ],
- )
- : Column(
- children: [
- _buildTechCard(it, infra),
- const SizedBox(height: 12),
- Row(
- children: [
- Expanded(
- child: _buildStatCard(
- 'Contracts',
- contractCount,
- 'Contracts Pending',
- Icons.description_outlined,
- BrandColors.primary,
- BrandColors.primaryFixed,
- ),
- ),
- const SizedBox(width: 12),
- Expanded(
- child: _buildStatCard(
- 'Procurement',
- vendorCount,
- 'Items Identified',
- Icons.inventory_2_outlined,
- BrandColors.tertiary,
- BrandColors.tertiaryFixed,
- ),
- ),
- ],
- ),
- ],
- );
- },
- ),
- ],
- );
- }
+  @override
+  State<CharterTechnicalProcurementBento> createState() =>
+      _CharterTechnicalProcurementBentoState();
+}
 
- Widget _buildTechCard(
- ITConsiderationsData? it, InfrastructureConsiderationsData? infra) {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: kCardBorderDecoration,
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- labelStyle('IT Considerations'),
- const SizedBox(height: 8),
- if (it == null ||
- (it.hardwareRequirements.isEmpty &&
- it.softwareRequirements.isEmpty &&
- it.networkRequirements.isEmpty))
- const Text('No specific requirements defined.',
- style: TextStyle(
- color: BrandColors.onSurfaceVariant,
- fontStyle: FontStyle.italic,
- fontSize: 13))
- else ...[
- if (it.hardwareRequirements.isNotEmpty)
- _buildReqRow('Hardware', it.hardwareRequirements),
- if (it.softwareRequirements.isNotEmpty)
- _buildReqRow('Software', it.softwareRequirements),
- if (it.networkRequirements.isNotEmpty)
- _buildReqRow('Network', it.networkRequirements),
- ],
- const SizedBox(height: 16),
- const Divider(color: BrandColors.outlineVariant),
- const SizedBox(height: 12),
- labelStyle('Infrastructure'),
- const SizedBox(height: 8),
- if (infra == null ||
- (infra.physicalSpaceRequirements.isEmpty &&
- infra.powerCoolingRequirements.isEmpty &&
- infra.connectivityRequirements.isEmpty))
- const Text('No specific requirements defined.',
- style: TextStyle(
- color: BrandColors.onSurfaceVariant,
- fontStyle: FontStyle.italic,
- fontSize: 13))
- else ...[
- if (infra.physicalSpaceRequirements.isNotEmpty)
- _buildReqRow('Space', infra.physicalSpaceRequirements),
- if (infra.powerCoolingRequirements.isNotEmpty)
- _buildReqRow('Power/Cooling', infra.powerCoolingRequirements),
- if (infra.connectivityRequirements.isNotEmpty)
- _buildReqRow('Connectivity', infra.connectivityRequirements),
- ],
- ],
- ),
- );
- }
+class _CharterTechnicalProcurementBentoState
+    extends State<CharterTechnicalProcurementBento> {
+  @override
+  Widget build(BuildContext context) {
+    final data = widget.data;
+    if (data == null) return const SizedBox();
 
- Widget _buildReqRow(String label, String value) {
- return Padding(
- padding: const EdgeInsets.only(bottom: 8),
- child: Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- SizedBox(
- width: 90,
- child: Text(label,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: BrandColors.onSurfaceVariant)),
- ),
- Expanded(
- child: Text(value,
- style: const TextStyle(fontSize: 13, height: 1.4),
- maxLines: 3,
- overflow: TextOverflow.ellipsis),
- ),
- ],
- ),
- );
- }
+    final vendorCount = data.vendors.length;
+    final contractCount = data.contractors.length;
 
- Widget _buildStatCard(String title, int count, String subtitle,
- IconData icon, Color accentColor, Color bgColor) {
- // Helper text to disambiguate "0" counts — tells the user whether
- // the count is genuinely zero or just not yet captured.
- final helper = count == 0
- ? 'No records added yet. Use "View / Edit Source" to add.'
- : null;
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: kCardBorderDecoration,
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Icon(icon, size: 18, color: accentColor),
- const SizedBox(width: 8),
- Text(title,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.bold,
- color: accentColor,
- letterSpacing: 0.5)),
- ],
- ),
- const SizedBox(height: 16),
- Container(
- width: double.infinity,
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: bgColor,
- borderRadius: BorderRadius.circular(10),
- border: Border.all(color: accentColor.withValues(alpha: 0.2)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text('$count',
- style: TextStyle(
- fontSize: 28,
- fontWeight: FontWeight.bold,
- color: accentColor)),
- const SizedBox(height: 2),
- Text(subtitle,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: accentColor.withValues(alpha: 0.8))),
- if (helper != null) ...[
- const SizedBox(height: 6),
- Text(helper,
- style: TextStyle(
- fontSize: 10,
- fontStyle: FontStyle.italic,
- color: accentColor.withValues(alpha: 0.65),
- height: 1.3)),
- ],
- ],
- ),
- ),
- ],
- ),
- );
- }
+    // IT considerations + Infrastructure source from the preferred
+    // solution when one is locked. The user can still update the
+    // charter's wording via the inline Edit affordance, which writes
+    // a charter-side override (ProjectDataModel.charterITOverride /
+    // charterInfraOverride). When no preferred solution is selected,
+    // fall back to the dedicated FEP IT/Infra Considerations pages.
+    final preferred = data.preferredSolution;
+    final hasPreferred = preferred != null;
+
+    final sourceLabel = hasPreferred
+        ? 'Source: Preferred Solution — ${preferred.title}'
+        : 'Source: IT & Infrastructure Considerations pages';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: sectionTitleWithIcon(
+                  Icons.precision_manufacturing_outlined, 'Technical & Procurement'),
+            ),
+            // AI Generate removed per user request — IT considerations and
+            // Infrastructure come from the preferred solution (Business Case
+            // section, which is locked once a preferred solution is selected).
+            if (widget.onEdit != null)
+              TextButton.icon(
+                onPressed: widget.onEdit,
+                icon: const Icon(Icons.visibility_outlined, size: 16),
+                label: const Text('View Preferred Solution',
+                    style: TextStyle(fontSize: 12)),
+                style: TextButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          sourceLabel,
+          style: const TextStyle(
+            fontSize: 11,
+            fontStyle: FontStyle.italic,
+            color: BrandColors.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 16),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 768;
+            return isWide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // IT + Infrastructure card
+                      Expanded(
+                        child: _buildTechCard(data, hasPreferred),
+                      ),
+                      const SizedBox(width: 12),
+                      // Contracts + Procurement side by side
+                      Expanded(
+                        child: Column(
+                          children: [
+                            _buildStatCard(
+                              'Contracts',
+                              contractCount,
+                              'Contracts Pending',
+                              Icons.description_outlined,
+                              BrandColors.primary,
+                              BrandColors.primaryFixed,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildStatCard(
+                              'Procurement',
+                              vendorCount,
+                              'Items Identified',
+                              Icons.inventory_2_outlined,
+                              BrandColors.tertiary,
+                              BrandColors.tertiaryFixed,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      _buildTechCard(data, hasPreferred),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              'Contracts',
+                              contractCount,
+                              'Contracts Pending',
+                              Icons.description_outlined,
+                              BrandColors.primary,
+                              BrandColors.primaryFixed,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              'Procurement',
+                              vendorCount,
+                              'Items Identified',
+                              Icons.inventory_2_outlined,
+                              BrandColors.tertiary,
+                              BrandColors.tertiaryFixed,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+          },
+        ),
+      ],
+    );
+  }
+
+  /// Build the IT considerations + Infrastructure card.
+  ///
+  /// When [hasPreferred] is true (a preferred solution is locked):
+  ///   - IT considerations text = charterITOverride ?? preferred solution IT text
+  ///   - Infrastructure text    = charterInfraOverride ?? preferred solution infra text
+  ///   - Edit buttons open an inline dialog that writes the charter-side
+  ///     override (does NOT unlock or modify the Business Case).
+  ///
+  /// When [hasPreferred] is false (no preferred solution yet):
+  ///   - Falls back to the FEP IT/Infrastructure Considerations pages'
+  ///     structured data (hardware/software/network, space/power/connectivity).
+  ///   - Edit buttons are hidden (the FEP pages remain the source of truth
+  ///     in this state and are still editable from the sidebar).
+  Widget _buildTechCard(ProjectDataModel data, bool hasPreferred) {
+    final itText = hasPreferred
+        ? CharterTechProcHelper.charterITText(data)
+        : _fepITText(data.itConsiderationsData);
+    final infraText = hasPreferred
+        ? CharterTechProcHelper.charterInfraText(data)
+        : _fepInfraText(data.infrastructureConsiderationsData);
+
+    // Track whether the displayed text is an override (vs. the raw
+    // preferred-solution text). Used to show a "Charter override"
+    // badge and a "Reset to preferred solution" affordance.
+    final itIsOverride = hasPreferred &&
+        (data.charterITOverride?.trim().isNotEmpty ?? false);
+    final infraIsOverride = hasPreferred &&
+        (data.charterInfraOverride?.trim().isNotEmpty ?? false);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: kCardBorderDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ─── IT Considerations ───
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              labelStyle('IT Considerations'),
+              if (hasPreferred && widget.onSaveITOverride != null)
+                TextButton.icon(
+                  onPressed: () => _editSection(
+                    title: 'IT Considerations',
+                    fieldLabel: 'IT considerations for the charter',
+                    currentText: itText ?? '',
+                    preferredText:
+                        CharterTechProcHelper.preferredSolutionITText(data) ??
+                            '',
+                    isOverride: itIsOverride,
+                    onSave: widget.onSaveITOverride,
+                    onClear: widget.onClearITOverride,
+                  ),
+                  icon: const Icon(Icons.edit_outlined, size: 14),
+                  label: const Text('Edit',
+                      style: TextStyle(fontSize: 11)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: BrandColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (itText == null || itText.trim().isEmpty)
+            const Text('No specific requirements defined.',
+                style: TextStyle(
+                    color: BrandColors.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 13))
+          else if (hasPreferred)
+            _buildTextBlock(itText, itIsOverride)
+          else ...[
+            // Structured FEP rows (pre-preferred-solution display).
+            if (data.itConsiderationsData != null) ...[
+              if (data.itConsiderationsData!.hardwareRequirements.isNotEmpty)
+                _buildReqRow(
+                    'Hardware', data.itConsiderationsData!.hardwareRequirements),
+              if (data.itConsiderationsData!.softwareRequirements.isNotEmpty)
+                _buildReqRow(
+                    'Software', data.itConsiderationsData!.softwareRequirements),
+              if (data.itConsiderationsData!.networkRequirements.isNotEmpty)
+                _buildReqRow(
+                    'Network', data.itConsiderationsData!.networkRequirements),
+            ],
+          ],
+          const SizedBox(height: 16),
+          const Divider(color: BrandColors.outlineVariant),
+          const SizedBox(height: 12),
+          // ─── Infrastructure ───
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              labelStyle('Infrastructure'),
+              if (hasPreferred && widget.onSaveInfraOverride != null)
+                TextButton.icon(
+                  onPressed: () => _editSection(
+                    title: 'Infrastructure',
+                    fieldLabel: 'Infrastructure considerations for the charter',
+                    currentText: infraText ?? '',
+                    preferredText:
+                        CharterTechProcHelper.preferredSolutionInfraText(data) ??
+                            '',
+                    isOverride: infraIsOverride,
+                    onSave: widget.onSaveInfraOverride,
+                    onClear: widget.onClearInfraOverride,
+                  ),
+                  icon: const Icon(Icons.edit_outlined, size: 14),
+                  label: const Text('Edit',
+                      style: TextStyle(fontSize: 11)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: BrandColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (infraText == null || infraText.trim().isEmpty)
+            const Text('No specific requirements defined.',
+                style: TextStyle(
+                    color: BrandColors.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 13))
+          else if (hasPreferred)
+            _buildTextBlock(infraText, infraIsOverride)
+          else ...[
+            // Structured FEP rows (pre-preferred-solution display).
+            if (data.infrastructureConsiderationsData != null) ...[
+              if (data
+                  .infrastructureConsiderationsData!.physicalSpaceRequirements
+                  .isNotEmpty)
+                _buildReqRow('Space',
+                    data.infrastructureConsiderationsData!.physicalSpaceRequirements),
+              if (data
+                  .infrastructureConsiderationsData!.powerCoolingRequirements
+                  .isNotEmpty)
+                _buildReqRow('Power/Cooling',
+                    data.infrastructureConsiderationsData!.powerCoolingRequirements),
+              if (data
+                  .infrastructureConsiderationsData!.connectivityRequirements
+                  .isNotEmpty)
+                _buildReqRow('Connectivity',
+                    data.infrastructureConsiderationsData!.connectivityRequirements),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Render a multi-line text block with proper wrapping. When
+  /// [isOverride] is true, show a small "Charter override" badge so
+  /// the user can see the section has been tailored away from the
+  /// preferred-solution source.
+  Widget _buildTextBlock(String text, bool isOverride) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isOverride)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: BrandColors.tertiaryFixed,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                'Charter override',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: BrandColors.tertiary,
+                ),
+              ),
+            ),
+          ),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 13, height: 1.5),
+        ),
+      ],
+    );
+  }
+
+  /// Open a dialog that lets the user edit the charter-side override
+  /// for one of the two sections (IT considerations or Infrastructure).
+  ///
+  /// The dialog shows:
+  ///   - The preferred-solution source text (read-only, for reference)
+  ///   - A multiline text field pre-filled with the current display
+  ///     text (which is the override if set, else the preferred text)
+  ///   - A "Reset to preferred solution" button (only when an
+  ///     override is active)
+  ///   - Save / Cancel buttons
+  Future<void> _editSection({
+    required String title,
+    required String fieldLabel,
+    required String currentText,
+    required String preferredText,
+    required bool isOverride,
+    required void Function(String)? onSave,
+    required VoidCallback? onClear,
+  }) async {
+    final controller = TextEditingController(text: currentText);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        final canReset = isOverride && onClear != null;
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.edit_outlined, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Edit $title')),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'This section is sourced from the preferred solution. '
+                  'The Business Case is locked, but you can tailor the '
+                  'wording shown in the charter below.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: BrandColors.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (preferredText.isNotEmpty) ...[
+                  const Text(
+                    'Preferred solution source text (read-only):',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: BrandColors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: BrandColors.surfaceContainer,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                          color: BrandColors.outlineVariant),
+                    ),
+                    constraints: const BoxConstraints(maxHeight: 120),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        preferredText,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: BrandColors.onSurfaceVariant,
+                          height: 1.4,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                Text(
+                  fieldLabel,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: BrandColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextField(
+                  controller: controller,
+                  maxLines: 8,
+                  minLines: 4,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Enter the text to display in the charter…',
+                    contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            if (canReset)
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.of(ctx).pop('__reset__');
+                },
+                icon: const Icon(Icons.restart_alt, size: 16),
+                label: const Text('Reset to preferred solution'),
+                style: TextButton.styleFrom(
+                  foregroundColor: BrandColors.error,
+                ),
+              ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(null),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(ctx).pop(controller.text.trim());
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == null) return;
+    if (result == '__reset__') {
+      if (onClear != null) onClear();
+      return;
+    }
+    if (onSave != null) onSave(result);
+  }
+
+  /// Build the IT considerations text from the FEP IT Considerations
+  /// page data (used when no preferred solution is locked yet).
+  String? _fepITText(ITConsiderationsData? it) {
+    if (it == null) return null;
+    final parts = <String>[];
+    if (it.hardwareRequirements.isNotEmpty) {
+      parts.add('Hardware: ${it.hardwareRequirements}');
+    }
+    if (it.softwareRequirements.isNotEmpty) {
+      parts.add('Software: ${it.softwareRequirements}');
+    }
+    if (it.networkRequirements.isNotEmpty) {
+      parts.add('Network: ${it.networkRequirements}');
+    }
+    if (parts.isEmpty) return null;
+    return parts.join('\n');
+  }
+
+  /// Build the Infrastructure text from the FEP Infrastructure
+  /// Considerations page data (used when no preferred solution is
+  /// locked yet).
+  String? _fepInfraText(InfrastructureConsiderationsData? infra) {
+    if (infra == null) return null;
+    final parts = <String>[];
+    if (infra.physicalSpaceRequirements.isNotEmpty) {
+      parts.add('Space: ${infra.physicalSpaceRequirements}');
+    }
+    if (infra.powerCoolingRequirements.isNotEmpty) {
+      parts.add('Power/Cooling: ${infra.powerCoolingRequirements}');
+    }
+    if (infra.connectivityRequirements.isNotEmpty) {
+      parts.add('Connectivity: ${infra.connectivityRequirements}');
+    }
+    if (parts.isEmpty) return null;
+    return parts.join('\n');
+  }
+
+  Widget _buildReqRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(label,
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: BrandColors.onSurfaceVariant)),
+          ),
+          Expanded(
+            child: Text(value,
+                style: const TextStyle(fontSize: 13, height: 1.4),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, int count, String subtitle,
+      IconData icon, Color accentColor, Color bgColor) {
+    // Helper text to disambiguate "0" counts — tells the user whether
+    // the count is genuinely zero or just not yet captured.
+    final helper = count == 0
+        ? 'No records added yet. Use "View Preferred Solution" to add.'
+        : null;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: kCardBorderDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: accentColor),
+              const SizedBox(width: 8),
+              Text(title,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: accentColor,
+                      letterSpacing: 0.5)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: accentColor.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$count',
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: accentColor)),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: accentColor.withValues(alpha: 0.8))),
+                if (helper != null) ...[
+                  const SizedBox(height: 6),
+                  Text(helper,
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontStyle: FontStyle.italic,
+                          color: accentColor.withValues(alpha: 0.65),
+                          height: 1.3)),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ─── 7. Tentative Schedule Timeline ───
@@ -2072,24 +2784,43 @@ class _CharterFloatingApprovalBarState
   @override
   Widget build(BuildContext context) {
     final data = widget.data;
+    final isApproved = data?.charterApprovalDate != null ||
+        (data?.frontEndPlanning.charterApproved ?? false);
+
     // Prefer the resolved approver (which knows about registered
     // users and the admin fallback), fall back to the raw charter
     // fields for display.
-    String signerName = _resolved.name.isNotEmpty && _resolved.name != 'Pending Assignment'
-        ? _resolved.name
-        : (data?.charterProjectSponsorName ?? data?.charterProjectManagerName ?? '');
-    String signerRole = _resolved.role.isNotEmpty && _resolved.role != 'Sponsor'
-        ? _resolved.role
-        : (data?.charterProjectSponsorName.isNotEmpty == true
-            ? 'Project Sponsor'
-            : (data?.charterProjectManagerName.isNotEmpty == true
-                ? 'Project Owner'
-                : 'Pending Assignment'));
-    if (signerName.isEmpty) {
+    //
+    // After approval, we show the actual approver — the resolved
+    // name if available, otherwise the named sponsor/PM, otherwise
+    // the currently signed-in user (who must have approved since
+    // they clicked the Approve button).
+    String signerName;
+    String signerRole;
+    if (_resolved.name.isNotEmpty &&
+        _resolved.name != 'Pending Assignment') {
+      signerName = _resolved.name;
+      signerRole = _resolved.role;
+    } else if ((data?.charterProjectSponsorName ?? '').isNotEmpty) {
+      signerName = data!.charterProjectSponsorName;
+      signerRole = 'Project Sponsor';
+    } else if ((data?.charterProjectManagerName ?? '').isNotEmpty) {
+      signerName = data!.charterProjectManagerName;
+      signerRole = 'Project Owner';
+    } else if (isApproved) {
+      // Charter was approved but no sponsor/PM was named — use the
+      // currently signed-in user as the approver of record. This
+      // fixes the bug where the bottom bar shows "Pending
+      // Assignment (Project Owner)" even after the user approved.
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final dn = (currentUser?.displayName ?? '').trim();
+      final em = (currentUser?.email ?? '').trim();
+      signerName = dn.isNotEmpty ? dn : (em.isNotEmpty ? em : 'Approver');
+      signerRole = 'Project Owner (signed-in user)';
+    } else {
       signerName = 'Pending Assignment';
+      signerRole = 'Pending Assignment';
     }
-    final isApproved = data?.charterApprovalDate != null ||
-        (data?.frontEndPlanning.charterApproved ?? false);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -2142,14 +2873,24 @@ class _CharterFloatingApprovalBarState
 
   Widget _buildApprovalInfo(
       String signerName, String signerRole, bool isApproved) {
+    // After approval, the message changes to "Charter approved by …".
+    // Before approval, it tells the user who the approver is and that
+    // the charter needs their sign-off.
+    final message = isApproved
+        ? 'Charter approved by $signerName ($signerRole) — Front End Planning is now locked'
+        : 'Approval Authority: $signerName ($signerRole) — Charter to be approved by sponsor, owner or applicable lead';
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.gavel_outlined, size: 18, color: Colors.white70),
+        Icon(
+          isApproved ? Icons.lock_outline : Icons.gavel_outlined,
+          size: 18,
+          color: Colors.white70,
+        ),
         const SizedBox(width: 8),
         Flexible(
           child: Text(
-            'Approval Authority: $signerName ($signerRole) — Charter to be approved by sponsor, owner or applicable lead',
+            message,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
               fontSize: 13,
@@ -2288,14 +3029,38 @@ class _CharterFloatingApprovalBarState
   Future<void> _showApprovalConfirmationDialog() async {
     final data = widget.data;
     if (data == null) return;
+    // If neither sponsor nor PM is named, the system suggests the
+    // highest role-based authority as the sponsor and prompts the
+    // user to assign one before approving.
     if ((data.charterProjectSponsorName.isEmpty) &&
         (data.charterProjectManagerName.isEmpty)) {
+      // Try to suggest a sponsor on the fly.
+      ResolvedApprover? suggestion;
+      try {
+        final snap = await FirebaseFirestore.instance
+            .collection('users')
+            .limit(200)
+            .get();
+        final users =
+            snap.docs.map((d) => UserModel.fromJson(d.data())).toList();
+        suggestion = CharterApprovalService.suggestSponsor(allUsers: users);
+      } catch (e) {
+        debugPrint('On-the-fly sponsor suggestion failed: $e');
+      }
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-              'Charter to be approved by sponsor, owner or applicable lead'),
+          content: Text(
+            suggestion != null && suggestion.name != 'Pending Assignment'
+                ? 'A sponsor must be identified before approving. Suggested: '
+                    '${suggestion.name} (${suggestion.role}). Tap the '
+                    '"Assign Sponsor" card to assign them.'
+                : 'A sponsor must be identified before approving. Tap the '
+                    '"Assign Sponsor" card to assign one (or invite an '
+                    'external sponsor via email).'),
           backgroundColor: const Color(0xFFD97706),
           behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 6),
           action: SnackBarAction(
             label: 'Dismiss',
             textColor: Colors.white,
@@ -2434,6 +3199,10 @@ class _CharterFloatingApprovalBarState
 
     if (!mounted) return;
     if (success) {
+      // Re-resolve the approver now that the charter is approved, so
+      // the bottom bar updates immediately to show the approver's
+      // name instead of "Pending Assignment".
+      _resolveFromCachedUsers();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(

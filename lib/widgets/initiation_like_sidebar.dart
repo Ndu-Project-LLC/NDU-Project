@@ -2306,12 +2306,17 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
                 child: VoiceTextField(
                   controller: _searchController,
                   onChanged: (value) => setState(() => _searchQuery = value),
-                  // Search bar is for menu navigation — KAZ AI icon here would
-                  // duplicate the floating KAZ chat bubble (unified AI entry
-                  // point). Voice input (mic) is still available for hands-free
-                  // search. Docx import + text formatting don't apply to a
-                  // single-line search field either.
+                  // Search bar is for menu navigation only — disable every
+                  // editor action so VoiceTextField renders as a plain
+                  // TextField (no Open Editor button above-right, no inline
+                  // suffix icons, no formatting toolbar). The KAZ AI sparkle
+                  // would duplicate the floating KAZ chat bubble (the unified
+                  // AI entry point); docx import + text formatting don't
+                  // apply to a single-line search query; and the mic /
+                  // Open-Editor affordance belongs on content fields, not a
+                  // menu filter.
                   enableKazAi: false,
+                  enableVoice: false,
                   enableDocxImport: false,
                   enableTextFormatting: false,
                   style: const TextStyle(

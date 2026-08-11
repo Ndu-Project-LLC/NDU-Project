@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:ndu_project/services/voice_input_service.dart';
 import 'package:ndu_project/services/docx_import_service.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
+import 'package:ndu_project/widgets/open_editor_button.dart';
 import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 
 /// A drop-in replacement for [TextField] that adds a microphone button
@@ -341,16 +342,12 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
 
   @override
   Widget build(BuildContext context) {
-    // Always show the mic button when enableVoice is true and the field
-    // isn't a password field — even if the browser doesn't support voice
-    // input. Tapping the mic on an unsupported browser shows a helpful
-    // message instead of silently failing.
+    // Editor features are surfaced via the Open Editor button placed
+    // OUTSIDE the text field — no more inline suffix icons.
     final voiceEnabled = widget.enableVoice && !widget.obscureText;
     final docxEnabled = widget.enableDocxImport && !widget.obscureText;
     final kazAiEnabled =
         widget.enableKazAi && !widget.obscureText && !widget.readOnly;
-    final effectiveDecoration =
-        _buildDecoration(voiceEnabled, docxEnabled, kazAiEnabled);
 
     // Show text formatting toolbar only for multi-line fields
     final showToolbar = widget.enableTextFormatting &&
@@ -358,10 +355,18 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
         !widget.readOnly &&
         (widget.maxLines == null || widget.maxLines! > 1);
 
+    final actions = _buildEditorActions(
+      voiceEnabled: voiceEnabled,
+      docxEnabled: docxEnabled,
+      kazAiEnabled: kazAiEnabled,
+    );
+    final anyLoading = _isListening || _isGeneratingAi || _isImportingDoc;
+    final hasActions = actions.any((a) => a.enabled);
+
     final textField = TextField(
       controller: _controller,
       focusNode: widget.focusNode,
-      decoration: effectiveDecoration,
+      decoration: widget.decoration ?? const InputDecoration(),
       keyboardType: widget.keyboardType,
       textInputAction: widget.textInputAction,
       textCapitalization: widget.textCapitalization,
@@ -403,160 +408,85 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       autofillHints: widget.autofillHints,
     );
 
-    if (showToolbar) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextFormattingToolbar(controller: _controller),
-          const SizedBox(height: 2),
-          textField,
-        ],
-      );
-    }
-    return textField;
-  }
+    if (!hasActions && !showToolbar) return textField;
 
-  InputDecoration _buildDecoration(
-      bool voiceEnabled, bool docxEnabled, bool kazAiEnabled) {
-    final base = widget.decoration ?? const InputDecoration();
-
-    final icons = <Widget>[];
-    if (docxEnabled) icons.add(_buildDocxImportIcon());
-    if (voiceEnabled) icons.add(_buildMicIcon());
-    if (kazAiEnabled) icons.add(_buildKazAiIcon());
-    if (kazAiEnabled && _controller.text.isNotEmpty)
-      icons.add(_buildClearIcon());
-
-    if (icons.isEmpty) return base;
-
-    final existingSuffix = base.suffixIcon;
-    Widget suffixWidget;
-    final merged = icons.length == 1
-        ? icons.first
-        : Row(mainAxisSize: MainAxisSize.min, children: icons);
-
-    if (existingSuffix != null) {
-      suffixWidget = Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [existingSuffix, merged],
-      );
-    } else {
-      suffixWidget = merged;
-    }
-
-    return base.copyWith(suffixIcon: suffixWidget);
-  }
-
-  Widget _buildKazAiIcon() {
-    if (_isGeneratingAi) {
-      return const Padding(
-        padding: EdgeInsets.all(8),
-        child: SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2)),
-      );
-    }
-    return IconButton(
-      icon: const Icon(Icons.auto_awesome, color: Color(0xFFF59E0B), size: 18),
-      tooltip: 'KAZ AI',
-      onPressed: _generateWithKazAi,
-      padding: const EdgeInsets.all(4),
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-      splashRadius: 16,
-    );
-  }
-
-  Widget _buildClearIcon() {
-    return IconButton(
-      icon: const Icon(Icons.delete_sweep, color: Color(0xFFEF4444), size: 18),
-      tooltip: 'Clear all content',
-      onPressed: () {
-        _controller.clear();
-        widget.onChanged?.call('');
-        setState(() {});
-      },
-      padding: const EdgeInsets.all(4),
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-      splashRadius: 16,
-    );
-  }
-
-  Widget _buildDocxImportIcon() {
-    final iconColor = widget.docxImportIconColor ?? const Color(0xFF0EA5E9);
-    if (_isImportingDoc) {
-      return Container(
-        width: 36,
-        height: 36,
-        margin: const EdgeInsets.only(right: 4),
-        decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: 0.15),
-          shape: BoxShape.circle,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: iconColor,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasActions)
+          Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: OpenEditorButton(
+                actions: actions,
+                isLoading: anyLoading,
+              ),
             ),
           ),
-        ),
-      );
-    }
-    return IconButton(
-      icon: Icon(
-        Icons.upload_file,
-        color: iconColor,
-        size: 18,
-      ),
-      padding: const EdgeInsets.only(right: 4),
-      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-      onPressed: _importDocument,
-      tooltip: widget.docxImportTooltip,
+        if (showToolbar) ...[
+          TextFormattingToolbar(controller: _controller),
+          const SizedBox(height: 2),
+        ],
+        textField,
+      ],
     );
   }
 
-  Widget _buildMicIcon() {
-    final iconColor = widget.voiceIconColor ?? const Color(0xFFFFB800);
-
-    if (_isListening) {
-      return Container(
-        width: 36,
-        height: 36,
-        margin: const EdgeInsets.only(right: 4),
-        decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: 0.15),
-          shape: BoxShape.circle,
+  /// Builds the list of [EditorAction]s surfaced in the Open Editor popup.
+  ///
+  /// The list adapts to the current state — for example, the voice action
+  /// shows a 'Stop voice input' label while listening, and the clear action
+  /// only appears when the field has content.
+  List<EditorAction> _buildEditorActions({
+    required bool voiceEnabled,
+    required bool docxEnabled,
+    required bool kazAiEnabled,
+  }) {
+    return <EditorAction>[
+      if (kazAiEnabled)
+        EditorAction(
+          id: 'ai',
+          icon: Icons.auto_awesome,
+          label: 'KAZ AI suggest',
+          tooltip: 'Generate a value for this field using AI',
+          accent: const Color(0xFFF59E0B),
+          onTap: _generateWithKazAi,
         ),
-        child: IconButton(
-          icon: Icon(
-            Icons.mic,
-            color: iconColor,
-            size: 18,
-          ),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          onPressed: _toggleVoiceInput,
-          tooltip: 'Stop voice input',
+      if (voiceEnabled)
+        EditorAction(
+          id: 'voice',
+          icon: _isListening ? Icons.mic : Icons.mic_none_outlined,
+          label: _isListening ? 'Stop voice input' : 'Voice input',
+          tooltip: 'Tap to speak — your words will be transcribed',
+          accent: const Color(0xFFFFB800),
+          onTap: _toggleVoiceInput,
         ),
-      );
-    }
-
-    return IconButton(
-      icon: Icon(
-        Icons.mic_none_outlined,
-        color: iconColor,
-        size: 18,
-      ),
-      padding: const EdgeInsets.only(right: 4),
-      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-      onPressed: _toggleVoiceInput,
-      tooltip: 'Voice input',
-    );
+      if (docxEnabled)
+        EditorAction(
+          id: 'docx',
+          icon: Icons.upload_file,
+          label: 'Import from .docx / .doc',
+          tooltip: widget.docxImportTooltip,
+          accent: const Color(0xFF0EA5E9),
+          onTap: _importDocument,
+        ),
+      if (kazAiEnabled && _controller.text.isNotEmpty)
+        EditorAction(
+          id: 'clear',
+          icon: Icons.delete_sweep,
+          label: 'Clear all content',
+          tooltip: 'Remove everything in this field',
+          accent: const Color(0xFFEF4444),
+          isDestructive: true,
+          onTap: () {
+            _controller.clear();
+            widget.onChanged?.call('');
+            setState(() {});
+          },
+        ),
+    ];
   }
 }
 
@@ -1108,15 +1038,12 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
 
   @override
   Widget build(BuildContext context) {
-    // Always show the mic button — even if the browser doesn't support
-    // voice input. Tapping it on an unsupported browser shows a helpful
-    // message instead of silently failing.
+    // Editor features are surfaced via the Open Editor button placed
+    // OUTSIDE the text field — no more inline suffix icons.
     final voiceEnabled = widget.enableVoice && !widget.obscureText;
     final docxEnabled = widget.enableDocxImport && !widget.obscureText;
     final kazAiEnabled =
         widget.enableKazAi && !widget.obscureText && !widget.readOnly;
-    final effectiveDecoration =
-        _buildDecoration(voiceEnabled, docxEnabled, kazAiEnabled);
 
     // Show text formatting toolbar only for multi-line fields
     final showToolbar = widget.enableTextFormatting &&
@@ -1124,10 +1051,18 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
         !widget.readOnly &&
         (widget.maxLines == null || widget.maxLines! > 1);
 
+    final actions = _buildEditorActions(
+      voiceEnabled: voiceEnabled,
+      docxEnabled: docxEnabled,
+      kazAiEnabled: kazAiEnabled,
+    );
+    final anyLoading = _isListening || _isGeneratingAi || _isImportingDoc;
+    final hasActions = actions.any((a) => a.enabled);
+
     final textField = TextFormField(
       controller: _controller,
       focusNode: widget.focusNode,
-      decoration: effectiveDecoration,
+      decoration: widget.decoration ?? const InputDecoration(),
       keyboardType: widget.keyboardType,
       textCapitalization: widget.textCapitalization,
       textInputAction: widget.textInputAction,
@@ -1175,158 +1110,83 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
       restorationId: widget.restorationId,
     );
 
-    if (showToolbar) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextFormattingToolbar(controller: _controller),
-          const SizedBox(height: 2),
-          textField,
-        ],
-      );
-    }
-    return textField;
-  }
+    if (!hasActions && !showToolbar) return textField;
 
-  InputDecoration _buildDecoration(
-      bool voiceEnabled, bool docxEnabled, bool kazAiEnabled) {
-    final base = widget.decoration ?? const InputDecoration();
-
-    final icons = <Widget>[];
-    if (docxEnabled) icons.add(_buildDocxImportIcon());
-    if (voiceEnabled) icons.add(_buildMicIcon());
-    if (kazAiEnabled) icons.add(_buildKazAiIcon());
-    if (kazAiEnabled && _controller.text.isNotEmpty)
-      icons.add(_buildClearIcon());
-
-    if (icons.isEmpty) return base;
-
-    final existingSuffix = base.suffixIcon;
-    Widget suffixWidget;
-    final merged = icons.length == 1
-        ? icons.first
-        : Row(mainAxisSize: MainAxisSize.min, children: icons);
-
-    if (existingSuffix != null) {
-      suffixWidget = Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [existingSuffix, merged],
-      );
-    } else {
-      suffixWidget = merged;
-    }
-
-    return base.copyWith(suffixIcon: suffixWidget);
-  }
-
-  Widget _buildKazAiIcon() {
-    if (_isGeneratingAi) {
-      return const Padding(
-        padding: EdgeInsets.all(8),
-        child: SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2)),
-      );
-    }
-    return IconButton(
-      icon: const Icon(Icons.auto_awesome, color: Color(0xFFF59E0B), size: 18),
-      tooltip: 'KAZ AI',
-      onPressed: _generateWithKazAi,
-      padding: const EdgeInsets.all(4),
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-      splashRadius: 16,
-    );
-  }
-
-  Widget _buildClearIcon() {
-    return IconButton(
-      icon: const Icon(Icons.delete_sweep, color: Color(0xFFEF4444), size: 18),
-      tooltip: 'Clear all content',
-      onPressed: () {
-        _controller.clear();
-        setState(() {});
-      },
-      padding: const EdgeInsets.all(4),
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-      splashRadius: 16,
-    );
-  }
-
-  Widget _buildDocxImportIcon() {
-    final iconColor = widget.docxImportIconColor ?? const Color(0xFF0EA5E9);
-    if (_isImportingDoc) {
-      return Container(
-        width: 36,
-        height: 36,
-        margin: const EdgeInsets.only(right: 4),
-        decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: 0.15),
-          shape: BoxShape.circle,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: iconColor,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasActions)
+          Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: OpenEditorButton(
+                actions: actions,
+                isLoading: anyLoading,
+              ),
             ),
           ),
-        ),
-      );
-    }
-    return IconButton(
-      icon: Icon(
-        Icons.upload_file,
-        color: iconColor,
-        size: 18,
-      ),
-      padding: const EdgeInsets.only(right: 4),
-      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-      onPressed: _importDocument,
-      tooltip: widget.docxImportTooltip,
+        if (showToolbar) ...[
+          TextFormattingToolbar(controller: _controller),
+          const SizedBox(height: 2),
+        ],
+        textField,
+      ],
     );
   }
 
-  Widget _buildMicIcon() {
-    final iconColor = widget.voiceIconColor ?? const Color(0xFFFFB800);
-
-    if (_isListening) {
-      return Container(
-        width: 36,
-        height: 36,
-        margin: const EdgeInsets.only(right: 4),
-        decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: 0.15),
-          shape: BoxShape.circle,
+  /// Builds the list of [EditorAction]s surfaced in the Open Editor popup.
+  ///
+  /// The list adapts to the current state — for example, the voice action
+  /// shows a 'Stop voice input' label while listening, and the clear action
+  /// only appears when the field has content.
+  List<EditorAction> _buildEditorActions({
+    required bool voiceEnabled,
+    required bool docxEnabled,
+    required bool kazAiEnabled,
+  }) {
+    return <EditorAction>[
+      if (kazAiEnabled)
+        EditorAction(
+          id: 'ai',
+          icon: Icons.auto_awesome,
+          label: 'KAZ AI suggest',
+          tooltip: 'Generate a value for this field using AI',
+          accent: const Color(0xFFF59E0B),
+          onTap: _generateWithKazAi,
         ),
-        child: IconButton(
-          icon: Icon(
-            Icons.mic,
-            color: iconColor,
-            size: 18,
-          ),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          onPressed: _toggleVoiceInput,
-          tooltip: 'Stop voice input',
+      if (voiceEnabled)
+        EditorAction(
+          id: 'voice',
+          icon: _isListening ? Icons.mic : Icons.mic_none_outlined,
+          label: _isListening ? 'Stop voice input' : 'Voice input',
+          tooltip: 'Tap to speak — your words will be transcribed',
+          accent: const Color(0xFFFFB800),
+          onTap: _toggleVoiceInput,
         ),
-      );
-    }
-
-    return IconButton(
-      icon: Icon(
-        Icons.mic_none_outlined,
-        color: iconColor,
-        size: 18,
-      ),
-      padding: const EdgeInsets.only(right: 4),
-      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-      onPressed: _toggleVoiceInput,
-      tooltip: 'Voice input',
-    );
+      if (docxEnabled)
+        EditorAction(
+          id: 'docx',
+          icon: Icons.upload_file,
+          label: 'Import from .docx / .doc',
+          tooltip: widget.docxImportTooltip,
+          accent: const Color(0xFF0EA5E9),
+          onTap: _importDocument,
+        ),
+      if (kazAiEnabled && _controller.text.isNotEmpty)
+        EditorAction(
+          id: 'clear',
+          icon: Icons.delete_sweep,
+          label: 'Clear all content',
+          tooltip: 'Remove everything in this field',
+          accent: const Color(0xFFEF4444),
+          isDestructive: true,
+          onTap: () {
+            _controller.clear();
+            setState(() {});
+          },
+        ),
+    ];
   }
 }

@@ -27,7 +27,6 @@ import 'package:ndu_project/widgets/context_banner.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/screens/wbs_builder_screen.dart';
-import 'package:ndu_project/wbs/screens/framework_picker_screen.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
 import 'package:ndu_project/wbs/screens/wbs_ai_screen.dart';
 import 'package:ndu_project/wbs/screens/wbs_validator_screen.dart';
@@ -61,6 +60,33 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
   void initState() {
     super.initState();
     _tabController.addListener(_onTabChanged);
+    // Auto-initialize WBS with sensible defaults — the explicit setup
+    // wizard has been removed. Users land directly in the Builder.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _autoSetupWbsIfNeeded();
+    });
+  }
+
+  void _autoSetupWbsIfNeeded() {
+    if (!mounted) return;
+    final provider = context.read<WBSProvider>();
+    if (provider.isLoadingFromStorage) return;
+    if (provider.wbs != null && provider.setupComplete) return;
+
+    final projectData = context.read<ProjectDataProvider>().projectData;
+    final projectName = projectData.projectName.trim().isNotEmpty
+        ? projectData.projectName.trim()
+        : 'Untitled Project';
+    final projectId = projectData.projectId?.trim().isNotEmpty == true
+        ? projectData.projectId!.trim()
+        : 'default';
+
+    provider.setup(
+      projectName: projectName,
+      framework: WBSFramework.waterfallDeliverable,
+      methodology: ProjectMethodology.waterfall,
+      projectId: projectId,
+    );
   }
 
   void _onTabChanged() {
@@ -91,10 +117,15 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
           );
         }
 
-        // No WBS yet — show the framework picker so the user chooses
-        // their WBS dimension (deliverable, discipline, geographic, etc.)
+        // WBS is auto-initialized in initState. While the post-frame
+        // callback is pending (or storage is still loading), show a
+        // brief loading indicator instead of the old setup wizard.
         if (wbs == null || !provider.setupComplete) {
-          return const FrameworkPickerScreen();
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(LightModeColors.accent),
+            ),
+          );
         }
 
         final projectData = projectProvider.projectData;

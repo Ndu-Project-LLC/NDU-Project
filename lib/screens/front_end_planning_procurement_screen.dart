@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -5310,8 +5311,10 @@ class _FrontEndPlanningProcurementScreenState
  child: Container(
  color: Colors.white,
  child: SingleChildScrollView(
- padding:
- const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+ padding: EdgeInsets.symmetric(
+ horizontal: isMobile ? 16 : 24,
+ vertical: 32,
+ ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -7350,6 +7353,14 @@ class _ProcurementStrategiesSection extends StatelessWidget {
 
  Widget _buildStrategiesTable(List<ProcurementStrategyModel> strategies) {
  Widget buildTable() {
+ return LayoutBuilder(
+ builder: (context, constraints) {
+ // Use a flexible minimum width so the table always fills the
+ // available content area. On narrow viewports it still scrolls
+ // horizontally; on wide viewports it stretches edge-to-edge.
+ final minWidth = constraints.maxWidth.isFinite
+ ? math.max(constraints.maxWidth, 920.0)
+ : 920.0;
  return Container(
  decoration: BoxDecoration(
  color: Colors.white,
@@ -7362,18 +7373,18 @@ class _ProcurementStrategiesSection extends StatelessWidget {
  child: SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
- constraints: const BoxConstraints(minWidth: 920),
+ constraints: BoxConstraints(minWidth: minWidth),
  child: Table(
  border: const TableBorder(
  horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
  verticalInside: BorderSide(color: Color(0xFFE5E7EB)),
  ),
  columnWidths: const {
- 0: FixedColumnWidth(260),
- 1: FixedColumnWidth(230),
- 2: FixedColumnWidth(170),
- 3: FixedColumnWidth(140),
- 4: FixedColumnWidth(120),
+ 0: FlexColumnWidth(2.6),
+ 1: FlexColumnWidth(2.3),
+ 2: FlexColumnWidth(1.7),
+ 3: FlexColumnWidth(1.4),
+ 4: FlexColumnWidth(1.2),
  },
  children: [
  const TableRow(
@@ -7449,6 +7460,8 @@ class _ProcurementStrategiesSection extends StatelessWidget {
  ),
  ),
  ),
+ );
+ },
  );
  }
 
@@ -7587,6 +7600,14 @@ class _StrategiesSection extends StatelessWidget {
 
  Widget _buildScopeItemsTable(List<ProcurementItemModel> items) {
  Widget buildTable() {
+ return LayoutBuilder(
+ builder: (context, constraints) {
+ // Use a flexible minimum width so the table always fills the
+ // available content area. On narrow viewports it still scrolls
+ // horizontally; on wide viewports it stretches edge-to-edge.
+ final minWidth = constraints.maxWidth.isFinite
+ ? math.max(constraints.maxWidth, 1160.0)
+ : 1160.0;
  return Container(
  decoration: BoxDecoration(
  color: Colors.white,
@@ -7599,7 +7620,7 @@ class _StrategiesSection extends StatelessWidget {
  child: SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
- constraints: const BoxConstraints(minWidth: 1160),
+ constraints: BoxConstraints(minWidth: minWidth),
  child: Table(
  border: const TableBorder(
  horizontalInside: BorderSide(color: Color(0xFFE5E7EB)),
@@ -7607,13 +7628,13 @@ class _StrategiesSection extends StatelessWidget {
  ),
  columnWidths: const {
  0: FixedColumnWidth(50),
- 1: FixedColumnWidth(230),
- 2: FixedColumnWidth(290),
- 3: FixedColumnWidth(200),
- 4: FixedColumnWidth(140),
- 5: FixedColumnWidth(150),
- 6: FixedColumnWidth(150),
- 7: FixedColumnWidth(140),
+ 1: FlexColumnWidth(2.3),
+ 2: FlexColumnWidth(2.9),
+ 3: FlexColumnWidth(2.0),
+ 4: FlexColumnWidth(1.4),
+ 5: FlexColumnWidth(1.5),
+ 6: FlexColumnWidth(1.5),
+ 7: FlexColumnWidth(1.4),
  },
  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
  children: [
@@ -7654,6 +7675,8 @@ class _StrategiesSection extends StatelessWidget {
  ),
  ),
  ),
+ );
+ },
  );
  }
 

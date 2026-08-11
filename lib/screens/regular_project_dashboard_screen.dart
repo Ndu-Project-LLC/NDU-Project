@@ -313,7 +313,11 @@ class _RegularProjectDashboardScreenState
         onPressed: _createNewProject,
         backgroundColor: _teal,
         foregroundColor: const Color(0xFF1C1C1C),
-        icon: const Icon(Icons.add_rounded, size: 22),
+        icon: _KazAiBadge(
+          size: 28,
+          iconColor: Colors.white,
+          badgeColor: Colors.white.withValues(alpha: 0.28),
+        ),
         label: const Text(
           'New Project',
           style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.2),
@@ -1078,6 +1082,45 @@ class _NavItem extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// KAZ AI branded icon badge.
+///
+/// Renders the [Icons.psychology_rounded] glyph (the canonical KAZ AI brand
+/// mark used across the application — see `SelectProjectKazButton` and the
+/// KAZ AI chat bubble) inside a soft circular container so the icon reads
+/// unmistakably as "KAZ AI" rather than a generic brain icon. Used on the
+/// "New Project" floating action button on the regular project dashboard.
+class _KazAiBadge extends StatelessWidget {
+  final double size;
+  final Color iconColor;
+  final Color badgeColor;
+
+  const _KazAiBadge({
+    required this.size,
+    required this.iconColor,
+    required this.badgeColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Icon glyph occupies ~62% of the badge diameter — leaves a comfortable
+    // margin so the badge reads as a deliberate brand chip, not a tight fit.
+    final double iconSize = size * 0.62;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: badgeColor,
+      ),
+      child: Icon(
+        Icons.psychology_rounded,
+        size: iconSize,
+        color: iconColor,
       ),
     );
   }

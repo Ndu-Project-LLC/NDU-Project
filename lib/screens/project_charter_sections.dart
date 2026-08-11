@@ -8,6 +8,7 @@ import 'package:ndu_project/models/user_model.dart';
 import 'package:ndu_project/services/charter_approval_service.dart';
 import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/utils/charter_tech_proc_helper.dart';
 import 'package:ndu_project/widgets/expandable_text.dart';
 import 'package:ndu_project/widgets/page_regenerate_all_button.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
@@ -1831,354 +1832,643 @@ class CharterRisks extends StatelessWidget {
 
 // ─── 6. Technical & Procurement Bento ───
 
-class CharterTechnicalProcurementBento extends StatelessWidget {
- final ProjectDataModel? data;
- final VoidCallback? onGenerate;
- /// When provided, shows a "View / Edit Source" button that takes the
- /// user back to the Preferred Solution Analysis screen (the source of
- /// truth for the preferred solution). The Business Case section is
- /// read-only after the preferred solution is locked, but the dedicated
- /// IT Considerations / Infrastructure Considerations pages remain
- /// editable — see [onEditIT] and [onEditInfra].
- final VoidCallback? onEdit;
- /// Navigate to the IT Considerations page so the user can edit the
- /// hardware / software / network requirements that feed this card.
- /// IT Considerations remain editable even when the Business Case is
- /// locked, because they are part of the FEP (not the Business Case).
- final VoidCallback? onEditIT;
- /// Navigate to the Infrastructure Considerations page so the user can
- /// edit the physical-space / power-cooling / connectivity requirements
- /// that feed this card. Infrastructure Considerations remain editable
- /// even when the Business Case is locked.
- final VoidCallback? onEditInfra;
+class CharterTechnicalProcurementBento extends StatefulWidget {
+  final ProjectDataModel? data;
+  final VoidCallback? onGenerate;
+  /// When provided, shows a "View Preferred Solution" button that
+  /// takes the user to the Preferred Solution Analysis screen (the
+  /// source of truth for the preferred solution). The Business Case
+  /// section is read-only after the preferred solution is locked.
+  final VoidCallback? onEdit;
 
- const CharterTechnicalProcurementBento(
- {super.key,
- required this.data,
- this.onGenerate,
- this.onEdit,
- this.onEditIT,
- this.onEditInfra});
+  /// When a preferred solution is locked, IT considerations and
+  /// Infrastructure text shown in the charter are sourced from the
+  /// preferred solution's SolutionAnalysisItem. The Business Case
+  /// itself is locked, but the user can still update the charter's
+  /// wording directly — [onSaveITOverride] / [onSaveInfraOverride]
+  /// are called with the new text when the user edits a section
+  /// inline. When the override is empty, the charter falls back to
+  /// the preferred-solution text.
+  final void Function(String text)? onSaveITOverride;
+  final void Function(String text)? onSaveInfraOverride;
 
- @override
- Widget build(BuildContext context) {
- if (data == null) return const SizedBox();
+  /// Clear the charter-side override so the section reverts to the
+  /// preferred-solution text.
+  final VoidCallback? onClearITOverride;
+  final VoidCallback? onClearInfraOverride;
 
- final it = data!.itConsiderationsData;
- final infra = data!.infrastructureConsiderationsData;
- final vendorCount = data!.vendors.length;
- final contractCount = data!.contractors.length;
+  const CharterTechnicalProcurementBento({
+    super.key,
+    required this.data,
+    this.onGenerate,
+    this.onEdit,
+    this.onSaveITOverride,
+    this.onSaveInfraOverride,
+    this.onClearITOverride,
+    this.onClearInfraOverride,
+  });
 
- // IT considerations + Infrastructure now source from the preferred
- // solution when one is locked. The dedicated IT/Infra pages remain
- // editable even after the Business Case is locked, so we expose
- // per-section edit affordances in addition to the "View Source"
- // button at the top of the bento.
- final preferred = data!.preferredSolution;
- final sourceLabel = preferred != null
-     ? 'Source: Preferred Solution — ${preferred.title}'
-     : 'Source: IT & Infrastructure Considerations pages';
+  @override
+  State<CharterTechnicalProcurementBento> createState() =>
+      _CharterTechnicalProcurementBentoState();
+}
 
- return Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- Flexible(
- child: sectionTitleWithIcon(
- Icons.precision_manufacturing_outlined, 'Technical & Procurement'),
- ),
- // AI Generate removed per user request — IT considerations and
- // Infrastructure come from the preferred solution (Business Case
- // section, which is locked once the preferred solution is selected).
- if (onEdit != null)
- TextButton.icon(
- onPressed: onEdit,
- icon: const Icon(Icons.visibility_outlined, size: 16),
- label: const Text('View Preferred Solution',
- style: TextStyle(fontSize: 12)),
- style: TextButton.styleFrom(
- padding:
- const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
- minimumSize: Size.zero,
- tapTargetSize: MaterialTapTargetSize.shrinkWrap,
- ),
- ),
- ],
- ),
- const SizedBox(height: 6),
- Text(
- sourceLabel,
- style: const TextStyle(
- fontSize: 11,
- fontStyle: FontStyle.italic,
- color: BrandColors.onSurfaceVariant,
- ),
- ),
- const SizedBox(height: 16),
- LayoutBuilder(
- builder: (context, constraints) {
- final isWide = constraints.maxWidth >= 768;
- return isWide
- ? Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- // IT + Infrastructure card
- Expanded(
- child: _buildTechCard(it, infra),
- ),
- const SizedBox(width: 12),
- // Contracts + Procurement side by side
- Expanded(
- child: Column(
- children: [
- _buildStatCard(
- 'Contracts',
- contractCount,
- 'Contracts Pending',
- Icons.description_outlined,
- BrandColors.primary,
- BrandColors.primaryFixed,
- ),
- const SizedBox(height: 12),
- _buildStatCard(
- 'Procurement',
- vendorCount,
- 'Items Identified',
- Icons.inventory_2_outlined,
- BrandColors.tertiary,
- BrandColors.tertiaryFixed,
- ),
- ],
- ),
- ),
- ],
- )
- : Column(
- children: [
- _buildTechCard(it, infra),
- const SizedBox(height: 12),
- Row(
- children: [
- Expanded(
- child: _buildStatCard(
- 'Contracts',
- contractCount,
- 'Contracts Pending',
- Icons.description_outlined,
- BrandColors.primary,
- BrandColors.primaryFixed,
- ),
- ),
- const SizedBox(width: 12),
- Expanded(
- child: _buildStatCard(
- 'Procurement',
- vendorCount,
- 'Items Identified',
- Icons.inventory_2_outlined,
- BrandColors.tertiary,
- BrandColors.tertiaryFixed,
- ),
- ),
- ],
- ),
- ],
- );
- },
- ),
- ],
- );
- }
+class _CharterTechnicalProcurementBentoState
+    extends State<CharterTechnicalProcurementBento> {
+  @override
+  Widget build(BuildContext context) {
+    final data = widget.data;
+    if (data == null) return const SizedBox();
 
- Widget _buildTechCard(
- ITConsiderationsData? it, InfrastructureConsiderationsData? infra) {
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: kCardBorderDecoration,
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- labelStyle('IT Considerations'),
- // Edit-on-IT-Considerations-page affordance. IT Considerations
- // remain editable even when the Business Case is locked, because
- // they belong to the FEP, not the Business Case.
- if (onEditIT != null)
- TextButton.icon(
- onPressed: onEditIT,
- icon: const Icon(Icons.edit_outlined, size: 14),
- label: const Text('Edit',
- style: TextStyle(fontSize: 11)),
- style: TextButton.styleFrom(
- foregroundColor: BrandColors.primary,
- padding: const EdgeInsets.symmetric(
- horizontal: 6, vertical: 2),
- minimumSize: Size.zero,
- tapTargetSize: MaterialTapTargetSize.shrinkWrap,
- ),
- ),
- ],
- ),
- const SizedBox(height: 8),
- if (it == null ||
- (it.hardwareRequirements.isEmpty &&
- it.softwareRequirements.isEmpty &&
- it.networkRequirements.isEmpty))
- const Text('No specific requirements defined.',
- style: TextStyle(
- color: BrandColors.onSurfaceVariant,
- fontStyle: FontStyle.italic,
- fontSize: 13))
- else ...[
- if (it.hardwareRequirements.isNotEmpty)
- _buildReqRow('Hardware', it.hardwareRequirements),
- if (it.softwareRequirements.isNotEmpty)
- _buildReqRow('Software', it.softwareRequirements),
- if (it.networkRequirements.isNotEmpty)
- _buildReqRow('Network', it.networkRequirements),
- ],
- const SizedBox(height: 16),
- const Divider(color: BrandColors.outlineVariant),
- const SizedBox(height: 12),
- Row(
- mainAxisAlignment: MainAxisAlignment.spaceBetween,
- children: [
- labelStyle('Infrastructure'),
- // Edit-on-Infrastructure-Considerations-page affordance.
- // Infrastructure Considerations remain editable even when the
- // Business Case is locked.
- if (onEditInfra != null)
- TextButton.icon(
- onPressed: onEditInfra,
- icon: const Icon(Icons.edit_outlined, size: 14),
- label: const Text('Edit',
- style: TextStyle(fontSize: 11)),
- style: TextButton.styleFrom(
- foregroundColor: BrandColors.primary,
- padding: const EdgeInsets.symmetric(
- horizontal: 6, vertical: 2),
- minimumSize: Size.zero,
- tapTargetSize: MaterialTapTargetSize.shrinkWrap,
- ),
- ),
- ],
- ),
- const SizedBox(height: 8),
- if (infra == null ||
- (infra.physicalSpaceRequirements.isEmpty &&
- infra.powerCoolingRequirements.isEmpty &&
- infra.connectivityRequirements.isEmpty))
- const Text('No specific requirements defined.',
- style: TextStyle(
- color: BrandColors.onSurfaceVariant,
- fontStyle: FontStyle.italic,
- fontSize: 13))
- else ...[
- if (infra.physicalSpaceRequirements.isNotEmpty)
- _buildReqRow('Space', infra.physicalSpaceRequirements),
- if (infra.powerCoolingRequirements.isNotEmpty)
- _buildReqRow('Power/Cooling', infra.powerCoolingRequirements),
- if (infra.connectivityRequirements.isNotEmpty)
- _buildReqRow('Connectivity', infra.connectivityRequirements),
- ],
- ],
- ),
- );
- }
+    final vendorCount = data.vendors.length;
+    final contractCount = data.contractors.length;
 
- Widget _buildReqRow(String label, String value) {
- return Padding(
- padding: const EdgeInsets.only(bottom: 8),
- child: Row(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- SizedBox(
- width: 90,
- child: Text(label,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: BrandColors.onSurfaceVariant)),
- ),
- Expanded(
- child: Text(value,
- style: const TextStyle(fontSize: 13, height: 1.4),
- maxLines: 3,
- overflow: TextOverflow.ellipsis),
- ),
- ],
- ),
- );
- }
+    // IT considerations + Infrastructure source from the preferred
+    // solution when one is locked. The user can still update the
+    // charter's wording via the inline Edit affordance, which writes
+    // a charter-side override (ProjectDataModel.charterITOverride /
+    // charterInfraOverride). When no preferred solution is selected,
+    // fall back to the dedicated FEP IT/Infra Considerations pages.
+    final preferred = data.preferredSolution;
+    final hasPreferred = preferred != null;
 
- Widget _buildStatCard(String title, int count, String subtitle,
- IconData icon, Color accentColor, Color bgColor) {
- // Helper text to disambiguate "0" counts — tells the user whether
- // the count is genuinely zero or just not yet captured.
- final helper = count == 0
- ? 'No records added yet. Use "View / Edit Source" to add.'
- : null;
- return Container(
- padding: const EdgeInsets.all(20),
- decoration: kCardBorderDecoration,
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Icon(icon, size: 18, color: accentColor),
- const SizedBox(width: 8),
- Text(title,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.bold,
- color: accentColor,
- letterSpacing: 0.5)),
- ],
- ),
- const SizedBox(height: 16),
- Container(
- width: double.infinity,
- padding: const EdgeInsets.all(16),
- decoration: BoxDecoration(
- color: bgColor,
- borderRadius: BorderRadius.circular(10),
- border: Border.all(color: accentColor.withValues(alpha: 0.2)),
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Text('$count',
- style: TextStyle(
- fontSize: 28,
- fontWeight: FontWeight.bold,
- color: accentColor)),
- const SizedBox(height: 2),
- Text(subtitle,
- style: TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- color: accentColor.withValues(alpha: 0.8))),
- if (helper != null) ...[
- const SizedBox(height: 6),
- Text(helper,
- style: TextStyle(
- fontSize: 10,
- fontStyle: FontStyle.italic,
- color: accentColor.withValues(alpha: 0.65),
- height: 1.3)),
- ],
- ],
- ),
- ),
- ],
- ),
- );
- }
+    final sourceLabel = hasPreferred
+        ? 'Source: Preferred Solution — ${preferred.title}'
+        : 'Source: IT & Infrastructure Considerations pages';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: sectionTitleWithIcon(
+                  Icons.precision_manufacturing_outlined, 'Technical & Procurement'),
+            ),
+            // AI Generate removed per user request — IT considerations and
+            // Infrastructure come from the preferred solution (Business Case
+            // section, which is locked once a preferred solution is selected).
+            if (widget.onEdit != null)
+              TextButton.icon(
+                onPressed: widget.onEdit,
+                icon: const Icon(Icons.visibility_outlined, size: 16),
+                label: const Text('View Preferred Solution',
+                    style: TextStyle(fontSize: 12)),
+                style: TextButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          sourceLabel,
+          style: const TextStyle(
+            fontSize: 11,
+            fontStyle: FontStyle.italic,
+            color: BrandColors.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 16),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 768;
+            return isWide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // IT + Infrastructure card
+                      Expanded(
+                        child: _buildTechCard(data, hasPreferred),
+                      ),
+                      const SizedBox(width: 12),
+                      // Contracts + Procurement side by side
+                      Expanded(
+                        child: Column(
+                          children: [
+                            _buildStatCard(
+                              'Contracts',
+                              contractCount,
+                              'Contracts Pending',
+                              Icons.description_outlined,
+                              BrandColors.primary,
+                              BrandColors.primaryFixed,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildStatCard(
+                              'Procurement',
+                              vendorCount,
+                              'Items Identified',
+                              Icons.inventory_2_outlined,
+                              BrandColors.tertiary,
+                              BrandColors.tertiaryFixed,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      _buildTechCard(data, hasPreferred),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              'Contracts',
+                              contractCount,
+                              'Contracts Pending',
+                              Icons.description_outlined,
+                              BrandColors.primary,
+                              BrandColors.primaryFixed,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              'Procurement',
+                              vendorCount,
+                              'Items Identified',
+                              Icons.inventory_2_outlined,
+                              BrandColors.tertiary,
+                              BrandColors.tertiaryFixed,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+          },
+        ),
+      ],
+    );
+  }
+
+  /// Build the IT considerations + Infrastructure card.
+  ///
+  /// When [hasPreferred] is true (a preferred solution is locked):
+  ///   - IT considerations text = charterITOverride ?? preferred solution IT text
+  ///   - Infrastructure text    = charterInfraOverride ?? preferred solution infra text
+  ///   - Edit buttons open an inline dialog that writes the charter-side
+  ///     override (does NOT unlock or modify the Business Case).
+  ///
+  /// When [hasPreferred] is false (no preferred solution yet):
+  ///   - Falls back to the FEP IT/Infrastructure Considerations pages'
+  ///     structured data (hardware/software/network, space/power/connectivity).
+  ///   - Edit buttons are hidden (the FEP pages remain the source of truth
+  ///     in this state and are still editable from the sidebar).
+  Widget _buildTechCard(ProjectDataModel data, bool hasPreferred) {
+    final itText = hasPreferred
+        ? CharterTechProcHelper.charterITText(data)
+        : _fepITText(data.itConsiderationsData);
+    final infraText = hasPreferred
+        ? CharterTechProcHelper.charterInfraText(data)
+        : _fepInfraText(data.infrastructureConsiderationsData);
+
+    // Track whether the displayed text is an override (vs. the raw
+    // preferred-solution text). Used to show a "Charter override"
+    // badge and a "Reset to preferred solution" affordance.
+    final itIsOverride = hasPreferred &&
+        (data.charterITOverride?.trim().isNotEmpty ?? false);
+    final infraIsOverride = hasPreferred &&
+        (data.charterInfraOverride?.trim().isNotEmpty ?? false);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: kCardBorderDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ─── IT Considerations ───
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              labelStyle('IT Considerations'),
+              if (hasPreferred && widget.onSaveITOverride != null)
+                TextButton.icon(
+                  onPressed: () => _editSection(
+                    title: 'IT Considerations',
+                    fieldLabel: 'IT considerations for the charter',
+                    currentText: itText ?? '',
+                    preferredText:
+                        CharterTechProcHelper.preferredSolutionITText(data) ??
+                            '',
+                    isOverride: itIsOverride,
+                    onSave: widget.onSaveITOverride,
+                    onClear: widget.onClearITOverride,
+                  ),
+                  icon: const Icon(Icons.edit_outlined, size: 14),
+                  label: const Text('Edit',
+                      style: TextStyle(fontSize: 11)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: BrandColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (itText == null || itText.trim().isEmpty)
+            const Text('No specific requirements defined.',
+                style: TextStyle(
+                    color: BrandColors.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 13))
+          else if (hasPreferred)
+            _buildTextBlock(itText, itIsOverride)
+          else ...[
+            // Structured FEP rows (pre-preferred-solution display).
+            if (data.itConsiderationsData != null) ...[
+              if (data.itConsiderationsData!.hardwareRequirements.isNotEmpty)
+                _buildReqRow(
+                    'Hardware', data.itConsiderationsData!.hardwareRequirements),
+              if (data.itConsiderationsData!.softwareRequirements.isNotEmpty)
+                _buildReqRow(
+                    'Software', data.itConsiderationsData!.softwareRequirements),
+              if (data.itConsiderationsData!.networkRequirements.isNotEmpty)
+                _buildReqRow(
+                    'Network', data.itConsiderationsData!.networkRequirements),
+            ],
+          ],
+          const SizedBox(height: 16),
+          const Divider(color: BrandColors.outlineVariant),
+          const SizedBox(height: 12),
+          // ─── Infrastructure ───
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              labelStyle('Infrastructure'),
+              if (hasPreferred && widget.onSaveInfraOverride != null)
+                TextButton.icon(
+                  onPressed: () => _editSection(
+                    title: 'Infrastructure',
+                    fieldLabel: 'Infrastructure considerations for the charter',
+                    currentText: infraText ?? '',
+                    preferredText:
+                        CharterTechProcHelper.preferredSolutionInfraText(data) ??
+                            '',
+                    isOverride: infraIsOverride,
+                    onSave: widget.onSaveInfraOverride,
+                    onClear: widget.onClearInfraOverride,
+                  ),
+                  icon: const Icon(Icons.edit_outlined, size: 14),
+                  label: const Text('Edit',
+                      style: TextStyle(fontSize: 11)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: BrandColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (infraText == null || infraText.trim().isEmpty)
+            const Text('No specific requirements defined.',
+                style: TextStyle(
+                    color: BrandColors.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 13))
+          else if (hasPreferred)
+            _buildTextBlock(infraText, infraIsOverride)
+          else ...[
+            // Structured FEP rows (pre-preferred-solution display).
+            if (data.infrastructureConsiderationsData != null) ...[
+              if (data
+                  .infrastructureConsiderationsData!.physicalSpaceRequirements
+                  .isNotEmpty)
+                _buildReqRow('Space',
+                    data.infrastructureConsiderationsData!.physicalSpaceRequirements),
+              if (data
+                  .infrastructureConsiderationsData!.powerCoolingRequirements
+                  .isNotEmpty)
+                _buildReqRow('Power/Cooling',
+                    data.infrastructureConsiderationsData!.powerCoolingRequirements),
+              if (data
+                  .infrastructureConsiderationsData!.connectivityRequirements
+                  .isNotEmpty)
+                _buildReqRow('Connectivity',
+                    data.infrastructureConsiderationsData!.connectivityRequirements),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Render a multi-line text block with proper wrapping. When
+  /// [isOverride] is true, show a small "Charter override" badge so
+  /// the user can see the section has been tailored away from the
+  /// preferred-solution source.
+  Widget _buildTextBlock(String text, bool isOverride) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isOverride)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: BrandColors.tertiaryFixed,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                'Charter override',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: BrandColors.tertiary,
+                ),
+              ),
+            ),
+          ),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 13, height: 1.5),
+        ),
+      ],
+    );
+  }
+
+  /// Open a dialog that lets the user edit the charter-side override
+  /// for one of the two sections (IT considerations or Infrastructure).
+  ///
+  /// The dialog shows:
+  ///   - The preferred-solution source text (read-only, for reference)
+  ///   - A multiline text field pre-filled with the current display
+  ///     text (which is the override if set, else the preferred text)
+  ///   - A "Reset to preferred solution" button (only when an
+  ///     override is active)
+  ///   - Save / Cancel buttons
+  Future<void> _editSection({
+    required String title,
+    required String fieldLabel,
+    required String currentText,
+    required String preferredText,
+    required bool isOverride,
+    required void Function(String)? onSave,
+    required VoidCallback? onClear,
+  }) async {
+    final controller = TextEditingController(text: currentText);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        final canReset = isOverride && onClear != null;
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.edit_outlined, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Edit $title')),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'This section is sourced from the preferred solution. '
+                  'The Business Case is locked, but you can tailor the '
+                  'wording shown in the charter below.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: BrandColors.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (preferredText.isNotEmpty) ...[
+                  const Text(
+                    'Preferred solution source text (read-only):',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: BrandColors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: BrandColors.surfaceContainer,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                          color: BrandColors.outlineVariant),
+                    ),
+                    constraints: const BoxConstraints(maxHeight: 120),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        preferredText,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: BrandColors.onSurfaceVariant,
+                          height: 1.4,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                Text(
+                  fieldLabel,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: BrandColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                TextField(
+                  controller: controller,
+                  maxLines: 8,
+                  minLines: 4,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Enter the text to display in the charter…',
+                    contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            if (canReset)
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.of(ctx).pop('__reset__');
+                },
+                icon: const Icon(Icons.restart_alt, size: 16),
+                label: const Text('Reset to preferred solution'),
+                style: TextButton.styleFrom(
+                  foregroundColor: BrandColors.error,
+                ),
+              ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(null),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(ctx).pop(controller.text.trim());
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == null) return;
+    if (result == '__reset__') {
+      if (onClear != null) onClear();
+      return;
+    }
+    if (onSave != null) onSave(result);
+  }
+
+  /// Build the IT considerations text from the FEP IT Considerations
+  /// page data (used when no preferred solution is locked yet).
+  String? _fepITText(ITConsiderationsData? it) {
+    if (it == null) return null;
+    final parts = <String>[];
+    if (it.hardwareRequirements.isNotEmpty) {
+      parts.add('Hardware: ${it.hardwareRequirements}');
+    }
+    if (it.softwareRequirements.isNotEmpty) {
+      parts.add('Software: ${it.softwareRequirements}');
+    }
+    if (it.networkRequirements.isNotEmpty) {
+      parts.add('Network: ${it.networkRequirements}');
+    }
+    if (parts.isEmpty) return null;
+    return parts.join('\n');
+  }
+
+  /// Build the Infrastructure text from the FEP Infrastructure
+  /// Considerations page data (used when no preferred solution is
+  /// locked yet).
+  String? _fepInfraText(InfrastructureConsiderationsData? infra) {
+    if (infra == null) return null;
+    final parts = <String>[];
+    if (infra.physicalSpaceRequirements.isNotEmpty) {
+      parts.add('Space: ${infra.physicalSpaceRequirements}');
+    }
+    if (infra.powerCoolingRequirements.isNotEmpty) {
+      parts.add('Power/Cooling: ${infra.powerCoolingRequirements}');
+    }
+    if (infra.connectivityRequirements.isNotEmpty) {
+      parts.add('Connectivity: ${infra.connectivityRequirements}');
+    }
+    if (parts.isEmpty) return null;
+    return parts.join('\n');
+  }
+
+  Widget _buildReqRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(label,
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: BrandColors.onSurfaceVariant)),
+          ),
+          Expanded(
+            child: Text(value,
+                style: const TextStyle(fontSize: 13, height: 1.4),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, int count, String subtitle,
+      IconData icon, Color accentColor, Color bgColor) {
+    // Helper text to disambiguate "0" counts — tells the user whether
+    // the count is genuinely zero or just not yet captured.
+    final helper = count == 0
+        ? 'No records added yet. Use "View Preferred Solution" to add.'
+        : null;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: kCardBorderDecoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: accentColor),
+              const SizedBox(width: 8),
+              Text(title,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: accentColor,
+                      letterSpacing: 0.5)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: accentColor.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$count',
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: accentColor)),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: accentColor.withValues(alpha: 0.8))),
+                if (helper != null) ...[
+                  const SizedBox(height: 6),
+                  Text(helper,
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontStyle: FontStyle.italic,
+                          color: accentColor.withValues(alpha: 0.65),
+                          height: 1.3)),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ─── 7. Tentative Schedule Timeline ───

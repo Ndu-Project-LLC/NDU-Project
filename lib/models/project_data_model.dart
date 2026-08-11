@@ -252,6 +252,16 @@ class ProjectDataModel {
   // Preferred Solution Reference
   String? preferredSolutionId;
 
+  // Charter-side overrides for the Technical & Procurement bento.
+  // When a preferred solution is locked, IT considerations and
+  // Infrastructure shown in the charter are sourced from the
+  // preferred solution's SolutionAnalysisItem. The user can still
+  // update these directly in the charter — the override (when
+  // non-empty) takes precedence over the preferred-solution text.
+  // Stored as a single text block per section (multiline allowed).
+  String? charterITOverride;
+  String? charterInfraOverride;
+
   // Project Location & Classification
   String country = '';
   String location = '';
@@ -354,6 +364,8 @@ class ProjectDataModel {
     this.launchPhaseData,
     String? costBenefitCurrency,
     this.preferredSolutionId,
+    this.charterITOverride,
+    this.charterInfraOverride,
     this.country = '',
     this.location = '',
     this.city = '',
@@ -542,6 +554,8 @@ class ProjectDataModel {
     Map<String, FieldHistory>? fieldHistories,
     String? costBenefitCurrency,
     String? preferredSolutionId,
+    String? charterITOverride,
+    String? charterInfraOverride,
     String? country,
     String? location,
     String? city,
@@ -701,6 +715,8 @@ class ProjectDataModel {
       fieldHistories: fieldHistories ?? this.fieldHistories,
       costBenefitCurrency: costBenefitCurrency ?? this.costBenefitCurrency,
       preferredSolutionId: preferredSolutionId ?? this.preferredSolutionId,
+      charterITOverride: charterITOverride ?? this.charterITOverride,
+      charterInfraOverride: charterInfraOverride ?? this.charterInfraOverride,
       country: country ?? this.country,
       location: location ?? this.location,
       city: city ?? this.city,
@@ -877,6 +893,8 @@ class ProjectDataModel {
           fieldHistories.map((key, value) => MapEntry(key, value.toJson())),
       'costBenefitCurrency': costBenefitCurrency,
       'preferredSolutionId': preferredSolutionId,
+      'charterITOverride': charterITOverride,
+      'charterInfraOverride': charterInfraOverride,
       'country': country,
       'location': location,
       'city': city,
@@ -1215,6 +1233,8 @@ class ProjectDataModel {
           : {},
       costBenefitCurrency: json['costBenefitCurrency']?.toString() ?? 'USD',
       preferredSolutionId: json['preferredSolutionId']?.toString(),
+      charterITOverride: json['charterITOverride']?.toString(),
+      charterInfraOverride: json['charterInfraOverride']?.toString(),
       country: json['country']?.toString() ?? '',
       location: json['location']?.toString() ?? '',
       city: json['city']?.toString() ?? '',

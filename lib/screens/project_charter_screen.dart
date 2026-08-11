@@ -301,13 +301,13 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  /// Navigate to the Preferred Solution Analysis screen so the user can
  /// view the preferred solution that supplies IT considerations and
  /// infrastructure to the charter. The Business Case section is locked
- /// once a preferred solution is selected, but the dedicated
- /// IT Considerations / Infrastructure Considerations pages remain
- /// editable — see [_navigateToITConsiderations] and
- /// [_navigateToInfrastructureConsiderations].
+ /// once a preferred solution is selected, but the charter's
+ /// "Technical & Procurement" bento remains tailorable via the inline
+ /// Edit affordance — see [_saveCharterITOverride] and
+ /// [_saveCharterInfraOverride].
   void _navigateToBusinessCase() {
     try {
-     context.push('/preferred-solution-analysis');
+      context.push('/preferred-solution-analysis');
    } catch (e) {
      debugPrint('Could not navigate to Preferred Solution Analysis: $e');
      ScaffoldMessenger.of(context).showSnackBar(
@@ -320,44 +320,52 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
    }
  }
 
- /// Navigate to the IT Considerations page so the user can edit the
- /// hardware / software / network requirements that feed the charter's
- /// Technical & Procurement bento. IT Considerations remain editable
- /// even when the Business Case is locked.
- void _navigateToITConsiderations() {
-   try {
-     context.push('/it-considerations');
-   } catch (e) {
-     debugPrint('Could not navigate to IT Considerations: $e');
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(
-         content: Text(
-             'IT Considerations is reachable from the sidebar under Initiation → IT Considerations.'),
-         duration: Duration(seconds: 4),
-       ),
-     );
-   }
- }
+ /// Save a charter-side override for the IT Considerations text shown
+ /// in the "Technical & Procurement" bento. The Business Case section
+ /// itself stays locked — this only updates the charter's display.
+ /// Pass an empty string to revert to the preferred-solution text.
+  void _saveCharterITOverride(String text) {
+    final provider = ProjectDataInherited.read(context);
+    provider.updateField(
+        (d) => d.copyWith(charterITOverride: text));
+    setState(() {
+      _projectData = provider.projectData;
+    });
+  }
 
- /// Navigate to the Infrastructure Considerations page so the user can
- /// edit the physical-space / power-cooling / connectivity requirements
- /// that feed the charter's Technical & Procurement bento.
- /// Infrastructure Considerations remain editable even when the Business
- /// Case is locked.
- void _navigateToInfrastructureConsiderations() {
-   try {
-     context.push('/infrastructure-considerations');
-   } catch (e) {
-     debugPrint('Could not navigate to Infrastructure Considerations: $e');
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(
-         content: Text(
-             'Infrastructure Considerations is reachable from the sidebar under Initiation → Infrastructure Considerations.'),
-         duration: Duration(seconds: 4),
-       ),
-     );
-   }
- }
+ /// Save a charter-side override for the Infrastructure text shown in
+ /// the "Technical & Procurement" bento. The Business Case section
+ /// itself stays locked — this only updates the charter's display.
+  void _saveCharterInfraOverride(String text) {
+    final provider = ProjectDataInherited.read(context);
+    provider.updateField(
+        (d) => d.copyWith(charterInfraOverride: text));
+    setState(() {
+      _projectData = provider.projectData;
+    });
+  }
+
+ /// Clear the charter-side IT override so the section reverts to the
+ /// preferred-solution text.
+  void _clearCharterITOverride() {
+    final provider = ProjectDataInherited.read(context);
+    provider.updateField(
+        (d) => d.copyWith(charterITOverride: ''));
+    setState(() {
+      _projectData = provider.projectData;
+    });
+  }
+
+ /// Clear the charter-side Infrastructure override so the section
+ /// reverts to the preferred-solution text.
+  void _clearCharterInfraOverride() {
+    final provider = ProjectDataInherited.read(context);
+    provider.updateField(
+        (d) => d.copyWith(charterInfraOverride: ''));
+    setState(() {
+      _projectData = provider.projectData;
+    });
+  }
 
  @override
  Widget build(BuildContext context) {
@@ -526,12 +534,14 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  // AI Generate intentionally removed — IT/Infrastructure comes from
  // the preferred solution (Business Case section, locked once a
  // preferred solution is selected). onEdit takes the user to view
- // the preferred solution. onEditIT / onEditInfra let the user
- // edit the dedicated IT/Infrastructure pages — those remain
- // editable even when the Business Case is locked.
+ // the preferred solution. onSaveITOverride / onSaveInfraOverride
+ // let the user tailor the wording shown in the charter directly
+ // (the Business Case itself stays locked).
  onEdit: () => _navigateToBusinessCase(),
- onEditIT: () => _navigateToITConsiderations(),
- onEditInfra: () => _navigateToInfrastructureConsiderations(),
+ onSaveITOverride: (text) => _saveCharterITOverride(text),
+ onSaveInfraOverride: (text) => _saveCharterInfraOverride(text),
+ onClearITOverride: () => _clearCharterITOverride(),
+ onClearInfraOverride: () => _clearCharterInfraOverride(),
  ),
  const SizedBox(height: 24),
 

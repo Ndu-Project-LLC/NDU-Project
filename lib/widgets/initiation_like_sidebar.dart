@@ -2560,14 +2560,14 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               onTap: _openOrganizationRolesResponsibilities,
               isActive: widget.activeItemLabel ==
                   'Organization Plan - Roles & Responsibilities'),
-          _buildSubSubMenuItem('RACI Matrix',
-              onTap: _openOrganizationRaciMatrix,
-              isActive:
-                  widget.activeItemLabel == 'Organization Plan - RACI Matrix'),
           _buildSubSubMenuItem('Staffing Plan',
               onTap: _openOrganizationStaffingPlan,
               isActive: widget.activeItemLabel ==
                   'Organization Plan - Staffing Plan'),
+          _buildSubSubMenuItem('RACI Matrix',
+              onTap: _openOrganizationRaciMatrix,
+              isActive:
+                  widget.activeItemLabel == 'Organization Plan - RACI Matrix'),
           _buildSubSubMenuItem('Training & Team Building',
               onTap: _openTeamTraining,
               isActive:

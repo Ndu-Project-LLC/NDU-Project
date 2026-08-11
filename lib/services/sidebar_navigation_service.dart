@@ -166,9 +166,9 @@ class SidebarNavigationService {
     SidebarItem(
         checkpoint: 'organization_roles_responsibilities',
         label: 'Roles & Responsibilities'),
-    SidebarItem(checkpoint: 'organization_raci_matrix', label: 'RACI Matrix'),
     SidebarItem(
         checkpoint: 'organization_staffing_plan', label: 'Staffing Plan'),
+    SidebarItem(checkpoint: 'organization_raci_matrix', label: 'RACI Matrix'),
     SidebarItem(checkpoint: 'team_training', label: 'Training & Team Building'),
     SidebarItem(
         checkpoint: 'stakeholder_management', label: 'Stakeholder Management'),

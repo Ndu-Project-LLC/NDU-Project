@@ -3915,6 +3915,7 @@ class _FrontEndPlanningProcurementScreenState
  context: context,
  title: 'Procurement Needs',
  minWidth: 820,
+ maxHeight: 320,
  columnSpacing: 24,
  horizontalMargin: 18,
  headingRowHeight: 48,
@@ -4007,6 +4008,103 @@ class _FrontEndPlanningProcurementScreenState
  );
  }
  }
+
+ // ─── Preferred Solution follow-through ────────────────────────────────
+ // Pull Risks, IT (technologies), Infrastructure, and initial cost
+ // estimate items from the selected preferred solution so procurement
+ // has full context for what to source. These are appended (not
+ // deduplicated against existing needs) because they represent
+ // solution-specific scope that the procurement team must action.
+ final psa = data.preferredSolutionAnalysis;
+ SolutionAnalysisItem? selectedSolution;
+ if (psa != null && psa.isSelectionFinalized) {
+ final byId = psa.selectedSolutionId;
+ final byIndex = psa.selectedSolutionIndex;
+ final byTitle = psa.selectedSolutionTitle;
+ if (byId != null && byId.isNotEmpty) {
+ selectedSolution = psa.solutionAnalyses.firstWhere(
+ (s) => s.solutionTitle == byTitle,
+ orElse: () => psa.solutionAnalyses.first,
+ );
+ } else if (byIndex != null &&
+ byIndex >= 0 &&
+ byIndex < psa.solutionAnalyses.length) {
+ selectedSolution = psa.solutionAnalyses[byIndex];
+ } else if (byTitle != null && byTitle.isNotEmpty) {
+ selectedSolution = psa.solutionAnalyses.firstWhere(
+ (s) => s.solutionTitle == byTitle,
+ orElse: () => psa.solutionAnalyses.first,
+ );
+ }
+ }
+
+ if (selectedSolution != null) {
+ // Risks → procurement needs (mitigation may require purchases)
+ for (final risk in selectedSolution.risks) {
+ addNeed(
+ name: risk,
+ source: 'Preferred Solution · Risks',
+ priorityHint: 'high',
+ );
+ }
+ // IT / Technologies → procurement needs
+ for (final tech in selectedSolution.technologies) {
+ addNeed(
+ name: tech,
+ source: 'Preferred Solution · IT',
+ priorityHint: 'medium',
+ );
+ }
+ // Infrastructure → procurement needs
+ for (final infra in selectedSolution.infrastructure) {
+ addNeed(
+ name: infra,
+ source: 'Preferred Solution · Infrastructure',
+ priorityHint: 'medium',
+ );
+ }
+ // Initial cost estimate items → procurement needs (with cost)
+ for (final cost in selectedSolution.costs) {
+ final needName = cost.item.trim().isNotEmpty
+ ? cost.item.trim()
+ : cost.description.trim();
+ if (needName.isEmpty) continue;
+ final trimmed = needName;
+ final key = trimmed.toLowerCase();
+ if (seen.contains(key)) continue;
+ seen.add(key);
+ // Don't run through addNeed because we have an explicit cost.
+ needs.add(
+ _ProcurementNeed(
+ name: trimmed,
+ source: 'Preferred Solution · Cost Estimate',
+ quantity: 1,
+ estimatedCost: cost.estimatedCost,
+ priority: cost.estimatedCost >= 100000 ? 'High' : 'Medium',
+ ),
+ );
+ }
+ // Also include the IT/Infrastructure consideration text blobs if
+ // they exist (free-form notes from the preferred solution analysis).
+ final itText = selectedSolution.itConsiderationText?.trim() ?? '';
+ if (itText.isNotEmpty) {
+ addNeed(
+ name: itText,
+ source: 'Preferred Solution · IT Considerations',
+ priorityHint: 'medium',
+ );
+ }
+ final infraText =
+ selectedSolution.infraConsiderationText?.trim() ?? '';
+ if (infraText.isNotEmpty) {
+ addNeed(
+ name: infraText,
+ source: 'Preferred Solution · Infrastructure Considerations',
+ priorityHint: 'medium',
+ );
+ }
+ }
+ // ─── End preferred solution follow-through ────────────────────────────
 
  return needs;
  }
@@ -5310,6 +5408,9 @@ class _FrontEndPlanningProcurementScreenState
  Expanded(
  child: Container(
  color: Colors.white,
+ child: Scrollbar(
+ thumbVisibility: true,
+ trackVisibility: true,
  child: SingleChildScrollView(
  padding: EdgeInsets.symmetric(
  horizontal: isMobile ? 16 : 24,
@@ -5407,6 +5508,7 @@ class _FrontEndPlanningProcurementScreenState
  _buildNextSectionButton(),
  const SizedBox(height: 40),
  ],
+ ),
  ),
  ),
  ),
@@ -5783,7 +5885,7 @@ class _ContractScopeManagementSection extends StatelessWidget {
  children: [
  const Expanded(
  child: Text(
- 'Contract Scope Management',
+ 'Vendor Scope Management',
  style: TextStyle(
  fontSize: 18,
  fontWeight: FontWeight.w700,
@@ -8015,14 +8117,32 @@ class _VendorGrid extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
+ final isMobile = AppBreakpoints.isMobile(context);
+ // Use LayoutBuilder to compute a responsive cross-axis count so cards
+ // are never too narrow on wide screens nor too wide on tablets.
+ return LayoutBuilder(
+ builder: (context, constraints) {
+ final double maxCardWidth = isMobile ? 180 : 320;
+ final int crossAxisCount =
+ (constraints.maxWidth / maxCardWidth).floor().clamp(1, 4);
+ const double crossAxisSpacing = 16;
+ const double mainAxisSpacing = 16;
+ // Each card sizes its own height based on content. We provide a
+ // generous mainAxisExtent ceiling so cards don't clip the rating
+ // stars / actions menu on vendors that have full status + rating.
+ final double mainAxisExtent = isMobile ? 220 : 240;
+
  return GridView.builder(
  shrinkWrap: true,
  physics: const NeverScrollableScrollPhysics(),
- gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
- crossAxisCount: 3,
- childAspectRatio: 3.2,
- mainAxisSpacing: 16,
- crossAxisSpacing: 16,
+ gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+ crossAxisCount: crossAxisCount,
+ crossAxisSpacing: crossAxisSpacing,
+ mainAxisSpacing: mainAxisSpacing,
+ // Fixed height ensures the checkbox, name, category, status,
+ // rating, contact, and actions menu all fit inside the card
+ // border without clipping.
+ mainAxisExtent: mainAxisExtent,
  ),
  itemCount: vendors.length,
  itemBuilder: (_, index) {
@@ -8033,31 +8153,40 @@ class _VendorGrid extends StatelessWidget {
  borderRadius: BorderRadius.circular(16),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  ),
- padding: const EdgeInsets.all(20),
+ padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ // Top row: checkbox right-aligned (compact)
  Align(
  alignment: Alignment.centerRight,
+ child: SizedBox(
+ height: 28,
+ width: 28,
  child: Checkbox(
  value: selectedVendorIds.contains(vendor.id),
  onChanged: (value) =>
  onToggleSelected(vendor.id, value ?? false),
  ),
  ),
+ ),
+ // Name + contact cell
  _VendorNameCell(vendor: vendor),
- const SizedBox(height: 8),
+ const SizedBox(height: 6),
  Text(vendor.category,
- style:
- const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
- const SizedBox(height: 8),
+ style: const TextStyle(
+ fontSize: 13, color: Color(0xFF6B7280))),
+ const SizedBox(height: 6),
  _VendorStatusPill(status: vendor.status),
  const SizedBox(height: 6),
  Text(
  vendor.contactLabel,
- style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+ style: const TextStyle(
+ fontSize: 12, color: Color(0xFF64748B)),
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
  ),
- const SizedBox(height: 8),
+ const SizedBox(height: 6),
  _RatingStars(rating: vendor.ratingScore),
  const Spacer(),
  Row(
@@ -8072,6 +8201,8 @@ class _VendorGrid extends StatelessWidget {
  ),
  ],
  ),
+ );
+ },
  );
  },
  );

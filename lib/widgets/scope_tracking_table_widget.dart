@@ -8,11 +8,54 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/inline_editable_text.dart';
 import 'package:ndu_project/utils/auto_bullet_text_controller.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
-import 'package:ndu_project/widgets/ux_hardening_primitives.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 
-/// Custom Scope Tracking Table with inline editing, CRUD actions, and AI capabilities
+/// Column flex weights — proportional widths that distribute content evenly
+/// across the available table width. The exact pixel width of each column is
+/// derived from these weights at runtime via [FlexColumnWidth] inside a
+/// [Table] widget, so the table fills its container with no orphaned wide
+/// column and no squished right-edge cluster.
+const List<double> _kScopeColumnFlex = [
+  2.6, // Scope Item / Deliverable
+  1.0, // Status
+  1.2, // Owner
+  1.2, // Verification
+  2.0, // Verification Steps
+  1.8, // Tracking Notes
+  1.1, // Actions
+];
+
+const List<String> _kScopeColumnLabels = [
+  'Scope Item/Deliverable',
+  'Status',
+  'Owner',
+  'Verification',
+  'Verification Steps',
+  'Tracking Notes',
+  'Actions',
+];
+
+/// Minimum column widths (in dp) — used as a floor so cells never collapse
+/// below their content's natural fit. When the available container width is
+/// less than the sum of these minima, horizontal scrolling kicks in.
+const List<double> _kScopeColumnMinWidth = [
+  180, // Scope Item / Deliverable
+  96,  // Status
+  120, // Owner
+  120, // Verification
+  160, // Verification Steps
+  140, // Tracking Notes
+  112, // Actions
+];
+
+/// Custom Scope Tracking Table with inline editing, CRUD actions, and AI capabilities.
+///
+/// Uses [Table] + [FlexColumnWidth] (rather than [DataTable]) so column widths
+/// are distributed proportionally across the full available width. This avoids
+/// the default `DataTable` behaviour where one column (usually the last)
+/// absorbs all leftover horizontal space — producing the uneven, squished-right
+/// layout previously visible on this table.
 class ScopeTrackingTableWidget extends StatelessWidget {
   const ScopeTrackingTableWidget({
     super.key,
@@ -36,346 +79,198 @@ class ScopeTrackingTableWidget extends StatelessWidget {
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final headingColor =
+        isDark ? const Color(0xFF1F2937) : const Color(0xFFF5F8FC);
+    final dividerColor =
+        isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB);
+    final headingStyle = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+      letterSpacing: 0.2,
+    );
+
     return LayoutBuilder(
       builder: (context, constraints) {
+        final availableWidth =
+            constraints.maxWidth > 0 ? constraints.maxWidth : 1200.0;
+        final minTotalWidth =
+            _kScopeColumnMinWidth.reduce((a, b) => a + b);
+        final useHorizontalScroll = availableWidth < minTotalWidth;
+        final tableWidth =
+            useHorizontalScroll ? minTotalWidth : availableWidth;
+
+        final columnWidths = <int, TableColumnWidth>{
+          for (var i = 0; i < _kScopeColumnFlex.length; i++)
+            i: useHorizontalScroll
+                ? FixedColumnWidth(_kScopeColumnMinWidth[i])
+                : FlexColumnWidth(_kScopeColumnFlex[i]),
+        };
+
+        final headerRow = TableRow(
+          decoration: BoxDecoration(
+            color: headingColor,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          children: [
+            for (var i = 0; i < _kScopeColumnLabels.length; i++)
+              _ScopeHeaderCell(
+                label: _kScopeColumnLabels[i],
+                style: headingStyle,
+              ),
+          ],
+        );
+
+        final dataRows = items.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          final isOdd = index.isOdd;
+          final rowColor = isDark
+              ? (isOdd ? const Color(0xFF10151D) : const Color(0xFF151922))
+              : (isOdd ? const Color(0xFFFAFCFF) : Colors.white);
+          return TableRow(
+            decoration: BoxDecoration(color: rowColor),
+            children: [
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.scopeItem,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.implementationStatus,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.owner,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.verificationMethod,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.verificationSteps,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.trackingNotes,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+              _ScopeTrackingRowWidget(
+                item: item,
+                column: _ScopeTrackingColumn.actions,
+                availableRoles: availableRoles,
+                onUpdated: onUpdated,
+                onDeleted: onDeleted,
+              ),
+            ],
+          );
+        }).toList();
+
+        final table = Table(
+          columnWidths: columnWidths,
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          border: TableBorder(
+            top: BorderSide(color: dividerColor, width: 0.8),
+            bottom: BorderSide(color: dividerColor, width: 0.8),
+            horizontalInside:
+                BorderSide(color: dividerColor.withOpacity(0.6), width: 0.6),
+          ),
+          children: [headerRow, ...dataRows],
+        );
+
+        // Table needs a bounded width so FlexColumnWidth can compute. We
+        // wrap it in a SizedBox with the resolved width. If the available
+        // width is below the minimum threshold we keep the wider SizedBox and
+        // wrap it in a horizontal scroll view so the user can pan.
+        final sizedTable = SizedBox(
+          width: tableWidth,
+          child: table,
+        );
+
+        Widget tableHost = sizedTable;
+        if (useHorizontalScroll) {
+          tableHost = SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: sizedTable,
+          );
+        }
+
+        // Cap vertical height and enable vertical scroll when rows exceed the
+        // visible viewport. Mirrors the prior `maxHeight: 560` behaviour.
+        tableHost = ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 560),
+          child: Scrollbar(
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              child: tableHost,
+            ),
+          ),
+        );
+
         return Container(
           width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Color(0xFFE5E7EB)),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Colors.black.withOpacity(0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
             ],
           ),
-          child: ExpandableDataTable(
-            title: 'Scope Tracking',
-            minWidth: constraints.maxWidth > 0 ? constraints.maxWidth : 1000,
-            maxHeight: 560,
-            columnSpacing: 20,
-            horizontalMargin: 16,
-            headingRowHeight: 56,
-            dataRowMinHeight: 52,
-              dataRowMaxHeight: 120,
-              rowDetailBuilder: (index) {
-                if (index < 0 || index >= items.length) return null;
-                return _buildScopeItemDetailPanel(items[index]);
-              },
-              columns: const [
-                DataColumn(
-                  label: Center(
-                    child: Text('Scope Item/Deliverable',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Status',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Owner',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Verification',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Verification Steps',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Tracking Notes',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-                DataColumn(
-                  label: Center(
-                    child: Text('Actions',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF374151))),
-                  ),
-                ),
-              ],
-              rows: items.map((item) {
-                return DataRow(
-                  cells: [
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.scopeItem,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.implementationStatus,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.owner,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.verificationMethod,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.verificationSteps,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.trackingNotes,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                    DataCell(_ScopeTrackingRowWidget(
-                      item: item,
-                      column: _ScopeTrackingColumn.actions,
-                      availableRoles: availableRoles,
-                      onUpdated: onUpdated,
-                      onDeleted: onDeleted,
-                    )),
-                  ],
-                );
-              }).toList(),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: tableHost,
           ),
         );
       },
     );
   }
+}
 
-  /// Phase 1 hardening: expandable row detail panel for scope items.
-  /// Shown when the user taps the chevron on a row. Renders the item's
-  /// tracking notes, verification method/steps, cross-references, and
-  /// baseline metadata in a clean, readable layout.
-  Widget _buildScopeItemDetailPanel(ScopeTrackingItem item) {
-    final fmtDate = (DateTime? d) =>
-        d == null ? '—' : '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+/// Header cell — left-aligned, padded, single-line with ellipsis fallback so
+/// longer labels (e.g. "Verification Steps") never wrap awkwardly.
+class _ScopeHeaderCell extends StatelessWidget {
+  const _ScopeHeaderCell({required this.label, required this.style});
 
-    Widget detailRow(String label, String value, {IconData? icon}) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 14, color: const Color(0xFF6B7280)),
-              const SizedBox(width: 6),
-            ],
-            SizedBox(
-              width: 140,
-              child: Text(label,
-                  style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF6B7280),
-                      letterSpacing: 0.4)),
-            ),
-            Expanded(
-              child: Text(value.isEmpty ? '—' : value,
-                  style: const TextStyle(
-                      fontSize: 12.5, color: Color(0xFF1F2937), height: 1.4)),
-            ),
-          ],
+  final String label;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          label,
+          style: style,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              const Icon(Icons.unfold_more_rounded,
-                  size: 16, color: Color(0xFF2563EB)),
-              const SizedBox(width: 8),
-              Text('Scope Item Detail',
-                  style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                      letterSpacing: -0.2)),
-              const Spacer(),
-              if (item.isBaseline)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD1FAE5),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text('BASELINED',
-                      style: TextStyle(
-                          color: Color(0xFF065F46),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.6)),
-                ),
-            ],
-          ),
-          const Divider(height: 20, color: Color(0xFFE2E8F0)),
-          // Tracking notes
-          if (item.trackingNotes.trim().isNotEmpty)
-            detailRow('Tracking Notes', item.trackingNotes,
-                icon: Icons.note_alt_outlined)
-          else
-            detailRow('Tracking Notes', '',
-                icon: Icons.note_alt_outlined),
-          // Verification
-          detailRow('Verification Method', item.verificationMethod,
-              icon: Icons.verified_outlined),
-          if (item.verificationSteps.trim().isNotEmpty)
-            detailRow('Verification Steps', item.verificationSteps,
-                icon: Icons.checklist),
-          // Cross-references
-          const SizedBox(height: 4),
-          const Text('CROSS-REFERENCES',
-              style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF94A3B8),
-                  letterSpacing: 1)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _detailChip('WBS', item.wbsId, const Color(0xFF2563EB)),
-              _detailChip('Requirement', item.requirementId, const Color(0xFF7C3AED)),
-              _detailChip('Schedule', item.scheduleActivityId, const Color(0xFF059669)),
-              _detailChip('CBS', item.cbsId, const Color(0xFFD97706)),
-              _detailChip('OBS', item.obsId, const Color(0xFF0891B2)),
-              _detailChip('Control Acct', item.controlAccountId, const Color(0xFF475569)),
-              if (item.epicId.isNotEmpty)
-                _detailChip('Epic', item.epicId, const Color(0xFF7C3AED)),
-              if (item.featureId.isNotEmpty)
-                _detailChip('Feature', item.featureId, const Color(0xFF9333EA)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Dates
-          Row(
-            children: [
-              Expanded(
-                  child: detailRow('Planned Start', fmtDate(item.plannedStartDate),
-                      icon: Icons.event_outlined)),
-              Expanded(
-                  child: detailRow('Planned End', fmtDate(item.plannedEndDate),
-                      icon: Icons.event_available_outlined)),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                  child: detailRow('Actual Start', fmtDate(item.actualStartDate),
-                      icon: Icons.play_arrow_outlined)),
-              Expanded(
-                  child: detailRow('Actual End', fmtDate(item.actualEndDate),
-                      icon: Icons.done_all_outlined)),
-            ],
-          ),
-          // Progress
-          detailRow(
-              'Progress',
-              '${(item.percentComplete * 100).toStringAsFixed(0)}% complete (weight ${(item.weight * 100).toStringAsFixed(0)}%)',
-              icon: Icons.trending_up_outlined),
-          if (item.dependencies.isNotEmpty)
-            detailRow('Dependencies', item.dependencies.join(', '),
-                icon: Icons.link_outlined),
-          if (item.changeRequestId.isNotEmpty)
-            detailRow('Change Request', item.changeRequestId,
-                icon: Icons.compare_arrows_outlined),
-        ],
-      ),
-    );
-  }
-
-  Widget _detailChip(String label, String value, Color color) {
-    final hasValue = value.trim().isNotEmpty;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: hasValue ? color.withValues(alpha: 0.10) : const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-            color: hasValue ? color.withValues(alpha: 0.30) : const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('$label: ',
-              style: TextStyle(
-                  color: hasValue ? color : const Color(0xFF94A3B8),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700)),
-          Text(hasValue ? value : '—',
-              style: TextStyle(
-                  color: hasValue ? const Color(0xFF1F2937) : const Color(0xFF94A3B8),
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600)),
-        ],
       ),
     );
   }
@@ -421,12 +316,6 @@ class _ScopeTrackingRowWidgetState extends State<_ScopeTrackingRowWidget> {
     'UAT',
     'Stakeholder Review',
   ];
-
-  @override
-  void dispose() {
-    _debouncer.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -760,7 +649,7 @@ class _StatusPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
+          color: color.withOpacity(0.12),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(

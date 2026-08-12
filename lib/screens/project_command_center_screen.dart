@@ -244,6 +244,10 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
                       child: _buildPrimaryBento(
                           projects, statusesById),
                     ),
+                    // Per Task 29: extended KPI row with deeper portfolio metrics.
+                    SliverToBoxAnchor(
+                      child: _buildExtendedKpiBento(projects, statusesById),
+                    ),
                     SliverToBoxAnchor(
                       child: _buildFilterRail(),
                     ),
@@ -602,6 +606,197 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
             ],
           );
         },
+      ),
+    );
+  }
+
+  // ── Per Task 29: Extended KPI bento with comprehensive portfolio metrics ──
+  Widget _buildExtendedKpiBento(
+      List<ProjectRecord> projects, Map<String, ProjectStatusRollup> statuses) {
+    if (projects.isEmpty) return const SizedBox.shrink();
+
+    final totalProjects = projects.length;
+    final totalOpenRisks = statuses.values
+        .map((s) => s.openRisks ?? 0)
+        .fold<int>(0, (a, b) => a + b);
+    final totalOpenIssues = statuses.values
+        .map((s) => s.openIssues ?? 0)
+        .fold<int>(0, (a, b) => a + b);
+    final avgBudgetUsed = statuses.values.isEmpty
+        ? 0.0
+        : statuses.values
+                .map((s) => s.budgetUsedPercent ?? 0.0)
+                .fold<double>(0.0, (a, b) => a + b) /
+            statuses.values.length;
+    final scheduleHealthy = statuses.values
+        .where((s) => s.scheduleStatus == 'on_track')
+        .length;
+    final costHealthy = statuses.values
+        .where((s) => s.costStatus == 'on_track')
+        .length;
+    final scopeHealthy = statuses.values
+        .where((s) => s.scopeStatus == 'on_track')
+        .length;
+    final qualityHealthy = statuses.values
+        .where((s) => s.qualityStatus == 'on_track')
+        .length;
+    final riskHealthy = statuses.values
+        .where((s) => s.riskStatus == 'on_track')
+        .length;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: _surfaceAlt,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _outline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.insights_outlined,
+                    size: 18, color: _blue),
+                const SizedBox(width: 8),
+                const Text(
+                  'Portfolio Health Matrix',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _ink,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '$totalProjects workspace${totalProjects == 1 ? '' : 's'}',
+                  style: const TextStyle(fontSize: 11, color: _muted),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth >= 920;
+                final kpis = <_KpiCellData>[
+                  _KpiCellData(
+                    label: 'Open Risks',
+                    value: '$totalOpenRisks',
+                    icon: Icons.warning_amber_outlined,
+                    color: _crimson,
+                  ),
+                  _KpiCellData(
+                    label: 'Open Issues',
+                    value: '$totalOpenIssues',
+                    icon: Icons.error_outline_outlined,
+                    color: _amber,
+                  ),
+                  _KpiCellData(
+                    label: 'Avg Budget Used',
+                    value: '${(avgBudgetUsed * 100).round()}%',
+                    icon: Icons.savings_outlined,
+                    color: _cyan,
+                  ),
+                  _KpiCellData(
+                    label: 'Schedule',
+                    value: '$scheduleHealthy/$totalProjects',
+                    icon: Icons.schedule_outlined,
+                    color: _emerald,
+                  ),
+                  _KpiCellData(
+                    label: 'Cost',
+                    value: '$costHealthy/$totalProjects',
+                    icon: Icons.attach_money_outlined,
+                    color: _emerald,
+                  ),
+                  _KpiCellData(
+                    label: 'Scope',
+                    value: '$scopeHealthy/$totalProjects',
+                    icon: Icons.account_tree_outlined,
+                    color: _emerald,
+                  ),
+                  _KpiCellData(
+                    label: 'Quality',
+                    value: '$qualityHealthy/$totalProjects',
+                    icon: Icons.verified_outlined,
+                    color: _emerald,
+                  ),
+                  _KpiCellData(
+                    label: 'Risk',
+                    value: '$riskHealthy/$totalProjects',
+                    icon: Icons.shield_outlined,
+                    color: _emerald,
+                  ),
+                ];
+                if (isWide) {
+                  return Row(
+                    children: [
+                      for (var i = 0; i < kpis.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 8),
+                        Expanded(child: _buildKpiCell(kpis[i])),
+                      ],
+                    ],
+                  );
+                }
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: kpis
+                      .map((k) => SizedBox(
+                            width: 140,
+                            child: _buildKpiCell(k),
+                          ))
+                      .toList(),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKpiCell(_KpiCellData data) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(data.icon, size: 13, color: data.color),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  data.label,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: _muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            data.value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: data.color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1547,4 +1742,20 @@ class _DonutPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _DonutPainter oldDelegate) =>
       oldDelegate.segments != segments;
+}
+
+/// Simple data holder for an extended-KPI cell on the Command Center
+/// dashboard's Portfolio Health Matrix (Task 29).
+class _KpiCellData {
+  const _KpiCellData({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
 }

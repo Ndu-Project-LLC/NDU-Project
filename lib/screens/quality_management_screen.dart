@@ -437,15 +437,9 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  ? InnerPageSectionStatus.current
  : InnerPageSectionStatus.available,
  ),
- InnerPageSection(
- id: _QualityTab.register.name,
- label: 'Quality Register',
- icon: Icons.assignment_late_outlined,
- stepNumber: 6,
- status: _selectedTab == _QualityTab.register
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- ),
+ // 'Quality Register' (previously step 6) is intentionally omitted from
+ // this navigation hint modal — the user requested its removal from this
+ // popup ONLY. The underlying tab remains accessible via the _TabStrip.
  ],
  );
  }

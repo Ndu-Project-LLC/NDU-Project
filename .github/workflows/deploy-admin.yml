@@ -216,23 +216,9 @@ jobs:
 
       - name: Build web (release, production)
         env:
-          # Canonical OpenAI API key secret is `API_Key`.
-          # Fall back to legacy `OPENAI_PROXY_API_KEY` if `API_Key` is unset
-          # (keeps older deployments working during the secret-name migration).
-          API_KEY_VAL: ${{ secrets.API_Key }}
-          LEGACY_OPENAI_KEY: ${{ secrets.OPENAI_PROXY_API_KEY }}
           OPENAI_PROXY_ENDPOINT: ${{ secrets.OPENAI_PROXY_ENDPOINT }}
         run: |
-          # Resolve the OpenAI API key: prefer `API_Key`, fall back to legacy secret.
-          OPENAI_API_KEY_VAL="${API_KEY_VAL:-$LEGACY_OPENAI_KEY}"
-          if [ -z "$OPENAI_API_KEY_VAL" ]; then
-            echo "::warning::No OpenAI API key found. Set the 'API_Key' GitHub secret."
-          else
-            echo "✓ OpenAI API key resolved (length=${#OPENAI_API_KEY_VAL})"
-          fi
           flutter build web --release --base-href "/" --no-tree-shake-icons \
-            --dart-define=OPENAI_PROXY_API_KEY="$OPENAI_API_KEY_VAL" \
-            --dart-define=OPENAI_API_KEY="$OPENAI_API_KEY_VAL" \
             --dart-define=OPENAI_PROXY_ENDPOINT=${OPENAI_PROXY_ENDPOINT} \
             --dart-define=ENVIRONMENT=production
 

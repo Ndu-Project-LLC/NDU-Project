@@ -7,9 +7,8 @@ import 'package:ndu_project/services/api_config_secure.dart';
 // Use relative import to ensure the library is part of this compilation unit
 import 'package:ndu_project/utils/diagram_model.dart';
 
-// Dreamflow env bindings (must exist with these exact names)
-// Do not rename: Dreamflow injects values via --dart-define at build time
-const String apiKey = String.fromEnvironment('OPENAI_PROXY_API_KEY');
+// Optional proxy override. This must point to a trusted server-side proxy;
+// OpenAI API keys are never accepted by the client application.
 const String endpoint = String.fromEnvironment('OPENAI_PROXY_ENDPOINT');
 
 /// Central configuration for OpenAI API access.
@@ -19,36 +18,16 @@ class OpenAiConfig {
       ? ''
       : endpoint.trim().replaceAll(RegExp(r'/+$'), '');
 
-  /// API key preference: environment overrides user-provided runtime key.
-  static String get apiKeyValue {
-    if (apiKey.trim().isNotEmpty) return apiKey.trim();
-    return SecureAPIConfig.apiKey ?? '';
-  }
-
-  /// Base endpoint for OpenAI API requests.
+  /// Base endpoint for OpenAI API requests through the server-side proxy.
   ///
   /// Routing priority:
   /// 1. If `OPENAI_PROXY_ENDPOINT` is set via --dart-define, use it directly.
-  /// 2. On web, ALWAYS route through the Cloud Function proxy
-  ///    (`SecureAPIConfig.baseUrl`) to avoid browser CORS restrictions —
-  ///    even when a client-side API key is present. The proxy accepts the
-  ///    client-supplied Bearer token as a fallback if its server-side
-  ///    `OPENAI_API_KEY` Firebase secret is not configured.
-  /// 3. On non-web platforms (mobile/desktop), call OpenAI directly at
-  ///    `api.openai.com/v1` when a client-side key is present (no CORS
-  ///    concerns off-browser).
-  /// 4. Otherwise, fall back to the Cloud Function proxy.
+  /// 2. Otherwise, always use the canonical Firebase Cloud Function proxy.
+  ///
+  /// This applies to web, mobile, and desktop so the OpenAI API key never
+  /// ships in a client binary.
   static String get baseEndpoint {
     if (_trimmedEnvEndpoint.isNotEmpty) return _trimmedEnvEndpoint;
-    // On web, always use the proxy — direct browser calls to api.openai.com
-    // fail with CORS. The proxy also keeps the key server-side, which is the
-    // recommended production posture.
-    if (kIsWeb) return SecureAPIConfig.baseUrl;
-    // Non-web with a client key: direct call is fine (no CORS).
-    if (apiKeyValue.isNotEmpty) {
-      return 'https://api.openai.com/v1';
-    }
-    // Non-web without a client key: use the proxy.
     return SecureAPIConfig.baseUrl;
   }
 
@@ -58,9 +37,8 @@ class OpenAiConfig {
   /// OpenAI API version (kept for backward compat).
   static String get openaiApiVersion => SecureAPIConfig.openaiApiVersion;
 
-  // Consider configured if we have an API key OR if we're using the Cloud
-  // Function proxy (which holds the key server-side). The proxy is the
-  // default production path — the app doesn't need a client-side key.
+  // The client is always configured to use the server-side proxy. Secret
+  // availability is validated by the proxy at request time.
   static bool get isConfigured => true;
 
   /// OpenAI Chat Completions API endpoint.
@@ -127,18 +105,12 @@ class OpenAiConfig {
 
   /// Returns headers for OpenAI API requests.
   ///
-  /// When using the Cloud Function proxy (default production path), we
-  /// don't send an Authorization header — the proxy adds it server-side
-  /// with the secret key. When a client-side key is provided (via
-  /// env-config.js or Settings), we send it for direct OpenAI calls.
+  /// The proxy adds authorization server-side. The client must never attach
+  /// an OpenAI credential.
   static Map<String, String> headers() {
-    final headers = <String, String>{
+    return <String, String>{
       'Content-Type': 'application/json',
     };
-    if (apiKeyValue.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $apiKeyValue';
-    }
-    return headers;
   }
 
   /// Extracts text content from an OpenAI API response.

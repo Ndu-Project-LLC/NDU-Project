@@ -7,9 +7,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:ndu_project/firebase_options.dart';
 import 'package:ndu_project/services/api_key_manager.dart';
-import 'package:ndu_project/services/api_config_secure.dart'
-    show SecureAPIConfig;
-import 'package:ndu_project/services/env_config_loader.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/services/currency_service.dart';
@@ -168,24 +165,9 @@ void main() async {
     debugPrint(stack.toString());
   }
 
-  // Load runtime environment config (web/env-config.js → window.__NDU_ENV).
-  // Must run BEFORE ApiKeyManager.initializeApiKey() so any OpenAI key
-  // supplied at deploy time is picked up. On non-web this is a fast no-op.
-  await EnvConfigLoader.load();
-
-  // Initialize API key. Priority order:
-  //   1. window.__NDU_ENV.OPENAI_API_KEY (deploy-time override)
-  //   2. Per-user key loaded from Firestore (set via Settings screen)
-  //   3. Server-side proxy (no client key needed)
+  // KAZ AI always uses the server-side Firebase proxy. No OpenAI credential
+  // is loaded into the Flutter application.
   ApiKeyManager.initializeApiKey();
-  if (EnvConfigLoader.hasOpenAiKey) {
-    ApiKeyManager.setApiKey(EnvConfigLoader.openaiApiKey!);
-  } else if (kIsWeb) {
-    debugPrint(
-      'NDU: no deploy-time API key in env-config.js — '
-      'using server-side proxy.',
-    );
-  }
   // Tune image raster cache for web — default 100 MB / 1000 images is
   // excessive for a project-management app where most images are small
   // avatars, icons, and section banners. 50 MB / 500 images is plenty and

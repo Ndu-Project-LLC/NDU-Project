@@ -275,15 +275,9 @@ exports.openaiProxy = functions
     }
     
     try {
-      let apiKey = process.env.OPENAI_API_KEY;
+      const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
-        const authHeader = req.headers.authorization;
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-          apiKey = authHeader.split('Bearer ')[1];
-        }
-      }
-      if (!apiKey) {
-        console.error('No API key configured (set OPENAI_API_KEY secret or provide via Authorization header)');
+        console.error('No API key configured. Set the OPENAI_API_KEY Firebase secret.');
         res.status(500).json({ error: 'Service configuration error' });
         return;
       }

@@ -2,12 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ndu_project/openai/openai_config.dart';
 import 'package:ndu_project/models/user_role.dart';
-import 'package:ndu_project/services/api_key_manager.dart';
 import 'package:ndu_project/services/permission_service.dart';
 import 'package:ndu_project/services/subscription_service.dart';
-import 'package:ndu_project/widgets/api_key_input_dialog.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
@@ -182,11 +179,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     _loadPreferences();
     // Load default currency
     CurrencyService.instance.load().then((_) {
-      if (mounted) setState(() {});
-    });
-    // Ensure user-specific OpenAI key is loaded from Firestore if present
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ApiKeyManager.ensureLoadedForSignedInUser();
       if (mounted) setState(() {});
     });
     // Removed auto banner popup on page load per request
@@ -1081,15 +1073,10 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _integrationsPanel() {
-    final bool isEnvManaged =
-        const String.fromEnvironment('OPENAI_PROXY_API_KEY').trim().isNotEmpty;
-    final bool isConfigured = OpenAiConfig.isConfigured;
-
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
       children: [
-        _openAiIntegrationTile(
-            isConfigured: isConfigured, isEnvManaged: isEnvManaged),
+        _openAiIntegrationTile(),
       ],
     );
   }
@@ -2019,16 +2006,12 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _openAiIntegrationTile(
-      {required bool isConfigured, required bool isEnvManaged}) {
+  Widget _openAiIntegrationTile() {
     final theme = Theme.of(context);
-    final statusColor = isConfigured ? Colors.green : Colors.red;
-    final statusLabel = isConfigured ? 'Configured' : 'Not Configured';
-    final subtitle = isEnvManaged
-        ? 'API key is set via environment and used across the app.'
-        : isConfigured
-            ? 'A runtime API key is active and used by all AI features.'
-            : 'Add an API key to enable AI features across the app.';
+    const statusColor = Colors.green;
+    const statusLabel = 'Server managed';
+    const subtitle =
+        'KAZ AI is configured centrally through the secure server proxy.';
 
     return Card(
       margin: EdgeInsets.zero,
@@ -2071,9 +2054,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                                isConfigured
-                                    ? Icons.check_circle
-                                    : Icons.error_outline,
+                                Icons.check_circle,
                                 size: 14,
                                 color: statusColor),
                             const SizedBox(width: 4),
@@ -2092,69 +2073,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                     subtitle,
                     style: const TextStyle(color: Colors.black54),
                   ),
-                  const SizedBox(height: 12),
-                  if (isConfigured && !isEnvManaged) ...[
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border:
-                            Border.all(color: Colors.grey.withOpacity(0.25)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.vpn_key,
-                              size: 18, color: Colors.black54),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: SelectableText(
-                              OpenAiConfig.apiKeyValue,
-                              style: const TextStyle(
-                                  fontFamily: appFontFamily, fontSize: 13),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _onAddOrUpdateKey,
-                        icon: const Icon(Icons.vpn_key),
-                        label: Text(isConfigured && !isEnvManaged
-                            ? 'Update API Key'
-                            : 'Add API Key'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFD700),
-                          foregroundColor: Colors.black,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed:
-                            isEnvManaged || !isConfigured ? null : _onRemoveKey,
-                        icon: const Icon(Icons.delete_outline),
-                        label: const Text('Remove API Key'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.black,
-                          side: BorderSide(color: Colors.grey.withOpacity(0.4)),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 8),
+                  const Text(
+                    'The OpenAI credential is never stored on user accounts or sent to client devices.',
+                    style: TextStyle(fontSize: 12, color: Colors.black45),
                   ),
                 ],
               ),
@@ -2163,16 +2085,6 @@ class _SettingsScreenState extends State<SettingsScreen>
         ),
       ),
     );
-  }
-
-  Future<void> _onAddOrUpdateKey() async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => const ApiKeyInputDialog(),
-    );
-    if (result == true && mounted) {
-      setState(() {});
-    }
   }
 
   // ── 2FA Toggle ──
@@ -2296,35 +2208,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
-  Future<void> _onRemoveKey() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove KAZ AI API Key'),
-        content: const Text(
-            'This will disable KAZ AI features until you add a new key. Continue?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
-          ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Remove')),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      await ApiKeyManager.removeForCurrentUser();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('KAZ AI API key removed'),
-              backgroundColor: Colors.red),
-        );
-        setState(() {});
-      }
-    }
-  }
 }
 
 // ── New Settings UI Widgets ──────────────────────────────────────────────

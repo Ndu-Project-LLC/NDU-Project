@@ -1,17 +1,6 @@
-import 'package:flutter/foundation.dart';
-
-/// Runtime OpenAI configuration that avoids hardcoding secrets in source.
-/// ApiKeyManager sets and clears the key at runtime; callers read via [apiKey].
+/// Central, non-secret OpenAI proxy configuration.
 class SecureAPIConfig {
   SecureAPIConfig._();
-
-  static String? _apiKey;
-
-  // OpenAI API key — loaded at runtime via ApiKeyManager or environment
-  // variable. Do NOT hardcode API keys in source code (GitHub secret
-  // scanning will block pushes).
-  // Set via: flutter build web --dart-define=OPENAI_API_KEY=sk-...
-  static const String _envApiKey = String.fromEnvironment('OPENAI_API_KEY');
 
   // OpenAI API base URL.
   //
@@ -37,16 +26,4 @@ class SecureAPIConfig {
   /// backward compatibility with code that reads this field).
   static const String openaiApiVersion = '2023-06-01';
 
-  static String? get apiKey => _apiKey ?? (_envApiKey.isEmpty ? null : _envApiKey);
-  static bool get hasApiKey => (_apiKey ?? _envApiKey).trim().isNotEmpty == true;
-
-  static void setApiKey(String apiKey) {
-    _apiKey = apiKey.trim().isEmpty ? null : apiKey.trim();
-    debugPrint('SecureAPIConfig: runtime API key set.');
-  }
-
-  static void clearApiKey() {
-    _apiKey = null;
-    debugPrint('SecureAPIConfig: runtime API key cleared.');
-  }
 }

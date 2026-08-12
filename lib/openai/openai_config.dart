@@ -27,20 +27,28 @@ class OpenAiConfig {
 
   /// Base endpoint for OpenAI API requests.
   ///
-  /// When a client-side API key is available, calls OpenAI directly at
-  /// api.openai.com/v1. The browser's region determines whether OpenAI
-  /// accepts the request — if the user's browser is in a supported region,
-  /// direct calls work fine.
-  ///
-  /// When no client-side key is available, falls back to the Cloud Function
-  /// proxy (SecureAPIConfig.baseUrl) which holds the key server-side.
+  /// Routing priority:
+  /// 1. If `OPENAI_PROXY_ENDPOINT` is set via --dart-define, use it directly.
+  /// 2. On web, ALWAYS route through the Cloud Function proxy
+  ///    (`SecureAPIConfig.baseUrl`) to avoid browser CORS restrictions —
+  ///    even when a client-side API key is present. The proxy accepts the
+  ///    client-supplied Bearer token as a fallback if its server-side
+  ///    `OPENAI_API_KEY` Firebase secret is not configured.
+  /// 3. On non-web platforms (mobile/desktop), call OpenAI directly at
+  ///    `api.openai.com/v1` when a client-side key is present (no CORS
+  ///    concerns off-browser).
+  /// 4. Otherwise, fall back to the Cloud Function proxy.
   static String get baseEndpoint {
     if (_trimmedEnvEndpoint.isNotEmpty) return _trimmedEnvEndpoint;
-    // If we have a client-side key, call OpenAI directly
+    // On web, always use the proxy — direct browser calls to api.openai.com
+    // fail with CORS. The proxy also keeps the key server-side, which is the
+    // recommended production posture.
+    if (kIsWeb) return SecureAPIConfig.baseUrl;
+    // Non-web with a client key: direct call is fine (no CORS).
     if (apiKeyValue.isNotEmpty) {
       return 'https://api.openai.com/v1';
     }
-    // No client-side key — use the Cloud Function proxy
+    // Non-web without a client key: use the proxy.
     return SecureAPIConfig.baseUrl;
   }
 
@@ -54,9 +62,6 @@ class OpenAiConfig {
   // Function proxy (which holds the key server-side). The proxy is the
   // default production path — the app doesn't need a client-side key.
   static bool get isConfigured => true;
-
-  /// Determine if we're using a proxy endpoint (not needed for OpenAI).
-  static bool get _isProxyEndpoint => false;
 
   /// OpenAI Chat Completions API endpoint.
   static Uri messagesUri() {
@@ -188,9 +193,10 @@ class OpenAiConfig {
   /// Helpful diagnostic used by UI to provide actionable error messages
   static String? configurationWarning() {
     if (!kIsWeb) return null;
-    if (_isProxyEndpoint) return null; // ok, using proxy
-    // On web with direct OpenAI endpoint: likely to hit CORS
-    return 'OpenAI proxy endpoint not configured. Using direct OpenAI endpoint may fail due to CORS. Set OPENAI_PROXY_ENDPOINT to your Cloud Function URL (do not append a path).';
+    if (_trimmedEnvEndpoint.isNotEmpty) return null; // explicit proxy override
+    // On web, baseEndpoint always returns SecureAPIConfig.baseUrl (Cloud
+    // Function proxy) — so CORS is never a concern. No warning needed.
+    return null;
   }
 }
 

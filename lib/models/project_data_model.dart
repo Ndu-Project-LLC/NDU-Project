@@ -70,6 +70,13 @@ class ProjectDataModel {
   // Project Charter (editable in Project Charter screen)
   String charterAssumptions;
   String charterConstraints;
+  /// Task 9.8 — Charter caching. Stores a hash of the FEP source inputs
+  /// that were used to generate the charter content. When the user opens
+  /// the charter screen, we compare the current FEP source hash against
+  /// this stored value. If they match, the cached charter content is
+  /// shown as-is. If they differ (FEP sections changed), the charter is
+  /// eligible for regeneration. Empty string means "never generated".
+  String charterSourceHash;
   String charterProjectManagerName;
   String charterProjectSponsorName;
   String charterReviewedBy; // Added
@@ -277,6 +284,7 @@ class ProjectDataModel {
     this.notes = '',
     this.charterAssumptions = '',
     this.charterConstraints = '',
+    this.charterSourceHash = '',
     this.charterProjectManagerName = '',
     this.charterProjectSponsorName = '',
     this.charterReviewedBy = '',
@@ -481,6 +489,7 @@ class ProjectDataModel {
     List<String>? opportunities,
     String? charterAssumptions,
     String? charterConstraints,
+    String? charterSourceHash,
     String? charterProjectManagerName,
     String? charterProjectSponsorName,
     String? charterReviewedBy,
@@ -622,6 +631,7 @@ class ProjectDataModel {
       opportunities: opportunities ?? this.opportunities,
       charterAssumptions: charterAssumptions ?? this.charterAssumptions,
       charterConstraints: charterConstraints ?? this.charterConstraints,
+      charterSourceHash: charterSourceHash ?? this.charterSourceHash,
       charterProjectManagerName:
           charterProjectManagerName ?? this.charterProjectManagerName,
       charterProjectSponsorName:
@@ -795,6 +805,7 @@ class ProjectDataModel {
       'opportunities': opportunities,
       'charterAssumptions': charterAssumptions,
       'charterConstraints': charterConstraints,
+      'charterSourceHash': charterSourceHash,
       'charterProjectManagerName': charterProjectManagerName,
       'charterProjectSponsorName': charterProjectSponsorName,
       'charterReviewedBy': charterReviewedBy,
@@ -1051,6 +1062,7 @@ class ProjectDataModel {
               [],
       charterAssumptions: json['charterAssumptions']?.toString() ?? '',
       charterConstraints: json['charterConstraints']?.toString() ?? '',
+      charterSourceHash: json['charterSourceHash']?.toString() ?? '',
       charterProjectManagerName:
           json['charterProjectManagerName']?.toString() ?? '',
       charterProjectSponsorName:
@@ -1632,6 +1644,17 @@ class Milestone {
   String references;
   String comments;
 
+  /// Task 9.9 — 2-step SME verification.
+  /// Step 1: SME Review (subject-matter expert has reviewed the milestone
+  /// for accuracy and completeness).
+  /// Step 2: SME Approval (reviewer has formally approved the milestone
+  /// for inclusion in the project plan).
+  /// Both steps must be checked for a milestone to be considered "verified".
+  bool smeVerifiedStep1;
+  bool smeVerifiedStep2;
+  String? smeVerifiedBy;
+  DateTime? smeVerifiedAt;
+
   Milestone({
     String? id,
     this.name = '',
@@ -1639,9 +1662,24 @@ class Milestone {
     this.dueDate = '',
     this.references = '',
     this.comments = '',
+    this.smeVerifiedStep1 = false,
+    this.smeVerifiedStep2 = false,
+    this.smeVerifiedBy,
+    this.smeVerifiedAt,
   }) : id = (id == null || id.trim().isEmpty)
             ? DateTime.now().microsecondsSinceEpoch.toString()
             : id;
+
+  /// Returns true only when BOTH SME verification steps are complete.
+  bool get isSmeVerified => smeVerifiedStep1 && smeVerifiedStep2;
+
+  /// Returns the verification status as a human-readable label.
+  String get smeVerificationLabel {
+    if (isSmeVerified) return 'Verified';
+    if (smeVerifiedStep1) return 'Pending Approval';
+    if (smeVerifiedStep2) return 'Pending Review';
+    return 'Not Verified';
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -1650,6 +1688,10 @@ class Milestone {
         'dueDate': dueDate,
         'references': references,
         'comments': comments,
+        'smeVerifiedStep1': smeVerifiedStep1,
+        'smeVerifiedStep2': smeVerifiedStep2,
+        'smeVerifiedBy': smeVerifiedBy,
+        'smeVerifiedAt': smeVerifiedAt?.toIso8601String(),
       };
 
   factory Milestone.fromJson(Map<String, dynamic> json) {
@@ -1661,6 +1703,12 @@ class Milestone {
       dueDate: json['dueDate'] ?? '',
       references: json['references'] ?? '',
       comments: json['comments'] ?? '',
+      smeVerifiedStep1: json['smeVerifiedStep1'] == true,
+      smeVerifiedStep2: json['smeVerifiedStep2'] == true,
+      smeVerifiedBy: json['smeVerifiedBy']?.toString(),
+      smeVerifiedAt: json['smeVerifiedAt'] != null
+          ? DateTime.tryParse(json['smeVerifiedAt'].toString())
+          : null,
     );
   }
 

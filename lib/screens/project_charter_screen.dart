@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
+
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
@@ -129,13 +132,34 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  Future<void> _ensureCharterContent() async {
  if (_projectData == null || _isGenerating) return;
 
+ // ── Task 9.8 — Charter caching ────────────────────────────────────
+ // Compute a hash of the FEP source inputs that feed the charter. If the
+ // hash matches the stored `charterSourceHash`, the cached charter content
+ // is fresh and we skip regeneration entirely. If it differs (or the
+ // charter has never been generated), we proceed to (re)generate.
+ final currentSourceHash = _computeCharterSourceHash(_projectData!);
+ final cachedHash = _projectData!.charterSourceHash;
+ final cacheIsFresh = cachedHash.isNotEmpty && cachedHash == currentSourceHash;
+
  final needsOverview = _projectData!.businessCase.trim().isEmpty &&
  _projectData!.solutionDescription.trim().isEmpty;
  final needsAssumptions = _projectData!.charterAssumptions.trim().isEmpty;
  final needsConstraints = _projectData!.charterConstraints.trim().isEmpty;
 
- if (!needsOverview && !needsAssumptions && !needsConstraints) {
+ // If cache is fresh and no section is empty, return early — the cached
+ // charter is still valid.
+ if (cacheIsFresh && !needsOverview && !needsAssumptions && !needsConstraints) {
  return;
+ }
+
+ // If cache is fresh but a section was manually cleared, we still
+ // regenerate only the missing section(s) without invalidating the
+ // overall cache.
+ if (!needsOverview && !needsAssumptions && !needsConstraints && !cacheIsFresh) {
+ // All sections populated but cache hash differs → FEP inputs changed.
+ // Force regeneration of all sections to keep the charter in sync.
+ // (This branch is reached when the user edits FEP inputs after the
+ // charter was first generated.)
  }
 
  setState(() => _isGenerating = true);
@@ -144,7 +168,15 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  final projectContext = ProjectDataHelper.buildFepContext(_projectData!);
 
  if (projectContext.trim().isNotEmpty) {
- if (needsOverview) {
+ // When the cache is stale (FEP inputs changed), force regeneration
+ // of ALL sections by treating them as "needed" even if they have
+ // existing content.
+ final forceRegenerate = !cacheIsFresh && cachedHash.isNotEmpty;
+ final regenOverview = needsOverview || forceRegenerate;
+ final regenAssumptions = needsAssumptions || forceRegenerate;
+ final regenConstraints = needsConstraints || forceRegenerate;
+
+ if (regenOverview) {
  try {
  final overview = await _openAi.generateFepSectionText(
  section: 'Project Overview',
@@ -155,7 +187,10 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  if (mounted && overview.isNotEmpty && _projectData != null) {
  final provider = ProjectDataInherited.read(context);
  provider.updateField((data) {
- if (data.businessCase.trim().isEmpty) {
+ // Only overwrite if regenerating (cache stale) or field
+ // is empty (first-time generation).
+ if (forceRegenerate ||
+ data.businessCase.trim().isEmpty) {
  return data.copyWith(businessCase: overview);
  }
  return data;
@@ -170,10 +205,10 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  }
  }
 
- if (needsAssumptions || needsConstraints) {
+ if (regenAssumptions || regenConstraints) {
  if (!mounted) return;
  final provider = ProjectDataInherited.read(context);
- if (needsAssumptions) {
+ if (regenAssumptions) {
  try {
  final assumptions = await _openAi.generateFepSectionText(
  section: 'Assumptions',
@@ -188,7 +223,7 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  debugPrint('Error generating charter assumptions: $e');
  }
  }
- if (needsConstraints) {
+ if (regenConstraints) {
  try {
  final constraints = await _openAi.generateFepSectionText(
  section: 'Constraints',
@@ -209,6 +244,20 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  });
  }
  }
+
+ // ── Stamp the cache hash ─────────────────────────────────────────
+ // After successful generation, persist the new source hash so future
+ // opens can skip regeneration when nothing has changed.
+ if (mounted) {
+ final provider = ProjectDataInherited.read(context);
+ provider.updateField((data) =>
+ data.copyWith(charterSourceHash: currentSourceHash));
+ if (mounted) {
+ setState(() {
+ _projectData = provider.projectData;
+ });
+ }
+ }
  }
  } catch (e) {
  debugPrint('Error ensuring charter content: $e');
@@ -217,6 +266,51 @@ class _ProjectCharterScreenState extends State<ProjectCharterScreen> {
  setState(() => _isGenerating = false);
  }
  }
+ }
+
+ /// Task 9.8 — Computes a stable SHA-1 hash of the FEP source inputs
+ /// that the charter depends on. When any of these inputs change, the
+ /// hash changes, and the charter is eligible for regeneration.
+ String _computeCharterSourceHash(ProjectDataModel data) {
+ final fep = data.frontEndPlanning;
+ final buffer = StringBuffer()
+ ..write(data.projectName ?? '')
+ ..write('|')
+ ..write(data.projectObjective)
+ ..write('|')
+ ..write(data.solutionTitle)
+ ..write('|')
+ ..write(data.solutionDescription)
+ ..write('|')
+ ..write(data.businessCase)
+ ..write('|')
+ ..write(data.overallFramework ?? '')
+ ..write('|')
+ ..write(fep.requirements)
+ ..write('|')
+ ..write(fep.requirementsNotes)
+ ..write('|')
+ ..write(fep.infrastructure)
+ ..write('|')
+ ..write(fep.security)
+ ..write('|')
+ ..write(fep.procurement)
+ ..write('|')
+ ..write(fep.allowance)
+ ..write('|')
+ ..write(fep.summary)
+ ..write('|')
+ ..write(fep.technology)
+ ..write('|')
+ ..write(fep.personnel)
+ ..write('|')
+ ..write(fep.contracts)
+ ..write('|')
+ ..write(fep.milestoneStartDate)
+ ..write('|')
+ ..write(fep.milestoneEndDate);
+ final bytes = utf8.encode(buffer.toString());
+ return sha1.convert(bytes).toString();
  }
 
  Future<void> _generateSection(String sectionType) async {

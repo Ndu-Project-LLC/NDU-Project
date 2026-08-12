@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -497,6 +498,37 @@ void _loadMilestoneData() {
  break;
  }
  _validationErrors = nextErrors;
+ });
+ _syncToProvider();
+ }
+
+ /// Task 9.9 — Toggle one of the two SME verification steps for a milestone.
+ /// stepNumber is 1 (SME Review) or 2 (SME Approval). Both must be true
+ /// for the milestone to be considered fully verified.
+ void _toggleSmeVerification(int index, int stepNumber) {
+ if (index < 0 || index >= _milestones.length) return;
+ setState(() {
+ final m = _milestones[index];
+ if (stepNumber == 1) {
+ m.smeVerifiedStep1 = !m.smeVerifiedStep1;
+ } else if (stepNumber == 2) {
+ m.smeVerifiedStep2 = !m.smeVerifiedStep2;
+ }
+ // Stamp verification metadata when both steps become complete.
+ if (m.isSmeVerified) {
+ m.smeVerifiedAt = DateTime.now();
+ try {
+ // Best-effort capture of the current user's email/uid.
+ final user = FirebaseAuth.instance.currentUser;
+ m.smeVerifiedBy = user?.email ?? user?.uid;
+ } catch (_) {
+ m.smeVerifiedBy = null;
+ }
+ } else {
+ // If either step is un-checked, clear the stamp.
+ m.smeVerifiedAt = null;
+ m.smeVerifiedBy = null;
+ }
  });
  _syncToProvider();
  }
@@ -1422,7 +1454,9 @@ Consider typical project timelines and ensure end date is after start date.''';
  // minimum readable width; otherwise fall back to horizontal
  // scrolling so the table always fills the screen as much as
  // possible.
- const minTableWidth = 1100.0;
+ // Widened from 1100 → 1280 to accommodate the new SME Verification
+ // column added in Task 9.9.
+ const minTableWidth = 1280.0;
  final tableWidth = constraints.maxWidth > minTableWidth
  ? constraints.maxWidth
  : minTableWidth;
@@ -1430,14 +1464,16 @@ Consider typical project timelines and ensure end date is after start date.''';
  // Proportional column widths so the table expands to fill the
  // available space (rather than the old fixed-pixel widths that
  // always left a fixed table size regardless of viewport).
+ // Columns: # | Name | Date | Discipline | Notes | SME Verification | Actions
  const col0 = 60.0; // #
- final col1 = tableWidth * 0.22; // Milestone Name
- final col2 = tableWidth * 0.16; // Target Date
- final col3 = tableWidth * 0.16; // Discipline
- final col4 = tableWidth * 0.36; // Notes (expandable)
- const col5 = 70.0; // Actions
+ final col1 = tableWidth * 0.20; // Milestone Name
+ final col2 = tableWidth * 0.14; // Target Date
+ final col3 = tableWidth * 0.14; // Discipline
+ final col4 = tableWidth * 0.30; // Notes (expandable)
+ final col5 = tableWidth * 0.16; // SME Verification (Task 9.9)
+ const col6 = 70.0; // Actions
  // Adjust to exactly fill tableWidth
- final allocated = col0 + col1 + col2 + col3 + col4 + col5;
+ final allocated = col0 + col1 + col2 + col3 + col4 + col5 + col6;
  final slack = tableWidth - allocated;
  final col4Adjusted = col4 + (slack > 0 ? slack : 0);
 
@@ -1462,6 +1498,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  3: FixedColumnWidth(col3),
  4: FixedColumnWidth(col4Adjusted),
  5: FixedColumnWidth(col5),
+ 6: FixedColumnWidth(col6),
  },
  children: [
  TableRow(
@@ -1472,6 +1509,7 @@ Consider typical project timelines and ensure end date is after start date.''';
  _milestoneHeaderCell('Target Date', headerStyle),
  _milestoneHeaderCell('Discipline', headerStyle),
  _milestoneHeaderCell('Notes', headerStyle),
+ _milestoneHeaderCell('SME Verification', headerStyle),
  _milestoneHeaderCell('Actions', headerStyle),
  ],
  ),
@@ -1647,6 +1685,16 @@ Consider typical project timelines and ensure end date is after start date.''';
  ],
  ),
  ),
+ // ── SME Verification cell (Task 9.9) ─────────────────────────────
+ // Two-step verification: SME Review + SME Approval. Both must be
+ // checked for the milestone to be considered fully verified. A status
+ // pill at the top of the cell shows the current verification state.
+ _milestoneDataCell(
+ _SmeVerificationCell(
+ milestone: milestone,
+ onToggleStep: (step) => _toggleSmeVerification(index, step),
+ ),
+ ),
  _milestoneDataCell(
  Center(
  child: IconButton(
@@ -1715,5 +1763,180 @@ Consider typical project timelines and ensure end date is after start date.''';
  }
  return '$years year${years > 1 ? 's' : ''}';
  }
+ }
+}
+
+// ============================================================================
+// TASK 9.9 — SME Verification Cell
+// ============================================================================
+// Renders the 2-step SME verification UI for a single milestone row:
+//  1. SME Review (subject-matter expert has reviewed the milestone)
+//  2. SME Approval (reviewer has formally approved the milestone)
+// A status pill at the top shows the current verification state:
+//  - "Not Verified" (neither step complete) — gray
+//  - "Pending Approval" (step 1 done, step 2 not) — amber
+//  - "Pending Review" (step 2 done, step 1 not — unusual order) — amber
+//  - "Verified" (both steps done) — green
+// ============================================================================
+
+class _SmeVerificationCell extends StatelessWidget {
+ const _SmeVerificationCell({
+ required this.milestone,
+ required this.onToggleStep,
+ });
+
+ final Milestone milestone;
+ final ValueChanged<int> onToggleStep;
+
+ @override
+ Widget build(BuildContext context) {
+ final isVerified = milestone.isSmeVerified;
+ final isPending = (milestone.smeVerifiedStep1 ||
+ milestone.smeVerifiedStep2) &&
+ !isVerified;
+
+ // Status pill
+ Color pillBg;
+ Color pillFg;
+ IconData pillIcon;
+ if (isVerified) {
+ pillBg = const Color(0xFFE8FFF4);
+ pillFg = const Color(0xFF16A34A);
+ pillIcon = Icons.verified_outlined;
+ } else if (isPending) {
+ pillBg = const Color(0xFFFEF3C7);
+ pillFg = const Color(0xFFB45309);
+ pillIcon = Icons.pending_outlined;
+ } else {
+ pillBg = const Color(0xFFF1F5F9);
+ pillFg = const Color(0xFF64748B);
+ pillIcon = Icons.hourglass_empty_outlined;
+ }
+
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ // Status pill
+ Container(
+ padding:
+ const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+ decoration: BoxDecoration(
+ color: pillBg,
+ borderRadius: BorderRadius.circular(6),
+ border: Border.all(color: pillFg.withValues(alpha: 0.3)),
+ ),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Icon(pillIcon, size: 12, color: pillFg),
+ const SizedBox(width: 4),
+ Flexible(
+ child: Text(
+ milestone.smeVerificationLabel,
+ style: TextStyle(
+ fontSize: 11,
+ fontWeight: FontWeight.w600,
+ color: pillFg,
+ ),
+ overflow: TextOverflow.ellipsis,
+ ),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(height: 8),
+ // Step 1: SME Review
+ _VerificationCheckbox(
+ label: 'SME Review',
+ hint: 'Subject-matter expert has reviewed this milestone '
+ 'for accuracy and completeness.',
+ value: milestone.smeVerifiedStep1,
+ onChanged: (_) => onToggleStep(1),
+ enabled: true,
+ ),
+ const SizedBox(height: 4),
+ // Step 2: SME Approval
+ _VerificationCheckbox(
+ label: 'SME Approval',
+ hint: 'Reviewer has formally approved this milestone '
+ 'for inclusion in the project plan.',
+ value: milestone.smeVerifiedStep2,
+ onChanged: (_) => onToggleStep(2),
+ enabled: true,
+ ),
+ if (isVerified && milestone.smeVerifiedBy != null) ...[
+ const SizedBox(height: 6),
+ Text(
+ 'By: ${milestone.smeVerifiedBy}',
+ style: const TextStyle(
+ fontSize: 10,
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic,
+ ),
+ overflow: TextOverflow.ellipsis,
+ ),
+ ],
+ ],
+ );
+ }
+}
+
+class _VerificationCheckbox extends StatelessWidget {
+ const _VerificationCheckbox({
+ required this.label,
+ required this.hint,
+ required this.value,
+ required this.onChanged,
+ required this.enabled,
+ });
+
+ final String label;
+ final String hint;
+ final bool value;
+ final ValueChanged<bool?> onChanged;
+ final bool enabled;
+
+ @override
+ Widget build(BuildContext context) {
+ return Tooltip(
+ message: hint,
+ child: InkWell(
+ onTap: enabled ? () => onChanged(!value) : null,
+ borderRadius: BorderRadius.circular(6),
+ child: Padding(
+ padding:
+ const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Icon(
+ value
+ ? Icons.check_box
+ : Icons.check_box_outline_blank,
+ size: 18,
+ color: value
+ ? const Color(0xFF16A34A)
+ : const Color(0xFF94A3B8),
+ ),
+ const SizedBox(width: 6),
+ Flexible(
+ child: Text(
+ label,
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w500,
+ color: value
+ ? const Color(0xFF1E293B)
+ : const Color(0xFF64748B),
+ ),
+ overflow: TextOverflow.ellipsis,
+ ),
+ ),
+ ],
+ ),
+ ),
+ ),
+ );
  }
 }

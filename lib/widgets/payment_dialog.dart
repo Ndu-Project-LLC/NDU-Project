@@ -673,6 +673,14 @@ class _PaymentDialogState extends State<PaymentDialog> {
                     Expanded(
                       child: VoiceTextField(
                         controller: _couponController,
+                        // Coupon codes are short manual-entry values — disable
+                        // the Open Editor button (voice / docx / KAZ AI) for
+                        // this field. These helpers only make sense for long
+                        // free-text fields, not a short promo code input.
+                        enableVoice: false,
+                        enableDocxImport: false,
+                        enableKazAi: false,
+                        enableTextFormatting: false,
                         decoration: InputDecoration(
                           hintText: 'Enter coupon code',
                           hintStyle: TextStyle(

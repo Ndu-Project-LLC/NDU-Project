@@ -1,10 +1,14 @@
 import 'package:ndu_project/models/project_activity.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/raci_assignment_service.dart';
+import 'package:ndu_project/services/sidebar_navigation_service.dart';
 
 /// Central orchestration utility that builds a unified, cross-phase
 /// activity log from structured project data.
 class ProjectIntelligenceService {
+  static const String continuityContextPrefix = 'continuity_context_';
+  static const String continuityCheckpointKey = 'continuity_last_checkpoint';
+  static const int _maxContinuityContextLength = 24000;
   static const Set<String> _executionSectionCheckpoints = <String>{
     'staff_team',
     'team_meetings',
@@ -403,8 +407,33 @@ class ProjectIntelligenceService {
     writeField('Solution Title', data.solutionTitle);
     writeField('Business Case', data.businessCase);
     writeField('Project Objective', data.projectObjective);
+    writeField('Delivery Framework', data.overallFramework ?? '');
+    writeField('Project Category', data.projectCategory);
+    writeField('Industry', data.projectIndustry);
+    writeField(
+      'Location',
+      [data.city, data.location, data.country]
+          .where((value) => value.trim().isNotEmpty)
+          .join(', '),
+    );
     writeField('Charter Assumptions', data.charterAssumptions);
     writeField('Charter Constraints', data.charterConstraints);
+
+    final preferred = data.preferredSolution;
+    if (preferred != null && preferred.title.trim().isNotEmpty) {
+      buffer.writeln('Preferred Solution: ${preferred.title.trim()}');
+      writeField('Preferred Solution Detail', preferred.description);
+    }
+
+    if (data.projectGoals.isNotEmpty) {
+      buffer.writeln('Project Goals:');
+      for (final goal in data.projectGoals.take(12)) {
+        final name = goal.name.trim();
+        if (name.isEmpty) continue;
+        final detail = goal.description.trim();
+        buffer.writeln(detail.isEmpty ? '- $name' : '- $name — $detail');
+      }
+    }
 
     if (data.withinScopeItems.isNotEmpty) {
       buffer.writeln('Within Scope:');
@@ -422,10 +451,93 @@ class ProjectIntelligenceService {
       }
     }
 
+    if (data.planningRequirementItems.isNotEmpty) {
+      buffer.writeln('Planned Requirements:');
+      for (final item in data.planningRequirementItems.take(16)) {
+        final text = item.plannedText.trim();
+        if (text.isEmpty) continue;
+        final owner = item.owner.trim();
+        buffer.writeln(owner.isEmpty ? '- $text' : '- $text (owner: $owner)');
+      }
+    }
+
     if (data.frontEndPlanning.riskRegisterItems.isNotEmpty) {
       buffer.writeln('Risks:');
       for (final item in data.frontEndPlanning.riskRegisterItems) {
         final text = item.riskName.trim();
+        if (text.isNotEmpty) buffer.writeln('- $text');
+      }
+    }
+
+    if (data.workPackages.isNotEmpty) {
+      buffer.writeln('Work Packages:');
+      for (final package in data.workPackages.take(16)) {
+        final title = package.title.trim();
+        if (title.isEmpty) continue;
+        final code = package.packageCode.trim();
+        final owner = package.owner.trim();
+        buffer.writeln(
+          '- ${code.isEmpty ? '' : '$code · '}$title'
+          '${owner.isEmpty ? '' : ' (owner: $owner)'}',
+        );
+      }
+    }
+
+    if (data.keyMilestones.isNotEmpty) {
+      buffer.writeln('Key Milestones:');
+      for (final milestone in data.keyMilestones.take(12)) {
+        final name = milestone.name.trim();
+        if (name.isEmpty) continue;
+        final due = milestone.dueDate.trim();
+        buffer.writeln(due.isEmpty ? '- $name' : '- $name (due: $due)');
+      }
+    }
+
+    if (data.costEstimateItems.isNotEmpty) {
+      final total = data.costEstimateItems.fold<double>(
+        0,
+        (sum, item) => sum + item.amount,
+      );
+      buffer.writeln(
+        'Cost Estimate: ${data.costEstimateItems.length} items · '
+        '${data.costBenefitCurrency} ${total.toStringAsFixed(2)}',
+      );
+      for (final item in data.costEstimateItems.take(10)) {
+        if (item.title.trim().isEmpty) continue;
+        buffer.writeln(
+          '- ${item.title.trim()}: ${item.amount.toStringAsFixed(2)}',
+        );
+      }
+    }
+
+    if (data.scheduleActivities.isNotEmpty) {
+      buffer.writeln('Schedule Activities:');
+      for (final activity in data.scheduleActivities.take(14)) {
+        final title = activity.title.trim();
+        if (title.isEmpty) continue;
+        buffer.writeln(
+          '- $title (${activity.startDate} → ${activity.dueDate})',
+        );
+      }
+    }
+
+    if (data.teamMembers.isNotEmpty) {
+      buffer.writeln('Project Team:');
+      for (final member in data.teamMembers.take(14)) {
+        final name = member.name.trim();
+        final role = member.role.trim();
+        if (name.isEmpty && role.isEmpty) continue;
+        buffer.writeln(
+          '- ${name.isEmpty ? 'Unassigned' : name}'
+          '${role.isEmpty ? '' : ' — $role'}',
+        );
+      }
+    }
+
+    if (data.lessonsLearned.isNotEmpty) {
+      buffer.writeln('Lessons Learned:');
+      for (final lesson in data.lessonsLearned.take(10)) {
+        final text = lesson.lesson.trim();
         if (text.isNotEmpty) buffer.writeln('- $text');
       }
     }
@@ -441,9 +553,154 @@ class ProjectIntelligenceService {
 
     if ((sectionLabel ?? '').trim().isNotEmpty) {
       writeField('Target Section', sectionLabel!);
+
+      final targetCheckpoint = SidebarNavigationService.instance
+          .findItemByLabel(sectionLabel)
+          ?.checkpoint;
+      final relevant = activities.where((activity) {
+        if (targetCheckpoint == null) return true;
+        if (activity.sourceSection == targetCheckpoint) return true;
+        return activity.applicableSections.contains(targetCheckpoint);
+      }).take(20).toList();
+      if (relevant.isNotEmpty) {
+        buffer.writeln('Relevant Upstream Activities:');
+        for (final activity in relevant) {
+          final owner = (activity.assignedTo ?? '').trim();
+          buffer.writeln(
+            '- ${activity.title}'
+            '${owner.isEmpty ? '' : ' (owner: $owner)'}'
+            ' [${activity.sourceSection}]',
+          );
+        }
+      }
     }
 
     return buffer.toString().trim();
+  }
+
+  /// Creates and stores a deterministic context snapshot for a sidebar page.
+  /// Existing user-entered fields are never overwritten; the snapshot is a
+  /// shared source for page seeders and AI-assisted fields.
+  static ProjectDataModel prepareForCheckpoint(
+    ProjectDataModel data,
+    String checkpoint,
+  ) {
+    final normalized = checkpoint.trim();
+    if (normalized.isEmpty) return rebuildActivityLog(data);
+
+    final enriched = rebuildActivityLog(_applyContinuityDefaults(data));
+    final item = SidebarNavigationService.instance
+        .findItemByCheckpoint(normalized);
+    final label = item?.label ?? normalized;
+    final fullContext = buildContextScan(enriched, sectionLabel: label);
+    final context = fullContext.length <= _maxContinuityContextLength
+        ? fullContext
+        : '${fullContext.substring(0, _maxContinuityContextLength)}\n'
+            '[Context truncated to the most relevant upstream data.]';
+    final contextKey = '$continuityContextPrefix$normalized';
+
+    if (enriched.planningNotes[contextKey] == context &&
+        enriched.planningNotes[continuityCheckpointKey] == normalized) {
+      return enriched;
+    }
+
+    final notes = Map<String, String>.from(enriched.planningNotes)
+      ..removeWhere((key, _) => key.startsWith(continuityContextPrefix))
+      ..[contextKey] = context
+      ..[continuityCheckpointKey] = normalized;
+
+    return enriched.copyWith(planningNotes: notes);
+  }
+
+  /// Reads the most recent deterministic context prepared for [checkpoint].
+  static String continuityContextFor(
+    ProjectDataModel data,
+    String checkpoint,
+  ) {
+    return data.planningNotes['$continuityContextPrefix${checkpoint.trim()}'] ??
+        '';
+  }
+
+  static ProjectDataModel _applyContinuityDefaults(ProjectDataModel data) {
+    final preferred = data.preferredSolution;
+    final preferredTitle = preferred?.title.trim() ?? '';
+    final preferredDescription = preferred?.description.trim() ?? '';
+
+    var objective = data.projectObjective;
+    if (objective.trim().isEmpty && data.projectGoals.isNotEmpty) {
+      final firstGoal = data.projectGoals.firstWhere(
+        (goal) =>
+            goal.description.trim().isNotEmpty || goal.name.trim().isNotEmpty,
+        orElse: () => ProjectGoal(),
+      );
+      objective = firstGoal.description.trim().isNotEmpty
+          ? firstGoal.description.trim()
+          : firstGoal.name.trim();
+    }
+
+    var charterAssumptions = data.charterAssumptions;
+    if (charterAssumptions.trim().isEmpty) {
+      charterAssumptions = data.assumptionItems
+          .map((item) => item.description.trim())
+          .where((text) => text.isNotEmpty)
+          .join('\n');
+    }
+
+    var charterConstraints = data.charterConstraints;
+    if (charterConstraints.trim().isEmpty) {
+      charterConstraints = data.constraintItems
+          .map((item) => item.description.trim())
+          .where((text) => text.isNotEmpty)
+          .join('\n');
+    }
+
+    var plannedRequirements = data.planningRequirementItems;
+    if (plannedRequirements.isEmpty &&
+        data.frontEndPlanning.requirementItems.isNotEmpty) {
+      plannedRequirements = data.frontEndPlanning.requirementItems
+          .asMap()
+          .entries
+          .where((entry) => entry.value.description.trim().isNotEmpty)
+          .map(
+            (entry) {
+              final item = entry.value;
+              return PlanningRequirementItem(
+              id: item.id.trim().isEmpty
+                  ? 'continuity_requirement_${entry.key}'
+                  : 'continuity_${item.id}',
+              sourceRequirementIds:
+                  item.id.trim().isEmpty ? const [] : [item.id],
+              plannedText: item.description.trim(),
+              owner: item.person.trim().isNotEmpty
+                  ? item.person.trim()
+                  : item.role.trim(),
+              status: 'Draft',
+              notes: item.comments.trim(),
+              lastSourceHash: item.description.trim(),
+            );
+            },
+          )
+          .toList(growable: false);
+    }
+
+    return data.copyWith(
+      solutionTitle: data.solutionTitle.trim().isEmpty &&
+              preferredTitle.isNotEmpty
+          ? preferredTitle
+          : data.solutionTitle,
+      solutionDescription: data.solutionDescription.trim().isEmpty &&
+              preferredDescription.isNotEmpty
+          ? preferredDescription
+          : data.solutionDescription,
+      potentialSolution: data.potentialSolution.trim().isEmpty &&
+              preferredTitle.isNotEmpty
+          ? preferredTitle
+          : data.potentialSolution,
+      projectObjective: objective,
+      charterAssumptions: charterAssumptions,
+      charterConstraints: charterConstraints,
+      planningRequirementItems: plannedRequirements,
+    );
   }
 
   static void _upsertDashboardItems({

@@ -1162,9 +1162,9 @@ class _OperationsPageBody extends StatelessWidget {
  const SizedBox(height: 16),
  _RunbookRegisterCard(rows: data.runbookRegister, onChanged: (rows) { data.runbookRegister = rows; onChanged(state); }),
  const SizedBox(height: 16),
- _ChecklistCard(title: 'Monitoring and alerting register', items: data.monitoringItems, onChanged: (items) { data.monitoringItems = items; onChanged(state); }),
+ _ChecklistTableCard(title: 'Monitoring and alerting register', items: data.monitoringItems, onChanged: (items) { data.monitoringItems = items; onChanged(state); }),
  const SizedBox(height: 16),
- _ChecklistCard(title: 'Recovery and resilience register', items: data.recoveryItems, onChanged: (items) { data.recoveryItems = items; onChanged(state); }),
+ _ChecklistTableCard(title: 'Recovery and resilience register', items: data.recoveryItems, onChanged: (items) { data.recoveryItems = items; onChanged(state); }),
  const SizedBox(height: 16),
  SwitchListTile.adaptive(value: data.goLiveApproved, title: const Text('Operational sign-off complete'), onChanged: (v) { data.goLiveApproved = v; onChanged(state); }),
  ]);
@@ -1259,7 +1259,7 @@ class _CloseOutPageBody extends StatelessWidget {
  ],
  ),
  const SizedBox(height: 16),
- _ChecklistCard(title: 'Acceptance register', items: data.acceptanceItems, onChanged: (items) { data.acceptanceItems = items; onChanged(state); }),
+ _ChecklistTableCard(title: 'Acceptance register', items: data.acceptanceItems, onChanged: (items) { data.acceptanceItems = items; onChanged(state); }),
  const SizedBox(height: 16),
  _ChecklistCard(title: 'Support handoff register', items: data.handoverArtifacts, onChanged: (items) { data.handoverArtifacts = items; onChanged(state); }),
  const SizedBox(height: 16),
@@ -1326,6 +1326,361 @@ class _DateButton extends StatelessWidget {
  child: Text('$label: ${_formatDate(value)}'),
  ),
  );
+}
+
+class _ChecklistTableCard extends StatelessWidget {
+ const _ChecklistTableCard({
+ required this.title,
+ required this.items,
+ required this.onChanged,
+ });
+
+ final String title;
+ final List<_ChecklistEntry> items;
+ final ValueChanged<List<_ChecklistEntry>> onChanged;
+
+ Future<void> _openEntryDialog(
+ BuildContext context, {
+ _ChecklistEntry? entry,
+ int? index,
+ }) async {
+ final titleController = TextEditingController(text: entry?.title ?? '');
+ final ownerController = TextEditingController(text: entry?.owner ?? '');
+ final notesController = TextEditingController(text: entry?.notes ?? '');
+ final formKey = GlobalKey<FormState>();
+ var isComplete = entry?.done ?? false;
+ final registerName = title
+ .replaceFirst(RegExp(r'\s+register$', caseSensitive: false), '')
+ .trim();
+
+ final result = await showDialog<_ChecklistEntry>(
+ context: context,
+ barrierDismissible: false,
+ builder: (dialogContext) => StatefulBuilder(
+ builder: (context, setDialogState) => AlertDialog(
+ backgroundColor: Colors.white,
+ surfaceTintColor: Colors.white,
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(18),
+ ),
+ title: Text(
+ index == null ? 'Add $registerName item' : 'Edit $registerName item',
+ ),
+ content: SizedBox(
+ width: 560,
+ child: Form(
+ key: formKey,
+ child: SingleChildScrollView(
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ TextFormField(
+ controller: titleController,
+ autofocus: true,
+ decoration: _fieldDecoration('Item / deliverable').copyWith(
+ labelText: 'Item / deliverable',
+ hintText: 'Enter the register item or requirement',
+ ),
+ validator: (value) => value == null || value.trim().isEmpty
+ ? 'A register item is required.'
+ : null,
+ ),
+ const SizedBox(height: 14),
+ TextFormField(
+ controller: ownerController,
+ decoration: _fieldDecoration('Owner').copyWith(
+ labelText: 'Owner',
+ hintText: 'Assign an accountable owner',
+ ),
+ ),
+ const SizedBox(height: 14),
+ TextFormField(
+ controller: notesController,
+ minLines: 3,
+ maxLines: 5,
+ decoration: _fieldDecoration('Notes / evidence / link / trigger').copyWith(
+ labelText: 'Notes / evidence',
+ hintText: 'Add evidence, links, conditions, or supporting notes',
+ alignLabelWithHint: true,
+ ),
+ ),
+ const SizedBox(height: 8),
+ SwitchListTile.adaptive(
+ contentPadding: EdgeInsets.zero,
+ value: isComplete,
+ activeThumbColor: const Color(0xFF10B981),
+ title: Text('$registerName item complete'),
+ subtitle: const Text('Mark this register item as completed.'),
+ onChanged: (value) =>
+ setDialogState(() => isComplete = value),
+ ),
+ ],
+ ),
+ ),
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.of(dialogContext).pop(),
+ child: const Text('Cancel'),
+ ),
+ FilledButton.icon(
+ style: FilledButton.styleFrom(
+ backgroundColor: const Color(0xFFFFB800),
+ foregroundColor: const Color(0xFF111827),
+ ),
+ onPressed: () {
+ if (!(formKey.currentState?.validate() ?? false)) return;
+ Navigator.of(dialogContext).pop(
+ _ChecklistEntry(
+ title: titleController.text.trim(),
+ owner: ownerController.text.trim(),
+ notes: notesController.text.trim(),
+ done: isComplete,
+ ),
+ );
+ },
+ icon: Icon(index == null ? Icons.add : Icons.save_outlined),
+ label: Text(index == null ? 'Add item' : 'Save changes'),
+ ),
+ ],
+ ),
+ ),
+ );
+
+ titleController.dispose();
+ ownerController.dispose();
+ notesController.dispose();
+
+ if (result == null) return;
+ final updated = [...items];
+ if (index == null) {
+ updated.add(result);
+ } else {
+ updated[index] = result;
+ }
+ onChanged(updated);
+ }
+
+ void _updateCompletion(int index, bool complete) {
+ final current = items[index];
+ final updated = [...items];
+ updated[index] = _ChecklistEntry(
+ title: current.title,
+ owner: current.owner,
+ notes: current.notes,
+ done: complete,
+ );
+ onChanged(updated);
+ }
+
+ void _removeItem(int index) {
+ final updated = [...items]..removeAt(index);
+ onChanged(updated);
+ }
+
+ @override
+ Widget build(BuildContext context) {
+ final registerName = title
+ .replaceFirst(RegExp(r'\s+register$', caseSensitive: false), '')
+ .trim();
+ return Container(
+ width: double.infinity,
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: const Color(0xFFE5E7EB)),
+ ),
+ clipBehavior: Clip.antiAlias,
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Padding(
+ padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+ child: Row(
+ children: [
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ title,
+ style: const TextStyle(
+ fontSize: 16,
+ fontWeight: FontWeight.w700,
+ ),
+ ),
+ const SizedBox(height: 4),
+ Text(
+ '${items.length} ${items.length == 1 ? 'item' : 'items'} · '
+ '${items.where((item) => item.done).length} complete',
+ style: const TextStyle(
+ fontSize: 12,
+ color: Color(0xFF6B7280),
+ ),
+ ),
+ ],
+ ),
+ ),
+ FilledButton.icon(
+ onPressed: () => _openEntryDialog(context),
+ style: FilledButton.styleFrom(
+ backgroundColor: const Color(0xFFFFB800),
+ foregroundColor: const Color(0xFF111827),
+ padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+ ),
+ icon: const Icon(Icons.add, size: 18),
+ label: const Text('Add item'),
+ ),
+ ],
+ ),
+ ),
+ const Divider(height: 1, color: Color(0xFFE5E7EB)),
+ if (items.isEmpty)
+ Padding(
+ padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+ child: Center(
+ child: Column(
+ children: [
+ const Icon(Icons.fact_check_outlined,
+ size: 32, color: Color(0xFF9CA3AF)),
+ const SizedBox(height: 10),
+ Text(
+ 'No $registerName items yet.',
+ style: const TextStyle(
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF374151),
+ ),
+ ),
+ const SizedBox(height: 4),
+ const Text(
+ 'Use Add item to create the first register entry.',
+ style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+ ),
+ ],
+ ),
+ ),
+ )
+ else
+ LayoutBuilder(
+ builder: (context, constraints) => SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: ConstrainedBox(
+ constraints: BoxConstraints(minWidth: constraints.maxWidth),
+ child: DataTable(
+ headingRowColor:
+ const WidgetStatePropertyAll(Color(0xFFF9FAFB)),
+ headingRowHeight: 48,
+ dataRowMinHeight: 58,
+ dataRowMaxHeight: 76,
+ horizontalMargin: 18,
+ columnSpacing: 28,
+ dividerThickness: 0.8,
+ columns: const [
+ DataColumn(label: Text('Complete')),
+ DataColumn(label: Text('Register item')),
+ DataColumn(label: Text('Owner')),
+ DataColumn(label: Text('Notes / evidence')),
+ DataColumn(label: Text('Actions')),
+ ],
+ rows: items.asMap().entries.map((record) {
+ final index = record.key;
+ final item = record.value;
+ return DataRow(
+ cells: [
+ DataCell(
+ Checkbox(
+ value: item.done,
+ activeColor: const Color(0xFF10B981),
+ onChanged: (value) =>
+ _updateCompletion(index, value ?? false),
+ ),
+ ),
+ DataCell(
+ ConstrainedBox(
+ constraints: const BoxConstraints(
+ minWidth: 220,
+ maxWidth: 360,
+ ),
+ child: Text(
+ item.title,
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis,
+ style: TextStyle(
+ fontWeight: FontWeight.w600,
+ color: const Color(0xFF111827),
+ decoration:
+ item.done ? TextDecoration.lineThrough : null,
+ ),
+ ),
+ ),
+ ),
+ DataCell(
+ SizedBox(
+ width: 160,
+ child: Text(
+ item.owner.isEmpty ? 'Unassigned' : item.owner,
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis,
+ style: TextStyle(
+ color: item.owner.isEmpty
+ ? const Color(0xFF9CA3AF)
+ : const Color(0xFF374151),
+ ),
+ ),
+ ),
+ ),
+ DataCell(
+ ConstrainedBox(
+ constraints: const BoxConstraints(
+ minWidth: 220,
+ maxWidth: 360,
+ ),
+ child: Text(
+ item.notes.isEmpty ? '—' : item.notes,
+ maxLines: 2,
+ overflow: TextOverflow.ellipsis,
+ style: const TextStyle(color: Color(0xFF4B5563)),
+ ),
+ ),
+ ),
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ IconButton(
+ tooltip: 'Edit register item',
+ onPressed: () => _openEntryDialog(
+ context,
+ entry: item,
+ index: index,
+ ),
+ icon: const Icon(Icons.edit_outlined, size: 19),
+ ),
+ IconButton(
+ tooltip: 'Delete register item',
+ onPressed: () => _removeItem(index),
+ icon: const Icon(
+ Icons.delete_outline,
+ size: 19,
+ color: Color(0xFFDC2626),
+ ),
+ ),
+ ],
+ ),
+ ),
+ ],
+ );
+ }).toList(),
+ ),
+ ),
+ ),
+ ),
+ ],
+ ),
+ );
+ }
 }
 
 class _ChecklistCard extends StatelessWidget {

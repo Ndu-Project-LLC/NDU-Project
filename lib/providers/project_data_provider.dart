@@ -167,6 +167,34 @@ class ProjectDataProvider extends ChangeNotifier {
     _markDirty();
   }
 
+  /// Prepare deterministic upstream context before a sidebar destination is
+  /// rendered. This is intentionally non-destructive: page-specific user
+  /// values remain untouched while a shared context snapshot is refreshed.
+  void prepareForCheckpoint(String checkpoint) {
+    final normalized = checkpoint.trim();
+    if (normalized.isEmpty) return;
+
+    final contextKey =
+        '${ProjectIntelligenceService.continuityContextPrefix}$normalized';
+    final previousContext = _projectData.planningNotes[contextKey];
+    final previousContinuityCheckpoint = _projectData.planningNotes[
+        ProjectIntelligenceService.continuityCheckpointKey];
+    final prepared = ProjectIntelligenceService.prepareForCheckpoint(
+      _projectData,
+      normalized,
+    );
+    final nextContext = prepared.planningNotes[contextKey];
+
+    _projectData = prepared;
+    if (previousContext == nextContext &&
+        previousContinuityCheckpoint == normalized) {
+      return;
+    }
+
+    notifyListeners();
+    _markDirty();
+  }
+
   /// Save current project data to Firebase
   Future<bool> saveToFirebase({String? checkpoint}) async {
     // Coalesce rapid consecutive saves. If one save is already in-flight, mark
@@ -231,7 +259,10 @@ class ProjectDataProvider extends ChangeNotifier {
       final now = FieldValue.serverTimestamp();
 
       // Prepare data payload
-      final effectiveCheckpoint = checkpoint ?? _projectData.currentCheckpoint ?? 'initiation';
+      final effectiveCheckpoint = checkpoint ??
+          (_projectData.currentCheckpoint.isEmpty
+              ? 'initiation'
+              : _projectData.currentCheckpoint);
       final dataPayload = {
         ..._projectData.toJson(),
         'ownerId': user.uid,

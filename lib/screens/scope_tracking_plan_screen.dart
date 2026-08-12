@@ -302,7 +302,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  final double horizontalPadding = isMobile ? 20 : 24;
 
  return Scaffold(
- backgroundColor: const Color(0xFFF7F9FC),
+ backgroundColor: Colors.white,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,

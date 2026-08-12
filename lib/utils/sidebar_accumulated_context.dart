@@ -33,34 +33,18 @@
 //     a list of seed rows (real) or an empty result (no hallucination).
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/services/execution_service.dart';
+import 'package:ndu_project/services/sidebar_navigation_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 /// Canonical top-to-bottom ordering of the sidebar pages shown in the
 /// Launch/Execution module screenshot.
-const List<String> sidebarCheckpointOrder = [
-  'cost_estimate',
-  'scope_tracking_plan',
-  'change_management',
-  'issue_management',
-  'lessons_learned',
-  'security_management',
-  'startup_planning',
-  'startup_planning_operations',
-  'startup_planning_hypercare',
-  'startup_planning_devops',
-  'startup_planning_closeout',
-  'deliverables_roadmap',
-  'project_plan',
-  'project_plan_level1_schedule',
-  'project_plan_detailed_schedule',
-  'project_plan_condensed_summary',
-  'project_baseline',
-];
+List<String> get sidebarCheckpointOrder => SidebarNavigationService.allItems
+    .map((item) => item.checkpoint)
+    .toList(growable: false);
 
 /// Returns every checkpoint strictly above the given one in the sidebar
 /// ordering. Returns an empty list if the checkpoint is unknown or is the
@@ -109,7 +93,10 @@ String labelForCheckpoint(String checkpoint) {
     case 'project_baseline':
       return 'Project Baseline';
     default:
-      return checkpoint;
+      return SidebarNavigationService.instance
+              .findItemByCheckpoint(checkpoint)
+              ?.label ??
+          checkpoint;
   }
 }
 
@@ -276,8 +263,9 @@ Future<String> _sectionForCheckpoint(
       case 'project_plan_level1_schedule':
       case 'project_plan_detailed_schedule':
       case 'project_plan_condensed_summary':
-        if (data.scheduleActivities.isEmpty &&
-            data.keyMilestones.isEmpty) return '';
+        if (data.scheduleActivities.isEmpty && data.keyMilestones.isEmpty) {
+          return '';
+        }
         final items = <String>[];
         for (final m in data.keyMilestones.take(6)) {
           final name = m.name.trim().isEmpty ? 'Milestone' : m.name.trim();
@@ -294,7 +282,9 @@ Future<String> _sectionForCheckpoint(
 
       case 'project_baseline':
         if (data.scheduleBaselineActivities.isEmpty &&
-            data.scheduleBaselineDate.isEmpty) return '';
+            data.scheduleBaselineDate.isEmpty) {
+          return '';
+        }
         final items = <String>[];
         if (data.scheduleBaselineDate.isNotEmpty) {
           items.add('- Baseline date: ${data.scheduleBaselineDate}');
@@ -623,7 +613,9 @@ SidebarSeedResult seedStartupPlanningSubsection(
       // Pull open risks for the watchlist.
       for (final r in data.frontEndPlanning.riskRegisterItems) {
         if (r.status.toLowerCase() == 'closed' ||
-            r.status.toLowerCase() == 'resolved') continue;
+            r.status.toLowerCase() == 'resolved') {
+          continue;
+        }
         if (r.riskName.trim().isEmpty && r.description.trim().isEmpty) {
           continue;
         }
@@ -701,7 +693,9 @@ SidebarSeedResult seedStartupPlanningSubsection(
               statusLower != 'done' &&
               statusLower != 'verified' &&
               statusLower != 'complete' &&
-              statusLower != 'released') continue;
+              statusLower != 'released') {
+            continue;
+          }
           rows.add(<String, dynamic>{
             'name': d.title,
             'owner': wp.owner,

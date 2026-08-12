@@ -43,6 +43,7 @@ class CrossSectionSyncCard extends StatefulWidget {
     super.key,
     required this.currentSection,
     this.compact = false,
+    this.backgroundColor = const Color(0xFFF8FAFC),
   });
 
   /// Which module screen the card is embedded on. Drives which "Open X"
@@ -52,6 +53,9 @@ class CrossSectionSyncCard extends StatefulWidget {
   /// When true, the card renders in a slimmer single-row layout suitable
   /// for very tall tab content. Default is false (full card).
   final bool compact;
+
+  /// Surface color for expanded, collapsed, and compact presentations.
+  final Color backgroundColor;
 
   @override
   State<CrossSectionSyncCard> createState() => _CrossSectionSyncCardState();
@@ -199,7 +203,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
           margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color: widget.backgroundColor,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
@@ -265,7 +269,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
       margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: widget.backgroundColor,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -547,7 +551,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: widget.backgroundColor,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),

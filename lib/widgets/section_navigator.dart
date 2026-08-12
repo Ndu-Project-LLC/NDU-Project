@@ -60,6 +60,7 @@ class SectionNavigator extends StatelessWidget {
     this.subtitle,
     this.icon,
     this.accentColor,
+    this.backgroundColor = const Color(0xFFF9FAFB),
     this.routeLabel = 'Page Route',
   });
 
@@ -87,6 +88,9 @@ class SectionNavigator extends StatelessWidget {
   /// Override the accent color (defaults to [LightModeColors.accent] gold).
   final Color? accentColor;
 
+  /// Background used by the navigation surface.
+  final Color backgroundColor;
+
   /// Label for the stepper row (default "Page Route").
   final String routeLabel;
 
@@ -97,7 +101,7 @@ class SectionNavigator extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE4E7EC)),
         boxShadow: [

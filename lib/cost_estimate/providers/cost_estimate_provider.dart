@@ -12,6 +12,7 @@ library;
 /// [BuildContext].
 
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
@@ -19,14 +20,36 @@ import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 const String _storageKey = 'ndu_cost_estimate_v1';
-const String currentUserEmail = 'you@ndu.project';
+const String _legacyOwnerEmail = 'you@ndu.project';
+
+/// The authenticated owner's real email address.
+///
+/// Firebase normally exposes it directly on [User.email]. The provider-data
+/// fallback also covers accounts whose email is attached to the identity
+/// provider but has not been copied onto the top-level user record.
+String get currentUserEmail {
+  final user = FirebaseAuth.instance.currentUser;
+  final primaryEmail = user?.email?.trim() ?? '';
+  if (primaryEmail.isNotEmpty) return primaryEmail;
+
+  for (final identity in user?.providerData ?? const <UserInfo>[]) {
+    final providerEmail = identity.email?.trim() ?? '';
+    if (providerEmail.isNotEmpty) return providerEmail;
+  }
+
+  return '';
+}
 
 class CostEstimateProvider extends ChangeNotifier {
   CostEstimate? _estimate;
   RBACRole _currentRole = RBACRole.admin;
   bool _setupComplete = false;
 
-  CostEstimate? get estimate => _estimate;
+  CostEstimate? get estimate {
+    _syncAuthenticatedOwner();
+    return _estimate;
+  }
+
   RBACRole get currentRole => _currentRole;
   bool get setupComplete => _setupComplete;
 
@@ -47,11 +70,68 @@ class CostEstimateProvider extends ChangeNotifier {
         if (state['estimate'] != null) {
           _estimate = _estimateFromJson(
               state['estimate'] as Map<String, dynamic>);
+          _syncAuthenticatedOwner();
         }
         notifyListeners();
       }
     } catch (e) {
       debugPrint('Error loading cost estimate: $e');
+    }
+  }
+
+  /// Replaces the former demo identity with the authenticated owner and
+  /// restores the owner's access grant when loading older saved estimates.
+  void _syncAuthenticatedOwner() {
+    final estimate = _estimate;
+    final ownerEmail = currentUserEmail;
+    if (estimate == null || ownerEmail.isEmpty) return;
+
+    var changed = false;
+    var hasOwnerAccess = false;
+    final normalizedAccess = <AccessGrant>[];
+
+    for (final grant in estimate.access) {
+      final isLegacyOwner = grant.userEmail.trim().toLowerCase() ==
+          _legacyOwnerEmail.toLowerCase();
+      final resolvedEmail = isLegacyOwner ? ownerEmail : grant.userEmail;
+      final resolvedGrantedBy = grant.grantedBy.trim().toLowerCase() ==
+              _legacyOwnerEmail.toLowerCase()
+          ? ownerEmail
+          : grant.grantedBy;
+
+      if (resolvedEmail.toLowerCase() == ownerEmail.toLowerCase()) {
+        hasOwnerAccess = true;
+      }
+      if (isLegacyOwner || resolvedGrantedBy != grant.grantedBy) {
+        changed = true;
+      }
+
+      normalizedAccess.add(AccessGrant(
+        userEmail: resolvedEmail,
+        role: grant.role,
+        grantedBy: resolvedGrantedBy,
+        grantedAt: grant.grantedAt,
+      ));
+    }
+
+    if (!hasOwnerAccess) {
+      changed = true;
+      normalizedAccess.insert(
+        0,
+        AccessGrant(
+          userEmail: ownerEmail,
+          role: RBACRole.admin,
+          grantedBy: ownerEmail,
+          grantedAt: DateTime.now(),
+        ),
+      );
+    }
+
+    if (changed) {
+      _estimate = estimate.copyWith(
+        access: normalizedAccess,
+        updatedAt: DateTime.now(),
+      );
     }
   }
 

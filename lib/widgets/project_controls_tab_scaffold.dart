@@ -98,7 +98,7 @@ class _PcHoverBuilderState extends State<PcHoverBuilder> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Wraps tab content in:
-///   1. A subtle vertical gradient page background.
+///   1. A clean white page background.
 ///   2. A center-constrained column (maxWidth: 1280).
 ///   3. A 700ms fade + slide intro animation.
 ///
@@ -142,13 +142,7 @@ class _PcPageScaffoldState extends State<PcPageScaffold>
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFBFCFD), Color(0xFFF3F5F8)],
-        ),
-      ),
+      color: Colors.white,
       child: SingleChildScrollView(
         padding: widget.padding,
         child: Center(
@@ -1031,6 +1025,7 @@ class PcTabShell extends StatelessWidget {
     this.borderColor = const Color(0xFFF1E8C5),
     this.heroSpacing = 22,
     this.kpiSpacing = 28,
+    this.showHero = true,
   });
 
   final String eyebrow;
@@ -1047,25 +1042,27 @@ class PcTabShell extends StatelessWidget {
   final Color borderColor;
   final double heroSpacing;
   final double kpiSpacing;
+  final bool showHero;
 
   @override
   Widget build(BuildContext context) {
     return PcPageScaffold(
       children: [
-        PcHeroBand(
-          eyebrow: eyebrow,
-          title: title,
-          subtitle: subtitle,
-          icon: icon,
-          accent: accent,
-          accentDeep: accentDeep,
-          accentSoft: accentSoft,
-          tint: tint,
-          borderColor: borderColor,
-          action: action,
-        ),
+        if (showHero)
+          PcHeroBand(
+            eyebrow: eyebrow,
+            title: title,
+            subtitle: subtitle,
+            icon: icon,
+            accent: accent,
+            accentDeep: accentDeep,
+            accentSoft: accentSoft,
+            tint: tint,
+            borderColor: borderColor,
+            action: action,
+          ),
         if (kpis.isNotEmpty) ...[
-          SizedBox(height: heroSpacing),
+          if (showHero) SizedBox(height: heroSpacing),
           PcKpiStrip(kpis: kpis),
         ],
         for (final s in sections) ...[

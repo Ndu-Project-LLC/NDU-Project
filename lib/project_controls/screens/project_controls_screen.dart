@@ -24,6 +24,7 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/project_intelligence_service.dart';
 import 'package:ndu_project/widgets/shimmer_loading.dart';
+import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:go_router/go_router.dart';
 
 class ProjectControlsScreen extends StatefulWidget {
@@ -166,6 +167,10 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
                 ),
+              ),
+              // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
+              const CrossSectionSyncCard(
+                currentSection: CrossSection.projectControls,
               ),
               // Tab content
               Expanded(

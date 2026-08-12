@@ -36,6 +36,7 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:go_router/go_router.dart';
 
 class WBSModuleScreen extends StatefulWidget {
@@ -209,6 +210,10 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
                 ),
               ),
               const SizedBox(height: 4),
+              // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
+              const CrossSectionSyncCard(
+                currentSection: CrossSection.wbs,
+              ),
               // Tab content
               Expanded(
                 child: TabBarView(

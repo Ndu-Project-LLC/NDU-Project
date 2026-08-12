@@ -135,9 +135,20 @@ enum ScheduleStatus {
 enum TShirtSize { xs, s, m, l, xl }
 
 /// A single schedule activity (tree node).
+///
+/// Cross-section linkage fields:
+/// - [wbsNodeId] — FK to `WBSNode.id` (already existed; now serialized
+///   and surfaced in the UI).
+/// - [wbsCode] — denormalized `WBSNode.code` (e.g. "1.2.3") for display
+///   without needing to look up the WBS tree.
+/// - [controlAccountId] — FK to `WorkPackageControl.id` so a schedule
+///   activity can be tied to the Project Controls control account that
+///   tracks its EVM metrics (CPI / SPI / EAC / actuals).
 class ScheduleActivity {
   final String id;
   final String? wbsNodeId;
+  final String? wbsCode;
+  final String? controlAccountId;
   final String? agileTaskId;
   final String? costLineId;
   final String? sprintId;
@@ -176,6 +187,8 @@ class ScheduleActivity {
   const ScheduleActivity({
     required this.id,
     this.wbsNodeId,
+    this.wbsCode,
+    this.controlAccountId,
     this.agileTaskId,
     this.costLineId,
     this.sprintId,
@@ -212,9 +225,18 @@ class ScheduleActivity {
     required this.children,
   });
 
+  /// True if this activity has been linked to either a WBS node or a
+  /// Project Controls work package (control account).
+  bool get hasCrossSectionLink =>
+      (wbsNodeId != null && wbsNodeId!.isNotEmpty) ||
+      (controlAccountId != null && controlAccountId!.isNotEmpty);
+
   Map<String, dynamic> toJson() => {
         'id': id,
         if (wbsNodeId != null) 'wbsNodeId': wbsNodeId,
+        if (wbsCode != null && wbsCode!.isNotEmpty) 'wbsCode': wbsCode,
+        if (controlAccountId != null && controlAccountId!.isNotEmpty)
+          'controlAccountId': controlAccountId,
         if (agileTaskId != null) 'agileTaskId': agileTaskId,
         if (costLineId != null) 'costLineId': costLineId,
         if (sprintId != null) 'sprintId': sprintId,
@@ -256,6 +278,8 @@ class ScheduleActivity {
     return ScheduleActivity(
       id: json['id'] as String,
       wbsNodeId: json['wbsNodeId'] as String?,
+      wbsCode: json['wbsCode'] as String?,
+      controlAccountId: json['controlAccountId'] as String?,
       agileTaskId: json['agileTaskId'] as String?,
       costLineId: json['costLineId'] as String?,
       sprintId: json['sprintId'] as String?,
@@ -313,6 +337,8 @@ class ScheduleActivity {
   ScheduleActivity copyWith({
     String? id,
     String? wbsNodeId,
+    String? wbsCode,
+    String? controlAccountId,
     String? agileTaskId,
     String? costLineId,
     String? sprintId,
@@ -351,6 +377,8 @@ class ScheduleActivity {
     return ScheduleActivity(
       id: id ?? this.id,
       wbsNodeId: wbsNodeId ?? this.wbsNodeId,
+      wbsCode: wbsCode ?? this.wbsCode,
+      controlAccountId: controlAccountId ?? this.controlAccountId,
       agileTaskId: agileTaskId ?? this.agileTaskId,
       costLineId: costLineId ?? this.costLineId,
       sprintId: sprintId ?? this.sprintId,

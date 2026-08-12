@@ -217,6 +217,10 @@ class ScheduleProvider extends ChangeNotifier {
                 isCriticalPath: patch.isCriticalPath,
                 isLongLead: patch.isLongLead,
                 dependencies: patch.dependencies,
+                // Cross-section linkage (WBS ↔ Schedule ↔ Project Controls)
+                wbsNodeId: patch.wbsNodeId,
+                wbsCode: patch.wbsCode,
+                controlAccountId: patch.controlAccountId,
                 estimatedHours: patch.estimatedHours,
               )),
     );

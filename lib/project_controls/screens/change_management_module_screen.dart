@@ -58,6 +58,9 @@ class _ChangeManagementModuleScreenState
   bool _autoPopulated = false;
   bool _isAutoPopulating = false;
   String? _carriedContext;
+  // Per Task 21: Change Management Navigation header (tab strip + page route
+  // stepper) is collapsible to free up vertical space for tab content.
+  bool _navCollapsed = false;
 
   @override
   void initState() {
@@ -198,29 +201,68 @@ class _ChangeManagementModuleScreenState
               // ── World-class Section Navigator ─────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: SectionNavigator(
-                  title: 'Change Management Navigation',
-                  subtitle: 'Navigate between change management sections',
-                  icon: Icons.sync_alt,
-                  tabs: const [
-                    SectionTab(
-                        icon: Icons.dashboard_outlined, label: 'Dashboard'),
-                    SectionTab(icon: Icons.list_alt, label: 'Change Register'),
-                    SectionTab(
-                        icon: Icons.assessment_outlined,
-                        label: 'Impact & Approval Summary'),
-                    SectionTab(icon: Icons.history, label: 'Audit Trail'),
-                    SectionTab(
-                        icon: Icons.add_circle_outline, label: 'Create CR'),
-                    SectionTab(icon: Icons.tune, label: 'Impact Detail'),
-                    SectionTab(
-                        icon: Icons.account_tree_outlined, label: 'Workflow'),
-                    SectionTab(
-                        icon: Icons.build_circle_outlined,
-                        label: 'Implementation'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: () => setState(() =>
+                              _navCollapsed = !_navCollapsed),
+                          icon: Icon(
+                            _navCollapsed
+                                ? Icons.unfold_more
+                                : Icons.unfold_less,
+                            size: 14,
+                          ),
+                          label: Text(
+                            _navCollapsed ? 'Expand nav' : 'Collapse nav',
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            foregroundColor: const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (!_navCollapsed)
+                      SectionNavigator(
+                        title: 'Change Management Navigation',
+                        subtitle:
+                            'Navigate between change management sections',
+                        icon: Icons.sync_alt,
+                        tabs: const [
+                          SectionTab(
+                              icon: Icons.dashboard_outlined,
+                              label: 'Dashboard'),
+                          SectionTab(
+                              icon: Icons.list_alt, label: 'Change Register'),
+                          SectionTab(
+                              icon: Icons.assessment_outlined,
+                              label: 'Impact & Approval Summary'),
+                          SectionTab(
+                              icon: Icons.history, label: 'Audit Trail'),
+                          SectionTab(
+                              icon: Icons.add_circle_outline,
+                              label: 'Create CR'),
+                          SectionTab(
+                              icon: Icons.tune, label: 'Impact Detail'),
+                          SectionTab(
+                              icon: Icons.account_tree_outlined,
+                              label: 'Workflow'),
+                          SectionTab(
+                              icon: Icons.build_circle_outlined,
+                              label: 'Implementation'),
+                        ],
+                        controller: _tabController,
+                        onChanged: (index) => setState(() {}),
+                      ),
                   ],
-                  controller: _tabController,
-                  onChanged: (index) => setState(() {}),
                 ),
               ),
               Expanded(

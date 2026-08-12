@@ -62,6 +62,11 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
   bool _syncing = false;
   LinkageReport? _lastReport;
   DateTime? _lastSyncedAt;
+  // Per Tasks 9 + 13: card is collapsible to free up vertical space on the
+  // WBS and Schedule module screens. Defaults to expanded so first-time
+  // users still see the sync status; once they collapse it, the choice
+  // persists for the lifetime of the widget instance.
+  bool _collapsed = false;
 
   Future<void> _runSync() async {
     setState(() => _syncing = true);
@@ -133,7 +138,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
         if (widget.compact) {
           return _buildCompact(report, statusColor, statusLabel);
         }
-        return _buildFull(
+        final fullCard = _buildFull(
           report,
           coveragePct,
           statusColor,
@@ -141,6 +146,88 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
           wbsP,
           schedP,
           pcP,
+        );
+
+        // Per Tasks 9 + 13: wrap the full card in a collapsible container.
+        // When collapsed, only a slim header bar with the status pill and
+        // an expand toggle is shown — frees up vertical space for the main
+        // WBS / Schedule content.
+        if (!_collapsed) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () => setState(() => _collapsed = true),
+                    icon: const Icon(Icons.unfold_less, size: 14),
+                    label: const Text('Collapse',
+                        style: TextStyle(fontSize: 11)),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      foregroundColor: const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+              fullCard,
+            ],
+          );
+        }
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.hub, size: 14, color: Color(0xFF4F46E5)),
+              const SizedBox(width: 8),
+              const Text(
+                'Cross-Section Sync',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: statusColor,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () => setState(() => _collapsed = false),
+                icon: const Icon(Icons.unfold_more, size: 14),
+                label: const Text('Expand',
+                    style: TextStyle(fontSize: 11)),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

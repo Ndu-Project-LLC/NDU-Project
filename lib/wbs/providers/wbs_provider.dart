@@ -250,6 +250,18 @@ class WBSProvider extends ChangeNotifier {
       costLineIds: json['costLineIds'] != null
           ? (json['costLineIds'] as List<dynamic>).cast<String>()
           : null,
+      // Cross-section linkage (WBS ↔ PC ↔ Schedule)
+      controlAccountId: json['controlAccountId'] as String?,
+      scheduleActivityId: json['scheduleActivityId'] as String?,
+      percentComplete: (json['percentComplete'] as num?)?.toDouble(),
+      actualCost: (json['actualCost'] as num?)?.toDouble(),
+      plannedStart: json['plannedStart'] != null
+          ? DateTime.tryParse(json['plannedStart'] as String)
+          : null,
+      plannedFinish: json['plannedFinish'] != null
+          ? DateTime.tryParse(json['plannedFinish'] as String)
+          : null,
+      scheduleStatus: json['scheduleStatus'] as String?,
       children: (json['children'] as List<dynamic>? ?? [])
           .map((c) => _nodeFromJson(c as Map<String, dynamic>))
           .toList(),
@@ -281,6 +293,20 @@ class WBSProvider extends ChangeNotifier {
         if (node.methodology != null) 'methodology': node.methodology,
         if (node.costLineIds != null && node.costLineIds!.isNotEmpty)
           'costLineIds': node.costLineIds,
+        // Cross-section linkage (WBS ↔ PC ↔ Schedule)
+        if (node.controlAccountId != null && node.controlAccountId!.isNotEmpty)
+          'controlAccountId': node.controlAccountId,
+        if (node.scheduleActivityId != null &&
+            node.scheduleActivityId!.isNotEmpty)
+          'scheduleActivityId': node.scheduleActivityId,
+        if (node.percentComplete != null) 'percentComplete': node.percentComplete,
+        if (node.actualCost != null) 'actualCost': node.actualCost,
+        if (node.plannedStart != null)
+          'plannedStart': node.plannedStart!.toIso8601String(),
+        if (node.plannedFinish != null)
+          'plannedFinish': node.plannedFinish!.toIso8601String(),
+        if (node.scheduleStatus != null && node.scheduleStatus!.isNotEmpty)
+          'scheduleStatus': node.scheduleStatus,
         'children': node.children.map(_nodeToJson).toList(),
       };
 

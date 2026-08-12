@@ -26,6 +26,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class TeamTrainingAndBuildingScreen extends StatefulWidget {
  const TeamTrainingAndBuildingScreen({super.key});
 
@@ -123,7 +124,7 @@ class _TeamTrainingAndBuildingScreenState
  // --- Mobile layout ---
  if (isMobile) {
  return Scaffold(
- backgroundColor: Colors.grey[50],
+ backgroundColor: Colors.white,
  drawer: Drawer(
  width: sidebarWidth,
  child: const SafeArea(
@@ -138,7 +139,12 @@ class _TeamTrainingAndBuildingScreenState
  child: Column(
  children: [
  header,
- Expanded(child: _buildMain(context)),
+ Expanded(
+ child: ColoredBox(
+ color: Colors.white,
+ child: _buildMain(context),
+ ),
+ ),
  ],
  ),
  ),
@@ -147,13 +153,9 @@ class _TeamTrainingAndBuildingScreenState
 
  // --- Desktop layout ---
  return Scaffold(
- backgroundColor: Colors.grey[50],
+ backgroundColor: Colors.white,
  body: SafeArea(
  top: true,
- child: Column(
- children: [
- header,
- Expanded(
  child: Row(
  children: [
  DraggableSidebar(
@@ -161,8 +163,15 @@ class _TeamTrainingAndBuildingScreenState
  child: const InitiationLikeSidebar(
  activeItemLabel: 'Team Training and Team Building'),
  ),
+ Expanded(
+ child: ColoredBox(
+ color: Colors.white,
+ child: Column(
+ children: [
+ header,
  Expanded(child: _buildMain(context)),
  ],
+ ),
  ),
  ),
  ],
@@ -2085,6 +2094,7 @@ $notesText
  .projectData
  .trainingActivities,
  )..removeWhere((a) => a.id == activity.id);
+ showDeleteSuccessSnackBar(context, itemLabel: 'Activity');
  Navigator.pop(dialogContext);
  await _saveActivities(rootContext, updated);
  },

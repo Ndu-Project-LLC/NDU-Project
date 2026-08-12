@@ -333,6 +333,18 @@ enum AISource {
 enum AIConfidence { low, med, high }
 
 /// A WBS node — supports levels 0 through maxDepth (frequently 5).
+///
+/// Cross-section linkage fields (kept optional so legacy nodes without
+/// linked control accounts / schedule activities still deserialize cleanly):
+/// - [controlAccountId] — FK to `WorkPackageControl.id` (Project Controls)
+/// - [scheduleActivityId] — FK to `ScheduleActivity.id` (Schedule module)
+/// - [percentComplete] / [actualCost] — propagated FROM Project Controls
+///   `WorkPackageControl` (PC → WBS reverse flow)
+/// - [plannedStart] / [plannedFinish] — propagated FROM the Schedule
+///   module's `ScheduleActivity.startDate` / `.endDate`
+/// - [scheduleStatus] — propagated from `ScheduleActivity.status` so the WBS
+///   tree can surface "In Progress" / "Completed" / "Delayed" badges without
+///   the user needing to open the Schedule module.
 class WBSNode {
   final String id;
   final WBSLevel level;
@@ -347,6 +359,14 @@ class WBSNode {
   final String? aiReference;
   final String? methodology; // 'waterfall', 'agile', or null (inherits parent)
   final List<String>? costLineIds;
+  // ─── Cross-section linkage (WBS ↔ Project Controls ↔ Schedule) ────────
+  final String? controlAccountId;
+  final String? scheduleActivityId;
+  final double? percentComplete;
+  final double? actualCost;
+  final DateTime? plannedStart;
+  final DateTime? plannedFinish;
+  final String? scheduleStatus;
   final List<WBSNode> children;
 
   const WBSNode({
@@ -363,8 +383,21 @@ class WBSNode {
     this.aiReference,
     this.methodology,
     this.costLineIds,
+    this.controlAccountId,
+    this.scheduleActivityId,
+    this.percentComplete,
+    this.actualCost,
+    this.plannedStart,
+    this.plannedFinish,
+    this.scheduleStatus,
     required this.children,
   });
+
+  /// True if this node has been linked to either a Project Controls work
+  /// package or a Schedule activity.
+  bool get hasCrossSectionLink =>
+      (controlAccountId != null && controlAccountId!.isNotEmpty) ||
+      (scheduleActivityId != null && scheduleActivityId!.isNotEmpty);
 
   WBSNode copyWith({
     String? id,
@@ -380,6 +413,13 @@ class WBSNode {
     String? aiReference,
     String? methodology,
     List<String>? costLineIds,
+    String? controlAccountId,
+    String? scheduleActivityId,
+    double? percentComplete,
+    double? actualCost,
+    DateTime? plannedStart,
+    DateTime? plannedFinish,
+    String? scheduleStatus,
     List<WBSNode>? children,
   }) {
     return WBSNode(
@@ -396,7 +436,42 @@ class WBSNode {
       aiReference: aiReference ?? this.aiReference,
       methodology: methodology ?? this.methodology,
       costLineIds: costLineIds ?? this.costLineIds,
+      controlAccountId: controlAccountId ?? this.controlAccountId,
+      scheduleActivityId: scheduleActivityId ?? this.scheduleActivityId,
+      percentComplete: percentComplete ?? this.percentComplete,
+      actualCost: actualCost ?? this.actualCost,
+      plannedStart: plannedStart ?? this.plannedStart,
+      plannedFinish: plannedFinish ?? this.plannedFinish,
+      scheduleStatus: scheduleStatus ?? this.scheduleStatus,
       children: children ?? this.children,
+    );
+  }
+
+  /// Returns a copy with the cross-section linkage fields explicitly cleared
+  /// (set to null). Used by `WbsLinkageService.unlinkNode`.
+  WBSNode clearCrossSectionLinks() {
+    return WBSNode(
+      id: id,
+      level: level,
+      code: code,
+      name: name,
+      description: description,
+      estimationMethod: estimationMethod,
+      isWorkPackage: isWorkPackage,
+      aiGenerated: aiGenerated,
+      aiSource: aiSource,
+      aiConfidence: aiConfidence,
+      aiReference: aiReference,
+      methodology: methodology,
+      costLineIds: costLineIds,
+      controlAccountId: null,
+      scheduleActivityId: null,
+      percentComplete: null,
+      actualCost: null,
+      plannedStart: null,
+      plannedFinish: null,
+      scheduleStatus: null,
+      children: children,
     );
   }
 }

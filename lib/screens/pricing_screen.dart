@@ -10,7 +10,6 @@ import 'package:ndu_project/services/subscription_service.dart';
 import 'package:ndu_project/services/subscription_pricing_service.dart';
 import 'package:ndu_project/services/user_preferences_service.dart';
 import 'package:ndu_project/widgets/payment_dialog.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 const Color _pageBackground = Color(0xFFFFFFFF);
 const Color _primaryText = Color(0xFF0F0F0F);
@@ -244,9 +243,7 @@ class _PricingScreenState extends State<PricingScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildTopNav(context, isDesktop: isDesktop),
                       if (_wasRedirectedForSubscription) ...[
-                        const SizedBox(height: 16),
                         _buildSubscriptionRedirectBanner(),
                       ],
                       const SizedBox(height: 24),
@@ -358,134 +355,6 @@ class _PricingScreenState extends State<PricingScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildTopNav(BuildContext context, {required bool isDesktop}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF1E6BE)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-            spreadRadius: -16,
-          ),
-        ],
-      ),
-      child: Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        runAlignment: WrapAlignment.center,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 16,
-        runSpacing: 16,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFFC812), Color(0xFFF4B400)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.auto_graph_rounded,
-                    color: Colors.black, size: 24),
-              ),
-              const SizedBox(width: 12),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'NDU Project',
-                    style: TextStyle(
-                      color: _primaryText,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
-                    ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Project delivery, planning, governance, and AI in one workspace',
-                    style: TextStyle(
-                      color: _secondaryText,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              if (Navigator.of(context).canPop())
-                OutlinedButton.icon(
-                  onPressed: () => Navigator.of(context).maybePop(),
-                  icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                  label: const Text('Back'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _secondaryText,
-                    side: const BorderSide(color: Color(0xFFE5E7EB)),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                ),
-              TextButton(
-                onPressed: () => context.go('/'),
-                child: const Text(
-                  'Home',
-                  style: TextStyle(
-                    color: _secondaryText,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () => context.go('/${AppRoutes.signIn}'),
-                child: const Text(
-                  'Sign In',
-                  style: TextStyle(
-                    color: _secondaryText,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => _launchExternalLink('https://calendly.com'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF151515),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                child: Text(
-                  isDesktop ? 'Book a Demo' : 'Demo',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -1047,11 +916,6 @@ class _PricingScreenState extends State<PricingScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _launchExternalLink(String url) async {
-    final uri = Uri.parse(url);
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Widget _buildPlansGrid(bool isDesktop, bool isTablet) {

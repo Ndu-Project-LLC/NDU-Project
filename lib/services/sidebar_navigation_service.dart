@@ -67,6 +67,21 @@ class SidebarNavigationService {
     return basicPlanLockedLabels.contains(item.label);
   }
 
+  /// Checkpoints that are intentionally skipped in the linear project
+  /// navigation flow (Next/Back buttons). Users can still open them
+  /// directly from the sidebar, but the wizard-style navigation will
+  /// route around them.
+  static const Set<String> _skippedCheckpoints = {
+    // Training & Team Building was rolled into the Execution-phase Team
+    // Management section. Skipping it here so the Staffing Plan "Next"
+    // button jumps straight to Stakeholder Management.
+    'team_training',
+  };
+
+  bool isItemSkipped(SidebarItem item) {
+    return _skippedCheckpoints.contains(item.checkpoint);
+  }
+
   /// Get the next accessible item in the sidebar order
   SidebarItem? getNextAccessibleItem(
       String? currentCheckpoint, bool isBasicPlan) {
@@ -76,14 +91,32 @@ class SidebarNavigationService {
         .indexWhere((item) => item.checkpoint == currentCheckpoint);
     if (currentIndex == -1) return null;
 
-    // Look ahead for the first non-locked item
+    // Look ahead for the first non-locked, non-skipped item
     for (int i = currentIndex + 1; i < _sidebarOrder.length; i++) {
       final item = _sidebarOrder[i];
+      if (isItemSkipped(item)) continue;
       if (!isItemLocked(item, isBasicPlan)) {
         return item;
       }
     }
     return null; // Reached end or all remaining are locked
+  }
+
+  /// Get the previous accessible item in the sidebar order, skipping
+  /// any items in [_skippedCheckpoints].
+  SidebarItem? getPreviousAccessibleItem(String? currentCheckpoint) {
+    if (currentCheckpoint == null || currentCheckpoint.isEmpty) return null;
+
+    int currentIndex = _sidebarOrder
+        .indexWhere((item) => item.checkpoint == currentCheckpoint);
+    if (currentIndex <= 0) return null;
+
+    for (int i = currentIndex - 1; i >= 0; i--) {
+      final item = _sidebarOrder[i];
+      if (isItemSkipped(item)) continue;
+      return item;
+    }
+    return null;
   }
 
   /// Flat, ordered list of all sidebar items with their checkpoint names.
@@ -133,9 +166,9 @@ class SidebarNavigationService {
     SidebarItem(
         checkpoint: 'organization_roles_responsibilities',
         label: 'Roles & Responsibilities'),
-    SidebarItem(checkpoint: 'organization_raci_matrix', label: 'RACI Matrix'),
     SidebarItem(
         checkpoint: 'organization_staffing_plan', label: 'Staffing Plan'),
+    SidebarItem(checkpoint: 'organization_raci_matrix', label: 'RACI Matrix'),
     SidebarItem(checkpoint: 'team_training', label: 'Training & Team Building'),
     SidebarItem(
         checkpoint: 'stakeholder_management', label: 'Stakeholder Management'),

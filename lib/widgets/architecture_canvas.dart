@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/theme.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 // ─── Data Models ────────────────────────────────────────────────────────────
@@ -244,6 +245,7 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
     widget.onNodesChanged(newNodes);
     widget.onEdgesChanged(newEdges);
     setState(() => _selectedNodeId = null);
+      showDeleteSuccessSnackBar(context, itemLabel: 'Selected Node');
   }
 
   void _duplicateSelectedNode() {

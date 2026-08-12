@@ -24,6 +24,9 @@ import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/project_intelligence_service.dart';
 import 'package:ndu_project/widgets/shimmer_loading.dart';
+import 'package:ndu_project/widgets/cross_section_sync_card.dart';
+import 'package:ndu_project/schedule/providers/schedule_provider.dart';
+import 'package:ndu_project/schedule/models/schedule_models.dart' as sched;
 import 'package:go_router/go_router.dart';
 
 class ProjectControlsScreen extends StatefulWidget {
@@ -133,6 +136,7 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
             appBarTitle: 'Project Controls',
             breadcrumbPhase: 'Execution Phase',
             breadcrumbTitle: 'Project Controls',
+            backgroundColor: Colors.white,
             body: PageShimmerSkeleton(),
           );
         }
@@ -142,6 +146,7 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
           appBarTitle: 'Project Controls',
           breadcrumbPhase: 'Execution Phase',
           breadcrumbTitle: 'Project Controls',
+          backgroundColor: Colors.white,
           body: Column(
             children: [
               // ── World-class Section Navigator ─────────────────────────
@@ -151,6 +156,7 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                   title: 'Project Controls Navigation',
                   subtitle: 'Navigate between project control sections',
                   icon: Icons.dashboard_outlined,
+                  backgroundColor: Colors.white,
                   tabs: const [
                     SectionTab(icon: Icons.dashboard_outlined, label: 'Dashboard'),
                     SectionTab(icon: Icons.account_tree_outlined, label: 'Scope Tracking'),
@@ -167,13 +173,18 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                   onChanged: (index) => setState(() {}),
                 ),
               ),
+              // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
+              const CrossSectionSyncCard(
+                currentSection: CrossSection.projectControls,
+                backgroundColor: Colors.white,
+              ),
               // Tab content
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
                   children: [
                     _DashboardTab(state: state, aiContext: aiContext, aiMilestones: aiMilestones, aiCostForecast: aiCostForecast, changeRecommendations: changeRecommendations),
-                    _ScopeTrackingTab(state: state, aiMilestones: aiMilestones, aiContext: aiContext),
+                    _ScopeTrackingTab(state: state, aiMilestones: aiMilestones, aiContext: aiContext, provider: provider),
                     _CostControlTab(state: state, aiCostForecast: aiCostForecast, aiContext: aiContext, projectData: projectData),
                     _ChangeMgmtTab(state: state, provider: provider, changeRecommendations: changeRecommendations, aiContext: aiContext),
                     _ForecastingTab(state: state),
@@ -216,8 +227,24 @@ class _DashboardTab extends StatelessWidget {
     final currencySymbol = UserPreferencesService.currencySymbolSync;
     final cpiColor = _cpiColor(state.portfolioCPI);
     final spiColor = _spiColor(state.portfolioSPI);
+    final workPackages = state.workPackages;
+    final isAgile = state.deliveryModel == DeliveryModel.agile;
+    final completeCount = workPackages
+        .where((workPackage) => (workPackage.percentComplete ?? 0) >= 100)
+        .length;
+    final inProgressCount = workPackages.where((workPackage) {
+      final progress = workPackage.percentComplete ?? 0;
+      return progress > 0 && progress < 100;
+    }).length;
+    final notStartedCount = workPackages
+        .where((workPackage) => (workPackage.percentComplete ?? 0) == 0)
+        .length;
+    final actualCostPercent = state.totalOriginalBudget <= 0
+        ? 0.0
+        : (state.totalActualCost / state.totalOriginalBudget) * 100;
 
     return PcTabShell(
+      showHero: false,
       eyebrow: 'Project Controls Dashboard',
       title: 'Dashboard',
       subtitle:
@@ -241,8 +268,7 @@ class _DashboardTab extends StatelessWidget {
           label: 'Actual Cost',
           value:
               '$currencySymbol${(state.totalActualCost / 1000000).toStringAsFixed(1)}M',
-          sub:
-              '${((state.totalActualCost / state.totalOriginalBudget) * 100).toStringAsFixed(1)}% of budget',
+          sub: '${actualCostPercent.toStringAsFixed(1)}% of budget',
           icon: Icons.payments_rounded,
           accent: PcPalette.amber,
         ),
@@ -267,6 +293,34 @@ class _DashboardTab extends StatelessWidget {
                   : 'Behind schedule',
           icon: Icons.schedule_rounded,
           accent: spiColor,
+        ),
+        PcKpiSpec(
+          label: isAgile ? 'Epics' : 'Work Packages',
+          value: '${workPackages.length}',
+          sub: isAgile ? 'Agile epics tracked' : 'Work packages tracked',
+          icon: Icons.account_tree_rounded,
+          accent: PcPalette.indigo,
+        ),
+        PcKpiSpec(
+          label: 'Completed',
+          value: '$completeCount',
+          sub: completeCount == 0 ? 'None completed' : 'At 100% complete',
+          icon: Icons.task_alt_rounded,
+          accent: PcPalette.emerald,
+        ),
+        PcKpiSpec(
+          label: 'In Progress',
+          value: '$inProgressCount',
+          sub: 'Active work',
+          icon: Icons.play_circle_outline_rounded,
+          accent: PcPalette.amber,
+        ),
+        PcKpiSpec(
+          label: 'Not Started',
+          value: '$notStartedCount',
+          sub: notStartedCount == 0 ? 'All started' : 'Awaiting kickoff',
+          icon: Icons.schedule_rounded,
+          accent: PcPalette.inkMuted,
         ),
       ],
       sections: [
@@ -1017,22 +1071,68 @@ class _ScopeTrackingTab extends StatelessWidget {
   final ProjectControlsState state;
   final List<String> aiMilestones;
   final String aiContext;
+  final ProjectControlsProvider provider;
   const _ScopeTrackingTab({
     required this.state,
     required this.aiMilestones,
     required this.aiContext,
+    required this.provider,
   });
+
+  /// Per Task 19: Pull schedule activities from ScheduleProvider and feed
+  /// them into Scope Tracking via [ProjectControlsProvider.syncFromScheduleActivities].
+  void _syncFromSchedule(BuildContext context) {
+    final scheduleProvider = context.read<ScheduleProvider>();
+    final schedule = scheduleProvider.schedule;
+    if (schedule == null || schedule.activities.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'No schedule activities found. Build a schedule first, then sync.'),
+        ),
+      );
+      return;
+    }
+    // Flatten the activity tree (activities can have nested children).
+    final flattened = <sched.ScheduleActivity>[];
+    void walk(sched.ScheduleActivity a) {
+      flattened.add(a);
+      for (final c in a.children) {
+        walk(c);
+      }
+    }
+    for (final a in schedule.activities) {
+      walk(a);
+    }
+    final shims = flattened
+        .map((a) => ScheduleActivityShim(
+              id: a.id,
+              name: a.name,
+              description: a.description,
+              wbsCode: a.wbsCode,
+              plannedStart: a.startDate,
+              plannedFinish: a.endDate,
+              actualStart: null,
+              actualFinish: null,
+              percentComplete: a.progress,
+              isCriticalPath: a.isCriticalPath,
+            ))
+        .toList();
+    provider.syncFromScheduleActivities(shims);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            'Synced ${shims.length} schedule activities into Scope Tracking.'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF10B981),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final wps = state.workPackages;
     final isAgile = state.deliveryModel == DeliveryModel.agile;
-    final completeCount = wps.where((w) => (w.percentComplete ?? 0) >= 100).length;
-    final inProgressCount = wps.where((w) {
-      final p = w.percentComplete ?? 0;
-      return p > 0 && p < 100;
-    }).length;
-    final notStartedCount = wps.where((w) => (w.percentComplete ?? 0) == 0).length;
 
     return PcTabShell(
       eyebrow: 'Scope Tracking',
@@ -1046,38 +1146,13 @@ class _ScopeTrackingTab extends StatelessWidget {
       accentSoft: const Color(0xFFE0E7FF),
       tint: const Color(0xFFEEF2FF),
       borderColor: const Color(0xFFC7D2FE),
-      kpis: [
-        PcKpiSpec(
-          label: isAgile ? 'Epics' : 'Work Packages',
-          value: '${wps.length}',
-          sub: isAgile ? 'Agile epics tracked' : 'Work packages tracked',
-          icon: Icons.account_tree_rounded,
-          accent: PcPalette.indigo,
-        ),
-        PcKpiSpec(
-          label: 'Completed',
-          value: '$completeCount',
-          sub: completeCount == 0
-              ? 'None completed'
-              : 'At 100% complete',
-          icon: Icons.task_alt_rounded,
-          accent: PcPalette.emerald,
-        ),
-        PcKpiSpec(
-          label: 'In Progress',
-          value: '$inProgressCount',
-          sub: 'Active work',
-          icon: Icons.play_circle_outline_rounded,
-          accent: PcPalette.amber,
-        ),
-        PcKpiSpec(
-          label: 'Not Started',
-          value: '$notStartedCount',
-          sub: notStartedCount == 0 ? 'All started' : 'Awaiting kickoff',
-          icon: Icons.schedule_rounded,
-          accent: PcPalette.inkMuted,
-        ),
-      ],
+      // Per Task 19: 'Sync from Schedule' CTA on the hero band feeds
+      // Schedule activities into Scope Tracking.
+      action: PcHeroAction(
+        label: 'Sync from Schedule',
+        icon: Icons.sync,
+        onTap: () => _syncFromSchedule(context),
+      ),
       sections: [
         if (aiMilestones.isNotEmpty) _buildAiMilestonesCard(context, aiMilestones),
         PcSectionCard(
@@ -1643,11 +1718,11 @@ class _CostControlTab extends StatelessWidget {
       subtitle:
           'Real-time budget burn, CPI/SPI health, and variance analytics across work packages.',
       icon: Icons.attach_money_rounded,
-      accent: const Color(0xFF10B981),
-      accentDeep: const Color(0xFF059669),
-      accentSoft: const Color(0xFFD1FAE5),
-      tint: const Color(0xFFECFDF5),
-      borderColor: const Color(0xFFA7F3D0),
+      accent: PcPalette.gold,
+      accentDeep: PcPalette.goldDeep,
+      accentSoft: PcPalette.goldSoft,
+      tint: const Color(0xFFFFFBEB),
+      borderColor: const Color(0xFFFDE68A),
       kpis: [
         PcKpiSpec(
           label: 'Total Budget',

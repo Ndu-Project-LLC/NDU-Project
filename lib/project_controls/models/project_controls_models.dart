@@ -290,9 +290,22 @@ extension ReportTypeLabel on ReportType {
 
 // ─── Work Package Control (Waterfall) / Epic Control (Agile) ──────────────
 
+/// A Project Controls work package (also called a "control account" when it
+/// sits at the appropriate WBS level).
+///
+/// Cross-section linkage fields (kept optional so legacy WPCs without
+/// linked WBS / Schedule entries still deserialize cleanly):
+/// - [wbsNodeId] — FK to `WBSNode.id` (canonical, ID-based link).
+///   [wbsCode] is retained as a denormalized display string for legacy
+///   data seeded from Cost Estimate lines.
+/// - [scheduleActivityId] — FK to `ScheduleActivity.id` so the WPC can
+///   pull planned/actual dates and critical-path / float information
+///   from the Schedule module.
 class WorkPackageControl {
   final String id;
   final String wbsCode;
+  final String? wbsNodeId;
+  final String? scheduleActivityId;
   final String name;
   final String scopeDescription;
   final List<String> deliverables;
@@ -336,6 +349,8 @@ class WorkPackageControl {
   const WorkPackageControl({
     required this.id,
     required this.wbsCode,
+    this.wbsNodeId,
+    this.scheduleActivityId,
     required this.name,
     required this.scopeDescription,
     required this.deliverables,
@@ -383,6 +398,8 @@ class WorkPackageControl {
   WorkPackageControl copyWith({
     String? id,
     String? wbsCode,
+    String? wbsNodeId,
+    String? scheduleActivityId,
     String? name,
     String? scopeDescription,
     List<String>? deliverables,
@@ -418,6 +435,8 @@ class WorkPackageControl {
     return WorkPackageControl(
       id: id ?? this.id,
       wbsCode: wbsCode ?? this.wbsCode,
+      wbsNodeId: wbsNodeId ?? this.wbsNodeId,
+      scheduleActivityId: scheduleActivityId ?? this.scheduleActivityId,
       name: name ?? this.name,
       scopeDescription: scopeDescription ?? this.scopeDescription,
       deliverables: deliverables ?? this.deliverables,
@@ -684,8 +703,16 @@ class BaselineSnapshot {
 
 // ─── Schedule Variance ────────────────────────────────────────────────────
 
+/// Per-work-package schedule variance record.
+///
+/// Cross-section linkage:
+/// - [workPackageId] — FK to `WorkPackageControl.id` (PC-internal).
+/// - [scheduleActivityId] — FK to the Schedule module's
+///   `ScheduleActivity.id`. When present, the variance can be traced back
+///   to the originating schedule activity for root-cause analysis.
 class ScheduleVariance {
   final String workPackageId;
+  final String? scheduleActivityId;
   final DateTime? plannedStart;
   final DateTime? actualStart;
   final DateTime? plannedFinish;
@@ -696,6 +723,7 @@ class ScheduleVariance {
 
   const ScheduleVariance({
     required this.workPackageId,
+    this.scheduleActivityId,
     this.plannedStart,
     this.actualStart,
     this.plannedFinish,
@@ -722,6 +750,7 @@ class ScheduleVariance {
 
   ScheduleVariance copyWith({
     String? workPackageId,
+    String? scheduleActivityId,
     DateTime? plannedStart,
     DateTime? actualStart,
     DateTime? plannedFinish,
@@ -732,6 +761,7 @@ class ScheduleVariance {
   }) {
     return ScheduleVariance(
       workPackageId: workPackageId ?? this.workPackageId,
+      scheduleActivityId: scheduleActivityId ?? this.scheduleActivityId,
       plannedStart: plannedStart ?? this.plannedStart,
       actualStart: actualStart ?? this.actualStart,
       plannedFinish: plannedFinish ?? this.plannedFinish,

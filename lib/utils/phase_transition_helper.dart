@@ -10,8 +10,14 @@ class PhaseTransitionHelper {
     String? sourceCheckpoint,
     RouteSettings? settings,
   }) {
-    final fromCheckpoint = sourceCheckpoint ??
-        ProjectDataInherited.maybeOf(context)?.projectData.currentCheckpoint;
+    final projectProvider = ProjectDataInherited.maybeOf(context);
+    final normalizedDestination = destinationCheckpoint?.trim() ?? '';
+    if (projectProvider != null && normalizedDestination.isNotEmpty) {
+      projectProvider.prepareForCheckpoint(normalizedDestination);
+    }
+
+    final fromCheckpoint =
+        sourceCheckpoint ?? projectProvider?.projectData.currentCheckpoint;
     final fromPhase = SidebarNavigationService.phaseForCheckpoint(fromCheckpoint);
     final toPhase =
         SidebarNavigationService.phaseForCheckpoint(destinationCheckpoint);

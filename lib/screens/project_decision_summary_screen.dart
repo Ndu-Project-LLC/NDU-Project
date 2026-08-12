@@ -12,10 +12,8 @@ import 'package:ndu_project/widgets/draggable_sidebar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/responsive.dart';
-import 'package:ndu_project/widgets/planning_phase_header.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/utils/pdf_export_helper.dart';
 class ProjectDecisionSummaryScreen extends StatefulWidget {
  final String projectName;
  final AiSolutionItem selectedSolution;
@@ -95,13 +93,6 @@ class _ProjectDecisionSummaryScreenState
  bool get _isUserAuthorized {
  final normalized = _normalizeRole(_currentUserRole);
  return _authorizedRoles.contains(normalized);
- }
-
- String get _safeProjectName {
- final trimmed = widget.projectName.trim();
- if (trimmed.isNotEmpty) return trimmed;
- final selectedTitle = widget.selectedSolution.title.trim();
- return selectedTitle.isNotEmpty ? selectedTitle : 'Untitled Project';
  }
 
  Future<void> _bootstrapPage() async {
@@ -802,10 +793,6 @@ class _ProjectDecisionSummaryScreenState
  children: [
  Column(
  children: [
- _Header(
- projectName: _safeProjectName,
- roleLabel: _currentUserRole,
- ),
  Expanded(
  child: _isBootstrapping
  ? const Center(
@@ -843,8 +830,6 @@ class _ProjectDecisionSummaryScreenState
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- PlanningPhaseHeader(title: 'Project Decision Summary', onExportPdf: _exportPdf),
- const SizedBox(height: 16),
  const Text(
  'Preferred Solution Selection',
  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
@@ -1337,107 +1322,6 @@ class _ProjectDecisionSummaryScreenState
  );
  }
 
- Future<void> _exportPdf() async {
- final projectData = ProjectDataHelper.getData(context);
- await PdfExportHelper.exportScreenPdf(
- context: context,
- screenTitle: 'Project Decision Summary',
- sections: [
- PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- {'Solution Title': projectData.solutionTitle ?? 'N/A'},
- ]),
- PdfSection.text('Notes', projectData.planningNotes['planning_project_decision_summary_notes'] ?? 'No data recorded.'),
- ],
- );
- }
-}
-
-class _Header extends StatelessWidget {
- final String projectName;
- final String roleLabel;
-
- const _Header({required this.projectName, required this.roleLabel});
-
- @override
- Widget build(BuildContext context) {
- final isMobile = AppBreakpoints.isMobile(context);
- return Container(
- height: isMobile ? 56 : 70,
- color: Colors.white,
- padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 24),
- child: Row(
- children: [
- if (isMobile)
- IconButton(
- icon: const Icon(Icons.menu),
- onPressed: () => Scaffold.maybeOf(context)?.openDrawer(),
- ),
- if (!isMobile) ...[
- const SizedBox(width: 20),
- IconButton(
- icon: const Icon(Icons.arrow_back_ios, size: 16),
- onPressed: () => Navigator.of(context).pop(),
- ),
- ],
- const Spacer(),
- if (!isMobile)
- Text(
- 'Preferred Solution - $projectName',
- style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
- ),
- const Spacer(),
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
- decoration: BoxDecoration(
- color: Colors.grey[100],
- borderRadius: BorderRadius.circular(24),
- ),
- child: Row(
- children: [
- CircleAvatar(
- radius: 18,
- backgroundColor: Colors.blue[400],
- child: Text(
- FirebaseAuthService.displayNameOrEmail(fallback: 'U')
- .characters
- .first
- .toUpperCase(),
- style: const TextStyle(
- color: Colors.white,
- fontWeight: FontWeight.bold,
- ),
- ),
- ),
- if (!isMobile) ...[
- const SizedBox(width: 10),
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- mainAxisSize: MainAxisSize.min,
- children: [
- Text(
- FirebaseAuthService.displayNameOrEmail(
- fallback: 'User'),
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
- ),
- ),
- Text(
- roleLabel,
- style:
- const TextStyle(fontSize: 10, color: Colors.grey),
- ),
- ],
- ),
- ],
- ],
- ),
- ),
- ],
- ),
- );
- }
 }
 
 class _NextButton extends StatelessWidget {

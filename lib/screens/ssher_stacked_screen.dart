@@ -18,9 +18,9 @@ import 'package:ndu_project/services/user_service.dart';
 import 'package:ndu_project/utils/web_utils_stub.dart'
  if (dart.library.html) 'package:ndu_project/utils/web_utils_web.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 enum _SsherCategory { safety, security, health, environment, regulatory }
 
 String _categoryKey(_SsherCategory category) => category.name;
@@ -640,6 +640,7 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
  });
  await _saveEntries();
  }
+    showDeleteSuccessSnackBar(context, itemLabel: 'Ssher Entry');
  }
 
  Future<void> _editEntry(SsherEntry entry) async {
@@ -909,30 +910,6 @@ class _SsherStackedScreenState extends State<SsherStackedScreen>
 
  // ── Phase Navigation (Scrollable Pill Tabs) ──
  _buildPhaseTabs(isMobile),
-
- // ── Inner Page Navigation Hint ──
- Padding(
- padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 0),
- child: InnerPageNavigationHint(
- pageId: 'ssher_stacked',
- pageTitle: 'SSHER Hub',
- description: 'Navigate between SSHER categories',
- currentSectionId: _selectedCategory.name,
- accentColor: _accentForCategory(_selectedCategory),
- sections: [
- InnerPageSection(id: _SsherCategory.safety.name, label: 'Safety', icon: Icons.health_and_safety, status: _selectedCategory == _SsherCategory.safety ? InnerPageSectionStatus.current : InnerPageSectionStatus.available, stepNumber: 1),
- InnerPageSection(id: _SsherCategory.security.name, label: 'Security', icon: Icons.security, status: _selectedCategory == _SsherCategory.security ? InnerPageSectionStatus.current : InnerPageSectionStatus.available, stepNumber: 2),
- InnerPageSection(id: _SsherCategory.health.name, label: 'Health', icon: Icons.medical_services, status: _selectedCategory == _SsherCategory.health ? InnerPageSectionStatus.current : InnerPageSectionStatus.available, stepNumber: 3),
- InnerPageSection(id: _SsherCategory.environment.name, label: 'Environment', icon: Icons.eco, status: _selectedCategory == _SsherCategory.environment ? InnerPageSectionStatus.current : InnerPageSectionStatus.available, stepNumber: 4),
- InnerPageSection(id: _SsherCategory.regulatory.name, label: 'Regulatory', icon: Icons.gavel, status: _selectedCategory == _SsherCategory.regulatory ? InnerPageSectionStatus.current : InnerPageSectionStatus.available, stepNumber: 5),
- ],
- onSectionTap: (sectionId) {
- final cat = _SsherCategory.values.firstWhere((c) => c.name == sectionId);
- _onCategoryChanged(cat);
- _tabController.animateTo(cat.index);
- },
- ),
- ),
 
  // ── Data Cards Section ──
  _buildDataCardsSection(isMobile, allowCsv),

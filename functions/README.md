@@ -47,24 +47,11 @@ After deployment, you'll see your function URL:
 https://YOUR_REGION-YOUR_PROJECT_ID.cloudfunctions.net/openaiProxy
 ```
 
-### 5. Update Your Flutter App Configuration
+### 5. Verify Your Flutter App Configuration
 
-Edit `lib/services/api_config_secure.dart`:
-
-```dart
-// Change this line:
-static const String baseUrl = 'https://api.openai.com/v1';
-
-// To your Cloud Function URL:
-static const String baseUrl = 'https://YOUR_REGION-YOUR_PROJECT_ID.cloudfunctions.net/openaiProxy';
-```
-
-**Also remove the hardcoded API key** from the same file:
-
-```dart
-// Remove or comment out:
-static const String _defaultApiKey = 'sk-proj-...';
-```
+`lib/services/api_config_secure.dart` already points web, mobile, desktop,
+staging, production, and admin builds to the deployed `openaiProxy`. Do not
+add a client-side OpenAI key or a direct OpenAI URL.
 
 ### 6. Update CORS Settings (Production)
 

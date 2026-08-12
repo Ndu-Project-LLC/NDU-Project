@@ -16,10 +16,10 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/ai_suggesting_textfield.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 // ─── Tab definitions ────────────────────────────────────────────────────────
 
 enum _ImTab {
@@ -86,9 +86,13 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final isMobile = AppBreakpoints.isMobile(context);
-    // Reduced horizontal padding so cards/tables can extend closer to the
-    // viewport edges on wide screens. Mobile stays at 16 for thumb reach.
+    // Per Task 14: extend content to the full screen width. We no longer
+    // reserve 104px on the right for the floating KAZ AI bubble — the
+    // bubble sits above the content with a shadow and is non-blocking,
+    // so content can flow underneath it. Horizontal padding is kept
+    // symmetric for visual balance.
     final horizontalPadding = isMobile ? 16.0 : 24.0;
+    final bottomPadding = isMobile ? 24.0 : 120.0;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -105,9 +109,6 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
               child: Column(
                 children: [
                   // ── Unified page header (matches other planning screens) ──
-                  // Adding this also resolves the "glitching" caused by the
-                  // page previously having no top-level header — the layout
-                  // now flows: Header → Scrollable content → KAZ bubble.
                   PlanningPhaseHeader(
                     title: 'Interface Management Plan',
                     breadcrumbPhase: 'Planning Phase',
@@ -127,8 +128,11 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
                           ),
                         ),
                         SingleChildScrollView(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: horizontalPadding, vertical: 24),
+                          padding: EdgeInsets.only(
+                              left: horizontalPadding,
+                              right: horizontalPadding,
+                              top: 24,
+                              bottom: bottomPadding),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -168,27 +172,6 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
                               const SizedBox(height: 24),
                               _buildTabBar(),
                               const SizedBox(height: 16),
-                              InnerPageNavigationHint(
-                                pageId: 'interface_management',
-                                pageTitle: 'Interface Management',
-                                sections: _ImTab.values
-                                    .map((tab) => InnerPageSection(
-                                          id: tab.name,
-                                          label: tab.label,
-                                          status: tab == _selectedTab
-                                              ? InnerPageSectionStatus.current
-                                              : InnerPageSectionStatus.available,
-                                          stepNumber:
-                                              _ImTab.values.indexOf(tab) + 1,
-                                        ))
-                                    .toList(),
-                                currentSectionId: _selectedTab.name,
-                                onSectionTap: (sectionId) {
-                                  final tab = _ImTab.values
-                                      .firstWhere((t) => t.name == sectionId);
-                                  setState(() => _selectedTab = tab);
-                                },
-                              ),
                               _buildTabContent(),
                               const SizedBox(height: 24),
                               LaunchPhaseNavigation(
@@ -579,10 +562,17 @@ class _InterfaceRegisterSection extends StatefulWidget {
 }
 
 class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _typeFilter = 'All';
   String _statusFilter = 'All';
   String _priorityFilter = 'All';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   List<InterfaceEntry> _applyFilters(List<InterfaceEntry> entries) {
     var filtered = entries;
@@ -625,59 +615,30 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // Wide layout: search expands to fill, dropdowns fixed width on the
-          // right, optional "Clear" button at the far right when filters are
-          // active. Threshold = search min (240) + 3 dropdowns (150 each) +
-          // gaps (12*4) + clear button (~96) ≈ 830px.
-          const wideThreshold = 820.0;
+          final search = _buildSearchField(
+            hint: constraints.maxWidth >= 820
+                ? 'Search by boundary, party, owner, or notes…'
+                : 'Search interfaces…',
+          );
+          const wideThreshold = 900.0;
           if (constraints.maxWidth >= wideThreshold) {
             return Row(
               children: [
-                Expanded(
-                  child: VoiceTextField(
-                    onChanged: (v) => setState(() => _searchQuery = v),
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search,
-                          size: 18, color: Color(0xFF9CA3AF)),
-                      hintText:
-                          'Search by boundary, party, owner, or notes…',
-                      hintStyle: const TextStyle(
-                          fontSize: 13, color: Color(0xFF9CA3AF)),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      isDense: true,
-                    ),
-                    style: const TextStyle(fontSize: 13),
-                  ),
+                Expanded(child: search),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 150,
+                  child: _buildTypeFilter(),
                 ),
                 const SizedBox(width: 12),
-                _buildFilterDropdown(
-                  label: 'Type',
-                  value: _typeFilter,
-                  items: const ['All', ..._kInterfaceTypes],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _typeFilter = v);
-                  },
+                SizedBox(
+                  width: 150,
+                  child: _buildStatusFilter(),
                 ),
                 const SizedBox(width: 12),
-                _buildFilterDropdown(
-                  label: 'Status',
-                  value: _statusFilter,
-                  items: const ['All', ..._kStatuses],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _statusFilter = v);
-                  },
-                ),
-                const SizedBox(width: 12),
-                _buildFilterDropdown(
-                  label: 'Priority',
-                  value: _priorityFilter,
-                  items: const ['All', ..._kPriorities],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _priorityFilter = v);
-                  },
+                SizedBox(
+                  width: 150,
+                  child: _buildPriorityFilter(),
                 ),
                 if (hasActiveFilters) ...[
                   const SizedBox(width: 12),
@@ -686,71 +647,92 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
               ],
             );
           }
-          // Narrow layout: wrap items naturally so they reflow on mobile.
-          return Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          final singleColumn = constraints.maxWidth < 540;
+          final filterWidth = singleColumn
+              ? constraints.maxWidth
+              : (constraints.maxWidth - 20) / 3;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 260,
-                child: VoiceTextField(
-                  onChanged: (v) => setState(() => _searchQuery = v),
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.search,
-                        size: 18, color: Color(0xFF9CA3AF)),
-                    hintText: 'Search interfaces…',
-                    hintStyle: const TextStyle(
-                        fontSize: 12, color: Color(0xFF9CA3AF)),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 8),
-                    isDense: true,
-                  ),
-                  style: const TextStyle(fontSize: 12),
-                ),
+              SizedBox(width: double.infinity, child: search),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  SizedBox(width: filterWidth, child: _buildTypeFilter()),
+                  SizedBox(width: filterWidth, child: _buildStatusFilter()),
+                  SizedBox(width: filterWidth, child: _buildPriorityFilter()),
+                  if (hasActiveFilters) _buildClearButton(),
+                ],
               ),
-              SizedBox(
-                width: 150,
-                child: _buildFilterDropdown(
-                  label: 'Type',
-                  value: _typeFilter,
-                  items: const ['All', ..._kInterfaceTypes],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _typeFilter = v);
-                  },
-                ),
-              ),
-              SizedBox(
-                width: 150,
-                child: _buildFilterDropdown(
-                  label: 'Status',
-                  value: _statusFilter,
-                  items: const ['All', ..._kStatuses],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _statusFilter = v);
-                  },
-                ),
-              ),
-              SizedBox(
-                width: 150,
-                child: _buildFilterDropdown(
-                  label: 'Priority',
-                  value: _priorityFilter,
-                  items: const ['All', ..._kPriorities],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _priorityFilter = v);
-                  },
-                ),
-              ),
-              if (hasActiveFilters) _buildClearButton(),
             ],
           );
         },
       ),
     );
   }
+
+  Widget _buildSearchField({required String hint}) {
+    return VoiceTextField(
+      controller: _searchController,
+      maxLines: 1,
+      enableVoice: false,
+      enableKazAi: false,
+      enableTextFormatting: false,
+      textInputAction: TextInputAction.search,
+      onChanged: (value) => setState(() => _searchQuery = value),
+      decoration: InputDecoration(
+        prefixIcon:
+            const Icon(Icons.search, size: 18, color: Color(0xFF9CA3AF)),
+        hintText: hint,
+        hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFFFB800), width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        isDense: true,
+      ),
+      style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+    );
+  }
+
+  Widget _buildTypeFilter() => _buildFilterDropdown(
+        label: 'Type',
+        value: _typeFilter,
+        items: const ['All', ..._kInterfaceTypes],
+        onChanged: (value) {
+          if (value != null) setState(() => _typeFilter = value);
+        },
+      );
+
+  Widget _buildStatusFilter() => _buildFilterDropdown(
+        label: 'Status',
+        value: _statusFilter,
+        items: const ['All', ..._kStatuses],
+        onChanged: (value) {
+          if (value != null) setState(() => _statusFilter = value);
+        },
+      );
+
+  Widget _buildPriorityFilter() => _buildFilterDropdown(
+        label: 'Priority',
+        value: _priorityFilter,
+        items: const ['All', ..._kPriorities],
+        onChanged: (value) {
+          if (value != null) setState(() => _priorityFilter = value);
+        },
+      );
 
   /// Builds a styled dropdown for a filter field. Used inside the filter bar
   /// so all dropdowns share consistent visual treatment.
@@ -761,12 +743,23 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
+      key: ValueKey('$label-$value'),
       initialValue: value,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFFFB800), width: 1.5),
+        ),
+        filled: true,
+        fillColor: Colors.white,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         isDense: true,
@@ -789,6 +782,7 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
   Widget _buildClearButton() {
     return InkWell(
       onTap: () => setState(() {
+        _searchController.clear();
         _searchQuery = '';
         _typeFilter = 'All';
         _statusFilter = 'All';
@@ -800,7 +794,9 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
         decoration: BoxDecoration(
           color: const Color(0xFFFEF3C7),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
+          border: Border.all(
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+          ),
         ),
         child: const Row(
           mainAxisSize: MainAxisSize.min,
@@ -1202,6 +1198,7 @@ class _InterfaceRegisterRow extends StatelessWidget {
       ),
       showSnackbar: false,
     );
+      showDeleteSuccessSnackBar(context, itemLabel: 'Entry');
   }
 }
 

@@ -953,6 +953,245 @@ Security Training:
  return 'Milestone';
  }
 
+ // ── Per Task 27: 3-pillar security structure (Physical, Personnel,
+ // Information Security). Each pillar shows its Considerations and Key
+ // Deliverables as guidance content. Content seeds the SSHER section
+ // in the Planning phase via the security notes field.
+ Widget _buildPhysicalSecurityPillar() {
+ return _buildSecurityPillarCard(
+ title: 'Physical Security',
+ description:
+ 'Protect project facilities, equipment, materials, and physical assets '
+ 'from unauthorized access, damage, theft, or disruption.',
+ icon: Icons.shield_outlined,
+ accentColor: const Color(0xFF0EA5E9),
+ considerations: const [
+ 'Site access controls and visitor management',
+ 'Asset, equipment, and material protection',
+ 'Surveillance, lighting, and perimeter security',
+ 'Fire, life safety, and emergency response measures',
+ 'Storage and transportation security',
+ 'Environmental and natural hazard risks',
+ 'Business continuity for critical facilities',
+ 'Applicable regulations',
+ ],
+ deliverables: const [
+ 'Physical Security Requirements',
+ 'Site Security Assessment',
+ 'Emergency Response Requirements',
+ ],
+ );
+ }
+
+ Widget _buildPersonnelSecurityPillar() {
+ return _buildSecurityPillarCard(
+ title: 'Personnel Security',
+ description:
+ 'Ensure all individuals working on or supporting the project are '
+ 'appropriately authorized, trained, and accountable.',
+ icon: Icons.badge_outlined,
+ accentColor: const Color(0xFF10B981),
+ considerations: const [
+ 'Background checks and security clearances',
+ 'Identity verification and access permissions',
+ 'Contractor and vendor onboarding',
+ 'Roles, responsibilities, and segregation of duties',
+ 'Security awareness training',
+ 'Non-Disclosure Agreements (NDAs) and confidentiality requirements',
+ 'Insider threat and personnel risk assessment',
+ 'Applicable regulatory considerations',
+ ],
+ deliverables: const [
+ 'Personnel Security Plan',
+ 'Access Authorization Matrix',
+ 'Security Roles & Responsibilities',
+ ],
+ );
+ }
+
+ Widget _buildInformationSecurityPillar() {
+ return _buildSecurityPillarCard(
+ title: 'Information Security',
+ description:
+ 'Protect project information, digital systems, and intellectual '
+ 'property throughout the project lifecycle.',
+ icon: Icons.lock_outline,
+ accentColor: const Color(0xFF8B5CF6),
+ considerations: const [
+ 'Information classification and data ownership',
+ 'Cybersecurity requirements (authentication, encryption, backups, disaster recovery)',
+ 'Privacy and regulatory compliance (e.g., GDPR, HIPAA, ISO 27001, NIST)',
+ 'Cloud, network, and application security',
+ 'Third-party and vendor cybersecurity requirements',
+ 'Secure communications and collaboration tools',
+ 'AI governance, data protection, and technology risks',
+ 'Incident response and recovery planning',
+ ],
+ deliverables: const [
+ 'Information Security Requirements',
+ 'Cybersecurity & Privacy Assessment',
+ 'Information Classification Matrix',
+ 'Security Risk Register',
+ ],
+ );
+ }
+
+ Widget _buildSecurityPillarCard({
+ required String title,
+ required String description,
+ required IconData icon,
+ required Color accentColor,
+ required List<String> considerations,
+ required List<String> deliverables,
+ }) {
+ return Container(
+ padding: const EdgeInsets.all(20),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(16),
+ border: Border.all(color: accentColor.withValues(alpha: 0.25)),
+ boxShadow: [
+ BoxShadow(
+ color: Colors.black.withValues(alpha: 0.03),
+ blurRadius: 8,
+ offset: const Offset(0, 4),
+ ),
+ ],
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ Container(
+ padding: const EdgeInsets.all(10),
+ decoration: BoxDecoration(
+ color: accentColor.withValues(alpha: 0.12),
+ borderRadius: BorderRadius.circular(10),
+ ),
+ child: Icon(icon, color: accentColor, size: 22),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ title,
+ style: const TextStyle(
+ fontSize: 16,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ ),
+ ),
+ const SizedBox(height: 4),
+ Text(
+ description,
+ style: const TextStyle(
+ fontSize: 12.5,
+ color: Color(0xFF6B7280),
+ height: 1.45,
+ ),
+ ),
+ ],
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 16),
+ Row(
+ children: [
+ Icon(Icons.checklist_outlined,
+ size: 16, color: accentColor.withValues(alpha: 0.8)),
+ const SizedBox(width: 6),
+ const Text(
+ 'Considerations',
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF374151),
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 8),
+ Wrap(
+ spacing: 6,
+ runSpacing: 6,
+ children: considerations
+ .map(
+ (c) => Container(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 10, vertical: 5),
+ decoration: BoxDecoration(
+ color: accentColor.withValues(alpha: 0.08),
+ borderRadius: BorderRadius.circular(8),
+ border: Border.all(
+ color: accentColor.withValues(alpha: 0.18)),
+ ),
+ child: Text(
+ c,
+ style: TextStyle(
+ fontSize: 11.5,
+ color: accentColor.withValues(alpha: 0.95),
+ fontWeight: FontWeight.w500,
+ height: 1.3,
+ ),
+ ),
+ ),
+ )
+ .toList(),
+ ),
+ const SizedBox(height: 14),
+ Row(
+ children: [
+ Icon(Icons.task_alt_rounded,
+ size: 16, color: accentColor.withValues(alpha: 0.8)),
+ const SizedBox(width: 6),
+ const Text(
+ 'Key Deliverables',
+ style: TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF374151),
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 8),
+ Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: deliverables
+ .map(
+ (d) => Padding(
+ padding: const EdgeInsets.only(bottom: 4),
+ child: Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Icon(Icons.arrow_right,
+ size: 14, color: accentColor),
+ const SizedBox(width: 4),
+ Expanded(
+ child: Text(
+ d,
+ style: const TextStyle(
+ fontSize: 12,
+ color: Color(0xFF4B5563),
+ height: 1.4,
+ ),
+ ),
+ ),
+ ],
+ ),
+ ),
+ )
+ .toList(),
+ ),
+ ],
+ ),
+ );
+ }
+
  Future<void> _saveAndNavigateToAllowance({
  bool skippedValidation = false,
  }) async {
@@ -1110,6 +1349,17 @@ Security Training:
  _buildSecuritySettingsSection(),
  const SizedBox(height: 24),
  _buildSecurityAccessLogsSection(),
+ const SizedBox(height: 24),
+ // ── Per Task 27: 3-pillar security structure (Physical, Personnel,
+ // Information). Each pillar shows Considerations + Key Deliverables
+ // as guidance content. These sections feed the SSHER section in the
+ // Planning phase (cross-phase data flow is wired via the security
+ // notes field that gets persisted to frontEndPlanning.security).
+ _buildPhysicalSecurityPillar(),
+ const SizedBox(height: 24),
+ _buildPersonnelSecurityPillar(),
+ const SizedBox(height: 24),
+ _buildInformationSecurityPillar(),
  const SizedBox(height: 140),
  ],
  ),

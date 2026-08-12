@@ -22,6 +22,7 @@ import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:ndu_project/openai/openai_config.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class StakeholderManagementScreen extends StatefulWidget {
   const StakeholderManagementScreen({super.key});
 
@@ -157,11 +158,8 @@ class _StakeholderManagementScreenState
             context, 'stakeholder_management'),
         onForward: () =>
             PlanningPhaseNavigation.goToNext(context, 'stakeholder_management'),
-        // Export PDF is intentionally hidden from the header because the
-        // header row sits visually above the sidebar zone (its Wrap row
-        // starts at the left edge of the screen, directly over the
-        // sidebar's column). The button is relocated to the Engagement
-        // Section toolbar so it never extends into the sidebar zone.
+        // Export PDF remains in the Engagement toolbar. On desktop this
+        // header is constrained to the content column beside the sidebar.
         showExportPdf: false,
         onExportPdf: _exportPdf);
 
@@ -330,29 +328,32 @@ class _StakeholderManagementScreenState
       backgroundColor: Colors.white,
       body: SafeArea(
         top: true,
-        child: Column(
+        child: Row(
           children: [
-            header,
+            DraggableSidebar(
+              openWidth: sidebarWidth,
+              child: const InitiationLikeSidebar(
+                  activeItemLabel: 'Stakeholder Management'),
+            ),
             Expanded(
-              child: Row(
-                children: [
-                  DraggableSidebar(
-                    openWidth: sidebarWidth,
-                    child: const InitiationLikeSidebar(
-                        activeItemLabel: 'Stakeholder Management'),
-                  ),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        scrollableContent,
-                        const Positioned(
-                            right: 24,
-                            bottom: 24,
-                            child: KazAiChatBubble(positioned: false)),
-                      ],
+              child: ColoredBox(
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    header,
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          scrollableContent,
+                          const Positioned(
+                              right: 24,
+                              bottom: 24,
+                              child: KazAiChatBubble(positioned: false)),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -399,6 +400,7 @@ class _StakeholderManagementScreenState
             d.stakeholderEntries.where((e) => e.id != id).toList(),
       ),
     );
+      showDeleteSuccessSnackBar(context, itemLabel: 'Stakeholder');
   }
 
   void _addEngagementPlan() async {
@@ -442,6 +444,7 @@ class _StakeholderManagementScreenState
             d.engagementPlanEntries.where((e) => e.id != id).toList(),
       ),
     );
+      showDeleteSuccessSnackBar(context, itemLabel: 'Engagement Plan');
   }
 
   // ── Announcements persistence (Firestore subcollection) ─────────────
@@ -509,6 +512,7 @@ class _StakeholderManagementScreenState
         .collection('stakeholder_announcements')
         .doc(id)
         .delete();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Announcement');
   }
 
   /// Persist edits made to a [TeamMember] from the Project Team

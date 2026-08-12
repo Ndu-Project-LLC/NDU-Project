@@ -26,6 +26,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class UiUxDesignScreen extends StatefulWidget {
  const UiUxDesignScreen({super.key});
 
@@ -2124,6 +2125,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  void _deleteJourney(_JourneyRow row) {
  setState(() => _journeys.removeWhere((j) => j.id == row.id));
  _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Journey Row');
  }
 
  Future<void> _showInterfaceDialog({_InterfaceRow? existing}) async {
@@ -2208,6 +2210,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  void _deleteInterface(_InterfaceRow row) {
  setState(() => _interfaces.removeWhere((i) => i.id == row.id));
  _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Interface Row');
  }
 
  Future<void> _showDesignTokenDialog({_DesignTokenRow? existing}) async {
@@ -2292,6 +2295,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  void _deleteDesignToken(_DesignTokenRow row) {
  setState(() => _designTokens.removeWhere((t) => t.id == row.id));
  _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Design Token Row');
  }
 
  Future<void> _showUsabilityDialog({_UsabilityRow? existing}) async {
@@ -2381,6 +2385,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  void _deleteUsability(_UsabilityRow row) {
  setState(() => _usabilityEntries.removeWhere((u) => u.id == row.id));
  _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Usability Row');
  }
 
  Future<void> _showReviewGateDialog({_ReviewGateRow? existing}) async {
@@ -2469,6 +2474,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  void _deleteReviewGate(_ReviewGateRow row) {
  setState(() => _reviewGates.removeWhere((g) => g.id == row.id));
  _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Review Gate Row');
  }
 
  // ─── KAZ AI TextField Builder for Dialogs ──────────────────────────────

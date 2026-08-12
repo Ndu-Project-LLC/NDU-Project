@@ -17,7 +17,6 @@ import 'package:ndu_project/screens/design_phase_screen.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
@@ -2135,26 +2134,11 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  return Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
- // ── Inner-Page Navigation Hint ──
- InnerPageNavigationHint(
- pageId: 'design_planning',
- pageTitle: 'Design Planning Process',
- description: 'This page has 14 guided sections.',
- accentColor: _kPrimary,
- currentSectionId: _activeSectionId,
- sections: _sectionOrder.asMap().entries.map((entry) {
- final index = entry.key;
- final section = entry.value;
- final progress = _sectionProgress[section.id] ?? _SectionProgressState.pending;
- return InnerPageSection(
- id: section.id,
- label: section.label,
- stepNumber: index + 1,
- status: _mapSectionProgress(progress, section.id),
- );
- }).toList(),
- onSectionTap: (sectionId) => _activateSection(sectionId),
- ),
+ // ── Inner-Page Navigation Hint removed per user request ──
+ // The original InnerPageNavigationHint modal that appeared at the
+ // top of this column has been removed. The guided section cards
+ // below (_buildOverviewSection ... _buildWorkPackagesSection)
+ // remain intact and fully functional.
  _buildOverviewSection(data),
  _buildDesignOverviewSection(data),
  _buildDesignSpecificationsWorkspaceSection(),
@@ -2174,19 +2158,11 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
   );
  }
 
- InnerPageSectionStatus _mapSectionProgress(_SectionProgressState state, String sectionId) {
- final isCurrent = sectionId == _activeSectionId;
- if (isCurrent) return InnerPageSectionStatus.current;
- switch (state) {
- case _SectionProgressState.complete:
- return InnerPageSectionStatus.completed;
- case _SectionProgressState.notApplicable:
- return InnerPageSectionStatus.notApplicable;
- case _SectionProgressState.pending:
- if (!_canOpenSection(sectionId)) return InnerPageSectionStatus.locked;
- return InnerPageSectionStatus.available;
- }
- }
+ // Note: The original _mapSectionProgress() helper that mapped section
+ // progress state to InnerPageSectionStatus was removed along with the
+ // InnerPageNavigationHint modal. If you need it again, restore the
+ // import of inner_page_navigation_hint.dart and re-implement based
+ // on git history (commit prior to this change).
 
  Widget _buildGuidedSectionCard({
  required String sectionId,
@@ -3578,22 +3554,26 @@ class _SectionCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _kGray900,
-                  ),
-                ),
-              ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 200),
-                child: Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: _kGray500),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: _kGray900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, color: _kGray500, height: 1.35),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 8),

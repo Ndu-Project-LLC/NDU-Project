@@ -415,15 +415,21 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (hasActions)
-          Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: OpenEditorButton(
-                actions: actions,
-                isLoading: anyLoading,
+          // Wrap so the Open Editor button never overflows on narrow
+          // viewports — it flows to a new line instead of being clipped.
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: OpenEditorButton(
+                  actions: actions,
+                  isLoading: anyLoading,
+                ),
               ),
-            ),
+            ],
           ),
         if (showToolbar) ...[
           TextFormattingToolbar(controller: _controller),
@@ -1117,15 +1123,21 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (hasActions)
-          Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: OpenEditorButton(
-                actions: actions,
-                isLoading: anyLoading,
+          // Wrap so the Open Editor button never overflows on narrow
+          // viewports — it flows to a new line instead of being clipped.
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: OpenEditorButton(
+                  actions: actions,
+                  isLoading: anyLoading,
+                ),
               ),
-            ),
+            ],
           ),
         if (showToolbar) ...[
           TextFormattingToolbar(controller: _controller),

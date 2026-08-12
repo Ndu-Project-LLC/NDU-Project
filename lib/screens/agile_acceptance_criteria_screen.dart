@@ -17,6 +17,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -203,6 +204,7 @@ class _AgileAcceptanceCriteriaScreenState
       }
     });
     _scheduleAutoSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Template');
   }
 
   void _addCriterion() {
@@ -225,6 +227,7 @@ class _AgileAcceptanceCriteriaScreenState
       t.criteria.removeAt(index);
     });
     _scheduleAutoSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Criterion');
   }
 
   TextEditingController _ctrlForCriterion(AcceptanceCriterion c) {

@@ -302,6 +302,12 @@ class _ProjectDashboardMobileShellState
  ),
  child: VoiceTextField(
  controller: controller,
+ // Search bars don't need the Open Editor button (voice / AI /
+ // docx import are for content fields, not search). Disable all
+ // editor features so the OpenEditorButton doesn't render above.
+ enableVoice: false,
+ enableKazAi: false,
+ enableTextFormatting: false,
  onChanged: onChanged,
  style: const TextStyle(fontSize: 14, color: _Tokens.onSurface),
  decoration: InputDecoration(

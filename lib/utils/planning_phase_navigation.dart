@@ -95,14 +95,14 @@ class PlanningPhaseNavigation {
       builder: (_) => const OrganizationRolesResponsibilitiesScreen(),
     ),
     PlanningPage(
-      id: 'organization_raci_matrix',
-      title: 'RACI Matrix',
-      builder: (_) => const OrganizationRaciMatrixScreen(),
-    ),
-    PlanningPage(
       id: 'organization_staffing_plan',
       title: 'Staffing Plan',
       builder: (_) => const OrganizationStaffingPlanScreen(),
+    ),
+    PlanningPage(
+      id: 'organization_raci_matrix',
+      title: 'RACI Matrix',
+      builder: (_) => const OrganizationRaciMatrixScreen(),
     ),
     PlanningPage(
       id: 'team_training',
@@ -439,7 +439,8 @@ class PlanningPhaseNavigation {
   }
 
   static SidebarItem? _previousSidebarItem(String currentId) {
-    return SidebarNavigationService.instance.getPreviousItem(currentId);
+    return SidebarNavigationService.instance
+        .getPreviousAccessibleItem(currentId);
   }
 
   static Widget? resolvePreviousScreen(BuildContext context, String currentId) {

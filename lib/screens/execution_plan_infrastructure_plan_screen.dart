@@ -15,6 +15,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 Future<void> _exportInfrastructurePlanPdf(BuildContext context) async {
   final projectData = ProjectDataHelper.getData(context);
   await PdfExportHelper.exportScreenPdf(
@@ -344,6 +345,7 @@ class _PlanningInfrastructureCostSectionState
       (data) => data.copyWith(planningInfrastructureItems: current),
     );
     await provider.saveToFirebase(checkpoint: 'execution_infrastructure_plan');
+      showDeleteSuccessSnackBar(context, itemLabel: 'Item');
   }
 
   @override

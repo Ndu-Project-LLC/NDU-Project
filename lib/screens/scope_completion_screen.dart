@@ -23,6 +23,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class ScopeCompletionScreen extends StatefulWidget {
   const ScopeCompletionScreen({super.key});
 
@@ -3151,6 +3152,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   void _deleteWorkPackage(String id) {
     setState(() => _workPackages.removeWhere((entry) => entry.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
   }
 
   void _addCheckpoint() {
@@ -3172,6 +3174,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
     setState(
         () => _acceptanceCheckpoints.removeWhere((entry) => entry.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Checkpoint');
   }
 
   void _addAcceptanceTag() {
@@ -3191,6 +3194,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   void _deleteAcceptanceTag(String id) {
     setState(() => _acceptanceTags.removeWhere((entry) => entry.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Acceptance Tag');
   }
 
   void _addScopeChange() {
@@ -3210,6 +3214,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   void _deleteScopeChange(String id) {
     setState(() => _scopeChanges.removeWhere((entry) => entry.id == id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Scope Change');
   }
 
   String _newId() => DateTime.now().microsecondsSinceEpoch.toString();

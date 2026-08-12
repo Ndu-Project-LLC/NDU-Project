@@ -31,6 +31,7 @@ import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/services/planning_sync_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
+import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:go_router/go_router.dart';
 
 
@@ -293,6 +294,10 @@ class _ScheduleModuleScreenState extends State<ScheduleModuleScreen>
                       ),
                     ],
                 ),
+              ),
+              // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
+              const CrossSectionSyncCard(
+                currentSection: CrossSection.schedule,
               ),
               // Tab content
               Expanded(

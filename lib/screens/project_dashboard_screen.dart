@@ -1075,6 +1075,12 @@ class _SingleProjectsCardState extends State<_SingleProjectsCard> {
           const SizedBox(height: 18),
           VoiceTextField(
             controller: _searchController,
+            // Search bars don't need the Open Editor button (voice / AI /
+            // docx import are for content fields, not search). Disable all
+            // editor features so the OpenEditorButton doesn't render above.
+            enableVoice: false,
+            enableKazAi: false,
+            enableTextFormatting: false,
             style: TextStyle(fontSize: 14, color: palette.ink),
             decoration: InputDecoration(
               hintText: searchHint,
@@ -1634,6 +1640,12 @@ class _GroupProjectsCardState extends State<_GroupProjectsCard> {
           const SizedBox(height: 18),
           VoiceTextField(
             controller: _searchController,
+            // Search bars don't need the Open Editor button (voice / AI /
+            // docx import are for content fields, not search). Disable all
+            // editor features so the OpenEditorButton doesn't render above.
+            enableVoice: false,
+            enableKazAi: false,
+            enableTextFormatting: false,
             style: TextStyle(fontSize: 14, color: palette.ink),
             decoration: InputDecoration(
               hintText: 'Search projects to group...',

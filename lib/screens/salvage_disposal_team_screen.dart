@@ -1446,11 +1446,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  crossAxisAlignment: CrossAxisAlignment.start,
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
- Text(item.assetId,
- style: const TextStyle(
- fontSize: 12,
- color: Color(0xFF0EA5E9),
- fontWeight: FontWeight.w600)),
  ConstrainedBox(
  constraints: const BoxConstraints(maxWidth: 180),
  child: Text(item.name,
@@ -1571,11 +1566,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  crossAxisAlignment: CrossAxisAlignment.start,
  mainAxisAlignment: MainAxisAlignment.center,
  children: [
- Text(item.assetId,
- style: const TextStyle(
- fontSize: 12,
- color: Color(0xFF0EA5E9),
- fontWeight: FontWeight.w600)),
  ConstrainedBox(
  constraints: const BoxConstraints(maxWidth: 180),
  child: Text(item.name,
@@ -3677,7 +3667,6 @@ Execution snapshot:
  columnSpacing: 10,
  horizontalMargin: 10,
  columns: const [
- DataColumn(label: Text('Asset ID')),
  DataColumn(label: Text('Description')),
  DataColumn(label: Text('Category')),
  DataColumn(label: Text('Condition')),
@@ -3699,18 +3688,13 @@ Execution snapshot:
  style: TextStyle(
  color: Color(0xFF64748B),
  fontStyle: FontStyle.italic))),
- for (var i = 0; i < 12; i++) const DataCell(SizedBox()),
+ for (var i = 0; i < 11; i++) const DataCell(SizedBox()),
  ]),
  ]
  : items.map((item) {
  final priorityColor = _priorityColorFor(item.priority);
  return DataRow(
  cells: [
- DataCell(Text(item.assetId,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: Color(0xFF0EA5E9)))),
  DataCell(ConstrainedBox(
  constraints: const BoxConstraints(maxWidth: 160),
  child: Text(item.name,
@@ -3802,7 +3786,6 @@ Execution snapshot:
  columnSpacing: 10,
  horizontalMargin: 10,
  columns: const [
- DataColumn(label: Text('Asset ID')),
  DataColumn(label: Text('Description')),
  DataColumn(label: Text('Category')),
  DataColumn(label: Text('Condition')),
@@ -3824,18 +3807,13 @@ Execution snapshot:
  style: TextStyle(
  color: const Color(0xFF64748B),
  fontStyle: FontStyle.italic))),
- for (var i = 0; i < 12; i++) const DataCell(SizedBox()),
+ for (var i = 0; i < 11; i++) const DataCell(SizedBox()),
  ]),
  ]
  : items.map((item) {
  final priorityColor = _priorityColorFor(item.priority);
  return DataRow(
  cells: [
- DataCell(Text(item.assetId,
- style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w700,
- color: Color(0xFF0EA5E9)))),
  DataCell(ConstrainedBox(
  constraints: const BoxConstraints(maxWidth: 160),
  child: Text(item.name,

@@ -19,6 +19,7 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 /// Front End Planning – Allowance screen
 /// Refactored to support structured "Program-Aware Financial Inputs".
 ///
@@ -303,6 +304,7 @@ class _FrontEndPlanningAllowanceScreenState
  _allowanceItems.removeWhere((item) => item.id == id);
  });
  _syncItemsToProvider();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Item');
  }
 
  String _nextFlowDestinationLabel() {

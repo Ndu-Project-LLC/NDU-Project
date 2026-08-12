@@ -26,6 +26,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/field_regenerate_undo_buttons.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 // ─── Design Tokens ───────────────────────────────────────────────────────────
 class _Tokens {
  _Tokens._();
@@ -615,6 +616,7 @@ class _ProjectFrameworkScreenState extends State<ProjectFrameworkScreen> {
  goal.dispose();
  _goals.removeWhere((g) => g.id == goalId);
  });
+    showDeleteSuccessSnackBar(context, itemLabel: 'Goal');
  }
 
  Future<void> _handleNextPressed() async {

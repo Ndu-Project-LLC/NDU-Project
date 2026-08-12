@@ -17,12 +17,12 @@ import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class ProjectPlanScreen extends StatefulWidget {
   const ProjectPlanScreen({super.key});
 
@@ -330,51 +330,6 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                         _ProjectPlanOverviewCard(isMobile: isMobile),
                         const SizedBox(height: 24),
                         _buildTabBar(),
-                        const SizedBox(height: 16),
-                        InnerPageNavigationHint(
-                          pageId: 'project_plan',
-                          pageTitle: 'Project Plan',
-                          description: 'Navigate between project plan sections',
-                          currentSectionId: _tabController.index.toString(),
-                          onSectionTap: (sectionId) {
-                            final index = int.tryParse(sectionId) ?? 0;
-                            if (index >= 0 && index < 5) {
-                              _tabController.animateTo(index);
-                            }
-                          },
-                          sections: const [
-                            InnerPageSection(
-                              id: '0',
-                              label: 'Overview',
-                              icon: Icons.dashboard_outlined,
-                              stepNumber: 1,
-                            ),
-                            InnerPageSection(
-                              id: '1',
-                              label: 'Resources',
-                              icon: Icons.people_outline,
-                              stepNumber: 2,
-                            ),
-                            InnerPageSection(
-                              id: '2',
-                              label: 'Tasks',
-                              icon: Icons.task_alt_outlined,
-                              stepNumber: 3,
-                            ),
-                            InnerPageSection(
-                              id: '3',
-                              label: 'Budget',
-                              icon: Icons.account_balance_wallet_outlined,
-                              stepNumber: 4,
-                            ),
-                            InnerPageSection(
-                              id: '4',
-                              label: 'Risks',
-                              icon: Icons.warning_amber_outlined,
-                              stepNumber: 5,
-                            ),
-                          ],
-                        ),
                         const SizedBox(height: 24),
                         _buildTabContent(isMobile),
                         const SizedBox(height: 24),
@@ -1675,6 +1630,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   void _deleteOverviewObjective(String id) {
     setState(() => _overviewObjectives.removeWhere((item) => item.id == id));
     _scheduleOverviewSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Overview Objective');
   }
 
   void _addOverviewScope() {
@@ -1692,6 +1648,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   void _deleteOverviewScope(String id) {
     setState(() => _overviewScope.removeWhere((item) => item.id == id));
     _scheduleOverviewSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Overview Scope');
   }
 
   void _addOverviewAssumption() {
@@ -1710,6 +1667,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   void _deleteOverviewAssumption(String id) {
     setState(() => _overviewAssumptions.removeWhere((item) => item.id == id));
     _scheduleOverviewSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Overview Assumption');
   }
 
   void _addMilestone() {
@@ -1728,6 +1686,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   void _deleteMilestone(String id) {
     setState(() => _overviewMilestones.removeWhere((item) => item.id == id));
     _scheduleOverviewSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Milestone');
   }
 
   void _addResource() {
@@ -1745,6 +1704,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   void _deleteResource(String id) {
     setState(() => _resourcePlan.removeWhere((item) => item.id == id));
     _scheduleResourcesSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Resource');
   }
 
   void _addVendor() {
@@ -1762,6 +1722,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   void _deleteVendor(String id) {
     setState(() => _vendors.removeWhere((item) => item.id == id));
     _scheduleResourcesSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Vendor');
   }
 
   void _addTool() {
@@ -1779,6 +1740,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   void _deleteTool(String id) {
     setState(() => _tools.removeWhere((item) => item.id == id));
     _scheduleResourcesSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Tool');
   }
 
   void _addTask() {
@@ -1796,6 +1758,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   void _deleteTask(String id) {
     setState(() => _tasks.removeWhere((item) => item.id == id));
     _scheduleTasksSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Task');
   }
 
   void _addBudgetItem() {
@@ -1813,6 +1776,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   void _deleteBudgetItem(String id) {
     setState(() => _budgetBreakdown.removeWhere((item) => item.id == id));
     _scheduleBudgetSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Budget Item');
   }
 
   void _addRisk() {
@@ -1830,6 +1794,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
   void _deleteRisk(String id) {
     setState(() => _risks.removeWhere((item) => item.id == id));
     _scheduleRisksSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Risk');
   }
 
   Widget _buildCsvImportToolbar({

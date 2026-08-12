@@ -27,6 +27,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 enum _ScopeTab { overview, registry, traceability, baseline }
 
 const List<String> _tabLabels = [
@@ -245,6 +246,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  void _deleteItem(ScopeTrackingItem item) {
  setState(() => _items.removeWhere((i) => i.id == item.id));
  _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Scope Tracking Item');
  }
 
  void _setBaseline() async {
@@ -300,7 +302,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  final double horizontalPadding = isMobile ? 20 : 24;
 
  return Scaffold(
- backgroundColor: const Color(0xFFF7F9FC),
+ backgroundColor: Colors.white,
  body: SafeArea(
  child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,

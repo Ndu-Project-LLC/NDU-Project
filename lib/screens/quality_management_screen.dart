@@ -18,7 +18,6 @@ import 'package:ndu_project/widgets/text_formatting_toolbar.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/csv_import_dialog.dart';
@@ -379,75 +378,11 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  }
 
  Widget _buildNavigationHint() {
- return InnerPageNavigationHint(
- pageId: 'quality_management',
- pageTitle: 'Quality Management',
- description: 'Navigate between quality management sections',
- currentSectionId: _selectedTab.name,
- onSectionTap: (sectionId) {
- final tab = _QualityTab.values.firstWhere(
- (t) => t.name == sectionId,
- orElse: () => _selectedTab,
- );
- _handleTabSelected(tab);
- },
- sections: [
- InnerPageSection(
- id: _QualityTab.plan.name,
- label: 'Quality Management Plan',
- icon: Icons.description_outlined,
- stepNumber: 1,
- status: _selectedTab == _QualityTab.plan
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- ),
- InnerPageSection(
- id: _QualityTab.targets.name,
- label: 'Objectives & Acceptance',
- icon: Icons.flag_outlined,
- stepNumber: 2,
- status: _selectedTab == _QualityTab.targets
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- ),
- InnerPageSection(
- id: _QualityTab.qaTracking.name,
- label: 'Inspection & Test Plan',
- icon: Icons.verified_outlined,
- stepNumber: 3,
- status: _selectedTab == _QualityTab.qaTracking
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- ),
- InnerPageSection(
- id: _QualityTab.qcTracking.name,
- label: 'Quality Audit Plan',
- icon: Icons.fact_check_outlined,
- stepNumber: 4,
- status: _selectedTab == _QualityTab.qcTracking
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- ),
- InnerPageSection(
- id: _QualityTab.metrics.name,
- label: 'Metrics Dashboard',
- icon: Icons.analytics_outlined,
- stepNumber: 5,
- status: _selectedTab == _QualityTab.metrics
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- ),
- InnerPageSection(
- id: _QualityTab.register.name,
- label: 'Quality Register',
- icon: Icons.assignment_late_outlined,
- stepNumber: 6,
- status: _selectedTab == _QualityTab.register
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- ),
- ],
- );
+ // Removed: InnerPageNavigationHint modal is no longer rendered on this
+ // page (or any other page). The _TabStrip above provides full navigation
+ // between quality management sections. Kept as a no-op stub in case any
+ // callers were not updated; returns an empty SizedBox.
+ return const SizedBox.shrink();
  }
 
  @override
@@ -510,8 +445,6 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  selectedTab: _selectedTab,
  onSelected: _handleTabSelected,
  ),
- const SizedBox(height: 16),
- _buildNavigationHint(),
  const SizedBox(height: 28),
  _TabContent(selectedTab: _selectedTab),
  const SizedBox(height: 28),
@@ -577,8 +510,6 @@ class _QualityManagementScreenState extends State<QualityManagementScreen> {
  selectedTab: _selectedTab,
  onSelected: _handleTabSelected,
  ),
- const SizedBox(height: 16),
- _buildNavigationHint(),
  const SizedBox(height: 28),
  _TabContent(selectedTab: _selectedTab),
  const SizedBox(height: 28),

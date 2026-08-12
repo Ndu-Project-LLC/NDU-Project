@@ -19,6 +19,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class PunchlistActionsScreen extends StatefulWidget {
   const PunchlistActionsScreen({super.key});
 
@@ -1938,6 +1939,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onPressed: () {
  setState(() => _distributionRows.removeAt(index));
  _saveToFirestore();
+ showDeleteSuccessSnackBar(context, itemLabel: 'Distribution');
  Navigator.pop(ctx);
  _showActionSnack('Category deleted.');
  },
@@ -1962,6 +1964,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onPressed: () {
  setState(() => _velocityRows.removeAt(index));
  _saveToFirestore();
+ showDeleteSuccessSnackBar(context, itemLabel: 'Velocity');
  Navigator.pop(ctx);
  _showActionSnack('Workstream deleted.');
  },
@@ -2132,6 +2135,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onPressed: () {
  setState(() => _capacityHealthRows.removeAt(index));
  _saveToFirestore();
+ showDeleteSuccessSnackBar(context, itemLabel: 'Capacity Health');
  Navigator.pop(ctx);
  _showActionSnack('Team deleted.');
  },
@@ -2299,6 +2303,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onPressed: () {
  setState(() => _shiftCoverageRows.removeAt(index));
  _saveToFirestore();
+ showDeleteSuccessSnackBar(context, itemLabel: 'Shift Coverage');
  Navigator.pop(ctx);
  _showActionSnack('Shift deleted.');
  },

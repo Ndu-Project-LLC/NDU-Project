@@ -14,6 +14,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class LongLeadEquipmentOrderingScreen extends StatefulWidget {
  const LongLeadEquipmentOrderingScreen({super.key});
 
@@ -407,6 +408,7 @@ class _LongLeadEquipmentOrderingScreenState
  void _deleteCategory(String id) {
  setState(() => _categories.removeWhere((entry) => entry.id == id));
  _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Category');
  }
 
  void _addEquipmentItem() {
@@ -423,6 +425,7 @@ class _LongLeadEquipmentOrderingScreenState
  void _deleteEquipmentItem(String id) {
  setState(() => _equipmentItems.removeWhere((entry) => entry.id == id));
  _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Equipment Item');
  }
 
  void _addAction() {
@@ -439,6 +442,7 @@ class _LongLeadEquipmentOrderingScreenState
  void _deleteAction(String id) {
  setState(() => _actions.removeWhere((entry) => entry.id == id));
  _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Action');
  }
 
  Future<void> _openCategoryDialog() async {

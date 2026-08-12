@@ -27,7 +27,6 @@ import 'package:ndu_project/widgets/context_banner.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/wbs/screens/wbs_builder_screen.dart';
-import 'package:ndu_project/wbs/screens/framework_picker_screen.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
 import 'package:ndu_project/wbs/screens/wbs_ai_screen.dart';
 import 'package:ndu_project/wbs/screens/wbs_validator_screen.dart';
@@ -37,6 +36,8 @@ import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/widgets/cross_section_sync_card.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
 
 class WBSModuleScreen extends StatefulWidget {
@@ -61,6 +62,51 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
   void initState() {
     super.initState();
     _tabController.addListener(_onTabChanged);
+    // Auto-initialize WBS with sensible defaults — the explicit setup
+    // wizard has been removed. Users land directly in the Builder.
+    //
+    // This is async because we must WAIT for the provider's initial
+    // storage load to complete before deciding whether to call setup().
+    // If we don't wait, isLoadingFromStorage is still true on the first
+    // post-frame callback and we'd bail out without ever initializing
+    // the WBS — leaving the page stuck on the loading spinner forever.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _autoSetupWbsIfNeeded();
+    });
+  }
+
+  Future<void> _autoSetupWbsIfNeeded() async {
+    if (!mounted) return;
+
+    final projectData = context.read<ProjectDataProvider>().projectData;
+    final projectName = projectData.projectName.trim().isNotEmpty
+        ? projectData.projectName.trim()
+        : 'Untitled Project';
+    final projectId = projectData.projectId?.trim().isNotEmpty == true
+        ? projectData.projectId!.trim()
+        : 'default';
+
+    final provider = context.read<WBSProvider>();
+
+    // Wait for the provider's initial storage load to finish AND for any
+    // project-scoped WBS to be loaded from Firestore / SharedPreferences.
+    // This blocks until isLoadingFromStorage == false, so the check below
+    // runs against the fully-resolved state.
+    await provider.ensureProjectLoaded(projectId);
+    if (!mounted) return;
+
+    // If storage already gave us a complete WBS for this project, nothing
+    // to do — the builder will render it.
+    if (provider.wbs != null && provider.setupComplete) return;
+
+    // No persisted WBS for this project — create one with the default
+    // framework/methodology and persist it for next time.
+    provider.setup(
+      projectName: projectName,
+      framework: WBSFramework.waterfallDeliverable,
+      methodology: ProjectMethodology.waterfall,
+      projectId: projectId,
+    );
   }
 
   void _onTabChanged() {
@@ -91,10 +137,15 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
           );
         }
 
-        // No WBS yet — show the framework picker so the user chooses
-        // their WBS dimension (deliverable, discipline, geographic, etc.)
+        // WBS is auto-initialized in initState. While the post-frame
+        // callback is pending (or storage is still loading), show a
+        // brief loading indicator instead of the old setup wizard.
         if (wbs == null || !provider.setupComplete) {
-          return const FrameworkPickerScreen();
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(LightModeColors.accent),
+            ),
+          );
         }
 
         final projectData = projectProvider.projectData;
@@ -113,6 +164,7 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
           breadcrumbPhase: 'Planning Phase',
           breadcrumbTitle: 'WBS',
           backgroundColor: Colors.white,
+          floatingActionButton: const KazAiChatBubble(positioned: false),
           body: Column(
             children: [
               // ── World-class Section Navigator ─────────────────────────
@@ -160,6 +212,10 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
                 ),
               ),
               const SizedBox(height: 4),
+              // ── Cross-section sync card (WBS ↔ Schedule ↔ PC) ──────────
+              const CrossSectionSyncCard(
+                currentSection: CrossSection.wbs,
+              ),
               // Tab content
               Expanded(
                 child: TabBarView(
@@ -1048,5 +1104,4 @@ class _ExportAndLinkTab extends StatelessWidget {
     return count(wbs.level0);
   }
 }
-
 

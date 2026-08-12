@@ -153,6 +153,10 @@ class ProjectControlsFirestoreService {
 
   Map<String, dynamic> _wpToMap(WorkPackageControl wp) => {
         'wbsCode': wp.wbsCode,
+        if (wp.wbsNodeId != null && wp.wbsNodeId!.isNotEmpty)
+          'wbsNodeId': wp.wbsNodeId,
+        if (wp.scheduleActivityId != null && wp.scheduleActivityId!.isNotEmpty)
+          'scheduleActivityId': wp.scheduleActivityId,
         'name': wp.name,
         'scopeDescription': wp.scopeDescription,
         'deliverables': wp.deliverables,
@@ -192,6 +196,8 @@ class ProjectControlsFirestoreService {
     return WorkPackageControl(
       id: doc.id,
       wbsCode: d['wbsCode'] as String? ?? '',
+      wbsNodeId: d['wbsNodeId'] as String?,
+      scheduleActivityId: d['scheduleActivityId'] as String?,
       name: d['name'] as String? ?? '',
       scopeDescription: d['scopeDescription'] as String? ?? '',
       deliverables: List<String>.from(d['deliverables'] ?? []),
@@ -501,6 +507,7 @@ class ProjectControlsFirestoreService {
         final d = doc.data();
         return ScheduleVariance(
           workPackageId: d['workPackageId'] as String? ?? '',
+          scheduleActivityId: d['scheduleActivityId'] as String?,
           plannedStart: (d['plannedStart'] as Timestamp?)?.toDate(),
           actualStart: (d['actualStart'] as Timestamp?)?.toDate(),
           plannedFinish: (d['plannedFinish'] as Timestamp?)?.toDate(),
@@ -522,6 +529,8 @@ class ProjectControlsFirestoreService {
     try {
       await _svCol.doc(sv.workPackageId).set({
         'workPackageId': sv.workPackageId,
+        if (sv.scheduleActivityId != null && sv.scheduleActivityId!.isNotEmpty)
+          'scheduleActivityId': sv.scheduleActivityId,
         'plannedStart': sv.plannedStart,
         'actualStart': sv.actualStart,
         'plannedFinish': sv.plannedFinish,

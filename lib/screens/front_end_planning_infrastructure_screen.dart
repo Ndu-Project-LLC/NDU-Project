@@ -15,6 +15,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class FrontEndPlanningInfrastructureScreen extends StatefulWidget {
  const FrontEndPlanningInfrastructureScreen({super.key});
 
@@ -348,6 +349,7 @@ class _FrontEndPlanningInfrastructureScreenState
  }).toList();
  });
  _syncItemsToProvider();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Infrastructure Planning Item');
  }
 
  double get _infrastructureTotal => _items.fold<double>(

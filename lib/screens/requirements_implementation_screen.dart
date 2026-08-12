@@ -29,6 +29,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/routing/app_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class RequirementsImplementationScreen extends StatefulWidget {
  const RequirementsImplementationScreen({super.key});
 
@@ -431,6 +432,7 @@ class _RequirementsImplementationScreenState
  }
  });
  _scheduleSave();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Requirement');
  }
 
  void _showArtifactMessage(RequirementRow row) {

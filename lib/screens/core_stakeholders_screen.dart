@@ -707,6 +707,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
           notes: _notesController.text,
           solutions: widget.solutions,
           businessCase: widget.businessCase,
+          initialStepIndex: 1,
         ));
   }
 
@@ -1581,6 +1582,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  builder: (context) => CostAnalysisScreen(
  notes: _notesController.text,
  solutions: widget.solutions,
+ initialStepIndex: 1,
  ),
  ),
  );

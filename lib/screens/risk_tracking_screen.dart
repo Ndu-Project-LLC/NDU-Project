@@ -16,6 +16,7 @@ import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class RiskTrackingScreen extends StatefulWidget {
   const RiskTrackingScreen({super.key});
 
@@ -377,13 +378,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  ),
  ),
- if (!isNarrow) _buildHeaderActions(),
  ],
  ),
- if (isNarrow) ...[
- const SizedBox(height: 12),
- _buildHeaderActions(),
- ],
  ],
  );
  }
@@ -439,12 +435,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── Stats Row ────────────────────────────────────────────────────────────
 
  Widget _buildStatsRow(bool isNarrow) {
+ // Use project theme accent (yellow/gold #FFC107) consistently across
+ // all four summary cards — per Task 5 directive. Cards remain visually
+ // distinct via their iconography and labels, not via mismatched hues.
+ const themeAccent = Color(0xFFFFC107);
  final stats = [
  _StatCardData(
  'Active risks',
  '$_activeRiskCount',
  '$_criticalRiskCount critical',
- const Color(0xFFEF4444),
+ themeAccent,
  ),
  _StatCardData(
  'Mitigation coverage',
@@ -452,19 +452,19 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _risks.isEmpty
  ? 'Add risks to start tracking'
  : '$_mitigatedRiskCount of $_activeRiskCount mitigated',
- const Color(0xFF10B981),
+ themeAccent,
  ),
  _StatCardData(
  'Escalations',
  '$_escalationCount',
  _escalationCount > 0 ? 'Exec sync scheduled' : 'None',
- const Color(0xFFF97316),
+ themeAccent,
  ),
  _StatCardData(
  'Exposure score',
  _risks.isEmpty ? '—' : '$_exposureScore/100',
  _risks.isEmpty ? 'Add risks to compute' : _exposureStatus,
- const Color(0xFF6366F1),
+ themeAccent,
  ),
  ];
 
@@ -567,7 +567,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return _PanelShell(
  title: 'Risk register',
  subtitle: 'Live view of probability, impact, and mitigation status',
- trailing: _actionButton(Icons.filter_list, 'Filter'),
+ trailing: Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+  _actionButton(Icons.filter_list, 'Filter'),
+  const SizedBox(width: 8),
+  _actionButton(Icons.add, 'Add risk', onPressed: _openAddRiskDialog),
+  ],
+ ),
  child: _risks.isEmpty
  ? _buildEmptyRiskState()
  : Builder(builder: (bc) {
@@ -585,10 +592,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  columnSpacing: 16,
  horizontalMargin: 12,
  columns: const [
- DataColumn(
- label: Text('ID',
- style: TextStyle(
- fontSize: 11, fontWeight: FontWeight.w700))),
  DataColumn(
  label: Text('Risk',
  style: TextStyle(
@@ -620,9 +623,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  rows: _risks.map((risk) {
  return DataRow(cells: [
- DataCell(Text(risk.id,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF0EA5E9)))),
  DataCell(Text(risk.title,
  style: const TextStyle(fontSize: 13),
  maxLines: 1, overflow: TextOverflow.ellipsis)),
@@ -745,10 +745,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  horizontalMargin: 12,
  columns: const [
  DataColumn(
- label: Text('ID',
- style: TextStyle(
- fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
  label: Text('Risk Ref',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
@@ -791,9 +787,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  rows: _plans.map((plan) {
  return DataRow(cells: [
- DataCell(Text(plan.id,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF0EA5E9), fontWeight: FontWeight.w600))),
  DataCell(Text(plan.riskId,
  style: const TextStyle(
  fontSize: 12, color: Color(0xFF6366F1)))),
@@ -1022,10 +1015,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  horizontalMargin: 12,
  columns: const [
  DataColumn(
- label: Text('Signal ID',
- style: TextStyle(
- fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
  label: Text('Signal',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
@@ -1064,9 +1053,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  rows: _signals.map((signal) {
  return DataRow(cells: [
- DataCell(Text(signal.id,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF0EA5E9), fontWeight: FontWeight.w600))),
  DataCell(SizedBox(
  width: 160,
  child: Text(signal.title,
@@ -1266,10 +1252,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  horizontalMargin: 12,
  columns: const [
  DataColumn(
- label: Text('ID',
- style: TextStyle(
- fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
  label: Text('Escalation Event',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
@@ -1316,9 +1298,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  rows: _escalations.map((esc) {
  return DataRow(cells: [
- DataCell(Text(esc.id,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF0EA5E9), fontWeight: FontWeight.w600))),
  DataCell(SizedBox(
  width: 200,
  child: Text(esc.event,
@@ -1519,7 +1498,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── CRUD: Escalation Readiness ────────────────────────────────────────────
 
  void _openAddEscalationDialog() {
- final idController = TextEditingController();
  final eventController = TextEditingController();
  final triggerController = TextEditingController();
  final responsibleController = TextEditingController();
@@ -1546,13 +1524,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- VoiceTextFormField(
- controller: idController,
- decoration: const InputDecoration(
- labelText: 'Escalation ID', hintText: 'e.g., ESC-005'),
- validator: (v) => v == null || v.trim().isEmpty ? 'Enter an ID' : null,
- ),
- const SizedBox(height: 12),
  VoiceTextFormField(
  controller: eventController,
  decoration: const InputDecoration(
@@ -1639,7 +1610,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (formKey.currentState?.validate() ?? false) {
  setState(() {
  _escalations.add(_EscalationReadiness(
- id: idController.text.trim(),
+ id: 'ESC-${DateTime.now().millisecondsSinceEpoch.toString().substring(7, 13)}',
  event: eventController.text.trim(),
  level: selectedLevel,
  triggerCondition: triggerController.text.trim(),
@@ -1663,7 +1634,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  },
  ).then((_) {
- idController.dispose();
  eventController.dispose();
  triggerController.dispose();
  responsibleController.dispose();
@@ -1691,7 +1661,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return StatefulBuilder(
  builder: (context, setDialogState) {
  return AlertDialog(
- title: Text('Edit ${esc.id}'),
+ title: const Text('Edit escalation path'),
  content: Form(
  key: formKey,
  child: SingleChildScrollView(
@@ -1822,13 +1792,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete escalation path?'),
- content: Text('Are you sure you want to delete ${esc.id}: "${esc.event}"?'),
+ content: Text('Are you sure you want to delete this escalation path: "${esc.event}"?'),
  actions: [
  TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
  ElevatedButton(
  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
  onPressed: () {
  setState(() => _escalations.removeWhere((e) => e.id == esc.id));
+ showDeleteSuccessSnackBar(context, itemLabel: 'Escalation Readiness');
  Navigator.of(context).pop();
  },
  child: const Text('Delete'),
@@ -2153,6 +2124,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
  onPressed: () {
  setState(() => _risks.removeWhere((r) => r.id == risk.id));
+ showDeleteSuccessSnackBar(context, itemLabel: 'Risk Item');
  Navigator.of(context).pop();
  },
  child: const Text('Delete'),
@@ -2472,6 +2444,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
  onPressed: () {
  setState(() => _plans.removeWhere((p) => p.id == plan.id));
+ showDeleteSuccessSnackBar(context, itemLabel: 'Mitigation Plan');
  Navigator.of(context).pop();
  },
  child: const Text('Delete'),
@@ -2484,7 +2457,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  // ─── CRUD: Risk Signals ──────────────────────────────────────────────────
 
  void _openAddSignalDialog() {
- final idController = TextEditingController();
  final titleController = TextEditingController();
  final descriptionController = TextEditingController();
  final linkedRiskController = TextEditingController();
@@ -2509,13 +2481,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- VoiceTextFormField(
- controller: idController,
- decoration: const InputDecoration(
- labelText: 'Signal ID', hintText: 'e.g., SIG-005'),
- validator: (v) => v == null || v.trim().isEmpty ? 'Enter an ID' : null,
- ),
- const SizedBox(height: 12),
  VoiceTextFormField(
  controller: titleController,
  decoration: const InputDecoration(labelText: 'Signal name'),
@@ -2582,7 +2547,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (formKey.currentState?.validate() ?? false) {
  setState(() {
  _signals.add(_RiskSignal(
- id: idController.text.trim(),
+ id: 'SIG-${DateTime.now().millisecondsSinceEpoch.toString().substring(7, 13)}',
  title: titleController.text.trim(),
  category: selectedCategory,
  severity: selectedSeverity,
@@ -2604,7 +2569,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  );
  },
  ).then((_) {
- idController.dispose();
  titleController.dispose();
  descriptionController.dispose();
  linkedRiskController.dispose();
@@ -2627,7 +2591,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return StatefulBuilder(
  builder: (context, setDialogState) {
  return AlertDialog(
- title: Text('Edit ${signal.id}'),
+ title: const Text('Edit risk signal'),
  content: Form(
  key: formKey,
  child: SingleChildScrollView(
@@ -2737,13 +2701,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  context: context,
  builder: (context) => AlertDialog(
  title: const Text('Delete risk signal?'),
- content: Text('Are you sure you want to delete ${signal.id}: "${signal.title}"?'),
+ content: Text('Are you sure you want to delete this signal: "${signal.title}"?'),
  actions: [
  TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
  ElevatedButton(
  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444), foregroundColor: Colors.white),
  onPressed: () {
  setState(() => _signals.removeWhere((s) => s.id == signal.id));
+ showDeleteSuccessSnackBar(context, itemLabel: 'Risk Signal');
  Navigator.of(context).pop();
  },
  child: const Text('Delete'),

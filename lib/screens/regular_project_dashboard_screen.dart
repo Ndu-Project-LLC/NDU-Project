@@ -276,6 +276,10 @@ class _RegularProjectDashboardScreenState
                     SliverToBoxAdapter(
                       child: _buildStatsRow(projects, statusesById),
                     ),
+                    // Per Task 28: extended KPI row with deeper project metrics.
+                    SliverToBoxAdapter(
+                      child: _buildExtendedKpiRow(projects, statusesById),
+                    ),
                     SliverToBoxAdapter(
                       child: _buildNextActionCard(projects),
                     ),
@@ -309,21 +313,18 @@ class _RegularProjectDashboardScreenState
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: _createNewProject,
-        backgroundColor: _teal,
+        backgroundColor: const Color(0xFFFFC107),
         foregroundColor: const Color(0xFF1C1C1C),
-        icon: _KazAiBadge(
-          size: 28,
-          iconColor: Colors.white,
-          badgeColor: Colors.white.withValues(alpha: 0.28),
+        child: const _KazAiBadge(
+          size: 36,
+          iconColor: Color(0xFF1C1C1C),
+          badgeColor: Colors.transparent,
         ),
-        label: const Text(
-          'New Project',
-          style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.2),
-        ),
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        elevation: 4,
+        shape: const CircleBorder(),
+        tooltip: 'KAZ AI — New Project',
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       // The bottom navigation bar is a mobile-only affordance. On web the
@@ -439,6 +440,197 @@ class _RegularProjectDashboardScreenState
                 ),
               ],
             ),
+    );
+  }
+
+  // ── Per Task 28: Extended KPI row with comprehensive project metrics ───────
+  Widget _buildExtendedKpiRow(
+      List<ProjectRecord> projects, Map<String, ProjectStatusRollup> statuses) {
+    if (projects.isEmpty) return const SizedBox.shrink();
+
+    // Aggregate metrics from project status rollups.
+    final totalProjects = projects.length;
+    final totalOpenRisks = statuses.values
+        .map((s) => s.openRisks ?? 0)
+        .fold<int>(0, (a, b) => a + b);
+    final totalOpenIssues = statuses.values
+        .map((s) => s.openIssues ?? 0)
+        .fold<int>(0, (a, b) => a + b);
+    final avgBudgetUsed = statuses.values.isEmpty
+        ? 0.0
+        : statuses.values
+                .map((s) => s.budgetUsedPercent ?? 0.0)
+                .fold<double>(0.0, (a, b) => a + b) /
+            statuses.values.length;
+    // Health distribution: schedule / cost / scope / quality / risk.
+    final scheduleHealthy = statuses.values
+        .where((s) => s.scheduleStatus == 'on_track')
+        .length;
+    final costHealthy = statuses.values
+        .where((s) => s.costStatus == 'on_track')
+        .length;
+    final scopeHealthy = statuses.values
+        .where((s) => s.scopeStatus == 'on_track')
+        .length;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 0, 28, 8),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: _surfaceWarm,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _outlineSoft),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.analytics_outlined,
+                    size: 18, color: _brand),
+                const SizedBox(width: 8),
+                const Text(
+                  'Portfolio Health',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _ink,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '$totalProjects project${totalProjects == 1 ? '' : 's'}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: _muted,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            // Bento grid of 6 KPIs
+            kIsWeb
+                ? Row(
+                    children: [
+                      Expanded(
+                          child: _miniKpi('Open Risks', '$totalOpenRisks',
+                          Icons.warning_amber_outlined, _coral)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                          child: _miniKpi('Open Issues', '$totalOpenIssues',
+                          Icons.error_outline_outlined, _amber)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                          child: _miniKpi(
+                          'Avg Budget Used',
+                          '${(avgBudgetUsed * 100).round()}%',
+                          Icons.savings_outlined,
+                          _teal)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                          child: _miniKpi(
+                          'Schedule Healthy',
+                          '$scheduleHealthy/$totalProjects',
+                          Icons.schedule_outlined,
+                          _emerald)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                          child: _miniKpi(
+                          'Cost Healthy',
+                          '$costHealthy/$totalProjects',
+                          Icons.attach_money_outlined,
+                          _emerald)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                          child: _miniKpi(
+                          'Scope Healthy',
+                          '$scopeHealthy/$totalProjects',
+                          Icons.account_tree_outlined,
+                          _emerald)),
+                    ],
+                  )
+                : Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      SizedBox(
+                          width: 140,
+                          child: _miniKpi('Open Risks', '$totalOpenRisks',
+                              Icons.warning_amber_outlined, _coral)),
+                      SizedBox(
+                          width: 140,
+                          child: _miniKpi('Open Issues', '$totalOpenIssues',
+                              Icons.error_outline_outlined, _amber)),
+                      SizedBox(
+                          width: 140,
+                          child: _miniKpi('Avg Budget Used',
+                              '${(avgBudgetUsed * 100).round()}%',
+                              Icons.savings_outlined, _teal)),
+                      SizedBox(
+                          width: 140,
+                          child: _miniKpi('Schedule Healthy',
+                              '$scheduleHealthy/$totalProjects',
+                              Icons.schedule_outlined, _emerald)),
+                      SizedBox(
+                          width: 140,
+                          child: _miniKpi('Cost Healthy',
+                              '$costHealthy/$totalProjects',
+                              Icons.attach_money_outlined, _emerald)),
+                      SizedBox(
+                          width: 140,
+                          child: _miniKpi('Scope Healthy',
+                              '$scopeHealthy/$totalProjects',
+                              Icons.account_tree_outlined, _emerald)),
+                    ],
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _miniKpi(
+      String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _outlineSoft),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: _muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

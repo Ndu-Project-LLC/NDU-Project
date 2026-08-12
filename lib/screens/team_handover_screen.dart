@@ -211,7 +211,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
     final double horizontalPadding = isMobile ? 18 : 32;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,9 +276,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFDF2F8), Color(0xFFFCE7F3)],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFF9A8D4)),
       ),
@@ -303,7 +301,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF831843),
+                    color: Color(0xFF111827),
                   ),
                 ),
               ),
@@ -317,7 +315,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
             'Agile, Waterfall, and Hybrid projects by referring generically to '
             '"work packages, epics, or tasks" rather than prescribing a specific delivery approach.',
             style:
-                TextStyle(fontSize: 13, color: Color(0xFF9D174D), height: 1.6),
+                TextStyle(fontSize: 13, color: Color(0xFF4B5563), height: 1.6),
           ),
         ],
       ),
@@ -462,9 +460,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: item.checked
-                        ? const Color(0xFFF0FDF4)
-                        : const Color(0xFFF9FAFB),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: item.checked
@@ -570,7 +566,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Color(0xFFFFFBEB),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFFCD34D)),
       ),
@@ -582,7 +578,7 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
             style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF92400E)),
+                color: Color(0xFF111827)),
           ),
           const SizedBox(height: 16),
           _signOffField('Team Member', _teamMemberController),
@@ -598,38 +594,42 @@ class _TeamHandoverScreenState extends State<TeamHandoverScreen> {
   }
 
   Widget _signOffField(String label, TextEditingController controller) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 200,
-          child: Text(
-            '$label:',
-            style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF92400E)),
-          ),
+        Text(
+          label,
+          style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF374151)),
         ),
-        Expanded(
-          child: TextField(
-            controller: controller,
-            onChanged: (_) => _saveData(),
-            decoration: const InputDecoration(
-              hintText: '______________________',
-              hintStyle: TextStyle(color: Color(0xFFD1D5DB)),
-              border: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFFD1D5DB)),
-              ),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFFD1D5DB)),
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFFF59E0B)),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          onChanged: (_) => _saveData(),
+          decoration: InputDecoration(
+            hintText: label == 'Date' ? 'YYYY-MM-DD' : 'Enter full name',
+            hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
             ),
-            style: const TextStyle(fontSize: 13, color: Color(0xFF1F2937)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: Color(0xFFF59E0B), width: 1.6),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
+          style: const TextStyle(fontSize: 13, color: Color(0xFF1F2937)),
         ),
       ],
     );

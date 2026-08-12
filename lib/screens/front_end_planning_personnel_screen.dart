@@ -12,6 +12,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class FrontEndPlanningPersonnelScreen extends StatefulWidget {
  const FrontEndPlanningPersonnelScreen({super.key});
 
@@ -366,6 +367,7 @@ class _FrontEndPlanningPersonnelScreenState
  _rows.removeWhere((item) => item.id == row.id);
  });
  _syncRowsToProvider();
+    showDeleteSuccessSnackBar(context, itemLabel: 'Staffing Row');
  }
 
  double get _staffingTotal =>

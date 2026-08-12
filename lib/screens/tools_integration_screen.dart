@@ -19,6 +19,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class ToolsIntegrationScreen extends StatefulWidget {
  const ToolsIntegrationScreen({super.key});
 
@@ -401,18 +402,21 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  setState(() => _integrations.removeWhere((e) => e.id == id));
  _scheduleSave();
  _logActivity('Deleted tool integration row', details: {'itemId': id});
+    showDeleteSuccessSnackBar(context, itemLabel: 'Integration');
  }
 
  void _deleteRiskSignal(String id) {
  setState(() => _riskSignals.removeWhere((e) => e.id == id));
  _scheduleSave();
  _logActivity('Deleted risk signal row', details: {'itemId': id});
+    showDeleteSuccessSnackBar(context, itemLabel: 'Risk Signal');
  }
 
  void _deleteActionRow(String id) {
  setState(() => _actionRows.removeWhere((e) => e.id == id));
  _scheduleSave();
  _logActivity('Deleted action item row', details: {'itemId': id});
+    showDeleteSuccessSnackBar(context, itemLabel: 'Action');
  }
 
  void _removeCustomKpi(String id) {
@@ -425,12 +429,14 @@ class _ToolsIntegrationScreenState extends State<ToolsIntegrationScreen> {
  setState(() => _approvalGates.removeWhere((e) => e.id == id));
  _scheduleSave();
  _logActivity('Deleted approval gate row', details: {'itemId': id});
+    showDeleteSuccessSnackBar(context, itemLabel: 'Approval Gate');
  }
 
  void _deleteDataFlow(String id) {
  setState(() => _dataFlows.removeWhere((e) => e.id == id));
  _scheduleSave();
  _logActivity('Deleted data flow row', details: {'itemId': id});
+    showDeleteSuccessSnackBar(context, itemLabel: 'Data Flow');
  }
 
  // ---------------------------------------------------------------------------

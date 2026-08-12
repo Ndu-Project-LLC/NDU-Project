@@ -22,6 +22,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 const Color _kBackground = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kMuted = Color(0xFF6B7280);
@@ -166,6 +167,7 @@ class _AgileStoriesBacklogScreenState extends State<AgileStoriesBacklogScreen> {
   void _deleteStory(AgileTask story) {
     setState(() => _stories.removeWhere((s) => s.id == story.id));
     _scheduleSave();
+      showDeleteSuccessSnackBar(context, itemLabel: 'Agile Task');
   }
 
   void _updateStory(AgileTask story) {

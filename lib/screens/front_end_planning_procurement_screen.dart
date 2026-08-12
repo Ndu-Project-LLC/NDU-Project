@@ -34,9 +34,9 @@ import 'package:ndu_project/widgets/procurement/procurement_items_list_view.dart
 import 'package:ndu_project/widgets/procurement/procurement_vendor_management.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 enum ProcurementScreenMode { fep, planning }
 
 enum _MissingProcurementAction {
@@ -645,6 +645,7 @@ class _FrontEndPlanningProcurementScreenState
  _workflowDraftSteps =
  _workflowDraftSteps.where((step) => step.id != stepId).toList();
  });
+    showDeleteSuccessSnackBar(context, itemLabel: 'Workflow Step From Draft');
  }
 
  void _moveWorkflowStepInDraft(int index, int direction) {
@@ -742,6 +743,117 @@ class _FrontEndPlanningProcurementScreenState
  restricted.add(_ProcurementTab.reports);
  }
  return restricted;
+ }
+
+ /// Builds a horizontally-scrollable tab strip that lets the user jump
+ /// directly to any procurement tab. Added per Task 9.3 — previously the
+ /// only way to switch tabs was the "Next:" button at the bottom of the
+ /// page, which made the screen feel cut off and hard to navigate.
+ ///
+ /// The strip renders a pill per tab. The active tab is filled (blue bg,
+ /// white text); inactive tabs are outlined. Restricted tabs (e.g. Reports
+ /// before contracting has commenced) show a lock icon and are disabled.
+ /// On narrow viewports the strip scrolls horizontally so all 7 tabs
+ /// remain reachable.
+ Widget _buildProcurementTabStrip() {
+ final tabs = _ProcurementTab.values;
+ final restricted = _tabsWithRestrictedAccess;
+
+ return Container(
+ decoration: BoxDecoration(
+ color: const Color(0xFFF8FAFC),
+ border: Border.all(color: const Color(0xFFE2E8F0)),
+ borderRadius: BorderRadius.circular(12),
+ ),
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+ child: Scrollbar(
+ thumbVisibility: true,
+ trackVisibility: true,
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: Row(
+ crossAxisAlignment: CrossAxisAlignment.center,
+ children: [
+ for (var i = 0; i < tabs.length; i++) ...[
+ _buildProcurementTabPill(tabs[i], restricted),
+ if (i < tabs.length - 1) const SizedBox(width: 8),
+ ],
+ ],
+ ),
+ ),
+ ),
+ );
+ }
+
+ Widget _buildProcurementTabPill(
+ _ProcurementTab tab, Set<_ProcurementTab> restricted) {
+ final isSelected = _selectedTab == tab;
+ final isRestricted = restricted.contains(tab);
+ final accent = const Color(0xFF1E3A8A);
+
+ VoidCallback? onTap = () => _handleTabSelected(tab);
+ if (isRestricted) onTap = null;
+
+ final label = tab.label;
+ final pill = InkWell(
+ onTap: onTap,
+ borderRadius: BorderRadius.circular(8),
+ child: AnimatedContainer(
+ duration: const Duration(milliseconds: 150),
+ padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+ decoration: BoxDecoration(
+ color: isSelected
+ ? accent
+ : (isRestricted
+ ? const Color(0xFFF1F5F9)
+ : Colors.white),
+ borderRadius: BorderRadius.circular(8),
+ border: Border.all(
+ color: isSelected
+ ? accent
+ : (isRestricted
+ ? const Color(0xFFCBD5E1)
+ : const Color(0xFFBFDBFE)),
+ ),
+ ),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ if (isRestricted) ...[
+ Icon(
+ Icons.lock_outline,
+ size: 14,
+ color: isSelected
+ ? Colors.white
+ : const Color(0xFF64748B),
+ ),
+ const SizedBox(width: 6),
+ ],
+ Text(
+ label,
+ style: TextStyle(
+ fontSize: 13,
+ fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+ color: isSelected
+ ? Colors.white
+ : (isRestricted
+ ? const Color(0xFF64748B)
+ : accent),
+ ),
+ ),
+ ],
+ ),
+ ),
+ );
+
+ // Show a tooltip explaining why a tab is locked.
+ if (isRestricted) {
+ return Tooltip(
+ message: _tabAccessMessage(tab),
+ child: pill,
+ );
+ }
+ return pill;
  }
 
  void _scheduleProjectBootstrap() {
@@ -1553,6 +1665,12 @@ class _FrontEndPlanningProcurementScreenState
  break;
  case _ProcurementTab.rfqWorkflow:
  _rfqsLimit += _streamLimitStep;
+ break;
+ case _ProcurementTab.contractingWorkflow:
+ // Stage-based stepper; no stream pagination needed.
+ break;
+ case _ProcurementTab.vendorEvaluation:
+ // Evaluation matrix renders all vendors; no pagination needed.
  break;
  case _ProcurementTab.purchaseOrders:
  _purchaseOrdersLimit += _streamLimitStep;
@@ -3564,6 +3682,22 @@ class _FrontEndPlanningProcurementScreenState
  onOpenTemplates: () =>
  _handleTabSelected(_ProcurementTab.itemTracking),
  );
+ case _ProcurementTab.contractingWorkflow:
+ return _ContractingWorkflowView(
+ key: const ValueKey('procurement_contracting_workflow'),
+ scopeItems: _items,
+ vendors: _vendors,
+ selectedVendorIds: _selectedVendorIds,
+ currencyFormat: _currencyFormat,
+ processStarted: _hasCommencedContractingActivities,
+ );
+ case _ProcurementTab.vendorEvaluation:
+ return _VendorEvaluationView(
+ key: const ValueKey('procurement_vendor_evaluation'),
+ vendors: _vendors,
+ scopeItems: _items,
+ currencyFormat: _currencyFormat,
+ );
  case _ProcurementTab.purchaseOrders:
  return _PurchaseOrdersView(
  key: const ValueKey('procurement_purchase_orders'),
@@ -3703,6 +3837,12 @@ class _FrontEndPlanningProcurementScreenState
  icon: const Icon(Icons.unfold_more_rounded, size: 16),
  label: Text('Load ${_streamLimitStep.toString()} more RFQs'),
  );
+ case _ProcurementTab.contractingWorkflow:
+ // Stage stepper is fully rendered; no stream load-more.
+ return const SizedBox.shrink();
+ case _ProcurementTab.vendorEvaluation:
+ // Matrix renders all vendors; no stream load-more.
+ return const SizedBox.shrink();
  case _ProcurementTab.purchaseOrders:
  if (!_isPurchaseOrdersSectionEnabled) {
  return const SizedBox.shrink();
@@ -5437,6 +5577,13 @@ class _FrontEndPlanningProcurementScreenState
  'Capture procurement priorities, vendors, and approval constraints.',
  ),
  const SizedBox(height: 16),
+ // ── Tab strip (clickable navigation across all procurement tabs) ────────
+ // Added per Task 9.3 — previously tabs were only reachable via the
+ // "Next:" button at the bottom, which made the screen feel cut off and
+ // hard to navigate. The strip is horizontally scrollable on narrow
+ // viewports so all 7 tabs remain accessible on mobile.
+ _buildProcurementTabStrip(),
+ const SizedBox(height: 16),
  Align(
  alignment: Alignment.centerRight,
  child: OutlinedButton.icon(
@@ -5467,33 +5614,6 @@ class _FrontEndPlanningProcurementScreenState
  ),
  ],
  const SizedBox(height: 32),
- InnerPageNavigationHint(
- pageId: _isPlanningMode ? 'planning_procurement' : 'fep_procurement',
- pageTitle: 'Procurement',
- description: 'Navigate between procurement sections',
- currentSectionId: _selectedTab.name,
- onSectionTap: (sectionId) {
- final tab = _ProcurementTab.values.firstWhere(
- (t) => t.name == sectionId,
- orElse: () => _selectedTab,
- );
- _handleTabSelected(tab);
- },
- sections: _ProcurementTab.values.map((tab) {
- final isRestricted = _tabsWithRestrictedAccess.contains(tab);
- final isCurrent = tab == _selectedTab;
- return InnerPageSection(
- id: tab.name,
- label: tab.label,
- stepNumber: _ProcurementTab.values.indexOf(tab) + 1,
- status: isRestricted
- ? InnerPageSectionStatus.locked
- : isCurrent
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- );
- }).toList(),
- ),
  const SizedBox(height: 24),
  AnimatedSwitcher(
  duration: const Duration(milliseconds: 250),
@@ -12042,6 +12162,8 @@ enum _ProcurementTab {
  procurementDashboard,
  itemsList,
  rfqWorkflow,
+ contractingWorkflow, // Task 9.5 — 7-stage contracting workflow
+ vendorEvaluation, // Task 9.6 — Technical / Commercial / Risk evaluation
  vendorManagement,
  purchaseOrders,
  itemTracking,
@@ -12057,6 +12179,10 @@ extension _ProcurementTabExtension on _ProcurementTab {
  return 'Scope Details';
  case _ProcurementTab.rfqWorkflow:
  return 'Procurement Workflow';
+ case _ProcurementTab.contractingWorkflow:
+ return 'Contracting Workflow';
+ case _ProcurementTab.vendorEvaluation:
+ return 'Vendor Evaluation';
  case _ProcurementTab.vendorManagement:
  return 'Vendor Management';
  case _ProcurementTab.purchaseOrders:
@@ -12345,3 +12471,986 @@ class _ComplianceMetric {
  final String label;
  final double value;
 }
+
+// ============================================================================
+// TASK 9.5 — Contracting Workflow View
+// ============================================================================
+// Implements the 7-stage contracting workflow the user asked for:
+//   1. Scope Documents
+//   2. Invite Vendors
+//   3. Bid Cycle
+//   4. Bid Clarifications
+//   5. Review Bids
+//   6. Select Contractor
+//   7. Contract Tracking
+//
+// Each stage is rendered as a card in a vertical stepper. The user can mark
+// each stage complete to advance. State is held in-memory per session
+// (Firestore persistence is a future enhancement; for now the focus is on
+// surfacing the workflow visually on the procurement screen).
+// ============================================================================
+
+enum _ContractingStage {
+ scopeDocuments,
+ inviteVendors,
+ bidCycle,
+ bidClarifications,
+ reviewBids,
+ selectContractor,
+ contractTracking,
+}
+
+extension _ContractingStageExtension on _ContractingStage {
+ String get label {
+ switch (this) {
+ case _ContractingStage.scopeDocuments:
+ return 'Scope Documents';
+ case _ContractingStage.inviteVendors:
+ return 'Invite Vendors';
+ case _ContractingStage.bidCycle:
+ return 'Bid Cycle';
+ case _ContractingStage.bidClarifications:
+ return 'Bid Clarifications';
+ case _ContractingStage.reviewBids:
+ return 'Review Bids';
+ case _ContractingStage.selectContractor:
+ return 'Select Contractor';
+ case _ContractingStage.contractTracking:
+ return 'Contract Tracking';
+ }
+ }
+
+ String get description {
+ switch (this) {
+ case _ContractingStage.scopeDocuments:
+ return 'Prepare and finalize the scope of work (SOW), technical '
+ 'specifications, drawings, and any reference materials that bidders '
+ 'will need to submit a compliant proposal. Confirm acceptance '
+ 'criteria and contract terms.';
+ case _ContractingStage.inviteVendors:
+ return 'Identify qualified vendors from the approved vendor list '
+ 'and issue invitations to bid (ITB). Provide each vendor with the '
+ 'scope documents, submission deadline, and evaluation criteria.';
+ case _ContractingStage.bidCycle:
+ return 'Vendors prepare and submit their bids. Track submission '
+ 'status, confirm receipt of each bid, and enforce the bid deadline. '
+ 'Late bids are flagged for review.';
+ case _ContractingStage.bidClarifications:
+ return 'Issue clarification requests to bidders where their '
+ 'proposals are ambiguous or incomplete. Log each clarification and '
+ 'the bidder\'s response so the evaluation trail is auditable.';
+ case _ContractingStage.reviewBids:
+ return 'Evaluate each bid against the technical, commercial, and '
+ 'risk criteria defined in the Vendor Evaluation tab. Document '
+ 'strengths, weaknesses, and overall scores per bidder.';
+ case _ContractingStage.selectContractor:
+ return 'Select the winning bidder based on the evaluation results '
+ 'and confirm approval with the project sponsor. Notify the '
+ 'successful contractor and debrief unsuccessful bidders.';
+ case _ContractingStage.contractTracking:
+ return 'Track contract execution: signed agreement, milestones, '
+ 'deliverables, invoicing, and performance against SLA. Log any '
+ 'change orders or variations.';
+ }
+ }
+
+ IconData get icon {
+ switch (this) {
+ case _ContractingStage.scopeDocuments:
+ return Icons.description_outlined;
+ case _ContractingStage.inviteVendors:
+ return Icons.send_outlined;
+ case _ContractingStage.bidCycle:
+ return Icons.inbox_outlined;
+ case _ContractingStage.bidClarifications:
+ return Icons.question_answer_outlined;
+ case _ContractingStage.reviewBids:
+ return Icons.rate_review_outlined;
+ case _ContractingStage.selectContractor:
+ return Icons.handshake_outlined;
+ case _ContractingStage.contractTracking:
+ return Icons.fact_check_outlined;
+ }
+ }
+}
+
+class _ContractingWorkflowView extends StatefulWidget {
+ const _ContractingWorkflowView({
+ super.key,
+ required this.scopeItems,
+ required this.vendors,
+ required this.selectedVendorIds,
+ required this.currencyFormat,
+ required this.processStarted,
+ });
+
+ final List<ProcurementItemModel> scopeItems;
+ final List<VendorModel> vendors;
+ final Set<String> selectedVendorIds;
+ final NumberFormat currencyFormat;
+ final bool processStarted;
+
+ @override
+ State<_ContractingWorkflowView> createState() =>
+ _ContractingWorkflowViewState();
+}
+
+class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
+ /// Tracks which stages the user has marked complete.
+ final Set<_ContractingStage> _completedStages = {};
+
+ @override
+ void didUpdateWidget(covariant _ContractingWorkflowView oldWidget) {
+ super.didUpdateWidget(oldWidget);
+ // If the process is reset (e.g. user navigates away and back), keep state.
+ // Reset only when the user explicitly clears it via the "Reset workflow"
+ // button.
+ }
+
+ void _toggleStage(_ContractingStage stage) {
+ setState(() {
+ if (_completedStages.contains(stage)) {
+ _completedStages.remove(stage);
+ } else {
+ _completedStages.add(stage);
+ }
+ });
+ }
+
+ void _resetWorkflow() {
+ setState(_completedStages.clear);
+ }
+
+ int get _completedCount => _completedStages.length;
+ int get _totalStages => _ContractingStage.values.length;
+ double get _progressPercent => _completedCount / _totalStages;
+
+ /// Returns the next incomplete stage, or null if all are complete.
+ _ContractingStage? get _nextPendingStage {
+ for (final stage in _ContractingStage.values) {
+ if (!_completedStages.contains(stage)) return stage;
+ }
+ return null;
+ }
+
+ @override
+ Widget build(BuildContext context) {
+ if (!widget.processStarted) {
+ return const _StageLockedView(
+ title: 'Contracting Workflow Locked',
+ message: 'Start at least one contract scope process to unlock the '
+ '7-stage contracting workflow.',
+ );
+ }
+
+ final accent = const Color(0xFF1E3A8A);
+ final nextStage = _nextPendingStage;
+
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ // ── Workflow header card ───────────────────────────────────────────
+ Card(
+ elevation: 0,
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(12),
+ side: const BorderSide(color: Color(0xFFE2E8F0)),
+ ),
+ child: Padding(
+ padding: const EdgeInsets.all(20),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ '7-Stage Contracting Workflow',
+ style: TextStyle(
+ fontSize: 18,
+ fontWeight: FontWeight.w600,
+ color: accent,
+ ),
+ ),
+ const SizedBox(height: 4),
+ const Text(
+ 'Walk through each stage in order. Mark each one '
+ 'complete to advance. Use the Vendor Evaluation tab '
+ 'to score bids during the Review Bids stage.',
+ style: TextStyle(
+ fontSize: 13,
+ color: Color(0xFF64748B),
+ ),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(width: 16),
+ OutlinedButton.icon(
+ onPressed: _resetWorkflow,
+ icon: const Icon(Icons.restart_alt, size: 16),
+ label: const Text('Reset'),
+ style: OutlinedButton.styleFrom(
+ foregroundColor: accent,
+ side: const BorderSide(color: Color(0xFFBFDBFE)),
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 16),
+ // Progress bar
+ Row(
+ children: [
+ Expanded(
+ child: ClipRRect(
+ borderRadius: BorderRadius.circular(8),
+ child: LinearProgressIndicator(
+ value: _progressPercent,
+ minHeight: 10,
+ backgroundColor: const Color(0xFFE2E8F0),
+ valueColor: AlwaysStoppedAnimation<Color>(accent),
+ ),
+ ),
+ ),
+ const SizedBox(width: 12),
+ Text(
+ '$_completedCount / $_totalStages',
+ style: TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w600,
+ color: accent,
+ ),
+ ),
+ ],
+ ),
+ if (nextStage != null) ...[
+ const SizedBox(height: 12),
+ Container(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 12, vertical: 8),
+ decoration: BoxDecoration(
+ color: const Color(0xFFFEF3C7),
+ borderRadius: BorderRadius.circular(8),
+ border: Border.all(color: const Color(0xFFFCD34D)),
+ ),
+ child: Row(
+ children: [
+ const Icon(Icons.flag_outlined,
+ size: 16, color: Color(0xFFB45309)),
+ const SizedBox(width: 8),
+ Expanded(
+ child: Text(
+ 'Next: ${nextStage.label}',
+ style: const TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w500,
+ color: Color(0xFFB45309),
+ ),
+ ),
+ ),
+ ],
+ ),
+ ),
+ ],
+ ],
+ ),
+ ),
+ ),
+ const SizedBox(height: 16),
+ // ── Stage cards ────────────────────────────────────────────────────
+ ..._ContractingStage.values.map((stage) {
+ final isComplete = _completedStages.contains(stage);
+ final isNext = stage == nextStage;
+ return _ContractingStageCard(
+ stage: stage,
+ isComplete: isComplete,
+ isNext: isNext,
+ onToggle: () => _toggleStage(stage),
+ );
+ }),
+ const SizedBox(height: 24),
+ ],
+ );
+ }
+}
+
+class _ContractingStageCard extends StatelessWidget {
+ const _ContractingStageCard({
+ required this.stage,
+ required this.isComplete,
+ required this.isNext,
+ required this.onToggle,
+ });
+
+ final _ContractingStage stage;
+ final bool isComplete;
+ final bool isNext;
+ final VoidCallback onToggle;
+
+ @override
+ Widget build(BuildContext context) {
+ final accent = const Color(0xFF1E3A8A);
+ final successGreen = const Color(0xFF16A34A);
+ final amber = const Color(0xFFF59E0B);
+
+ Color badgeColor = isComplete
+ ? successGreen
+ : (isNext ? amber : const Color(0xFFCBD5E1));
+ Color badgeBg = isComplete
+ ? const Color(0xFFE8FFF4)
+ : (isNext ? const Color(0xFFFEF3C7) : const Color(0xFFF1F5F9));
+ IconData badgeIcon = isComplete
+ ? Icons.check_circle
+ : (isNext ? Icons.play_circle_outline : stage.icon);
+
+ return Padding(
+ padding: const EdgeInsets.only(bottom: 12),
+ child: Card(
+ elevation: 0,
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(10),
+ side: BorderSide(
+ color: isComplete
+ ? const Color(0xFFBBF7D0)
+ : (isNext ? const Color(0xFFFCD34D) : const Color(0xFFE2E8F0)),
+ width: isComplete || isNext ? 1.5 : 1,
+ ),
+ ),
+ child: Padding(
+ padding: const EdgeInsets.all(16),
+ child: Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ // Stage icon / status badge
+ Container(
+ width: 40,
+ height: 40,
+ decoration: BoxDecoration(
+ color: badgeBg,
+ borderRadius: BorderRadius.circular(10),
+ ),
+ child: Icon(badgeIcon, color: badgeColor, size: 22),
+ ),
+ const SizedBox(width: 14),
+ // Stage label + description
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ Text(
+ stage.label,
+ style: TextStyle(
+ fontSize: 15,
+ fontWeight: FontWeight.w600,
+ color: accent,
+ ),
+ ),
+ const SizedBox(width: 8),
+ if (isComplete)
+ _StageChip(
+ text: 'COMPLETE',
+ color: successGreen,
+ bgColor: const Color(0xFFE8FFF4),
+ )
+ else if (isNext)
+ _StageChip(
+ text: 'NEXT',
+ color: const Color(0xFFB45309),
+ bgColor: const Color(0xFFFEF3C7),
+ ),
+ ],
+ ),
+ const SizedBox(height: 6),
+ Text(
+ stage.description,
+ style: const TextStyle(
+ fontSize: 13,
+ color: Color(0xFF64748B),
+ height: 1.4,
+ ),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(width: 12),
+ // Toggle button
+ OutlinedButton(
+ onPressed: onToggle,
+ style: OutlinedButton.styleFrom(
+ foregroundColor: isComplete ? successGreen : accent,
+ side: BorderSide(
+ color: isComplete
+ ? const Color(0xFFBBF7D0)
+ : const Color(0xFFBFDBFE),
+ ),
+ padding:
+ const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+ ),
+ child: Text(isComplete ? 'Mark Incomplete' : 'Mark Complete'),
+ ),
+ ],
+ ),
+ ),
+ ),
+ );
+ }
+}
+
+class _StageChip extends StatelessWidget {
+ const _StageChip({
+ required this.text,
+ required this.color,
+ required this.bgColor,
+ });
+
+ final String text;
+ final Color color;
+ final Color bgColor;
+
+ @override
+ Widget build(BuildContext context) {
+ return Container(
+ padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+ decoration: BoxDecoration(
+ color: bgColor,
+ borderRadius: BorderRadius.circular(4),
+ ),
+ child: Text(
+ text,
+ style: TextStyle(
+ fontSize: 10,
+ fontWeight: FontWeight.w700,
+ color: color,
+ letterSpacing: 0.5,
+ ),
+ ),
+ );
+ }
+}
+
+// ============================================================================
+// TASK 9.6 — Vendor Evaluation View
+// ============================================================================
+// Implements a formal vendor evaluation matrix with three scoring pillars:
+//   1. Technical Scoring  — methodology, experience, qualifications
+//   2. Commercial Evaluation — price, payment terms, total cost of ownership
+//   3. Risk Assessment — financial stability, past performance, capacity
+//
+// Each vendor gets a 0-100 score per pillar. Weights are configurable (the
+// default is 40% technical / 40% commercial / 20% risk). The weighted total
+// determines the ranking. Scores are held in-memory for the session.
+// ============================================================================
+
+class _VendorEvaluationView extends StatefulWidget {
+ const _VendorEvaluationView({
+ super.key,
+ required this.vendors,
+ required this.scopeItems,
+ required this.currencyFormat,
+ });
+
+ final List<VendorModel> vendors;
+ final List<ProcurementItemModel> scopeItems;
+ final NumberFormat currencyFormat;
+
+ @override
+ State<_VendorEvaluationView> createState() => _VendorEvaluationViewState();
+}
+
+class _VendorEvaluationViewState extends State<_VendorEvaluationView> {
+ /// Per-vendor scores: vendorId → {pillar → score 0..100}
+ final Map<String, Map<_EvalPillar, double>> _scores = {};
+
+ /// Pillar weights (must sum to 1.0). Defaults: 40/40/20.
+ final Map<_EvalPillar, double> _weights = {
+ _EvalPillar.technical: 0.40,
+ _EvalPillar.commercial: 0.40,
+ _EvalPillar.risk: 0.20,
+ };
+
+ double _scoreFor(String vendorId, _EvalPillar pillar) {
+ return _scores[vendorId]?[pillar] ?? 0.0;
+ }
+
+ void _setScore(String vendorId, _EvalPillar pillar, double value) {
+ setState(() {
+ final map = _scores.putIfAbsent(vendorId, () => {});
+ map[pillar] = value.clamp(0.0, 100.0);
+ });
+ }
+
+ double _weightedTotal(String vendorId) {
+ double total = 0.0;
+ for (final pillar in _EvalPillar.values) {
+ total += _scoreFor(vendorId, pillar) * _weights[pillar]!;
+ }
+ return total;
+ }
+
+ @override
+ Widget build(BuildContext context) {
+ final accent = const Color(0xFF1E3A8A);
+ final vendors = widget.vendors;
+
+ if (vendors.isEmpty) {
+ return const _EmptyStateCard(
+ icon: Icons.grading_outlined,
+ title: 'No Vendors to Evaluate',
+ message: 'Add vendors on the Vendor Management tab before running '
+ 'a formal technical / commercial / risk evaluation.',
+ compact: true,
+ );
+ }
+
+ // Ranked vendors (highest weighted total first).
+ final ranked = [...vendors]
+ ..sort((a, b) =>
+ _weightedTotal(b.id).compareTo(_weightedTotal(a.id)));
+
+ return Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ // ── Header card ────────────────────────────────────────────────────
+ Card(
+ elevation: 0,
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(12),
+ side: const BorderSide(color: Color(0xFFE2E8F0)),
+ ),
+ child: Padding(
+ padding: const EdgeInsets.all(20),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ const Icon(Icons.grading_outlined, color: Color(0xFF1E3A8A)),
+ const SizedBox(width: 10),
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(
+ 'Vendor Evaluation Matrix',
+ style: TextStyle(
+ fontSize: 18,
+ fontWeight: FontWeight.w600,
+ color: accent,
+ ),
+ ),
+ const SizedBox(height: 4),
+ const Text(
+ 'Score each vendor on three pillars. The weighted '
+ 'total drives the ranking. Adjust the weights below '
+ 'to match your project priorities.',
+ style: TextStyle(
+ fontSize: 13,
+ color: Color(0xFF64748B),
+ ),
+ ),
+ ],
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 16),
+ // Weight sliders
+ ..._EvalPillar.values.map((pillar) => _WeightSlider(
+ pillar: pillar,
+ weight: _weights[pillar]!,
+ onChanged: (v) => setState(() => _weights[pillar] = v),
+ )),
+ const SizedBox(height: 8),
+ Text(
+ 'Sum of weights: ${(_weights.values.fold(0.0, (a, b) => a + b) * 100).toStringAsFixed(0)}%',
+ style: const TextStyle(
+ fontSize: 12,
+ color: Color(0xFF64748B),
+ fontStyle: FontStyle.italic,
+ ),
+ ),
+ ],
+ ),
+ ),
+ ),
+ const SizedBox(height: 16),
+ // ── Matrix table ───────────────────────────────────────────────────
+ Card(
+ elevation: 0,
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(12),
+ side: const BorderSide(color: Color(0xFFE2E8F0)),
+ ),
+ child: Padding(
+ padding: const EdgeInsets.all(16),
+ child: _EvaluationMatrix(
+ vendors: ranked,
+ scoreFor: _scoreFor,
+ weightedTotal: _weightedTotal,
+ weights: _weights,
+ onScoreChanged: _setScore,
+ ),
+ ),
+ ),
+ const SizedBox(height: 16),
+ // ── Recommendation banner ──────────────────────────────────────────
+ if (ranked.isNotEmpty && _weightedTotal(ranked.first.id) > 0)
+ Card(
+ elevation: 0,
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(12),
+ side: const BorderSide(color: Color(0xFFBBF7D0)),
+ ),
+ color: const Color(0xFFE8FFF4),
+ child: Padding(
+ padding: const EdgeInsets.all(16),
+ child: Row(
+ children: [
+ const Icon(Icons.emoji_events_outlined,
+ color: Color(0xFF16A34A), size: 28),
+ const SizedBox(width: 12),
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text(
+ 'Recommended Contractor',
+ style: TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF15803D),
+ ),
+ ),
+ const SizedBox(height: 2),
+ Text(
+ '${ranked.first.name} — weighted score '
+ '${_weightedTotal(ranked.first.id).toStringAsFixed(1)} / 100',
+ style: const TextStyle(
+ fontSize: 15,
+ fontWeight: FontWeight.w500,
+ color: Color(0xFF166534),
+ ),
+ ),
+ ],
+ ),
+ ),
+ ],
+ ),
+ ),
+ ),
+ const SizedBox(height: 24),
+ ],
+ );
+ }
+}
+
+enum _EvalPillar {
+ technical,
+ commercial,
+ risk,
+}
+
+extension _EvalPillarExtension on _EvalPillar {
+ String get label {
+ switch (this) {
+ case _EvalPillar.technical:
+ return 'Technical';
+ case _EvalPillar.commercial:
+ return 'Commercial';
+ case _EvalPillar.risk:
+ return 'Risk';
+ }
+ }
+
+ String get description {
+ switch (this) {
+ case _EvalPillar.technical:
+ return 'Methodology, relevant experience, team qualifications, '
+ 'and approach to delivering the scope of work.';
+ case _EvalPillar.commercial:
+ return 'Price competitiveness, payment terms, total cost of '
+ 'ownership, and financial flexibility.';
+ case _EvalPillar.risk:
+ return 'Financial stability, past performance on similar projects, '
+ 'capacity to deliver, and identified risk factors.';
+ }
+ }
+
+ IconData get icon {
+ switch (this) {
+ case _EvalPillar.technical:
+ return Icons.engineering_outlined;
+ case _EvalPillar.commercial:
+ return Icons.attach_money_outlined;
+ case _EvalPillar.risk:
+ return Icons.shield_outlined;
+ }
+ }
+}
+
+class _WeightSlider extends StatelessWidget {
+ const _WeightSlider({
+ required this.pillar,
+ required this.weight,
+ required this.onChanged,
+ });
+
+ final _EvalPillar pillar;
+ final double weight;
+ final ValueChanged<double> onChanged;
+
+ @override
+ Widget build(BuildContext context) {
+ return Padding(
+ padding: const EdgeInsets.only(bottom: 8),
+ child: Row(
+ children: [
+ Icon(pillar.icon, size: 18, color: const Color(0xFF1E3A8A)),
+ const SizedBox(width: 8),
+ Text(
+ pillar.label,
+ style: const TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w500,
+ color: Color(0xFF1E293B),
+ ),
+ ),
+ const Spacer(),
+ SizedBox(
+ width: 180,
+ child: Slider(
+ value: weight,
+ min: 0.0,
+ max: 1.0,
+ divisions: 20,
+ label: '${(weight * 100).round()}%',
+ onChanged: onChanged,
+ activeColor: const Color(0xFF1E3A8A),
+ ),
+ ),
+ SizedBox(
+ width: 48,
+ child: Text(
+ '${(weight * 100).round()}%',
+ style: const TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF1E3A8A),
+ ),
+ textAlign: TextAlign.right,
+ ),
+ ),
+ ],
+ ),
+ );
+ }
+}
+
+class _EvaluationMatrix extends StatelessWidget {
+ const _EvaluationMatrix({
+ required this.vendors,
+ required this.scoreFor,
+ required this.weightedTotal,
+ required this.weights,
+ required this.onScoreChanged,
+ });
+
+ final List<VendorModel> vendors;
+ final double Function(String, _EvalPillar) scoreFor;
+ final double Function(String) weightedTotal;
+ final Map<_EvalPillar, double> weights;
+ final void Function(String, _EvalPillar, double) onScoreChanged;
+
+ @override
+ Widget build(BuildContext context) {
+ final headerStyle = TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: const Color(0xFF1E293B),
+ );
+
+ return Scrollbar(
+ thumbVisibility: true,
+ trackVisibility: true,
+ child: SingleChildScrollView(
+ scrollDirection: Axis.horizontal,
+ child: SingleChildScrollView(
+ child: DataTable(
+ columnSpacing: 24,
+ horizontalMargin: 8,
+ columns: [
+ DataColumn(
+ label: SizedBox(
+ width: 40,
+ child: Text('#', style: headerStyle),
+ ),
+ ),
+ DataColumn(
+ label: SizedBox(
+ width: 180,
+ child: Text('Vendor', style: headerStyle),
+ ),
+ ),
+ DataColumn(
+ label: SizedBox(
+ width: 120,
+ child: Text('Category', style: headerStyle),
+ ),
+ ),
+ for (final pillar in _EvalPillar.values)
+ DataColumn(
+ label: SizedBox(
+ width: 180,
+ child: Tooltip(
+ message: pillar.description,
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Icon(pillar.icon,
+ size: 14, color: const Color(0xFF1E3A8A)),
+ const SizedBox(width: 4),
+ Text(
+ '${pillar.label}\n(${(weights[pillar]! * 100).round()}%)',
+ style: headerStyle,
+ ),
+ ],
+ ),
+ ),
+ ),
+ ),
+ DataColumn(
+ label: SizedBox(
+ width: 140,
+ child: Text('Weighted Total', style: headerStyle),
+ ),
+ ),
+ ],
+ rows: [
+ for (var i = 0; i < vendors.length; i++)
+ DataRow(
+ cells: [
+ DataCell(Text('${i + 1}')),
+ DataCell(Text(vendors[i].name)),
+ DataCell(Text(vendors[i].category)),
+ for (final pillar in _EvalPillar.values)
+ DataCell(
+ _ScoreCell(
+ value: scoreFor(vendors[i].id, pillar),
+ onChanged: (v) =>
+ onScoreChanged(vendors[i].id, pillar, v),
+ ),
+ ),
+ DataCell(
+ _WeightedTotalChip(
+ value: weightedTotal(vendors[i].id),
+ rank: i + 1,
+ ),
+ ),
+ ],
+ ),
+ ],
+ ),
+ ),
+ ),
+ );
+ }
+}
+
+class _ScoreCell extends StatelessWidget {
+ const _ScoreCell({required this.value, required this.onChanged});
+
+ final double value;
+ final ValueChanged<double> onChanged;
+
+ @override
+ Widget build(BuildContext context) {
+ final controller =
+ TextEditingController(text: value == 0 ? '' : value.toStringAsFixed(0));
+
+ return SizedBox(
+ width: 100,
+ child: TextField(
+ controller: controller,
+ keyboardType: const TextInputType.numberWithOptions(decimal: true),
+ decoration: InputDecoration(
+ isDense: true,
+ suffixText: '/100',
+ border: const OutlineInputBorder(),
+ contentPadding:
+ const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+ enabledBorder: OutlineInputBorder(
+ borderSide: BorderSide(
+ color: value >= 70
+ ? const Color(0xFFBBF7D0)
+ : (value >= 40
+ ? const Color(0xFFFCD34D)
+ : const Color(0xFFFECACA)),
+ ),
+ ),
+ focusedBorder: const OutlineInputBorder(
+ borderSide: BorderSide(color: Color(0xFF1E3A8A)),
+ ),
+ ),
+ onChanged: (text) {
+ final parsed = double.tryParse(text);
+ if (parsed != null) onChanged(parsed);
+ },
+ ),
+ );
+ }
+}
+
+class _WeightedTotalChip extends StatelessWidget {
+ const _WeightedTotalChip({required this.value, required this.rank});
+
+ final double value;
+ final int rank;
+
+ @override
+ Widget build(BuildContext context) {
+ Color bg;
+ Color fg;
+ if (rank == 1 && value > 0) {
+ bg = const Color(0xFFE8FFF4);
+ fg = const Color(0xFF16A34A);
+ } else if (value >= 60) {
+ bg = const Color(0xFFEFF6FF);
+ fg = const Color(0xFF1E3A8A);
+ } else if (value >= 30) {
+ bg = const Color(0xFFFEF3C7);
+ fg = const Color(0xFFB45309);
+ } else {
+ bg = const Color(0xFFF1F5F9);
+ fg = const Color(0xFF64748B);
+ }
+
+ return Container(
+ padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+ decoration: BoxDecoration(
+ color: bg,
+ borderRadius: BorderRadius.circular(8),
+ border: Border.all(color: fg.withValues(alpha: 0.3)),
+ ),
+ child: Text(
+ value.toStringAsFixed(1),
+ style: TextStyle(
+ fontSize: 13,
+ fontWeight: FontWeight.w700,
+ color: fg,
+ ),
+ ),
+ );
+ }
+}
+
+// ============================================================================
+// Shared empty-state card — already defined earlier in this file at
+// line ~12049 (class _EmptyStateCard). The two new views (Contracting
+// Workflow and Vendor Evaluation) reuse that existing widget.
+// ============================================================================

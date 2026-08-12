@@ -31,7 +31,11 @@ class PcPalette {
 
   // Surfaces
   static const Color surface = Colors.white;
-  static const Color surfaceSubtle = Color(0xFFF9FAFB);
+  // Per Task 18: entire Project Controls page should have a white background.
+  // surfaceSubtle was previously a light gray (#F9FAFB) which created visible
+  // gray panels across the dashboard, summary cards, and content sections.
+  // Aliased to white so all surfaces render uniformly white.
+  static const Color surfaceSubtle = Colors.white;
   static const Color surfaceElevated = Color(0xFFFFFFFF);
 
   // Borders

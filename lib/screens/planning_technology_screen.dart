@@ -11,7 +11,6 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/launch_phase_navigation.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/widgets/responsive.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
@@ -951,35 +950,10 @@ onBack: () =>
  const SizedBox(height: 14),
  _buildTabsBar(),
  const SizedBox(height: 12),
- InnerPageNavigationHint(
- pageId: 'planning_technology',
- pageTitle: 'Technology Planning',
- // 'Technology Inventory' (originally step 1) is intentionally omitted
- // from this navigation hint modal — the user requested its removal
- // from this popup ONLY. The underlying tab bar (_buildTabsBar) and
- // tab content switch (_buildCurrentTabContent) still include the
- // inventory tab and remain fully functional.
- sections: _TechnologyTab.values
-     .where((tab) => tab != _TechnologyTab.inventory)
-     .toList()
-     .asMap()
-     .entries
-     .map((entry) => InnerPageSection(
- id: entry.value.name,
- label: entry.value.label,
- status: entry.value == _selectedTab
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- stepNumber: entry.key + 1,
- ))
-     .toList(),
- currentSectionId: _selectedTab.name,
- onSectionTap: (sectionId) {
- final tab = _TechnologyTab.values.firstWhere(
- (t) => t.name == sectionId);
- setState(() => _selectedTab = tab);
- },
- ),
+ // The "Technology Planning Navigation" hint modal (InnerPageNavigationHint)
+ // that previously appeared here has been intentionally removed per user
+ // request — the tab bar above provides all the navigation needed, and the
+ // underlying tab content switch (_buildCurrentTabContent) remains intact.
  _buildCurrentTabContent(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(

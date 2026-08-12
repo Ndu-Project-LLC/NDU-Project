@@ -62,16 +62,19 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
     _tabController.addListener(_onTabChanged);
     // Auto-initialize WBS with sensible defaults — the explicit setup
     // wizard has been removed. Users land directly in the Builder.
+    //
+    // This is async because we must WAIT for the provider's initial
+    // storage load to complete before deciding whether to call setup().
+    // If we don't wait, isLoadingFromStorage is still true on the first
+    // post-frame callback and we'd bail out without ever initializing
+    // the WBS — leaving the page stuck on the loading spinner forever.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _autoSetupWbsIfNeeded();
     });
   }
 
-  void _autoSetupWbsIfNeeded() {
+  Future<void> _autoSetupWbsIfNeeded() async {
     if (!mounted) return;
-    final provider = context.read<WBSProvider>();
-    if (provider.isLoadingFromStorage) return;
-    if (provider.wbs != null && provider.setupComplete) return;
 
     final projectData = context.read<ProjectDataProvider>().projectData;
     final projectName = projectData.projectName.trim().isNotEmpty
@@ -81,6 +84,21 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
         ? projectData.projectId!.trim()
         : 'default';
 
+    final provider = context.read<WBSProvider>();
+
+    // Wait for the provider's initial storage load to finish AND for any
+    // project-scoped WBS to be loaded from Firestore / SharedPreferences.
+    // This blocks until isLoadingFromStorage == false, so the check below
+    // runs against the fully-resolved state.
+    await provider.ensureProjectLoaded(projectId);
+    if (!mounted) return;
+
+    // If storage already gave us a complete WBS for this project, nothing
+    // to do — the builder will render it.
+    if (provider.wbs != null && provider.setupComplete) return;
+
+    // No persisted WBS for this project — create one with the default
+    // framework/methodology and persist it for next time.
     provider.setup(
       projectName: projectName,
       framework: WBSFramework.waterfallDeliverable,

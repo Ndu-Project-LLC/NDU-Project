@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ndu_project/models/project_activity.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/admin_edit_toggle.dart';
@@ -67,6 +69,24 @@ class _ProjectActivitiesLogScreenState
  PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
  ],
  );
+ }
+
+ /// Robust back-navigation handler.
+ ///
+ /// Preferred flow: pop the current route off the stack (returns the user
+ /// to whichever screen pushed /project-activities-log — typically the
+ /// Portfolio Dashboard, Program Dashboard, or a project workspace).
+ ///
+ /// Fallback: if there is nothing to pop (e.g. the user deep-linked
+ /// directly to /project-activities-log via URL or the route stack was
+ /// cleared), navigate to the main dashboard so the user always lands
+ /// somewhere meaningful instead of being stranded on a dead-end screen.
+ void _handleBackNavigation() {
+ if (context.canPop()) {
+ context.pop();
+ } else {
+ context.go('/${AppRoutes.dashboard}');
+ }
  }
 
  final TextEditingController _searchController = TextEditingController();
@@ -759,7 +779,9 @@ class _ProjectActivitiesLogScreenState
  children: [
  FrontEndPlanningHeader(
  title: 'Project Activities Log',
- showActivityLogAction: false, onExportPdf: _exportPdf),
+ showActivityLogAction: false,
+ onBackPressed: _handleBackNavigation,
+ onExportPdf: _exportPdf),
  Expanded(
  child: LayoutBuilder(
  builder: (context, constraints) {

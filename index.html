@@ -32,14 +32,14 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="NDU Project">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png?v=NDU_BUILD_STAMP">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png?v=1786563210">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="favicon.ico?v=NDU_BUILD_STAMP"/>
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png?v=NDU_BUILD_STAMP"/>
+  <link rel="icon" type="image/x-icon" href="favicon.ico?v=1786563210"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png?v=1786563210"/>
 
   <title>NDU Project</title>
-  <link rel="manifest" href="manifest.json?v=NDU_BUILD_STAMP">
+  <link rel="manifest" href="manifest.json?v=1786563210">
 
   <!-- Loading spinner — shown immediately on first paint, before Flutter's
        engine has booted. Provides visual feedback during the ~1-2s it takes
@@ -119,11 +119,11 @@
   <!-- Runtime environment config — loaded BEFORE Flutter so the keys are
        available when EnvConfigLoader.load() runs in main().
        See web/env-config.js for documentation. -->
-  <script src="env-config.js?v=NDU_BUILD_STAMP"></script>
+  <script src="env-config.js?v=1786563210"></script>
 
   <!-- ULTRA AGGRESSIVE cache bust — guarantees users always see the latest
        deployment. The pipeline (scripts/stamp_build_version.py) replaces
-       NDU_BUILD_STAMP with the current epoch seconds at build time, so this
+       1786563210 with the current epoch seconds at build time, so this
        block effectively re-runs on every new deploy:
 
        1. Kills ALL existing service workers (prevents stale SW from serving
@@ -136,11 +136,11 @@
           bypassing any HTTP cache. -->
   <script>
     (function() {
-      // NDU_BUILD_STAMP is replaced at build time by scripts/stamp_build_version.py
-      var NDU_BUILD = 'NDU_BUILD_STAMP';
+      // 1786563210 is replaced at build time by scripts/stamp_build_version.py
+      var NDU_BUILD = '1786563210';
       // If the stamp wasn't replaced (e.g. running `flutter run` locally),
       // fall back to a fixed value so the redirect logic doesn't loop.
-      if (NDU_BUILD === 'NDU_BUILD_STAMP' || !NDU_BUILD) {
+      if (NDU_BUILD === '1786563210' || !NDU_BUILD) {
         NDU_BUILD = 'dev-local';
       }
       try {
@@ -207,6 +207,6 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="flutter_bootstrap.js?v=NDU_BUILD_STAMP" async></script>
+  <script src="flutter_bootstrap.js?v=1786563210" async></script>
 </body>
 </html>

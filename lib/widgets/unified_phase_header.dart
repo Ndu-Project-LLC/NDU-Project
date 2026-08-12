@@ -327,7 +327,6 @@ class UnifiedPhaseHeader extends StatelessWidget {
           if (showActivityLogAction) const SizedBox(width: 12),
           ...trailingActions,
           if (trailingActions.isNotEmpty) const SizedBox(width: 12),
-          const UnifiedProfileMenu(compact: true),
         ],
       ),
     );

@@ -954,14 +954,25 @@ onBack: () =>
  InnerPageNavigationHint(
  pageId: 'planning_technology',
  pageTitle: 'Technology Planning',
- sections: _TechnologyTab.values.map((tab) => InnerPageSection(
- id: tab.name,
- label: tab.label,
- status: tab == _selectedTab
+ // 'Technology Inventory' (originally step 1) is intentionally omitted
+ // from this navigation hint modal — the user requested its removal
+ // from this popup ONLY. The underlying tab bar (_buildTabsBar) and
+ // tab content switch (_buildCurrentTabContent) still include the
+ // inventory tab and remain fully functional.
+ sections: _TechnologyTab.values
+     .where((tab) => tab != _TechnologyTab.inventory)
+     .toList()
+     .asMap()
+     .entries
+     .map((entry) => InnerPageSection(
+ id: entry.value.name,
+ label: entry.value.label,
+ status: entry.value == _selectedTab
  ? InnerPageSectionStatus.current
  : InnerPageSectionStatus.available,
- stepNumber: _TechnologyTab.values.indexOf(tab) + 1,
- )).toList(),
+ stepNumber: entry.key + 1,
+ ))
+     .toList(),
  currentSectionId: _selectedTab.name,
  onSectionTap: (sectionId) {
  final tab = _TechnologyTab.values.firstWhere(

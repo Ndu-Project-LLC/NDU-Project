@@ -19,6 +19,15 @@
 // 2. Fill in the values below for your environment.
 // 3. Serve. The Dart side (EnvConfigLoader) picks them up on app start.
 //
+// GITHUB SECRET
+// -------------
+// The OpenAI API key is stored as a GitHub secret named `API_Key` on the
+// NDU-Project-LLC/NDU-Project repository. The CI/CD workflows
+// (.github/workflows/*.yml) read `${{ secrets.API_Key }}` and inject it at
+// build time via `--dart-define=OPENAI_API_KEY` and `--dart-define=OPENAI_PROXY_API_KEY`.
+// A fallback to the legacy `OPENAI_PROXY_API_KEY` secret is also kept for
+// safety during the secret-name migration.
+//
 // FALLBACK
 // --------
 // If OPENAI_API_KEY is left empty (""), the app uses the Cloud Function

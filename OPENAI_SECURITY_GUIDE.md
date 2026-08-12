@@ -4,6 +4,20 @@
 
 This guide explains how to securely use OpenAI API in your app by moving the API key from client code to a Firebase Cloud Function. This prevents the key from being exposed in your source code, even when pushed to GitHub.
 
+## 🔑 GitHub Secret Name
+
+The canonical OpenAI API key GitHub secret is named **`API_Key`** on the `Ndu-Project-LLC/NDU-Project` repository. All CI/CD workflows in `.github/workflows/` read it via `${{ secrets.API_Key }}` and inject it at build time through `--dart-define`:
+
+- `--dart-define=OPENAI_API_KEY` — read by `lib/services/api_config_secure.dart`
+- `--dart-define=OPENAI_PROXY_API_KEY` — read by `lib/openai/openai_config.dart`
+
+A fallback to the legacy `OPENAI_PROXY_API_KEY` secret is kept for safety during the secret-name migration. To rotate the key, update the `API_Key` GitHub secret at:
+> **GitHub → NDU-Project-LLC/NDU-Project → Settings → Secrets and variables → Actions → `API_Key`**
+
+The key then takes effect on the next workflow run (push to `staging` triggers `deploy-staging.yml`, or run `Promote Staging → Production` for `nduproject.com`).
+
+> ⚠️ **Note**: The Cloud Function proxy (`functions/index.js`) uses Firebase secrets (`firebase functions:secrets:set OPENAI_API_KEY`), which is a **separate** secret store from GitHub. The Flutter client never sees the server-side key — it only sends requests to the proxy URL.
+
 ## ⚠️ Current Security Issue
 
 **Problem**: Your OpenAI API key is currently hardcoded in `lib/services/api_config_secure.dart`:
@@ -221,7 +235,16 @@ firebase functions:secrets:access OPENAI_API_KEY
 
 ## 🔄 Updating the API Key
 
-If you need to rotate or update your API key:
+There are TWO places the OpenAI API key is stored, depending on which path you want to update:
+
+### Path A — Client-side `--dart-define` (used by direct OpenAI calls)
+
+Update the **`API_Key`** GitHub secret at:
+> GitHub → NDU-Project-LLC/NDU-Project → Settings → Secrets and variables → Actions → `API_Key`
+
+The new value takes effect on the next CI build (push to `staging` auto-triggers `deploy-staging.yml`; for `nduproject.com` run `Promote Staging → Production`). No code changes needed.
+
+### Path B — Server-side Cloud Function proxy (recommended for production)
 
 ```bash
 # Set new key

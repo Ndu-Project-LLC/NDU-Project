@@ -274,14 +274,14 @@ class _ProjectCommandCenterScreenState extends State<ProjectCommandCenterScreen>
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: _createNewProject,
-        backgroundColor: _blue,
+        backgroundColor: const Color(0xFFFFC107),
         foregroundColor: const Color(0xFF1C1C1C),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('New Workspace',
-            style: TextStyle(fontWeight: FontWeight.w700)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        child: const Icon(Icons.psychology_rounded, size: 30, color: Color(0xFF1C1C1C)),
+        elevation: 4,
+        shape: const CircleBorder(),
+        tooltip: 'KAZ AI — New Workspace',
       ),
       ),
     );

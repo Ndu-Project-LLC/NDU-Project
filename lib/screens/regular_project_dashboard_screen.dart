@@ -309,21 +309,18 @@ class _RegularProjectDashboardScreenState
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: _createNewProject,
-        backgroundColor: _teal,
+        backgroundColor: const Color(0xFFFFC107),
         foregroundColor: const Color(0xFF1C1C1C),
-        icon: _KazAiBadge(
-          size: 28,
-          iconColor: Colors.white,
-          badgeColor: Colors.white.withValues(alpha: 0.28),
+        child: const _KazAiBadge(
+          size: 36,
+          iconColor: Color(0xFF1C1C1C),
+          badgeColor: Colors.transparent,
         ),
-        label: const Text(
-          'New Project',
-          style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.2),
-        ),
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        elevation: 4,
+        shape: const CircleBorder(),
+        tooltip: 'KAZ AI — New Project',
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       // The bottom navigation bar is a mobile-only affordance. On web the

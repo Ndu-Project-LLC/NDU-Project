@@ -25,6 +25,8 @@ import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/project_intelligence_service.dart';
 import 'package:ndu_project/widgets/shimmer_loading.dart';
 import 'package:ndu_project/widgets/cross_section_sync_card.dart';
+import 'package:ndu_project/schedule/providers/schedule_provider.dart';
+import 'package:ndu_project/schedule/models/schedule_models.dart' as sched;
 import 'package:go_router/go_router.dart';
 
 class ProjectControlsScreen extends StatefulWidget {
@@ -178,7 +180,7 @@ class _ProjectControlsScreenState extends State<ProjectControlsScreen>
                   controller: _tabController,
                   children: [
                     _DashboardTab(state: state, aiContext: aiContext, aiMilestones: aiMilestones, aiCostForecast: aiCostForecast, changeRecommendations: changeRecommendations),
-                    _ScopeTrackingTab(state: state, aiMilestones: aiMilestones, aiContext: aiContext),
+                    _ScopeTrackingTab(state: state, aiMilestones: aiMilestones, aiContext: aiContext, provider: provider),
                     _CostControlTab(state: state, aiCostForecast: aiCostForecast, aiContext: aiContext, projectData: projectData),
                     _ChangeMgmtTab(state: state, provider: provider, changeRecommendations: changeRecommendations, aiContext: aiContext),
                     _ForecastingTab(state: state),
@@ -1022,11 +1024,63 @@ class _ScopeTrackingTab extends StatelessWidget {
   final ProjectControlsState state;
   final List<String> aiMilestones;
   final String aiContext;
+  final ProjectControlsProvider provider;
   const _ScopeTrackingTab({
     required this.state,
     required this.aiMilestones,
     required this.aiContext,
+    required this.provider,
   });
+
+  /// Per Task 19: Pull schedule activities from ScheduleProvider and feed
+  /// them into Scope Tracking via [ProjectControlsProvider.syncFromScheduleActivities].
+  void _syncFromSchedule(BuildContext context) {
+    final scheduleProvider = context.read<ScheduleProvider>();
+    final schedule = scheduleProvider.schedule;
+    if (schedule == null || schedule.activities.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'No schedule activities found. Build a schedule first, then sync.'),
+        ),
+      );
+      return;
+    }
+    // Flatten the activity tree (activities can have nested children).
+    final flattened = <sched.ScheduleActivity>[];
+    void walk(sched.ScheduleActivity a) {
+      flattened.add(a);
+      for (final c in a.children) {
+        walk(c);
+      }
+    }
+    for (final a in schedule.activities) {
+      walk(a);
+    }
+    final shims = flattened
+        .map((a) => ScheduleActivityShim(
+              id: a.id,
+              name: a.name,
+              description: a.description,
+              wbsCode: a.wbsCode,
+              plannedStart: a.startDate,
+              plannedFinish: a.endDate,
+              actualStart: null,
+              actualFinish: null,
+              percentComplete: a.progress,
+              isCriticalPath: a.isCriticalPath,
+            ))
+        .toList();
+    provider.syncFromScheduleActivities(shims);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            'Synced ${shims.length} schedule activities into Scope Tracking.'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF10B981),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1051,6 +1105,13 @@ class _ScopeTrackingTab extends StatelessWidget {
       accentSoft: const Color(0xFFE0E7FF),
       tint: const Color(0xFFEEF2FF),
       borderColor: const Color(0xFFC7D2FE),
+      // Per Task 19: 'Sync from Schedule' CTA on the hero band feeds
+      // Schedule activities into Scope Tracking.
+      action: PcHeroAction(
+        label: 'Sync from Schedule',
+        icon: Icons.sync,
+        onTap: () => _syncFromSchedule(context),
+      ),
       kpis: [
         PcKpiSpec(
           label: isAgile ? 'Epics' : 'Work Packages',

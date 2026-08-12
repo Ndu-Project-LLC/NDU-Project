@@ -199,6 +199,81 @@ class ProjectControlsProvider extends ChangeNotifier {
     ProjectControlsFirestoreService.instance.saveWorkPackage(wp);
   }
 
+  /// Per Task 19: Pull schedule activities from the ScheduleProvider and
+  /// merge them into Project Controls work packages so the Scope Tracking
+  /// tab stays in sync with the Schedule. Activities that already have a
+  /// matching work package (by scheduleActivityId) are updated in place;
+  /// new activities become new work packages.
+  void syncFromScheduleActivities(List<ScheduleActivityShim> activities) {
+    if (activities.isEmpty) return;
+    final existingByActivityId = {
+      for (final wp in _state.workPackages)
+        if (wp.scheduleActivityId != null) wp.scheduleActivityId!: wp,
+    };
+    final updated = <WorkPackageControl>[];
+    var addedCount = 0;
+    var updatedCount = 0;
+    for (final act in activities) {
+      final existing = existingByActivityId[act.id];
+      if (existing != null) {
+        // Update schedule-related fields only — preserve cost / scope data
+        // entered directly in Project Controls.
+        updated.add(existing.copyWith(
+          plannedStart: act.plannedStart,
+          plannedFinish: act.plannedFinish,
+          actualStart: act.actualStart,
+          actualFinish: act.actualFinish,
+          percentComplete: act.percentComplete ?? existing.percentComplete,
+          isCriticalPath: act.isCriticalPath,
+        ));
+        updatedCount++;
+      } else {
+        // New activity from Schedule → seed a new work package.
+        updated.add(WorkPackageControl(
+          id: 'wp_${act.id}',
+          wbsCode: act.wbsCode ?? 'WP-${(updated.length + 1).toString().padLeft(3, '0')}',
+          scheduleActivityId: act.id,
+          name: act.name,
+          scopeDescription: act.description ?? '',
+          deliverables: const [],
+          acceptanceCriteria: const [],
+          priority: 'Medium',
+          status: 'Not Started',
+          plannedStart: act.plannedStart,
+          plannedFinish: act.plannedFinish,
+          actualStart: act.actualStart,
+          actualFinish: act.actualFinish,
+          percentComplete: act.percentComplete,
+          isCriticalPath: act.isCriticalPath,
+          originalBudget: 0,
+          currentBudget: 0,
+          committedCost: 0,
+          actualCost: 0,
+          earnedValue: 0,
+          plannedValue: 0,
+          progressMethod: ProgressMethod.physicalPercent,
+        ));
+        addedCount++;
+      }
+    }
+    // Preserve any existing work packages that don't have a scheduleActivityId
+    // (manually-created ones in PC).
+    for (final wp in _state.workPackages) {
+      if (wp.scheduleActivityId == null ||
+          !existingByActivityId.containsKey(wp.scheduleActivityId)) {
+        // Already added above if matched; otherwise keep.
+        if (!updated.any((u) => u.id == wp.id)) {
+          updated.add(wp);
+        }
+      }
+    }
+    _state = _state.copyWith(workPackages: updated);
+    _addAudit('workPackages', '—', '+$addedCount new, ~$updatedCount updated',
+        'Synced from Schedule');
+    notifyListeners();
+    _saveToFirestore();
+  }
+
   void updateWorkPackage(String id, WorkPackageControl updated) {
     final oldWp = _state.workPackages.firstWhere((w) => w.id == id);
     _state = _state.copyWith(
@@ -602,4 +677,34 @@ class ProjectControlsProvider extends ChangeNotifier {
   }
 
   // (seedDemoData removed — data now comes from Firestore)
+}
+
+/// Lightweight value object used by [ProjectControlsProvider.syncFromScheduleActivities]
+/// to receive schedule activity data without creating a hard dependency on the
+/// Schedule module's models. Callers convert their ScheduleActivity objects
+/// into this shim before calling the sync method.
+class ScheduleActivityShim {
+  final String id;
+  final String name;
+  final String? description;
+  final String? wbsCode;
+  final DateTime? plannedStart;
+  final DateTime? plannedFinish;
+  final DateTime? actualStart;
+  final DateTime? actualFinish;
+  final double? percentComplete;
+  final bool isCriticalPath;
+
+  const ScheduleActivityShim({
+    required this.id,
+    required this.name,
+    this.description,
+    this.wbsCode,
+    this.plannedStart,
+    this.plannedFinish,
+    this.actualStart,
+    this.actualFinish,
+    this.percentComplete,
+    this.isCriticalPath = false,
+  });
 }

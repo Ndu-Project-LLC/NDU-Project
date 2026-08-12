@@ -5710,42 +5710,17 @@ class _TopHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Per Tasks 10 + 11: strip the R&R header down to ONLY the "+ Add Role"
+    // button. Navigation arrows, page title, "Standard Roles" button, and
+    // user profile chip were all removed to declutter the header.
     return Row(
       children: [
-        _CircleIconButton(
-            icon: Icons.arrow_back_ios_new_rounded, onTap: onBack),
-        const SizedBox(width: 12),
-        _CircleIconButton(icon: Icons.arrow_forward_ios_rounded, onTap: onNext),
-        const SizedBox(width: 16),
-        Text(
-          title,
-          style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF111827)),
-        ),
-        const SizedBox(width: 24),
-        if (onAddPredefined != null) ...[
-          _yellowButton(
-            label: onAddPredefined!.toString().contains('SyncRoles')
-                ? 'Sync from Roles'
-                : 'Standard Roles',
-            icon: onAddPredefined!.toString().contains('SyncRoles')
-                ? Icons.sync
-                : Icons.assignment_outlined,
-            onPressed: onAddPredefined!,
-          ),
-          const SizedBox(width: 12),
-        ],
         if (onAdd != null)
           _yellowButton(
             label: 'Add Role',
             icon: Icons.add,
             onPressed: onAdd!,
           ),
-        const Spacer(),
-        const SizedBox(width: 12),
-        const _UserChip(),
       ],
     );
   }

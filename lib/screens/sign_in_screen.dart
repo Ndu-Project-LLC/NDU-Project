@@ -537,6 +537,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         SizedBox(
                           height: 54,
                           child: VoiceTextField(
+                            enableVoice: false,
                             enableKazAi: false,
                             enableTextFormatting: false,
                             controller: _passwordController,

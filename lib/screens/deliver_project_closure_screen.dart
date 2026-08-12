@@ -411,7 +411,7 @@ class _DeliverProjectClosureScreenState
         ),
       ],
       rowCount: _outstandingItems.length,
-      onAddValues: (v) => _addFollowUp(_outstandingItems, v),
+      onAddValues: _addOutstandingItem,
       csvColumns: const [
         CsvColumnSpec(
             key: 'title', label: 'Title', sampleValue: 'Pending bug fix'),
@@ -512,7 +512,7 @@ class _DeliverProjectClosureScreenState
         ),
       ],
       rowCount: _riskFollowUps.length,
-      onAddValues: (v) => _addFollowUp(_riskFollowUps, v),
+      onAddValues: _addRiskFollowUp,
       csvColumns: const [
         CsvColumnSpec(
             key: 'title',
@@ -646,16 +646,42 @@ class _DeliverProjectClosureScreenState
     _scheduleSave();
   }
 
-  void _addFollowUp(List<LaunchFollowUpItem> list, Map<String, String> values) {
+  LaunchFollowUpItem _followUpFromValues(Map<String, String> values) {
+    return LaunchFollowUpItem(
+      title: values['Title']?.trim() ?? '',
+      details: values['Details']?.trim() ?? '',
+      owner: values['Owner']?.trim() ?? '',
+      status: values['Status']?.trim().isNotEmpty == true
+          ? values['Status']!.trim()
+          : 'Open',
+    );
+  }
+
+  void _addOutstandingItem(Map<String, String> values) {
     setState(() {
-      list.add(LaunchFollowUpItem(
-        title: values['Title'] ?? '',
-        details: values['Details'] ?? '',
-        owner: values['Owner'] ?? '',
-        status: values['Status'] ?? 'Open',
-      ));
+      _outstandingItems.add(_followUpFromValues(values));
     });
     _scheduleSave();
+  }
+
+  void _addRiskFollowUp(Map<String, String> values) {
+    setState(() {
+      _riskFollowUps.add(_followUpFromValues(values));
+    });
+    _scheduleSave();
+  }
+
+  List<LaunchFollowUpItem> _mergeLoadedFollowUps(
+    List<LaunchFollowUpItem> loaded,
+    List<LaunchFollowUpItem> local,
+  ) {
+    final merged = <String, LaunchFollowUpItem>{
+      for (final item in loaded) item.id: item,
+    };
+    for (final item in local) {
+      merged[item.id] = item;
+    }
+    return merged.values.toList();
   }
 
   Future<void> _importScope() async {
@@ -722,8 +748,14 @@ class _DeliverProjectClosureScreenState
       setState(() {
         _scopeItems = result.scopeItems;
         _milestones = result.milestones;
-        _outstandingItems = result.outstandingItems;
-        _riskFollowUps = result.riskFollowUps;
+        _outstandingItems = _mergeLoadedFollowUps(
+          result.outstandingItems,
+          _outstandingItems,
+        );
+        _riskFollowUps = _mergeLoadedFollowUps(
+          result.riskFollowUps,
+          _riskFollowUps,
+        );
         _closureNotes = result.closureNotes;
         _isLoading = false;
         _hasLoaded = true;

@@ -124,7 +124,7 @@ class _TeamTrainingAndBuildingScreenState
  // --- Mobile layout ---
  if (isMobile) {
  return Scaffold(
- backgroundColor: Colors.grey[50],
+ backgroundColor: Colors.white,
  drawer: Drawer(
  width: sidebarWidth,
  child: const SafeArea(
@@ -139,7 +139,12 @@ class _TeamTrainingAndBuildingScreenState
  child: Column(
  children: [
  header,
- Expanded(child: _buildMain(context)),
+ Expanded(
+ child: ColoredBox(
+ color: Colors.white,
+ child: _buildMain(context),
+ ),
+ ),
  ],
  ),
  ),
@@ -148,13 +153,9 @@ class _TeamTrainingAndBuildingScreenState
 
  // --- Desktop layout ---
  return Scaffold(
- backgroundColor: Colors.grey[50],
+ backgroundColor: Colors.white,
  body: SafeArea(
  top: true,
- child: Column(
- children: [
- header,
- Expanded(
  child: Row(
  children: [
  DraggableSidebar(
@@ -162,8 +163,15 @@ class _TeamTrainingAndBuildingScreenState
  child: const InitiationLikeSidebar(
  activeItemLabel: 'Team Training and Team Building'),
  ),
+ Expanded(
+ child: ColoredBox(
+ color: Colors.white,
+ child: Column(
+ children: [
+ header,
  Expanded(child: _buildMain(context)),
  ],
+ ),
  ),
  ),
  ],

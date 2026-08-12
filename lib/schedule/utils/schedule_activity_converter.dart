@@ -53,7 +53,11 @@ class ScheduleActivityConverter {
     return ScheduleActivity(
       id: dm.id,
       wbsNodeId: dm.wbsId.isNotEmpty ? dm.wbsId : null,
-      costLineId: dm.controlAccountId.isNotEmpty ? dm.controlAccountId : null,
+      // A control account is an EVM/control FK, not a cost-line FK. Keeping
+      // these identities separate is essential for WBS → Schedule → Cost
+      // traceability and prevents cost reports from resolving the wrong ID.
+      controlAccountId:
+          dm.controlAccountId.isNotEmpty ? dm.controlAccountId : null,
       level: 0,
       code: '',
       name: dm.title,
@@ -92,6 +96,7 @@ class ScheduleActivityConverter {
       dueDate: node.endDate?.toIso8601String() ?? '',
       isCriticalPath: node.isCriticalPath,
       percentComplete: node.progress ?? 0,
+      controlAccountId: node.controlAccountId ?? '',
     );
     switch (node.type) {
       case ActivityType.ewp:

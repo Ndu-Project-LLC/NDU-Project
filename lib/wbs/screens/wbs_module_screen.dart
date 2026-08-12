@@ -37,6 +37,7 @@ import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/widgets/cross_section_sync_card.dart';
+import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:go_router/go_router.dart';
 
 class WBSModuleScreen extends StatefulWidget {
@@ -163,6 +164,7 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
           breadcrumbPhase: 'Planning Phase',
           breadcrumbTitle: 'WBS',
           backgroundColor: Colors.white,
+          floatingActionButton: const KazAiChatBubble(positioned: false),
           body: Column(
             children: [
               // ── World-class Section Navigator ─────────────────────────
@@ -1102,5 +1104,4 @@ class _ExportAndLinkTab extends StatelessWidget {
     return count(wbs.level0);
   }
 }
-
 

@@ -1140,6 +1140,9 @@ onBack: () =>
  children: [
  Expanded(
  child: VoiceTextField(
+ enableVoice: false,
+ enableKazAi: false,
+ enableTextFormatting: false,
  onChanged: (value) => setState(() => _inventorySearch = value),
  decoration: const InputDecoration(
  hintText: 'Search technology...',

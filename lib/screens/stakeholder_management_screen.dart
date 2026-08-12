@@ -158,11 +158,8 @@ class _StakeholderManagementScreenState
             context, 'stakeholder_management'),
         onForward: () =>
             PlanningPhaseNavigation.goToNext(context, 'stakeholder_management'),
-        // Export PDF is intentionally hidden from the header because the
-        // header row sits visually above the sidebar zone (its Wrap row
-        // starts at the left edge of the screen, directly over the
-        // sidebar's column). The button is relocated to the Engagement
-        // Section toolbar so it never extends into the sidebar zone.
+        // Export PDF remains in the Engagement toolbar. On desktop this
+        // header is constrained to the content column beside the sidebar.
         showExportPdf: false,
         onExportPdf: _exportPdf);
 
@@ -331,29 +328,32 @@ class _StakeholderManagementScreenState
       backgroundColor: Colors.white,
       body: SafeArea(
         top: true,
-        child: Column(
+        child: Row(
           children: [
-            header,
+            DraggableSidebar(
+              openWidth: sidebarWidth,
+              child: const InitiationLikeSidebar(
+                  activeItemLabel: 'Stakeholder Management'),
+            ),
             Expanded(
-              child: Row(
-                children: [
-                  DraggableSidebar(
-                    openWidth: sidebarWidth,
-                    child: const InitiationLikeSidebar(
-                        activeItemLabel: 'Stakeholder Management'),
-                  ),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        scrollableContent,
-                        const Positioned(
-                            right: 24,
-                            bottom: 24,
-                            child: KazAiChatBubble(positioned: false)),
-                      ],
+              child: ColoredBox(
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    header,
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          scrollableContent,
+                          const Positioned(
+                              right: 24,
+                              bottom: 24,
+                              child: KazAiChatBubble(positioned: false)),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

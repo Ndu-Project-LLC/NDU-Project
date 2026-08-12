@@ -77,18 +77,60 @@ class ProjectControlsProvider extends ChangeNotifier {
   /// This ties the Project Controls dashboard to the Cost Estimate module:
   /// the total authorized budget from the cost estimate becomes the BAC
   /// for EVM calculations. If work packages don't exist yet, seed them
-  /// from cost lines (one work package per cost line with a WBS ref).
+  /// from cost lines (one control account per unique WBS reference).
   void syncFromCostEstimate(ce_models.CostEstimate? estimate) {
     if (estimate == null) return;
 
     final bac = estimate.totals.totalAuthorizedBudget;
     if (bac <= 0) return;
 
-    // If we already have work packages, just update the total budget
-    // by scaling the original budgets proportionally to match the new BAC.
+    // Existing control accounts are allocated from their WBS-linked cost
+    // lines first. This preserves the chain WBS → Schedule → Cost → Control
+    // instead of spreading the budget across unrelated work packages.
     if (_state.workPackages.isNotEmpty) {
       final currentTotal = _state.totalOriginalBudget;
-      if (currentTotal > 0 && (currentTotal - bac).abs() > 1) {
+      final costByWbsRef = <String, double>{};
+      for (final line in estimate.lines) {
+        final ref = line.wbsRef?.trim() ?? '';
+        if (ref.isEmpty) continue;
+        costByWbsRef[ref] = (costByWbsRef[ref] ?? 0) + line.total;
+      }
+      final tracedCostTotal =
+          costByWbsRef.values.fold<double>(0, (a, b) => a + b);
+      final allLineTotal =
+          estimate.lines.fold<double>(0, (sum, line) => sum + line.total);
+
+      if (tracedCostTotal > 0) {
+        // Allocate contingency/reserve proportionally so the control-account
+        // roll-up reconciles to BAC once every cost line has a WBS reference.
+        // Unlinked lines deliberately remain unallocated and visible as a
+        // lifecycle traceability gap.
+        final authorizationScale = allLineTotal > 0 ? bac / allLineTotal : 1.0;
+        final updatedWPs = _state.workPackages.map((wp) {
+          final tracedCost = costByWbsRef[wp.wbsCode];
+          if (tracedCost == null) return wp;
+          final allocated = tracedCost * authorizationScale;
+          return wp.copyWith(
+            originalBudget: allocated,
+            currentBudget: allocated,
+            plannedValue: allocated,
+          );
+        }).toList();
+        _state = _state.copyWith(workPackages: updatedWPs);
+        _addAudit(
+          'BAC',
+          '\$${currentTotal.toStringAsFixed(0)}',
+          '\$${bac.toStringAsFixed(0)}',
+          'Budget allocated to control accounts from WBS-linked cost lines',
+        );
+        notifyListeners();
+        _saveToFirestore();
+        for (final wp in updatedWPs) {
+          ProjectControlsFirestoreService.instance.saveWorkPackage(wp);
+        }
+      } else if (currentTotal > 0 && (currentTotal - bac).abs() > 1) {
+        // Legacy estimates may not have WBS references yet. Preserve their
+        // established proportions until the user completes traceability.
         final scale = bac / currentTotal;
         final updatedWPs = _state.workPackages.map((wp) {
           return wp.copyWith(
@@ -111,47 +153,31 @@ class ProjectControlsProvider extends ChangeNotifier {
         l.wbsRef != null && l.wbsRef!.isNotEmpty).toList();
 
     if (costLines.isEmpty) {
-      // No WBS-linked cost lines — just set a single work package with the total BAC
-      _state = _state.copyWith(
-        workPackages: [
-          WorkPackageControl(
-            id: 'wp_ce_total',
-            wbsCode: '—',
-            name: 'Total Project (from Cost Estimate)',
-            scopeDescription: 'Auto-synced from Cost Estimate module',
-            deliverables: [],
-            acceptanceCriteria: [],
-            priority: 'Medium',
-            status: 'Not Started',
-            plannedStart: DateTime.now(),
-            plannedFinish: DateTime.now().add(const Duration(days: 365)),
-            percentComplete: 0,
-            isCriticalPath: false,
-            remainingDuration: 365,
-            floatDays: 0,
-            originalBudget: bac,
-            currentBudget: bac,
-            committedCost: 0,
-            actualCost: 0,
-            earnedValue: 0,
-            plannedValue: 0,
-            progressMethod: ProgressMethod.physicalPercent,
-          ),
-        ],
-      );
+      // Do not create an untraceable project-total control account. The
+      // lifecycle UI keeps Controls blocked until costs reference the WBS.
+      return;
     } else {
-      // Seed one work package per WBS-linked cost line
+      // Seed one control account per WBS work package, rolling up all labor,
+      // material, equipment, and subcontract cost lines sharing that WBS ref.
+      final linesByWbs = <String, List<ce_models.CostLine>>{};
+      for (final line in costLines) {
+        linesByWbs.putIfAbsent(line.wbsRef!, () => []).add(line);
+      }
       final wps = <WorkPackageControl>[];
-      for (int i = 0; i < costLines.length; i++) {
-        final line = costLines[i];
+      var index = 0;
+      for (final entry in linesByWbs.entries) {
+        final lines = entry.value;
+        final line = lines.first;
+        final workPackageCost =
+            lines.fold<double>(0, (sum, item) => sum + item.total);
         wps.add(WorkPackageControl(
-          id: 'wp_ce_${line.id}',
-          wbsCode: line.wbsRef ?? '—',
+          id: 'wp_ce_${entry.key.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_')}',
+          wbsCode: entry.key,
           name: line.description.isNotEmpty
               ? line.description
               : line.subCategory.isNotEmpty
                   ? line.subCategory
-                  : 'Cost Line ${i + 1}',
+                  : 'WBS ${entry.key}',
           scopeDescription: '${line.category.name} — ${line.subCategory}',
           deliverables: [],
           acceptanceCriteria: [],
@@ -160,17 +186,18 @@ class ProjectControlsProvider extends ChangeNotifier {
           plannedStart: DateTime.now(),
           plannedFinish: DateTime.now().add(const Duration(days: 180)),
           percentComplete: 0,
-          isCriticalPath: i == 0,
+          isCriticalPath: index == 0,
           remainingDuration: 180,
           floatDays: 10,
-          originalBudget: line.total,
-          currentBudget: line.total,
+          originalBudget: workPackageCost,
+          currentBudget: workPackageCost,
           committedCost: 0,
           actualCost: 0,
           earnedValue: 0,
-          plannedValue: line.total,
+          plannedValue: workPackageCost,
           progressMethod: ProgressMethod.physicalPercent,
         ));
+        index++;
       }
       _state = _state.copyWith(workPackages: wps);
     }

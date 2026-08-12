@@ -39,6 +39,7 @@ import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
+import 'package:ndu_project/widgets/cross_section_sync_card.dart';
 import 'package:go_router/go_router.dart';
 
 class CostEstimateModuleScreen extends StatefulWidget {
@@ -175,6 +176,9 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                     icon: Icons.lightbulb_outline,
                   ),
                 ],
+              ),
+              const CrossSectionSyncCard(
+                currentSection: CrossSection.costEstimate,
               ),
               // Tab content
               Expanded(

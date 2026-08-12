@@ -301,13 +301,16 @@ class WbsLinkageService {
         wpc = existingWpc;
         // Ensure the cross-section FK fields are stamped.
         var patched = wpc;
+        var accountChanged = false;
         if (patched.wbsNodeId != leaf.id) {
           patched = patched.copyWith(wbsNodeId: leaf.id);
+          accountChanged = true;
         }
         if (patched.wbsCode != leaf.code && leaf.code.isNotEmpty) {
           patched = patched.copyWith(wbsCode: leaf.code);
+          accountChanged = true;
         }
-        if (patched != wpc) {
+        if (accountChanged) {
           controlAccountsUpdated++;
           pcProvider.updateWorkPackage(wpc.id, patched);
           pcByWbsNodeId[leaf.id] = patched;
@@ -371,16 +374,20 @@ class WbsLinkageService {
         activity = existingActivity;
         // Ensure FK fields are stamped.
         var patched = activity;
+        var activityChanged = false;
         if (patched.wbsNodeId != leaf.id) {
           patched = patched.copyWith(wbsNodeId: leaf.id);
+          activityChanged = true;
         }
         if (patched.wbsCode != leaf.code && leaf.code.isNotEmpty) {
           patched = patched.copyWith(wbsCode: leaf.code);
+          activityChanged = true;
         }
         if (patched.controlAccountId != wpc.id) {
           patched = patched.copyWith(controlAccountId: wpc.id);
+          activityChanged = true;
         }
-        if (patched != activity) {
+        if (activityChanged) {
           scheduleProvider.updateActivity(patched.id, patched);
           schedByWbsNodeId[leaf.id] = patched;
           schedByWbsCode[leaf.code] = patched;
@@ -390,7 +397,47 @@ class WbsLinkageService {
         }
       }
 
-      // ───── 3. Stamp the WBS node with the linked IDs (if missing) ────
+      // ───── 3. Schedule → control account ─────────────────────────────
+      // The control account is the common performance-measurement point.
+      // Carry its schedule identity, dates, owner, progress, and criticality
+      // so cost and EVM reporting remain tied to the originating WBS work.
+      final scheduleFieldsChanged =
+          wpc.scheduleActivityId != activity.id ||
+              (activity.startDate != null &&
+                  wpc.plannedStart != activity.startDate) ||
+              (activity.endDate != null &&
+                  wpc.plannedFinish != activity.endDate) ||
+              (activity.owner != null &&
+                  activity.owner!.isNotEmpty &&
+                  wpc.responsibleIndividual != activity.owner) ||
+              wpc.isCriticalPath != activity.isCriticalPath ||
+              (activity.duration != null &&
+                  wpc.remainingDuration != activity.duration) ||
+              (activity.progress != null &&
+                  wpc.percentComplete != activity.progress) ||
+              (activity.status != null &&
+                  activity.status!.isNotEmpty &&
+                  wpc.status != activity.status);
+      if (scheduleFieldsChanged) {
+        final scheduledAccount = wpc.copyWith(
+          scheduleActivityId: activity.id,
+          plannedStart: activity.startDate,
+          plannedFinish: activity.endDate,
+          responsibleIndividual: activity.owner,
+          isCriticalPath: activity.isCriticalPath,
+          remainingDuration: activity.duration,
+          percentComplete: activity.progress,
+          status: activity.status,
+        );
+        pcProvider.updateWorkPackage(wpc.id, scheduledAccount);
+        wpc = scheduledAccount;
+        pcByWbsNodeId[leaf.id] = scheduledAccount;
+        pcByWbsCode[leaf.code] = scheduledAccount;
+        controlAccountsUpdated++;
+        pcDirty = true;
+      }
+
+      // ───── 4. Stamp the WBS node with the linked IDs (if missing) ────
       var patchedLeaf = leaf;
       var leafChanged = false;
       if (patchedLeaf.controlAccountId != wpc.id) {

@@ -10,6 +10,7 @@ import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
+
 /// ═══════════════════════════════════════════════════════════════════════════
 /// RECOGNITION & AWARDS
 /// ═══════════════════════════════════════════════════════════════════════════
@@ -32,6 +33,13 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
   bool _isLoading = true;
   bool _hasLoaded = false;
   List<_Recognition> _recognitions = [];
+  final TextEditingController _quickRecipientController =
+      TextEditingController();
+  final TextEditingController _quickTeamController = TextEditingController();
+  final TextEditingController _quickCommentsController =
+      TextEditingController();
+  String _quickCategory = _awardCategories.first;
+  String _quickStatus = 'Nominated';
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
 
@@ -70,6 +78,51 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+  }
+
+  @override
+  void dispose() {
+    _quickRecipientController.dispose();
+    _quickTeamController.dispose();
+    _quickCommentsController.dispose();
+    super.dispose();
+  }
+
+  void _submitQuickRecognition() {
+    final recipient = _quickRecipientController.text.trim();
+    if (recipient.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a recipient name to continue.')),
+      );
+      return;
+    }
+
+    final now = DateTime.now();
+    final date =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    setState(() {
+      _recognitions.insert(
+        0,
+        _Recognition(
+          category: _quickCategory,
+          type: _recognitionTypes.first,
+          recipient: recipient,
+          team: _quickTeamController.text.trim(),
+          nominatedBy: '',
+          date: date,
+          evidence: '',
+          comments: _quickCommentsController.text.trim(),
+          linkedMilestone: '',
+          status: _quickStatus,
+        ),
+      );
+      _quickRecipientController.clear();
+      _quickTeamController.clear();
+      _quickCommentsController.clear();
+      _quickCategory = _awardCategories.first;
+      _quickStatus = 'Nominated';
+    });
+    _saveData();
   }
 
   Future<void> _loadData() async {
@@ -328,7 +381,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
     final double horizontalPadding = isMobile ? 18 : 32;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,6 +411,8 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
                         ),
                         const SizedBox(height: 20),
                         _buildIntroCard(),
+                        const SizedBox(height: 24),
+                        _buildQuickEntryForm(),
                         const SizedBox(height: 24),
                         _buildStatsRow(),
                         const SizedBox(height: 24),
@@ -396,9 +451,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFFFCD34D)),
       ),
@@ -423,7 +476,7 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF92400E),
+                    color: Color(0xFF111827),
                   ),
                 ),
               ),
@@ -435,9 +488,212 @@ class _RecognitionAwardsScreenState extends State<RecognitionAwardsScreen> {
             'Reinforces positive behaviors, improves engagement, and fosters a culture of accountability, '
             'collaboration, and continuous improvement.',
             style:
-                TextStyle(fontSize: 13, color: Color(0xFF78350F), height: 1.6),
+                TextStyle(fontSize: 13, color: Color(0xFF4B5563), height: 1.6),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickEntryForm() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Add Recognition',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Capture a nomination now. Use “New Recognition” for the full evidence and milestone form.',
+            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 18),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stacked = constraints.maxWidth < 760;
+              final fields = [
+                _quickTextField(
+                  label: 'Recipient name',
+                  controller: _quickRecipientController,
+                  hint: 'e.g. Jane Banda',
+                ),
+                _quickTextField(
+                  label: 'Team',
+                  controller: _quickTeamController,
+                  hint: 'e.g. Delivery Team',
+                ),
+              ];
+              if (stacked) {
+                return Column(
+                  children: [fields[0], const SizedBox(height: 14), fields[1]],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: fields[0]),
+                  const SizedBox(width: 16),
+                  Expanded(child: fields[1]),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final category = _quickDropdown(
+                label: 'Award category',
+                value: _quickCategory,
+                items: _awardCategories,
+                onChanged: (value) =>
+                    setState(() => _quickCategory = value ?? _quickCategory),
+              );
+              final status = _quickDropdown(
+                label: 'Status',
+                value: _quickStatus,
+                items: _statuses,
+                onChanged: (value) =>
+                    setState(() => _quickStatus = value ?? _quickStatus),
+              );
+              if (constraints.maxWidth < 760) {
+                return Column(
+                  children: [category, const SizedBox(height: 14), status],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: category),
+                  const SizedBox(width: 16),
+                  Expanded(child: status),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+          _quickTextField(
+            label: 'Recognition note',
+            controller: _quickCommentsController,
+            hint: 'Describe the contribution and its impact…',
+            maxLines: 3,
+          ),
+          const SizedBox(height: 18),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: _submitQuickRecognition,
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('Add recognition'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF59E0B),
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _quickTextField({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151))),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          decoration: _quickInputDecoration(hint),
+          style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+        ),
+      ],
+    );
+  }
+
+  Widget _quickDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151))),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          key: ValueKey('$label-$value'),
+          initialValue: value,
+          isExpanded: true,
+          items: items
+              .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+              .toList(),
+          onChanged: onChanged,
+          decoration: _quickInputDecoration('Select an option'),
+          style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _quickInputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Color(0xFFF59E0B), width: 1.6),
       ),
     );
   }

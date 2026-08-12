@@ -39,6 +39,11 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
   List<_OperationsRow> _operationsRows = [];
   // Status check entries
   List<_StatusCheckEntry> _statusEntries = [];
+  final TextEditingController _memberController = TextEditingController();
+  final TextEditingController _periodController = TextEditingController();
+  final TextEditingController _accomplishmentsController =
+      TextEditingController();
+  final TextEditingController _blockersController = TextEditingController();
 
   String? get _projectId => ProjectDataHelper.getData(context).projectId;
 
@@ -52,7 +57,63 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _memberController.dispose();
+    _periodController.dispose();
+    _accomplishmentsController.dispose();
+    _blockersController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveStatusEntries() async {
+    if (_projectId == null) return;
+    try {
+      await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(_projectId!)
+          .collection('execution_phase_entries')
+          .doc('team_status_check')
+          .set({
+        'statusEntries': _statusEntries.map((entry) => entry.toMap()).toList(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Team Status Check save error: $e');
+    }
+  }
+
+  void _submitStatusUpdate() {
+    final member = _memberController.text.trim();
+    final period = _periodController.text.trim();
+    if (member.isEmpty || period.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter the team member and reporting period.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _statusEntries.insert(
+        0,
+        _StatusCheckEntry(
+          teamMember: member,
+          reportingPeriod: period,
+          accomplishments: _accomplishmentsController.text.trim(),
+          blockers: _blockersController.text.trim(),
+        ),
+      );
+      _memberController.clear();
+      _periodController.clear();
+      _accomplishmentsController.clear();
+      _blockersController.clear();
+    });
+    _saveStatusEntries();
+  }
+
+  void _deleteStatusUpdate(int index) {
+    setState(() => _statusEntries.removeAt(index));
+    _saveStatusEntries();
   }
 
   Future<void> _loadData() async {
@@ -150,7 +211,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     final double horizontalPadding = isMobile ? 18 : 32;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,9 +274,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Color(0xFF6EE7B7)),
       ),
@@ -240,7 +299,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF064E3B),
+                    color: Color(0xFF111827),
                   ),
                 ),
               ),
@@ -253,7 +312,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
             'concerns, and surface issues early. AI analyzes responses to identify trends, risks, '
             'and recommended actions for project managers.',
             style:
-                TextStyle(fontSize: 13, color: Color(0xFF065F46), height: 1.6),
+                TextStyle(fontSize: 13, color: Color(0xFF4B5563), height: 1.6),
           ),
         ],
       ),
@@ -294,6 +353,8 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
         _sectionTitle('Team Status Updates',
             'Weekly or bi-weekly status updates from team members'),
         const SizedBox(height: 20),
+        _buildStatusEntryForm(),
+        const SizedBox(height: 20),
         if (_statusEntries.isEmpty)
           _buildEmptyState('No status updates yet',
               'Team members can submit weekly status updates here')
@@ -306,7 +367,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
               final entry = _statusEntries[index];
               return RepaintBoundary(
                 key: ValueKey('status_card_$index'),
-                child: _buildStatusCard(entry),
+                child: _buildStatusCard(index, entry),
               );
             },
           ),
@@ -314,7 +375,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
     );
   }
 
-  Widget _buildStatusCard(_StatusCheckEntry entry) {
+  Widget _buildStatusCard(int index, _StatusCheckEntry entry) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(20),
@@ -337,6 +398,15 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
               Text(entry.reportingPeriod,
                   style:
                       const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () => _deleteStatusUpdate(index),
+                tooltip: 'Delete update',
+                icon: const Icon(Icons.delete_outline,
+                    size: 18, color: Color(0xFFEF4444)),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                padding: EdgeInsets.zero,
+              ),
             ],
           ),
           if (entry.accomplishments.isNotEmpty) ...[
@@ -365,6 +435,144 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildStatusEntryForm() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Submit a status update',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF111827))),
+          const SizedBox(height: 4),
+          const Text(
+            'Capture progress and surface delivery blockers for follow-up.',
+            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+          ),
+          const SizedBox(height: 18),
+          LayoutBuilder(builder: (context, constraints) {
+            final member = _statusInput(
+              label: 'Team member',
+              controller: _memberController,
+              hint: 'Full name',
+            );
+            final period = _statusInput(
+              label: 'Reporting period',
+              controller: _periodController,
+              hint: 'e.g. 12–16 August 2026',
+            );
+            if (constraints.maxWidth < 720) {
+              return Column(
+                children: [member, const SizedBox(height: 14), period],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: member),
+                const SizedBox(width: 16),
+                Expanded(child: period),
+              ],
+            );
+          }),
+          const SizedBox(height: 14),
+          _statusInput(
+            label: 'Accomplishments',
+            controller: _accomplishmentsController,
+            hint: 'What was completed or moved forward?',
+            maxLines: 3,
+          ),
+          const SizedBox(height: 14),
+          _statusInput(
+            label: 'Blockers and support needed',
+            controller: _blockersController,
+            hint: 'Describe blockers, risks, decisions, or help required…',
+            maxLines: 3,
+          ),
+          const SizedBox(height: 18),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: _submitStatusUpdate,
+              icon: const Icon(Icons.send_rounded, size: 17),
+              label: const Text('Submit update'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF059669),
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusInput({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151))),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: Color(0xFF059669), width: 1.6),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -421,7 +629,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
       ),
@@ -547,7 +755,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF9FAFB),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Color(0xFFE5E7EB)),
       ),
@@ -668,12 +876,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withValues(alpha: 0.08),
-            color.withValues(alpha: 0.04)
-          ],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),

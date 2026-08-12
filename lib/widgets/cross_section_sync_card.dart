@@ -31,6 +31,9 @@ import 'package:provider/provider.dart';
 import 'package:ndu_project/wbs/providers/wbs_provider.dart';
 import 'package:ndu_project/schedule/providers/schedule_provider.dart';
 import 'package:ndu_project/project_controls/providers/project_controls_provider.dart';
+import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
+import 'package:ndu_project/providers/project_data_provider.dart';
+import 'package:ndu_project/services/project_lifecycle_service.dart';
 import 'package:ndu_project/services/wbs_linkage_service.dart';
 import 'package:ndu_project/routing/app_router.dart';
 import 'package:ndu_project/widgets/trace_chip.dart';
@@ -56,7 +59,7 @@ class CrossSectionSyncCard extends StatefulWidget {
 
 /// Enumerates the three sections this card bridges. Used to decide which
 /// "Open X" navigation button to render.
-enum CrossSection { wbs, schedule, projectControls }
+enum CrossSection { wbs, schedule, costEstimate, projectControls }
 
 class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
   bool _syncing = false;
@@ -74,11 +77,17 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
       final wbsProvider = context.read<WBSProvider>();
       final scheduleProvider = context.read<ScheduleProvider>();
       final pcProvider = context.read<ProjectControlsProvider>();
+      final costProvider = context.read<CostEstimateProvider>();
       final report = await WbsLinkageService.syncAll(
         wbsProvider: wbsProvider,
         scheduleProvider: scheduleProvider,
         pcProvider: pcProvider,
       );
+      // Newly-created control accounts can now receive their exact WBS cost
+      // allocation. The operation is idempotent and reconciles to BAC.
+      if (report.wbsWorkPackageCount > 0) {
+        pcProvider.syncFromCostEstimate(costProvider.estimate);
+      }
       setState(() {
         _lastReport = report;
         _lastSyncedAt = DateTime.now();
@@ -108,8 +117,17 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
 
   @override
   Widget build(BuildContext context) {
+    final projectProvider = context.watch<ProjectDataProvider>();
+    final costProvider = context.watch<CostEstimateProvider>();
     return Consumer3<WBSProvider, ScheduleProvider, ProjectControlsProvider>(
       builder: (context, wbsP, schedP, pcP, _) {
+        final lifecycle = ProjectLifecycleService.assess(
+          project: projectProvider.projectData,
+          wbs: wbsP.wbs,
+          schedule: schedP.schedule,
+          costEstimate: costProvider.estimate,
+          controls: pcP.state,
+        );
         final snapshot = WbsLinkageService.snapshot(
           wbsProvider: wbsP,
           scheduleProvider: schedP,
@@ -120,9 +138,8 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
         final report = _lastReport ?? snapshot;
         final coveragePct = (report.coverageRatio * 100).round();
         final fullyLinked = report.fullyLinked;
-        final hasOrphans =
-            report.orphanNoControlAccount > 0 ||
-                report.orphanNoScheduleActivity > 0;
+        final hasOrphans = report.orphanNoControlAccount > 0 ||
+            report.orphanNoScheduleActivity > 0;
 
         final statusColor = fullyLinked
             ? const Color(0xFF16A34A) // green
@@ -136,7 +153,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
                 : 'Not synced yet';
 
         if (widget.compact) {
-          return _buildCompact(report, statusColor, statusLabel);
+          return _buildCompact(report, statusColor, lifecycle);
         }
         final fullCard = _buildFull(
           report,
@@ -146,6 +163,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
           wbsP,
           schedP,
           pcP,
+          lifecycle,
         );
 
         // Per Tasks 9 + 13: wrap the full card in a collapsible container.
@@ -241,6 +259,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
     WBSProvider wbsP,
     ScheduleProvider schedP,
     ProjectControlsProvider pcP,
+    ProjectLifecycleAssessment lifecycle,
   ) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
@@ -259,7 +278,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
               const Icon(Icons.hub, size: 16, color: Color(0xFF4F46E5)),
               const SizedBox(width: 6),
               const Text(
-                'Cross-Section Sync',
+                'Project Delivery Chain',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -269,7 +288,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'WBS ↔ Schedule ↔ Project Controls',
+                  'Scope → WBS → Activities → Schedule → Resources → Cost → Controls',
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey.shade600,
@@ -310,7 +329,35 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
             ],
           ),
           const SizedBox(height: 10),
-          // KPI row — 3 columns
+          _buildLifecycleFlow(lifecycle),
+          const SizedBox(height: 9),
+          _buildCommonStructureSummary(lifecycle),
+          if (lifecycle.hasIterativeFeedback) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(7),
+                border: Border.all(color: const Color(0xFFBFDBFE)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.loop, size: 14, color: Color(0xFF2563EB)),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      '${lifecycle.openFeedbackCount} control signal${lifecycle.openFeedbackCount == 1 ? '' : 's'} require review. Feed approved changes back into Scope/WBS, then resync downstream.',
+                      style: const TextStyle(
+                          fontSize: 10.5, color: Color(0xFF1E40AF)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          // KPI row — the traceable execution chain
           Row(
             children: [
               Expanded(
@@ -319,7 +366,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
                   icon: Icons.account_tree_outlined,
                   color: TraceChipPalette.wbs,
                   value: '${report.wbsWorkPackageCount}',
-                  sub: 'work packages',
+                  sub: 'what',
                 ),
               ),
               Container(width: 1, height: 38, color: const Color(0xFFE2E8F0)),
@@ -328,8 +375,18 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
                   label: 'Schedule',
                   icon: Icons.calendar_month_outlined,
                   color: TraceChipPalette.schedule,
-                  value: '${report.scheduleActivityCount}',
-                  sub: 'activities',
+                  value: '${lifecycle.scheduleActivityCount}',
+                  sub: 'when',
+                ),
+              ),
+              Container(width: 1, height: 38, color: const Color(0xFFE2E8F0)),
+              Expanded(
+                child: _kpiCell(
+                  label: 'Cost',
+                  icon: Icons.attach_money,
+                  color: const Color(0xFFD97706),
+                  value: '${lifecycle.costLineCount}',
+                  sub: 'how much',
                 ),
               ),
               Container(width: 1, height: 38, color: const Color(0xFFE2E8F0)),
@@ -339,7 +396,7 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
                   icon: Icons.dashboard_outlined,
                   color: TraceChipPalette.projectControls,
                   value: '${report.controlAccountCount}',
-                  sub: 'control accounts',
+                  sub: 'performance',
                 ),
               ),
             ],
@@ -459,13 +516,19 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
                   color: TraceChipPalette.schedule,
                   onTap: () => _navigate(context, AppRoutes.schedule),
                 ),
+              if (widget.currentSection != CrossSection.costEstimate)
+                _secondaryButton(
+                  label: 'Open Cost',
+                  icon: Icons.attach_money,
+                  color: const Color(0xFFD97706),
+                  onTap: () => _navigate(context, AppRoutes.costEstimate),
+                ),
               if (widget.currentSection != CrossSection.projectControls)
                 _secondaryButton(
                   label: 'Open Project Controls',
                   icon: Icons.dashboard_outlined,
                   color: TraceChipPalette.projectControls,
-                  onTap: () => _navigate(
-                      context, AppRoutes.projectControls),
+                  onTap: () => _navigate(context, AppRoutes.projectControls),
                 ),
             ],
           ),
@@ -475,7 +538,10 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
   }
 
   Widget _buildCompact(
-      LinkageReport report, Color statusColor, String statusLabel) {
+    LinkageReport report,
+    Color statusColor,
+    ProjectLifecycleAssessment lifecycle,
+  ) {
     final coveragePct = (report.coverageRatio * 100).round();
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -489,9 +555,15 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
         children: [
           const Icon(Icons.hub, size: 13, color: Color(0xFF4F46E5)),
           const SizedBox(width: 6),
-          Text(
-            '${report.wbsWorkPackageCount} WBS · ${report.scheduleActivityCount} Sched · ${report.controlAccountCount} PC',
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+          Flexible(
+            flex: 2,
+            child: Text(
+              '${report.wbsWorkPackageCount} WBS · ${lifecycle.scheduleActivityCount} Schedule · ${lifecycle.costLineCount} Cost · ${report.controlAccountCount} Controls',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style:
+                  const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -534,6 +606,261 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
         ],
       ),
     );
+  }
+
+  Widget _buildLifecycleFlow(ProjectLifecycleAssessment lifecycle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              'DELIVERY READINESS',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                letterSpacing: .8,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const Spacer(),
+            Text(
+              'Click a stage to review its source data',
+              style: TextStyle(fontSize: 9, color: Colors.grey.shade500),
+            ),
+          ],
+        ),
+        const SizedBox(height: 7),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (var index = 0; index < lifecycle.stages.length; index++) ...[
+                _lifecycleStage(lifecycle.stages[index]),
+                if (index < lifecycle.stages.length - 1)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 5),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 15,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCommonStructureSummary(ProjectLifecycleAssessment lifecycle) {
+    final total = lifecycle.workPackageCount;
+    final traced = lifecycle.fullyTracedWorkPackageCount;
+    final traceRatio = total == 0 ? 0.0 : traced / total;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final narrow = constraints.maxWidth < 820;
+          final description = Row(
+            children: [
+              const Icon(Icons.account_tree_rounded,
+                  size: 15, color: Color(0xFF4F46E5)),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'WBS COMMON STRUCTURE',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: .7,
+                        color: Color(0xFF475569),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$traced/$total work packages trace What → Activities → When → Resources → How much → Control account',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 10, color: Color(0xFF64748B)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+          final readiness = Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: narrow ? 110 : 70,
+                child: LinearProgressIndicator(
+                  value: traceRatio,
+                  minHeight: 6,
+                  borderRadius: BorderRadius.circular(4),
+                  backgroundColor: const Color(0xFFE2E8F0),
+                  color: traced == total && total > 0
+                      ? const Color(0xFF16A34A)
+                      : const Color(0xFFD97706),
+                ),
+              ),
+              _readinessPill(
+                label: lifecycle.timePhasedBaselineReady
+                    ? 'Time-phased baseline ready'
+                    : '${lifecycle.timePhasedCostLineCount}/${lifecycle.costLineCount} costs time-phased',
+                ready: lifecycle.timePhasedBaselineReady,
+              ),
+              _readinessPill(
+                label:
+                    lifecycle.evmReady ? 'EVM ready' : 'EVM prerequisites open',
+                ready: lifecycle.evmReady,
+              ),
+            ],
+          );
+          if (narrow) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [description, const SizedBox(height: 8), readiness],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(child: description),
+              const SizedBox(width: 10),
+              readiness,
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _readinessPill({required String label, required bool ready}) {
+    final color = ready ? const Color(0xFF15803D) : const Color(0xFFD97706);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: .25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(ready ? Icons.check_circle : Icons.pending_outlined,
+              size: 11, color: color),
+          const SizedBox(width: 4),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 9, fontWeight: FontWeight.w700, color: color)),
+        ],
+      ),
+    );
+  }
+
+  Widget _lifecycleStage(LifecycleStageAssessment stage) {
+    final isCurrent = switch (stage.stage) {
+      ProjectLifecycleStage.wbs => widget.currentSection == CrossSection.wbs,
+      ProjectLifecycleStage.schedule =>
+        widget.currentSection == CrossSection.schedule,
+      ProjectLifecycleStage.resources => false,
+      ProjectLifecycleStage.cost =>
+        widget.currentSection == CrossSection.costEstimate,
+      ProjectLifecycleStage.controls =>
+        widget.currentSection == CrossSection.projectControls,
+      ProjectLifecycleStage.scope => false,
+    };
+    final color = switch (stage.state) {
+      LifecycleStageState.ready => const Color(0xFF15803D),
+      LifecycleStageState.attention => const Color(0xFFD97706),
+      LifecycleStageState.blocked => const Color(0xFF64748B),
+    };
+    final icon = switch (stage.state) {
+      LifecycleStageState.ready => Icons.check_circle,
+      LifecycleStageState.attention => Icons.pending_rounded,
+      LifecycleStageState.blocked => Icons.lock_outline_rounded,
+    };
+
+    return Tooltip(
+      message: stage.summary,
+      child: InkWell(
+        onTap: () => _openLifecycleStage(stage.stage),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 142,
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+          decoration: BoxDecoration(
+            color: isCurrent
+                ? const Color(0xFFEEF2FF)
+                : color.withValues(alpha: .06),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isCurrent
+                  ? const Color(0xFF6366F1)
+                  : color.withValues(alpha: .28),
+              width: isCurrent ? 1.5 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 13, color: color),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      stage.label,
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${(stage.completion * 100).round()}%',
+                    style: TextStyle(
+                        fontSize: 9, fontWeight: FontWeight.w800, color: color),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                stage.summary,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 9, color: Color(0xFF64748B)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openLifecycleStage(ProjectLifecycleStage stage) {
+    final route = switch (stage) {
+      ProjectLifecycleStage.scope => AppRoutes.projectCharter,
+      ProjectLifecycleStage.wbs => AppRoutes.wbs,
+      ProjectLifecycleStage.schedule => AppRoutes.schedule,
+      ProjectLifecycleStage.resources => AppRoutes.projectControls,
+      ProjectLifecycleStage.cost => AppRoutes.costEstimate,
+      ProjectLifecycleStage.controls => AppRoutes.projectControls,
+    };
+    _navigate(context, route);
   }
 
   Widget _kpiCell({

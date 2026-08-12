@@ -3031,12 +3031,13 @@ class _CharterFloatingApprovalBarState
   Future<void> _showApprovalConfirmationDialog() async {
     final data = widget.data;
     if (data == null) return;
-    // If neither sponsor nor PM is named, the system suggests the
-    // highest role-based authority as the sponsor and prompts the
-    // user to assign one before approving.
-    if ((data.charterProjectSponsorName.isEmpty) &&
-        (data.charterProjectManagerName.isEmpty)) {
-      // Try to suggest a sponsor on the fly.
+    // Per Task 24: charter approval must NOT proceed if a sponsor is not
+    // explicitly assigned. Previously the check only blocked when BOTH
+    // sponsor AND PM were empty, which let users approve with just a PM
+    // set — leaving the Sponsor card showing "Assign Sponsor" after
+    // approval. Now: sponsor is strictly required.
+    if (data.charterProjectSponsorName.isEmpty) {
+      // Try to suggest a sponsor on the fly (highest role authority).
       ResolvedApprover? suggestion;
       try {
         final snap = await FirebaseFirestore.instance

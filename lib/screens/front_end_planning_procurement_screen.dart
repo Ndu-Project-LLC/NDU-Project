@@ -34,7 +34,6 @@ import 'package:ndu_project/widgets/procurement/procurement_items_list_view.dart
 import 'package:ndu_project/widgets/procurement/procurement_vendor_management.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
@@ -5469,33 +5468,6 @@ class _FrontEndPlanningProcurementScreenState
  ),
  ],
  const SizedBox(height: 32),
- InnerPageNavigationHint(
- pageId: _isPlanningMode ? 'planning_procurement' : 'fep_procurement',
- pageTitle: 'Procurement',
- description: 'Navigate between procurement sections',
- currentSectionId: _selectedTab.name,
- onSectionTap: (sectionId) {
- final tab = _ProcurementTab.values.firstWhere(
- (t) => t.name == sectionId,
- orElse: () => _selectedTab,
- );
- _handleTabSelected(tab);
- },
- sections: _ProcurementTab.values.map((tab) {
- final isRestricted = _tabsWithRestrictedAccess.contains(tab);
- final isCurrent = tab == _selectedTab;
- return InnerPageSection(
- id: tab.name,
- label: tab.label,
- stepNumber: _ProcurementTab.values.indexOf(tab) + 1,
- status: isRestricted
- ? InnerPageSectionStatus.locked
- : isCurrent
- ? InnerPageSectionStatus.current
- : InnerPageSectionStatus.available,
- );
- }).toList(),
- ),
  const SizedBox(height: 24),
  AnimatedSwitcher(
  duration: const Duration(milliseconds: 250),

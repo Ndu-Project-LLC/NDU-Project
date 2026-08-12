@@ -16,7 +16,6 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/ai_suggesting_textfield.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:go_router/go_router.dart';
@@ -180,27 +179,6 @@ class _InterfaceManagementScreenState extends State<InterfaceManagementScreen> {
                               const SizedBox(height: 24),
                               _buildTabBar(),
                               const SizedBox(height: 16),
-                              InnerPageNavigationHint(
-                                pageId: 'interface_management',
-                                pageTitle: 'Interface Management',
-                                sections: _ImTab.values
-                                    .map((tab) => InnerPageSection(
-                                          id: tab.name,
-                                          label: tab.label,
-                                          status: tab == _selectedTab
-                                              ? InnerPageSectionStatus.current
-                                              : InnerPageSectionStatus.available,
-                                          stepNumber:
-                                              _ImTab.values.indexOf(tab) + 1,
-                                        ))
-                                    .toList(),
-                                currentSectionId: _selectedTab.name,
-                                onSectionTap: (sectionId) {
-                                  final tab = _ImTab.values
-                                      .firstWhere((t) => t.name == sectionId);
-                                  setState(() => _selectedTab = tab);
-                                },
-                              ),
                               _buildTabContent(),
                               const SizedBox(height: 24),
                               LaunchPhaseNavigation(

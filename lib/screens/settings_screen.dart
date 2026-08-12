@@ -26,14 +26,12 @@ import 'package:ndu_project/utils/web_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/providers/theme_provider.dart';
-import 'package:ndu_project/services/hint_service.dart';
 import 'package:ndu_project/services/auth_nav.dart';
 import 'package:ndu_project/services/security_services.dart';
 import 'package:ndu_project/screens/mfa_enrollment_screen.dart';
 import 'package:ndu_project/screens/recovery_codes_screen.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -233,88 +231,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      InnerPageNavigationHint(
-                        pageId: 'settings',
-                        pageTitle: 'Settings',
-                        description: 'Navigate between settings sections',
-                        currentSectionId: _tabs[_tabController.index],
-                        sections: [
-                          InnerPageSection(
-                              id: 'Preferences',
-                              label: 'Preferences',
-                              icon: Icons.tune,
-                              status: _tabController.index ==
-                                      _tabs.indexOf('Preferences')
-                                  ? InnerPageSectionStatus.current
-                                  : InnerPageSectionStatus.available,
-                              stepNumber: 1),
-                          if (_isAdminDomain)
-                            InnerPageSection(
-                                id: 'Integrations',
-                                label: 'Integrations',
-                                icon: Icons.integration_instructions,
-                                status: _tabController.index ==
-                                        _tabs.indexOf('Integrations')
-                                    ? InnerPageSectionStatus.current
-                                    : InnerPageSectionStatus.available,
-                                stepNumber: 2),
-                          InnerPageSection(
-                              id: 'Access & Collaborators',
-                              label: 'Access & Collaborators',
-                              icon: Icons.people,
-                              status: _tabController.index ==
-                                      _tabs.indexOf('Access & Collaborators')
-                                  ? InnerPageSectionStatus.current
-                                  : InnerPageSectionStatus.available,
-                              stepNumber: _isAdminDomain ? 3 : 2),
-                          InnerPageSection(
-                              id: 'Billing & Subscription',
-                              label: 'Billing & Subscription',
-                              icon: Icons.credit_card,
-                              status: _tabController.index ==
-                                      _tabs.indexOf('Billing & Subscription')
-                                  ? InnerPageSectionStatus.current
-                                  : InnerPageSectionStatus.available,
-                              stepNumber: _isAdminDomain ? 4 : 3),
-                          InnerPageSection(
-                              id: 'Report & Analysis',
-                              label: 'Report & Analysis',
-                              icon: Icons.analytics,
-                              status: _tabController.index ==
-                                      _tabs.indexOf('Report & Analysis')
-                                  ? InnerPageSectionStatus.current
-                                  : InnerPageSectionStatus.available,
-                              stepNumber: _isAdminDomain ? 5 : 4),
-                          if (_isAdminDomain)
-                            InnerPageSection(
-                                id: 'Security',
-                                label: 'Security',
-                                icon: Icons.security,
-                                status: _tabController.index ==
-                                        _tabs.indexOf('Security')
-                                    ? InnerPageSectionStatus.current
-                                    : InnerPageSectionStatus.available,
-                                stepNumber: 6),
-                          if (_isAdminDomain)
-                            InnerPageSection(
-                                id: 'Edit Content',
-                                label: 'Edit Content',
-                                icon: Icons.edit_note,
-                                status: _tabController.index ==
-                                        _tabs.indexOf('Edit Content')
-                                    ? InnerPageSectionStatus.current
-                                    : InnerPageSectionStatus.available,
-                                stepNumber: 7),
-                        ],
-                        onSectionTap: (sectionId) {
-                          final index = _tabs.indexOf(sectionId);
-                          if (index >= 0) {
-                            _tabController.animateTo(index);
-                            setState(() {});
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 24),
                       _builderForTab(_tabController.index),
                     ],
                   ),

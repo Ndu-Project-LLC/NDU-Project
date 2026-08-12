@@ -44,7 +44,6 @@ import 'package:ndu_project/widgets/proceed_confirmation_gate.dart';
 import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/expandable_text.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/utils/csv_import_helper.dart';
@@ -3367,33 +3366,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InnerPageNavigationHint(
-          pageId: 'cost_analysis',
-          pageTitle: 'Benefit Categories',
-          description: 'Navigate between benefit categories',
-          currentSectionId:
-              _projectValueFields[_activeBenefitCategoryIndex].key,
-          compact: true,
-          sections: [
-            for (int i = 0; i < _projectValueFields.length; i++)
-              InnerPageSection(
-                id: _projectValueFields[i].key,
-                label: _projectValueFields[i].value,
-                status: _activeBenefitCategoryIndex == i
-                    ? InnerPageSectionStatus.current
-                    : InnerPageSectionStatus.available,
-                stepNumber: i + 1,
-              ),
-          ],
-          onSectionTap: (sectionId) {
-            final index =
-                _projectValueFields.indexWhere((f) => f.key == sectionId);
-            if (index >= 0) {
-              setState(() => _activeBenefitCategoryIndex = index);
-              _benefitCategoryTabController.animateTo(index);
-            }
-          },
-        ),
         const SizedBox(height: 12),
         const Text(
           'Estimated Benefits',

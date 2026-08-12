@@ -17,7 +17,6 @@ import 'package:ndu_project/widgets/carried_context_banner.dart';
 import 'package:ndu_project/widgets/csv_table_import_button.dart';
 
 import 'package:ndu_project/widgets/voice_text_field.dart';
-import 'package:ndu_project/widgets/inner_page_navigation_hint.dart';
 import 'package:ndu_project/widgets/planning_phase_header.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
@@ -331,51 +330,6 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                         _ProjectPlanOverviewCard(isMobile: isMobile),
                         const SizedBox(height: 24),
                         _buildTabBar(),
-                        const SizedBox(height: 16),
-                        InnerPageNavigationHint(
-                          pageId: 'project_plan',
-                          pageTitle: 'Project Plan',
-                          description: 'Navigate between project plan sections',
-                          currentSectionId: _tabController.index.toString(),
-                          onSectionTap: (sectionId) {
-                            final index = int.tryParse(sectionId) ?? 0;
-                            if (index >= 0 && index < 5) {
-                              _tabController.animateTo(index);
-                            }
-                          },
-                          sections: const [
-                            InnerPageSection(
-                              id: '0',
-                              label: 'Overview',
-                              icon: Icons.dashboard_outlined,
-                              stepNumber: 1,
-                            ),
-                            InnerPageSection(
-                              id: '1',
-                              label: 'Resources',
-                              icon: Icons.people_outline,
-                              stepNumber: 2,
-                            ),
-                            InnerPageSection(
-                              id: '2',
-                              label: 'Tasks',
-                              icon: Icons.task_alt_outlined,
-                              stepNumber: 3,
-                            ),
-                            InnerPageSection(
-                              id: '3',
-                              label: 'Budget',
-                              icon: Icons.account_balance_wallet_outlined,
-                              stepNumber: 4,
-                            ),
-                            InnerPageSection(
-                              id: '4',
-                              label: 'Risks',
-                              icon: Icons.warning_amber_outlined,
-                              stepNumber: 5,
-                            ),
-                          ],
-                        ),
                         const SizedBox(height: 24),
                         _buildTabContent(isMobile),
                         const SizedBox(height: 24),

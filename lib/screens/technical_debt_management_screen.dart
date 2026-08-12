@@ -366,7 +366,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: Row(
  children: [
- _tableHeaderCell('ID', flex: isNarrow ? 0.6 : 0.5),
  _tableHeaderCell('Item', flex: 2.0),
  _tableHeaderCell('Area', flex: 1.0),
  _tableHeaderCell('Owner', flex: 1.2),
@@ -405,10 +404,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  child: Row(
  children: [
- _tableCell(item.id,
- flex: isNarrow ? 0.6 : 0.5,
- textStyle: const TextStyle(
- fontSize: 12, color: Color(0xFF0EA5E9))),
  _tableCell(item.title,
  flex: 2.0,
  textStyle: const TextStyle(fontSize: 13)),
@@ -1125,6 +1120,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  void _showDebtItemDialog({DebtItem? existing}) {
  final isEdit = existing != null;
+ // ID is auto-generated and hidden from the UI per Task 7.
  final idController = TextEditingController(
  text: existing?.id ?? 'TD-${DateTime.now().millisecondsSinceEpoch}',
  );
@@ -1153,11 +1149,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  child: Column(
  mainAxisSize: MainAxisSize.min,
  children: [
- VoiceTextField(
- controller: idController,
- decoration: const InputDecoration(labelText: 'ID *'),
- ),
- const SizedBox(height: 12),
  VoiceTextField(
  controller: titleController,
  decoration: const InputDecoration(labelText: 'Item *'),
@@ -1217,9 +1208,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  onPressed: () async {
  final id = idController.text.trim();
  final title = titleController.text.trim();
- if (id.isEmpty || title.isEmpty) {
+ if (title.isEmpty) {
  ScaffoldMessenger.of(context).showSnackBar(
- const SnackBar(content: Text('ID and Item are required.')),
+ const SnackBar(content: Text('Item is required.')),
  );
  return;
  }
@@ -1268,7 +1259,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  if (!mounted) return;
  setState(() => _debtItems = updated);
  ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(content: Text('Removed debt item ${item.id}.')),
+ SnackBar(content: Text('Removed debt item.')),
  );
  }
 

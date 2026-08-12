@@ -568,27 +568,26 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
               children: [
                 _buildColumnHeaders(
                     tableWidth, effectiveColumns, hasRowActions),
-                // Use a lazily-built list body so large tables don't lay out
-                // every row up front; only visible rows are mounted.
+                // Use a Column with explicit children (not ListView.builder)
+                // so the rows render correctly inside the parent
+                // SingleChildScrollView. Previously used
+                // ListView.builder(shrinkWrap: true, physics: NeverScrollable)
+                // which silently reported 0 height in this nested context,
+                // making all body rows invisible even though rowCount > 0.
                 if (rows.isEmpty)
                   _buildEmpty()
                 else
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: rows.length * 2 - 1,
-                    itemBuilder: (context, idx) {
-                      if (idx.isOdd) {
-                        return const Divider(
-                            height: 1, thickness: 1, color: Color(0xFFF1F5F9));
-                      }
-                      final rowIdx = idx ~/ 2;
-                      return RepaintBoundary(
-                        key: ValueKey('launch_row_$rowIdx'),
-                        child: rows[rowIdx],
-                      );
-                    },
-                  ),
+                  ...List.generate(rows.length * 2 - 1, (idx) {
+                    if (idx.isOdd) {
+                      return const Divider(
+                          height: 1, thickness: 1, color: Color(0xFFF1F5F9));
+                    }
+                    final rowIdx = idx ~/ 2;
+                    return RepaintBoundary(
+                      key: ValueKey('launch_row_$rowIdx'),
+                      child: rows[rowIdx],
+                    );
+                  }),
               ],
             ),
           ),

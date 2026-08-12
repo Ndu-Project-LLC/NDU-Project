@@ -587,10 +587,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  horizontalMargin: 12,
  columns: const [
  DataColumn(
- label: Text('ID',
- style: TextStyle(
- fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
  label: Text('Risk',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
@@ -621,9 +617,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  rows: _risks.map((risk) {
  return DataRow(cells: [
- DataCell(Text(risk.id,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF0EA5E9)))),
  DataCell(Text(risk.title,
  style: const TextStyle(fontSize: 13),
  maxLines: 1, overflow: TextOverflow.ellipsis)),
@@ -746,10 +739,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  horizontalMargin: 12,
  columns: const [
  DataColumn(
- label: Text('ID',
- style: TextStyle(
- fontSize: 11, fontWeight: FontWeight.w700))),
- DataColumn(
  label: Text('Risk Ref',
  style: TextStyle(
  fontSize: 11, fontWeight: FontWeight.w700))),
@@ -792,9 +781,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  rows: _plans.map((plan) {
  return DataRow(cells: [
- DataCell(Text(plan.id,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF0EA5E9), fontWeight: FontWeight.w600))),
  DataCell(Text(plan.riskId,
  style: const TextStyle(
  fontSize: 12, color: Color(0xFF6366F1)))),

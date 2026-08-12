@@ -538,10 +538,8 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
 
     try {
       final uri = OpenAiConfig.chatUri();
-      final headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${OpenAiConfig.apiKeyValue}',
-      };
+      // Use centralized headers() — the server-side proxy adds Authorization.
+      final headers = OpenAiConfig.headers();
 
       // Build full conversation history for multi-turn context
       final messages = <Map<String, String>>[

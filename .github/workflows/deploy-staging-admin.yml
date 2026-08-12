@@ -67,11 +67,21 @@ jobs:
   # Runs the full test suite + static analysis. If any check fails, the
   # workflow stops here and the build-and-deploy job is skipped — guaranteeing
   # that a triggered deployment never fails mid-flight.
+  #
+  # NOTE on email notifications: analyze/test steps use `continue-on-error: true`
+  # so that a failing check does NOT mark the workflow as failed (which would
+  # trigger GitHub's auto failure-email to the actor). Pass/fail is captured
+  # via step outputs and consumed by `build-and-deploy`'s `if` condition, so
+  # the deploy safety gate is preserved — broken code still blocks the deploy.
   preflight:
     name: Preflight checks (analyze + test)
     needs: gate
     if: needs.gate.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
+    outputs:
+      analyze_passed: ${{ steps.analyze.outcome == 'success' }}
+      test_passed: ${{ steps.test.outcome == 'success' }}
+      files_passed: ${{ steps.required-files.outcome == 'success' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -93,6 +103,8 @@ jobs:
           echo "============================================"
 
       - name: Required files present
+        id: required-files
+        continue-on-error: true
         run: |
           set -eu
           REQUIRED_FILES=(
@@ -122,6 +134,8 @@ jobs:
         run: flutter pub get
 
       - name: Flutter analyze (fatal on errors)
+        id: analyze
+        continue-on-error: true
         run: |
           set -eu
           echo "── flutter analyze ──"
@@ -132,6 +146,8 @@ jobs:
           echo "✓ flutter analyze passed"
 
       - name: Flutter test (unit + widget)
+        id: test
+        continue-on-error: true
         run: |
           set -eu
           echo "── flutter test ──"
@@ -140,24 +156,39 @@ jobs:
           flutter test --no-pub --reporter expanded
           echo "✓ flutter test passed"
 
-      - name: Preflight passed
-        if: success()
+      - name: Preflight summary
+        if: always()
         run: |
           echo "============================================"
-          echo "  ✅ Preflight checks passed"
-          echo "  Proceeding to build + deploy..."
+          echo "  Preflight outcomes:"
+          echo "    files_passed:    ${{ steps.required-files.outcome }}"
+          echo "    analyze_passed:  ${{ steps.analyze.outcome }}"
+          echo "    test_passed:     ${{ steps.test.outcome }}"
           echo "============================================"
+          if [ "${{ steps.required-files.outcome }}" = "success" ] \
+            && [ "${{ steps.analyze.outcome }}" = "success" ] \
+            && [ "${{ steps.test.outcome }}" = "success" ]; then
+            echo "  ✅ All preflight checks passed — proceeding to build + deploy."
+          else
+            echo "  ⛔ One or more preflight checks failed — deploy will be skipped."
+          fi
 
   # ── BUILD & DEPLOY TO STAGING ─────────────────────────────────────────────
   build-and-deploy:
     name: Build Flutter web → staging.admin.nduproject.com
     needs: [gate, preflight]
     # Only run on the admin.nduproject.com repo (not on NDU-Project repo)
-    # AND only if preflight checks passed (needs.preflight.result == 'success')
+    # AND only if ALL preflight checks actually passed (captured via step
+    # outputs — see preflight job). The job result itself is always 'success'
+    # because the analyze/test steps use continue-on-error, so we cannot rely
+    # on needs.preflight.result here.
     if: |
       needs.gate.outputs.should_skip != 'true' &&
       github.repository == 'Ndu-Project-LLC/admin.nduproject.com' &&
-      needs.preflight.result == 'success'
+      needs.preflight.result == 'success' &&
+      needs.preflight.outputs.files_passed == 'true' &&
+      needs.preflight.outputs.analyze_passed == 'true' &&
+      needs.preflight.outputs.test_passed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

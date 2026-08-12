@@ -42,6 +42,12 @@ jobs:
         continue-on-error: true
 
       - name: Build Web (release)
+        id: build
+        # continue-on-error so a failing build does NOT mark the workflow as
+        # failed (which would trigger GitHub's auto failure-email to the actor).
+        # The build outcome is captured in steps.build.outcome below; downstream
+        # steps that depend on a successful build are gated on that.
+        continue-on-error: true
         env:
           OPENAI_PROXY_API_KEY: ${{ secrets.OPENAI_PROXY_API_KEY }}
           OPENAI_PROXY_ENDPOINT: ${{ secrets.OPENAI_PROXY_ENDPOINT }}
@@ -52,18 +58,21 @@ jobs:
             --dart-define=OPENAI_PROXY_ENDPOINT=${OPENAI_PROXY_ENDPOINT}
 
       - name: Stamp build version (cache-busting)
+        if: steps.build.outcome == 'success'
         run: |
           python scripts/stamp_build_version.py
           STAMP=$(grep -oE "var NDU_BUILD = '[^']+'" build/web/index.html | head -1)
           echo "Stamped NDU_BUILD = $STAMP"
 
       - name: Add SPA routing config (if present)
+        if: steps.build.outcome == 'success'
         run: |
           if [ -f staticwebapp.config.json ]; then
             cp staticwebapp.config.json build/web/staticwebapp.config.json
           fi
 
       - name: Upload build artifact
+        if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: flutter-web-build
@@ -71,9 +80,14 @@ jobs:
           retention-days: 7
 
       - name: Build summary
+        if: always()
         run: |
-          echo "### Flutter Web Build ✅" >> $GITHUB_STEP_SUMMARY
+          echo "### Flutter Web Build — outcome: ${{ steps.build.outcome }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Ref:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**SHA:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Bundle:** $(du -sh build/web/main.dart.js | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.build.outcome }}" = "success" ]; then
+            echo "**Bundle:** $(du -sh build/web/main.dart.js | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Bundle:** build failed — see logs above" >> $GITHUB_STEP_SUMMARY
+          fi

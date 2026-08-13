@@ -969,7 +969,7 @@ class _KazAiChatPopupState extends State<_KazAiChatPopup>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.psychology_rounded, size: 18),
+                const Icon(Icons.chat_bubble_rounded, size: 18),
                 const SizedBox(width: 8),
                 const Text('AI Assistant'),
               ],

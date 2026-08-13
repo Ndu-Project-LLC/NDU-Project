@@ -36,4 +36,4 @@ window.__NDU_ENV.FIREBASE_API_KEY = '';
 // Deployment build stamp — used by the cache-busting logic in index.html.
 // The build pipeline (scripts/stamp_build_version.py) overwrites this with
 // the current epoch seconds on every `flutter build web`.
-window.__NDU_ENV.BUILD_STAMP = '1786563210';
+window.__NDU_ENV.BUILD_STAMP = '1786612694';

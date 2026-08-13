@@ -224,9 +224,10 @@ class CurrentUserProfileChip extends StatelessWidget {
   String _initials(String text) {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return 'U';
-    final parts = trimmed.split(RegExp(r"\s+"));
+    final parts = trimmed.split(RegExp(r"\s+")).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return trimmed[0].toUpperCase();
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return trimmed.substring(0, 1).toUpperCase();
+    return parts[0][0].toUpperCase();
   }
 
   @override

@@ -1188,11 +1188,14 @@ class _PremiumUserGreeting extends StatelessWidget {
 
  /// Extract initials (up to 2 chars) from display name
  static String _initials(String name) {
- final parts = name.trim().split(RegExp(r'\s+'));
+ final trimmed = name.trim();
+ if (trimmed.isEmpty) return 'U';
+ final parts = trimmed.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+ if (parts.isEmpty) return trimmed[0].toUpperCase();
  if (parts.length >= 2) {
  return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
  }
- return name.isNotEmpty ? name[0].toUpperCase() : 'U';
+ return parts[0][0].toUpperCase();
  }
 
  @override

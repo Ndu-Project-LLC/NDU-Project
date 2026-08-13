@@ -381,11 +381,14 @@ class UserProfile {
 
   /// Get initials for avatar
   String get initials {
-    final parts = displayName.trim().split(' ');
+    final trimmed = displayName.trim();
+    if (trimmed.isEmpty) return '?';
+    final parts = trimmed.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return trimmed[0].toUpperCase();
     if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
-    return displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+    return parts[0][0].toUpperCase();
   }
 
   Map<String, dynamic> toMap() => {

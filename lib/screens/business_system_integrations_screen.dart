@@ -277,7 +277,7 @@ class _BusinessSystemIntegrationsScreenState
  ),
  child: Center(
  child: Text(
- p.label.substring(0, 1),
+ p.label.isNotEmpty ? p.label.substring(0, 1) : '?',
  style: const TextStyle(
  color: Colors.white,
  fontWeight: FontWeight.w800,
@@ -514,7 +514,7 @@ class _ProviderConfigDialogState extends State<_ProviderConfigDialog> {
  borderRadius: BorderRadius.circular(6),
  ),
  child: Center(
- child: Text(p.label.substring(0, 1),
+ child: Text(p.label.isNotEmpty ? p.label.substring(0, 1) : '?',
  style: const TextStyle(
  color: Colors.white, fontWeight: FontWeight.w800)),
  ),

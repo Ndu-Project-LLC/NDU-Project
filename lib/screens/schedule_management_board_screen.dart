@@ -1130,11 +1130,12 @@ class _ScheduleCardData {
  final double progressPercent;
 
  String get assigneeInitials {
- final parts = assignee.trim().split(' ');
+ final parts = assignee.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+ if (parts.isEmpty) return 'U';
  if (parts.length == 1) {
- return parts.first.substring(0, 1).toUpperCase();
+ return parts.first[0].toUpperCase();
  }
- return parts.take(2).map((part) => part.substring(0, 1).toUpperCase()).join();
+ return parts.take(2).map((part) => part[0].toUpperCase()).join();
  }
 }
 

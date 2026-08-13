@@ -2177,9 +2177,8 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  email.split('@').first.replaceAll(RegExp(r'[._-]+'), ' ');
  return username
  .split(' ')
- .map((part) => part.isEmpty
- ? ''
- : '${part[0].toUpperCase()}${part.substring(1)}')
+ .where((part) => part.isNotEmpty)
+ .map((part) => part[0].toUpperCase() + part.substring(1))
  .join(' ');
  }
  return 'Unknown';
@@ -3132,9 +3131,8 @@ class _OwnerNameCellState extends State<_OwnerNameCell> {
  final beforeAt = email.split('@').first;
  final cleaned = beforeAt.replaceAll(RegExp(r'[._-]+'), ' ').trim();
  if (cleaned.isEmpty) return 'Unknown';
- final parts = cleaned.split(RegExp(r'\s+'));
+ final parts = cleaned.split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
  final cased = parts.map((p) {
- if (p.isEmpty) return p;
  final lower = p.toLowerCase();
  return lower[0].toUpperCase() + lower.substring(1);
  }).join(' ');

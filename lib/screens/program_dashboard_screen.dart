@@ -347,10 +347,11 @@ class _ProgramDashboardScreenState extends State<ProgramDashboardScreen>
 
  // Only create if no portfolio exists yet
  if (existingPortfoliosSnap.docs.isEmpty) {
+ final shortId = ownerId.length >= 6 ? ownerId.substring(0, 6) : ownerId;
  await FirebaseFirestore.instance
  .collection('portfolios')
  .add({
- 'name': '${ownerId.substring(0, 6)} Portfolio',
+ 'name': '$shortId Portfolio',
  'projectIds': projects.take(7).map((p) => p.id).toList(),
  'ownerId': ownerId,
  'createdAt': FieldValue.serverTimestamp(),

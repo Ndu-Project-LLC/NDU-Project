@@ -8372,7 +8372,9 @@ class _VendorNameCell extends StatelessWidget {
  radius: 16,
  backgroundColor: const Color(0xFFE2E8F0),
  child: Text(
- vendor.name.substring(0, 2).toUpperCase(),
+ vendor.name.length >= 2
+ ? vendor.name.substring(0, 2).toUpperCase()
+ : vendor.name.toUpperCase(),
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,

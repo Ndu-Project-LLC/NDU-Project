@@ -314,7 +314,9 @@ class _AggregatedBusinessSystemsCardState
             ),
             child: Center(
               child: Text(
-                i.provider.label.substring(0, 1),
+                i.provider.label.isNotEmpty
+                    ? i.provider.label.substring(0, 1)
+                    : '?',
                 style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,

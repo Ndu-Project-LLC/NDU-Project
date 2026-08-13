@@ -6939,7 +6939,7 @@ class _ReviewCard extends StatelessWidget {
  CircleAvatar(
  radius: 18,
  backgroundColor: review.avatarColor,
- child: Text(review.author.substring(0, 1),
+ child: Text(review.author.isNotEmpty ? review.author.substring(0, 1) : '?',
  style: const TextStyle(
  color: Colors.white, fontWeight: FontWeight.w700)),
  ),

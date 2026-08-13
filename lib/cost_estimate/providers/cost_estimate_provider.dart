@@ -140,7 +140,30 @@ class CostEstimateProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final data = {
         'state': {
-          'estimate': _estimate != null ? {'id': _estimate!.id, 'projectName': _estimate!.projectName, 'className': _estimate!.className.name, 'deliveryModel': _estimate!.deliveryModel.name, 'status': _estimate!.status.name, 'currency': _estimate!.currency} : null,
+          'estimate': _estimate != null
+              ? {
+                  'id': _estimate!.id,
+                  'projectId': _estimate!.projectId,
+                  'projectName': _estimate!.projectName,
+                  'className': _estimate!.className.name,
+                  'deliveryModel': _estimate!.deliveryModel.name,
+                  'status': _estimate!.status.name,
+                  'currency': _estimate!.currency,
+                  // Phase 0 fix — persist the full estimate state so the
+                  // Project Controls BAC seeding (syncFromCostEstimate)
+                  // and the WBS ↔ Cost linkage survive an app restart.
+                  // Previously only metadata was saved → silent data loss.
+                  'lines': _estimate!.lines
+                      .map((l) => l.toJson())
+                      .toList(growable: false),
+                  'totals': _estimate!.totals.toJson(),
+                  'access': _estimate!.access
+                      .map((g) => g.toJson())
+                      .toList(growable: false),
+                  'createdAt': _estimate!.createdAt.toIso8601String(),
+                  'updatedAt': _estimate!.updatedAt.toIso8601String(),
+                }
+              : null,
           'setupComplete': _setupComplete,
         },
       };
@@ -151,7 +174,28 @@ class CostEstimateProvider extends ChangeNotifier {
   }
 
   CostEstimate _estimateFromJson(Map<String, dynamic> json) {
-    // Simplified deserialization — in production, use json_serializable
+    // Phase 0 fix — full deserialization including cost lines, totals,
+    // and access grants. Defaults gracefully for legacy records that
+    // were saved before these fields were persisted.
+    final linesJson = json['lines'] as List<dynamic>?;
+    final lines = linesJson != null
+        ? linesJson
+            .map((l) => CostLine.fromJson(l as Map<String, dynamic>))
+            .toList(growable: false)
+        : <CostLine>[];
+
+    final totalsJson = json['totals'] as Map<String, dynamic>?;
+    final totals = totalsJson != null
+        ? EstimateTotals.fromJson(totalsJson)
+        : EstimateTotals.empty();
+
+    final accessJson = json['access'] as List<dynamic>?;
+    final access = accessJson != null
+        ? accessJson
+            .map((g) => AccessGrant.fromJson(g as Map<String, dynamic>))
+            .toList(growable: false)
+        : <AccessGrant>[];
+
     return CostEstimate(
       id: json['id'] as String,
       projectId: json['projectId'] as String? ?? 'default',
@@ -163,15 +207,19 @@ class CostEstimateProvider extends ChangeNotifier {
       status: EstimateStatus.values
           .byName(json['status'] as String? ?? 'draft'),
       currency: json['currency'] as String? ?? 'USD',
-      lines: [],
+      lines: lines,
       boe: emptyBOE(EstimateClass.values
           .byName(json['className'] as String? ?? 'class3')),
-      totals: EstimateTotals.empty(),
-      access: [],
+      totals: totals,
+      access: access,
       stakeholders: [],
       aiSuggestions: [],
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+      createdAt: json['createdAt'] is String
+          ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
+      updatedAt: json['updatedAt'] is String
+          ? DateTime.tryParse(json['updatedAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 

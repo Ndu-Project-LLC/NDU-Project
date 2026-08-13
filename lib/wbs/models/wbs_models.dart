@@ -367,6 +367,16 @@ class WBSNode {
   final DateTime? plannedStart;
   final DateTime? plannedFinish;
   final String? scheduleStatus;
+  // ─── WBS Dictionary (Phase 1 — Scope → WBS integration) ──────────────
+  // Per PMI Practice Standard for WBS (2nd ed.) and EIA-748 EVMS, each
+  // work-package node carries a dictionary entry that documents the
+  // deliverable description, acceptance criteria, and the work-package
+  // definition narrative. This is the literal bridge between the scope
+  // statement and the WBS — the WBS Dictionary is the document that
+  // proves the 100% Rule is satisfied per work package.
+  final String? deliverableDescription;
+  final List<String>? acceptanceCriteria;
+  final String? workPackageDefinition;
   final List<WBSNode> children;
 
   const WBSNode({
@@ -390,6 +400,9 @@ class WBSNode {
     this.plannedStart,
     this.plannedFinish,
     this.scheduleStatus,
+    this.deliverableDescription,
+    this.acceptanceCriteria,
+    this.workPackageDefinition,
     required this.children,
   });
 
@@ -398,6 +411,15 @@ class WBSNode {
   bool get hasCrossSectionLink =>
       (controlAccountId != null && controlAccountId!.isNotEmpty) ||
       (scheduleActivityId != null && scheduleActivityId!.isNotEmpty);
+
+  /// True if the WBS Dictionary entry is fully populated. Used by the
+  /// IBR readiness check to verify scope completeness per work package.
+  bool get hasWbsDictionaryEntry =>
+      (deliverableDescription != null &&
+          deliverableDescription!.trim().isNotEmpty) &&
+      (acceptanceCriteria != null && acceptanceCriteria!.isNotEmpty) &&
+      (workPackageDefinition != null &&
+          workPackageDefinition!.trim().isNotEmpty);
 
   WBSNode copyWith({
     String? id,
@@ -420,6 +442,9 @@ class WBSNode {
     DateTime? plannedStart,
     DateTime? plannedFinish,
     String? scheduleStatus,
+    String? deliverableDescription,
+    List<String>? acceptanceCriteria,
+    String? workPackageDefinition,
     List<WBSNode>? children,
   }) {
     return WBSNode(
@@ -443,6 +468,11 @@ class WBSNode {
       plannedStart: plannedStart ?? this.plannedStart,
       plannedFinish: plannedFinish ?? this.plannedFinish,
       scheduleStatus: scheduleStatus ?? this.scheduleStatus,
+      deliverableDescription:
+          deliverableDescription ?? this.deliverableDescription,
+      acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
+      workPackageDefinition:
+          workPackageDefinition ?? this.workPackageDefinition,
       children: children ?? this.children,
     );
   }
@@ -471,6 +501,9 @@ class WBSNode {
       plannedStart: null,
       plannedFinish: null,
       scheduleStatus: null,
+      deliverableDescription: deliverableDescription,
+      acceptanceCriteria: acceptanceCriteria,
+      workPackageDefinition: workPackageDefinition,
       children: children,
     );
   }

@@ -262,6 +262,12 @@ class WBSProvider extends ChangeNotifier {
           ? DateTime.tryParse(json['plannedFinish'] as String)
           : null,
       scheduleStatus: json['scheduleStatus'] as String?,
+      // WBS Dictionary (Phase 1)
+      deliverableDescription: json['deliverableDescription'] as String?,
+      acceptanceCriteria: json['acceptanceCriteria'] != null
+          ? (json['acceptanceCriteria'] as List<dynamic>).cast<String>()
+          : null,
+      workPackageDefinition: json['workPackageDefinition'] as String?,
       children: (json['children'] as List<dynamic>? ?? [])
           .map((c) => _nodeFromJson(c as Map<String, dynamic>))
           .toList(),
@@ -307,6 +313,16 @@ class WBSProvider extends ChangeNotifier {
           'plannedFinish': node.plannedFinish!.toIso8601String(),
         if (node.scheduleStatus != null && node.scheduleStatus!.isNotEmpty)
           'scheduleStatus': node.scheduleStatus,
+        // WBS Dictionary (Phase 1)
+        if (node.deliverableDescription != null &&
+            node.deliverableDescription!.isNotEmpty)
+          'deliverableDescription': node.deliverableDescription,
+        if (node.acceptanceCriteria != null &&
+            node.acceptanceCriteria!.isNotEmpty)
+          'acceptanceCriteria': node.acceptanceCriteria,
+        if (node.workPackageDefinition != null &&
+            node.workPackageDefinition!.isNotEmpty)
+          'workPackageDefinition': node.workPackageDefinition,
         'children': node.children.map(_nodeToJson).toList(),
       };
 
@@ -473,7 +489,39 @@ class WBSProvider extends ChangeNotifier {
       aiConfidence: patch.aiConfidence,
       aiReference: patch.aiReference,
       methodology: patch.methodology,
+      // WBS Dictionary (Phase 1) — propagated through updateNode so the
+      // UI can edit deliverableDescription / acceptanceCriteria /
+      // workPackageDefinition in place without rebuilding the whole tree.
+      deliverableDescription: patch.deliverableDescription,
+      acceptanceCriteria: patch.acceptanceCriteria,
+      workPackageDefinition: patch.workPackageDefinition,
     );
+  }
+
+  /// Convenience helper to update the WBS Dictionary entry for a specific
+  /// work-package node. Used by the WBS Builder's dictionary editor panel.
+  /// Passing `null` for a field clears it; passing an empty list for
+  /// [acceptanceCriteria] clears the list.
+  void updateWbsDictionary(
+    String nodeId, {
+    String? deliverableDescription,
+    List<String>? acceptanceCriteria,
+    String? workPackageDefinition,
+  }) {
+    if (_wbs == null) return;
+    final updatedLevel0 = _findAndUpdateNode(_wbs!.level0, nodeId, (n) {
+      return n.copyWith(
+        deliverableDescription: deliverableDescription,
+        acceptanceCriteria: acceptanceCriteria,
+        workPackageDefinition: workPackageDefinition,
+      );
+    });
+    _wbs = _wbs!.copyWith(
+      level0: updatedLevel0,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
   }
 
   void removeNode(String id) {

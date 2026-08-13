@@ -1447,6 +1447,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     context.push('/project-controls');
   }
 
+  void _openIntegrationDashboard() {
+    // PMB Integration Dashboard — unified Scope ↔ WBS ↔ Schedule ↔ PC view.
+    // Route-based module (uses go_router).
+    context.push('/integration-dashboard');
+  }
+
   void _openChangeManagement() {
     _navigateWithCheckpoint(
         'change_management', const ChangeManagementModuleScreen());
@@ -2861,6 +2867,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         _buildSubMenuItem('Schedule',
             onTap: _openSchedule,
             isActive: widget.activeItemLabel == 'Schedule'),
+        _buildSubMenuItem('Integration Dashboard',
+            onTap: _openIntegrationDashboard,
+            isActive:
+                widget.activeItemLabel == 'Integration Dashboard'),
         _buildSubExpandableHeader(
           'Cost Estimate',
           expanded: _costEstimateExpanded,

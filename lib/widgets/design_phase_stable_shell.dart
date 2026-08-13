@@ -63,7 +63,16 @@ class DesignPhaseStableShell extends StatelessWidget {
               Expanded(
                 child: Stack(
                   children: [
-                    child,
+                    // Pad child content so the floating Save pill +
+                    // chat bubble FAB never overlap body content.
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: kFloatingBottomReservedHeight,
+                        ),
+                        child: child,
+                      ),
+                    ),
                     const KazAiChatBubble(positioned: true),
                     // Global Save pill — bottom-left, opposite the chat
                     // bubble FAB at bottom-right. Persists the current
@@ -112,7 +121,16 @@ class DesignPhaseStableShell extends StatelessWidget {
                   Expanded(
                     child: Stack(
                       children: [
-                        child,
+                        // Pad child content so the floating Save pill +
+                        // chat bubble FAB never overlap body content.
+                        Positioned.fill(
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: kFloatingBottomReservedHeight,
+                            ),
+                            child: child,
+                          ),
+                        ),
                         const KazAiChatBubble(positioned: true),
                         // Global Save pill — bottom-left, opposite the chat
                         // bubble FAB at bottom-right.

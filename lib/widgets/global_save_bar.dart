@@ -19,15 +19,32 @@ import 'package:provider/provider.dart';
 /// immediately. A [ScaffoldMessenger] snack bar confirms the save outcome.
 ///
 /// The bar is positioned bottom-LEFT so it does not collide with the
-/// [KazAiChatBubble] floating action button at bottom-RIGHT. It is rendered
-/// as a `Positioned` overlay inside the scaffold's `Stack`, so existing
-/// body content and any `bottomNavigationBar` are left untouched.
+/// [KazAiChatBubble] floating action button at bottom-RIGHT. Both floating
+/// elements sit inside a reserved bottom strip — see
+/// [kFloatingBottomReservedHeight] — so they NEVER overlap or cut off body
+/// content. Host scaffolds pad their body by this amount to leave room.
 ///
 /// The button is **stateful** so it can show a brief "Saving…" /
 /// "Saved ✓" state while the Firestore write is in flight. If no project
 /// is loaded (e.g. on a dashboard with no active project), the bar still
 /// renders but taps show an informational "Nothing to save" message.
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/// Vertical space reserved at the bottom of every screen that hosts the
+/// [GlobalSaveBar] and/or the [KazAiChatBubble] FAB. Both floating elements
+/// live inside this strip — body content is padded up by this amount so
+/// nothing is ever hidden behind them.
+///
+/// Calculation:
+///   KazAiChatBubble FAB height           64
+///   + bottom margin                       24
+///   + small visual gap                     8
+///   ─────────────────────────────────────────
+///   Total reserved                        96
+///
+/// The Save pill is shorter (~44px tall + 24px margin = 68px) so it sits
+/// comfortably within this strip alongside the taller chat bubble FAB.
+const double kFloatingBottomReservedHeight = 96.0;
 
 class GlobalSaveBar extends StatefulWidget {
   const GlobalSaveBar({super.key});

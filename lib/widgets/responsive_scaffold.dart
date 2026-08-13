@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
+import 'package:ndu_project/widgets/global_save_bar.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/widgets/unified_phase_header.dart';
 
@@ -145,6 +146,14 @@ class _MobileScaffold extends StatelessWidget {
             Positioned.fill(
               child: body,
             ),
+            // Global Save pill — bottom-left, opposite the chat bubble FAB.
+            // Persists the current page's in-memory project state to
+            // Firestore immediately (drains the autosave debounce timer).
+            const Positioned(
+              bottom: 24,
+              left: 24,
+              child: GlobalSaveBar(),
+            ),
             // NOTE: Activity Log button removed from here — it's already
             // rendered by PlanningPhaseHeader/UnifiedPhaseHeader. Having
             // both caused a duplicate Activity Log button on every screen.
@@ -195,6 +204,14 @@ class _DesktopScaffold extends StatelessWidget {
                 children: [
                   Positioned.fill(
                     child: body,
+                  ),
+                  // Global Save pill — bottom-left, opposite the chat bubble
+                  // FAB at bottom-right. Drains the autosave debounce and
+                  // writes the current page's state to Firestore immediately.
+                  const Positioned(
+                    bottom: 24,
+                    left: 24,
+                    child: GlobalSaveBar(),
                   ),
                   // NOTE: Activity Log button removed from here — it's
                   // already rendered by PlanningPhaseHeader/

@@ -20,7 +20,7 @@ import 'package:ndu_project/widgets/voice_text_field.dart';
 //   • Clear history, search, and conversation management
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-class KazAiChatBubble extends StatelessWidget {
+class KazAiChatBubble extends StatefulWidget {
   const KazAiChatBubble({super.key, this.positioned = true});
 
   final bool positioned;
@@ -54,68 +54,95 @@ class KazAiChatBubble extends StatelessWidget {
   }
 
   @override
+  State<KazAiChatBubble> createState() => _KazAiChatBubbleState();
+}
+
+class _KazAiChatBubbleState extends State<KazAiChatBubble>
+    with TickerProviderStateMixin {
+  // Brand amber — matches the KAZ AI bubble design (golden-yellow FAB).
+  static const Color _kBubbleColor = Color(0xFFFBC02D);
+
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    // Soft, slow pulse on the outer glow to draw the user's eye to the
+    // assistant entry point. Loop forever, ~2.4s period.
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat(reverse: true);
+    // Glow alpha oscillates between 0.30 and 0.55 — subtle but noticeable.
+    _pulseAnimation = Tween<double>(begin: 0.30, end: 0.55).animate(
+      CurvedAnimation(
+        parent: _pulseController,
+        curve: Curves.easeInOutSine,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final bubble = Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => openChat(context),
-        borderRadius: BorderRadius.circular(32),
-        child: Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFFFFC812),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFFC812).withValues(alpha: 0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+    final bubble = AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        final glowAlpha = _pulseAnimation.value;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => KazAiChatBubble.openChat(context),
+            borderRadius: BorderRadius.circular(32),
+            child: Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _kBubbleColor,
+                boxShadow: [
+                  // Primary floating shadow (depth, slightly offset down).
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                  // Soft amber outer glow — the signature "halo" around the
+                  // bubble. Pulses gently to draw attention.
+                  BoxShadow(
+                    color: _kBubbleColor.withValues(alpha: glowAlpha),
+                    blurRadius: 28,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 0),
+                  ),
+                ],
               ),
-            ],
+              child: child,
+            ),
           ),
-          child: const Icon(
-            Icons.chat_bubble_rounded,
-            color: Colors.white,
-            size: 28,
-          ),
-        ),
+        );
+      },
+      // The icon is rendered once and reused across animation frames — only
+      // the outer glow alpha changes each tick.
+      child: const Icon(
+        Icons.chat_bubble_rounded,
+        color: Colors.white,
+        size: 28,
       ),
     );
 
-    if (!positioned) return bubble;
+    if (!widget.positioned) return bubble;
 
     return Positioned(
       bottom: 90,
       right: 24,
       child: bubble,
-    );
-  }
-
-  void _openKazAiChat(BuildContext context) {
-    showGeneralDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.15),
-      barrierDismissible: true,
-      barrierLabel: 'Close chat',
-      transitionDuration: const Duration(milliseconds: 250),
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          const _KazAiChatPopup(),
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0.15, 0.15),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-            )),
-            child: child,
-          ),
-        );
-      },
     );
   }
 }

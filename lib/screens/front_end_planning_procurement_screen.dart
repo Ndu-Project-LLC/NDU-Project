@@ -7844,10 +7844,10 @@ class _VendorsSection extends StatelessWidget {
  ),
  ],
  ),
- const SizedBox(height: 16),
+ const SizedBox(height: 10),
  Wrap(
- spacing: 12,
- runSpacing: 12,
+ spacing: 10,
+ runSpacing: 10,
  crossAxisAlignment: WrapCrossAlignment.center,
  children: [
  OutlinedButton.icon(
@@ -7945,7 +7945,7 @@ class _VendorsSection extends StatelessWidget {
  ),
  ],
  ),
- const SizedBox(height: 20),
+ const SizedBox(height: 12),
  if (vendors.isEmpty)
  _EmptyStateCard(
  icon: Icons.storefront_outlined,
@@ -8106,6 +8106,59 @@ class _VendorDataTable extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
+ // Standard, compact row heights so every vendor row has the same
+ // footprint and the table no longer shows large vertical gaps.
+ // The Vendor Name cell stacks name + email vertically (~44px), so a
+ // row height of 56–72 fits it cleanly without whitespace.
+ const double headingRowHeight = 44;
+ const double dataRowMinHeight = 56;
+ const double dataRowMaxHeight = 72;
+ const double columnSpacing = 16;
+ const double horizontalMargin = 16;
+ const TextStyle headingStyle = TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF475569),
+ letterSpacing: 0.2);
+ const TextStyle dataStyle =
+ TextStyle(fontSize: 13, color: Color(0xFF111827), height: 1.35);
+
+ // The "Contact" column was removed because the email is already
+ // shown inside the Vendor Name cell (name + email stacked).
+ List<DataColumn> buildColumns() => const [
+ DataColumn(label: Center(child: SizedBox(width: 24))),
+ DataColumn(label: Text('Vendor Name')),
+ DataColumn(label: Text('Category')),
+ DataColumn(label: Text('Status')),
+ DataColumn(label: Text('Rating')),
+ DataColumn(label: Center(child: Text('Actions'))),
+ ];
+
+ List<DataRow> buildRows() => vendors
+ .map(
+ (vendor) => DataRow(
+ cells: [
+ DataCell(
+ Checkbox(
+ value: selectedVendorIds.contains(vendor.id),
+ onChanged: (value) =>
+ onToggleSelected(vendor.id, value ?? false),
+ ),
+ ),
+ DataCell(_VendorNameCell(vendor: vendor)),
+ DataCell(Text(vendor.category)),
+ DataCell(_VendorStatusPill(status: vendor.status)),
+ DataCell(_RatingStars(rating: vendor.ratingScore)),
+ DataCell(_VendorActionsMenu(
+ vendor: vendor,
+ onEdit: () => onEditVendor(vendor),
+ onDelete: () => onDeleteVendor(vendor.id),
+ )),
+ ],
+ ),
+ )
+ .toList();
+
  return LayoutBuilder(
  builder: (context, constraints) {
  return Container(
@@ -8119,98 +8172,32 @@ class _VendorDataTable extends StatelessWidget {
  title: 'Vendor Directory',
  tableBuilder: (fsContext) => buildNduDataTable(
  context: fsContext,
- columnSpacing: 18,
- horizontalMargin: 24,
- headingTextStyle: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: Color(0xFF475569)),
- dataTextStyle:
- const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+ columnSpacing: columnSpacing,
+ horizontalMargin: horizontalMargin,
+ headingRowHeight: headingRowHeight,
+ dataRowMinHeight: dataRowMinHeight,
+ dataRowMaxHeight: dataRowMaxHeight,
+ headingTextStyle: headingStyle,
+ dataTextStyle: dataStyle,
  showCheckboxColumn: false,
- columns: const [
- DataColumn(label: Center(child: SizedBox(width: 24))),
- DataColumn(label: Center(child: Text('Vendor Name'))),
- DataColumn(label: Center(child: Text('Category'))),
- DataColumn(label: Center(child: Text('Status'))),
- DataColumn(label: Center(child: Text('Contact'))),
- DataColumn(label: Center(child: Text('Rating'))),
- DataColumn(label: Center(child: Text('Actions'))),
- ],
- rows: vendors
- .map(
- (vendor) => DataRow(
- cells: [
- DataCell(
- Checkbox(
- value: selectedVendorIds.contains(vendor.id),
- onChanged: (value) =>
- onToggleSelected(vendor.id, value ?? false),
- ),
- ),
- DataCell(_VendorNameCell(vendor: vendor)),
- DataCell(Text(vendor.category)),
- DataCell(_VendorStatusPill(status: vendor.status)),
- DataCell(Text(vendor.contactLabel)),
- DataCell(_RatingStars(rating: vendor.ratingScore)),
- DataCell(_VendorActionsMenu(
- vendor: vendor,
- onEdit: () => onEditVendor(vendor),
- onDelete: () => onDeleteVendor(vendor.id),
- )),
- ],
- ),
- )
- .toList(),
+ columns: buildColumns(),
+ rows: buildRows(),
  ),
  child: ResponsiveDataTableWrapper(
  minWidth: constraints.maxWidth,
  maxHeight: 600,
  child: buildNduDataTable(
  context: context,
- columnSpacing: 18,
- horizontalMargin: 24,
- headingTextStyle: const TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: Color(0xFF475569)),
- dataTextStyle:
- const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+ columnSpacing: columnSpacing,
+ horizontalMargin: horizontalMargin,
+ headingRowHeight: headingRowHeight,
+ dataRowMinHeight: dataRowMinHeight,
+ dataRowMaxHeight: dataRowMaxHeight,
+ headingTextStyle: headingStyle,
+ dataTextStyle: dataStyle,
  showCheckboxColumn: false,
- columns: const [
- DataColumn(label: Center(child: SizedBox(width: 24))),
- DataColumn(label: Center(child: Text('Vendor Name'))),
- DataColumn(label: Center(child: Text('Category'))),
- DataColumn(label: Center(child: Text('Status'))),
- DataColumn(label: Center(child: Text('Contact'))),
- DataColumn(label: Center(child: Text('Rating'))),
- DataColumn(label: Center(child: Text('Actions'))),
- ],
- rows: vendors
- .map(
- (vendor) => DataRow(
- cells: [
- DataCell(
- Checkbox(
- value: selectedVendorIds.contains(vendor.id),
- onChanged: (value) =>
- onToggleSelected(vendor.id, value ?? false),
- ),
- ),
- DataCell(_VendorNameCell(vendor: vendor)),
- DataCell(Text(vendor.category)),
- DataCell(_VendorStatusPill(status: vendor.status)),
- DataCell(Text(vendor.contactLabel)),
- DataCell(_RatingStars(rating: vendor.ratingScore)),
- DataCell(_VendorActionsMenu(
- vendor: vendor,
- onEdit: () => onEditVendor(vendor),
- onDelete: () => onDeleteVendor(vendor.id),
- )),
- ],
- ),
- )
- .toList(),
+ columns: buildColumns(),
+ rows: buildRows(),
  ),
  ),
  ),
@@ -8238,31 +8225,20 @@ class _VendorGrid extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  final isMobile = AppBreakpoints.isMobile(context);
- // Use LayoutBuilder to compute a responsive cross-axis count so cards
- // are never too narrow on wide screens nor too wide on tablets.
+ // Compact card grid: fixed 3 columns, childAspectRatio 3.6 keeps each
+ // card short enough to fit name + status + category + rating + actions
+ // without the large vertical gaps the previous LayoutBuilder-driven
+ // mainAxisExtent (220–240px) was producing.
  return LayoutBuilder(
  builder: (context, constraints) {
- final double maxCardWidth = isMobile ? 180 : 320;
- final int crossAxisCount =
- (constraints.maxWidth / maxCardWidth).floor().clamp(1, 4);
- const double crossAxisSpacing = 16;
- const double mainAxisSpacing = 16;
- // Each card sizes its own height based on content. We provide a
- // generous mainAxisExtent ceiling so cards don't clip the rating
- // stars / actions menu on vendors that have full status + rating.
- final double mainAxisExtent = isMobile ? 220 : 240;
-
  return GridView.builder(
  shrinkWrap: true,
  physics: const NeverScrollableScrollPhysics(),
- gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
- crossAxisCount: crossAxisCount,
- crossAxisSpacing: crossAxisSpacing,
- mainAxisSpacing: mainAxisSpacing,
- // Fixed height ensures the checkbox, name, category, status,
- // rating, contact, and actions menu all fit inside the card
- // border without clipping.
- mainAxisExtent: mainAxisExtent,
+ gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+ crossAxisCount: 3,
+ childAspectRatio: 3.6,
+ mainAxisSpacing: 12,
+ crossAxisSpacing: 12,
  ),
  itemCount: vendors.length,
  itemBuilder: (_, index) {
@@ -8270,48 +8246,52 @@ class _VendorGrid extends StatelessWidget {
  return Container(
  decoration: BoxDecoration(
  color: Colors.white,
- borderRadius: BorderRadius.circular(16),
+ borderRadius: BorderRadius.circular(14),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  ),
- padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 14, vertical: 12),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
+ mainAxisSize: MainAxisSize.min,
  children: [
- // Top row: checkbox right-aligned (compact)
- Align(
- alignment: Alignment.centerRight,
- child: SizedBox(
- height: 28,
- width: 28,
- child: Checkbox(
+ Row(
+ mainAxisAlignment: MainAxisAlignment.spaceBetween,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Expanded(child: _VendorNameCell(vendor: vendor)),
+ Checkbox(
  value: selectedVendorIds.contains(vendor.id),
  onChanged: (value) =>
  onToggleSelected(vendor.id, value ?? false),
+ visualDensity: VisualDensity.compact,
  ),
+ ],
  ),
- ),
- // Name + contact cell
- _VendorNameCell(vendor: vendor),
  const SizedBox(height: 6),
+ Wrap(
+ spacing: 8,
+ runSpacing: 6,
+ crossAxisAlignment: WrapCrossAlignment.center,
+ children: [
+ _VendorStatusPill(status: vendor.status),
  Text(vendor.category,
  style: const TextStyle(
- fontSize: 13, color: Color(0xFF6B7280))),
- const SizedBox(height: 6),
- _VendorStatusPill(status: vendor.status),
- const SizedBox(height: 6),
- Text(
- vendor.contactLabel,
- style: const TextStyle(
- fontSize: 12, color: Color(0xFF64748B)),
- maxLines: 1,
- overflow: TextOverflow.ellipsis,
+ fontSize: 12, color: Color(0xFF6B7280))),
+ _RatingStars(rating: vendor.ratingScore),
+ ],
  ),
  const SizedBox(height: 6),
- _RatingStars(rating: vendor.ratingScore),
- const Spacer(),
  Row(
  children: [
- const Spacer(),
+ Expanded(
+ child: Text(
+ vendor.contactLabel,
+ style: const TextStyle(
+ fontSize: 11, color: Color(0xFF64748B)),
+ overflow: TextOverflow.ellipsis,
+ ),
+ ),
  _VendorActionsMenu(
  vendor: vendor,
  onEdit: () => onEditVendor(vendor),
@@ -8366,37 +8346,53 @@ class _VendorNameCell extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
+ final safeName = vendor.name.trim();
+ final initials = safeName.isEmpty
+ ? '??'
+ : safeName
+ .split(RegExp(r'\s+'))
+ .where((part) => part.isNotEmpty)
+ .take(2)
+ .map((part) => part[0].toUpperCase())
+ .join();
  return Row(
  children: [
  CircleAvatar(
- radius: 16,
+ radius: 14,
  backgroundColor: const Color(0xFFE2E8F0),
  child: Text(
- vendor.name.length >= 2
- ? vendor.name.substring(0, 2).toUpperCase()
- : vendor.name.toUpperCase(),
+ initials,
  style: const TextStyle(
- fontSize: 12,
- fontWeight: FontWeight.w600,
+ fontSize: 11,
+ fontWeight: FontWeight.w700,
  color: Color(0xFF0F172A)),
  ),
  ),
- const SizedBox(width: 12),
+ const SizedBox(width: 10),
  Flexible(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
+ mainAxisSize: MainAxisSize.min,
  children: [
  Text(
  vendor.name,
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
  style: const TextStyle(
- fontSize: 14,
+ fontSize: 13,
  fontWeight: FontWeight.w600,
- color: Color(0xFF0F172A)),
+ color: Color(0xFF0F172A),
+ height: 1.25),
  ),
- const SizedBox(height: 2),
+ const SizedBox(height: 1),
  Text(
  vendor.contactLabel,
- style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+ maxLines: 1,
+ overflow: TextOverflow.ellipsis,
+ style: const TextStyle(
+ fontSize: 11,
+ color: Color(0xFF64748B),
+ height: 1.2),
  ),
  ],
  ),
@@ -8414,12 +8410,13 @@ class _RatingStars extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  return Row(
+ mainAxisSize: MainAxisSize.min,
  children: List.generate(
  5,
  (index) => Icon(
  index < rating ? Icons.star_rounded : Icons.star_border_rounded,
  color: const Color(0xFFFACC15),
- size: 18,
+ size: 14,
  ),
  ),
  );
@@ -8682,16 +8679,16 @@ class _VendorManagementView extends StatelessWidget {
  ),
  ],
  ),
- const SizedBox(height: 16),
+ const SizedBox(height: 12),
  if (isMobile)
  Column(
  children: [
  metricCards[0],
- const SizedBox(height: 12),
+ const SizedBox(height: 8),
  metricCards[1],
- const SizedBox(height: 12),
+ const SizedBox(height: 8),
  metricCards[2],
- const SizedBox(height: 12),
+ const SizedBox(height: 8),
  metricCards[3],
  ],
  )
@@ -8700,18 +8697,18 @@ class _VendorManagementView extends StatelessWidget {
  children: [
  for (var i = 0; i < metricCards.length; i++) ...[
  Expanded(child: metricCards[i]),
- if (i != metricCards.length - 1) const SizedBox(width: 16),
+ if (i != metricCards.length - 1) const SizedBox(width: 12),
  ],
  ],
  ),
- const SizedBox(height: 24),
+ const SizedBox(height: 14),
  if (isMobile)
  Column(
  children: [
  _VendorHealthCard(metrics: healthMetrics),
- const SizedBox(height: 16),
+ const SizedBox(height: 10),
  _VendorOnboardingCard(tasks: onboardingTasks),
- const SizedBox(height: 16),
+ const SizedBox(height: 10),
  _VendorRiskCard(riskItems: riskItems),
  ],
  )
@@ -8720,13 +8717,13 @@ class _VendorManagementView extends StatelessWidget {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Expanded(child: _VendorHealthCard(metrics: healthMetrics)),
- const SizedBox(width: 16),
+ const SizedBox(width: 12),
  Expanded(child: _VendorOnboardingCard(tasks: onboardingTasks)),
- const SizedBox(width: 16),
+ const SizedBox(width: 12),
  Expanded(child: _VendorRiskCard(riskItems: riskItems)),
  ],
  ),
- const SizedBox(height: 24),
+ const SizedBox(height: 14),
  _VendorsSection(
  vendors: vendors,
  allVendorsCount: allVendors.length,

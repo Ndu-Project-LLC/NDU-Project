@@ -455,7 +455,7 @@ Future<void> _loadProgress(String projectId) async {
  breadcrumbTitle: 'Design Management',
  onItemSelected: _openStableDesignItem,
  child: Container(
- color: const Color(0xFFF7F9FB),
+ color: Colors.white,
  child: ListView(
  padding: EdgeInsets.all(padding),
  children: [

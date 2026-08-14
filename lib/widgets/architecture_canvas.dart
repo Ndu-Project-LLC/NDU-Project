@@ -231,8 +231,11 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
   void _editSelectedNode() {
     final id = _selectedNodeId;
     if (id == null) return;
-    final node = widget.nodes
-        .firstWhere((n) => n.id == id, orElse: () => widget.nodes.first);
+    if (widget.nodes.isEmpty) return;
+    final node = widget.nodes.firstWhere(
+      (n) => n.id == id,
+      orElse: () => widget.nodes.first,
+    );
     _openNodeEditor(node);
   }
 
@@ -251,8 +254,11 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
   void _duplicateSelectedNode() {
     final id = _selectedNodeId;
     if (id == null) return;
-    final node = widget.nodes
-        .firstWhere((n) => n.id == id, orElse: () => widget.nodes.first);
+    if (widget.nodes.isEmpty) return;
+    final node = widget.nodes.firstWhere(
+      (n) => n.id == id,
+      orElse: () => widget.nodes.first,
+    );
     final newNode = ArchitectureNode(
       id: 'n_${DateTime.now().millisecondsSinceEpoch}',
       label: '${node.label} (copy)',
@@ -1215,31 +1221,13 @@ class _ProNodeWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Connection ports (left & right dots)
-                // Left port
-                Positioned(
-                  left: -5,
-                  top: 0,
-                  bottom: 0,
-                  child: Center(
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: connectMode
-                            ? const Color(0xFF7C3AED)
-                            : isSelected
-                                ? accent
-                                : const Color(0xFFE4E7EC),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                // NOTE: A previous `Positioned` "connection port" widget
+                // here was nested directly inside this Column. That is a
+                // fatal Flutter assertion ("Positioned widgets must be
+                // placed directly inside Stack widgets"). The page rendered
+                // fine while the canvas was empty, but adding any node
+                // (drag-drop or "+" click) triggered _ProNodeWidget build
+                // and crashed the app. Removed.
               ],
             ),
           ),

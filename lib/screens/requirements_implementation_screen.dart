@@ -393,9 +393,7 @@ class _RequirementsImplementationScreenState
  void _addRequirement(ProjectDataModel projectData) {
  final ownerOptions = _ownerOptions(projectData);
  final requirementIndex = _requirementRows.length + 1;
- setState(() {
- _requirementRows.add(
- RequirementRow(
+ final newRow = RequirementRow(
  requirementId: _buildRequirementId(requirementIndex),
  title: 'New requirement',
  owner: ownerOptions.first,
@@ -412,12 +410,11 @@ class _RequirementsImplementationScreenState
  sourceDocument: 'Planning requirement register',
  gapStatus: 'Pending Approval',
  conflictImpact: 'Low',
- ),
  );
- _selectedRequirementIndex = _requirementRows.length - 1;
- _showAllRows = true;
- });
- _scheduleSave();
+ // Open the same modal dialog used by Edit so the user can fill in the
+ // form before the row is committed to the register. The row is only
+ // added to _requirementRows when the user clicks Save inside the dialog.
+ _showRequirementFormDialog(row: newRow, isNew: true);
  }
 
  Future<void> _deleteRequirement(int index) async {
@@ -2812,8 +2809,26 @@ class _RequirementsImplementationScreenState
  // -------------------------------------------------------------------------
  void _showRequirementEditDialog(int index) {
  if (index < 0 || index >= _requirementRows.length) return;
- final row = _requirementRows[index];
+ _showRequirementFormDialog(
+ row: _requirementRows[index],
+ isNew: false,
+ editIndex: index,
+ );
+ }
 
+ // -------------------------------------------------------------------------
+ // 7. Requirement Add/Edit — Shared Modal Form Dialog
+ // -------------------------------------------------------------------------
+ // Shared by both the "Add requirement" button (isNew=true) and the row
+ // "Edit" action (isNew=false, editIndex provided). Opening this dialog is
+ // the ONLY way new rows enter the register — there is no longer a silent
+ // inline-add path, which is what caused "Add" to not trigger the modal
+ // while "Edit" did.
+ void _showRequirementFormDialog({
+ required RequirementRow row,
+ required bool isNew,
+ int? editIndex,
+ }) {
  final reqIdController = TextEditingController(text: row.requirementId);
  final titleController = TextEditingController(text: row.title);
  final ownerController = TextEditingController(text: row.owner);
@@ -2839,9 +2854,22 @@ class _RequirementsImplementationScreenState
  context: context,
  builder: (dialogContext) => StatefulBuilder(
  builder: (context, setDialogState) => AlertDialog(
- title: Text(
- 'Edit Requirement — ${row.requirementId}',
+ title: Row(
+ children: [
+ Expanded(
+ child: Text(
+ isNew
+ ? 'Add Requirement'
+ : 'Edit Requirement — ${row.requirementId}',
  style: const TextStyle(fontSize: 18),
+ ),
+ ),
+ IconButton(
+ icon: const Icon(Icons.close, size: 20),
+ tooltip: 'Close',
+ onPressed: () => Navigator.of(dialogContext).pop(),
+ ),
+ ],
  ),
  content: SizedBox(
  width: 600,
@@ -3151,7 +3179,7 @@ class _RequirementsImplementationScreenState
  ),
  FilledButton(
  onPressed: () {
- final updated = row.copyWith(
+ final committed = row.copyWith(
  requirementId: reqIdController.text.trim(),
  title: titleController.text.trim(),
  owner: ownerController.text.trim(),
@@ -3170,15 +3198,32 @@ class _RequirementsImplementationScreenState
  conflictNote: conflictNoteController.text.trim(),
  conflictImpact: selectedConflictImpact,
  );
- _updateRequirement(index, (_) => updated);
- Navigator.of(dialogContext).pop();
+ if (isNew) {
+ // Commit the new row to the register only on Save.
+ setState(() {
+ _requirementRows.add(committed);
+ _selectedRequirementIndex = _requirementRows.length - 1;
+ _showAllRows = true;
+ });
+ _scheduleSave();
  ScaffoldMessenger.of(context).showSnackBar(
  SnackBar(
  content: Text(
- 'Requirement ${updated.requirementId} updated.'),
+ 'Requirement ${committed.requirementId} added.'),
  backgroundColor: const Color(0xFF16A34A),
  ),
  );
+ } else {
+ _updateRequirement(editIndex!, (_) => committed);
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(
+ 'Requirement ${committed.requirementId} updated.'),
+ backgroundColor: const Color(0xFF16A34A),
+ ),
+ );
+ }
+ Navigator.of(dialogContext).pop();
  },
  child: const Text('Save'),
  ),

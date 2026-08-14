@@ -4020,6 +4020,15 @@ class TeamMember {
   /// since most PT members are internal users provisioned in the app.
   bool hasSiteAccess;
 
+  /// Foreign key to [StaffingRow.id] when this member was derived from
+  /// the Front-End Planning > Personnel staffing plan via the "Sync from
+  /// Staffing Plan" action on the Team Management > Members tab.
+  ///
+  /// Null when the member was added manually. Used for idempotent
+  /// re-syncing: if a staffing row with this id already has N linked
+  /// members and its quantity is N, re-syncing will not create duplicates.
+  String? staffingPlanId;
+
   TeamMember({
     String? id,
     this.name = '',
@@ -4029,6 +4038,7 @@ class TeamMember {
     this.phone = '',
     this.location = '',
     this.hasSiteAccess = true,
+    this.staffingPlanId,
   }) : id = id ?? _generateId();
 
   Map<String, dynamic> toJson() => {
@@ -4040,6 +4050,7 @@ class TeamMember {
         'phone': phone,
         'location': location,
         'hasSiteAccess': hasSiteAccess,
+        if (staffingPlanId != null) 'staffingPlanId': staffingPlanId,
       };
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
@@ -4052,6 +4063,7 @@ class TeamMember {
       phone: json['phone']?.toString() ?? '',
       location: json['location']?.toString() ?? '',
       hasSiteAccess: json['hasSiteAccess'] != false,
+      staffingPlanId: json['staffingPlanId']?.toString(),
     );
   }
 
@@ -4063,6 +4075,7 @@ class TeamMember {
     String? phone,
     String? location,
     bool? hasSiteAccess,
+    String? staffingPlanId,
   }) {
     return TeamMember(
       id: id,
@@ -4073,6 +4086,7 @@ class TeamMember {
       phone: phone ?? this.phone,
       location: location ?? this.location,
       hasSiteAccess: hasSiteAccess ?? this.hasSiteAccess,
+      staffingPlanId: staffingPlanId ?? this.staffingPlanId,
     );
   }
 

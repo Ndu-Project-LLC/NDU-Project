@@ -6,6 +6,7 @@ import 'package:ndu_project/widgets/responsive.dart';
 import 'package:ndu_project/widgets/initiation_like_sidebar.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/models/staffing_row.dart';
 import 'package:ndu_project/models/team_management_plan.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/team_management_service.dart';
@@ -34,6 +35,11 @@ class TeamManagementScreen extends StatefulWidget {
 class _TeamManagementScreenState extends State<TeamManagementScreen>
     with SingleTickerProviderStateMixin {
  bool _loadedMembers = false;
+ /// Tracks whether we have already auto-synced members from the staffing
+ /// plan once during this session. Prevents re-triggering the auto-sync
+ /// on every rebuild — the user can still manually re-sync via the
+ /// "Sync from Staffing Plan" button in the summary card.
+ bool _autoSyncedFromStaffingPlan = false;
  late TabController _tabController;
  TeamManagementPlan _plan = TeamManagementPlan.empty();
  bool _loadingPlan = true;
@@ -310,6 +316,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  if (projectId == null || projectId.isEmpty) return;
  if (provider.projectData.teamMembers.isNotEmpty) {
  _loadedMembers = true;
+ _maybeAutoSyncFromStaffingPlan();
  return;
  }
 
@@ -321,13 +328,92 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  .get();
  if (snapshot.docs.isEmpty) {
  _loadedMembers = true;
+ _maybeAutoSyncFromStaffingPlan();
  return;
  }
  final members = snapshot.docs.map((doc) => TeamMember.fromJson(doc.data())).toList();
  provider.updateField((data) => data.copyWith(teamMembers: members));
  _loadedMembers = true;
+ _maybeAutoSyncFromStaffingPlan();
  } catch (error) {
  debugPrint('Failed to load team members: $error');
+ }
+ }
+
+ /// Auto-syncs members from the Front-End Planning staffing plan ONCE
+ /// per session, but only when there are no existing team members yet.
+ /// This ensures that a fresh project with staffing rows defined shows
+ /// those roles on the Members tab immediately, while still letting the
+ /// user delete a synced card without it reappearing on the next visit
+ /// (because once a card exists, even briefly, it counts toward the
+ /// "already linked" tally and the auto-sync becomes a no-op).
+ void _maybeAutoSyncFromStaffingPlan() {
+ if (_autoSyncedFromStaffingPlan) return;
+ final provider = ProjectDataHelper.getProvider(context);
+ final data = provider.projectData;
+ if (data.teamMembers.isNotEmpty) {
+ _autoSyncedFromStaffingPlan = true;
+ return;
+ }
+ final staffingRows = data.frontEndPlanning.staffingRows;
+ if (staffingRows.isEmpty) {
+ _autoSyncedFromStaffingPlan = true;
+ return;
+ }
+ _autoSyncedFromStaffingPlan = true;
+ _syncFromStaffingPlan(showSnackbar: false);
+ }
+
+ /// Pulls staffing-plan rows into the Members list. For each staffing row
+ /// with a non-empty role, generates one TeamMember per remaining slot
+ /// (quantity minus already-linked members). Idempotent — re-running is
+ /// safe and produces zero new members when everything is already linked.
+ Future<void> _syncFromStaffingPlan({required bool showSnackbar}) async {
+ final provider = ProjectDataHelper.getProvider(context);
+ final data = provider.projectData;
+ final existingMembers = data.teamMembers;
+ final staffingRows = data.frontEndPlanning.staffingRows;
+ final newMembers = TeamManagementService.generateMembersFromStaffingPlan(
+ existingMembers: existingMembers,
+ staffingRows: staffingRows,
+ );
+ if (newMembers.isEmpty) {
+ if (showSnackbar && mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'No new members to sync — every staffing role is already linked.',
+ ),
+ behavior: SnackBarBehavior.floating,
+ duration: Duration(seconds: 3),
+ ),
+ );
+ }
+ return;
+ }
+ final updated = [...existingMembers, ...newMembers];
+ await ProjectDataHelper.updateAndSave(
+ context: context,
+ checkpoint: 'team_management',
+ dataUpdater: (d) => d.copyWith(teamMembers: updated),
+ showSnackbar: false,
+ );
+ // Persist each new member to the team_members Firestore subcollection
+ // so they survive navigation away from the screen.
+ for (final m in newMembers) {
+ await _persistMember(m);
+ }
+ if (showSnackbar && mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(
+ 'Synced ${newMembers.length} new member${newMembers.length == 1 ? '' : 's'} '
+ 'from the staffing plan.',
+ ),
+ behavior: SnackBarBehavior.floating,
+ duration: const Duration(seconds: 4),
+ ),
+ );
  }
  }
 
@@ -348,6 +434,9 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  Widget build(BuildContext context) {
  final members = context.select<ProjectDataProvider, List<TeamMember>>(
  (provider) => provider.projectData.teamMembers,
+ );
+ final staffingRows = context.select<ProjectDataProvider, List<StaffingRow>>(
+ (provider) => provider.projectData.frontEndPlanning.staffingRows,
  );
  return Scaffold(
  backgroundColor: Colors.white,
@@ -396,7 +485,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  child: TabBarView(
  controller: _tabController,
  children: [
- _buildMembersTab(members),
+ _buildMembersTab(members, staffingRows),
  _buildMobilizationTab(members),
  _buildOnboardingTab(members),
  _buildRecognitionTab(),
@@ -415,7 +504,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  }
 
  // ── Tab 1: Members (existing functionality) ──────────────────────────
- Widget _buildMembersTab(List<TeamMember> members) {
+ Widget _buildMembersTab(List<TeamMember> members, List<StaffingRow> staffingRows) {
+ final staffingSnapshot = TeamManagementService.summarizeStaffingPlan(staffingRows);
  return LayoutBuilder(
  builder: (context, constraints) {
  final width = constraints.maxWidth;
@@ -457,6 +547,17 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  ),
  ],
  ),
+ const SizedBox(height: 16),
+ // ── Staffing Plan summary + sync action ──
+ // Surfaces the Front-End Planning > Personnel staffing rows on this
+ // tab so the user can see the planned headcount and cost at a glance,
+ // and one-click sync them into named member slots.
+ if (!staffingSnapshot.isEmpty)
+ _StaffingPlanSummaryCard(
+ snapshot: staffingSnapshot,
+ linkedCount: members.where((m) => m.staffingPlanId != null).length,
+ onSync: () => _syncFromStaffingPlan(showSnackbar: true),
+ ),
  const SizedBox(height: 24),
  const PlanningAiNotesCard(
  title: 'Notes',
@@ -469,7 +570,9 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  if (members.isEmpty)
  _EmptyStateCard(
  title: 'No team members yet',
- message: 'Add team members to define roles, responsibilities, and ownership.',
+ message: staffingSnapshot.isEmpty
+ ? 'Add team members to define roles, responsibilities, and ownership.'
+ : 'Sync from the staffing plan or add team members manually to define roles, responsibilities, and ownership.',
  onAdd: () => _openAddMemberDialog(members),
  )
  else
@@ -483,7 +586,20 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  crossAxisSpacing: gap,
  childAspectRatio: cardAspectRatio,
  ),
- itemBuilder: (context, index) => _TeamRoleCard(member: members[index]),
+ itemBuilder: (context, index) {
+ final member = members[index];
+ // Look up the source StaffingRow (if any) so the card can show
+ // staffing metadata: duration, monthly cost, internal/external.
+ final sourceRow = member.staffingPlanId == null
+ ? null
+ : staffingRows
+     .where((r) => r.id == member.staffingPlanId)
+     .firstOrNull;
+ return _TeamRoleCard(
+ member: member,
+ sourceStaffingRow: sourceRow,
+ );
+ },
  ),
  const SizedBox(height: 28),
  Align(
@@ -1270,9 +1386,17 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
 
 
 class _TeamRoleCard extends StatelessWidget {
- const _TeamRoleCard({required this.member});
+ const _TeamRoleCard({required this.member, this.sourceStaffingRow});
 
  final TeamMember member;
+
+ /// The Front-End Planning > Personnel staffing row this member was
+ /// derived from (when [member.staffingPlanId] is non-null and the
+ /// source row still exists). Null for manually-added members or when
+ /// the source staffing row has been deleted. Used to display staffing
+ /// metadata (duration, monthly cost, internal/external, status) on
+ /// the card so the user can see the link back to the staffing plan.
+ final StaffingRow? sourceStaffingRow;
 
  List<String> _responsibilityItems() {
  final raw = member.responsibilities.trim();
@@ -1287,12 +1411,18 @@ class _TeamRoleCard extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  final responsibilities = _responsibilityItems();
+ final isFromStaffingPlan = member.staffingPlanId != null;
+ final isUnnamed = member.name.trim().isEmpty;
  return Container(
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(14),
- border: Border.all(color: const Color(0xFFE5E7EB)),
+ border: Border.all(
+ color: isFromStaffingPlan
+ ? const Color(0xFFBFDBFE).withValues(alpha: 0.7)
+ : const Color(0xFFE5E7EB),
+ ),
  boxShadow: const [
  BoxShadow(color: Color(0x0A000000), blurRadius: 10, offset: Offset(0, 6)),
  ],
@@ -1307,19 +1437,41 @@ class _TeamRoleCard extends StatelessWidget {
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: const Color(0xFFEAF2FF),
+ color: isFromStaffingPlan
+ ? const Color(0xFFEFF6FF)
+ : const Color(0xFFEAF2FF),
  borderRadius: BorderRadius.circular(10),
  ),
- child: const Icon(Icons.work_outline, color: Color(0xFF2563EB), size: 20),
+ child: Icon(
+ isFromStaffingPlan
+ ? Icons.badge_outlined
+ : Icons.work_outline,
+ color: const Color(0xFF2563EB),
+ size: 20,
+ ),
  ),
  const SizedBox(width: 12),
  Expanded(
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ if (isUnnamed)
+ const Text(
+ 'Unnamed — add member name',
+ style: TextStyle(
+ fontSize: 14,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF6B7280),
+ fontStyle: FontStyle.italic,
+ ),
+ )
+ else
  Text(
- member.name.isNotEmpty ? member.name : 'Team member',
- style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+ member.name,
+ style: const TextStyle(
+ fontSize: 14,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827)),
  ),
  const SizedBox(height: 4),
  Text(
@@ -1332,6 +1484,10 @@ class _TeamRoleCard extends StatelessWidget {
  const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF9CA3AF)),
  ],
  ),
+ if (isFromStaffingPlan) ...[
+ const SizedBox(height: 10),
+ _StaffingPlanBadge(row: sourceStaffingRow),
+ ],
  const SizedBox(height: 14),
  const Text(
  'Key Responsibilities',
@@ -1430,6 +1586,250 @@ class _EmptyStateCard extends StatelessWidget {
  ],
  ),
  );
+ }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Staffing Plan summary card + badge
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Surfaces the Front-End Planning > Personnel staffing rows on the Team
+// Management > Members tab. Shows the planned headcount, monthly cost,
+// total cost, and internal/external split. The "Sync from Staffing Plan"
+// button pulls staffing rows into the Members list (idempotent — re-run
+// is safe and only adds slots that aren't already linked).
+
+/// Summary banner shown at the top of the Members tab when the project
+/// has staffing rows defined in Front-End Planning > Personnel.
+class _StaffingPlanSummaryCard extends StatelessWidget {
+ const _StaffingPlanSummaryCard({
+ required this.snapshot,
+ required this.linkedCount,
+ required this.onSync,
+ });
+
+ final StaffingPlanSnapshot snapshot;
+ final int linkedCount;
+ final VoidCallback onSync;
+
+ @override
+ Widget build(BuildContext context) {
+ final unlinked = snapshot.headcount - linkedCount;
+ return Container(
+ width: double.infinity,
+ padding: const EdgeInsets.all(16),
+ decoration: BoxDecoration(
+ color: const Color(0xFFEFF6FF),
+ borderRadius: BorderRadius.circular(12),
+ border: Border.all(
+ color: const Color(0xFFBFDBFE).withValues(alpha: 0.7)),
+ ),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Row(
+ children: [
+ const Icon(Icons.people_alt_outlined,
+ size: 16, color: Color(0xFF1D4ED8)),
+ const SizedBox(width: 8),
+ const Expanded(
+ child: Text(
+ 'Staffing Plan — from Front-End Planning',
+ style: TextStyle(
+ color: Color(0xFF1E3A8A),
+ fontSize: 14,
+ fontWeight: FontWeight.w700),
+ ),
+ ),
+ if (unlinked > 0)
+ FilledButton.icon(
+ onPressed: onSync,
+ icon: const Icon(Icons.sync, size: 16),
+ label: const Text('Sync to Members'),
+ style: FilledButton.styleFrom(
+ backgroundColor: const Color(0xFF1D4ED8),
+ foregroundColor: Colors.white,
+ padding: const EdgeInsets.symmetric(
+ horizontal: 14, vertical: 8),
+ ),
+ )
+ else
+ OutlinedButton.icon(
+ onPressed: onSync,
+ icon: const Icon(Icons.refresh, size: 16),
+ label: const Text('Re-sync'),
+ style: OutlinedButton.styleFrom(
+ foregroundColor: const Color(0xFF1D4ED8),
+ side: const BorderSide(color: Color(0xFFBFDBFE)),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 14, vertical: 8),
+ ),
+ ),
+ ],
+ ),
+ const SizedBox(height: 6),
+ const Text(
+ 'Pulls the staffing roles defined in Front-End Planning > '
+ 'Personnel into the Members list. Idempotent — re-running '
+ 'only adds slots that aren\'t already linked.',
+ style: TextStyle(color: Color(0xFF1E40AF), fontSize: 12),
+ ),
+ const SizedBox(height: 12),
+ Wrap(
+ spacing: 8,
+ runSpacing: 6,
+ children: [
+ _summaryChip(
+ 'Roles', '${snapshot.roles}', Icons.list_alt_outlined),
+ _summaryChip(
+ 'Headcount', '${snapshot.headcount}', Icons.people_outline),
+ _summaryChip('Internal', '${snapshot.internalCount}',
+ Icons.badge_outlined),
+ _summaryChip('External', '${snapshot.externalCount}',
+ Icons.public_outlined),
+ _summaryChip('Monthly cost', snapshot.monthlyCostFormatted,
+ Icons.calendar_month_outlined),
+ _summaryChip('Total cost', snapshot.totalCostFormatted,
+ Icons.payments_outlined),
+ _summaryChip('Linked to members', '$linkedCount',
+ Icons.link_outlined),
+ ],
+ ),
+ ],
+ ),
+ );
+ }
+
+ Widget _summaryChip(
+ String label, String value, IconData icon) {
+ return Container(
+ padding:
+ const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(6),
+ border: Border.all(
+ color: const Color(0xFFBFDBFE).withValues(alpha: 0.5)),
+ ),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Icon(icon, size: 12, color: const Color(0xFF1D4ED8)),
+ const SizedBox(width: 4),
+ Text(value,
+ style: const TextStyle(
+ color: Color(0xFF1E3A8A),
+ fontSize: 11,
+ fontWeight: FontWeight.w700)),
+ const SizedBox(width: 4),
+ Text(label,
+ style: const TextStyle(
+ color: Color(0xFF475569),
+ fontSize: 11,
+ fontWeight: FontWeight.w500)),
+ ],
+ ),
+ );
+ }
+}
+
+/// Compact badge shown on a `_TeamRoleCard` when the member was derived
+/// from a staffing plan row. Displays the staffing metadata (duration,
+/// monthly cost, internal/external, status) so the user can see the link
+/// back to the Front-End Planning > Personnel source row.
+class _StaffingPlanBadge extends StatelessWidget {
+ const _StaffingPlanBadge({required this.row});
+
+ /// Null when the source staffing row has been deleted but the member
+ /// still carries the `staffingPlanId` link. In that case we show a
+ /// minimal "from staffing plan" pill without the metadata chips.
+ final StaffingRow? row;
+
+ @override
+ Widget build(BuildContext context) {
+ return Wrap(
+ spacing: 6,
+ runSpacing: 4,
+ children: [
+ _pill(
+ 'From Staffing Plan',
+ Icons.link_outlined,
+ const Color(0xFF1D4ED8),
+ const Color(0xFFEFF6FF),
+ ),
+ if (row != null) ...[
+ _pill(
+ row!.isInternal ? 'Internal' : 'External',
+ row!.isInternal
+ ? Icons.badge_outlined
+ : Icons.public_outlined,
+ const Color(0xFF475569),
+ const Color(0xFFF1F5F9),
+ ),
+ if (row!.durationMonths.trim().isNotEmpty)
+ _pill(
+ '${row!.durationMonths} mo',
+ Icons.calendar_month_outlined,
+ const Color(0xFF475569),
+ const Color(0xFFF1F5F9),
+ ),
+ if (row!.monthlyCost.trim().isNotEmpty)
+ _pill(
+ '\$${row!.monthlyCost}/mo',
+ Icons.payments_outlined,
+ const Color(0xFF475569),
+ const Color(0xFFF1F5F9),
+ ),
+ if (row!.status.trim().isNotEmpty)
+ _pill(
+ row!.status,
+ Icons.flag_outlined,
+ _statusColor(row!.status),
+ const Color(0xFFF1F5F9),
+ ),
+ ],
+ ],
+ );
+ }
+
+ Widget _pill(
+ String label,
+ IconData icon,
+ Color fg,
+ Color bg,
+ ) {
+ return Container(
+ padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+ decoration: BoxDecoration(
+ color: bg,
+ borderRadius: BorderRadius.circular(10),
+ ),
+ child: Row(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ Icon(icon, size: 11, color: fg),
+ const SizedBox(width: 4),
+ Text(label,
+ style: TextStyle(
+ color: fg,
+ fontSize: 10,
+ fontWeight: FontWeight.w600)),
+ ],
+ ),
+ );
+ }
+
+ Color _statusColor(String status) {
+ final s = status.toLowerCase().trim();
+ if (s.contains('complete') || s.contains('done')) {
+ return const Color(0xFF16A34A);
+ }
+ if (s.contains('progress') || s.contains('active')) {
+ return const Color(0xFF2563EB);
+ }
+ if (s.contains('delay') || s.contains('block')) {
+ return const Color(0xFFDC2626);
+ }
+ return const Color(0xFF475569);
  }
 }
 

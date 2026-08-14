@@ -515,8 +515,6 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  const SizedBox(height: 16),
  _buildHeroHeader(isMobile: isMobile),
  const SizedBox(height: 24),
- _buildMethodologySelector(),
- const SizedBox(height: 24),
  _buildFilterChips(),
  const SizedBox(height: 20),
  _buildStatsRow(),
@@ -749,105 +747,6 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  ),
  );
  }
-
- // ══════════════════════════════════════════════════════════════════════════
- // METHODOLOGY SELECTOR
- // ══════════════════════════════════════════════════════════════════════════
-
- Widget _buildMethodologySelector() {
- return _PanelShell(
- title: 'Development Methodology',
- subtitle: 'Select the delivery methodology to tailor setup requirements. Each methodology dictates different environment provisioning, quality gates, and tooling expectations per industry standards.',
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- LayoutBuilder(
- builder: (context, constraints) {
- final isNarrow = constraints.maxWidth < 700;
- if (isNarrow) {
- return Column(
- children: [
- _buildMethodologyCard('Waterfall', 'Sequential, phase-gated delivery. All environments and tooling must be fully provisioned before development begins.', Icons.timeline, const Color(0xFF2563EB)),
- const SizedBox(height: 12),
- _buildMethodologyCard('Hybrid', 'Combines waterfall rigour for infrastructure with agile flexibility for feature delivery. Core environments upfront; development evolves iteratively.', Icons.merge_type_outlined, const Color(0xFF7C3AED)),
- const SizedBox(height: 12),
- _buildMethodologyCard('Agile', 'Iterative, incremental delivery. Minimal viable environment for Sprint 1; tooling and infrastructure evolve with each iteration.', Icons.autorenew_outlined, const Color(0xFF16A34A)),
- ],
- );
- }
- return Row(
- children: [
- Expanded(child: _buildMethodologyCard('Waterfall', 'Sequential, phase-gated delivery. All environments and tooling must be fully provisioned before development begins.', Icons.timeline, const Color(0xFF2563EB))),
- const SizedBox(width: 12),
- Expanded(child: _buildMethodologyCard('Hybrid', 'Combines waterfall rigour for infrastructure with agile flexibility for feature delivery. Core environments upfront; development evolves iteratively.', Icons.merge_type_outlined, const Color(0xFF7C3AED))),
- const SizedBox(width: 12),
- Expanded(child: _buildMethodologyCard('Agile', 'Iterative, incremental delivery. Minimal viable environment for Sprint 1; tooling and infrastructure evolve with each iteration.', Icons.autorenew_outlined, const Color(0xFF16A34A))),
- ],
- );
- },
- ),
- ],
- ),
- );
- }
-
- Widget _buildMethodologyCard(String label, String description, IconData icon, Color color) {
- final isSelected = _selectedMethodology == label;
- return GestureDetector(
- onTap: () {
- setState(() => _selectedMethodology = label);
- _scheduleSave();
- },
- child: AnimatedContainer(
- duration: const Duration(milliseconds: 200),
- padding: const EdgeInsets.all(18),
- decoration: BoxDecoration(
- color: isSelected ? color.withValues(alpha: 0.08) : const Color(0xFFF8FAFC),
- borderRadius: BorderRadius.circular(18),
- border: Border.all(
- color: isSelected ? color : const Color(0xFFE2E8F0),
- width: isSelected ? 2.0 : 1.0,
- ),
- boxShadow: isSelected
- ? [BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 12, offset: const Offset(0, 4))]
- : [],
- ),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- Row(
- children: [
- Container(
- width: 38,
- height: 38,
- decoration: BoxDecoration(
- color: color.withValues(alpha: 0.12),
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: color.withValues(alpha: 0.22)),
- ),
- child: Icon(icon, color: color, size: 20),
- ),
- const SizedBox(width: 10),
- Expanded(
- child: Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: isSelected ? color : const Color(0xFF0F172A))),
- ),
- if (isSelected)
- Container(
- padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
- decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(999)),
- child: const Text('Active', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
- ),
- ],
- ),
- const SizedBox(height: 10),
- Text(description, style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B), height: 1.5)),
- ],
- ),
- ),
- );
- }
-
-
 
  // ══════════════════════════════════════════════════════════════════════════
  // FILTER CHIPS

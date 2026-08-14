@@ -9,8 +9,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart' hide EstimationMethod;
+import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
+import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/wbs/models/wbs_templates.dart';
+import 'package:ndu_project/wbs/providers/wbs_cost_rollup.dart';
 import 'package:ndu_project/wbs/services/wbs_firestore_service.dart';
 
 const String _legacyStorageKey = 'ndu_wbs_v2';
@@ -641,5 +645,270 @@ class WBSProvider extends ChangeNotifier {
     }
 
     return _wbs == null ? null : find(_wbs!.level0);
+  }
+
+  // ---- Cross-section rollups (cost / schedule / scope) ----
+
+  /// Computes the canonical [WBSNodeCostRollup] for [node] using the given
+  /// list of cost lines (typically `CostEstimateProvider.estimate.lines`).
+  ///
+  /// A cost line is considered linked to a node when EITHER:
+  ///   - the node's `costLineIds` contains the line's `id` (canonical FK),
+  ///     OR
+  ///   - the line's `wbsRef` exactly equals the node's `code` (path string
+  ///     like "G1" / "G1.2.3" — the legacy linkage written by AddLineDialog).
+  ///
+  /// Rolled-up totals include the node's direct lines PLUS every descendant
+  /// node's rolled-up total. This is the single source of truth — callers
+  /// should NOT re-walk the estimate to compute per-node totals.
+  WBSNodeCostRollup computeCostRollup(
+    WBSNode node,
+    List<CostLine> allLines,
+  ) {
+    final directLines = allLines.where((l) {
+      if ((node.costLineIds ?? const <String>[]).contains(l.id)) return true;
+      final ref = (l.wbsRef ?? '').trim();
+      return ref.isNotEmpty && ref == node.code;
+    }).toList(growable: false);
+    final directCost =
+        directLines.fold<double>(0, (s, l) => s + _effectiveLineTotal(l));
+
+    double childCost = 0;
+    int childCount = 0;
+    for (final c in node.children) {
+      final r = computeCostRollup(c, allLines);
+      childCost += r.rolledUpCost;
+      childCount += r.rolledUpLineCount;
+    }
+
+    return WBSNodeCostRollup(
+      node: node,
+      directCost: directCost,
+      rolledUpCost: directCost + childCost,
+      directLineCount: directLines.length,
+      rolledUpLineCount: directLines.length + childCount,
+      directLines: directLines,
+    );
+  }
+
+  /// Convenience wrapper: lookup a node by ID, then compute its rollup.
+  /// Returns `null` if the WBS or node doesn't exist.
+  WBSNodeCostRollup? getCostRollupForNodeId(
+    String nodeId,
+    List<CostLine> allLines,
+  ) {
+    final node = findNode(nodeId);
+    if (node == null) return null;
+    return computeCostRollup(node, allLines);
+  }
+
+  /// Returns cost rollups for every L1 child of the root (i.e. every
+  /// "deliverable" in waterfall terminology). Each rollup includes that
+  /// node's descendants. This is what the Cost by WBS tab iterates over.
+  List<WBSNodeCostRollup> getCostRollupsForL1(List<CostLine> allLines) {
+    if (_wbs == null) return const <WBSNodeCostRollup>[];
+    return _wbs!.level0.children
+        .map((n) => computeCostRollup(n, allLines))
+        .toList(growable: false);
+  }
+
+  /// Effective contribution of a cost line to a rollup total — accounts
+  /// for variance flags (added / removed / changed) so the WBS-side rollup
+  /// stays consistent with `ComputeUtils.computeTotals` on the cost side.
+  double _effectiveLineTotal(CostLine l) {
+    if (l.varianceType == VarianceType.remove) {
+      return -(l.varianceBaselineTotal ?? 0);
+    }
+    if (l.varianceType == VarianceType.change) {
+      return l.varianceDelta ?? 0;
+    }
+    return l.total;
+  }
+
+  // ---- Initiation → WBS seeding ----
+
+  /// Seeds the WBS with L1 deliverable nodes derived from the project's
+  /// initiation-phase data. Pulls from, in priority order:
+  ///   1. `projectGoals` — the "what we're delivering" statements
+  ///   2. `keyMilestones` — fallback when goals are empty
+  ///   3. `withinScopeItems` — last-resort scope-statement fallback
+  ///
+  /// Idempotent: candidate names that already exist as L1 children
+  /// (matched case-insensitively on trimmed name) are skipped.
+  ///
+  /// Returns the number of NEW L1 nodes created.
+  int seedFromInitiation(ProjectDataModel project) {
+    if (_wbs == null) return 0;
+
+    final existingNames = _wbs!.level0.children
+        .map((n) => n.name.trim().toLowerCase())
+        .where((s) => s.isNotEmpty)
+        .toSet();
+
+    final candidates = <String>[];
+
+    void addCandidate(String name) {
+      final trimmed = name.trim();
+      if (trimmed.isEmpty) return;
+      final key = trimmed.toLowerCase();
+      if (existingNames.contains(key)) return;
+      candidates.add(trimmed);
+      existingNames.add(key);
+    }
+
+    // 1. Project goals (preferred — these are the deliverable statements)
+    for (final g in project.projectGoals) {
+      addCandidate(g.name);
+    }
+    // 2. Key milestones (fallback — milestones are time-bound but still
+    //    represent deliverables in many frameworks)
+    if (candidates.isEmpty) {
+      for (final m in project.keyMilestones) {
+        addCandidate(m.name);
+      }
+    }
+    // 3. Within-scope items (last resort — these are scope statements,
+    //    not deliverables, but they're better than an empty WBS)
+    if (candidates.isEmpty) {
+      for (final s in project.withinScopeItems) {
+        addCandidate(s.description);
+      }
+    }
+
+    if (candidates.isEmpty) return 0;
+
+    final newChildren = <WBSNode>[];
+    for (final name in candidates) {
+      final id = newWBSId('node');
+      newChildren.add(WBSNode(
+        id: id,
+        level: WBSLevel.level1,
+        code: '', // recalcCodes assigns G1, G2, …
+        name: name,
+        description: 'Seeded from initiation phase',
+        aiGenerated: false,
+        isWorkPackage: false,
+        methodology: _wbs!.methodology.name, // inherit project methodology
+        children: const [],
+      ));
+    }
+
+    final updatedLevel0 = recalcCodes(_wbs!.level0.copyWith(
+      children: [..._wbs!.level0.children, ...newChildren],
+    ));
+    _wbs = _wbs!.copyWith(
+      level0: updatedLevel0,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return newChildren.length;
+  }
+
+  // ---- FEP Cost Estimate → WBS auto-linking ----
+
+  /// Best-effort links cost lines from [ceProvider] to WBS nodes by
+  /// matching:
+  ///   1. EXACT CODE MATCH — the line's `wbsRef` (e.g. "G1.2") equals a
+  ///      node's `code`. This is the strong signal.
+  ///   2. NAME-IN-DESCRIPTION — the lowercase node name (≥ 4 chars) is
+  ///      contained within the lowercase cost-line description. This is
+  ///      the weak signal — only applied to lines that have no `wbsRef`.
+  ///
+  /// Idempotent: lines already linked to a node are not re-linked.
+  /// Returns the number of NEW links created.
+  int autoLinkCostLines(CostEstimateProvider ceProvider) {
+    if (_wbs == null) return 0;
+    final estimate = ceProvider.estimate;
+    if (estimate == null) return 0;
+
+    final lines = estimate.lines;
+    if (lines.isEmpty) return 0;
+
+    // Flatten the WBS tree (excluding L0 root).
+    final allNodes = <WBSNode>[];
+    void collect(WBSNode n) {
+      if (n.level != WBSLevel.level0) allNodes.add(n);
+      for (final c in n.children) {
+        collect(c);
+      }
+    }
+
+    collect(_wbs!.level0);
+
+    // Code → node fast lookup.
+    final byCode = <String, WBSNode>{
+      for (final n in allNodes)
+        if (n.code.isNotEmpty) n.code: n,
+    };
+
+    // Track existing (nodeId, lineId) links so we don't double-link.
+    final existingLinks = <String>{};
+    for (final n in allNodes) {
+      for (final id in (n.costLineIds ?? const <String>[])) {
+        existingLinks.add('${n.id}|$id');
+      }
+    }
+
+    int newLinks = 0;
+    // nodeId → list of lineIds to append.
+    final additions = <String, List<String>>{};
+
+    void tryLink(String nodeId, String lineId) {
+      final key = '$nodeId|$lineId';
+      if (existingLinks.contains(key)) return;
+      additions.putIfAbsent(nodeId, () => []).add(lineId);
+      existingLinks.add(key);
+      newLinks++;
+    }
+
+    for (final line in lines) {
+      final ref = (line.wbsRef ?? '').trim();
+
+      // 1. Strong signal: wbsRef matches a node code.
+      if (ref.isNotEmpty && byCode.containsKey(ref)) {
+        tryLink(byCode[ref]!.id, line.id);
+        continue;
+      }
+
+      // 2. Weak signal: node name appears in the line description.
+      //    Skip lines that already have a wbsRef — those were explicitly
+      //    set by the user and shouldn't be second-guessed.
+      if (ref.isNotEmpty) continue;
+      final descLower = line.description.toLowerCase();
+      if (descLower.isEmpty) continue;
+
+      for (final node in allNodes) {
+        final nameLower = node.name.toLowerCase().trim();
+        if (nameLower.length < 4) continue; // skip very short names
+        if (descLower.contains(nameLower)) {
+          tryLink(node.id, line.id);
+          break; // link to the first matching node only
+        }
+      }
+    }
+
+    if (additions.isEmpty) return 0;
+
+    // Apply additions by walking the tree once.
+    WBSNode applyAdditions(WBSNode n) {
+      final adds = additions[n.id];
+      final newIds = (adds == null)
+          ? (n.costLineIds ?? const <String>[])
+          : [...(n.costLineIds ?? const <String>[]), ...adds];
+      return n.copyWith(
+        costLineIds: newIds,
+        children: n.children.map(applyAdditions).toList(growable: false),
+      );
+    }
+
+    final updatedLevel0 = applyAdditions(_wbs!.level0);
+    _wbs = _wbs!.copyWith(
+      level0: updatedLevel0,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return newLinks;
   }
 }

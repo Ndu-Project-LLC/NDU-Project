@@ -1675,213 +1675,239 @@ class _FrontEndPlanningRequirementsScreenState
         _normalizeDisciplineSelection(row.selectedDiscipline);
     String? selectedPhase = _normalizePhaseSelection(row.selectedPhase);
 
-    await showModalBottomSheet<void>(
+    await showDialog<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (sheetContext) {
-        final inset = MediaQuery.of(sheetContext).viewInsets.bottom;
-        return Padding(
-          padding: EdgeInsets.fromLTRB(16, 12, 16, inset + 14),
-          child: StatefulBuilder(
-            builder: (context, setLocalState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isNew ? 'Add Requirement' : 'Edit Requirement',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 12),
-                  VoiceTextField(
-                    controller: descriptionController,
-                    minLines: 2,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Requirement',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedType,
-                        hint: const Text('Requirement Type'),
-                        isExpanded: true,
-                        items: const [
-                          'Technical',
-                          'Regulatory',
-                          'Functional',
-                          'Operational',
-                          'Non-Functional',
-                          'Safety',
-                          'Sustainability',
-                          'Business',
-                          'Stakeholder',
-                          'Solutions',
-                          'Transitional',
-                          'Other'
-                        ]
-                            .map((value) => DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                ))
-                            .toList(),
-                        onChanged: (value) =>
-                            setLocalState(() => selectedType = value),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedDiscipline,
-                        hint: const Text('Discipline'),
-                        isExpanded: true,
-                        items: _RequirementRow.disciplineOptions
-                            .map(
-                              (value) => DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) =>
-                            setLocalState(() => selectedDiscipline = value),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedPhase,
-                        hint: const Text('Implementation Phase'),
-                        isExpanded: true,
-                        items: _RequirementRow.phaseOptions
-                            .map(
-                              (value) => DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (value) =>
-                            setLocalState(() => selectedPhase = value),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  VoiceTextField(
-                    controller: roleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Role',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _PersonDropdownField(
-                    value: personController.text,
-                    options: _memberOptions,
-                    hint: 'Person',
-                    dense: false,
-                    onChanged: (value) {
-                      personController.text = value;
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  VoiceTextField(
-                    controller: sourceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Requirement Source',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  VoiceTextField(
-                    controller: commentsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Comments and Requirement Source Links',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            final inset = MediaQuery.of(context).viewInsets.bottom;
+            return Dialog(
+              backgroundColor: Colors.white,
+              insetPadding: EdgeInsets.fromLTRB(
+                16,
+                24,
+                16,
+                24 + inset,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.85,
+                  maxWidth: 640,
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(sheetContext),
-                        child: const Text('Cancel'),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              isNew ? 'Add Requirement' : 'Edit Requirement',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 20),
+                            onPressed: () => Navigator.pop(dialogContext),
+                            tooltip: 'Close',
+                          ),
+                        ],
                       ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          if (isNew || (index >= 0 && index < _rows.length)) {
-                            if (isNew && !_rows.contains(row)) {
-                              setState(() => _rows.add(row));
-                            }
-                            setState(() {
-                              final previousDescription =
-                                  row.descriptionController.text;
-                              final nextDescription =
-                                  descriptionController.text;
-                              if (previousDescription.trim().isNotEmpty &&
-                                  previousDescription != nextDescription) {
-                                row.manualUndoText = previousDescription;
-                              }
-                              row.setDescriptionFromCode(nextDescription);
-                              row.commentsController.text =
-                                  commentsController.text;
-                              row.roleController.text = roleController.text;
-                              row.personController.text =
-                                  _resolvePersonSelection(
-                                personController.text,
-                                roleHint: roleController.text,
-                              );
-                              row.sourceController.text = sourceController.text;
-                              row.selectedType =
-                                  _normalizeRequirementTypeSelection(
-                                selectedType,
-                              );
-                              row.selectedDiscipline =
-                                  _normalizeDisciplineSelection(
-                                selectedDiscipline,
-                              );
-                              row.selectedPhase =
-                                  _normalizePhaseSelection(selectedPhase);
-                            });
-                            _scheduleAutoSave(showSnack: false);
-                          }
-                          Navigator.pop(sheetContext);
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: descriptionController,
+                        minLines: 2,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          labelText: 'Requirement',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFD1D5DB)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedType,
+                            hint: const Text('Requirement Type'),
+                            isExpanded: true,
+                            items: const [
+                              'Technical',
+                              'Regulatory',
+                              'Functional',
+                              'Operational',
+                              'Non-Functional',
+                              'Safety',
+                              'Sustainability',
+                              'Business',
+                              'Stakeholder',
+                              'Solutions',
+                              'Transitional',
+                              'Other'
+                            ]
+                                .map((value) => DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    ))
+                                .toList(),
+                            onChanged: (value) =>
+                                setLocalState(() => selectedType = value),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFD1D5DB)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedDiscipline,
+                            hint: const Text('Discipline'),
+                            isExpanded: true,
+                            items: _RequirementRow.disciplineOptions
+                                .map(
+                                  (value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setLocalState(() => selectedDiscipline = value),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFFD1D5DB)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedPhase,
+                            hint: const Text('Implementation Phase'),
+                            isExpanded: true,
+                            items: _RequirementRow.phaseOptions
+                                .map(
+                                  (value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setLocalState(() => selectedPhase = value),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: roleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Role',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _PersonDropdownField(
+                        value: personController.text,
+                        options: _memberOptions,
+                        hint: 'Person',
+                        dense: false,
+                        onChanged: (value) {
+                          personController.text = value;
                         },
-                        child: const Text('Save'),
+                      ),
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: sourceController,
+                        decoration: const InputDecoration(
+                          labelText: 'Requirement Source',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      VoiceTextField(
+                        controller: commentsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Comments and Requirement Source Links',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('Cancel'),
+                          ),
+                          const Spacer(),
+                          FilledButton(
+                            onPressed: () {
+                              if (isNew || (index >= 0 && index < _rows.length)) {
+                                if (isNew && !_rows.contains(row)) {
+                                  setState(() => _rows.add(row));
+                                }
+                                setState(() {
+                                  final previousDescription =
+                                      row.descriptionController.text;
+                                  final nextDescription =
+                                      descriptionController.text;
+                                  if (previousDescription.trim().isNotEmpty &&
+                                      previousDescription != nextDescription) {
+                                    row.manualUndoText = previousDescription;
+                                  }
+                                  row.setDescriptionFromCode(nextDescription);
+                                  row.commentsController.text =
+                                      commentsController.text;
+                                  row.roleController.text = roleController.text;
+                                  row.personController.text =
+                                      _resolvePersonSelection(
+                                        personController.text,
+                                        roleHint: roleController.text,
+                                      );
+                                  row.sourceController.text = sourceController.text;
+                                  row.selectedType =
+                                      _normalizeRequirementTypeSelection(
+                                        selectedType,
+                                      );
+                                  row.selectedDiscipline =
+                                      _normalizeDisciplineSelection(
+                                        selectedDiscipline,
+                                      );
+                                  row.selectedPhase =
+                                      _normalizePhaseSelection(selectedPhase);
+                                });
+                                _scheduleAutoSave(showSnack: false);
+                              }
+                              Navigator.pop(dialogContext);
+                            },
+                            child: const Text('Save'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+              ),
+            );
+          },
         );
       },
     );

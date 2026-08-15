@@ -19,7 +19,7 @@ import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/cost_estimate_provider.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
 import 'package:ndu_project/services/openai_service_secure.dart';
-import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/wbs/widgets/wbs_node_dialog.dart';
 
 class WBSBuilderScreen extends StatefulWidget {
   const WBSBuilderScreen({super.key});
@@ -1601,140 +1601,20 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
       _showLevel1CapMessage(context);
       return;
     }
-    final nameCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-    final isHybrid = provider.wbs!.methodology == ProjectMethodology.hybrid;
-    String? selectedMethodology;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.add_circle_outline,
-                color: LightModeColors.accent, size: 20),
-            const SizedBox(width: 8),
-            Text('Add Level $level — $levelLabel',
-                style: const TextStyle(color: Color(0xFF1A1D1F), fontSize: 16)),
-          ],
-        ),
-        content: StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            return SizedBox(
-              width: 480,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: nameCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Name *',
-                      labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                      hintText: level <= 2
-                          ? 'Use a deliverable noun (not an activity verb)'
-                          : 'Describe the work package or activity',
-                      hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-                      filled: true,
-                      fillColor: const Color(0xFFF9FAFB),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            const BorderSide(color: LightModeColors.accent),
-                      ),
-                    ),
-                    style: const TextStyle(color: Color(0xFF1A1D1F)),
-                    autofocus: true,
-                  ),
-                  const SizedBox(height: 12),
-                  VoiceTextField(
-                    controller: descCtrl,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      labelText: 'Description (optional)',
-                      labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                      filled: true,
-                      fillColor: const Color(0xFFF9FAFB),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            const BorderSide(color: LightModeColors.accent),
-                      ),
-                    ),
-                    style: const TextStyle(color: Color(0xFF1A1D1F)),
-                  ),
-                  if (isHybrid && level == 1) ...[
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedMethodology,
-                      decoration: InputDecoration(
-                        labelText: 'Methodology',
-                        labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                        filled: true,
-                        fillColor: const Color(0xFFF9FAFB),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Color(0xFFE4E7EC)),
-                        ),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                            value: 'waterfall', child: Text('Waterfall')),
-                        DropdownMenuItem(value: 'agile', child: Text('Agile')),
-                      ],
-                      onChanged: (v) =>
-                          setDialogState(() => selectedMethodology = v),
-                      hint: const Text('Inherit from project'),
-                    ),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: Color(0xFF6B7280))),
-          ),
-          FilledButton(
-            onPressed: () {
-              final name = nameCtrl.text.trim();
-              if (name.isEmpty) return;
-              final id =
-                  provider.addChildNode(parentId!, name, descCtrl.text.trim());
-              if (isHybrid && selectedMethodology != null && id.isNotEmpty) {
-                provider.setNodeMethodology(id, selectedMethodology);
-              }
-              Navigator.pop(ctx);
-            },
-            style: FilledButton.styleFrom(
-                backgroundColor: LightModeColors.accent,
-                foregroundColor: LightModeColors.lightOnPrimary),
-            child: Text('Add $levelLabel'),
-          ),
-        ],
-      ),
+    // Resolve the parent node (if any) so we can show its name in the hero.
+    String? parentName;
+    if (parentId != null && parentId.isNotEmpty) {
+      final parent = provider.findNode(parentId);
+      if (parent != null) parentName = parent.name;
+    }
+    showWBSAddNodeDialog(
+      context,
+      provider: provider,
+      level: level,
+      levelLabel: levelLabel,
+      parentId: parentId,
+      parentName: parentName,
+      framework: provider.wbs?.framework,
     );
   }
 
@@ -1744,82 +1624,11 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
     WBSNode node,
     WBSFramework fm,
   ) {
-    final nameCtrl = TextEditingController(text: node.name);
-    final descCtrl = TextEditingController(text: node.description ?? '');
-    final levelLabel = nodeLevelLabel(node, fm);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.edit_outlined, color: LightModeColors.accent, size: 20),
-            const SizedBox(width: 8),
-            Text('Edit $levelLabel',
-                style: const TextStyle(color: Color(0xFF1A1D1F), fontSize: 16)),
-          ],
-        ),
-        content: SizedBox(
-          width: 480,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  filled: true,
-                  fillColor: const Color(0xFFF9FAFB),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                  ),
-                ),
-                style: const TextStyle(color: Color(0xFF1A1D1F)),
-              ),
-              const SizedBox(height: 12),
-              VoiceTextField(
-                controller: descCtrl,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  filled: true,
-                  fillColor: const Color(0xFFF9FAFB),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
-                  ),
-                ),
-                style: const TextStyle(color: Color(0xFF1A1D1F)),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: Color(0xFF6B7280))),
-          ),
-          FilledButton(
-            onPressed: () {
-              provider.updateNode(
-                  node.id,
-                  node.copyWith(
-                    name: nameCtrl.text.trim(),
-                    description: descCtrl.text.trim(),
-                  ));
-              Navigator.pop(ctx);
-            },
-            style: FilledButton.styleFrom(
-                backgroundColor: LightModeColors.accent,
-                foregroundColor: LightModeColors.lightOnPrimary),
-            child: const Text('Update'),
-          ),
-        ],
-      ),
+    showWBSEditNodeDialog(
+      context,
+      provider: provider,
+      node: node,
+      framework: fm,
     );
   }
 

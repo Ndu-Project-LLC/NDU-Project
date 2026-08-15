@@ -501,8 +501,7 @@ class _ExecutionWorkPackagesScreenState
       );
       setState(() {});
       _showInfo('Work package deleted.');
-    }
-      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
+    }      showDeleteSuccessSnackBar(context, itemLabel: 'Work Package');
   }
 
   Future<void> _showWorkPackageDetail(WorkPackage wp) async {
@@ -1169,7 +1168,6 @@ class _ExecutionWorkPackagesScreenState
               ],
             ),
           ),
-          const Spacer(),
           _actionChip(
               Icons.account_tree_outlined, 'Generate', _generatePackageChains),
           _actionChip(Icons.timeline_outlined, 'Schedule Network',

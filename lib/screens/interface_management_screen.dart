@@ -882,7 +882,7 @@ class _InterfaceRegisterSectionState extends State<_InterfaceRegisterSection> {
           // available width thanks to the Expanded "Boundary / Name" column.
           LayoutBuilder(
             builder: (context, constraints) {
-              const minTableWidth = 980.0;
+              const minTableWidth = 1200.0;
               final needsScroll = constraints.maxWidth < minTableWidth;
               final table = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

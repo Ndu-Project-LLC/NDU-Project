@@ -178,8 +178,7 @@ class LaunchEditableSection extends StatelessWidget {
   }
 
   Widget _buildCardList() {
-    if (entries.isEmpty) {
-      return ExecutionEmptyState(
+    if (entries.isEmpty) {        return ExecutionEmptyState(
         icon: Icons.playlist_add_check_circle_outlined,
         title: 'Nothing added yet',
         description: emptyLabel,
@@ -189,7 +188,7 @@ class LaunchEditableSection extends StatelessWidget {
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Add first item'),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF0F172A),
+              backgroundColor: const Color(0xFFD97706),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               shape: RoundedRectangleBorder(
@@ -268,11 +267,11 @@ class LaunchEditableSection extends StatelessWidget {
 
     return Column(
       children: [
-        // Dark navy header row (matching LaunchDataTable)
+        // Yellow theme header row
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF1F2937),
+            color: const Color(0xFFD97706),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -299,9 +298,9 @@ class LaunchEditableSection extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFFFFDF5),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
+              border: Border.all(color: const Color(0xFFFDE68A)),
             ),
             child: Column(
               children: [
@@ -397,17 +396,16 @@ class _LaunchEntryCard extends StatelessWidget {
   final bool showStatusChip;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(BuildContext context) {      return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFFFFDF5),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: const Color(0xFFD97706).withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 8),
           ),

@@ -861,12 +861,12 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
   Widget _buildResourceGrid() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFFFFDF5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFFE5E7EB)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: const Color(0xFFD97706).withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -918,7 +918,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Add Role'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F172A),
+                    backgroundColor: const Color(0xFFD97706),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -934,8 +934,8 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                   icon: const Icon(Icons.upload_file_outlined, size: 16),
                   label: const Text('Import'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF4338CA),
-                    side: const BorderSide(color: Color(0xFFE5E7EB)),
+                    foregroundColor: const Color(0xFFD97706),
+                    side: const BorderSide(color: const Color(0xFFFDE68A)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -950,8 +950,8 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                   icon: const Icon(Icons.download_outlined, size: 16),
                   label: const Text('Template'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF6B7280),
-                    side: const BorderSide(color: Color(0xFFE5E7EB)),
+                    foregroundColor: const Color(0xFF92400E),
+                    side: const BorderSide(color: const Color(0xFFFDE68A)),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -1002,11 +1002,11 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
-                color: Color(0xFFF3F4F6),
+                color: Color(0xFFFEF3C7),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.people_outline_rounded,
-                  color: Color(0xFF9CA3AF), size: 36),
+                  color: Color(0xFFD97706), size: 36),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -1037,7 +1037,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: const BoxDecoration(
-        color: Color(0xFF1F2937),
+        color: Color(0xFFD97706),
       ),
       child: const Row(
         children: [

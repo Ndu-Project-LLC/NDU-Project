@@ -503,8 +503,26 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
   String _searchQuery = '';
 
   bool _activeIn(Set<String> labels) {
-    final activeLabel = widget.activeItemLabel;
-    return activeLabel != null && labels.contains(activeLabel);
+    final resolved = _resolvedActiveLabel();
+    return resolved != null && labels.contains(resolved);
+  }
+
+  String? _resolvedActiveLabel() {
+    // Priority: explicit prop -> project current checkpoint -> null
+    if (widget.activeItemLabel != null && widget.activeItemLabel!.isNotEmpty) {
+      return widget.activeItemLabel;
+    }
+    final provider = ProjectDataInherited.maybeOf(context);
+    final currentCheckpoint = provider?.projectData.currentCheckpoint;
+    if (currentCheckpoint == null || currentCheckpoint.isEmpty) return null;
+    final item = SidebarNavigationService.instance
+        .findItemByCheckpoint(currentCheckpoint);
+    return item?.label;
+  }
+
+  bool _isActiveLabel(String label) {
+    final resolved = _resolvedActiveLabel();
+    return resolved != null && resolved == label;
   }
 
   bool _expandForActiveLabel() {
@@ -1974,10 +1992,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       {VoidCallback? onTap, bool isActive = false, bool isDisabled = false}) {
     const activeColor = Color(0xFFD97706);
     final isInteractive = !isDisabled && onTap != null;
-    final isHighlighted = isActive && !isDisabled;
+    final effectiveIsActive = isActive || _isActiveLabel(title);
+    final isHighlighted = effectiveIsActive && !isDisabled;
     final textColor = isDisabled
-        ? Colors.grey[400]
-        : (isHighlighted ? activeColor : Colors.black87);
+      ? Colors.grey[400]
+      : (isHighlighted ? activeColor : Colors.black87);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
@@ -2026,10 +2045,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       {VoidCallback? onTap, bool isActive = false, bool isDisabled = false}) {
     const activeColor = Color(0xFFD97706);
     final isInteractive = !isDisabled && onTap != null;
-    final isHighlighted = isActive && !isDisabled;
+    final effectiveIsActive = isActive || _isActiveLabel(title);
+    final isHighlighted = effectiveIsActive && !isDisabled;
     final textColor = isDisabled
-        ? Colors.grey[400]
-        : (isHighlighted ? activeColor : Colors.black87);
+      ? Colors.grey[400]
+      : (isHighlighted ? activeColor : Colors.black87);
 
     return Padding(
       padding: const EdgeInsets.only(left: 48, right: 24, top: 2, bottom: 2),
@@ -2084,7 +2104,8 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       bool isDisabled = false}) {
     const activeColor = Color(0xFFD97706);
     final isInteractive = !isDisabled;
-    final isHighlighted = isActive && !isDisabled;
+    final effectiveIsActive = isActive || _isActiveLabel(title);
+    final isHighlighted = effectiveIsActive && !isDisabled;
     final textColor = isDisabled
         ? Colors.grey[400]
         : (isHighlighted ? activeColor : Colors.black87);
@@ -2141,10 +2162,11 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
       {VoidCallback? onTap, bool isActive = false, bool isDisabled = false}) {
     const activeColor = Color(0xFFD97706);
     final isInteractive = !isDisabled && onTap != null;
-    final isHighlighted = isActive && !isDisabled;
+    final effectiveIsActive = isActive || _isActiveLabel(title);
+    final isHighlighted = effectiveIsActive && !isDisabled;
     final textColor = isDisabled
-        ? Colors.grey[400]
-        : (isHighlighted ? activeColor : Colors.black87);
+      ? Colors.grey[400]
+      : (isHighlighted ? activeColor : Colors.black87);
     return Padding(
       padding: const EdgeInsets.only(left: 72, right: 24, top: 2, bottom: 2),
       child: AbsorbPointer(
@@ -2403,6 +2425,10 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
     final lockProjectSummary = _isBasicPlanLocked('Project Performance Review');
     final lockWarrantiesSupport =
         _isBasicPlanLocked('Hypercare & Warranty Support');
+    final provider = ProjectDataInherited.maybeOf(context);
+    final overallFramework = provider?.projectData.overallFramework ?? '';
+    final disableDesignTech = overallFramework == 'Waterfall';
+
     return [
       _buildMenuItem(
         Icons.home_outlined,
@@ -3034,29 +3060,33 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
             onTap: _openTechnicalAlignment,
             isActive: widget.activeItemLabel == 'Technical Alignment'),
         _buildSubMenuItem('Development Set Up',
-            onTap: _openDevelopmentSetUp,
-            isActive: widget.activeItemLabel == 'Development Set Up'),
+            onTap: disableDesignTech ? null : _openDevelopmentSetUp,
+            isActive: widget.activeItemLabel == 'Development Set Up',
+            isDisabled: disableDesignTech),
         _buildSubMenuItem('UI/UX Design',
-            onTap: _openUiUxDesign,
-            isActive: widget.activeItemLabel == 'UI/UX Design'),
+            onTap: disableDesignTech ? null : _openUiUxDesign,
+            isActive: widget.activeItemLabel == 'UI/UX Design',
+            isDisabled: disableDesignTech),
         _buildSubMenuItem('Backend Design',
-            onTap: _openBackendDesign,
-            isActive: widget.activeItemLabel == 'Backend Design'),
+            onTap: disableDesignTech ? null : _openBackendDesign,
+            isActive: widget.activeItemLabel == 'Backend Design',
+            isDisabled: disableDesignTech),
         _buildSubMenuItem(
           'Engineering',
-          onTap: lockEngineering ? null : _openEngineeringDesign,
+          onTap: disableDesignTech || lockEngineering ? null : _openEngineeringDesign,
           isActive: widget.activeItemLabel == 'Engineering',
-          isDisabled: lockEngineering,
+          isDisabled: disableDesignTech || lockEngineering,
         ),
         _buildSubMenuItem(
           'Technical Development',
-          onTap: lockTechnicalDevelopment ? null : _openTechnicalDevelopment,
+          onTap: disableDesignTech || lockTechnicalDevelopment ? null : _openTechnicalDevelopment,
           isActive: widget.activeItemLabel == 'Technical Development',
-          isDisabled: lockTechnicalDevelopment,
+          isDisabled: disableDesignTech || lockTechnicalDevelopment,
         ),
         _buildSubMenuItem('Tools Integration',
-            onTap: _openToolsIntegration,
-            isActive: widget.activeItemLabel == 'Tools Integration'),
+            onTap: disableDesignTech ? null : _openToolsIntegration,
+            isActive: widget.activeItemLabel == 'Tools Integration',
+            isDisabled: disableDesignTech),
         _buildSubMenuItem('Long Lead Equipment Ordering',
             onTap: _openLongLeadEquipmentOrdering,
             isActive: widget.activeItemLabel == 'Long Lead Equipment Ordering'),

@@ -7,6 +7,7 @@
 /// work package summary, open change requests, variance alerts.
 library;
 
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -6394,8 +6395,11 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
   String _filter = 'all'; // all | critical | delayed
   final Map<String, TextEditingController> _reasonControllers = {};
 
+  Timer? _delayReasonDebounce;
+
   @override
   void dispose() {
+    _delayReasonDebounce?.cancel();
     for (final c in _reasonControllers.values) {
       c.dispose();
     }
@@ -6860,8 +6864,13 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
                     color: PcPalette.sky.withValues(alpha: 0.6)),
               ),
             ),
-            onSubmitted: (val) =>
-                widget.provider.setDelayReason(wpId, val.trim()),
+            onChanged: (val) {
+              _delayReasonDebounce?.cancel();
+              _delayReasonDebounce = Timer(
+                  const Duration(milliseconds: 500), () {
+                widget.provider.setDelayReason(wpId, val.trim());
+              });
+            },
           ),
         ),
         const SizedBox(height: 6),

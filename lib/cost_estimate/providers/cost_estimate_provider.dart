@@ -17,6 +17,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ndu_project/cost_estimate/models/cost_estimate_models.dart';
 import 'package:ndu_project/cost_estimate/providers/compute_utils.dart';
+import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 
 const String _storageKey = 'ndu_cost_estimate_v1';
@@ -249,6 +250,106 @@ class CostEstimateProvider extends ChangeNotifier {
     _currentRole = RBACRole.admin;
     notifyListeners();
     _saveToStorage();
+  }
+
+  /// Import [CostEstimateItem] objects from the central project data model
+  /// as [CostLine] objects in this cost estimate. This auto-populates the
+  /// Cost by WBS tab from the Initial Cost Estimate screen.
+  ///
+  /// Returns `true` if lines were imported (estimate was previously empty).
+  bool importFromProjectCostEstimateItems(
+      List<CostEstimateItem> costEstimateItems) {
+    final estimate = _estimate;
+    if (estimate == null) return false;
+    if (estimate.lines.isNotEmpty) return false;
+    if (costEstimateItems.isEmpty) return false;
+
+    final importedLines = <CostLine>[];
+    for (final item in costEstimateItems) {
+      // Only import items with a positive amount
+      if (item.amount <= 0) continue;
+
+      // Build a descriptive sub-category from phase + work package info
+      final subParts = <String>[];
+      if (item.phase.isNotEmpty) subParts.add(item.phase);
+      if (item.workPackageTitle.isNotEmpty) subParts.add(item.workPackageTitle);
+
+      importedLines.add(CostLine(
+        id: 'imported_${item.id}',
+        category: _mapCostTypeToCategory(item.costType),
+        subCategory: subParts.join(' / '),
+        description: item.title,
+        wbsRef: item.wbsItemId.isNotEmpty
+            ? item.wbsItemId
+            : (item.workPackageTitle.isNotEmpty ? item.workPackageTitle : null),
+        quantity: item.quantity > 0 ? item.quantity.toDouble() : null,
+        unit: item.unitOfMeasure.isNotEmpty ? item.unitOfMeasure : null,
+        rate: item.unitRate > 0 ? item.unitRate : null,
+        total: item.amount,
+        inSchedule: item.scheduleActivityId.isNotEmpty,
+        basisSource: _mapEstimatingMethodToSourceType(item.estimatingMethod),
+        basisReference: item.estimatingBasis.isNotEmpty
+            ? item.estimatingBasis
+            : (item.notes.isNotEmpty ? item.notes : null),
+        aiGenerated: item.source == 'ai_generated',
+      ));
+    }
+
+    if (importedLines.isEmpty) return false;
+
+    _estimate = estimate.copyWith(
+      lines: importedLines,
+      updatedAt: DateTime.now(),
+    );
+    notifyListeners();
+    _saveToStorage();
+    return true;
+  }
+
+  /// Map a costType string from CostEstimateItem to a CostCategory enum.
+  CostCategory _mapCostTypeToCategory(String costType) {
+    switch (costType.toLowerCase()) {
+      case 'labor':
+        return CostCategory.labor;
+      case 'materials':
+        return CostCategory.materials;
+      case 'software':
+        return CostCategory.software;
+      case 'procurement':
+        return CostCategory.procurement;
+      case 'travel' || 'training':
+        return CostCategory.travelTraining;
+      case 'construction':
+        return CostCategory.construction;
+      case 'team' || 'project_team':
+        return CostCategory.projectTeam;
+      case 'overhead' || 'overheads':
+        return CostCategory.overheads;
+      case 'ga' || 'general':
+        return CostCategory.ga;
+      case 'facilities':
+        return CostCategory.facilities;
+      case 'indirect':
+        return CostCategory.overheads;
+      default:
+        return CostCategory.materials;
+    }
+  }
+
+  /// Map estimatingMethod string to CostSourceType enum.
+  CostSourceType _mapEstimatingMethodToSourceType(String method) {
+    switch (method.toLowerCase()) {
+      case 'vendor_quote' || 'vendor':
+        return CostSourceType.vendorQuote;
+      case 'historical':
+        return CostSourceType.historical;
+      case 'published_index' || 'benchmark':
+        return CostSourceType.industryBenchmark;
+      case 'expert_judgment' || 'expert':
+        return CostSourceType.expertJudgment;
+      default:
+        return CostSourceType.historical;
+    }
   }
 
   /// Pick the best project name: the explicit one if it's been customised,

@@ -7522,11 +7522,18 @@ class _ProcurementStrategiesSection extends StatelessWidget {
  );
  }
 
- return FullScreenTableWrapper(
- title: 'Procurement Strategies',
- child: buildTable(),
- tableBuilder: (fsContext) => buildTable(),
- );
+      return SearchableTableSection(
+         title: 'Procurement Strategies',
+         items: items,
+         searchFilter: (item, query) {
+            final s = item as ProcurementStrategyModel;
+            final q = query.trim().toLowerCase();
+            if (q.isEmpty) return true;
+            return s.name.toLowerCase().contains(q) || s.rationale.toLowerCase().contains(q);
+         },
+         tableBuilder: (fsContext, query) => buildTable(),
+         cardBuilder: (fsContext, query) => Column(children: items.where((s) => s.name.toLowerCase().contains(query.trim().toLowerCase()) || s.rationale.toLowerCase().contains(query.trim().toLowerCase())).map((s) => Card(child: ListTile(title: Text(s.name), subtitle: Text(s.rationale)))).toList()),
+      );
  }
 }
 
@@ -7737,11 +7744,18 @@ class _StrategiesSection extends StatelessWidget {
  );
  }
 
- return FullScreenTableWrapper(
- title: 'Procurement Scope',
- child: buildTable(),
- tableBuilder: (fsContext) => buildTable(),
- );
+      return SearchableTableSection(
+         title: 'Procurement Scope',
+         items: items,
+         searchFilter: (item, query) {
+            final it = item as ProcurementItemModel;
+            final q = query.trim().toLowerCase();
+            if (q.isEmpty) return true;
+            return it.name.toLowerCase().contains(q) || it.description.toLowerCase().contains(q) || it.category.toLowerCase().contains(q);
+         },
+         tableBuilder: (fsContext, query) => buildTable(),
+         cardBuilder: (fsContext, query) => Column(children: items.where((it) => it.name.toLowerCase().contains(query.trim().toLowerCase()) || it.description.toLowerCase().contains(query.trim().toLowerCase()) || it.category.toLowerCase().contains(query.trim().toLowerCase())).map((it) => Card(child: ListTile(title: Text(it.name), subtitle: Text(it.description)))).toList()),
+      );
  }
 }
 
@@ -8168,39 +8182,62 @@ class _VendorDataTable extends StatelessWidget {
  borderRadius: BorderRadius.circular(16),
  border: Border.all(color: const Color(0xFFE5E7EB)),
  ),
- child: FullScreenTableWrapper(
- title: 'Vendor Directory',
- tableBuilder: (fsContext) => buildNduDataTable(
- context: fsContext,
- columnSpacing: columnSpacing,
- horizontalMargin: horizontalMargin,
- headingRowHeight: headingRowHeight,
- dataRowMinHeight: dataRowMinHeight,
- dataRowMaxHeight: dataRowMaxHeight,
- headingTextStyle: headingStyle,
- dataTextStyle: dataStyle,
- showCheckboxColumn: false,
- columns: buildColumns(),
- rows: buildRows(),
- ),
- child: ResponsiveDataTableWrapper(
- minWidth: constraints.maxWidth,
- maxHeight: 600,
- child: buildNduDataTable(
- context: context,
- columnSpacing: columnSpacing,
- horizontalMargin: horizontalMargin,
- headingRowHeight: headingRowHeight,
- dataRowMinHeight: dataRowMinHeight,
- dataRowMaxHeight: dataRowMaxHeight,
- headingTextStyle: headingStyle,
- dataTextStyle: dataStyle,
- showCheckboxColumn: false,
- columns: buildColumns(),
- rows: buildRows(),
- ),
- ),
- ),
+         child: SearchableTableSection(
+            title: 'Vendor Directory',
+            items: vendors,
+            searchFilter: (item, query) {
+               final v = item as VendorModel;
+               final q = query.trim().toLowerCase();
+               if (q.isEmpty) return true;
+               return v.name.toLowerCase().contains(q) || v.category.toLowerCase().contains(q) || v.email.toLowerCase().contains(q) || v.status.toLowerCase().contains(q);
+            },
+            tableBuilder: (fsContext, query) {
+               final filtered = vendors.where((v) => v.name.toLowerCase().contains(query.trim().toLowerCase()) || v.category.toLowerCase().contains(query.trim().toLowerCase()) || v.email.toLowerCase().contains(query.trim().toLowerCase()) || v.status.toLowerCase().contains(query.trim().toLowerCase())).toList();
+               List<DataRow> buildFilteredRows() => filtered.map((vendor) => DataRow(cells: [
+                        DataCell(Checkbox(value: selectedVendorIds.contains(vendor.id), onChanged: (value) => onToggleSelected(vendor.id, value ?? false))),
+                        DataCell(_VendorNameCell(vendor: vendor)),
+                        DataCell(Text(vendor.category)),
+                        DataCell(_VendorStatusPill(status: vendor.status)),
+                        DataCell(_RatingStars(rating: vendor.ratingScore)),
+                        DataCell(_VendorActionsMenu(vendor: vendor, onEdit: () => onEditVendor(vendor), onDelete: () => onDeleteVendor(vendor.id))),
+                     ])).toList();
+
+               return FullScreenTableWrapper(
+                  title: 'Vendor Directory',
+                  tableBuilder: (fsCtx) => buildNduDataTable(
+                     context: fsCtx,
+                     columnSpacing: columnSpacing,
+                     horizontalMargin: horizontalMargin,
+                     headingRowHeight: headingRowHeight,
+                     dataRowMinHeight: dataRowMinHeight,
+                     dataRowMaxHeight: dataRowMaxHeight,
+                     headingTextStyle: headingStyle,
+                     dataTextStyle: dataStyle,
+                     showCheckboxColumn: false,
+                     columns: buildColumns(),
+                     rows: buildFilteredRows(),
+                  ),
+                  child: ResponsiveDataTableWrapper(
+                     minWidth: constraints.maxWidth,
+                     maxHeight: 600,
+                     child: buildNduDataTable(
+                        context: context,
+                        columnSpacing: columnSpacing,
+                        horizontalMargin: horizontalMargin,
+                        headingRowHeight: headingRowHeight,
+                        dataRowMinHeight: dataRowMinHeight,
+                        dataRowMaxHeight: dataRowMaxHeight,
+                        headingTextStyle: headingStyle,
+                        dataTextStyle: dataStyle,
+                        showCheckboxColumn: false,
+                        columns: buildColumns(),
+                        rows: buildFilteredRows(),
+                     ),
+                  ),
+               );
+            },
+            cardBuilder: (ctx, query) => Column(children: vendors.where((v) => v.name.toLowerCase().contains(query.trim().toLowerCase()) || v.category.toLowerCase().contains(query.trim().toLowerCase()) || v.email.toLowerCase().contains(query.trim().toLowerCase()) || v.status.toLowerCase().contains(query.trim().toLowerCase())).map((v) => Card(child: ListTile(title: Text(v.name), subtitle: Text(v.category)))).toList()),
+         ),
  );
  },
  );

@@ -14,6 +14,7 @@ import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class FrontEndPlanningInfrastructureScreen extends StatefulWidget {
@@ -523,190 +524,185 @@ class _InfrastructureTable extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- const border = BorderSide(color: Color(0xFFE5E7EB));
- const headerStyle = TextStyle(
- fontSize: 13,
- fontWeight: FontWeight.w700,
- color: Color(0xFF4B5563),
- );
- const cellStyle = TextStyle(fontSize: 14, color: Color(0xFF111827));
+      // Use SearchableTableSection so this table gains a consistent search
+      // bar and card/table toggle. The search filters by name, summary,
+      // details, owner, and status.
+      return SearchableTableSection(
+         title: 'Infrastructure Items',
+         items: items,
+         searchFilter: (item, query) {
+            final it = item as InfrastructurePlanningItem;
+            final q = query.trim().toLowerCase();
+            if (q.isEmpty) return true;
+            return it.name.toLowerCase().contains(q) ||
+                  it.summary.toLowerCase().contains(q) ||
+                  it.details.toLowerCase().contains(q) ||
+                  it.owner.toLowerCase().contains(q) ||
+                  it.status.toLowerCase().contains(q);
+         },
+         tableBuilder: (ctx, query) {
+            final filtered = items
+                  .where((it) => it.name.toLowerCase().contains(query.trim().toLowerCase()) ||
+                        it.summary.toLowerCase().contains(query.trim().toLowerCase()) ||
+                        it.details.toLowerCase().contains(query.trim().toLowerCase()) ||
+                        it.owner.toLowerCase().contains(query.trim().toLowerCase()) ||
+                        it.status.toLowerCase().contains(query.trim().toLowerCase()))
+                  .toList();
 
- Widget td(Widget child) => Padding(
- padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
- child: child,
- );
+            // Build rows from filtered list
+            final rows = <TableRow>[
+               TableRow(
+                  decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),
+                  children: [
+                     _th('No', headerStyle),
+                     _th('Infrastructure', headerStyle),
+                     _th('Summary', headerStyle),
+                     _th('Detailed Description', headerStyle),
+                     _th('Potential cost', headerStyle),
+                     _th('Owner', headerStyle),
+                     _th('Status', headerStyle),
+                     _th('Actions', headerStyle),
+                  ],
+               ),
+            ];
 
- final rows = <TableRow>[
- TableRow(
- decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),
- children: [
- _th('No', headerStyle),
- _th('Infrastructure', headerStyle),
- _th('Summary', headerStyle),
- _th('Detailed Description', headerStyle),
- _th('Potential cost', headerStyle),
- _th('Owner', headerStyle),
- _th('Status', headerStyle),
- _th('Actions', headerStyle),
- ],
- ),
- ];
+            if (filtered.isEmpty) {
+               rows.add(
+                  TableRow(
+                     children: [
+                        td(const SizedBox.shrink()),
+                        td(const WrappedText(
+                           'No structured infrastructure items added yet.',
+                           style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+                        )),
+                        td(const SizedBox.shrink()),
+                        td(const SizedBox.shrink()),
+                        td(const SizedBox.shrink()),
+                        td(const SizedBox.shrink()),
+                        td(const SizedBox.shrink()),
+                        td(const SizedBox.shrink()),
+                     ],
+                  ),
+               );
+            } else {
+               for (var index = 0; index < filtered.length; index++) {
+                  final item = filtered[index];
+                  rows.add(
+                     TableRow(
+                        children: [
+                           td(WrappedText('${index + 1}', style: cellStyle)),
+                           td(WrappedText(item.name.trim(), style: cellStyle)),
+                           td(WrappedText(item.summary.trim().isEmpty ? '-' : item.summary.trim(), style: cellStyle)),
+                           td(WrappedText(item.details.trim().isEmpty ? '-' : item.details.trim(), style: cellStyle)),
+                           td(WrappedText(_formatCurrency(item.potentialCost), style: cellStyle)),
+                           td(WrappedText(item.owner.trim().isEmpty ? '-' : item.owner.trim(), style: cellStyle)),
+                           td(WrappedText(item.status.trim(), style: cellStyle)),
+                           td(Row(mainAxisSize: MainAxisSize.min, children: [
+                              IconButton(onPressed: () => onEdit(item), icon: const Icon(Icons.edit_outlined, size: 18)),
+                              IconButton(onPressed: () => onDelete(item), icon: const Icon(Icons.delete_outline, size: 18)),
+                           ])),
+                        ],
+                     ),
+                  );
+               }
+            }
 
- if (items.isEmpty) {
- rows.add(
- TableRow(
- children: [
- td(const SizedBox.shrink()),
- td(
- const WrappedText(
- 'No structured infrastructure items added yet.',
- style: TextStyle(
- fontSize: 14,
- color: Color(0xFF6B7280),
- ),
- ),
- ),
- td(const SizedBox.shrink()),
- td(const SizedBox.shrink()),
- td(const SizedBox.shrink()),
- td(const SizedBox.shrink()),
- td(const SizedBox.shrink()),
- td(const SizedBox.shrink()),
- ],
- ),
- );
- } else {
- for (var index = 0; index < items.length; index++) {
- final item = items[index];
- rows.add(
- TableRow(
- children: [
- td(WrappedText('${index + 1}', style: cellStyle)),
- td(WrappedText(item.name.trim(), style: cellStyle)),
- td(WrappedText(
- item.summary.trim().isEmpty ? '-' : item.summary.trim(),
- style: cellStyle,
- )),
- td(WrappedText(
- item.details.trim().isEmpty ? '-' : item.details.trim(),
- style: cellStyle,
- )),
- td(WrappedText(_formatCurrency(item.potentialCost), style: cellStyle)),
- td(WrappedText(item.owner.trim().isEmpty ? '-' : item.owner.trim(),
- style: cellStyle)),
- td(WrappedText(item.status.trim(), style: cellStyle)),
- td(
- Row(
- mainAxisSize: MainAxisSize.min,
- children: [
- IconButton(
- onPressed: () => onEdit(item),
- icon: const Icon(Icons.edit_outlined, size: 18),
- ),
- IconButton(
- onPressed: () => onDelete(item),
- icon: const Icon(Icons.delete_outline, size: 18),
- ),
- ],
- ),
- ),
- ],
- ),
- );
- }
- }
-
- return FullScreenTableWrapper(
- title: 'Infrastructure Items',
- child: Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: LayoutBuilder(
- builder: (context, constraints) {
- final minTableWidth =
- constraints.maxWidth > 1440 ? constraints.maxWidth : 1440.0;
- return Scrollbar(
- thumbVisibility: true,
- child: SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: ConstrainedBox(
- constraints: BoxConstraints(minWidth: minTableWidth),
- child: Table(
- columnWidths: const {
- 0: FixedColumnWidth(52),
- 1: FlexColumnWidth(1.6),
- 2: FlexColumnWidth(1.4),
- 3: FlexColumnWidth(2.2),
- 4: FixedColumnWidth(130),
- 5: FixedColumnWidth(140),
- 6: FixedColumnWidth(110),
- 7: FixedColumnWidth(110),
- },
- border: TableBorder(
- horizontalInside: border,
- verticalInside: border,
- top: border,
- bottom: border,
- left: border,
- right: border,
- ),
- defaultVerticalAlignment: TableCellVerticalAlignment.middle,
- children: rows,
- ),
- ),
- ),
- );
- },
- ),
- ),
- tableBuilder: (fsContext) => Container(
- decoration: BoxDecoration(
- color: Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE5E7EB)),
- ),
- child: LayoutBuilder(
- builder: (context, constraints) {
- final minTableWidth =
- constraints.maxWidth > 1440 ? constraints.maxWidth : 1440.0;
- return Scrollbar(
- thumbVisibility: true,
- child: SingleChildScrollView(
- scrollDirection: Axis.horizontal,
- child: ConstrainedBox(
- constraints: BoxConstraints(minWidth: minTableWidth),
- child: Table(
- columnWidths: const {
- 0: FixedColumnWidth(52),
- 1: FlexColumnWidth(1.6),
- 2: FlexColumnWidth(1.4),
- 3: FlexColumnWidth(2.2),
- 4: FixedColumnWidth(130),
- 5: FixedColumnWidth(140),
- 6: FixedColumnWidth(110),
- 7: FixedColumnWidth(110),
- },
- border: TableBorder(
- horizontalInside: border,
- verticalInside: border,
- top: border,
- bottom: border,
- left: border,
- right: border,
- ),
- defaultVerticalAlignment: TableCellVerticalAlignment.middle,
- children: rows,
- ),
- ),
- ),
- );
- },
- ),
- ),
- );
+            return FullScreenTableWrapper(
+               title: 'Infrastructure Items',
+               child: Container(
+                  decoration: BoxDecoration(
+                     color: Colors.white,
+                     borderRadius: BorderRadius.circular(12),
+                     border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: LayoutBuilder(
+                     builder: (context, constraints) {
+                        final minTableWidth = constraints.maxWidth > 1440 ? constraints.maxWidth : 1440.0;
+                        return Scrollbar(
+                           thumbVisibility: true,
+                           child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: ConstrainedBox(
+                                 constraints: BoxConstraints(minWidth: minTableWidth),
+                                 child: Table(
+                                    columnWidths: const {
+                                       0: FixedColumnWidth(52),
+                                       1: FlexColumnWidth(1.6),
+                                       2: FlexColumnWidth(1.4),
+                                       3: FlexColumnWidth(2.2),
+                                       4: FixedColumnWidth(130),
+                                       5: FixedColumnWidth(140),
+                                       6: FixedColumnWidth(110),
+                                       7: FixedColumnWidth(110),
+                                    },
+                                    border: TableBorder(horizontalInside: border, verticalInside: border, top: border, bottom: border, left: border, right: border),
+                                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                                    children: rows,
+                                 ),
+                              ),
+                           ),
+                        );
+                     },
+                  ),
+               ),
+               tableBuilder: (fsContext) => Container(
+                  decoration: BoxDecoration(
+                     color: Colors.white,
+                     borderRadius: BorderRadius.circular(12),
+                     border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: LayoutBuilder(
+                     builder: (context, constraints) {
+                        final minTableWidth = constraints.maxWidth > 1440 ? constraints.maxWidth : 1440.0;
+                        return Scrollbar(
+                           thumbVisibility: true,
+                           child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: ConstrainedBox(
+                                 constraints: BoxConstraints(minWidth: minTableWidth),
+                                 child: Table(
+                                    columnWidths: const {
+                                       0: FixedColumnWidth(52),
+                                       1: FlexColumnWidth(1.6),
+                                       2: FlexColumnWidth(1.4),
+                                       3: FlexColumnWidth(2.2),
+                                       4: FixedColumnWidth(130),
+                                       5: FixedColumnWidth(140),
+                                       6: FixedColumnWidth(110),
+                                       7: FixedColumnWidth(110),
+                                    },
+                                    border: TableBorder(horizontalInside: border, verticalInside: border, top: border, bottom: border, left: border, right: border),
+                                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                                    children: rows,
+                                 ),
+                              ),
+                           ),
+                        );
+                     },
+                  ),
+               ),
+            );
+         },
+         cardBuilder: (ctx, query) {
+            final filtered = items
+                  .where((it) => it.name.toLowerCase().contains(query.trim().toLowerCase()) ||
+                        it.summary.toLowerCase().contains(query.trim().toLowerCase()) ||
+                        it.details.toLowerCase().contains(query.trim().toLowerCase()) ||
+                        it.owner.toLowerCase().contains(query.trim().toLowerCase()) ||
+                        it.status.toLowerCase().contains(query.trim().toLowerCase()))
+                  .toList();
+            return Column(
+               children: filtered
+                     .map((it) => Card(
+                              child: ListTile(
+                                 title: Text(it.name),
+                                 subtitle: Text('${it.summary} • ${it.owner}'),
+                              ),
+                           ))
+                     .toList(),
+            );
+         },
+      );
  }
 
  Widget _th(String text, TextStyle style) {

@@ -21,6 +21,7 @@ import 'package:intl/intl.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
 /// Front End Planning – Milestone screen
 /// Allows users to define project start date, key milestones, and end date.
@@ -1428,14 +1429,56 @@ Consider typical project timelines and ensure end date is after start date.''';
  }
 
  Widget _buildMilestonesTable() {
- return FullScreenTableWrapper(
- title: 'Milestones',
- child: _buildMilestonesTableContent(),
- tableBuilder: (fsContext) => _buildMilestonesTableContent(),
- );
+	 return SearchableTableSection(
+		 title: 'Milestones',
+		 items: _milestones,
+		 searchFilter: (item, query) {
+			 final m = item as Milestone;
+			 final q = query.trim().toLowerCase();
+			 if (q.isEmpty) return true;
+			 return m.name.toLowerCase().contains(q) ||
+					 m.discipline.toLowerCase().contains(q) ||
+					 m.dueDate.toLowerCase().contains(q) ||
+					 m.comments.toLowerCase().contains(q) ||
+					 m.references.toLowerCase().contains(q);
+		 },
+		 tableBuilder: (ctx, query) {
+			 final filtered = _milestones
+					 .where((m) => m.name.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.discipline.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.dueDate.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.comments.toLowerCase().contains(query.trim().toLowerCase()))
+					 .toList();
+			 return FullScreenTableWrapper(
+				 title: 'Milestones',
+				 child: _buildMilestonesTableContent(filtered),
+				 tableBuilder: (fsCtx) => _buildMilestonesTableContent(filtered),
+			 );
+		 },
+		 cardBuilder: (ctx, query) {
+			 final filtered = _milestones
+					 .where((m) => m.name.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.discipline.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.dueDate.toLowerCase().contains(query.trim().toLowerCase()) ||
+							 m.comments.toLowerCase().contains(query.trim().toLowerCase()))
+					 .toList();
+			 return Column(
+				 children: filtered
+						 .map((m) => Card(
+									 child: ListTile(
+										 title: Text(m.name.isEmpty ? '—' : m.name),
+										 subtitle: Text('${m.dueDate} • ${m.discipline}'),
+										 trailing: Text(m.comments, maxLines: 2, overflow: TextOverflow.ellipsis),
+									 ),
+								 ))
+						 .toList(),
+			 );
+		 },
+	 );
  }
 
- Widget _buildMilestonesTableContent() {
+ Widget _buildMilestonesTableContent([List<Milestone>? items]) {
+	 final rowsSource = items ?? _milestones;
  const border = BorderSide(color: Color(0xFFE5E7EB));
  const headerStyle = TextStyle(
  fontSize: 12,
@@ -1513,12 +1556,12 @@ Consider typical project timelines and ensure end date is after start date.''';
  _milestoneHeaderCell('Actions', headerStyle),
  ],
  ),
- ...List.generate(_milestones.length, (index) {
- final milestone = _milestones[index];
+ ...List.generate(rowsSource.length, (index) {
+ final milestone = rowsSource[index];
  final nameError =
- _validationErrors['milestone_name_$index'];
+	 _validationErrors['milestone_name_$index'];
  final dateError =
- _validationErrors['milestone_date_$index'];
+	 _validationErrors['milestone_date_$index'];
  return TableRow(
  decoration: BoxDecoration(
  color: index.isEven

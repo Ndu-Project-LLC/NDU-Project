@@ -2010,14 +2010,24 @@ class _ExistingQuotesTable extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return FullScreenTableWrapper(
- title: 'Existing Quotes',
- child: _buildTable(),
- tableBuilder: (fsContext) => _buildTable(),
- );
+    return SearchableTableSection(
+      title: 'Existing Quotes',
+      items: quotes,
+      searchFilter: (item, query) {
+        final qd = item as _QuoteRowData;
+        final q = query.trim().toLowerCase();
+        if (q.isEmpty) return true;
+        return qd.vendor.toLowerCase().contains(q) ||
+            qd.summary.toLowerCase().contains(q) ||
+            qd.amount.toString().toLowerCase().contains(q);
+      },
+      tableBuilder: (ctx, query) => _buildTable(query.isEmpty ? null : quotes.where((q) => q.vendor.toLowerCase().contains(query.trim().toLowerCase()) || q.summary.toLowerCase().contains(query.trim().toLowerCase()) || q.amount.toString().toLowerCase().contains(query.trim().toLowerCase())).toList()),
+      cardBuilder: (ctx, query) => Column(children: quotes.where((q) => q.vendor.toLowerCase().contains(query.trim().toLowerCase()) || q.summary.toLowerCase().contains(query.trim().toLowerCase()) || q.amount.toString().toLowerCase().contains(query.trim().toLowerCase())).map((q) => Card(child: ListTile(title: Text(q.vendor), subtitle: Text(q.summary), trailing: Text(q.amount.toString())))).toList()),
+    );
  }
 
- Widget _buildTable() {
+  Widget _buildTable([List<_QuoteRowData>? source]) {
+    final rowsSource = source ?? quotes;
  return Container(
  decoration: BoxDecoration(
  color: Colors.white,
@@ -2032,11 +2042,11 @@ class _ExistingQuotesTable extends StatelessWidget {
  children: [
  _ExistingQuotesHeader(),
  const Divider(height: 1, color: Color(0xFFE5E7EB)),
- for (int i = 0; i < quotes.length; i++) ...[
- _ExistingQuotesRow(data: quotes[i], onViewDetails: onViewDetails),
- if (i != quotes.length - 1)
- const Divider(height: 1, color: Color(0xFFE5E7EB)),
- ],
+    for (int i = 0; i < rowsSource.length; i++) ...[
+      _ExistingQuotesRow(data: rowsSource[i], onViewDetails: onViewDetails),
+      if (i != rowsSource.length - 1)
+        const Divider(height: 1, color: Color(0xFFE5E7EB)),
+    ],
  ],
  ),
  );
@@ -5401,17 +5411,25 @@ class _ContractingSummaryOverviewCard extends StatelessWidget {
  style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
  ),
  const SizedBox(height: 24),
- FullScreenTableWrapper(
- title: 'Contracting Summary',
- child: _buildSummaryTable(),
- tableBuilder: (fsContext) => _buildSummaryTable(),
- ),
+        SearchableTableSection(
+          title: 'Contracting Summary',
+          items: rows,
+          searchFilter: (item, query) {
+            final r = item as _SummaryTableRowData;
+            final q = query.trim().toLowerCase();
+            if (q.isEmpty) return true;
+            return r.contractName.toLowerCase().contains(q) || r.counterparty.toLowerCase().contains(q) || r.status.toLowerCase().contains(q);
+          },
+          tableBuilder: (fsContext, query) => _buildSummaryTable(query.isEmpty ? null : rows.where((r) => r.contractName.toLowerCase().contains(query.trim().toLowerCase()) || r.counterparty.toLowerCase().contains(query.trim().toLowerCase()) || r.status.toLowerCase().contains(query.trim().toLowerCase())).toList()),
+          cardBuilder: (fsContext, query) => Column(children: rows.where((r) => r.contractName.toLowerCase().contains(query.trim().toLowerCase()) || r.counterparty.toLowerCase().contains(query.trim().toLowerCase()) || r.status.toLowerCase().contains(query.trim().toLowerCase())).map((r) => Card(child: ListTile(title: Text(r.contractName), subtitle: Text(r.counterparty)))).toList()),
+        ),
  ],
  ),
  );
  }
 
- Widget _buildSummaryTable() {
+  Widget _buildSummaryTable([List<_SummaryTableRowData>? rowsOverride]) {
+    final rowsSource = rowsOverride ?? rows;
  return DecoratedBox(
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(22),
@@ -5445,11 +5463,11 @@ class _ContractingSummaryOverviewCard extends StatelessWidget {
  'No contracts have been summarized yet.'),
  )
  else
- for (int i = 0; i < rows.length; i++) ...[
- _SummaryTableRow(data: rows[i]),
- if (i != rows.length - 1)
- const Divider(height: 1, color: Color(0xFFE5E7EB)),
- ],
+                for (int i = 0; i < rowsSource.length; i++) ...[
+                  _SummaryTableRow(data: rowsSource[i]),
+                  if (i != rowsSource.length - 1)
+                    const Divider(height: 1, color: Color(0xFFE5E7EB)),
+                ],
  ],
  ),
  ),
@@ -5943,17 +5961,25 @@ class _ContractingSummaryWarrantyCard extends StatelessWidget {
  style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
  ),
  const SizedBox(height: 24),
- FullScreenTableWrapper(
- title: 'Warranty & Support Documentation',
- child: _buildWarrantyTable(),
- tableBuilder: (fsContext) => _buildWarrantyTable(),
- ),
+        SearchableTableSection(
+          title: 'Warranty & Support Documentation',
+          items: rows,
+          searchFilter: (item, query) {
+            final r = item as _WarrantyRowData;
+            final q = query.trim().toLowerCase();
+            if (q.isEmpty) return true;
+            return r.contract.toLowerCase().contains(q) || r.supportType.toLowerCase().contains(q) || r.contact.toLowerCase().contains(q);
+          },
+          tableBuilder: (fsContext, query) => _buildWarrantyTable(query.isEmpty ? null : rows.where((r) => r.contract.toLowerCase().contains(query.trim().toLowerCase()) || r.supportType.toLowerCase().contains(query.trim().toLowerCase()) || r.contact.toLowerCase().contains(query.trim().toLowerCase())).toList()),
+          cardBuilder: (fsContext, query) => Column(children: rows.where((r) => r.contract.toLowerCase().contains(query.trim().toLowerCase()) || r.supportType.toLowerCase().contains(query.trim().toLowerCase()) || r.contact.toLowerCase().contains(query.trim().toLowerCase())).map((r) => Card(child: ListTile(title: Text(r.contract), subtitle: Text(r.contact)))).toList()),
+        ),
  ],
  ),
  );
  }
 
- Widget _buildWarrantyTable() {
+  Widget _buildWarrantyTable([List<_WarrantyRowData>? rowsOverride]) {
+    final rowsSource = rowsOverride ?? rows;
  return DecoratedBox(
  decoration: BoxDecoration(
  borderRadius: BorderRadius.circular(22),
@@ -5980,18 +6006,18 @@ class _ContractingSummaryWarrantyCard extends StatelessWidget {
  ],
  ),
  ),
- if (rows.isEmpty)
+    if (rowsSource.isEmpty)
  const Padding(
  padding: EdgeInsets.all(24),
  child: _EmptyPanelMessage(
  'No warranty or support records yet.'),
  )
- else
- for (int i = 0; i < rows.length; i++) ...[
- _WarrantyTableRow(data: rows[i]),
- if (i != rows.length - 1)
- const Divider(height: 1, color: Color(0xFFE5E7EB)),
- ],
+    else
+      for (int i = 0; i < rowsSource.length; i++) ...[
+        _WarrantyTableRow(data: rowsSource[i]),
+        if (i != rowsSource.length - 1)
+          const Divider(height: 1, color: Color(0xFFE5E7EB)),
+      ],
  ],
  ),
  ),
@@ -6954,15 +6980,34 @@ class _ContractorsTable extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- return FullScreenTableWrapper(
- title: 'Contractors',
- child: _buildInlineView(),
- tableBuilder: (fsContext) => _buildTableContent(),
- );
+    return SearchableTableSection(
+      title: 'Contractors',
+      items: rows,
+      searchFilter: (item, query) {
+        final r = item as _ContractorRowData;
+        final q = query.trim().toLowerCase();
+        if (q.isEmpty) return true;
+        return r.name.toLowerCase().contains(q) || r.role.toLowerCase().contains(q) || r.location.toLowerCase().contains(q) || r.statusLabel.toLowerCase().contains(q);
+      },
+      tableBuilder: (fsContext, query) {
+        final filtered = rows.where((r) {
+          final q = query.trim().toLowerCase();
+          if (q.isEmpty) return true;
+          return r.name.toLowerCase().contains(q) || r.role.toLowerCase().contains(q) || r.location.toLowerCase().contains(q) || r.statusLabel.toLowerCase().contains(q);
+        }).toList();
+
+        return FullScreenTableWrapper(
+          title: 'Contractors',
+          tableBuilder: (fsCtx) => _buildTableContent(filtered),
+          child: _buildInlineView(filtered),
+        );
+      },
+      cardBuilder: (ctx, query) => Column(children: rows.where((r) => r.name.toLowerCase().contains(query.trim().toLowerCase()) || r.role.toLowerCase().contains(query.trim().toLowerCase()) || r.location.toLowerCase().contains(query.trim().toLowerCase()) || r.statusLabel.toLowerCase().contains(query.trim().toLowerCase())).map((r) => Card(child: ListTile(title: Text(r.name), subtitle: Text(r.role)))).toList()),
+    );
  }
 
- Widget _buildInlineView() {
- final Widget table = _buildTableContent();
+ Widget _buildInlineView([List<_ContractorRowData>? items]) {
+ final Widget table = _buildTableContent(items);
  if (isMobile) {
  return SingleChildScrollView(
  scrollDirection: Axis.horizontal,

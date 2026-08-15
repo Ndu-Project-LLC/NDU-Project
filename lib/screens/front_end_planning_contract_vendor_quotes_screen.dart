@@ -21,6 +21,7 @@ import 'package:ndu_project/widgets/procurement_dialogs.dart';
 import 'package:ndu_project/widgets/planning_ai_notes_card.dart';
 import 'package:ndu_project/widgets/responsive_table_widgets.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // Layout Imports
 import 'package:ndu_project/widgets/draggable_sidebar.dart';
@@ -36,174 +37,208 @@ class FrontEndPlanningContractVendorQuotesScreen extends StatefulWidget {
  const FrontEndPlanningContractVendorQuotesScreen({super.key});
 
  static void open(BuildContext context) {
- context.push('/fep-vendor-quotes');
- }
+			return SearchableTableSection(
+				title: 'Procurement Items',
+				items: items,
+				searchFilter: (item, query) {
+					final it = item as dynamic;
+					final q = query.trim().toLowerCase();
+					if (q.isEmpty) return true;
+					return it.name.toLowerCase().contains(q) || it.description.toLowerCase().contains(q) || it.notes.toLowerCase().contains(q) || it.category.toLowerCase().contains(q) || it.responsibleMember.toLowerCase().contains(q);
+				},
+				tableBuilder: (fsContext, query) {
+					final filtered = items.where((it) {
+						final q = query.trim().toLowerCase();
+						if (q.isEmpty) return true;
+						return it.name.toLowerCase().contains(q) || it.description.toLowerCase().contains(q) || it.notes.toLowerCase().contains(q) || it.category.toLowerCase().contains(q) || it.responsibleMember.toLowerCase().contains(q);
+					}).toList();
 
- @override
- State<FrontEndPlanningContractVendorQuotesScreen> createState() =>
- _FrontEndPlanningContractVendorQuotesScreenState();
-}
+					final minWidthForTable = minWidth;
+					return FullScreenTableWrapper(
+						title: 'Procurement Items',
+						tableBuilder: (fsCtx) => ResponsiveDataTableWrapper(
+							minWidth: minWidthForTable,
+							maxHeight: 560,
+							child: buildNduDataTable(
+								context: fsCtx,
+								columnSpacing: 16,
+								horizontalMargin: 12,
+								border: TableBorder.all(
+									color: const Color(0xFFE5E7EB),
+									width: 0.7,
+									borderRadius: BorderRadius.circular(10),
+								),
+								columns: const [
+									DataColumn(
+										label: Align(
+											alignment: Alignment.centerLeft,
+											child: Text(
+												'No',
+												textAlign: TextAlign.left,
+												style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+											),
+										),
+									),
+									DataColumn(
+										label: Align(
+											alignment: Alignment.centerLeft,
+											child: Text(
+												'Contract Scope',
+												textAlign: TextAlign.left,
+												style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+											),
+										),
+									),
+									DataColumn(
+										label: Align(
+											alignment: Alignment.centerLeft,
+											child: Text(
+												'Description',
+												textAlign: TextAlign.left,
+												style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+											),
+										),
+									),
+									DataColumn(
+										label: Align(
+											alignment: Alignment.centerLeft,
+											child: Text(
+												'Potential Contractors',
+												textAlign: TextAlign.left,
+												style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+											),
+										),
+									),
+									DataColumn(
+										label: Align(
+											alignment: Alignment.centerLeft,
+											child: Text(
+												'Contract Type',
+												textAlign: TextAlign.left,
+												style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+											),
+										),
+									),
+									DataColumn(
+										label: Align(
+											alignment: Alignment.centerLeft,
+											child: Text(
+												'Estimated Duration',
+												textAlign: TextAlign.left,
+												style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+											),
+										),
+									),
+									DataColumn(
+										label: Align(
+											alignment: Alignment.centerLeft,
+											child: Text(
+												'Estimated Value',
+												textAlign: TextAlign.left,
+												style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+											),
+										),
+									),
+									DataColumn(
+										label: Align(
+											alignment: Alignment.centerLeft,
+											child: Text(
+												'Bidding Required',
+												textAlign: TextAlign.left,
+												style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+											),
+										),
+									),
+									DataColumn(label: Center(child: Text(''))),
+								],
+								rows: filtered.asMap().entries.map((entry) {
+									final index = entry.key;
+									final item = entry.value;
+									final actionItems = <PopupMenuEntry<String>>[];
+									if (onEdit != null) {
+										actionItems.add(
+											const PopupMenuItem<String>(
+												value: 'edit',
+												child: Row(
+													children: [
+														Icon(Icons.edit_outlined, size: 16),
+														SizedBox(width: 8),
+														Text('Edit scope'),
+													],
+												),
+											),
+										);
+									}
+									if (onDelete != null) {
+										actionItems.add(
+											const PopupMenuItem<String>(
+												value: 'delete',
+												child: Row(
+													children: [
+														Icon(Icons.delete_outline, size: 16, color: Colors.red),
+														SizedBox(width: 8),
+														Text('Delete', style: TextStyle(color: Colors.red)),
+													],
+												),
+											),
+										);
+									}
 
-class _FrontEndPlanningContractVendorQuotesScreenState
- extends State<FrontEndPlanningContractVendorQuotesScreen> {
- static const int _initialContractsLimit = 40;
- static const int _initialItemsLimit = 40;
- static const int _loadMoreStep = 40;
- static const int _maxAiImportRows = 25;
- static const String _contractingNotesKey = 'planning_contracting_notes';
- static const String _contractingReportsKey = 'contracting_reports';
- static const String _contractingScopeSubtitle =
- 'Identify the contract scope required for effective project execution and, where applicable, initiate contracting activities early to ensure the project schedule is maintained.';
- static const List<String> _contractTypeOptions = [
- 'Lump Sum',
- 'Reimbursable',
- 'Unsure',
- ];
- static const List<String> _biddingOptions = ['Yes', 'No', 'Not Sure'];
- static const List<String> _startStageOptions = [
- 'Initiation',
- 'Planning',
- 'Execution',
- 'Launch',
- 'Operations',
- 'Unsure',
- ];
- static const List<String> _trackingStatusOptions = [
- 'RFQ Drafted',
- 'RFQ Sent',
- 'Responses In',
- 'Evaluation',
- 'Awarded',
- 'Contract Signed',
- ];
- static const List<String> _reportStatusOptions = [
- 'Draft',
- 'In Review',
- 'Approved',
- 'Published',
- ];
- static const String _workflowCollectionName = 'contracting_workflows';
- static const String _workflowGlobalDocId = 'global';
- static const String _scopeManagementCollectionName =
- 'contracting_scope_management';
- static const List<String> _workflowDurationUnits = ['week', 'month'];
- static const List<_ContractingWorkflowStep> _defaultWorkflowTemplate = [
- _ContractingWorkflowStep(
- id: 'pre_qualification',
- name: 'Pre-Qualification',
- duration: 1,
- unit: 'week',
- ),
- _ContractingWorkflowStep(
- id: 'request_for_proposal',
- name: 'Request for Proposal (RFP)',
- duration: 3,
- unit: 'week',
- ),
- _ContractingWorkflowStep(
- id: 'bid_evaluation',
- name: 'Bid Evaluation',
- duration: 2,
- unit: 'week',
- ),
- _ContractingWorkflowStep(
- id: 'bid_clarification',
- name: 'Bid Clarification',
- duration: 1,
- unit: 'week',
- ),
- _ContractingWorkflowStep(
- id: 'contract_award',
- name: 'Contract Award',
- duration: 1,
- unit: 'week',
- ),
- _ContractingWorkflowStep(
- id: 'mobilization',
- name: 'Mobilization',
- duration: 1,
- unit: 'week',
- ),
- ];
-
- final TextEditingController _notesController = TextEditingController();
- final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
- bool _isNotesSyncReady = false;
- final OpenAiServiceSecure _openAi = OpenAiServiceSecure();
-
- Stream<List<ProcurementItemModel>>? _itemsStream;
- Stream<List<ContractModel>>? _contractsStream;
- Stream<List<VendorModel>>? _contractorsStream;
- int _contractQueryLimit = _initialContractsLimit;
- int _itemQueryLimit = _initialItemsLimit;
- bool _generating = false;
- bool _showScopeDetails = false;
- bool _customizeWorkflowByScope = false;
- bool _workflowLoading = false;
- bool _workflowSaving = false;
- bool _scopeManagementLoading = false;
- bool _scopeManagementSaving = false;
- String? _selectedWorkflowScopeId;
- String _actingContractRole = '';
- _ContractingManagementTab _selectedManagementTab =
- _ContractingManagementTab.scopeManagement;
- String? _lastProjectId;
- String? _autoGenerationRequestedProjectId;
- bool _showAutoGenerationSpinner = false;
- String? _autoGenerationError;
- List<_ContractingWorkflowStep> _globalWorkflowSteps =
- List<_ContractingWorkflowStep>.from(_defaultWorkflowTemplate);
- List<_ContractingWorkflowStep> _workflowDraftSteps =
- List<_ContractingWorkflowStep>.from(_defaultWorkflowTemplate);
- Map<String, List<_ContractingWorkflowStep>> _scopeWorkflowOverrides = {};
- Map<String, _ContractScopeManagementState> _scopeManagementByScopeId = {};
- String? _prefilledNotesProjectId;
-
- @override
- void initState() {
- super.initState();
- ApiKeyManager.initializeApiKey();
- WidgetsBinding.instance.addPostFrameCallback((_) {
- if (!mounted) return;
- final data = ProjectDataHelper.getData(context);
- _notesController.text = data.frontEndPlanning.contractVendorQuotes;
- _notesController.addListener(_syncContractNotes);
- _isNotesSyncReady = true;
- _prefillContractingNotesIfMissing(data);
- });
- }
-
- 
- Future<void> _exportPdf() async {
- final projectData = ProjectDataHelper.getData(context);
- final fep = projectData.frontEndPlanning;
- await PdfExportHelper.exportScreenPdf(
- context: context,
- screenTitle: 'Contract & Vendor Quotes',
- sections: [
- PdfSection.keyValue('Project Info', [
- {'Project Name': projectData.projectName ?? 'N/A'},
- ]),
- PdfSection.text('Notes', fep.requirementsNotes ?? 'No data recorded.'),
- ],
- );
- }
-@override
- void didChangeDependencies() {
- super.didChangeDependencies();
- final projectData = ProjectDataHelper.getData(context);
- final projectId = projectData.projectId;
-
- if (projectId != _lastProjectId &&
- projectId != null &&
- projectId.isNotEmpty) {
- _lastProjectId = projectId;
- _bindProcurementStreams(projectId);
- _loadContractingWorkflowData(projectId);
- _loadScopeManagementData(projectId);
- _triggerAutoGenerationForProject(projectId);
- }
- }
+									return DataRow(
+										cells: [
+											DataCell(Text('${index + 1}')),
+											DataCell(_cellText(item.name, width: 170, bold: true)),
+											DataCell(_cellText(item.description, width: 220)),
+											DataCell(_cellText(item.notes, width: 190)),
+											DataCell(_cellText(item.category, width: 120)),
+											DataCell(_cellText(item.comments, width: 150)),
+											DataCell(_cellText(_formatCurrency(item.budget), width: 130)),
+											DataCell(_cellText(
+													item.responsibleMember.trim().isEmpty
+															? 'Not Sure'
+															: item.responsibleMember.trim(),
+													width: 130,
+											)),
+											DataCell(
+												hasActions
+														? PopupMenuButton<String>(
+																icon: const Icon(Icons.more_horiz,
+																		color: Colors.grey),
+																itemBuilder: (_) => actionItems,
+																onSelected: (value) {
+																	if (value == 'edit' && onEdit != null) {
+																		onEdit!(item);
+																	} else if (value == 'delete' &&
+																			onDelete != null) {
+																		onDelete!(item);
+																	}
+																},
+															)
+														: const SizedBox.shrink(),
+											),
+										],
+									);
+								}).toList(),
+							),
+						),
+					);
+				},
+				cardBuilder: (ctx, query) => Column(
+					children: items
+							.where((it) {
+								final q = query.trim().toLowerCase();
+								if (q.isEmpty) return true;
+								return it.name.toLowerCase().contains(q) || it.description.toLowerCase().contains(q) || it.notes.toLowerCase().contains(q) || it.category.toLowerCase().contains(q) || it.responsibleMember.toLowerCase().contains(q);
+							})
+							.map((it) => Card(
+										child: ListTile(
+											title: Text(it.name),
+											subtitle: Text(it.category),
+										),
+									))
+							.toList(),
+				),
+			);
 
  void _triggerAutoGenerationForProject(String projectId) {
  if (_autoGenerationRequestedProjectId == projectId) return;

@@ -97,17 +97,26 @@ class _WBSModuleScreenState extends State<WBSModuleScreen>
 
     // If storage already gave us a complete WBS for this project, nothing
     // to do — the builder will render it.
-    if (provider.wbs != null && provider.setupComplete) return;
+    if (provider.wbs != null && provider.setupComplete) return; // No persisted WBS for this project — create one with the default
+ // framework/methodology and persist it for next time.
+ provider.setup(
+ projectName: projectName,
+ framework: WBSFramework.waterfallDeliverable,
+ methodology: ProjectMethodology.waterfall,
+ projectId: projectId,
+ );
 
-    // No persisted WBS for this project — create one with the default
-    // framework/methodology and persist it for next time.
-    provider.setup(
-      projectName: projectName,
-      framework: WBSFramework.waterfallDeliverable,
-      methodology: ProjectMethodology.waterfall,
-      projectId: projectId,
-    );
-  }
+ // Auto-import cost items from the Initial Cost Estimate if the
+ // cost estimate has no lines yet. This populates the Cost by WBS
+ // tab with data from the project's cost estimate items.
+ final ceProvider = context.read<CostEstimateProvider>();
+ if (ceProvider.estimate != null && ceProvider.estimate!.lines.isEmpty) {
+ if (projectData.costEstimateItems.isNotEmpty) {
+ ceProvider.importFromProjectCostEstimateItems(
+ projectData.costEstimateItems);
+ }
+ }
+ }
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {

@@ -2859,9 +2859,9 @@ class _CharterFloatingApprovalBarState
               );
             }
             return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                info,
+                Expanded(child: info),
+                const SizedBox(width: 12),
                 actions,
               ],
             );

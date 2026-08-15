@@ -83,6 +83,16 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
           deliveryModel: DeliveryModel.waterfall,
         );
       }
+      // Auto-import cost items from the Initial Cost Estimate if the
+      // cost estimate has no lines yet. This populates the Cost by WBS
+      // tab with data from the project's cost estimate items.
+      if (provider.estimate != null && provider.estimate!.lines.isEmpty) {
+        final projectData = context.read<ProjectDataProvider>().projectData;
+        if (projectData.costEstimateItems.isNotEmpty) {
+          provider.importFromProjectCostEstimateItems(
+              projectData.costEstimateItems);
+        }
+      }
     });
   }
 

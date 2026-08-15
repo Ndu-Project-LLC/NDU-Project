@@ -18,6 +18,7 @@ import 'package:ndu_project/widgets/delete_confirmation_dialog.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
 /// Front End Planning – Project Risks page
 /// Matches the provided screenshot with:
@@ -2009,14 +2010,25 @@ bool get _hasAnyDefinedRisk => _rows.any((row) => row.risk.trim().isNotEmpty);
  }
 
  Widget _buildRiskTable(BuildContext context) {
- return FullScreenTableWrapper(
- title: 'Risks',
- child: _buildRiskTableContent(),
- tableBuilder: (fsContext) => _buildRiskTableContent(),
- );
+		return SearchableTableSection(
+			title: 'Risks',
+			items: _rows,
+			searchFilter: (item, query) {
+				final r = item as _RiskItem;
+				final q = query.trim().toLowerCase();
+				if (q.isEmpty) return true;
+				return r.risk.toLowerCase().contains(q) ||
+						r.description.toLowerCase().contains(q) ||
+						r.category.toLowerCase().contains(q) ||
+						r.owner.toLowerCase().contains(q);
+			},
+			tableBuilder: (fsContext, query) => _buildRiskTableContent(query.isEmpty ? null : _rows.where((r) => r.risk.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.category.toLowerCase().contains(query.trim().toLowerCase()) || r.owner.toLowerCase().contains(query.trim().toLowerCase())).toList()),
+			cardBuilder: (fsContext, query) => Column(children: _rows.where((r) => r.risk.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.category.toLowerCase().contains(query.trim().toLowerCase()) || r.owner.toLowerCase().contains(query.trim().toLowerCase())).map((r) => Card(child: ListTile(title: Text(r.risk), subtitle: Text(r.description)))).toList()),
+		);
  }
 
- Widget _buildRiskTableContent() {
+	Widget _buildRiskTableContent([List<_RiskItem>? rowsOverride]) {
+		final rowsSource = rowsOverride ?? _rows;
  final border = const BorderSide(color: Color(0xFFE5E7EB));
  final headerStyle = const TextStyle(
  fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));

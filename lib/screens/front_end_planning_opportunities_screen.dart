@@ -24,6 +24,7 @@ import 'package:ndu_project/screens/staff_team_screen.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:go_router/go_router.dart';
 
@@ -714,38 +715,78 @@ Opportunity generation constraints:
                                   ),
                                 )
                               else
-                                Column(
-                                  children: [
-                                    _OpportunityTable(
-                                      rows: _rows,
-                                      onEdit: (item) {
-                                        _showAddOpportunityDialog(
-                                            existingItem: item);
-                                      },
-                                      onDelete: _confirmDeleteOpportunity,
-                                      onUndo: _undoOpportunityRow,
-                                      canUndoRow: _canUndoOpportunityRow,
-                                      selectedIds: _selectedIds,
-                                      onToggleSelect: _toggleSelection,
-                                      onAcceptReject: _handleAcceptReject,
-                                    ),
-                                    if (_hasSelection)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 12),
-                                        child: BatchDeleteBar(
-                                          selectedCount: _selectedIds.length,
-                                          onDelete: () async {
-                                            await _handleBatchDelete();
-                                            return true;
+                                SearchableTableSection(
+                                  title: 'Project Opportunities',
+                                  items: _rows,
+                                  searchFilter: (item, query) {
+                                    final r = item as OpportunityItem;
+                                    final q = query.trim().toLowerCase();
+                                    if (q.isEmpty) return true;
+                                    return r.opportunity.toLowerCase().contains(q) ||
+                                        r.discipline.toLowerCase().contains(q) ||
+                                        r.implementationStrategy.toLowerCase().contains(q) ||
+                                        r.owner.toLowerCase().contains(q) ||
+                                        r.responsibleRole.toLowerCase().contains(q);
+                                  },
+                                  tableBuilder: (ctx, query) {
+                                    final filtered = _rows
+                                        .where((r) => r.opportunity.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.discipline.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.implementationStrategy.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.owner.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.responsibleRole.toLowerCase().contains(query.trim().toLowerCase()))
+                                        .toList();
+                                    return Column(
+                                      children: [
+                                        _OpportunityTable(
+                                          rows: filtered,
+                                          onEdit: (item) {
+                                            _showAddOpportunityDialog(existingItem: item);
                                           },
-                                          onClear: () => setState(
-                                              () => _selectedIds.clear()),
-                                          itemLabel: 'opportunities',
-                                          confirmTitle:
-                                              'Delete selected opportunities?',
+                                          onDelete: _confirmDeleteOpportunity,
+                                          onUndo: _undoOpportunityRow,
+                                          canUndoRow: _canUndoOpportunityRow,
+                                          selectedIds: _selectedIds,
+                                          onToggleSelect: _toggleSelection,
+                                          onAcceptReject: _handleAcceptReject,
                                         ),
-                                      ),
-                                  ],
+                                        if (_hasSelection)
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 12),
+                                            child: BatchDeleteBar(
+                                              selectedCount: _selectedIds.length,
+                                              onDelete: () async {
+                                                await _handleBatchDelete();
+                                                return true;
+                                              },
+                                              onClear: () => setState(() => _selectedIds.clear()),
+                                              itemLabel: 'opportunities',
+                                              confirmTitle: 'Delete selected opportunities?',
+                                            ),
+                                          ),
+                                      ],
+                                    );
+                                  },
+                                  cardBuilder: (ctx, query) {
+                                    final filtered = _rows
+                                        .where((r) => r.opportunity.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.discipline.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.implementationStrategy.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.owner.toLowerCase().contains(query.trim().toLowerCase()) ||
+                                            r.responsibleRole.toLowerCase().contains(query.trim().toLowerCase()))
+                                        .toList();
+                                    return Column(
+                                      children: filtered
+                                          .map((r) => Card(
+                                                child: ListTile(
+                                                  title: Text(r.opportunity),
+                                                  subtitle: Text('${r.discipline} • ${r.owner}'),
+                                                  trailing: Text(r.potentialCostSavings),
+                                                ),
+                                              ))
+                                          .toList(),
+                                    );
+                                  },
                                 ),
                               const SizedBox(height: 80),
                             ],
@@ -1738,14 +1779,37 @@ class _OpportunityTableState extends State<_OpportunityTable> {
 
   @override
   Widget build(BuildContext context) {
-    return FullScreenTableWrapper(
+    return SearchableTableSection(
       title: 'Opportunities',
-      child: _buildTableContent(),
-      tableBuilder: (fsContext) => _buildTableContent(),
+      items: widget.rows,
+      searchFilter: (item, query) {
+        final it = item as OpportunityItem;
+        final q = query.trim().toLowerCase();
+        if (q.isEmpty) return true;
+        return it.opportunity.toLowerCase().contains(q) || it.discipline.toLowerCase().contains(q) || it.stakeholder.toLowerCase().contains(q) || it.owner.toLowerCase().contains(q) || it.status.toLowerCase().contains(q);
+      },
+      tableBuilder: (fsContext, query) {
+        final filtered = widget.rows.where((r) {
+          final q = query.trim().toLowerCase();
+          if (q.isEmpty) return true;
+          return r.opportunity.toLowerCase().contains(q) || r.discipline.toLowerCase().contains(q) || r.stakeholder.toLowerCase().contains(q) || r.owner.toLowerCase().contains(q) || r.status.toLowerCase().contains(q);
+        }).toList();
+
+        return FullScreenTableWrapper(
+          title: 'Opportunities',
+          tableBuilder: (fsCtx) => _buildTableContent(filtered),
+          child: _buildTableContent(filtered),
+        );
+      },
+      cardBuilder: (ctx, query) => Column(children: widget.rows.where((r) {
+        final q = query.trim().toLowerCase();
+        if (q.isEmpty) return true;
+        return r.opportunity.toLowerCase().contains(q) || r.discipline.toLowerCase().contains(q) || r.stakeholder.toLowerCase().contains(q) || r.owner.toLowerCase().contains(q) || r.status.toLowerCase().contains(q);
+      }).map((r) => Card(child: ListTile(title: Text(r.opportunity), subtitle: Text(r.discipline)))).toList()),
     );
   }
 
-  Widget _buildTableContent() {
+  Widget _buildTableContent([List<OpportunityItem>? items]) {
     final border = const BorderSide(color: Color(0xFFE5E7EB));
     final headerStyle = const TextStyle(
         fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF4B5563));
@@ -1762,7 +1826,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                 ),
         );
 
-    final rows = widget.rows;
+    final rows = items ?? widget.rows;
 
     return Container(
       decoration: BoxDecoration(

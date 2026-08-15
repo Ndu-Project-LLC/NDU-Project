@@ -994,14 +994,25 @@ class _FrontEndPlanningRequirementsScreenState
   }
 
   Widget _buildTableView() {
-    return FullScreenTableWrapper(
+    return SearchableTableSection(
       title: 'Requirements',
-      child: _buildTableViewContent(context),
-      tableBuilder: (fsContext) => _buildTableViewContent(fsContext),
+      items: _rows,
+      searchFilter: (item, query) {
+        final r = item as RequirementRow;
+        final q = query.trim().toLowerCase();
+        if (q.isEmpty) return true;
+        return r.title.toLowerCase().contains(q) ||
+            r.description.toLowerCase().contains(q) ||
+            r.discipline.toLowerCase().contains(q) ||
+            r.type.toLowerCase().contains(q);
+      },
+      tableBuilder: (fsContext, query) => _buildTableViewContent(fsContext, query.isEmpty ? null : _rows.where((r) => r.title.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.discipline.toLowerCase().contains(query.trim().toLowerCase()) || r.type.toLowerCase().contains(query.trim().toLowerCase())).toList()),
+      cardBuilder: (fsContext, query) => Column(children: _rows.where((r) => r.title.toLowerCase().contains(query.trim().toLowerCase()) || r.description.toLowerCase().contains(query.trim().toLowerCase()) || r.discipline.toLowerCase().contains(query.trim().toLowerCase()) || r.type.toLowerCase().contains(query.trim().toLowerCase())).map((r) => Card(child: ListTile(title: Text(r.title), subtitle: Text(r.description)))).toList()),
     );
   }
 
-  Widget _buildTableViewContent(BuildContext context) {
+  Widget _buildTableViewContent(BuildContext context, [List<RequirementRow>? rowsOverride]) {
+    final rows = rowsOverride ?? _rows;
     final headerStyle = const TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w700,
@@ -1024,7 +1035,7 @@ class _FrontEndPlanningRequirementsScreenState
             constraints: BoxConstraints(
               minWidth: MediaQuery.of(context).size.width - 100,
             ),
-            child: Column(
+                child: Column(
               children: [
                 Container(
                   decoration: const BoxDecoration(

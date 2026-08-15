@@ -266,7 +266,7 @@ class CharterStakeholdersShort extends StatelessWidget {
  padding:
  const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
  decoration: BoxDecoration(
- color: Color(0xFFFFC812).shade50,
+ color: Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(4)),
  child: Text(i['role']!,
  style: TextStyle(
@@ -318,7 +318,7 @@ class CharterStakeholdersShort extends StatelessWidget {
  label: Text(s,
  style: const TextStyle(
  fontSize: 11, fontWeight: FontWeight.w500)),
- backgroundColor: Color(0xFFB8860B).shade50,
+ backgroundColor: Color(0xFFFFF8E1),
  labelStyle: TextStyle(color: Color(0xFF92400E)),
  padding: EdgeInsets.zero,
  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

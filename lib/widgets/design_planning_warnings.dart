@@ -63,7 +63,7 @@ class DesignPlanningWarningsWidget extends StatelessWidget {
         icon = Icons.warning_amber_rounded;
         break;
       case WarningSeverity.info:
-        bgColor = Color(0xFFFFC812).shade50;
+        bgColor = Color(0xFFFFF8E1);
         iconColor = Color(0xFFB8860B);
         icon = Icons.info_outline;
         break;

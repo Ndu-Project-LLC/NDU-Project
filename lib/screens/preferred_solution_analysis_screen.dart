@@ -6897,7 +6897,7 @@ class _PreferredSolutionDetailsScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Color(0xFFFFC812).shade50,
+                    color: Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: Color(0xFFFDE68A)),
                   ),

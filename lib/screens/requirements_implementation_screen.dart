@@ -879,7 +879,7 @@ class _RequirementsImplementationScreenState
  // ── Form fields ──────────────────────────────
  // Row 1: Document Name (full width — primary field)
  fieldLabel('Document Name', required: true),
- VoiceTextField(
+ VoiceTextFormField(
  controller: nameController,
  focusNode: nameFocus,
  autofocus: true,
@@ -1299,8 +1299,7 @@ class _RequirementsImplementationScreenState
  ),
  ),
  ),
- ),
- ;
+ );
  },
  );
  },

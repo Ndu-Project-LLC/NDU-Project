@@ -1538,153 +1538,106 @@ Consider typical project timelines and ensure end date is after start date.''';
  ),
  ),
  ),
- _milestoneDataCell(
- VoiceTextFormField(
- key: _milestoneNameKey(index),
- controller: _milestoneNameControllers[index],
- onChanged: (value) =>
- _updateMilestoneField(index, 'name', value),
- decoration: InputDecoration(
- hintText: 'Enter milestone name',
- errorText: nameError,
- hintStyle: TextStyle(
- color: Colors.grey[400],
- fontSize: 13,
- ),
- border:
- _milestoneFieldBorder(nameError != null),
- enabledBorder:
- _milestoneFieldBorder(nameError != null),
- focusedBorder:
- _milestoneFieldBorder(nameError != null),
- errorBorder: _milestoneFieldBorder(true),
- focusedErrorBorder: _milestoneFieldBorder(true),
- contentPadding: const EdgeInsets.symmetric(
- horizontal: 12,
- vertical: 10,
- ),
- isDense: true,
- ),
- style: const TextStyle(fontSize: 13),
- ),
- ),
- _milestoneDataCell(
- Column(
- key: _milestoneDateKey(index),
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- InkWell(
- onTap: () => _selectMilestoneDate(index),
- borderRadius: BorderRadius.circular(8),
- child: Container(
- padding: const EdgeInsets.symmetric(
- horizontal: 12,
- vertical: 10,
- ),
- decoration: BoxDecoration(
- border: Border.all(
- color: dateError != null
- ? const Color(0xFFEF4444)
- : const Color(0xFFE5E7EB),
- ),
- borderRadius: BorderRadius.circular(8),
- ),
- child: Row(
- children: [
- Icon(
- Icons.calendar_today_outlined,
- size: 14,
- color: Colors.grey[400],
- ),
- const SizedBox(width: 8),
- Expanded(
- child: WrappedText(
- milestone.dueDate.isNotEmpty
- ? milestone.dueDate
- : 'Select date',
- style: TextStyle(
- fontSize: 13,
- color:
- milestone.dueDate.isNotEmpty
- ? const Color(0xFF111827)
- : Colors.grey[400],
- ),
- ),
- ),
- ],
- ),
- ),
- ),
- if (dateError != null) ...[
- const SizedBox(height: 4),
- WrappedText(
- dateError,
- style: const TextStyle(
- color: Color(0xFFDC2626),
- fontSize: 12,
- fontWeight: FontWeight.w600,
- ),
- ),
- ],
- ],
- ),
- ),
- _milestoneDataCell(
- VoiceTextFormField(
- controller:
- _milestoneDisciplineControllers[index],
- onChanged: (value) => _updateMilestoneField(
- index, 'discipline', value),
- decoration: InputDecoration(
- hintText: 'Discipline',
- hintStyle: TextStyle(
- color: Colors.grey[400],
- fontSize: 13,
- ),
- border: _milestoneFieldBorder(false),
- enabledBorder: _milestoneFieldBorder(false),
- contentPadding: const EdgeInsets.symmetric(
- horizontal: 12,
- vertical: 10,
- ),
- isDense: true,
- ),
- style: const TextStyle(fontSize: 13),
- ),
- ),
- _milestoneDataCell(
- Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- VoiceTextFormField(
- controller:
- _milestoneCommentControllers[index],
- onChanged: (value) => _updateMilestoneField(
- index,
- 'comments',
- value,
- ),
- decoration: InputDecoration(
- hintText: 'Add notes (optional)',
- hintStyle: TextStyle(
- color: Colors.grey[400],
- fontSize: 13,
- ),
- border: _milestoneFieldBorder(false),
- enabledBorder: _milestoneFieldBorder(false),
- contentPadding: const EdgeInsets.symmetric(
- horizontal: 12,
- vertical: 10,
- ),
- isDense: true,
- ),
- style: const TextStyle(fontSize: 13),
- minLines: 1,
- maxLines: null,
- ),
- ],
- ),
- ),
+		_milestoneDataCell(
+			Container(
+				padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+				child: WrappedText(
+					milestone.name.isNotEmpty ? milestone.name : '—',
+					style: TextStyle(
+						fontSize: 13,
+						color: milestone.name.isNotEmpty
+								? const Color(0xFF111827)
+								: Colors.grey[400],
+					),
+				),
+			),
+		),
+		_milestoneDataCell(
+			Column(
+				key: _milestoneDateKey(index),
+				crossAxisAlignment: CrossAxisAlignment.start,
+				children: [
+					Container(
+						padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+						decoration: BoxDecoration(
+							border: Border.all(
+								color: dateError != null
+										? const Color(0xFFEF4444)
+										: const Color(0xFFE5E7EB),
+							),
+							borderRadius: BorderRadius.circular(8),
+						),
+						child: Row(
+							children: [
+								Icon(
+									Icons.calendar_today_outlined,
+									size: 14,
+									color: Colors.grey[400],
+								),
+								const SizedBox(width: 8),
+								Expanded(
+									child: WrappedText(
+										milestone.dueDate.isNotEmpty
+												? milestone.dueDate
+												: '—',
+										style: TextStyle(
+											fontSize: 13,
+											color: milestone.dueDate.isNotEmpty
+													? const Color(0xFF111827)
+													: Colors.grey[400],
+										),
+									),
+								),
+							],
+						),
+					),
+					if (dateError != null) ...[
+						const SizedBox(height: 4),
+						WrappedText(
+							dateError,
+							style: const TextStyle(
+								color: Color(0xFFDC2626),
+								fontSize: 12,
+								fontWeight: FontWeight.w600,
+							),
+						),
+					],
+				],
+			),
+		),
+		_milestoneDataCell(
+			Container(
+				padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+				child: WrappedText(
+					milestone.discipline.isNotEmpty ? milestone.discipline : '—',
+					style: TextStyle(
+						fontSize: 13,
+						color: milestone.discipline.isNotEmpty
+								? const Color(0xFF111827)
+								: Colors.grey[400],
+					),
+				),
+			),
+		),
+		_milestoneDataCell(
+			Column(
+				crossAxisAlignment: CrossAxisAlignment.start,
+				children: [
+					Container(
+						padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+						child: WrappedText(
+							milestone.comments.isNotEmpty ? milestone.comments : '—',
+							style: TextStyle(
+								fontSize: 13,
+								color: milestone.comments.isNotEmpty
+										? const Color(0xFF111827)
+										: Colors.grey[400],
+							),
+						),
+					),
+				],
+			),
+		),
  // ── SME Verification cell (Task 9.9) ─────────────────────────────
  // Two-step verification: SME Review + SME Approval. Both must be
  // checked for the milestone to be considered fully verified. A status

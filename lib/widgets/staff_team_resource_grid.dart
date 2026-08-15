@@ -28,11 +28,30 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
   List<String> _aiSuggestions = [];
   bool _loadingSuggestions = false;
   String? _suggestionError;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _showCardView = false;
 
   @override
   void initState() {
     super.initState();
     _loadAiSuggestions();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<StaffingRow> get _filteredRows {
+    if (_searchQuery.isEmpty) return _rows;
+    final q = _searchQuery.toLowerCase();
+    return _rows.where((row) =>
+        row.role.toLowerCase().contains(q) ||
+        row.startDate.toLowerCase().contains(q) ||
+        row.status.toLowerCase().contains(q) ||
+        row.notes.toLowerCase().contains(q)).toList();
   }
 
   Future<void> _loadAiSuggestions() async {
@@ -859,6 +878,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
   }
 
   Widget _buildResourceGrid() {
+    final displayRows = _filteredRows;
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFFFFDF5),
@@ -877,86 +897,162 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Color(0xFFFFF8E1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.table_chart_outlined,
-                      size: 20, color: Color(0xFF4338CA)),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFFFF8E1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.table_chart_outlined,
+                          size: 20, color: Color(0xFF4338CA)),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Staffing Needs',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF111827),
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Define roles, timelines, and costs for each resource',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    FilledButton.icon(
+                      onPressed: _addNewRow,
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Add Role'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFD97706),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: _showImportDialog,
+                      icon: const Icon(Icons.upload_file_outlined, size: 16),
+                      label: const Text('Import'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFD97706),
+                        side: const BorderSide(color: const Color(0xFFFDE68A)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: _downloadTemplate,
+                      icon: const Icon(Icons.download_outlined, size: 16),
+                      label: const Text('Template'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF92400E),
+                        side: const BorderSide(color: const Color(0xFFFDE68A)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 14),
+                // ── Search + View Toggle ──
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
                     children: [
-                      Text(
-                        'Staffing Needs',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF111827),
+                      Expanded(
+                        child: Container(
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(left: 10),
+                                child: Icon(Icons.search, size: 16, color: Color(0xFF9CA3AF)),
+                              ),
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  onChanged: (v) => setState(() => _searchQuery = v),
+                                  style: const TextStyle(fontSize: 13),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Search roles, status...',
+                                    hintStyle: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                                  ),
+                                ),
+                              ),
+                              if (_searchQuery.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.close, size: 14),
+                                    onPressed: () { _searchController.clear(); setState(() => _searchQuery = ''); },
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Define roles, timelines, and costs for each resource',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF6B7280),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(6)),
+                        child: Text('${displayRows.length} items', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2563EB))),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE5E7EB))),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _ViewBtn(icon: Icons.table_chart_outlined, isActive: !_showCardView, onTap: () => setState(() => _showCardView = false)),
+                            Container(width: 1, height: 26, color: const Color(0xFFE5E7EB)),
+                            _ViewBtn(icon: Icons.view_agenda_outlined, isActive: _showCardView, onTap: () => setState(() => _showCardView = true)),
+                          ],
                         ),
                       ),
                     ],
-                  ),
-                ),
-                FilledButton.icon(
-                  onPressed: _addNewRow,
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add Role'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFD97706),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                    textStyle: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Table-level Import button (matches LaunchDataTable pattern)
-                OutlinedButton.icon(
-                  onPressed: _showImportDialog,
-                  icon: const Icon(Icons.upload_file_outlined, size: 16),
-                  label: const Text('Import'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFD97706),
-                    side: const BorderSide(color: const Color(0xFFFDE68A)),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                    textStyle: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Template download button
-                OutlinedButton.icon(
-                  onPressed: _downloadTemplate,
-                  icon: const Icon(Icons.download_outlined, size: 16),
-                  label: const Text('Template'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF92400E),
-                    side: const BorderSide(color: const Color(0xFFFDE68A)),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                    textStyle: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -965,22 +1061,30 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
           const Divider(height: 1, thickness: 1, color: Color(0xFFE5E7EB)),
           if (_rows.isEmpty)
             _buildEmptyState()
+          else if (_showCardView)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: displayRows.map((row) => _buildRoleCard(row, _rows.indexOf(row))).toList(),
+              ),
+            )
           else ...[
             _buildTableHeader(),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _rows.length,
+              itemCount: displayRows.length,
               itemBuilder: (context, index) {
-                final row = _rows[index];
-                final isLast = index == _rows.length - 1;
+                final row = displayRows[index];
+                final isLast = index == displayRows.length - 1;
+                final originalIndex = _rows.indexOf(row);
                 return RepaintBoundary(
-                  key: ValueKey('staffing_row_$index'),
+                  key: ValueKey('staffing_row_$originalIndex'),
                   child: _PremiumStaffingRow(
                     row: row,
-                    index: index,
-                    onChanged: (updated) => _updateRow(index, updated),
-                    onDelete: () => _removeRow(index),
+                    index: originalIndex,
+                    onChanged: (updated) => _updateRow(originalIndex, updated),
+                    onDelete: () => _removeRow(originalIndex),
                     showDivider: !isLast,
                   ),
                 );
@@ -991,6 +1095,56 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
         ],
       ),
     );
+  }
+
+  Widget _buildRoleCard(StaffingRow row, int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(row.role, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14))),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(10)),
+                child: Text(row.status, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFD97706))),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(children: [
+            _cardField('Qty', row.quantity.toString()),
+            const SizedBox(width: 16),
+            _cardField('Type', row.isInternal ? 'Internal' : 'External'),
+            const SizedBox(width: 16),
+            _cardField('Rate', '\$${row.monthlyCost}/mo'),
+          ]),
+          const SizedBox(height: 4),
+          Row(children: [
+            _cardField('Start', row.startDate),
+            const SizedBox(width: 16),
+            _cardField('Duration', '${row.durationMonths} mo'),
+            const SizedBox(width: 16),
+            _cardField('Total', '\$${row.subtotal.toStringAsFixed(0)}'),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _cardField(String label, String value) {
+    return Row(children: [
+      Text('$label: ', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+      Text(value, style: const TextStyle(fontSize: 11, color: Color(0xFF111827))),
+    ]);
   }
 
   Widget _buildEmptyState() {
@@ -1878,10 +2032,31 @@ class _ModalField extends StatelessWidget {
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             filled: true,
-            fillColor: const Color(0xFFF9FAFB),
-          ),
+            fillColor: const Color(0xFFF9FAFB),              ),
         ),
       ],
+    );
+  }
+}
+
+class _ViewBtn extends StatelessWidget {
+  const _ViewBtn({required this.icon, required this.isActive, required this.onTap});
+  final IconData icon;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFF111827) : Colors.transparent,
+          borderRadius: BorderRadius.circular(7),
+        ),
+        child: Icon(icon, size: 16, color: isActive ? Colors.white : const Color(0xFF6B7280)),
+      ),
     );
   }
 }

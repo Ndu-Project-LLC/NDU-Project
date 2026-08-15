@@ -13,6 +13,7 @@ import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class LongLeadEquipmentOrderingScreen extends StatefulWidget {
@@ -214,67 +215,241 @@ class _LongLeadEquipmentOrderingScreenState
  ],
  ),
  );
- }
+ }  Widget _buildCategoriesCard() {
+    return _SectionCard(
+      title: 'Equipment categories',
+      subtitle: 'Types of items requiring early procurement.',
+      actionLabel: 'Create item',
+      onAction: _addCategory,
+      child: SearchableTableSection(
+        title: '',
+        searchHint: 'Search categories...',
+        items: _categories,
+        searchFilter: (item, query) {
+          if (item is! _EquipmentCategory) return false;
+          final q = query.toLowerCase();
+          return item.title.toLowerCase().contains(q) ||
+              item.description.toLowerCase().contains(q) ||
+              item.owner.toLowerCase().contains(q);
+        },
+        tableBuilder: (context, query) => _buildCategoriesTable(),
+        cardBuilder: (context, query) => _buildCategoryCards(query),
+      ),
+    );
+  }
 
- Widget _buildCategoriesCard() {
- return _SectionCard(
- title: 'Equipment categories',
- subtitle: 'Types of items requiring early procurement.',
- actionLabel: 'Create item',
- onAction: _addCategory,
- child: _buildCategoriesTable(),
- );
- }
+  Widget _buildCategoryCards(String query) {
+    final items = query.isEmpty
+        ? _categories
+        : _categories.where((c) {
+            final q = query.toLowerCase();
+            return c.title.toLowerCase().contains(q) ||
+                c.description.toLowerCase().contains(q) ||
+                c.owner.toLowerCase().contains(q);
+          }).toList();
+    if (items.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: Text('No categories match your search.')),
+      );
+    }
+    return Column(
+      children: items.map((cat) => Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Expanded(child: Text(cat.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
+              _buildMiniBadge(cat.criticality),
+            ]),
+            if (cat.description.isNotEmpty) ...[const SizedBox(height: 6), Text(cat.description, style: TextStyle(fontSize: 12, color: Colors.grey[600]))],
+          ],
+        ),
+      )).toList(),
+    );
+  }
 
- Widget _buildEquipmentTrackingCard() {
- return _SectionCard(
- title: 'Equipment tracking',
- subtitle: 'Current status of long-lead items.',
- actionLabel: 'Create item',
- onAction: _addEquipmentItem,
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- _buildEquipmentTable(),
- const SizedBox(height: 12),
- Text(
- 'Track all equipment with lead times exceeding 4 weeks to ensure timely delivery.',
- style: TextStyle(fontSize: 12, color: Colors.grey[600]),
- ),
- ],
- ),
- );
- }
+  Widget _buildEquipmentTrackingCard() {
+    return _SectionCard(
+      title: 'Equipment tracking',
+      subtitle: 'Current status of long-lead items.',
+      actionLabel: 'Create item',
+      onAction: _addEquipmentItem,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SearchableTableSection(
+            title: '',
+            searchHint: 'Search equipment...',
+            items: _equipmentItems,
+            searchFilter: (item, query) {
+              if (item is! _EquipmentItem) return false;
+              final q = query.toLowerCase();
+              return item.name.toLowerCase().contains(q) ||
+                  item.category.toLowerCase().contains(q) ||
+                  item.vendor.toLowerCase().contains(q) ||
+                  item.owner.toLowerCase().contains(q);
+            },
+            tableBuilder: (context, query) => _buildEquipmentTable(),
+            cardBuilder: (context, query) => _buildEquipmentCards(query),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Track all equipment with lead times exceeding 4 weeks to ensure timely delivery.',
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
+        ],
+      ),
+    );
+  }
 
- Widget _buildProcurementActionsCard() {
- return _SectionCard(
- title: 'Procurement actions',
- subtitle: 'Steps to manage long-lead procurement.',
- actionLabel: 'Create item',
- onAction: _addAction,
- child: Column(
- children: [
- _buildActionsTable(),
- const SizedBox(height: 16),
- SizedBox(
- width: double.infinity,
- child: ElevatedButton.icon(
- onPressed: _showExportFeedback,
- icon: const Icon(Icons.download, size: 18),
- label: const Text('Export equipment schedule'),
- style: ElevatedButton.styleFrom(
- backgroundColor: LightModeColors.accent,
- foregroundColor: Colors.black87,
- padding: const EdgeInsets.symmetric(vertical: 12),
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(20)),
- ),
- ),
- ),
- ],
- ),
- );
- }
+  Widget _buildEquipmentCards(String query) {
+    final items = query.isEmpty
+        ? _equipmentItems
+        : _equipmentItems.where((e) {
+            final q = query.toLowerCase();
+            return e.name.toLowerCase().contains(q) ||
+                e.category.toLowerCase().contains(q) ||
+                e.vendor.toLowerCase().contains(q);
+          }).toList();
+    if (items.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: Text('No equipment matches your search.')),
+      );
+    }
+    return Column(
+      children: items.map((eq) => Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Expanded(child: Text(eq.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
+              _buildMiniBadge(eq.status),
+            ]),
+            const SizedBox(height: 6),
+            Text('${eq.category} • ${eq.vendor}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+            Text('Lead time: ${eq.leadTime}', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+          ],
+        ),
+      )).toList(),
+    );
+  }
+
+  Widget _buildProcurementActionsCard() {
+    return _SectionCard(
+      title: 'Procurement actions',
+      subtitle: 'Steps to manage long-lead procurement.',
+      actionLabel: 'Create item',
+      onAction: _addAction,
+      child: Column(
+        children: [
+          SearchableTableSection(
+            title: '',
+            searchHint: 'Search actions...',
+            items: _actions,
+            searchFilter: (item, query) {
+              if (item is! _ProcurementAction) return false;
+              final q = query.toLowerCase();
+              return item.title.toLowerCase().contains(q) ||
+                  item.owner.toLowerCase().contains(q) ||
+                  item.notes.toLowerCase().contains(q);
+            },
+            tableBuilder: (context, query) => _buildActionsTable(),
+            cardBuilder: (context, query) => _buildActionCards(query),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _showExportFeedback,
+              icon: const Icon(Icons.download, size: 18),
+              label: const Text('Export equipment schedule'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: LightModeColors.accent,
+                foregroundColor: Colors.black87,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionCards(String query) {
+    final items = query.isEmpty
+        ? _actions
+        : _actions.where((a) {
+            final q = query.toLowerCase();
+            return a.title.toLowerCase().contains(q) ||
+                a.owner.toLowerCase().contains(q);
+          }).toList();
+    if (items.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: Text('No actions match your search.')),
+      );
+    }
+    return Column(
+      children: items.map((action) => Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Expanded(child: Text(action.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
+              _buildMiniBadge(action.status),
+            ]),
+            if (action.owner.isNotEmpty) ...[const SizedBox(height: 6), Text('Owner: ${action.owner}', style: TextStyle(fontSize: 12, color: Colors.grey[600]))],
+            if (action.dueDate.isNotEmpty) Text('Due: ${action.dueDate}', style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+          ],
+        ),
+      )).toList(),
+    );
+  }
+
+  Widget _buildMiniBadge(String label) {
+    Color bgColor;
+    Color fgColor;
+    switch (label.toLowerCase()) {
+      case 'high': case 'active': case 'ordered': case 'in production': case 'delivered':
+        bgColor = const Color(0xFFECFDF5); fgColor = const Color(0xFF059669); break;
+      case 'medium': case 'planned': case 'in transit':
+        bgColor = const Color(0xFFFEF3C7); fgColor = const Color(0xFFD97706); break;
+      case 'low': case 'on hold': case 'blocked':
+        bgColor = const Color(0xFFFEF2F2); fgColor = const Color(0xFFEF4444); break;
+      default:
+        bgColor = const Color(0xFFF3F4F6); fgColor = const Color(0xFF6B7280);
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(10)),
+      child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: fgColor)),
+    );
+  }
 
  Widget _buildBottomNavigation(bool isMobile) {
  return Column(

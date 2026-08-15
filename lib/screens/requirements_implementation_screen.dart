@@ -1602,7 +1602,7 @@ class _RequirementsImplementationScreenState
  ),
  ],
  ),
- )
+ ),
  for (var i = 0; i < _documents.length; i++) ...[
  const SizedBox(height: 10),
  _buildDocumentRow(i, _documents[i], ownerOptions),

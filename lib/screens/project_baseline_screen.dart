@@ -711,16 +711,7 @@ onBack: () =>
  onForward: () => PlanningPhaseNavigation.goToNext(
  context, 'project_baseline'), onExportPdf: _exportPdf),
  const SizedBox(height: 16),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'project_baseline',
- contextText: _carriedContext!,
- ),
- ),
+
  _buildHeader(context),
  const SizedBox(height: 24),
  _buildComparisonToggle(),

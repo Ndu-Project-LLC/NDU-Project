@@ -91,16 +91,7 @@ class _StartUpPlanningScreenState extends State<StartUpPlanningScreen> {
  'startup_planning',
  ), onExportPdf: _exportPdf),
  const SizedBox(height: 12),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: CarriedContextBanner(
- checkpoint: 'startup_planning',
- contextText: _carriedContext!,
- ),
- ),
+
  const Text(
  'Plan readiness, go-live criteria, and transition activities.',
  style: TextStyle(

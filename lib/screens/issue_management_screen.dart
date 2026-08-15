@@ -258,16 +258,7 @@ class _IssueManagementScreenState extends State<IssueManagementScreen> {
  children: [
  PlanningPhaseHeader(title: 'Issue Management', onExportPdf: _exportPdf),
  const SizedBox(height: 24),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'issue_management',
- contextText: _carriedContext!,
- ),
- ),
+
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Issue Management',

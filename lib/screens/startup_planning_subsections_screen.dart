@@ -507,16 +507,7 @@ class _StartUpPlanningDetailScreenState
  widget.config.checkpoint,
  ), onExportPdf: _exportPdf),
  const SizedBox(height: 12),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: CarriedContextBanner(
- checkpoint: widget.config.checkpoint,
- contextText: _carriedContext!,
- ),
- ),
+
  Text(
  widget.config.subtitle,
  style: const TextStyle(

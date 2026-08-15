@@ -507,17 +507,7 @@ class _SecurityManagementScreenState extends State<SecurityManagementScreen> {
                             title: 'Security Management',
                             onExportPdf: _exportPdf),
                         const SizedBox(height: 16),
-                        if (_isAutoPopulating)
-                          const AutoPopulatingIndicator(),
-                        if (_carriedContext != null &&
-                            _carriedContext!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: CarriedContextBanner(
-                              checkpoint: 'security_management',
-                              contextText: _carriedContext!,
-                            ),
-                          ),
+                       
                         const _PageHeader(),
                         if (_loadingData) ...[
                           const SizedBox(height: 12),

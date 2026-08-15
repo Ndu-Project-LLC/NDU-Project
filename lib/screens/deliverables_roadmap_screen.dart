@@ -435,16 +435,7 @@ onBack: () => PlanningPhaseNavigation.goToPrevious(
  onForward: () =>
  PlanningPhaseNavigation.goToNext(context, 'deliverables_roadmap'), onExportPdf: _exportPdf),
  const SizedBox(height: 24),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'deliverables_roadmap',
- contextText: _carriedContext!,
- ),
- ),
+
  _buildStatsRow(),
  const SizedBox(height: 16),
  _buildFilterBar(),

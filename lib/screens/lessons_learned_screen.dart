@@ -328,16 +328,7 @@ class _LessonsLearnedScreenState extends State<LessonsLearnedScreen> {
  children: [
  PlanningPhaseHeader(title: 'Lessons Learned', onExportPdf: _exportPdf),
  const SizedBox(height: 24),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'lessons_learned',
- contextText: _carriedContext!,
- ),
- ),
+
  const PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Lessons Learned',

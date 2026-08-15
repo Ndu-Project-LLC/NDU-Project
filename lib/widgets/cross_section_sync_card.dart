@@ -73,7 +73,8 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
   // WBS and Schedule module screens. Defaults to expanded so first-time
   // users still see the sync status; once they collapse it, the choice
   // persists for the lifetime of the widget instance.
-  bool _collapsed = false;
+  // Default to collapsed to keep the page content visible on load.
+  bool _collapsed = true;
 
   Future<void> _runSync() async {
     setState(() => _syncing = true);

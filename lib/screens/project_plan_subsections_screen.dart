@@ -348,16 +348,7 @@ class _Level1ScheduleScreenState
  context, 'project_plan_level1_schedule'),
  ),
  const SizedBox(height: 12),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 12),
- child: CarriedContextBanner(
- checkpoint: 'project_plan_level1_schedule',
- contextText: _carriedContext!,
- ),
- ),
+
  Text(
  'Map major phases, milestone timing, and governance checkpoints.',
  style: const TextStyle(
@@ -2089,16 +2080,7 @@ class _DetailedScheduleState extends State<ProjectPlanDetailedScheduleScreen> {
  children: [
  _buildHeader(isMobile),
  const SizedBox(height: 20),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'project_plan_detailed_schedule',
- contextText: _carriedContext!,
- ),
- ),
+
  PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Detailed Project Schedule',
@@ -4046,16 +4028,7 @@ class _CondensedSummaryState extends State<ProjectPlanCondensedSummaryScreen> {
  children: [
  _buildHeader(isMobile),
  const SizedBox(height: 20),
- if (_isAutoPopulating)
- const AutoPopulatingIndicator(),
- if (_carriedContext != null && _carriedContext!.isNotEmpty)
- Padding(
- padding: const EdgeInsets.only(bottom: 16),
- child: CarriedContextBanner(
- checkpoint: 'project_plan_condensed_summary',
- contextText: _carriedContext!,
- ),
- ),
+
  PlanningAiNotesCard(
  title: 'Notes',
  sectionLabel: 'Condensed Project Summary',

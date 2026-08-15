@@ -305,17 +305,7 @@ class _ProjectPlanScreenState extends State<ProjectPlanScreen>
                                 context, 'project_plan'),
                             onExportPdf: _exportPdf),
                         const SizedBox(height: 16),
-                        if (_isAutoPopulating)
-                          const AutoPopulatingIndicator(),
-                        if (_carriedContext != null &&
-                            _carriedContext!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: CarriedContextBanner(
-                              checkpoint: 'project_plan',
-                              contextText: _carriedContext!,
-                            ),
-                          ),
+                       
                         _buildHeader(isMobile),
                         const SizedBox(height: 24),
                         const PlanningAiNotesCard(

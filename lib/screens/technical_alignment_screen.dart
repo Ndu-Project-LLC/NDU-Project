@@ -4488,13 +4488,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  required List<String> ownerOptions,
  }) {
  final isEditing = _editingConstraintRows.contains(index);
- return Container(
- padding: const EdgeInsets.all(12),
- decoration: BoxDecoration(
- color: isStriped ? const Color(0xFFF9FAFC) : Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE4E7EC)),
- ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(
+          bottom: BorderSide(color: Color(0xFFF3F4F6)),
+        ),
+      ),
  child: Row(
  children: [
  SizedBox(
@@ -4579,13 +4580,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _buildMappingRow(RequirementMappingRow row,
  {required int index, required bool isStriped}) {
  final isEditing = _editingMappingRows.contains(index);
- return Container(
- padding: const EdgeInsets.all(12),
- decoration: BoxDecoration(
- color: isStriped ? const Color(0xFFF9FAFC) : Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE4E7EC)),
- ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFF3F4F6)),
+        ),
+      ),
  child: Row(
  children: [
  SizedBox(
@@ -4661,13 +4663,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  required List<String> ownerOptions,
  }) {
  final isEditing = _editingDependencyRows.contains(index);
- return Container(
- padding: const EdgeInsets.all(12),
- decoration: BoxDecoration(
- color: isStriped ? const Color(0xFFF9FAFC) : Colors.white,
- borderRadius: BorderRadius.circular(12),
- border: Border.all(color: const Color(0xFFE4E7EC)),
- ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFF3F4F6)),
+        ),
+      ),
  child: Row(
  children: [
  SizedBox(
@@ -4757,45 +4760,58 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  bool enabled = true,
  ValueChanged<String>? onChanged,
  }) {
- return VoiceTextFormField(
- initialValue: initialValue,
- enabled: enabled,
- minLines: minLines,
- maxLines: maxLines,
- textAlignVertical: TextAlignVertical.center,
- textAlign: TextAlign.center,
- keyboardType: TextInputType.multiline,
- style: TextStyle(
- fontSize: 14,
- color: enabled ? const Color(0xFF1F2937) : const Color(0xFF475569),
- ),
- onChanged: onChanged,
- decoration: InputDecoration(
- hintText: hintText,
- hintStyle: TextStyle(fontSize: 13, color: Colors.grey[500]),
- isDense: true,
- filled: true,
- fillColor: enabled ? Colors.white : const Color(0xFFF8FAFC),
- contentPadding:
- const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
- border: OutlineInputBorder(
- borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
- ),
- enabledBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
- ),
- disabledBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
- ),
- focusedBorder: OutlineInputBorder(
- borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFFFFC812), width: 2),
- ),
- ),
- );
+    if (!enabled) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFE4E7EC)),
+        ),
+        child: Text(
+          initialValue.trim().isNotEmpty ? initialValue : '—',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 14, color: Color(0xFF475569)),
+        ),
+      );
+    }
+
+    return VoiceTextFormField(
+      initialValue: initialValue,
+      enabled: enabled,
+      minLines: minLines,
+      maxLines: maxLines,
+      textAlignVertical: TextAlignVertical.center,
+      textAlign: TextAlign.center,
+      keyboardType: TextInputType.multiline,
+      style: const TextStyle(fontSize: 14, color: Color(0xFF1F2937)),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: TextStyle(fontSize: 13, color: Colors.grey[500]),
+        isDense: true,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFFFC812), width: 2),
+        ),
+      ),
+    );
  }
 
  Widget _buildStatusDropdown({

@@ -179,25 +179,6 @@ class _ChangeManagementModuleScreenState
           breadcrumbTitle: 'Change Management',
           body: Column(
             children: [
-              // ── Carried context banner (real prior-phase data only) ──
-              if (_isAutoPopulating ||
-                  (_carriedContext != null && _carriedContext!.isNotEmpty))
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_isAutoPopulating)
-                        const AutoPopulatingIndicator(),
-                      if (_carriedContext != null &&
-                          _carriedContext!.isNotEmpty)
-                        CarriedContextBanner(
-                          checkpoint: 'change_management',
-                          contextText: _carriedContext!,
-                        ),
-                    ],
-                  ),
-                ),
               // ── World-class Section Navigator ─────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),

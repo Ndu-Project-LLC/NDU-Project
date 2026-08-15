@@ -6393,6 +6393,9 @@ class _ScheduleControlTab extends StatefulWidget {
 
 class _ScheduleControlTabState extends State<_ScheduleControlTab> {
   String _filter = 'all'; // all | critical | delayed
+  String _searchQuery = '';
+  bool _showCardView = false;
+  final TextEditingController _searchController = TextEditingController();
   final Map<String, TextEditingController> _reasonControllers = {};
 
   Timer? _delayReasonDebounce;
@@ -6400,6 +6403,7 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
   @override
   void dispose() {
     _delayReasonDebounce?.cancel();
+    _searchController.dispose();
     for (final c in _reasonControllers.values) {
       c.dispose();
     }
@@ -6425,6 +6429,18 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
         ? 1.0
         : wps.fold<double>(0.0, (s, w) => s + w.spi) / wps.length;
     final onTrackCount = wps.where((w) => _varianceFor(w.id).varianceDays <= 0).length;
+
+    // Apply search filter
+    final searchFiltered = _searchQuery.isEmpty
+        ? filtered
+        : filtered.where((wp) {
+            final q = _searchQuery.toLowerCase();
+            final sv = _varianceFor(wp.id);
+            return wp.name.toLowerCase().contains(q) ||
+                wp.id.toLowerCase().contains(q) ||
+                sv.delayReason.toLowerCase().contains(q) ||
+                sv.compressionStrategy.name.toLowerCase().contains(q);
+          }).toList();
 
     return PcTabShell(
       eyebrow: 'Schedule Control',
@@ -6482,15 +6498,19 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
           accent: PcPalette.sky,
           trailing: Wrap(
             spacing: 6,
+            runSpacing: 6,
             children: [
               _filterChip('All', 'all', wps.length),
               _filterChip('Critical Path', 'critical',
                   widget.state.criticalPathCount),
               _filterChip('Delayed', 'delayed',
                   widget.state.delayedWorkPackagesCount),
+              const SizedBox(width: 8),
+              _buildScheduleSearchBar(),
+              _buildScheduleViewToggle(),
             ],
           ),
-          child: filtered.isEmpty
+          child: searchFiltered.isEmpty
               ? const PcEmptyState(
                   icon: Icons.filter_alt_off_outlined,
                   title: 'No matching work packages',
@@ -6498,15 +6518,82 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
                       'No work packages match the current filter. Try changing the filter above.',
                   accent: PcPalette.sky,
                 )
-              : MediaQuery.sizeOf(context).width > 900
-                  ? _wideTable(filtered)
-                  : Column(
-                      children: filtered
+              : _showCardView
+                  ? Column(
+                      children: searchFiltered
                           .map((wp) => _narrowCard(wp))
                           .toList(growable: false),
-                    ),
+                    )
+                  : MediaQuery.sizeOf(context).width > 900
+                      ? _wideTable(searchFiltered)
+                      : Column(
+                          children: searchFiltered
+                              .map((wp) => _narrowCard(wp))
+                              .toList(growable: false),
+                        ),
         ),
       ],
+    );
+  }
+
+  Widget _buildScheduleSearchBar() {
+    return Container(
+      height: 32,
+      width: 200,
+      decoration: BoxDecoration(
+        color: PcPalette.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: PcPalette.border),
+      ),
+      child: Row(
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(left: 8),
+            child: Icon(Icons.search, size: 14, color: PcPalette.inkMuted),
+          ),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onChanged: (v) => setState(() => _searchQuery = v),
+              style: TextStyle(fontSize: 12, fontFamily: appFontFamily),
+              decoration: InputDecoration(
+                hintText: 'Search work packages...',
+                hintStyle: TextStyle(fontSize: 12, color: PcPalette.inkMuted, fontFamily: appFontFamily),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+              ),
+            ),
+          ),
+          if (_searchQuery.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: IconButton(
+                icon: const Icon(Icons.close, size: 12),
+                onPressed: () { _searchController.clear(); setState(() => _searchQuery = ''); },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduleViewToggle() {
+    return Container(
+      decoration: BoxDecoration(
+        color: PcPalette.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: PcPalette.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _PcViewBtn(icon: Icons.table_chart_rounded, isActive: !_showCardView, onTap: () => setState(() => _showCardView = false)),
+          Container(width: 1, height: 20, color: PcPalette.border),
+          _PcViewBtn(icon: Icons.view_agenda_rounded, isActive: _showCardView, onTap: () => setState(() => _showCardView = true)),
+        ],
+      ),
     );
   }
 
@@ -7115,10 +7202,14 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
   String _severityFilter = 'all'; // all | low | medium | high | critical
   String _typeFilter = 'all'; // all | risks | issues
   String? _ownerFilter;
+  String _searchQuery = '';
+  bool _showCardView = true;
+  final TextEditingController _searchController = TextEditingController();
   final Map<String, TextEditingController> _mitigationControllers = {};
 
   @override
   void dispose() {
+    _searchController.dispose();
     for (final c in _mitigationControllers.values) {
       c.dispose();
     }
@@ -7141,6 +7232,11 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
       if (_severityFilter != 'all' &&
           r.severityLabel.toLowerCase() != _severityFilter) {
         return false;
+      }
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        final haystack = '${r.description} ${r.owner} ${r.mitigation} ${r.severityLabel}'.toLowerCase();
+        if (!haystack.contains(q)) return false;
       }
       return true;
     }).toList()
@@ -7227,11 +7323,71 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
               'Filterable list of all risks and issues with mitigation plans, owner, and status workflow.',
           icon: Icons.list_alt_rounded,
           accent: PcPalette.rose,
-          trailing: owners.isEmpty
-              ? null
-              : Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 6),
+          trailing: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              // Search bar
+              Container(
+                height: 32,
+                width: 180,
+                decoration: BoxDecoration(
+                  color: PcPalette.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: PcPalette.border),
+                ),
+                child: Row(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Icon(Icons.search, size: 14, color: PcPalette.inkMuted),
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        style: TextStyle(fontSize: 12, fontFamily: appFontFamily),
+                        decoration: InputDecoration(
+                          hintText: 'Search risks...',
+                          hintStyle: TextStyle(fontSize: 12, color: PcPalette.inkMuted, fontFamily: appFontFamily),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+                        ),
+                      ),
+                    ),
+                    if (_searchQuery.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: IconButton(
+                          icon: const Icon(Icons.close, size: 12),
+                          onPressed: () { _searchController.clear(); setState(() => _searchQuery = ''); },
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // View toggle
+              Container(
+                decoration: BoxDecoration(
+                  color: PcPalette.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: PcPalette.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _PcViewBtn(icon: Icons.view_agenda_rounded, isActive: _showCardView, onTap: () => setState(() => _showCardView = true)),
+                    Container(width: 1, height: 20, color: PcPalette.border),
+                    _PcViewBtn(icon: Icons.table_chart_rounded, isActive: !_showCardView, onTap: () => setState(() => _showCardView = false)),
+                  ],
+                ),
+              ),
+              // Owner filter
+              if (owners.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: PcPalette.surfaceSubtle,
                     borderRadius: BorderRadius.circular(8),
@@ -7265,6 +7421,8 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
                     ),
                   ),
                 ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -9816,4 +9974,27 @@ class _HealthGaugePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _HealthGaugePainter old) => old.score != score;
+}
+
+// ── View Toggle Button for Project Controls ────────────────────────────────
+class _PcViewBtn extends StatelessWidget {
+  const _PcViewBtn({required this.icon, required this.isActive, required this.onTap});
+  final IconData icon;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? PcPalette.sky : Colors.transparent,
+          borderRadius: BorderRadius.circular(7),
+        ),
+        child: Icon(icon, size: 14, color: isActive ? Colors.white : PcPalette.inkMuted),
+      ),
+    );
+  }
 }

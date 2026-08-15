@@ -63,42 +63,46 @@ extension ArchitectureNodeTypeX on ArchitectureNodeType {
         ArchitectureNodeType.custom => 'Custom',
       };
 
+  // Yellow theme: all node types now use shades of the NDU gold/amber palette.
+  // Variation is preserved through subtle shifts between primary gold, deep gold,
+  // amber, and yellow — keeping the project's identity while still allowing
+  // the eye to distinguish node types at a glance.
   Color get accentColor => switch (this) {
-        ArchitectureNodeType.service => const Color(0xFF2563EB),
-        ArchitectureNodeType.database => const Color(0xFF059669),
-        ArchitectureNodeType.api => const Color(0xFF7C3AED),
-        ArchitectureNodeType.queue => const Color(0xFFD97706),
-        ArchitectureNodeType.cache => const Color(0xFFDC2626),
-        ArchitectureNodeType.auth => const Color(0xFF0891B2),
-        ArchitectureNodeType.mobileApp => const Color(0xFF4F46E5),
-        ArchitectureNodeType.webApp => const Color(0xFF0284C7),
-        ArchitectureNodeType.adminPortal => const Color(0xFF374151),
-        ArchitectureNodeType.thirdParty => const Color(0xFFB45309),
-        ArchitectureNodeType.loadBalancer => const Color(0xFF65A30D),
-        ArchitectureNodeType.cdn => const Color(0xFF6D28D9),
-        ArchitectureNodeType.storage => const Color(0xFF0D9488),
-        ArchitectureNodeType.container => const Color(0xFF2563EB),
-        ArchitectureNodeType.iotDevice => const Color(0xFF9333EA),
-        ArchitectureNodeType.custom => const Color(0xFF6B7280),
+        ArchitectureNodeType.service => const Color(0xFFFFC812), // NDU primary gold
+        ArchitectureNodeType.database => const Color(0xFFB8860B), // NDU deep gold
+        ArchitectureNodeType.api => const Color(0xFF92400E), // amber 800
+        ArchitectureNodeType.queue => const Color(0xFFD97706), // amber 600
+        ArchitectureNodeType.cache => const Color(0xFFA16207), // yellow 700
+        ArchitectureNodeType.auth => const Color(0xFFB45309), // amber 700
+        ArchitectureNodeType.mobileApp => const Color(0xFFCA8A04), // yellow 600
+        ArchitectureNodeType.webApp => const Color(0xFFF59E0B), // amber 500
+        ArchitectureNodeType.adminPortal => const Color(0xFFB8860B), // deep gold
+        ArchitectureNodeType.thirdParty => const Color(0xFFB45309), // amber 700
+        ArchitectureNodeType.loadBalancer => const Color(0xFFCA8A04), // yellow 600
+        ArchitectureNodeType.cdn => const Color(0xFFA16207), // yellow 700
+        ArchitectureNodeType.storage => const Color(0xFFD97706), // amber 600
+        ArchitectureNodeType.container => const Color(0xFFFFC812), // primary gold
+        ArchitectureNodeType.iotDevice => const Color(0xFFB45309), // amber 700
+        ArchitectureNodeType.custom => const Color(0xFFB8860B), // deep gold
       };
 
   Color get bgColor => switch (this) {
-        ArchitectureNodeType.service => const Color(0xFFEFF6FF),
-        ArchitectureNodeType.database => const Color(0xFFECFDF5),
-        ArchitectureNodeType.api => const Color(0xFFF5F3FF),
-        ArchitectureNodeType.queue => const Color(0xFFFFFBEB),
-        ArchitectureNodeType.cache => const Color(0xFFFEF2F2),
-        ArchitectureNodeType.auth => const Color(0xFFECFEFF),
-        ArchitectureNodeType.mobileApp => const Color(0xFFEEF2FF),
-        ArchitectureNodeType.webApp => const Color(0xFFF0F9FF),
-        ArchitectureNodeType.adminPortal => const Color(0xFFF9FAFB),
-        ArchitectureNodeType.thirdParty => const Color(0xFFFFFBEB),
-        ArchitectureNodeType.loadBalancer => const Color(0xFFF7FEE7),
-        ArchitectureNodeType.cdn => const Color(0xFFF5F3FF),
-        ArchitectureNodeType.storage => const Color(0xFFF0FDFA),
-        ArchitectureNodeType.container => const Color(0xFFEFF6FF),
-        ArchitectureNodeType.iotDevice => const Color(0xFFFAF5FF),
-        ArchitectureNodeType.custom => const Color(0xFFF9FAFB),
+        ArchitectureNodeType.service => const Color(0xFFFFF8E1), // amber 50
+        ArchitectureNodeType.database => const Color(0xFFFEF3C7), // amber 100
+        ArchitectureNodeType.api => const Color(0xFFFEF3C7), // amber 100
+        ArchitectureNodeType.queue => const Color(0xFFFFFBEB), // yellow 50
+        ArchitectureNodeType.cache => const Color(0xFFFEF9C3), // yellow 100
+        ArchitectureNodeType.auth => const Color(0xFFFFFBEB), // yellow 50
+        ArchitectureNodeType.mobileApp => const Color(0xFFFEF9C3), // yellow 100
+        ArchitectureNodeType.webApp => const Color(0xFFFEF3C7), // amber 100
+        ArchitectureNodeType.adminPortal => const Color(0xFFFFF8E1), // amber 50
+        ArchitectureNodeType.thirdParty => const Color(0xFFFFFBEB), // yellow 50
+        ArchitectureNodeType.loadBalancer => const Color(0xFFFEF9C3), // yellow 100
+        ArchitectureNodeType.cdn => const Color(0xFFFEF3C7), // amber 100
+        ArchitectureNodeType.storage => const Color(0xFFFFFBEB), // yellow 50
+        ArchitectureNodeType.container => const Color(0xFFFFF8E1), // amber 50
+        ArchitectureNodeType.iotDevice => const Color(0xFFFFFBEB), // yellow 50
+        ArchitectureNodeType.custom => const Color(0xFFFFF8E1), // amber 50
       };
 }
 
@@ -632,11 +636,11 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: Color(0xFFEFF6FF),
+                          color: Color(0xFFFFF8E1), // amber 50 — yellow theme
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Icon(Icons.account_tree_outlined,
-                            size: 14, color: Color(0xFF2563EB)),
+                            size: 14, color: Color(0xFFFFC812)), // NDU primary gold
                       ),
                       const SizedBox(width: 8),
                       const Text('Architecture Canvas',
@@ -647,14 +651,14 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Color(0xFFF0FDF4),
+                          color: Color(0xFFFFF8E1), // amber 50
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text('${widget.nodes.length}',
                             style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF16A34A))),
+                                color: Color(0xFFB8860B))), // NDU deep gold
                       ),
                     ],
                   ),
@@ -699,14 +703,14 @@ class _ArchitectureCanvasState extends State<ArchitectureCanvas> {
                       icon: Icons.trending_flat,
                       label: 'Connect',
                       isActive: _connectMode,
-                      activeColor: const Color(0xFF7C3AED),
+                      activeColor: const Color(0xFFB8860B), // NDU deep gold
                       onTap: _toggleConnectMode,
                     ),
                     _toolbarToggle(
                       icon: Icons.grid_on_outlined,
                       label: 'Grid',
                       isActive: _showGrid,
-                      activeColor: const Color(0xFF059669),
+                      activeColor: const Color(0xFFD97706), // amber 600
                       onTap: _toggleGrid,
                     ),
                     const SizedBox(width: 2),
@@ -984,7 +988,7 @@ class _EdgePainter extends CustomPainter {
       if (a != null) {
         final fromCenter = a.position + Offset(a.width / 2, a.height / 2);
         final paint = Paint()
-          ..color = const Color(0xFF7C3AED).withValues(alpha: 0.6)
+          ..color = const Color(0xFFFFC812).withValues(alpha: 0.7) // NDU gold — in-progress connection line
           ..strokeWidth = 2
           ..style = PaintingStyle.stroke;
         canvas.drawLine(fromCenter, dragEnd!, paint);
@@ -1098,7 +1102,7 @@ class _ProNodeWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: selectedForConnection
-                    ? const Color(0xFF7C3AED)
+                    ? const Color(0xFFB8860B) // NDU deep gold — selected-for-connection
                     : isSelected
                         ? accent
                         : isHovered

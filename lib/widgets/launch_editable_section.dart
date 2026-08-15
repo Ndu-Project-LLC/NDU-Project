@@ -395,7 +395,7 @@ class _ViewBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF111827) : Colors.transparent,
+          color: isActive ? const Color(0xFFFFC812) : Colors.transparent,
           borderRadius: BorderRadius.circular(7),
         ),
         child: Icon(icon, size: 16, color: isActive ? Colors.white : const Color(0xFF6B7280)),

@@ -65,8 +65,8 @@ class ExecutionActionBar extends StatelessWidget {
               : Icon(action.icon, size: compact ? 16 : 18),
           label: Text(action.label),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF0F172A),
-            foregroundColor: Colors.white,
+            backgroundColor: const Color(0xFFFFC812),
+            foregroundColor: const Color(0xFF111827),
             disabledBackgroundColor: const Color(0xFFE2E8F0),
             disabledForegroundColor: const Color(0xFF94A3B8),
             padding: EdgeInsets.symmetric(

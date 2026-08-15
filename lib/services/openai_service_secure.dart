@@ -4312,53 +4312,75 @@ $domainHints
     }).join(',');
     final currencyInstruction = _currencyConversionInstruction(currency);
     return '''
-For each solution below, provide a cost breakdown with up to 20 items (aim for 8-20 when possible).
+You are a senior cost estimator with 15+ years of experience in project cost analysis. Generate realistic, industry-standard cost estimates that reflect actual market rates and real-world project economics.
+
+For each solution below, provide a cost breakdown with 8-15 items.
 Each item must include: item, description, estimated_cost (number in $currency), roi_percent (number), and npv_by_years (keys "3_years", "5_years", "10_years" with numeric values in $currency).
 
-CRITICAL — Realistic Financial Guidelines:
-- Every estimated_cost MUST be a realistic, non-zero value based on real-world market rates.
-- NEVER return estimated_cost as 0 or null. Minimum is \$5,000.
-- Research-based cost ranges (USD) by project type:
-  • Healthcare/Software platform: \$50,000–\$2,000,000+
-  • Physical pharmacy/construction: \$100,000–\$5,000,000+
-  • Digital transformation: \$75,000–\$1,500,000
-  • Staffing/Training: \$20,000–\$500,000
-  • Regulatory/Compliance: \$10,000–\$200,000
-  • Monitoring/Ongoing: \$15,000–\$300,000/year (NEVER \$0)
+CRITICAL — REALISTIC COST ESTIMATION RULES:
 
-CRITICAL — ROI and NPV Consistency Rules:
-- roi_percent is the RETURN ON INVESTMENT percentage for that line item.
-  Realistic ranges: 5%–45% for most projects. NEVER exceed 100% per item.
-  Higher-risk digital projects may go up to 60%. Physical projects typically 10%–25%.
-- npv_by_years MUST be the NET PRESENT VALUE of future cash flows from that item.
-  NPV MUST be positive if ROI is positive.
-  NPV MUST increase with time horizon: 10_years > 5_years > 3_years.
-  NPV at 5_years should typically be 1.2x–3x the estimated_cost for profitable items.
-  Example: if estimated_cost is \$50,000 and roi_percent is 20%, then:
-    npv_3_years ≈ \$15,000–\$25,000
-    npv_5_years ≈ \$30,000–\$50,000
-    npv_10_years ≈ \$60,000–\$100,000
-- For physical/infrastructure projects, ROI should be lower (10%–25%) with
-  proportionally lower NPV values.
-- For digital/software projects, ROI can be higher (20%–60%) with
-  proportionally higher NPV values.
-- Total project ROI should be a weighted average of item ROIs, NOT a sum.
-- Vary costs, ROIs, and NPVs across items — do not use identical values.
+1. COST ACCURACY (Most Important):
+   - Every estimated_cost MUST reflect real-world market rates for the specific project type and region.
+   - NEVER return estimated_cost as 0, null, or placeholder values.
+   - Minimum realistic cost: \$5,000 for small items; most items should be \$15,000–\$500,000.
+   - Total project cost should typically range from \$250,000 to \$5,000,000+ depending on scope.
 
-Rules:
+2. INDUSTRY-STANDARD COST BENCHMARKS:
+   a) Road/Infrastructure Projects (like this one):
+      - Site survey & feasibility: \$25,000–\$150,000
+      - Permits & regulatory approvals: \$15,000–\$75,000
+      - Engineering & technical drawings: \$50,000–\$200,000
+      - Materials & equipment: \$150,000–\$1,500,000
+      - Civil works & installation: \$200,000–\$3,000,000
+      - Project management & supervision: \$40,000–\$250,000
+      - Testing & commissioning: \$20,000–\$100,000
+      - Training & handover: \$10,000–\$50,000
+   b) Building/Construction:
+      - Design & architecture: \$75,000–\$400,000
+      - Foundation & structural: \$100,000–\$800,000
+      - MEP (Mechanical, Electrical, Plumbing): \$150,000–\$600,000
+      - Finishing & fit-out: \$80,000–\$400,000
+   c) IT/Digital Projects:
+      - Discovery & requirements: \$20,000–\$80,000
+      - UX/UI design: \$30,000–\$120,000
+      - Development (per platform): \$80,000–\$400,000
+      - Testing & QA: \$25,000–\$100,000
+      - Deployment & launch: \$15,000–\$60,000
+      - Ongoing support (annual): \$30,000–\$150,000
+
+3. ROI GUIDELINES:
+   - Infrastructure/Physical projects: 8%–20% ROI (realistic for capital projects)
+   - Digital/Software projects: 15%–40% ROI
+   - Service/Training projects: 10%–30% ROI
+   - NEVER exceed 50% ROI for any single item (unrealistic)
+   - ROI should reflect the actual return potential of that specific investment
+
+4. NPV RULES:
+   - NPV MUST increase with time: 10_years > 5_years > 3_years
+   - NPV at 5_years should be 1.5x–3x the estimated_cost for profitable items
+   - For infrastructure with 8% ROI: NPV_5y ≈ 1.2x–1.5x cost
+   - For high-growth digital with 30% ROI: NPV_5y ≈ 2.0x–3.0x cost
+   - NPV at 10_years should be 2.5x–5x the estimated_cost
+
+5. VARIETY AND REALISM:
+   - Costs should vary significantly across items (not uniform)
+   - Include a mix of large capital items (\$100K+) and smaller operational items (\$10K–\$50K)
+   - Description must explain what specifically is included in the cost
+   - Each solution should have genuinely different cost structures based on its approach
+
+CRITICAL RULES:
 - Detect the project type per solution (physical construction/infrastructure, digital/software, or hybrid) and use domain-appropriate line items.
-- Physical solutions must not use software lifecycle placeholders such as Discovery and Planning, MVP Build, Integration, or Data.
-- Do not return repetitive placeholder amounts (100000, 250000, 500000) unless explicitly justified from context quantities.
-- Ensure solutions are distinct: avoid identical item lists and identical costs across different solutions.
-- If confidence is low for a specific line item, omit it instead of inventing a generic entry.
+- Physical solutions must not use software lifecycle placeholders.
+- Do not return repetitive placeholder amounts unless explicitly justified from context.
+- Ensure solutions are distinct: avoid identical item lists and identical costs.
 - Be detailed and specific: do not use "etc.", "and similar", or vague groupings.
-- All monetary values (estimated_cost, npv_by_years) must be in $currency.$currencyInstruction
+- All monetary values must be in $currency.$currencyInstruction
 
 Return ONLY valid JSON with this exact structure:
 {
   "cost_breakdown": [
     {"solution": "Solution Name", "items": [
-      {"item": "Project Item", "description": "...", "estimated_cost": 12345, "roi_percent": 18.5, "npv_by_years": {"3_years": 5600, "5_years": 7800, "10_years": 12800}}
+      {"item": "Project Item", "description": "Detailed scope of work...", "estimated_cost": 12345, "roi_percent": 18.5, "npv_by_years": {"3_years": 5600, "5_years": 7800, "10_years": 12800}}
     ]}
   ]
 }

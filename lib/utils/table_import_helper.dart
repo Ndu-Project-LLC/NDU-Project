@@ -266,9 +266,9 @@ class TableImportHelper {
                         label: const Text('Download Template',
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF059669),
-                          side: const BorderSide(color: Color(0xFFD1FAE5)),
-                          backgroundColor: const Color(0xFFF0FDF4),
+                          foregroundColor: const Color(0xFFB45309),
+                          side: const BorderSide(color: Color(0xFFFFC812)),
+                          backgroundColor: const Color(0xFFFFF8E1),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),

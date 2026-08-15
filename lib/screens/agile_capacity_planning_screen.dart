@@ -761,6 +761,24 @@ class _AgileCapacityPlanningScreenState
                   visualDensity: VisualDensity.compact,
                   textStyle: WidgetStateProperty.all(const TextStyle(
                       fontSize: 12, fontWeight: FontWeight.w600)),
+                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Color(0xFFFFC812); // Yellow theme
+                    }
+                    return Colors.white;
+                  }),
+                  foregroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Color(0xFF111827);
+                    }
+                    return const Color(0xFF374151);
+                  }),
+                  side: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const BorderSide(color: Color(0xFFFFC812));
+                    }
+                    return const BorderSide(color: Color(0xFFD1D5DB));
+                  }),
                 ),
               ),
             ],

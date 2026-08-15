@@ -314,9 +314,9 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
-                foregroundColor: const Color(0xFF059669),
-                side: const BorderSide(color: Color(0xFF6EE7B7)),
-                backgroundColor: const Color(0xFFECFDF5),
+                foregroundColor: const Color(0xFFB45309),
+                side: const BorderSide(color: Color(0xFFFFC812)),
+                backgroundColor: const Color(0xFFFFF8E1),
               ),
             ),
             const SizedBox(width: 8),

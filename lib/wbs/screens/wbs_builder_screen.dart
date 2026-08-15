@@ -331,11 +331,27 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                 ],
                 selected: {provider.viewModeSimple},
                 onSelectionChanged: (v) => provider.setViewMode(v.first),
-                style: SegmentedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                style: ButtonStyle(
                   visualDensity: VisualDensity.compact,
-                  textStyle: const TextStyle(fontSize: 12),
+                  textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Color(0xFFFFC812); // Yellow theme
+                    }
+                    return Colors.white;
+                  }),
+                  foregroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Color(0xFF111827);
+                    }
+                    return const Color(0xFF374151);
+                  }),
+                  side: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const BorderSide(color: Color(0xFFFFC812));
+                    }
+                    return const BorderSide(color: Color(0xFFD1D5DB));
+                  }),
                 ),
               ),
               if (provider.viewModeSimple) ...[
@@ -356,11 +372,27 @@ class _WBSBuilderScreenState extends State<WBSBuilderScreen> {
                   selected: {_simpleAxis},
                   onSelectionChanged: (v) =>
                       setState(() => _simpleAxis = v.first),
-                  style: SegmentedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  style: ButtonStyle(
                     visualDensity: VisualDensity.compact,
-                    textStyle: const TextStyle(fontSize: 12),
+                    textStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    backgroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return const Color(0xFFFFC812); // Yellow theme
+                      }
+                      return Colors.white;
+                    }),
+                    foregroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return const Color(0xFF111827);
+                      }
+                      return const Color(0xFF374151);
+                    }),
+                    side: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return const BorderSide(color: Color(0xFFFFC812));
+                      }
+                      return const BorderSide(color: Color(0xFFD1D5DB));
+                    }),
                   ),
                 ),
               ],

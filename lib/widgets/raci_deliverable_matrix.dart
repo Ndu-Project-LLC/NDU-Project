@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/project_data_model.dart';
+import 'package:ndu_project/services/firebase_auth_service.dart';
 import 'package:ndu_project/services/raci_assignment_service.dart';
 import 'package:ndu_project/services/raci_matrix_seeder.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
+import 'package:ndu_project/providers/user_role_provider.dart';
 
 /// Renders the new RACI Deliverable Matrix.
 ///
@@ -255,10 +257,18 @@ class _RaciDeliverableMatrixState extends State<RaciDeliverableMatrix> {
   Future<void> _openApprovalDialog(BuildContext context) async {
     final data = _data(context);
     final approval = data.raciApprovalStatus;
-    final approverNameController =
-        TextEditingController(text: approval.approverName);
-    final approverRoleController =
-        TextEditingController(text: approval.approverRole);
+    
+    // Auto-fill with authenticated user's details if fields are empty
+    final currentUserDisplayName = FirebaseAuthService.displayNameOrEmail(fallback: '');
+    final roleProvider = UserRoleInherited.of(context);
+    final currentUserRole = roleProvider.siteRole.displayName;
+    
+    final approverNameController = TextEditingController(
+      text: approval.approverName.isNotEmpty ? approval.approverName : currentUserDisplayName,
+    );
+    final approverRoleController = TextEditingController(
+      text: approval.approverRole.isNotEmpty ? approval.approverRole : currentUserRole,
+    );
     bool checked = false;
 
     final result = await showDialog<bool>(

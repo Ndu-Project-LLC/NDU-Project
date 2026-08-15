@@ -1457,6 +1457,9 @@ class _FilterToolbar extends StatelessWidget {
  child: VoiceTextField(
  controller: searchController,
  onChanged: onSearchChanged,
+ enableVoice: false,
+ enableKazAi: false,
+ enableTextFormatting: false,
  decoration: InputDecoration(
  hintText: 'Search activity, owner, role, phase...',
  isDense: true,

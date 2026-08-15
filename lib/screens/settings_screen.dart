@@ -2221,25 +2221,9 @@ class _TopAppBar extends StatelessWidget {
     return Container(
       height: 56,
       color: Colors.white,
-      child: Row(
+      child: const Row(
         children: [
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: IconButton(
-              onPressed: onBack,
-              icon: const Icon(Icons.arrow_back, size: 22),
-              color: const Color(0xFFFFC812),
-              padding: EdgeInsets.zero,
-              style: IconButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-            ),
-          ),
-          const Expanded(
+          Expanded(
             child: Text(
               'Settings',
               textAlign: TextAlign.center,
@@ -2250,7 +2234,6 @@ class _TopAppBar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 48), // balance the back button
         ],
       ),
     );
@@ -2699,7 +2682,8 @@ class _AccountActionsSection extends StatelessWidget {
       children: [
         // Change Password
         SizedBox(
-          height: 44,
+          height: 48,
+          width: double.infinity,
           child: OutlinedButton(
             onPressed: () {
               // Navigate to password reset or show dialog
@@ -2718,6 +2702,7 @@ class _AccountActionsSection extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               backgroundColor: Colors.white,
               side: const BorderSide(color: Color(0xFFC0C6D6)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -2726,7 +2711,8 @@ class _AccountActionsSection extends StatelessWidget {
               'Change Password',
               style: TextStyle(
                 color: Color(0xFF191C1E),
-                fontWeight: FontWeight.w500,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),

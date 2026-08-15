@@ -290,54 +290,57 @@ class _RiskTrackingScreenState extends State<RiskTrackingScreen> {
  } finally {
  _isAutoGenerating = false;
  }
- }
+ }  @override
+  Widget build(BuildContext context) {
+    final isNarrow = MediaQuery.sizeOf(context).width < 980;
+    final padding = AppBreakpoints.pagePadding(context);
 
- @override
- Widget build(BuildContext context) {
- final isNarrow = MediaQuery.sizeOf(context).width < 980;
- final padding = AppBreakpoints.pagePadding(context);
-
- return ResponsiveScaffold(
- activeItemLabel: 'Risk Tracking',
- backgroundColor: Colors.white,
- floatingActionButton: const KazAiChatBubble(positioned: false),
- body: SingleChildScrollView(
- padding: EdgeInsets.all(padding),
- child: Column(
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- PlanningPhaseHeader(
- title: 'Risk Tracking',
-showNavigationButtons: false, onExportPdf: _exportPdf),
- const SizedBox(height: 16),
- _buildHeader(isNarrow),
- const SizedBox(height: 20),
- _buildStatsRow(isNarrow),
- const SizedBox(height: 24),
- Column(
- crossAxisAlignment: CrossAxisAlignment.stretch,
- children: [
- _buildRiskRegister(),
- const SizedBox(height: 20),
- _buildMitigationPanel(),
- const SizedBox(height: 20),
- _buildSignalsPanel(),
- const SizedBox(height: 20),
- _buildEscalationPanel(),
- ],
- ),
- const SizedBox(height: 24),
- LaunchPhaseNavigation(
- backLabel: PlanningPhaseNavigation.backLabel('risk_tracking'),
- nextLabel: PlanningPhaseNavigation.nextLabel('risk_tracking'),
- onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'risk_tracking'),
- onNext: () => PlanningPhaseNavigation.goToNext(context, 'risk_tracking'),
- ),
- ],
- ),
- ),
- );
- }
+    return ResponsiveScaffold(
+      activeItemLabel: 'Risk Tracking',
+      backgroundColor: Colors.white,
+      floatingActionButton: const KazAiChatBubble(positioned: false),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 0, vertical: padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              child: PlanningPhaseHeader(
+                title: 'Risk Tracking',
+                showNavigationButtons: false, onExportPdf: _exportPdf),
+            ),            const SizedBox(height: 16),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              child: _buildHeader(isNarrow),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              child: _buildStatsRow(isNarrow),
+            ),
+            const SizedBox(height: 24),            _buildRiskRegister(),
+            const SizedBox(height: 20),
+            _buildMitigationPanel(),
+            const SizedBox(height: 20),
+            _buildSignalsPanel(),
+            const SizedBox(height: 20),
+            _buildEscalationPanel(),
+            const SizedBox(height: 24),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              child: LaunchPhaseNavigation(
+                backLabel: PlanningPhaseNavigation.backLabel('risk_tracking'),
+                nextLabel: PlanningPhaseNavigation.nextLabel('risk_tracking'),
+                onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'risk_tracking'),
+                onNext: () => PlanningPhaseNavigation.goToNext(context, 'risk_tracking'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
  // ─── Header ───────────────────────────────────────────────────────────────
 

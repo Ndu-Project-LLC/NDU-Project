@@ -1122,6 +1122,9 @@ class _PreferredSolutionAnalysisScreenState
               const SizedBox(height: 16),
             ],
             if (!_isLoading) ...[
+              // Working notes at the top
+              _buildNotesField(),
+              const SizedBox(height: 16),
               _buildViewToggle(),
               const SizedBox(height: 12),
               _showTableView ? _buildTabSection() : _buildCardBasedView(),
@@ -1131,9 +1134,6 @@ class _PreferredSolutionAnalysisScreenState
               const SizedBox(height: 16),
               // Action links row
               _buildActionLinksRow(),
-              const SizedBox(height: 16),
-              // Working notes
-              _buildNotesField(),
               const SizedBox(height: 24),
             ],
             if (_isLoading) const SizedBox(height: 24),

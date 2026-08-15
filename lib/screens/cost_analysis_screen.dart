@@ -32,6 +32,7 @@ import 'package:ndu_project/screens/risk_identification_screen.dart';
 import 'package:ndu_project/screens/it_considerations_screen.dart';
 import 'package:ndu_project/screens/infrastructure_considerations_screen.dart';
 import 'package:ndu_project/screens/core_stakeholders_screen.dart';
+import 'package:ndu_project/screens/project_decision_summary_screen.dart';
 import 'package:ndu_project/screens/settings_screen.dart';
 import 'package:ndu_project/utils/business_case_lock_helper.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
@@ -2358,7 +2359,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     final stepStatus =
         '${_stepDefinitions[_currentStepIndex].shortLabel} (${_isFullAdminView ? _currentStepIndex + 1 : 1}/$effectiveStepCount)';
     final primaryLabel =
-        isLast ? 'Continue to Preferred Solution Analysis' : 'Next Tab';
+        isLast ? 'Continue to Preferred Solution' : 'Next Tab';
     final primaryIcon = isLast ? Icons.check : Icons.arrow_forward_ios_rounded;
 
     final previousButton = TextButton.icon(
@@ -2581,20 +2582,6 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       }
     }
 
-    // 3. Smart checkpoint check
-    final nextCheckpoint =
-        SidebarNavigationService.instance.getNextItem('cost_analysis');
-    if (nextCheckpoint?.checkpoint != 'preferred_solution_analysis') {
-      // Use standard lock check for non-sequential navigation
-      final isLocked = ProjectDataHelper.isDestinationLocked(
-          context, 'preferred_solution_analysis');
-      if (isLocked) {
-        ProjectDataHelper.showLockedDestinationMessage(
-            context, 'Preferred Solution Analysis');
-        return;
-      }
-    }
-
     // Show loading dialog
     if (!mounted) return;
     showDialog(
@@ -2622,11 +2609,34 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
     if (!mounted) return;
     Navigator.of(context).pop(); // Close loading dialog
 
-    // Navigate to Preferred Solution Analysis
-    context.push('/preferred-solution-analysis', extra: PreferredSolutionAnalysisScreen(
-          notes: widget.notes,
-          solutions: widget.solutions,
-          businessCase: projectData.businessCase,
+    // Navigate to Preferred Solution (Project Decision Summary)
+    final potentialSolutions = projectData.potentialSolutions ?? [];
+    final solutions = potentialSolutions
+        .map((s) => AiSolutionItem(title: s.title, description: s.description))
+        .toList();
+    final safeSolutions = solutions.isNotEmpty
+        ? solutions
+        : [
+            AiSolutionItem(
+              title: projectData.projectName ?? 'Preferred Solution',
+              description: projectData.businessCase ?? '',
+            ),
+          ];
+    final preferredAnalysis = projectData.preferredSolutionAnalysis;
+    final selectedSolution =
+        (preferredAnalysis?.selectedSolutionTitle != null)
+            ? safeSolutions.firstWhere(
+                (s) => s.title == preferredAnalysis!.selectedSolutionTitle,
+                orElse: () => safeSolutions.first,
+              )
+            : safeSolutions.first;
+
+    context.push('/project-decision-summary', extra: ProjectDecisionSummaryScreen(
+          projectName: projectData.projectName ?? 'Untitled Project',
+          selectedSolution: selectedSolution,
+          allSolutions: safeSolutions,
+          businessCase: projectData.businessCase ?? '',
+          notes: preferredAnalysis?.workingNotes ?? '',
         ));
   }
 

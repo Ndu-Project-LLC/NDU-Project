@@ -69,6 +69,7 @@ class VoiceTextField extends StatefulWidget {
     this.enableKazAi = true,
     this.kazAiLabel,
     this.enableTextFormatting = true,
+    this.allowInlineSuffix = false,
   });
 
   final TextEditingController? controller;
@@ -140,6 +141,11 @@ class VoiceTextField extends StatefulWidget {
 
   /// Whether to show the text formatting toolbar for multi-line fields.
   final bool enableTextFormatting;
+
+  /// Whether to allow inline suffix icons (KAZ AI sparkle, clear content)
+  /// inside the text field. Defaults to false — these actions are surfaced
+  /// via the Open Editor button instead.
+  final bool allowInlineSuffix;
 
   @override
   State<VoiceTextField> createState() => _VoiceTextFieldState();
@@ -363,10 +369,18 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
     final anyLoading = _isListening || _isGeneratingAi || _isImportingDoc;
     final hasActions = actions.any((a) => a.enabled);
 
+    // Strip inline suffix icons (KAZ AI sparkle, clear content) unless
+    // explicitly allowed — these actions are surfaced via Open Editor instead.
+    final effectiveDecoration = widget.allowInlineSuffix
+        ? (widget.decoration ?? const InputDecoration())
+        : (widget.decoration ?? const InputDecoration()).copyWith(
+            suffixIcon: null,
+          );
+
     final textField = TextField(
       controller: _controller,
       focusNode: widget.focusNode,
-      decoration: widget.decoration ?? const InputDecoration(),
+      decoration: effectiveDecoration,
       keyboardType: widget.keyboardType,
       textInputAction: widget.textInputAction,
       textCapitalization: widget.textCapitalization,

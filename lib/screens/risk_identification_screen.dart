@@ -1525,6 +1525,46 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                         ],
                       ),
                     ),
+                  const SizedBox(height: 16),
+                  // Table action buttons at the top
+                  Row(
+                    children: [
+                      _buildAutoSaveIndicator(),
+                      const Spacer(),
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFB3D9FF),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.info_outline,
+                            color: Colors.white),
+                      ),
+                      const SizedBox(width: 24),
+                      CsvTableImportButton(
+                        tableTitle: 'Risk Identification',
+                        columns: _riskCsvColumns,
+                        onImport: _handleCsvImport,
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: _addNewRisk,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Risk'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFD700),
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   if (!isMobile) ...[
                     if (_solutions.isEmpty)
                       Container(
@@ -1617,45 +1657,6 @@ class _RiskIdentificationScreenState extends State<RiskIdentificationScreen> {
                         ),
                       ),
                   ],
-                  const SizedBox(height: 24),
-                  _buildAutoSaveIndicator(),
-                  const SizedBox(height: 16),
-                  // CSV import available to all users
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFB3D9FF),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.info_outline,
-                              color: Colors.white),
-                        ),
-                        const SizedBox(width: 24),
-                        CsvTableImportButton(
-                          tableTitle: 'Risk Identification',
-                          columns: _riskCsvColumns,
-                          onImport: _handleCsvImport,
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton.icon(
-                          onPressed: _addNewRisk,
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add Risk'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFD700),
-                            foregroundColor: Colors.black,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
-                      ],
-                    ),
                   const SizedBox(height: 24),
                   BusinessCaseNavigationButtons(
                     currentScreen: 'Risk Identification',

@@ -74,7 +74,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
         if (_selectedIds.length >= 7) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('You can select up to 7 projects for a portfolio.'),
+              content: Text('A portfolio requires exactly 7 projects. Deselect one first.'),
               duration: Duration(seconds: 2),
             ),
           );
@@ -465,7 +465,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '$selectedCount/7 projects selected. Select up to seven to create a portfolio.',
+                          '$selectedCount/7 projects selected.',
                           style: const TextStyle(
                             color: _onSurface,
                             fontSize: 14,
@@ -474,14 +474,22 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        if (selectedCount > 0)
+                        if (selectedCount < 7)
                           Text(
-                            selectedCount == 7
-                                ? 'Maximum number of projects selected.'
-                                : '${7 - selectedCount} more project${7 - selectedCount == 1 ? '' : 's'} can be added.',
+                            '${7 - selectedCount} more project${7 - selectedCount == 1 ? '' : 's'} required to create a portfolio.',
                             style: const TextStyle(
                               color: _muted,
                               fontSize: 12,
+                              fontFamily: appFontFamily,
+                            ),
+                          ),
+                        if (selectedCount == 7)
+                          const Text(
+                            'Perfect! You can now create your portfolio.',
+                            style: TextStyle(
+                              color: Color(0xFF10B981),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                               fontFamily: appFontFamily,
                             ),
                           ),
@@ -501,11 +509,11 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                       ),
                     ),
                   ElevatedButton.icon(
-                    onPressed: selectedCount >= 1 ? _handleCreatePortfolio : null,
+                    onPressed: selectedCount == 7 ? _handleCreatePortfolio : null,
                     icon:
                         const Icon(Icons.pie_chart_outline_rounded, size: 18),
                     label: Text(
-                      selectedCount >= 1 ? 'Create Portfolio' : 'Select projects',
+                      selectedCount == 7 ? 'Create Portfolio' : 'Select 7 projects',
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     style: ElevatedButton.styleFrom(

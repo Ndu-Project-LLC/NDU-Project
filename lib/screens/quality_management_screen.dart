@@ -3461,35 +3461,43 @@ class _StandardsTable extends StatelessWidget {
  title: 'Quality Standards',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+ headingRowHeight: 52,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 56,
+ columnSpacing: 24,
+ horizontalMargin: 16,
  columns: const [
- DataColumn(label: Text('Standard')),
- DataColumn(label: Text('Source')),
- DataColumn(label: Text('Category')),
- DataColumn(label: Text('Applicability')),
- DataColumn(label: Text('Actions')),
+ DataColumn(label: Text('Standard', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Source', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Category', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Applicability', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
  ],
  rows: [
  for (int i = 0; i < standards.length; i++)
  DataRow(
  cells: [
- DataCell(SizedBox(width: 220, child: Text(standards[i].name))),
+ DataCell(SizedBox(width: 220, child: Text(standards[i].name, style: const TextStyle(fontSize: 13)))),
  DataCell(
- SizedBox(width: 140, child: Text(standards[i].source))),
+ SizedBox(width: 140, child: Text(standards[i].source, style: const TextStyle(fontSize: 13)))),
  DataCell(
- SizedBox(width: 120, child: Text(standards[i].category))),
+ SizedBox(width: 120, child: Text(standards[i].category, style: const TextStyle(fontSize: 13)))),
  DataCell(SizedBox(
- width: 180, child: Text(standards[i].applicability))),
+ width: 180, child: Text(standards[i].applicability, style: const TextStyle(fontSize: 13)))),
  DataCell(
  Row(
+ mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(
  icon: const Icon(Icons.edit_outlined, size: 18),
  onPressed: () => onEdit(i),
+ tooltip: 'Edit',
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, size: 18),
  color: const Color(0xFFDC2626),
  onPressed: () => onRemove(i),
+ tooltip: 'Delete',
  ),
  ],
  ),
@@ -3526,38 +3534,47 @@ class _ObjectivesTable extends StatelessWidget {
  title: 'Quality Objectives',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+ headingRowHeight: 52,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 56,
+ columnSpacing: 24,
+ horizontalMargin: 16,
  columns: const [
- DataColumn(label: Text('Objective')),
- DataColumn(label: Text('Metric')),
- DataColumn(label: Text('Target')),
- DataColumn(label: Text('Current')),
- DataColumn(label: Text('Owner')),
- DataColumn(label: Text('Status')),
- DataColumn(label: Text('Actions')),
+ DataColumn(label: Text('Objective', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Metric', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Target', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Current', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Owner', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Status', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
  ],
  rows: [
  for (int i = 0; i < objectives.length; i++)
  DataRow(
  cells: [
  DataCell(
- SizedBox(width: 220, child: Text(objectives[i].title))),
+ SizedBox(width: 220, child: Text(objectives[i].title, style: const TextStyle(fontSize: 13)))),
  DataCell(SizedBox(
- width: 140, child: Text(objectives[i].successMetric))),
- DataCell(Text(objectives[i].targetValue)),
- DataCell(Text(objectives[i].currentValue)),
+ width: 140, child: Text(objectives[i].successMetric, style: const TextStyle(fontSize: 13)))),
+ DataCell(Text(objectives[i].targetValue, style: const TextStyle(fontSize: 13))),
+ DataCell(Text(objectives[i].currentValue, style: const TextStyle(fontSize: 13))),
  DataCell(
- SizedBox(width: 130, child: Text(objectives[i].owner))),
+ SizedBox(width: 130, child: Text(objectives[i].owner, style: const TextStyle(fontSize: 13)))),
  DataCell(_StatusChipText(label: objectives[i].status)),
- DataCell(Row(
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(
  icon: const Icon(Icons.edit_outlined, size: 18),
  onPressed: () => onEdit(i),
+ tooltip: 'Edit',
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, size: 18),
  color: const Color(0xFFDC2626),
  onPressed: () => onRemove(i),
+ tooltip: 'Delete',
  ),
  ],
  )),
@@ -3593,35 +3610,44 @@ class _WorkflowControlsTable extends StatelessWidget {
  title: 'Workflow Controls',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+ headingRowHeight: 52,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 56,
+ columnSpacing: 24,
+ horizontalMargin: 16,
  columns: const [
- DataColumn(label: Text('Control')),
- DataColumn(label: Text('Method')),
- DataColumn(label: Text('Tools')),
- DataColumn(label: Text('Frequency')),
- DataColumn(label: Text('Owner')),
- DataColumn(label: Text('Standards')),
- DataColumn(label: Text('Actions')),
+ DataColumn(label: Text('Control', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Method', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Tools', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Frequency', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Owner', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Standards', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
  ],
  rows: [
  for (final control in controls)
  DataRow(cells: [
- DataCell(SizedBox(width: 180, child: Text(control.name))),
- DataCell(SizedBox(width: 220, child: Text(control.method))),
- DataCell(SizedBox(width: 140, child: Text(control.tools))),
- DataCell(Text(control.frequency)),
- DataCell(SizedBox(width: 140, child: Text(control.owner))),
+ DataCell(SizedBox(width: 180, child: Text(control.name, style: const TextStyle(fontSize: 13)))),
+ DataCell(SizedBox(width: 220, child: Text(control.method, style: const TextStyle(fontSize: 13)))),
+ DataCell(SizedBox(width: 140, child: Text(control.tools, style: const TextStyle(fontSize: 13)))),
+ DataCell(Text(control.frequency, style: const TextStyle(fontSize: 13))),
+ DataCell(SizedBox(width: 140, child: Text(control.owner, style: const TextStyle(fontSize: 13)))),
  DataCell(SizedBox(
- width: 180, child: Text(control.standardsReference))),
- DataCell(Row(
+ width: 180, child: Text(control.standardsReference, style: const TextStyle(fontSize: 13)))),
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(
  icon: const Icon(Icons.edit_outlined, size: 18),
  onPressed: () => onEdit(control),
+ tooltip: 'Edit',
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, size: 18),
  color: const Color(0xFFDC2626),
  onPressed: () => onRemove(control),
+ tooltip: 'Delete',
  ),
  ],
  )),
@@ -3909,35 +3935,44 @@ class _QualityChangeLogTable extends StatelessWidget {
  title: 'Quality Change Log',
  table: DataTable(
  headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+ headingRowHeight: 52,
+ dataRowMinHeight: 56,
+ dataRowMaxHeight: 56,
+ columnSpacing: 24,
+ horizontalMargin: 16,
  columns: const [
- DataColumn(label: Text('Description')),
- DataColumn(label: Text('Reason')),
- DataColumn(label: Text('Requested By')),
- DataColumn(label: Text('Approved By')),
- DataColumn(label: Text('Date')),
- DataColumn(label: Text('Status')),
- DataColumn(label: Text('Actions')),
+ DataColumn(label: Text('Description', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Reason', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Requested By', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Approved By', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Date', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Status', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+ DataColumn(label: Text('Actions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
  ],
  rows: [
  for (int i = 0; i < entries.length; i++)
  DataRow(cells: [
  DataCell(
- SizedBox(width: 220, child: Text(entries[i].description))),
- DataCell(SizedBox(width: 160, child: Text(entries[i].reason))),
- DataCell(Text(entries[i].requestedBy)),
- DataCell(Text(entries[i].approvedBy)),
- DataCell(Text(entries[i].date)),
+ SizedBox(width: 220, child: Text(entries[i].description, style: const TextStyle(fontSize: 13)))),
+ DataCell(SizedBox(width: 160, child: Text(entries[i].reason, style: const TextStyle(fontSize: 13)))),
+ DataCell(Text(entries[i].requestedBy, style: const TextStyle(fontSize: 13))),
+ DataCell(Text(entries[i].approvedBy, style: const TextStyle(fontSize: 13))),
+ DataCell(Text(entries[i].date, style: const TextStyle(fontSize: 13))),
  DataCell(_StatusChipText(label: entries[i].status)),
- DataCell(Row(
+ DataCell(
+ Row(
+ mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(
  icon: const Icon(Icons.edit_outlined, size: 18),
  onPressed: () => onEdit(i),
+ tooltip: 'Edit',
  ),
  IconButton(
  icon: const Icon(Icons.delete_outline, size: 18),
  color: const Color(0xFFDC2626),
  onPressed: () => onRemove(i),
+ tooltip: 'Delete',
  ),
  ],
  )),

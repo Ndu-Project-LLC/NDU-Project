@@ -656,9 +656,677 @@ class _RequirementsImplementationScreenState
  );
  }
 
- void _addDocumentRow() {
- setState(() => _documents.add(_DesignSpecDocumentRow()));
+ void _addDocumentRow(List<String> ownerOptions) {
+ _showAddDocumentDialog(ownerOptions: ownerOptions);
+ }
+
+ // -------------------------------------------------------------------------
+ // Add Document modal — collects all document metadata up-front in a
+ // focused dialog (instead of dropping an empty inline row). Mirrors the
+ // existing "Add Requirement" modal pattern for consistency.
+ // -------------------------------------------------------------------------
+ Future<void> _showAddDocumentDialog({
+ required List<String> ownerOptions,
+ }) async {
+ final formKey = GlobalKey<FormState>();
+ final nameController = TextEditingController();
+ final nameFocus = FocusNode();
+ final categoryController = TextEditingController();
+ final versionController = TextEditingController();
+ final linkedSpecIdController = TextEditingController();
+ final linkController = TextEditingController();
+ String selectedOwner = ownerOptions.isEmpty ? '' : ownerOptions.first;
+ String selectedStatus = 'Draft';
+ String selectedCategory = '';
+ String? uploadedFileName;
+ String? uploadedStoragePath;
+ bool isUploading = false;
+
+ // Curated, domain-appropriate option lists — saves the user from typing
+ // common values and keeps the register consistent across rows.
+ const categoryOptions = <String>[
+ 'Specification',
+ 'Design',
+ 'Architecture',
+ 'Test Plan',
+ 'Test Report',
+ 'User Guide',
+ 'Reference',
+ 'Contract',
+ 'Compliance',
+ 'Meeting Notes',
+ 'Risk Assessment',
+ 'Other',
+ ];
+
+ const statusOptions = <String>[
+ 'Draft',
+ 'In Review',
+ 'Approved',
+ 'Published',
+ 'Superseded',
+ 'Archived',
+ ];
+
+ // Merge curated categories with any custom ones already used in the
+ // register, so the dropdown reflects real project usage.
+ final mergedCategories = <String>{
+ ...categoryOptions,
+ ..._documents
+ .map((d) => d.category.trim())
+ .where((c) => c.isNotEmpty),
+ }.toList()
+ ..sort();
+
+ final result = await showDialog<_DesignSpecDocumentRow?>(
+ context: context,
+ barrierDismissible: true,
+ builder: (dialogContext) {
+ return StatefulBuilder(
+ builder: (innerContext, setDialogState) {
+ // Helper to build a labeled field with the NDU focused-border
+ // accent (matches the existing inline field styling).
+ InputDecoration nduDecoration({
+ required String label,
+ bool required = false,
+ String? hint,
+ IconData? prefixIcon,
+ }) {
+ return InputDecoration(
+ labelText: required ? '$label *' : label,
+ hintText: hint,
+ isDense: true,
+ filled: true,
+ fillColor: const Color(0xFFF8FAFC),
+ contentPadding:
+ const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+ prefixIcon: prefixIcon != null
+ ? Icon(prefixIcon, size: 18, color: const Color(0xFFB8860B))
+ : null,
+ border: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(10),
+ borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
+ ),
+ enabledBorder: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(10),
+ borderSide: const BorderSide(color: Color(0xFFE4E7EC)),
+ ),
+ focusedBorder: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(10),
+ borderSide:
+ const BorderSide(color: Color(0xFFFFC812), width: 2),
+ ),
+ errorBorder: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(10),
+ borderSide: const BorderSide(color: Color(0xFFB91C1C)),
+ ),
+ focusedErrorBorder: OutlineInputBorder(
+ borderRadius: BorderRadius.circular(10),
+ borderSide:
+ const BorderSide(color: Color(0xFFB91C1C), width: 2),
+ ),
+ );
+ }
+
+ Widget fieldLabel(String text, {bool required = false}) {
+ return Padding(
+ padding: const EdgeInsets.only(bottom: 6, top: 4),
+ child: RichText(
+ text: TextSpan(
+ style: const TextStyle(
+ fontSize: 12,
+ fontWeight: FontWeight.w600,
+ color: Color(0xFF374151),
+ ),
+ children: [
+ TextSpan(text: text),
+ if (required)
+ const TextSpan(
+ text: ' *',
+ style: TextStyle(color: Color(0xFFB91C1C)),
+ ),
+ ],
+ ),
+ ),
+ );
+ }
+
+ return AnimatedPadding(
+ padding: MediaQuery.of(innerContext).viewInsets,
+ duration: const Duration(milliseconds: 120),
+ curve: Curves.easeOutCubic,
+ child: Dialog(
+ backgroundColor: Colors.white,
+ insetPadding: const EdgeInsets.symmetric(
+ horizontal: 24, vertical: 24),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(18)),
+ child: ConstrainedBox(
+ constraints: BoxConstraints(
+ maxWidth: 680,
+ maxHeight: MediaQuery.of(innerContext).size.height * 0.9,
+ ),
+ child: Form(
+ key: formKey,
+ child: SingleChildScrollView(
+ padding: const EdgeInsets.all(24),
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.stretch,
+ children: [
+ // ── Header ────────────────────────────────────
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Container(
+ width: 44,
+ height: 44,
+ decoration: BoxDecoration(
+ gradient: const LinearGradient(
+ begin: Alignment.topLeft,
+ end: Alignment.bottomRight,
+ colors: [
+ Color(0xFFFFC812),
+ Color(0xFFB8860B),
+ ],
+ ),
+ borderRadius: BorderRadius.circular(12),
+ ),
+ child: const Icon(
+ Icons.description_outlined,
+ color: Colors.white,
+ size: 22,
+ ),
+ ),
+ const SizedBox(width: 14),
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ const Text(
+ 'Add Document',
+ style: TextStyle(
+ fontSize: 19,
+ fontWeight: FontWeight.w700,
+ color: Color(0xFF111827),
+ letterSpacing: -0.2,
+ ),
+ ),
+ const SizedBox(height: 4),
+ Text(
+ 'Register a new document or link in the Documents & Links Register.',
+ style: TextStyle(
+ fontSize: 13,
+ color: const Color(0xFF6B7280),
+ height: 1.4,
+ ),
+ ),
+ ],
+ ),
+ ),
+ IconButton(
+ tooltip: 'Close',
+ onPressed: () =>
+ Navigator.of(dialogContext).pop(null),
+ icon: const Icon(Icons.close, size: 20),
+ splashRadius: 20,
+ ),
+ ],
+ ),
+ const Divider(height: 28, thickness: 1,
+ color: Color(0xFFF1F5F9)),
+
+ // ── Form fields ──────────────────────────────
+ // Row 1: Document Name (full width — primary field)
+ fieldLabel('Document Name', required: true),
+ VoiceTextFormField(
+ controller: nameController,
+ focusNode: nameFocus,
+ autofocus: true,
+ textCapitalization: TextCapitalization.sentences,
+ textInputAction: TextInputAction.next,
+ decoration: nduDecoration(
+ label: 'Document Name',
+ hint: 'e.g. API Specification v1.2',
+ prefixIcon: Icons.article_outlined,
+ ),
+ validator: (value) {
+ final v = value?.trim() ?? '';
+ if (v.isEmpty) {
+ return 'Document name is required';
+ }
+ if (v.length < 2) {
+ return 'Name must be at least 2 characters';
+ }
+ return null;
+ },
+ ),
+
+ const SizedBox(height: 16),
+
+ // Row 2: Category + Version
+ LayoutBuilder(
+ builder: (context, constraints) {
+ final isWide = constraints.maxWidth >= 480;
+ final children = <Widget>[
+ // Category dropdown
+ Flexible(
+ flex: isWide ? 3 : 1,
+ child: Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Category'),
+ DropdownButtonFormField<String>(
+ value: selectedCategory.isEmpty
+ ? null
+ : selectedCategory,
+ isExpanded: true,
+ decoration: nduDecoration(
+ label: 'Category',
+ prefixIcon: Icons.category_outlined,
+ ).copyWith(
+ labelText: null,
+ hintText: 'Select category',
+ ),
+ items: mergedCategories
+ .map((c) => DropdownMenuItem(
+ value: c,
+ child: Text(c,
+ overflow: TextOverflow
+ .ellipsis),
+ ))
+ .toList(),
+ onChanged: (v) {
+ if (v == null) return;
+ setDialogState(() {
+ selectedCategory = v;
+ if (v == 'Other') {
+ categoryController.clear();
+ } else {
+ categoryController.text = v;
+ }
+ });
+ },
+ ),
+ if (selectedCategory == 'Other') ...[
+ const SizedBox(height: 8),
+ VoiceTextField(
+ controller: categoryController,
+ textCapitalization:
+ TextCapitalization.sentences,
+ decoration: nduDecoration(
+ label: 'Custom Category',
+ hint: 'Type custom category',
+ ),
+ ),
+ ],
+ ],
+ ),
+ ),
+ SizedBox(width: isWide ? 12 : 0),
+ // Version
+ Flexible(
+ flex: isWide ? 2 : 1,
+ child: Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Version'),
+ VoiceTextField(
+ controller: versionController,
+ textInputAction: TextInputAction.next,
+ decoration: nduDecoration(
+ label: 'Version',
+ hint: 'e.g. 1.0.0',
+ prefixIcon:
+ Icons.history_outlined,
+ ),
+ ),
+ ],
+ ),
+ ),
+ ];
+ return isWide
+ ? Row(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: children,
+ )
+ : Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.stretch,
+ children: children,
+ );
+ },
+ ),
+
+ const SizedBox(height: 16),
+
+ // Row 3: Owner + Status
+ LayoutBuilder(
+ builder: (context, constraints) {
+ final isWide = constraints.maxWidth >= 480;
+ final children = <Widget>[
+ Flexible(
+ flex: isWide ? 3 : 1,
+ child: Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Owner'),
+ DropdownButtonFormField<String>(
+ value: selectedOwner.isEmpty
+ ? null
+ : selectedOwner,
+ isExpanded: true,
+ decoration: nduDecoration(
+ label: 'Owner',
+ prefixIcon: Icons.person_outline,
+ ).copyWith(
+ labelText: null,
+ hintText: 'Select owner',
+ ),
+ items: ownerOptions
+ .map((o) => DropdownMenuItem(
+ value: o,
+ child: Text(o,
+ overflow: TextOverflow
+ .ellipsis),
+ ))
+ .toList(),
+ onChanged: (v) {
+ if (v == null) return;
+ setDialogState(() =>
+ selectedOwner = v);
+ },
+ ),
+ ],
+ ),
+ ),
+ SizedBox(width: isWide ? 12 : 0),
+ Flexible(
+ flex: isWide ? 2 : 1,
+ child: Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: [
+ fieldLabel('Status'),
+ DropdownButtonFormField<String>(
+ value: selectedStatus,
+ isExpanded: true,
+ decoration: nduDecoration(
+ label: 'Status',
+ prefixIcon: Icons.flag_outlined,
+ ).copyWith(
+ labelText: null,
+ ),
+ items: statusOptions
+ .map((s) => DropdownMenuItem(
+ value: s, child: Text(s)))
+ .toList(),
+ onChanged: (v) {
+ if (v == null) return;
+ setDialogState(() =>
+ selectedStatus = v);
+ },
+ ),
+ ],
+ ),
+ ),
+ ];
+ return isWide
+ ? Row(
+ crossAxisAlignment:
+ CrossAxisAlignment.start,
+ children: children,
+ )
+ : Column(
+ crossAxisAlignment:
+ CrossAxisAlignment.stretch,
+ children: children,
+ );
+ },
+ ),
+
+ const SizedBox(height: 16),
+
+ // Row 4: Linked Spec ID (full width)
+ fieldLabel('Linked Spec ID'),
+ VoiceTextField(
+ controller: linkedSpecIdController,
+ textInputAction: TextInputAction.next,
+ decoration: nduDecoration(
+ label: 'Linked Spec ID',
+ hint: 'e.g. REQ-001',
+ prefixIcon: Icons.link,
+ ),
+ ),
+
+ const SizedBox(height: 16),
+
+ // Row 5: Link / Uploaded URL + Upload button
+ fieldLabel('Link / Uploaded URL'),
+ Row(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Expanded(
+ child: VoiceTextField(
+ controller: linkController,
+ keyboardType: TextInputType.url,
+ textInputAction: TextInputAction.done,
+ decoration: nduDecoration(
+ label: 'Link / Uploaded URL',
+ hint:
+ 'https://… or click Upload to attach',
+ prefixIcon: Icons.attach_file,
+ ),
+ ),
+ ),
+ const SizedBox(width: 8),
+ SizedBox(
+ height: 48,
+ child: OutlinedButton.icon(
+ onPressed: isUploading
+ ? null
+ : () async {
+ setDialogState(() =>
+ isUploading = true);
+ try {
+ final uploaded = await _pickAndUploadAttachment(
+ folder: 'design-spec-docs');
+ if (uploaded != null) {
+ linkController.text =
+ uploaded.url;
+ setDialogState(() {
+ uploadedFileName =
+ uploaded.name;
+ uploadedStoragePath =
+ uploaded.storagePath;
+ });
+ if (dialogContext.mounted) {
+ ScaffoldMessenger.of(dialogContext)
+ .showSnackBar(
+ SnackBar(
+ content: Text(
+ 'Uploaded: ${uploaded.name}'),
+ backgroundColor:
+ const Color(0xFF16A34A),
+ ),
+ );
+ }
+ }
+ } finally {
+ if (dialogContext.mounted) {
+ setDialogState(() =>
+ isUploading = false);
+ }
+ }
+ },
+ style: OutlinedButton.styleFrom(
+ foregroundColor: const Color(0xFFB8860B),
+ side: const BorderSide(
+ color: Color(0xFFFFC812)),
+ shape: RoundedRectangleBorder(
+ borderRadius:
+ BorderRadius.circular(10)),
+ ),
+ icon: isUploading
+ ? const SizedBox(
+ width: 16,
+ height: 16,
+ child: CircularProgressIndicator(
+ strokeWidth: 2),
+ )
+ : const Icon(Icons.upload_file, size: 18),
+ label: Text(isUploading
+ ? 'Uploading…'
+ : 'Upload'),
+ ),
+ ),
+ ],
+ ),
+
+ if (uploadedFileName != null) ...[
+ const SizedBox(height: 8),
+ Container(
+ padding: const EdgeInsets.symmetric(
+ horizontal: 10, vertical: 8),
+ decoration: BoxDecoration(
+ color: const Color(0xFFFFF8E1),
+ borderRadius: BorderRadius.circular(8),
+ border: Border.all(
+ color: const Color(0xFFFDE68A)),
+ ),
+ child: Row(
+ children: [
+ const Icon(Icons.check_circle,
+ size: 16, color: Color(0xFF16A34A)),
+ const SizedBox(width: 8),
+ Expanded(
+ child: Text(
+ 'Attached: $uploadedFileName',
+ style: const TextStyle(
+ fontSize: 12,
+ color: Color(0xFF6B7280)),
+ overflow: TextOverflow.ellipsis,
+ ),
+ ),
+ ],
+ ),
+ ),
+ ],
+
+ const SizedBox(height: 24),
+ const Divider(height: 1, color: Color(0xFFF1F5F9)),
+ const SizedBox(height: 16),
+
+ // ── Action bar ───────────────────────────────
+ Row(
+ mainAxisAlignment: MainAxisAlignment.spaceBetween,
+ children: [
+ const Text(
+ '* required',
+ style: TextStyle(
+ fontSize: 11,
+ color: Color(0xFF9CA3AF),
+ fontStyle: FontStyle.italic,
+ ),
+ ),
+ const Spacer(),
+ TextButton(
+ onPressed: () =>
+ Navigator.of(dialogContext).pop(null),
+ style: TextButton.styleFrom(
+ foregroundColor: const Color(0xFF6B7280),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 16, vertical: 12),
+ ),
+ child: const Text('Cancel'),
+ ),
+ const SizedBox(width: 8),
+ FilledButton.icon(
+ onPressed: () {
+ if (!(formKey.currentState?.validate() ??
+ false)) {
+ return;
+ }
+ final categoryValue = selectedCategory ==
+ 'Other'
+ ? categoryController.text.trim()
+ : (selectedCategory.isEmpty
+ ? categoryController.text.trim()
+ : selectedCategory);
+
+ final row = _DesignSpecDocumentRow(
+ name: nameController.text.trim(),
+ category: categoryValue,
+ version: versionController.text.trim(),
+ owner: selectedOwner,
+ linkedSpecId:
+ linkedSpecIdController.text.trim(),
+ link: linkController.text.trim(),
+ status: selectedStatus,
+ fileName: uploadedFileName ?? '',
+ storagePath: uploadedStoragePath ?? '',
+ );
+ Navigator.of(dialogContext).pop(row);
+ },
+ style: FilledButton.styleFrom(
+ backgroundColor: const Color(0xFFFFC812),
+ foregroundColor: const Color(0xFF111827),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 20, vertical: 14),
+ shape: RoundedRectangleBorder(
+ borderRadius:
+ BorderRadius.circular(10)),
+ elevation: 0,
+ ),
+ icon: const Icon(Icons.add, size: 18),
+ label: const Text(
+ 'Add to Register',
+ style: TextStyle(
+ fontWeight: FontWeight.w700,
+ fontSize: 14,
+ ),
+ ),
+ ),
+ ],
+ ),
+ ],
+ ),
+ ),
+ ),
+ ),
+ ),
+ );
+ },
+ );
+ },
+ );
+
+ // Dispose controllers after dialog closes
+ nameController.dispose();
+ nameFocus.dispose();
+ categoryController.dispose();
+ versionController.dispose();
+ linkedSpecIdController.dispose();
+ linkController.dispose();
+
+ // Commit the new row to the register only if user clicked "Add to Register"
+ if (result == null) return;
+ setState(() => _documents.add(result));
  _scheduleSave();
+ if (!mounted) return;
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(
+ content: Text(
+ 'Document "${result.name}" added to the register.'),
+ backgroundColor: const Color(0xFF16A34A),
+ behavior: SnackBarBehavior.floating,
+ duration: const Duration(seconds: 3),
+ ),
+ );
  }
 
  void _updateDocumentRow(int index,
@@ -901,17 +1569,39 @@ class _RequirementsImplementationScreenState
  ),
  ),
  TextButton.icon(
- onPressed: _addDocumentRow,
- icon: const Icon(Icons.add),
- label: const Text('Add document'),
+ onPressed: () => _addDocumentRow(ownerOptions),
+ style: TextButton.styleFrom(
+ foregroundColor: const Color(0xFFB8860B),
+ backgroundColor: const Color(0xFFFFF8E1),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 14, vertical: 8),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(8)),
+ ),
+ icon: const Icon(Icons.add_circle_outline, size: 18),
+ label: const Text(
+ 'Add document',
+ style: TextStyle(fontWeight: FontWeight.w600),
+ ),
  ),
  ],
  ),
  const SizedBox(height: 8),
  if (_documents.isEmpty)
- const Text(
- 'No documents added yet.',
- style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+ const Padding(
+ padding: EdgeInsets.symmetric(vertical: 8),
+ child: Row(
+ children: [
+ Icon(Icons.info_outline,
+ size: 14, color: Color(0xFF9CA3AF)),
+ SizedBox(width: 6),
+ Text(
+ 'No documents added yet. Click "Add document" to register one.',
+ style: TextStyle(
+ fontSize: 12, color: Color(0xFF6B7280)),
+ ),
+ ],
+ ),
  ),
  for (var i = 0; i < _documents.length; i++) ...[
  const SizedBox(height: 10),

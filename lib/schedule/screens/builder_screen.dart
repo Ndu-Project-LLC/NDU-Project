@@ -1880,7 +1880,6 @@ class _SampleActivityTableState extends State<_SampleActivityTable> {
     finishCtrl.dispose();
     predsCtrl.dispose();
     resourcesCtrl.dispose();
-    return result;
   }
 
   void _removeRow(int index) {

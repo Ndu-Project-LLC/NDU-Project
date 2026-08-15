@@ -294,10 +294,12 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  ),
  ),
  ),
+ ),
  );
  },
  );
  },
+ );
  );
 
  if (result == null || !mounted) {

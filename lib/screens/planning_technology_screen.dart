@@ -1617,7 +1617,7 @@ class _StatusBadge extends StatelessWidget {
  final color = normalized.contains('deployed')
  ? const Color(0xFF166534)
  : normalized.contains('implemented')
- ? const Color(0xFF1D4ED8)
+ ? const Color(0xFFFFC812)
  : normalized.contains('dismissed')
  ? const Color(0xFF991B1B)
  : const Color(0xFF92400E);

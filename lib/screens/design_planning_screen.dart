@@ -38,7 +38,7 @@ const Color _kSurface = Colors.white;
 const Color _kBorder = Color(0xFFE5E7EB);
 const Color _kText = Color(0xFF111827);
 const Color _kMuted = Color(0xFF6B7280);
-const Color _kPrimary = Color(0xFF2563EB);
+const Color _kPrimary = Color(0xFFFFC812);
 const Color _kSuccess = Color(0xFF0F9D58);
 const Color _kWarning = Color(0xFFF59E0B);
 // Brand colors from HTML design
@@ -48,8 +48,8 @@ const Color _kGray400 = Color(0xFF9CA3AF);
 const Color _kGray500 = Color(0xFF6B7280);
 const Color _kGray700 = Color(0xFF374151);
 const Color _kGray900 = Color(0xFF111827);
-const Color _kBlue50 = Color(0xFFEFF6FF);
-const Color _kBlue600 = Color(0xFF2563EB);
+const Color _kBlue50 = Color(0xFFFFF8E1);
+const Color _kBlue600 = Color(0xFFFFC812);
 const String _kSectionProgressNotesKey = 'planning_design_section_progress';
 
 enum _SectionProgressState { pending, complete, notApplicable }
@@ -2343,7 +2343,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'Design Overview',
  subtitle:
  'Document design basis details covering who owns design outcomes, how design will be executed, and what vendor/contract/interface constraints shape the solution.',
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFFFC812),
  child: Column(
  children: [
  _AssistActions(
@@ -2403,7 +2403,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'System Architecture Basis',
  subtitle:
  'Define the architecture direction, modules, diagram references, and data flow that downstream design must honor.',
- accent: const Color(0xFF7C3AED),
+ accent: const Color(0xFFB8860B),
  child: Column(
  children: [
  _AssistActions(
@@ -2731,7 +2731,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'Deviations',
  subtitle:
  'Record approved exceptions that deviate from planned specification items before execution begins.',
- accent: const Color(0xFF0EA5E9),
+ accent: const Color(0xFFFFC812),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -2782,7 +2782,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'UI/UX Design Basis',
  subtitle:
  'Capture journeys, interface areas, and design-system expectations that should feed the later UI/UX design work.',
- accent: const Color(0xFFDB2777),
+ accent: const Color(0xFFD97706),
  child: Column(
  children: [
  _AssistActions(
@@ -3016,7 +3016,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
  title: 'Dependencies',
  subtitle:
  'Track the external systems, teams, approvals, and vendors the design effort depends on.',
- accent: const Color(0xFF0891B2),
+ accent: const Color(0xFFD97706),
  child: Column(
  children: [
  _SubHeader(
@@ -3175,7 +3175,7 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
       title: 'Design Work Packages',
       subtitle:
           'Select WBS items to generate design work package chains (EWP → Procurement → Execution).',
-      accent: const Color(0xFF0D9488),
+      accent: const Color(0xFFD97706),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -3212,10 +3212,10 @@ class _DesignPlanningScreenState extends State<DesignPlanningScreen> {
                     : 'Create Design Work Packages from Selected',
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D9488),
+                backgroundColor: const Color(0xFFD97706),
                 foregroundColor: Colors.white,
                 disabledBackgroundColor:
-                    const Color(0xFF0D9488).withValues(alpha: 0.4),
+                    const Color(0xFFD97706).withValues(alpha: 0.4),
                 disabledForegroundColor: Colors.white70,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -3427,21 +3427,21 @@ class _SectionMeta {
 
 const List<_SectionMeta> _sectionOrder = [
   _SectionMeta('overview', 'Project Overview', _kPrimary),
-  _SectionMeta('design_overview', 'Design Overview', Color(0xFF1D4ED8)),
+  _SectionMeta('design_overview', 'Design Overview', Color(0xFFFFC812)),
   _SectionMeta('design_specifications_workspace', 'Design Specifications',
       Color(0xFF0F766E)),
-  _SectionMeta('deviations', 'Deviations', Color(0xFF0EA5E9)),
+  _SectionMeta('deviations', 'Deviations', Color(0xFFFFC812)),
   _SectionMeta('requirements', 'Requirements Mapping', Color(0xFF0F9D58)),
-  _SectionMeta('architecture', 'Architecture Basis', Color(0xFF7C3AED)),
-  _SectionMeta('uiux', 'UI/UX Basis', Color(0xFFDB2777)),
+  _SectionMeta('architecture', 'Architecture Basis', Color(0xFFB8860B)),
+  _SectionMeta('uiux', 'UI/UX Basis', Color(0xFFD97706)),
   _SectionMeta('technical', 'Technical Basis', Color(0xFF0F766E)),
   _SectionMeta('constraints', 'Constraints & Assumptions', Color(0xFFF59E0B)),
   _SectionMeta('risks', 'Risks & Mitigation', Color(0xFFDC2626)),
-  _SectionMeta('dependencies', 'Dependencies', Color(0xFF0891B2)),
+  _SectionMeta('dependencies', 'Dependencies', Color(0xFFD97706)),
   _SectionMeta('decisions', 'Decision Log', Color(0xFF4F46E5)),
   _SectionMeta('validation', 'Validation', Color(0xFF15803D)),
   _SectionMeta('approvals', 'Approvals', Color(0xFF7C2D12)),
-  _SectionMeta('work_packages', 'Work Packages', Color(0xFF0D9488)),
+  _SectionMeta('work_packages', 'Work Packages', Color(0xFFD97706)),
 ];
 
 class _SectionCard extends StatelessWidget {

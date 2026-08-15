@@ -454,7 +454,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  children: [
  _buildMetricsStrip(
  metrics: [
- _ScopeMetricData('Total Items', total, const Color(0xFF2563EB),
+ _ScopeMetricData('Total Items', total, const Color(0xFFFFC812),
  'All scope items', Icons.list),
  _ScopeMetricData('Not Started', notStarted,
  const Color(0xFF9CA3AF), 'Awaiting work', Icons.schedule),
@@ -519,7 +519,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  icon: const Icon(Icons.add, size: 18),
  label: const Text('Add Scope Item'),
  style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding:
  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
@@ -870,7 +870,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  _BaselineStatCard(
  label: 'Baseline Scope',
  value: '${baselineItems.length} items',
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  icon: Icons.lock_outline,
  ),
  _BaselineStatCard(
@@ -989,7 +989,7 @@ class _ScopeTrackingPlanScreenState extends State<ScopeTrackingPlanScreen> {
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  _compareRow('Baseline Items', '${baseline.length}',
- const Color(0xFF2563EB)),
+ const Color(0xFFFFC812)),
  const SizedBox(height: 12),
  _compareRow('Scope Creep', '${creep.length}',
  const Color(0xFFEF4444)),
@@ -1403,7 +1403,7 @@ class _StatusBadge extends StatelessWidget {
  case 'Not Started':
  return const Color(0xFF9CA3AF);
  case 'In-Progress':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case 'Verified':
  return const Color(0xFF10B981);
  case 'Out-of-Scope':
@@ -1912,7 +1912,7 @@ class _DriftSignalsCard extends StatelessWidget {
  children: const [
  _ScopeTag(label: '3 Active Alerts', tone: Color(0xFFF59E0B)),
  _ScopeTag(label: '1 Escalation', tone: Color(0xFFEF4444)),
- _ScopeTag(label: 'Risk Score: Medium', tone: Color(0xFF6366F1)),
+ _ScopeTag(label: 'Risk Score: Medium', tone: Color(0xFFB8860B)),
  ],
  ),
  ],

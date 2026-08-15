@@ -846,7 +846,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Container(
  padding: const EdgeInsets.fromLTRB(28, 24, 28, 20),
  decoration: const BoxDecoration(
- gradient: LinearGradient(colors: [Color(0xFF7C3AED), Color(0xFF5B21B6)]),
+ gradient: LinearGradient(colors: [Color(0xFFB8860B), Color(0xFFB8860B)]),
  borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
  ),
  child: Row(
@@ -920,7 +920,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  },
  icon: const Icon(Icons.add_rounded, size: 18),
  label: const Text('Add Model', style: TextStyle(fontWeight: FontWeight.w700)),
- style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7C3AED), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), elevation: 0),
+ style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFB8860B), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), elevation: 0),
  ),
  ],
  ),
@@ -938,7 +938,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _buildDialogField({required TextEditingController controller, required String label, required String hint, required IconData icon, int maxLines = 1, String? Function(String?)? validator}) {
  return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
- Row(children: [Icon(icon, size: 14, color: const Color(0xFF7C3AED)), const SizedBox(width: 6), Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF374151)))]),
+ Row(children: [Icon(icon, size: 14, color: const Color(0xFFB8860B)), const SizedBox(width: 6), Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF374151)))]),
  const SizedBox(height: 6),
  TextFormField(
  controller: controller,
@@ -949,7 +949,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  filled: true,
  fillColor: const Color(0xFFF9FAFB),
  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
- focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF7C3AED), width: 2)),
+ focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFB8860B), width: 2)),
  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
  ),
  ),
@@ -1075,13 +1075,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle:
  'Define and manage delivery models, alignment evidence, technical controls, and exit standards.',
  icon: Icons.delivery_dining_outlined,
- accent: const Color(0xFF7C3AED),
+ accent: const Color(0xFFB8860B),
  trailing: TextButton.icon(
  onPressed: _addMethodologyStandard,
  icon: const Icon(Icons.add_rounded, size: 16),
  label: const Text('Add model'),
  style: TextButton.styleFrom(
- foregroundColor: const Color(0xFF7C3AED),
+ foregroundColor: const Color(0xFFB8860B),
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
  ),
@@ -1441,7 +1441,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ? Icons.edit_outlined
  : Icons.add_circle_outline,
  size: 20,
- color: const Color(0xFF7C3AED)),
+ color: const Color(0xFFB8860B)),
  const SizedBox(width: 8),
  Text(isEdit ? 'Edit Delivery Model' : 'Add Delivery Model',
  style: const TextStyle(fontSize: 16)),
@@ -1559,7 +1559,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Navigator.of(ctx).pop();
  },
  style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFF7C3AED),
+ backgroundColor: const Color(0xFFB8860B),
  foregroundColor: Colors.white,
  ),
  child: Text(isEdit ? 'Save' : 'Add'),
@@ -1765,7 +1765,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  case 'no-go':
  return const Color(0xFFDC2626);
  case 'pending':
- return const Color(0xFF6366F1);
+ return const Color(0xFFB8860B);
  default:
  return const Color(0xFF6B7280);
  }
@@ -2309,7 +2309,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  _buildSectionHeader(
  icon: Icons.shield_outlined,
- color: const Color(0xFF1D4ED8),
+ color: const Color(0xFFFFC812),
  title: 'Constraint And Guardrail Register',
  subtitle:
  'Define architectural constraints, guardrails, ownership, and approval status for design governance.',
@@ -2454,7 +2454,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  _buildSectionHeader(
  icon: Icons.account_tree_outlined,
- color: const Color(0xFF9333EA),
+ color: const Color(0xFFB8860B),
  title: 'Dependency And Decision Watchlist',
  subtitle:
  'Track critical dependencies, decisions, ownership, and resolution status that affect design alignment.',
@@ -2841,7 +2841,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle:
  'Capture assumptions, unresolved blockers, and cross-team context driving feasibility decisions.',
  icon: Icons.edit_note_outlined,
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFFFC812),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
@@ -2887,7 +2887,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle:
  'Score each feature against the constraint most likely to challenge delivery.',
  icon: Icons.speed_outlined,
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFFFC812),
  child: Column(
  children: snapshot.feasibilityItems
  .map(
@@ -3170,16 +3170,16 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle:
  'Connected versus pending systems around the central project concept.',
  icon: Icons.hub_outlined,
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFFFC812),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(16),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  ),
  child: Row(
  children: [
@@ -3187,7 +3187,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  width: 40,
  height: 40,
  decoration: BoxDecoration(
- color: const Color(0xFF1D4ED8),
+ color: const Color(0xFFFFC812),
  borderRadius: BorderRadius.circular(12),
  ),
  child:
@@ -3203,7 +3203,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  style: TextStyle(
  fontSize: 11.5,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  const SizedBox(height: 2),
@@ -3234,14 +3234,14 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Expanded(
  child: Container(
  height: 2,
- color: const Color(0xFF93C5FD),
+ color: const Color(0xFFFFC812),
  ),
  ),
  Container(
  width: 10,
  height: 10,
  decoration: const BoxDecoration(
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  shape: BoxShape.circle,
  ),
  ),
@@ -3299,7 +3299,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle:
  'Target values compared against current capacity for digital and physical demand.',
  icon: Icons.monitor_heart_outlined,
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFFFC812),
  child: Column(
  children: snapshot.performanceItems
  .map(
@@ -3402,7 +3402,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildFlowStage(
  label: 'Source',
  value: lane.source,
- color: const Color(0xFFDBEAFE),
+ color: const Color(0xFFFEF3C7),
  ),
  _buildFlowStage(
  label: 'Transformation',
@@ -3470,7 +3470,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  subtitle:
  'Compliance view across digital controls and physical safety obligations.',
  icon: Icons.shield_outlined,
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFFFC812),
  child: Column(
  children: snapshot.protocols
  .map(
@@ -3962,7 +3962,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  _buildSectionHeader(
  icon: Icons.policy_outlined,
- color: const Color(0xFF1D4ED8),
+ color: const Color(0xFFFFC812),
  title: 'Constraints & guardrails',
  subtitle:
  'World-class guardrails that clarify what must never drift.',
@@ -4095,7 +4095,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  _buildSectionHeader(
  icon: Icons.hub_outlined,
- color: const Color(0xFF9333EA),
+ color: const Color(0xFFB8860B),
  title: 'Dependencies & decisions',
  subtitle:
  'World-class visibility into what must land before build.',
@@ -4546,7 +4546,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() => _constraints[index].status = value);
  _scheduleSave();
  },
- accent: const Color(0xFF1D4ED8),
+ accent: const Color(0xFFFFC812),
  enabled: _canEditAlignment && isEditing,
  ),
  ),
@@ -4719,7 +4719,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  setState(() => _dependencies[index].status = value);
  _scheduleSave();
  },
- accent: const Color(0xFF9333EA),
+ accent: const Color(0xFFB8860B),
  enabled: _canEditAlignment && isEditing,
  ),
  ),
@@ -4792,7 +4792,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF1D4ED8), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFFFC812), width: 2),
  ),
  ),
  );
@@ -4902,7 +4902,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF1D4ED8), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFFFC812), width: 2),
  ),
  ),
  );
@@ -4922,7 +4922,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  icon: isEditing
  ? Icons.check_circle_outline_rounded
  : Icons.edit_outlined,
- color: isEditing ? const Color(0xFF059669) : const Color(0xFF2563EB),
+ color: isEditing ? const Color(0xFF059669) : const Color(0xFFFFC812),
  onPressed: _canEditAlignment ? onToggleEdit : null,
  ),
  const SizedBox(width: _technicalAlignmentActionGap),

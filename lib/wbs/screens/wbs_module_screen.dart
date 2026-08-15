@@ -1170,20 +1170,20 @@ class _CrossPhaseActions extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFBFDBFE).withValues(alpha: 0.7)),
+        border: Border.all(color: const Color(0xFFFDE68A).withValues(alpha: 0.7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(Icons.hub_outlined, size: 16, color: Color(0xFF1D4ED8)),
+              Icon(Icons.hub_outlined, size: 16, color: Color(0xFFFFC812)),
               SizedBox(width: 8),
               Text('Connect to Initiation & Front-End Planning',
                   style: TextStyle(
-                      color: Color(0xFF1E3A8A),
+                      color: Color(0xFFB8860B),
                       fontSize: 14,
                       fontWeight: FontWeight.w700)),
             ],
@@ -1193,7 +1193,7 @@ class _CrossPhaseActions extends StatelessWidget {
             'Pull deliverables from the initiation phase into the WBS, then '
             'match existing front-end planning cost lines to WBS nodes by code '
             'or by name. Both actions are idempotent — re-running them is safe.',
-            style: TextStyle(color: Color(0xFF1E40AF), fontSize: 12),
+            style: TextStyle(color: Color(0xFFFFC812), fontSize: 12),
           ),
           const SizedBox(height: 12),
           // Source-data preview chips
@@ -1224,7 +1224,7 @@ class _CrossPhaseActions extends StatelessWidget {
                 icon: const Icon(Icons.download_for_offline_outlined, size: 16),
                 label: const Text('Seed from Initiation'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF1D4ED8),
+                  backgroundColor: const Color(0xFFFFC812),
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -1235,8 +1235,8 @@ class _CrossPhaseActions extends StatelessWidget {
                 icon: const Icon(Icons.auto_fix_high_outlined, size: 16),
                 label: const Text('Auto-link FEP Cost Lines'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF1D4ED8),
-                  side: const BorderSide(color: Color(0xFFBFDBFE)),
+                  foregroundColor: const Color(0xFFFFC812),
+                  side: const BorderSide(color: Color(0xFFFDE68A)),
                 ),
               ),
             ],
@@ -1252,16 +1252,16 @@ class _CrossPhaseActions extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFFBFDBFE).withValues(alpha: 0.5)),
+        border: Border.all(color: const Color(0xFFFDE68A).withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: const Color(0xFF1D4ED8)),
+          Icon(icon, size: 12, color: const Color(0xFFFFC812)),
           const SizedBox(width: 4),
           Text(value,
               style: const TextStyle(
-                  color: Color(0xFF1E3A8A),
+                  color: Color(0xFFB8860B),
                   fontSize: 11,
                   fontWeight: FontWeight.w700)),
           const SizedBox(width: 4),

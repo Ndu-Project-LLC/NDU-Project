@@ -346,20 +346,20 @@ class _DashboardTab extends StatelessWidget {
                 _kpiCard('Open CRs', '${provider.openCRs}',
                     Icons.pending_actions, const Color(0xFFF59E0B)),
                 _kpiCard('Pending Approval', '${provider.pendingApprovals}',
-                    Icons.assignment_late, const Color(0xFF8B5CF6)),
+                    Icons.assignment_late, const Color(0xFFB8860B)),
                 _kpiCard('Approved', '${provider.approvedCRs}',
                     Icons.check_circle, const Color(0xFF10B981)),
                 _kpiCard('Emergency', '${provider.emergencyCRs}',
                     Icons.emergency, const Color(0xFFEF4444)),
                 _kpiCard('Re-baselines', '${provider.rebaselineCount}',
-                    Icons.history, const Color(0xFF6366F1)),
+                    Icons.history, const Color(0xFFB8860B)),
                 _kpiCard(
                   'Approval Cycle (avg)',
                   provider.avgApprovalCycleDays == 0
                       ? '—'
                       : '${provider.avgApprovalCycleDays.toStringAsFixed(1)}d',
                   Icons.timer_outlined,
-                  const Color(0xFF06B6D4),
+                  const Color(0xFFD97706),
                 ),
                 _kpiCard(
                   'Re-baselines (Qtr)',
@@ -455,11 +455,11 @@ class _DashboardTab extends StatelessWidget {
           Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                  color: const Color(0xFFB8860B).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6)),
               child: Text('$total CRs',
                   style: const TextStyle(
-                      color: Color(0xFF6366F1),
+                      color: Color(0xFFB8860B),
                       fontSize: 11,
                       fontWeight: FontWeight.w700))),
         ]),
@@ -470,7 +470,7 @@ class _DashboardTab extends StatelessWidget {
             size: Size.infinite,
             painter: _SparklinePainter(
               values: volume,
-              color: const Color(0xFF6366F1),
+              color: const Color(0xFFB8860B),
               max: maxV == 0 ? 1 : maxV.toDouble(),
             ),
           ),
@@ -500,7 +500,7 @@ class _DashboardTab extends StatelessWidget {
                     fontWeight: FontWeight.w600)),
             Text('$maxV CRs',
                 style: const TextStyle(
-                    color: Color(0xFF6366F1),
+                    color: Color(0xFFB8860B),
                     fontSize: 12,
                     fontWeight: FontWeight.w800)),
           ]),
@@ -590,7 +590,7 @@ class _DashboardTab extends StatelessWidget {
         const SizedBox(height: 12),
         // Reserve
         _reserveBar('Management Reserve', provider.usedReserve,
-            provider.totalReserve, const Color(0xFF6366F1)),
+            provider.totalReserve, const Color(0xFFB8860B)),
         const SizedBox(height: 16),
         // Total impact
         Container(
@@ -1222,7 +1222,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
               selected: isSelected,
               onSelectChanged: (_) => widget.onSelectCR(cr.id),
               cells: [
-                DataCell(WrappedText(cr.id, style: const TextStyle(color: Color(0xFF6366F1), fontSize: 12, fontWeight: FontWeight.w600))),
+                DataCell(WrappedText(cr.id, style: const TextStyle(color: Color(0xFFB8860B), fontSize: 12, fontWeight: FontWeight.w600))),
                 DataCell(ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 240),
                   child: WrappedText(cr.title, style: const TextStyle(color: _textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
@@ -1257,7 +1257,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
   Widget _priorityBadge(CMPriority p) {
     final colors = <CMPriority, Color>{
       CMPriority.low: const Color(0xFF6B7280),
-      CMPriority.medium: const Color(0xFF3B82F6),
+      CMPriority.medium: const Color(0xFFFFC812),
       CMPriority.high: const Color(0xFFF59E0B),
       CMPriority.critical: const Color(0xFFEF4444),
       CMPriority.emergency: const Color(0xFFDC2626),
@@ -1277,12 +1277,12 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
   Widget _statusBadge(CMStatus s) {
     final colors = <CMStatus, Color>{
       CMStatus.draft: const Color(0xFF6B7280),
-      CMStatus.submitted: const Color(0xFF3B82F6),
-      CMStatus.underReview: const Color(0xFF8B5CF6),
+      CMStatus.submitted: const Color(0xFFFFC812),
+      CMStatus.underReview: const Color(0xFFB8860B),
       CMStatus.pendingApproval: const Color(0xFFF59E0B),
       CMStatus.approved: const Color(0xFF10B981),
       CMStatus.rejected: const Color(0xFFEF4444),
-      CMStatus.implemented: const Color(0xFF06B6D4),
+      CMStatus.implemented: const Color(0xFFD97706),
       CMStatus.closed: const Color(0xFF64748B),
     };
     final color = colors[s] ?? const Color(0xFF6B7280);
@@ -1470,11 +1470,11 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                      color: const Color(0xFF3B82F6).withValues(alpha: 0.12),
+                      color: const Color(0xFFFFC812).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(4)),
                   child: const Text('AGILE',
                       style: TextStyle(
-                          color: Color(0xFF3B82F6),
+                          color: Color(0xFFFFC812),
                           fontSize: 9,
                           fontWeight: FontWeight.w700))),
             Container(
@@ -1633,7 +1633,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
                     onPressed: () => widget.provider
                         .implementCR(cr.id, notes: 'Implemented from UI'),
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
+                        backgroundColor: const Color(0xFFB8860B),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6))),
@@ -1673,7 +1673,7 @@ class _ChangeRegisterTabState extends State<_ChangeRegisterTab> {
     for (final d in cr.impact.all) {
       if (!d.hasImpact) continue;
       final color =
-          d.isCritical ? const Color(0xFFEF4444) : const Color(0xFF6366F1);
+          d.isCritical ? const Color(0xFFEF4444) : const Color(0xFFB8860B);
       final labelParts = <String>[];
       if (d.scheduleDays != null && d.scheduleDays != 0) {
         labelParts.add(
@@ -1905,11 +1905,11 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
           Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                  color: const Color(0xFFB8860B).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6)),
               child: Text('Avg composite ${avgComposite.toStringAsFixed(2)}',
                   style: const TextStyle(
-                      color: Color(0xFF6366F1),
+                      color: Color(0xFFB8860B),
                       fontSize: 11,
                       fontWeight: FontWeight.w700))),
         ]),
@@ -1984,7 +1984,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                      color: const Color(0xFFB8860B).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6)),
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -1997,7 +1997,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                 letterSpacing: 0.5)),
                         Text(cr.impact.compositeImpactScore.toStringAsFixed(2),
                             style: const TextStyle(
-                                color: Color(0xFF6366F1),
+                                color: Color(0xFFB8860B),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800)),
                       ])),
@@ -2040,7 +2040,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                               ? (d.isCritical
                                   ? const Color(0xFFEF4444)
                                       .withValues(alpha: 0.06)
-                                  : const Color(0xFF6366F1)
+                                  : const Color(0xFFB8860B)
                                       .withValues(alpha: 0.04))
                               : const Color(0xFFF9FAFB),
                           borderRadius: BorderRadius.circular(6),
@@ -2049,7 +2049,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                   ? (d.isCritical
                                       ? const Color(0xFFEF4444)
                                           .withValues(alpha: 0.2)
-                                      : const Color(0xFF6366F1)
+                                      : const Color(0xFFB8860B)
                                           .withValues(alpha: 0.15))
                                   : _surfaceBorder)),
                       child: Column(
@@ -2065,7 +2065,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                           color: hasImpact
                                               ? (d.isCritical
                                                   ? const Color(0xFFEF4444)
-                                                  : const Color(0xFF6366F1))
+                                                  : const Color(0xFFB8860B))
                                               : _textSecondary,
                                           fontSize: 9,
                                           fontWeight: FontWeight.w600)),
@@ -2076,7 +2076,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                         decoration: BoxDecoration(
                                             color: (d.isCritical
                                                     ? const Color(0xFFEF4444)
-                                                    : const Color(0xFF6366F1))
+                                                    : const Color(0xFFB8860B))
                                                 .withValues(alpha: 0.15),
                                             borderRadius:
                                                 BorderRadius.circular(3)),
@@ -2084,7 +2084,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                             style: TextStyle(
                                                 color: d.isCritical
                                                     ? const Color(0xFFEF4444)
-                                                    : const Color(0xFF6366F1),
+                                                    : const Color(0xFFB8860B),
                                                 fontSize: 8,
                                                 fontWeight: FontWeight.w800))),
                                 ]),
@@ -2095,7 +2095,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                     style: TextStyle(
                                         color: d.isCritical
                                             ? const Color(0xFFEF4444)
-                                            : const Color(0xFF6366F1),
+                                            : const Color(0xFFB8860B),
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700)),
                               if (d.costAmount != null && d.costAmount != 0)
@@ -2103,7 +2103,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                                     style: TextStyle(
                                         color: d.isCritical
                                             ? const Color(0xFFEF4444)
-                                            : const Color(0xFF6366F1),
+                                            : const Color(0xFFB8860B),
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700)),
                               if (d.impact != null)
@@ -2145,7 +2145,7 @@ class _ImpactApprovalSummaryTab extends StatelessWidget {
                         _totalChip(
                             'Dimensions',
                             '${cr.impact.impactedCount}/${cr.impact.all.length}',
-                            const Color(0xFF6366F1)),
+                            const Color(0xFFB8860B)),
                         _totalChip(
                             'Composite',
                             cr.impact.compositeImpactScore.toStringAsFixed(2),
@@ -2310,7 +2310,7 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
             icon: const Icon(Icons.download, size: 16),
             label: const Text('Export CSV'),
             style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
+                backgroundColor: const Color(0xFFB8860B),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8))),
@@ -2409,18 +2409,18 @@ class _AuditTrailTabState extends State<_AuditTrailTab> {
                     color: _cardBg,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.2))),
+                        color: const Color(0xFFB8860B).withValues(alpha: 0.2))),
                 child: Row(children: [
                   Container(
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                          color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                          color: const Color(0xFFB8860B).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6)),
                       child: const Center(
                           child: Text('v',
                               style: TextStyle(
-                                  color: Color(0xFF6366F1),
+                                  color: Color(0xFFB8860B),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w800)))),
                   const SizedBox(width: 12),
@@ -3005,7 +3005,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
               const SizedBox(width: 12),
               Expanded(
                   child: _numberField('Schedule Days Impact', _schedCtrl,
-                      const Color(0xFF8B5CF6),
+                      const Color(0xFFB8860B),
                       allowNegative: true)),
             ]),
             const SizedBox(height: 12),
@@ -3025,7 +3025,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                   borderRadius: BorderRadius.circular(8)),
               child: Row(children: [
                 const Icon(Icons.info_outline,
-                    color: Color(0xFF6366F1), size: 16),
+                    color: Color(0xFFB8860B), size: 16),
                 const SizedBox(width: 8),
                 Expanded(
                     child: Text(
@@ -3064,7 +3064,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                 ),
                 child: Column(children: [
                   const Icon(Icons.upload_file,
-                      size: 36, color: Color(0xFF6366F1)),
+                      size: 36, color: Color(0xFFB8860B)),
                   const SizedBox(height: 8),
                   const Text(
                       'Drop supporting documents here or click to upload',
@@ -3160,7 +3160,7 @@ class _CreateCRTabState extends State<_CreateCRTab> {
                           fontSize: 14,
                           fontWeight: FontWeight.w800)))),
           const SizedBox(width: 12),
-          Icon(icon, color: const Color(0xFF6366F1), size: 18),
+          Icon(icon, color: const Color(0xFFB8860B), size: 18),
           const SizedBox(width: 8),
           Text(title,
               style: const TextStyle(
@@ -3599,7 +3599,7 @@ class _ImpactDetailTabState extends State<_ImpactDetailTab> {
               icon: const Icon(Icons.calculate, size: 14),
               label: const Text('Auto-calculate composite'),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
+                  backgroundColor: const Color(0xFFB8860B),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8))),
@@ -3864,7 +3864,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
                         value: r,
                         child: Row(children: [
                           Icon(r.icon,
-                              size: 14, color: const Color(0xFF6366F1)),
+                              size: 14, color: const Color(0xFFB8860B)),
                           const SizedBox(width: 8),
                           Text(r.label)
                         ])))
@@ -4085,7 +4085,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
               icon: const Icon(Icons.add, size: 14),
               label: const Text('Add Step'),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
+                  backgroundColor: const Color(0xFFB8860B),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8))),
@@ -4166,7 +4166,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
             _statChip(
-                'Total Steps', '${steps.length}', const Color(0xFF6366F1)),
+                'Total Steps', '${steps.length}', const Color(0xFFB8860B)),
             _statChip(
                 'Approved',
                 '${steps.where((s) => s.decision == ApprovalDecision.approved).length}',
@@ -4182,7 +4182,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
             _statChip(
                 'Delegated',
                 '${steps.where((s) => s.decision == ApprovalDecision.delegated).length}',
-                const Color(0xFF8B5CF6)),
+                const Color(0xFFB8860B)),
           ]),
         ),
         if (!canFinalize) ...[
@@ -4277,7 +4277,7 @@ class _WorkflowTabState extends State<_WorkflowTab> {
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               Icon(step.role?.icon ?? Icons.person_outline,
-                  size: 14, color: const Color(0xFF6366F1)),
+                  size: 14, color: const Color(0xFFB8860B)),
               const SizedBox(width: 6),
               Expanded(
                   child: Text(step.roleLabel,
@@ -4358,19 +4358,19 @@ class _WorkflowTabState extends State<_WorkflowTab> {
               Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.08),
+                      color: const Color(0xFFB8860B).withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                           color:
-                              const Color(0xFF8B5CF6).withValues(alpha: 0.2))),
+                              const Color(0xFFB8860B).withValues(alpha: 0.2))),
                   child: Row(children: [
                     const Icon(Icons.forward,
-                        size: 12, color: Color(0xFF8B5CF6)),
+                        size: 12, color: Color(0xFFB8860B)),
                     const SizedBox(width: 6),
                     Expanded(
                         child: Text('Delegated from: ${step.delegatedFrom}',
                             style: const TextStyle(
-                                color: Color(0xFF8B5CF6),
+                                color: Color(0xFFB8860B),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600))),
                   ])),
@@ -4760,7 +4760,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                         letterSpacing: 1)),
                 Text('$doneCount of ${tasks.length} work packages complete',
                     style: const TextStyle(
-                        color: Color(0xFF6366F1),
+                        color: Color(0xFFB8860B),
                         fontSize: 12,
                         fontWeight: FontWeight.w700)),
               ]),
@@ -4832,16 +4832,16 @@ class _ImplementationTabState extends State<_ImplementationTab> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.06),
+              color: const Color(0xFFB8860B).withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.2))),
+                  color: const Color(0xFFB8860B).withValues(alpha: 0.2))),
           child:
               Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
             _baselineStat(
                 'Current BAC',
                 '\$${widget.provider.currentBAC.toStringAsFixed(0)}',
-                const Color(0xFF6366F1)),
+                const Color(0xFFB8860B)),
             _baselineStat(
                 'Baseline Finish',
                 '${widget.provider.currentBaselineFinish.day}/${widget.provider.currentBaselineFinish.month}/${widget.provider.currentBaselineFinish.year}',
@@ -4849,7 +4849,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
             _baselineStat(
                 'Scope Hash',
                 _shortHash(widget.provider.currentScopeHash),
-                const Color(0xFF8B5CF6)),
+                const Color(0xFFB8860B)),
             _baselineStat('Re-baselines', '${widget.provider.rebaselineCount}',
                 const Color(0xFFD97706)),
           ]),
@@ -5092,19 +5092,19 @@ class _ImplementationTabState extends State<_ImplementationTab> {
           color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.2))),
+              color: const Color(0xFFB8860B).withValues(alpha: 0.2))),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                  color: const Color(0xFFB8860B).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8)),
               child: const Center(
                   child: Text('v',
                       style: TextStyle(
-                          color: Color(0xFF6366F1),
+                          color: Color(0xFFB8860B),
                           fontSize: 16,
                           fontWeight: FontWeight.w800)))),
           const SizedBox(width: 12),
@@ -5132,7 +5132,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
             // BAC diff
             Row(children: [
               const Icon(Icons.account_balance_wallet_outlined,
-                  size: 14, color: Color(0xFF6366F1)),
+                  size: 14, color: Color(0xFFB8860B)),
               const SizedBox(width: 6),
               const Expanded(
                   child: Text('BAC',
@@ -5160,7 +5160,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
             const SizedBox(height: 6),
             // Scope hash diff
             Row(children: [
-              const Icon(Icons.fingerprint, size: 14, color: Color(0xFF8B5CF6)),
+              const Icon(Icons.fingerprint, size: 14, color: Color(0xFFB8860B)),
               const SizedBox(width: 6),
               const Expanded(
                   child: Text('Scope hash',
@@ -5177,7 +5177,7 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                     size: 12, color: _textSecondary),
                 Text(_shortHash(rev.revisedScopeHash),
                     style: const TextStyle(
-                        color: Color(0xFF8B5CF6),
+                        color: Color(0xFFB8860B),
                         fontSize: 10,
                         fontWeight: FontWeight.w700)),
               ] else
@@ -5225,11 +5225,11 @@ class _ImplementationTabState extends State<_ImplementationTab> {
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                           color:
-                              const Color(0xFF6366F1).withValues(alpha: 0.08),
+                              const Color(0xFFB8860B).withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(4)),
                       child: Text(b,
                           style: const TextStyle(
-                              color: Color(0xFF6366F1),
+                              color: Color(0xFFB8860B),
                               fontSize: 9,
                               fontWeight: FontWeight.w600)),
                     ))
@@ -5456,7 +5456,7 @@ class _ImpactBarChartPainter extends CustomPainter {
       } else if (lvl <= 1) {
         barColor = const Color(0xFF10B981);
       } else if (lvl <= 2) {
-        barColor = const Color(0xFF3B82F6);
+        barColor = const Color(0xFFFFC812);
       } else if (lvl <= 3) {
         barColor = const Color(0xFFF59E0B);
       } else if (lvl <= 4) {

@@ -302,7 +302,7 @@ class _DeliverableRoadmapAgileMapOutScreenState
         _MetricCard(
             label: 'Total Sprints',
             value: '${_sprints.length}',
-            accent: const Color(0xFF8B5CF6)),
+            accent: const Color(0xFFB8860B)),
         _MetricCard(
             label: 'Est. Velocity',
             value: '$_avgVelocity pts/sprint',
@@ -310,7 +310,7 @@ class _DeliverableRoadmapAgileMapOutScreenState
         _MetricCard(
             label: 'Total Story Points',
             value: '$_totalPoints',
-            accent: const Color(0xFF2563EB)),
+            accent: const Color(0xFFFFC812)),
         _MetricCard(
             label: 'Progress',
             value: _totalPoints > 0
@@ -721,7 +721,7 @@ class _WaveRow extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+                  color: const Color(0xFFB8860B).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 alignment: Alignment.center,
@@ -730,7 +730,7 @@ class _WaveRow extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF8B5CF6),
+                    color: Color(0xFFB8860B),
                   ),
                 ),
               ),
@@ -756,7 +756,7 @@ class _WaveRow extends StatelessWidget {
               value: progress / 100,
               backgroundColor: const Color(0xFFE5E7EB),
               valueColor:
-                  const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+                  const AlwaysStoppedAnimation<Color>(Color(0xFFB8860B)),
               minHeight: 6,
             ),
           ),
@@ -773,7 +773,7 @@ class _WaveRow extends StatelessWidget {
                 style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF8B5CF6)),
+                    color: Color(0xFFB8860B)),
               ),
             ],
           ),
@@ -1017,7 +1017,7 @@ class _MilestoneRow extends StatelessWidget {
             decoration: BoxDecoration(
               color: (isComplete
                       ? const Color(0xFF10B981)
-                      : const Color(0xFF2563EB))
+                      : const Color(0xFFFFC812))
                   .withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -1026,7 +1026,7 @@ class _MilestoneRow extends StatelessWidget {
               size: 16,
               color: isComplete
                   ? const Color(0xFF10B981)
-                  : const Color(0xFF2563EB),
+                  : const Color(0xFFFFC812),
             ),
           ),
           const SizedBox(width: 10),

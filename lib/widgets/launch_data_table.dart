@@ -329,8 +329,8 @@ class _LaunchDataTableState extends State<LaunchDataTable> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
-                foregroundColor: const Color(0xFF2563EB),
-                side: const BorderSide(color: Color(0xFF93C5FD)),
+                foregroundColor: const Color(0xFFFFC812),
+                side: const BorderSide(color: Color(0xFFFFC812)),
               ),
             ),
             const SizedBox(width: 8),
@@ -952,7 +952,7 @@ class _LaunchEditableCellState extends State<LaunchEditableCell> {
     }
 
     final borderColor =
-        _isFocused ? const Color(0xFF2563EB) : const Color(0xFFE5E7EB);
+        _isFocused ? const Color(0xFFFFC812) : const Color(0xFFE5E7EB);
     final bgColor = _isFocused ? Colors.white : const Color(0xFFF9FAFB);
 
     final child = Focus(
@@ -1078,7 +1078,7 @@ class _LaunchDateCellState extends State<LaunchDateCell> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: _isHovering
-                    ? const Color(0xFF2563EB)
+                    ? const Color(0xFFFFC812)
                     : const Color(0xFFE5E7EB),
                 width: _isHovering ? 1.5 : 1,
               ),
@@ -1301,7 +1301,7 @@ class LaunchStatusDropdown extends StatelessWidget {
       return const Color(0xFF10B981);
     }
     if (s.contains('progress') || s.contains('active') || s.contains('track')) {
-      return const Color(0xFF2563EB);
+      return const Color(0xFFFFC812);
     }
     if (s.contains('overdue') || s.contains('at risk') || s.contains('delay')) {
       return const Color(0xFFEF4444);

@@ -1294,7 +1294,7 @@ class _TransitionToProdTeamScreenState
       sectionSubtitle:
           'Certification, release readiness, and production handoff',
       sectionIcon: Icons.send_outlined,
-      sectionColor: const Color(0xFF2563EB),
+      sectionColor: const Color(0xFFFFC812),
       completionPercent: completionPct,
       completionLabel: 'TRANSFERRED',
       completionCaption:
@@ -1304,7 +1304,7 @@ class _TransitionToProdTeamScreenState
           label: 'Team Members',
           value: '${projectData.teamMembers.length}',
           icon: Icons.people_outline,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'assigned to project',
         ),
         LaunchKpiTile(
@@ -1318,7 +1318,7 @@ class _TransitionToProdTeamScreenState
           label: 'Vendors',
           value: '${projectData.vendors.length}',
           icon: Icons.inventory_2_outlined,
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFFB8860B),
           delta: 'in supply chain',
         ),
         LaunchKpiTile(

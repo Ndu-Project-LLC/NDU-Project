@@ -22,7 +22,7 @@ class _Tokens {
   static const onSurfaceVariant = Color(0xFF414754);
   static const outline = Color(0xFF717786);
   static const outlineVariant = Color(0xFFC0C6D6);
-  static const primary = Color(0xFF005BB3);
+  static const primary = Color(0xFFFFC812);
   static const tertiaryFixedDim = Color(0xFFFABD00);
   static const tertiary = Color(0xFF755700);
 }
@@ -523,13 +523,13 @@ class UnifiedProfileMenu extends StatelessWidget {
         ? CircleAvatar(
             radius: compact ? 16 : 20,
             backgroundImage: NetworkImage(photoUrl),
-            backgroundColor: Colors.blue,
+            backgroundColor: Color(0xFFFFC812),
           )
         : Container(
             width: compact ? 32 : 40,
             height: compact ? 32 : 40,
             decoration: const BoxDecoration(
-              color: Colors.blue,
+              color: Color(0xFFFFC812),
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
@@ -718,7 +718,7 @@ class _HeaderActionChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: Color(0xFFF0F4FF),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFFC7D2FE)),
+            border: Border.all(color: Color(0xFFFEF3C7)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

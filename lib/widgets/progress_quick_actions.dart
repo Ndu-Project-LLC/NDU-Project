@@ -40,7 +40,7 @@ class ProgressQuickActions extends StatelessWidget {
             icon: Icons.add,
             label: 'Add',
             onPressed: onAdd,
-            color: const Color(0xFF2563EB),
+            color: const Color(0xFFFFC812),
           ),
           if (showRegenerate) ...[
             const SizedBox(
@@ -54,7 +54,7 @@ class ProgressQuickActions extends StatelessWidget {
               icon: Icons.auto_awesome,
               label: 'Regenerate',
               onPressed: onRegenerate,
-              color: const Color(0xFF7C3AED),
+              color: const Color(0xFFB8860B),
             ),
           ],
           if (showExport) ...[

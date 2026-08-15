@@ -8,11 +8,11 @@ enum SiteRole {
 
   /// Manages users, permissions, and system configurations while supporting
   /// overall platform governance. Limited site control beyond projects.
-  admin('Admin', 4, Color(0xFF8B5CF6)),
+  admin('Admin', 4, Color(0xFFB8860B)),
 
   /// Creates, modifies, and manages content, projects, or data within
   /// assigned areas of the platform. Project, program, and portfolio managers.
-  editor('Editor', 3, Color(0xFF3B82F6)),
+  editor('Editor', 3, Color(0xFFFFC812)),
 
   /// Engages with the platform to execute tasks, collaborate, and utilize
   /// available features based on assigned access. Regular project users.

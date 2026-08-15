@@ -39,7 +39,7 @@ Future<bool> showProceedWithoutReviewDialog(
             actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             title: Row(
               children: [
-                const Icon(Icons.fact_check_rounded, color: Color(0xFF1D4ED8)),
+                const Icon(Icons.fact_check_rounded, color: Color(0xFFFFC812)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

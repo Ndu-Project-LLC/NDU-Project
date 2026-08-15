@@ -626,7 +626,7 @@ class _OverviewTabState extends State<_OverviewTab> {
  _StatCard(
  value: _awardStrategy,
  label: 'Award Strategy',
- color: const Color(0xFF7C3AED),
+ color: const Color(0xFFB8860B),
  supporting: 'From strategy'),
  ],
  );
@@ -763,7 +763,7 @@ class _ApprovalGateSummary extends StatelessWidget {
  _InlineInfoCard(
  title: 'Sponsor Approval',
  detail: 'Required for every package before execution handoff.',
- color: Color(0xFF7C3AED),
+ color: Color(0xFFB8860B),
  ),
  _InlineInfoCard(
  title: 'Schedule Sync',
@@ -1917,7 +1917,7 @@ class _HandoffTab extends StatelessWidget {
  ? 'TBD'
  : '\$${_formatCurrency(procurementIssuedValue)}',
  label: 'Issued To Procurement',
- color: const Color(0xFF7C3AED),
+ color: const Color(0xFFB8860B),
  supporting: '${procurementIssuedContracts.length} packages'),
  ],
  ),
@@ -2530,7 +2530,7 @@ Color _rfqStatusColor(String s) {
  return const Color(0xFF22C55E);
  }
  if (l.contains('publish') || l.contains('active')) {
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  }
  if (l.contains('evaluat')) return const Color(0xFFF59E0B);
  return const Color(0xFF64748B);
@@ -3926,7 +3926,7 @@ class _PaymentSummaryCards extends StatelessWidget {
  _StatCard(
  value: '$paidCount/${allMilestones.length}',
  label: 'Paid Milestones',
- color: const Color(0xFF7C3AED)),
+ color: const Color(0xFFB8860B)),
  ],
  );
  }
@@ -4007,7 +4007,7 @@ class _PaymentContractExpansion extends StatelessWidget {
 Color _paymentStatusColor(String s) {
  final l = s.toLowerCase();
  if (l == 'paid') return const Color(0xFF22C55E);
- if (l == 'approved') return const Color(0xFF7C3AED);
+ if (l == 'approved') return const Color(0xFFB8860B);
  if (l == 'submitted') return _kBrandYellow;
  if (l == 'due') return const Color(0xFFF59E0B);
  return const Color(0xFF64748B);
@@ -4617,7 +4617,7 @@ class _BudgetTabState extends State<_BudgetTab> {
  _StatCard(
  value: allContracts.length.toString(),
  label: 'Contracts',
- color: const Color(0xFF7C3AED)),
+ color: const Color(0xFFB8860B)),
  ],
  ),
  const SizedBox(height: 20),

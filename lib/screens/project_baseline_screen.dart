@@ -878,7 +878,7 @@ onBack: () =>
  'Duration',
  scheduleDuration > 0 ? '$scheduleDuration days' : '—',
  Icons.timelapse,
- const Color(0xFF6366F1),
+ const Color(0xFFB8860B),
  ),
  _buildStatChip(
  'Active Version',
@@ -1024,7 +1024,7 @@ onBack: () =>
  borderRadius: BorderRadius.circular(20),
  boxShadow: [
  BoxShadow(
- color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+ color: const Color(0xFFFFC812).withValues(alpha: 0.3),
  blurRadius: 20,
  offset: const Offset(0, 12),
  ),
@@ -1248,7 +1248,7 @@ onBack: () =>
  const Row(
  children: [
  Icon(Icons.dashboard_customize,
- color: Color(0xFF8B5CF6), size: 24),
+ color: Color(0xFFB8860B), size: 24),
  SizedBox(width: 12),
  Text(
  'Scope Baseline',
@@ -1523,7 +1523,7 @@ onBack: () =>
  textColor = Colors.white;
  break;
  case 'in progress':
- bgColor = const Color(0xFF3B82F6);
+ bgColor = const Color(0xFFFFC812);
  textColor = Colors.white;
  break;
  case 'overdue':
@@ -1576,11 +1576,11 @@ onBack: () =>
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: const Color(0xFFEEF2FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(Icons.layers,
- color: Color(0xFF6366F1), size: 20),
+ color: Color(0xFFB8860B), size: 20),
  ),
  const SizedBox(width: 12),
  const Text(
@@ -1726,7 +1726,7 @@ onBack: () =>
  AlwaysStoppedAnimation<Color>(
  progress >= 1.0
  ? const Color(0xFF10B981)
- : const Color(0xFF3B82F6),
+ : const Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1966,7 +1966,7 @@ onBack: () =>
  icon: const Icon(
  Icons.visibility_outlined,
  size: 18),
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  tooltip: 'View Details',
  onPressed: () => _showVersionDetails(v),
  ),
@@ -2007,7 +2007,7 @@ onBack: () =>
  width: 42,
  height: 42,
  decoration: BoxDecoration(
- color: const Color(0xFFEEF2FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(12),
  ),
  child: const Icon(

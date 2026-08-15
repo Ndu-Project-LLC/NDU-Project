@@ -789,7 +789,7 @@ class _FrontEndPlanningProcurementScreenState
  _ProcurementTab tab, Set<_ProcurementTab> restricted) {
  final isSelected = _selectedTab == tab;
  final isRestricted = restricted.contains(tab);
- final accent = const Color(0xFF1E3A8A);
+ final accent = const Color(0xFFB8860B);
 
  VoidCallback? onTap = () => _handleTabSelected(tab);
  if (isRestricted) onTap = null;
@@ -813,7 +813,7 @@ class _FrontEndPlanningProcurementScreenState
  ? accent
  : (isRestricted
  ? const Color(0xFFCBD5E1)
- : const Color(0xFFBFDBFE)),
+ : const Color(0xFFFDE68A)),
  ),
  ),
  child: Row(
@@ -1513,10 +1513,10 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  final palette = <Color>[
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  const Color(0xFF10B981),
  const Color(0xFFF59E0B),
- const Color(0xFF6D28D9),
+ const Color(0xFFB8860B),
  const Color(0xFFEF4444),
  ];
  final categoryEntries = categoryTotals.entries.toList()
@@ -5021,7 +5021,7 @@ class _FrontEndPlanningProcurementScreenState
  builder: (dialogContext) => AlertDialog(
  title: const Row(
  children: [
- Icon(Icons.fact_check_outlined, color: Color(0xFF2563EB)),
+ Icon(Icons.fact_check_outlined, color: Color(0xFFFFC812)),
  SizedBox(width: 10),
  Text('Approved Vendor List'),
  ],
@@ -5049,13 +5049,13 @@ class _FrontEndPlanningProcurementScreenState
  const EdgeInsets.symmetric(horizontal: 0),
  leading: CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFFEFF6FF),
+ backgroundColor: const Color(0xFFFFF8E1),
  child: Text(
  name.isEmpty ? '?' : name[0].toUpperCase(),
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -5455,7 +5455,7 @@ class _FrontEndPlanningProcurementScreenState
  ListTile(
  title: Text(status.label),
  trailing: status == item.status
- ? const Icon(Icons.check_circle, color: Color(0xFF2563EB))
+ ? const Icon(Icons.check_circle, color: Color(0xFFFFC812))
  : null,
  onTap: () => Navigator.of(sheetContext).pop(status),
  ),
@@ -5589,9 +5589,9 @@ class _FrontEndPlanningProcurementScreenState
  child: OutlinedButton.icon(
  onPressed: _openApprovedVendorList,
  style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF1E3A8A),
- side: const BorderSide(color: Color(0xFFBFDBFE)),
- backgroundColor: const Color(0xFFEFF6FF),
+ foregroundColor: const Color(0xFFB8860B),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
+ backgroundColor: const Color(0xFFFFF8E1),
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
  shape: RoundedRectangleBorder(
@@ -6049,7 +6049,7 @@ class _ContractScopeManagementSection extends StatelessWidget {
  '$startedScopeCount of ${scopes.length} scopes started',
  style: const TextStyle(
  fontSize: 12,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  fontWeight: FontWeight.w600,
  ),
  ),
@@ -6392,7 +6392,7 @@ class _SummaryMetricsRow extends StatelessWidget {
  final cards = [
  _SummaryCard(
  icon: Icons.inventory_2_outlined,
- iconBackground: const Color(0xFFEFF6FF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '$totalItems',
  label: 'Total Items',
  ),
@@ -6405,14 +6405,14 @@ class _SummaryMetricsRow extends StatelessWidget {
  ),
  _SummaryCard(
  icon: Icons.access_time,
- iconBackground: const Color(0xFFF5F3FF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '$pendingApprovals',
  label: 'Pending Approvals',
  valueColor: const Color(0xFF1F2937),
  ),
  _SummaryCard(
  icon: Icons.attach_money,
- iconBackground: const Color(0xFFECFEFF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: totalBudgetLabel,
  label: 'Total Budget',
  valueColor: const Color(0xFF047857),
@@ -6475,7 +6475,7 @@ class _SummaryCard extends StatelessWidget {
  height: 44,
  decoration: BoxDecoration(
  color: iconBackground, borderRadius: BorderRadius.circular(12)),
- child: Icon(icon, color: const Color(0xFF1D4ED8)),
+ child: Icon(icon, color: const Color(0xFFFFC812)),
  ),
  const SizedBox(width: 16),
  Column(
@@ -6628,7 +6628,7 @@ class _AddItemButton extends StatelessWidget {
  return ElevatedButton.icon(
  onPressed: onPressed,
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -6726,11 +6726,11 @@ class _ProcurementItemCard extends StatelessWidget {
  if (item.progress >= 1.0) {
  progressColor = const Color(0xFF10B981);
  } else if (item.progress >= 0.5) {
- progressColor = const Color(0xFF2563EB);
+ progressColor = const Color(0xFFFFC812);
  } else if (item.progress == 0) {
  progressColor = const Color(0xFFD1D5DB);
  } else {
- progressColor = const Color(0xFF38BDF8);
+ progressColor = const Color(0xFFFFC812);
  }
 
  return Container(
@@ -6759,7 +6759,7 @@ class _ProcurementItemCard extends StatelessWidget {
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  const SizedBox(height: 4),
@@ -7104,7 +7104,7 @@ class _TrackableRow extends StatelessWidget {
  Row(
  children: [
  const Icon(Icons.inventory_2_outlined,
- size: 20, color: Color(0xFF2563EB)),
+ size: 20, color: Color(0xFFFFC812)),
  const SizedBox(width: 8),
  Expanded(
  child: Text(
@@ -7272,11 +7272,11 @@ class _TimelineEntry extends StatelessWidget {
  width: 32,
  height: 32,
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(999),
  ),
  child: const Icon(Icons.local_shipping_outlined,
- size: 18, color: Color(0xFF2563EB)),
+ size: 18, color: Color(0xFFFFC812)),
  ),
  const SizedBox(width: 12),
  Expanded(
@@ -7298,7 +7298,7 @@ class _TimelineEntry extends StatelessWidget {
  const SizedBox(height: 6),
  Text(
  event.subtext,
- style: const TextStyle(fontSize: 12, color: Color(0xFF2563EB)),
+ style: const TextStyle(fontSize: 12, color: Color(0xFFFFC812)),
  ),
  const SizedBox(height: 6),
  Text(
@@ -7342,7 +7342,7 @@ class _ProcurementStrategiesSection extends StatelessWidget {
  case StrategyStatus.draft:
  return const Color(0xFFF1F5F9);
  case StrategyStatus.active:
- return const Color(0xFFEFF6FF);
+ return const Color(0xFFFFF8E1);
  case StrategyStatus.complete:
  return const Color(0xFFE8FFF4);
  }
@@ -7353,7 +7353,7 @@ class _ProcurementStrategiesSection extends StatelessWidget {
  case StrategyStatus.draft:
  return const Color(0xFF64748B);
  case StrategyStatus.active:
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case StrategyStatus.complete:
  return const Color(0xFF047857);
  }
@@ -7875,11 +7875,11 @@ class _VendorsSection extends StatelessWidget {
  label: const Text('Approved Only'),
  selected: approvedOnly,
  onSelected: onApprovedChanged,
- selectedColor: const Color(0xFFEFF6FF),
+ selectedColor: const Color(0xFFFFF8E1),
  showCheckmark: false,
  labelStyle: TextStyle(
  color: approvedOnly
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF475569),
  fontWeight: FontWeight.w600,
  ),
@@ -7892,7 +7892,7 @@ class _VendorsSection extends StatelessWidget {
  showCheckmark: false,
  labelStyle: TextStyle(
  color: preferredOnly
- ? const Color(0xFF2563EB)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF475569),
  fontWeight: FontWeight.w600,
  ),
@@ -8432,16 +8432,16 @@ class _YesNoBadge extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
  final Color background =
- value ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC);
+ value ? const Color(0xFFFFF8E1) : const Color(0xFFF8FAFC);
  final Color foreground =
- value ? const Color(0xFF2563EB) : const Color(0xFF64748B);
+ value ? const Color(0xFFFFC812) : const Color(0xFF64748B);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
  decoration: BoxDecoration(
  color: background,
  borderRadius: BorderRadius.circular(999),
  border: Border.all(
- color: value ? const Color(0xFFBFDBFE) : const Color(0xFFE2E8F0)),
+ color: value ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
@@ -8519,7 +8519,7 @@ class _PriorityPill extends StatelessWidget {
  } else if (normalized.contains('low')) {
  tone = const Color(0xFF64748B);
  } else {
- tone = const Color(0xFF2563EB);
+ tone = const Color(0xFFFFC812);
  }
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -8604,7 +8604,7 @@ class _VendorManagementView extends StatelessWidget {
  final metricCards = [
  _SummaryCard(
  icon: Icons.inventory_2_outlined,
- iconBackground: const Color(0xFFEFF6FF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '$totalVendors',
  label: 'Active Vendors',
  ),
@@ -8623,7 +8623,7 @@ class _VendorManagementView extends StatelessWidget {
  ),
  _SummaryCard(
  icon: Icons.shield_outlined,
- iconBackground: const Color(0xFFFFF1F2),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '${riskItems.length}',
  label: 'Compliance Actions',
  valueColor: const Color(0xFFDC2626),
@@ -8666,7 +8666,7 @@ class _VendorManagementView extends StatelessWidget {
  icon: const Icon(Icons.add_rounded, size: 18),
  label: const Text('Add Vendor'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -8760,7 +8760,7 @@ class _VendorHealthCard extends StatelessWidget {
 
  Color _scoreColor(double score) {
  if (score >= 0.85) return const Color(0xFF10B981);
- if (score >= 0.7) return const Color(0xFF2563EB);
+ if (score >= 0.7) return const Color(0xFFFFC812);
  return const Color(0xFFF97316);
  }
 
@@ -9114,7 +9114,7 @@ class _RfqWorkflowView extends StatelessWidget {
  final metrics = [
  _SummaryCard(
  icon: Icons.assignment_outlined,
- iconBackground: const Color(0xFFEFF6FF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '${rfqs.length}',
  label: 'Open RFQs',
  ),
@@ -9133,7 +9133,7 @@ class _RfqWorkflowView extends StatelessWidget {
  ),
  _SummaryCard(
  icon: Icons.account_balance_wallet_outlined,
- iconBackground: const Color(0xFFECFEFF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: currencyFormat.format(pipelineValue),
  label: 'Pipeline Value',
  valueColor: const Color(0xFF047857),
@@ -9175,7 +9175,7 @@ class _RfqWorkflowView extends StatelessWidget {
  icon: const Icon(Icons.add_rounded, size: 18),
  label: const Text('Create RFQ'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -9544,7 +9544,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
  height: 26,
  alignment: Alignment.center,
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(999),
  ),
  child: Text(
@@ -9552,7 +9552,7 @@ class _ProcurementWorkflowStepRow extends StatelessWidget {
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -9800,7 +9800,7 @@ class _RfqItemCard extends StatelessWidget {
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: Color(0xFF1D4ED8)),
+ color: Color(0xFFFFC812)),
  ),
  ],
  ),
@@ -9812,7 +9812,7 @@ class _RfqItemCard extends StatelessWidget {
  minHeight: 6,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor:
- const AlwaysStoppedAnimation<Color>(Color(0xFF1D4ED8)),
+ const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
  ),
  ),
  ],
@@ -9932,7 +9932,7 @@ class _RfqSidebarCard extends StatelessWidget {
  minHeight: 6,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor: const AlwaysStoppedAnimation<Color>(
- Color(0xFF2563EB)),
+ Color(0xFFFFC812)),
  ),
  ),
  if (i != criteria.length - 1) const SizedBox(height: 12),
@@ -10075,7 +10075,7 @@ class _PurchaseOrdersView extends StatelessWidget {
  final metrics = [
  _SummaryCard(
  icon: Icons.receipt_long_outlined,
- iconBackground: const Color(0xFFEFF6FF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '$openOrders',
  label: 'Open Orders',
  ),
@@ -10094,7 +10094,7 @@ class _PurchaseOrdersView extends StatelessWidget {
  ),
  _SummaryCard(
  icon: Icons.attach_money,
- iconBackground: const Color(0xFFECFEFF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: currencyFormat.format(totalSpend),
  label: 'Total Spend',
  valueColor: const Color(0xFF047857),
@@ -10124,7 +10124,7 @@ class _PurchaseOrdersView extends StatelessWidget {
  icon: const Icon(Icons.add_rounded, size: 18),
  label: const Text('Create PO'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -10439,7 +10439,7 @@ class _PurchaseOrderRow extends StatelessWidget {
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: Color(0xFF1D4ED8))),
+ color: Color(0xFFFFC812))),
  const SizedBox(height: 6),
  ClipRRect(
  borderRadius: BorderRadius.circular(999),
@@ -10448,7 +10448,7 @@ class _PurchaseOrderRow extends StatelessWidget {
  minHeight: 6,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor:
- const AlwaysStoppedAnimation<Color>(Color(0xFF1D4ED8)),
+ const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
  ),
  ),
  ],
@@ -10587,7 +10587,7 @@ class _PurchaseOrderCard extends StatelessWidget {
  minHeight: 6,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor:
- const AlwaysStoppedAnimation<Color>(Color(0xFF1D4ED8)),
+ const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
  ),
  ),
  const SizedBox(height: 12),
@@ -10808,7 +10808,7 @@ class _ItemTrackingView extends StatelessWidget {
  final metrics = [
  _SummaryCard(
  icon: Icons.local_shipping_outlined,
- iconBackground: const Color(0xFFEFF6FF),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '$inTransit',
  label: 'In Transit',
  ),
@@ -10821,7 +10821,7 @@ class _ItemTrackingView extends StatelessWidget {
  ),
  _SummaryCard(
  icon: Icons.warning_amber_rounded,
- iconBackground: const Color(0xFFFFF1F2),
+ iconBackground: const Color(0xFFFFF8E1),
  value: '$highAlerts',
  label: 'High Priority Alerts',
  valueColor: const Color(0xFFDC2626),
@@ -10854,7 +10854,7 @@ class _ItemTrackingView extends StatelessWidget {
  icon: const Icon(Icons.sync_rounded, size: 18),
  label: const Text('Update Status'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding:
  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -11097,7 +11097,7 @@ class _CarrierPerformanceCard extends StatelessWidget {
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w600,
- color: Color(0xFF2563EB)),
+ color: Color(0xFFFFC812)),
  ),
  const SizedBox(width: 12),
  Text(
@@ -11115,7 +11115,7 @@ class _CarrierPerformanceCard extends StatelessWidget {
  minHeight: 6,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor:
- const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+ const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
  ),
  ),
  if (i != carriers.length - 1) const SizedBox(height: 12),
@@ -11332,7 +11332,7 @@ class _PurchaseOrdersInitiationLockedView extends StatelessWidget {
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  const SizedBox(width: 8),
@@ -11449,7 +11449,7 @@ class _ReportsView extends StatelessWidget {
  icon: const Icon(Icons.auto_awesome, size: 18),
  label: const Text('Generate Data'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF0EA5E9),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -11475,7 +11475,7 @@ class _ReportsView extends StatelessWidget {
  icon: const Icon(Icons.file_download_outlined, size: 18),
  label: const Text('Export PDF'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -11522,7 +11522,7 @@ class _ReportsView extends StatelessWidget {
  icon: const Icon(Icons.auto_awesome, size: 18),
  label: const Text('Generate Data'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF0EA5E9),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -11548,7 +11548,7 @@ class _ReportsView extends StatelessWidget {
  icon: const Icon(Icons.file_download_outlined, size: 18),
  label: const Text('Export PDF'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 16, vertical: 12),
@@ -11828,7 +11828,7 @@ class _LeadTimePerformanceCard extends StatelessWidget {
  minHeight: 8,
  backgroundColor: const Color(0xFFE2E8F0),
  valueColor:
- const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+ const AlwaysStoppedAnimation<Color>(Color(0xFFFFC812)),
  ),
  ),
  if (i != metrics.length - 1) const SizedBox(height: 12),
@@ -12013,11 +12013,11 @@ class _EmptyStateBody extends StatelessWidget {
  width: iconSize,
  height: iconSize,
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(14),
  ),
  child: Icon(icon,
- color: const Color(0xFF2563EB), size: compact ? 20 : 24),
+ color: const Color(0xFFFFC812), size: compact ? 20 : 24),
  ),
  SizedBox(height: compact ? 10 : 14),
  Text(
@@ -12040,7 +12040,7 @@ class _EmptyStateBody extends StatelessWidget {
  ElevatedButton(
  onPressed: onAction,
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
  shape: RoundedRectangleBorder(
@@ -12300,7 +12300,7 @@ extension _RiskSeverityExtension on _RiskSeverity {
  case _RiskSeverity.medium:
  return const Color(0xFFFFF7ED);
  case _RiskSeverity.high:
- return const Color(0xFFFFF1F2);
+ return const Color(0xFFFFF8E1);
  }
  }
 
@@ -12369,7 +12369,7 @@ extension _AlertSeverityExtension on _AlertSeverity {
  case _AlertSeverity.medium:
  return const Color(0xFFFFF7ED);
  case _AlertSeverity.high:
- return const Color(0xFFFFF1F2);
+ return const Color(0xFFFFF8E1);
  }
  }
 
@@ -12642,7 +12642,7 @@ class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
  );
  }
 
- final accent = const Color(0xFF1E3A8A);
+ final accent = const Color(0xFFB8860B);
  final nextStage = _nextPendingStage;
 
  return Column(
@@ -12695,7 +12695,7 @@ class _ContractingWorkflowViewState extends State<_ContractingWorkflowView> {
  label: const Text('Reset'),
  style: OutlinedButton.styleFrom(
  foregroundColor: accent,
- side: const BorderSide(color: Color(0xFFBFDBFE)),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
  ),
  ),
  ],
@@ -12792,7 +12792,7 @@ class _ContractingStageCard extends StatelessWidget {
 
  @override
  Widget build(BuildContext context) {
- final accent = const Color(0xFF1E3A8A);
+ final accent = const Color(0xFFB8860B);
  final successGreen = const Color(0xFF16A34A);
  final amber = const Color(0xFFF59E0B);
 
@@ -12886,7 +12886,7 @@ class _ContractingStageCard extends StatelessWidget {
  side: BorderSide(
  color: isComplete
  ? const Color(0xFFBBF7D0)
- : const Color(0xFFBFDBFE),
+ : const Color(0xFFFDE68A),
  ),
  padding:
  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -12994,7 +12994,7 @@ class _VendorEvaluationViewState extends State<_VendorEvaluationView> {
 
  @override
  Widget build(BuildContext context) {
- final accent = const Color(0xFF1E3A8A);
+ final accent = const Color(0xFFB8860B);
  final vendors = widget.vendors;
 
  if (vendors.isEmpty) {
@@ -13029,7 +13029,7 @@ class _VendorEvaluationViewState extends State<_VendorEvaluationView> {
  children: [
  Row(
  children: [
- const Icon(Icons.grading_outlined, color: Color(0xFF1E3A8A)),
+ const Icon(Icons.grading_outlined, color: Color(0xFFB8860B)),
  const SizedBox(width: 10),
  Expanded(
  child: Column(
@@ -13210,7 +13210,7 @@ class _WeightSlider extends StatelessWidget {
  padding: const EdgeInsets.only(bottom: 8),
  child: Row(
  children: [
- Icon(pillar.icon, size: 18, color: const Color(0xFF1E3A8A)),
+ Icon(pillar.icon, size: 18, color: const Color(0xFFB8860B)),
  const SizedBox(width: 8),
  Text(
  pillar.label,
@@ -13230,7 +13230,7 @@ class _WeightSlider extends StatelessWidget {
  divisions: 20,
  label: '${(weight * 100).round()}%',
  onChanged: onChanged,
- activeColor: const Color(0xFF1E3A8A),
+ activeColor: const Color(0xFFB8860B),
  ),
  ),
  SizedBox(
@@ -13240,7 +13240,7 @@ class _WeightSlider extends StatelessWidget {
  style: const TextStyle(
  fontSize: 13,
  fontWeight: FontWeight.w600,
- color: Color(0xFF1E3A8A),
+ color: Color(0xFFB8860B),
  ),
  textAlign: TextAlign.right,
  ),
@@ -13312,7 +13312,7 @@ class _EvaluationMatrix extends StatelessWidget {
  mainAxisSize: MainAxisSize.min,
  children: [
  Icon(pillar.icon,
- size: 14, color: const Color(0xFF1E3A8A)),
+ size: 14, color: const Color(0xFFB8860B)),
  const SizedBox(width: 4),
  Text(
  '${pillar.label}\n(${(weights[pillar]! * 100).round()}%)',
@@ -13393,7 +13393,7 @@ class _ScoreCell extends StatelessWidget {
  ),
  ),
  focusedBorder: const OutlineInputBorder(
- borderSide: BorderSide(color: Color(0xFF1E3A8A)),
+ borderSide: BorderSide(color: Color(0xFFB8860B)),
  ),
  ),
  onChanged: (text) {
@@ -13419,8 +13419,8 @@ class _WeightedTotalChip extends StatelessWidget {
  bg = const Color(0xFFE8FFF4);
  fg = const Color(0xFF16A34A);
  } else if (value >= 60) {
- bg = const Color(0xFFEFF6FF);
- fg = const Color(0xFF1E3A8A);
+ bg = const Color(0xFFFFF8E1);
+ fg = const Color(0xFFB8860B);
  } else if (value >= 30) {
  bg = const Color(0xFFFEF3C7);
  fg = const Color(0xFFB45309);

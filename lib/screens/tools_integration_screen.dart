@@ -625,7 +625,7 @@ showNavigationButtons: false,
  icon: const Icon(Icons.sync, size: 18),
  label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF0EA5E9),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -697,7 +697,7 @@ showNavigationButtons: false,
  policy.canCreate ? const Color(0xFF10B981) : const Color(0xFF94A3B8)),
  _GovernanceItem(Icons.edit_outlined, 'Update',
  policy.canUpdate ? 'Enabled' : 'Read-only',
- policy.canUpdate ? const Color(0xFF0EA5E9) : const Color(0xFF94A3B8)),
+ policy.canUpdate ? const Color(0xFFFFC812) : const Color(0xFF94A3B8)),
  _GovernanceItem(Icons.delete_outline, 'Delete',
  policy.canDelete ? 'Admin only' : 'Restricted',
  policy.canDelete ? const Color(0xFFEF4444) : const Color(0xFF94A3B8)),
@@ -766,7 +766,7 @@ showNavigationButtons: false,
 
  final stats = [
  _StatCardData('$connected', 'Connected Tools',
- '$total total · $degraded degraded', const Color(0xFF0EA5E9)),
+ '$total total · $degraded degraded', const Color(0xFFFFC812)),
  _StatCardData('$healthScore%', 'Health Score',
  healthScore >= 80 ? 'Above threshold' : 'Below 80% target', healthScore >= 80 ? const Color(0xFF10B981) : const Color(0xFFF59E0B)),
  _StatCardData(syncStatus, 'Data Sync Status',
@@ -774,7 +774,7 @@ showNavigationButtons: false,
  notConnected == 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
  _StatCardData('$openIssues', 'Open Issues',
  openIssues > 0 ? 'Require attention' : 'All clear',
- openIssues > 0 ? const Color(0xFF6366F1) : const Color(0xFF10B981)),
+ openIssues > 0 ? const Color(0xFFB8860B) : const Color(0xFF10B981)),
  ];
 
  if (isNarrow) {
@@ -888,7 +888,7 @@ showNavigationButtons: false,
  'Connected → Syncing → Active → Degraded → Expired. '
  'Each integration should be tracked from initial connection through operational maturity. '
  'Set automated health checks at regular intervals and configure alerts for status transitions.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -1171,8 +1171,8 @@ showNavigationButtons: false,
  case 'In Review':
  case 'In Progress':
  case 'Pending':
- bgColor = const Color(0xFFEFF6FF);
- textColor = const Color(0xFF2563EB);
+ bgColor = const Color(0xFFFFF8E1);
+ textColor = const Color(0xFFFFC812);
  break;
  case 'Not Started':
  bgColor = const Color(0xFFF9FAFB);
@@ -1490,8 +1490,8 @@ showNavigationButtons: false,
  textColor = const Color(0xFFD97706);
  break;
  case 'Medium':
- bgColor = const Color(0xFFEFF6FF);
- textColor = const Color(0xFF2563EB);
+ bgColor = const Color(0xFFFFF8E1);
+ textColor = const Color(0xFFFFC812);
  break;
  default:
  bgColor = const Color(0xFFF3F4F6);
@@ -3218,7 +3218,7 @@ class _ToolsCrudPolicy {
  canExport: hasProject,
  canAudit: hasProject,
  roleLabel: 'Editor',
- roleColor: const Color(0xFF0EA5E9),
+ roleColor: const Color(0xFFFFC812),
  );
  case SiteRole.user:
  return _ToolsCrudPolicy(

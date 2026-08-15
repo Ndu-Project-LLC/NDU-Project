@@ -139,10 +139,10 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
           mood: risks.length > index ? 'neutral' : 'positive',
           color: [
             Colors.green,
-            Colors.blue,
-            Colors.purple,
+            Color(0xFFFFC812),
+            Color(0xFFB8860B),
             Colors.orange,
-            Colors.teal,
+            Color(0xFFD97706),
             _kAccent,
           ][index % 6],
         ),
@@ -596,7 +596,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
           ),
           const SizedBox(height: 12),
           _standupSection(
-              'Yesterday', e.yesterday, Icons.history, const Color(0xFF3B82F6)),
+              'Yesterday', e.yesterday, Icons.history, const Color(0xFFFFC812)),
           const SizedBox(height: 8),
           _standupSection('Today', e.today, Icons.today, _kAccent),
           const SizedBox(height: 8),
@@ -834,7 +834,7 @@ class _AgileDailyStandupsScreenState extends State<AgileDailyStandupsScreen> {
     final color = status == 'Done'
         ? Colors.green
         : status == 'In Progress'
-            ? Colors.blue
+            ? Color(0xFFFFC812)
             : _kAccent;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

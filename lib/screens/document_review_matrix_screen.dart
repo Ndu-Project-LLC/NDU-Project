@@ -246,7 +246,7 @@ class _DocumentReviewMatrixScreenState
       ),
       child: Row(
         children: [
-          _buildStatChip('Total', stats.total.toString(), Colors.blue),
+          _buildStatChip('Total', stats.total.toString(), Color(0xFFFFC812)),
           const SizedBox(width: 12),
           _buildStatChip('Pending', stats.pending.toString(), Colors.orange),
           const SizedBox(width: 12),
@@ -255,7 +255,7 @@ class _DocumentReviewMatrixScreenState
           _buildStatChip('Overdue', stats.overdue.toString(), Colors.red),
           const SizedBox(width: 12),
           _buildStatChip(
-              'Needs Re-review', stats.needsRereview.toString(), Colors.purple),
+              'Needs Re-review', stats.needsRereview.toString(), Color(0xFFB8860B)),
           const Spacer(),
           Text(
             '${stats.completionPercent.toStringAsFixed(0)}% Complete',
@@ -698,7 +698,7 @@ class _DocumentReviewMatrixScreenState
         break;
       case ReviewStatus.underReview:
         icon = Icons.rate_review;
-        color = Colors.blue;
+        color = Color(0xFFFFC812);
         break;
       case ReviewStatus.pendingReview:
         icon = Icons.pending;
@@ -744,7 +744,7 @@ class _DocumentReviewMatrixScreenState
       case ReviewStatus.approved:
         return Colors.green;
       case ReviewStatus.underReview:
-        return Colors.blue;
+        return Color(0xFFFFC812);
       case ReviewStatus.pendingReview:
         return Colors.orange;
       case ReviewStatus.changesRequested:
@@ -1263,7 +1263,7 @@ class _DocumentPreviewDialog extends StatelessWidget {
       case ReviewStatus.approved:
         return Colors.green;
       case ReviewStatus.underReview:
-        return Colors.blue;
+        return Color(0xFFFFC812);
       case ReviewStatus.pendingReview:
         return Colors.orange;
       case ReviewStatus.changesRequested:

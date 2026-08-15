@@ -867,14 +867,14 @@ class _FrontEndPlanningRequirementsScreenState
             Icon(icon,
                 size: 16,
                 color:
-                    active ? const Color(0xFF2563EB) : const Color(0xFF6B7280)),
+                    active ? const Color(0xFFFFC812) : const Color(0xFF6B7280)),
             const SizedBox(width: 6),
             Text(label,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: active
-                      ? const Color(0xFF2563EB)
+                      ? const Color(0xFFFFC812)
                       : const Color(0xFF6B7280),
                 )),
           ],
@@ -1117,7 +1117,7 @@ class _FrontEndPlanningRequirementsScreenState
                                 icon: const Icon(
                                   Icons.edit_outlined,
                                   size: 16,
-                                  color: Color(0xFF2563EB),
+                                  color: Color(0xFFFFC812),
                                 ),
                                 tooltip: 'Edit',
                                 onPressed: () => _openMobileRequirementEditor(
@@ -1286,7 +1286,7 @@ class _FrontEndPlanningRequirementsScreenState
                     borderRadius: BorderRadius.circular(20),
                     child: const CircleAvatar(
                       radius: 13,
-                      backgroundColor: Color(0xFF2563EB),
+                      backgroundColor: Color(0xFFFFC812),
                       child: Text(
                         'C',
                         style: TextStyle(
@@ -1496,8 +1496,8 @@ class _FrontEndPlanningRequirementsScreenState
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF2563EB),
-                        side: const BorderSide(color: Color(0xFFBFDBFE)),
+                        foregroundColor: const Color(0xFFFFC812),
+                        side: const BorderSide(color: Color(0xFFFDE68A)),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 13),
@@ -1595,7 +1595,7 @@ class _FrontEndPlanningRequirementsScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
+                    color: const Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -2062,8 +2062,8 @@ class _FrontEndPlanningRequirementsScreenState
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF2563EB),
-          side: const BorderSide(color: Color(0xFF93C5FD)),
+          foregroundColor: const Color(0xFFFFC812),
+          side: const BorderSide(color: Color(0xFFFFC812)),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
@@ -2082,8 +2082,8 @@ class _FrontEndPlanningRequirementsScreenState
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF2563EB),
-          side: const BorderSide(color: Color(0xFF93C5FD)),
+          foregroundColor: const Color(0xFFFFC812),
+          side: const BorderSide(color: Color(0xFFFFC812)),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
@@ -2915,7 +2915,7 @@ class _RequirementRow {
                                     CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.refresh,
-                                size: 18, color: Color(0xFF2563EB)),
+                                size: 18, color: Color(0xFFFFC812)),
                         padding: const EdgeInsets.all(6),
                         constraints:
                             const BoxConstraints(minWidth: 36, minHeight: 36),
@@ -3116,7 +3116,7 @@ class _RequirementCard extends StatelessWidget {
                         height: 36,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEEF2FF),
+                          color: const Color(0xFFFFF8E1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -3158,8 +3158,8 @@ class _RequirementCard extends StatelessWidget {
                                 ),
                                 _RequirementSummaryChip(
                                   label: row.summaryDiscipline,
-                                  backgroundColor: const Color(0xFFEFF6FF),
-                                  textColor: const Color(0xFF1D4ED8),
+                                  backgroundColor: const Color(0xFFFFF8E1),
+                                  textColor: const Color(0xFFFFC812),
                                 ),
                                 _RequirementSummaryChip(
                                   label: row.summaryOwner,
@@ -3195,7 +3195,7 @@ class _RequirementCard extends StatelessWidget {
                                   )
                                 : const Icon(
                                     Icons.auto_awesome_rounded,
-                                    color: Color(0xFF2563EB),
+                                    color: Color(0xFFFFC812),
                                   ),
                           ),
                           IconButton(
@@ -3875,13 +3875,13 @@ class _MemberPickerDialogState extends State<_MemberPickerDialog> {
                                 dense: true,
                                 leading: CircleAvatar(
                                   radius: 14,
-                                  backgroundColor: const Color(0xFFDBEAFE),
+                                  backgroundColor: const Color(0xFFFEF3C7),
                                   child: Text(
                                     member.displayLabel[0].toUpperCase(),
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF1D4ED8),
+                                      color: Color(0xFFFFC812),
                                     ),
                                   ),
                                 ),

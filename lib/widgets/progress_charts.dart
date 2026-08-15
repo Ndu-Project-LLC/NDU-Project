@@ -76,7 +76,7 @@ class _TimelinePainter extends CustomPainter {
       // Color based on status
       final color = switch (status) {
         'Completed' => const Color(0xFF10B981),
-        'In Progress' => const Color(0xFF2563EB),
+        'In Progress' => const Color(0xFFFFC812),
         'At Risk' => const Color(0xFFF59E0B),
         'Blocked' => const Color(0xFFEF4444),
         _ => const Color(0xFF9CA3AF),
@@ -199,7 +199,7 @@ class _DonutPainter extends CustomPainter {
     for (final item in data) {
       final value = (item['value'] as num).toDouble();
       final sweep = (value / total) * 2 * math.pi;
-      final color = item['color'] as Color? ?? const Color(0xFF2563EB);
+      final color = item['color'] as Color? ?? const Color(0xFFFFC812);
 
       final paint = Paint()
         ..color = color
@@ -323,7 +323,7 @@ class _BarChartPainter extends CustomPainter {
           RRect.fromRectAndRadius(actualRect, const Radius.circular(4));
       canvas.drawRRect(
         actualRRect,
-        Paint()..color = const Color(0xFF2563EB),
+        Paint()..color = const Color(0xFFFFC812),
       );
 
       // Label

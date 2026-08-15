@@ -372,7 +372,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  width: 40,
  height: 40,
  decoration: const BoxDecoration(
- color: Colors.blue, shape: BoxShape.circle),
+ color: Color(0xFFFFC812), shape: BoxShape.circle),
  child: const Icon(Icons.person, color: Colors.white, size: 20)),
  if (!isMobile) ...[
  const SizedBox(width: 12),
@@ -867,9 +867,9 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  width: double.infinity,
  padding: const EdgeInsets.all(20),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -877,14 +877,14 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  Row(
  children: [
  const Icon(Icons.business_outlined,
- size: 20, color: Color(0xFF1D4ED8)),
+ size: 20, color: Color(0xFFFFC812)),
  const SizedBox(width: 8),
  const Text(
  'Organisation Context',
  style: TextStyle(
  fontSize: 16,
  fontWeight: FontWeight.w600,
- color: Color(0xFF1E3A8A),
+ color: Color(0xFFB8860B),
  ),
  ),
  const Spacer(),
@@ -896,7 +896,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  label: const Text('Clear',
  style: TextStyle(fontSize: 12)),
  style: TextButton.styleFrom(
- foregroundColor: const Color(0xFF1D4ED8),
+ foregroundColor: const Color(0xFFFFC812),
  ),
  ),
  ],
@@ -907,7 +907,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  'The AI uses this context to suggest relevant internal stakeholders for each solution.',
  style: TextStyle(
  fontSize: 13,
- color: Color(0xFF1E40AF),
+ color: Color(0xFFFFC812),
  height: 1.5,
  ),
  ),
@@ -919,7 +919,7 @@ class _CoreStakeholdersScreenState extends State<CoreStakeholdersScreen> {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(6),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  ),
  child: VoiceTextField(
  controller: _organisationContextController,

@@ -168,7 +168,7 @@ class _BOEScreenState extends State<BOEScreen> {
                   value: '$constraintCount',
                   sub: 'Boundaries on the estimate',
                   icon: Icons.lock_outline_rounded,
-                  tint: const Color(0xFF8B5CF6),
+                  tint: const Color(0xFFB8860B),
                   tintSoft: const Color(0xFFF4EEFF),
                 ),
                 TreasuryKpiSpec(
@@ -176,8 +176,8 @@ class _BOEScreenState extends State<BOEScreen> {
                   value: '$exclusionCount',
                   sub: 'Out of scope items',
                   icon: Icons.block_rounded,
-                  tint: const Color(0xFFEC4899),
-                  tintSoft: const Color(0xFFFCE7F3),
+                  tint: const Color(0xFFD97706),
+                  tintSoft: const Color(0xFFFFF8E1),
                 ),
                 TreasuryKpiSpec(
                   label: 'Methodology',
@@ -225,7 +225,7 @@ class _BOEScreenState extends State<BOEScreen> {
                         icon: Icons.delivery_dining_outlined,
                         label: 'DELIVERY MODEL',
                         value: estimate.deliveryModel.label,
-                        tint: const Color(0xFF6366F1),
+                        tint: const Color(0xFFB8860B),
                         tintSoft: const Color(0xFFEEF0FF),
                       ),
                     ],
@@ -268,7 +268,7 @@ class _BOEScreenState extends State<BOEScreen> {
                 Widget constraints = _ListCard(
                   title: 'Constraints',
                   icon: Icons.lock_outline_rounded,
-                  tint: const Color(0xFF8B5CF6),
+                  tint: const Color(0xFFB8860B),
                   tintSoft: const Color(0xFFF4EEFF),
                   ctrls: _constraintCtrls,
                   canEdit: canEdit,
@@ -280,8 +280,8 @@ class _BOEScreenState extends State<BOEScreen> {
                 Widget exclusions = _ListCard(
                   title: 'Exclusions',
                   icon: Icons.block_rounded,
-                  tint: const Color(0xFFEC4899),
-                  tintSoft: const Color(0xFFFCE7F3),
+                  tint: const Color(0xFFD97706),
+                  tintSoft: const Color(0xFFFFF8E1),
                   ctrls: _exclusionCtrls,
                   canEdit: canEdit,
                   suffixSingular: 'exclusion',

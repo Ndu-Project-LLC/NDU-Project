@@ -2116,8 +2116,8 @@ class _TableHeaderActions extends StatelessWidget {
  minimumSize: const Size(0, 36),
  textStyle: const TextStyle(
  fontSize: 12, fontWeight: FontWeight.w600),
- foregroundColor: const Color(0xFF2563EB),
- side: const BorderSide(color: Color(0xFFBFDBFE)),
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(10)),
  ),

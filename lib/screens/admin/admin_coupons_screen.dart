@@ -372,7 +372,7 @@ class _CouponCard extends StatelessWidget {
                 IconButton(
                   onPressed: onEdit,
                   icon: const Icon(Icons.edit_outlined),
-                  color: Colors.blue,
+                  color: Color(0xFFFFC812),
                   tooltip: 'Edit',
                 ),
                 IconButton(

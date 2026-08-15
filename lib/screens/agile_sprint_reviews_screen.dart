@@ -568,7 +568,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
     final color = value == 'High'
         ? _kAccent
         : value == 'Medium'
-            ? Colors.blue
+            ? Color(0xFFFFC812)
             : Colors.grey;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -587,7 +587,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
         (status == 'Done'
             ? Colors.green
             : status == 'In Progress'
-                ? Colors.blue
+                ? Color(0xFFFFC812)
                 : _kAccent);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -955,7 +955,7 @@ class _AgileSprintReviewsScreenState extends State<AgileSprintReviewsScreen> {
                   color: done
                       ? Colors.green
                       : a.status == 'In Progress'
-                          ? Colors.blue
+                          ? Color(0xFFFFC812)
                           : _kAccent),
             ),
           ],

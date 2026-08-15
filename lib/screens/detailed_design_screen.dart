@@ -153,7 +153,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
           'Asynchronous inter-service communication via message broker with event sourcing for audit-critical flows.',
       status: 'Baseline',
       icon: Icons.hub_outlined,
-      color: const Color(0xFF7C3AED),
+      color: const Color(0xFFB8860B),
     ),
     _ArchitecturePattern(
       name: 'API Gateway',
@@ -161,7 +161,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
           'Centralized entry point for routing, rate-limiting, and authentication. Terminates TLS and enforces policies.',
       status: 'Defined',
       icon: Icons.router_outlined,
-      color: const Color(0xFF2563EB),
+      color: const Color(0xFFFFC812),
     ),
     _ArchitecturePattern(
       name: 'CQRS + Read Replicas',
@@ -169,7 +169,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
           'Separate command and query models for high-throughput reads. Read replicas scale independently from writes.',
       status: 'Proposed',
       icon: Icons.call_split_outlined,
-      color: const Color(0xFF0891B2),
+      color: const Color(0xFFD97706),
     ),
     _ArchitecturePattern(
       name: 'Observability Stack',
@@ -483,13 +483,13 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF5F3FF),
+                  color: Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.tune_rounded,
                   size: 18,
-                  color: Color(0xFF7C3AED),
+                  color: Color(0xFFB8860B),
                 ),
               ),
               const SizedBox(width: 12),
@@ -547,13 +547,13 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
         'Waterfall',
         Icons.water_drop_outlined,
         'Full upfront spec',
-        const Color(0xFF2563EB)
+        const Color(0xFFFFC812)
       ),
       (
         'Hybrid',
         Icons.merge_outlined,
         'Baseline + iterative detail',
-        const Color(0xFF7C3AED)
+        const Color(0xFFB8860B)
       ),
       (
         'Agile',
@@ -666,7 +666,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
         icon: Icons.description_outlined,
         helper:
             'Across ${DesignComponent.specificationTypes.length} spec types',
-        emphasisColor: const Color(0xFF2563EB),
+        emphasisColor: const Color(0xFFFFC812),
       ),
       ExecutionMetricData(
         label: 'Must-Have Items',
@@ -687,7 +687,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
         value: '$secDefined/${_securityControls.length}',
         icon: Icons.shield_outlined,
         helper: 'ISO 27001 / NIST / SOC 2',
-        emphasisColor: const Color(0xFF7C3AED),
+        emphasisColor: const Color(0xFFB8860B),
       ),
       ExecutionMetricData(
         label: 'NFRs Specified',
@@ -701,7 +701,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
         value: '$artifactsReady/${_artifacts.length}',
         icon: Icons.inventory_2_outlined,
         helper: 'Staged for build handoff',
-        emphasisColor: const Color(0xFF0891B2),
+        emphasisColor: const Color(0xFFD97706),
       ),
     ];
 
@@ -718,7 +718,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       collapsible: true,
       initiallyExpanded: true,
       headerIcon: Icons.account_tree_outlined,
-      headerIconColor: const Color(0xFF7C3AED),
+      headerIconColor: const Color(0xFFB8860B),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -727,8 +727,8 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
             icon: const Icon(Icons.add_rounded, size: 16),
             label: const Text('Add Pattern'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF7C3AED),
-              side: const BorderSide(color: Color(0xFF7C3AED)),
+              foregroundColor: const Color(0xFFB8860B),
+              side: const BorderSide(color: Color(0xFFB8860B)),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               textStyle:
                   const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
@@ -776,16 +776,16 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
   ];
 
   static const List<MapEntry<IconData, Color>> _archIconOptions = [
-    MapEntry(Icons.hub_outlined, Color(0xFF7C3AED)),
-    MapEntry(Icons.router_outlined, Color(0xFF2563EB)),
-    MapEntry(Icons.call_split_outlined, Color(0xFF0891B2)),
+    MapEntry(Icons.hub_outlined, Color(0xFFB8860B)),
+    MapEntry(Icons.router_outlined, Color(0xFFFFC812)),
+    MapEntry(Icons.call_split_outlined, Color(0xFFD97706)),
     MapEntry(Icons.monitor_heart_outlined, Color(0xFF059669)),
     MapEntry(Icons.layers_outlined, Color(0xFFD97706)),
     MapEntry(Icons.security_outlined, Color(0xFFDC2626)),
-    MapEntry(Icons.storage_outlined, Color(0xFF6366F1)),
-    MapEntry(Icons.cloud_outlined, Color(0xFF0EA5E9)),
-    MapEntry(Icons.dns_outlined, Color(0xFF8B5CF6)),
-    MapEntry(Icons.memory_outlined, Color(0xFFEC4899)),
+    MapEntry(Icons.storage_outlined, Color(0xFFB8860B)),
+    MapEntry(Icons.cloud_outlined, Color(0xFFFFC812)),
+    MapEntry(Icons.dns_outlined, Color(0xFFB8860B)),
+    MapEntry(Icons.memory_outlined, Color(0xFFD97706)),
   ];
 
   Future<void> _showArchPatternEditor(
@@ -954,7 +954,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
         collapsible: true,
         initiallyExpanded: true,
         headerIcon: Icons.folder_special_outlined,
-        headerIconColor: const Color(0xFF2563EB),
+        headerIconColor: const Color(0xFFFFC812),
         child: const Center(
           child: Padding(
             padding: EdgeInsets.all(24.0),
@@ -973,7 +973,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       collapsible: true,
       initiallyExpanded: true,
       headerIcon: Icons.folder_special_outlined,
-      headerIconColor: const Color(0xFF2563EB),
+      headerIconColor: const Color(0xFFFFC812),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1114,14 +1114,14 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
 
   Color _getTypeColor(String type) {
     return switch (type) {
-      'Architecture' => const Color(0xFF7C3AED),
-      'Interface' => const Color(0xFF2563EB),
-      'Data' => const Color(0xFF0891B2),
+      'Architecture' => const Color(0xFFB8860B),
+      'Interface' => const Color(0xFFFFC812),
+      'Data' => const Color(0xFFD97706),
       'Component' => const Color(0xFF059669),
       'Security' => const Color(0xFFDC2626),
       'NFR' => const Color(0xFFD97706),
       'Infrastructure' => const Color(0xFF475569),
-      'UI/UX' => const Color(0xFFEC4899),
+      'UI/UX' => const Color(0xFFD97706),
       _ => const Color(0xFF6B7280),
     };
   }
@@ -1174,7 +1174,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       collapsible: true,
       initiallyExpanded: true,
       headerIcon: Icons.gavel_outlined,
-      headerIconColor: const Color(0xFF6366F1),
+      headerIconColor: const Color(0xFFB8860B),
       child: Column(
         children: _adrRecords.map((record) {
           return _ADRecordCard(record: record);
@@ -1194,7 +1194,7 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
       collapsible: true,
       initiallyExpanded: true,
       headerIcon: Icons.inventory_2_outlined,
-      headerIconColor: const Color(0xFF0891B2),
+      headerIconColor: const Color(0xFFD97706),
       child: Column(
         children: _artifacts.map((artifact) {
           final color = artifact.ready
@@ -1284,11 +1284,11 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                    color: const Color(0xFFFFC812).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.add_rounded,
-                      size: 20, color: Color(0xFF2563EB)),
+                      size: 20, color: Color(0xFFFFC812)),
                 ),
                 const SizedBox(width: 12),
                 const Text('Add Design Specification',
@@ -1645,7 +1645,7 @@ class _SecurityControlCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = switch (control.status) {
       'Defined' => const Color(0xFF10B981),
-      'In Progress' => const Color(0xFF2563EB),
+      'In Progress' => const Color(0xFFFFC812),
       'Pending' => const Color(0xFFF59E0B),
       _ => const Color(0xFF9CA3AF),
     };
@@ -1722,9 +1722,9 @@ class _NFRCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final categoryColor = switch (item.category) {
       'Performance' => const Color(0xFFDC2626),
-      'Scalability' => const Color(0xFF7C3AED),
+      'Scalability' => const Color(0xFFB8860B),
       'Availability' => const Color(0xFF059669),
-      'Recoverability' => const Color(0xFF2563EB),
+      'Recoverability' => const Color(0xFFFFC812),
       'Maintainability' => const Color(0xFFD97706),
       _ => const Color(0xFF6B7280),
     };
@@ -1849,7 +1849,7 @@ class _ADRecordCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          _buildADRow('Context', record.context, const Color(0xFF2563EB)),
+          _buildADRow('Context', record.context, const Color(0xFFFFC812)),
           const SizedBox(height: 8),
           _buildADRow('Decision', record.decision, const Color(0xFF059669)),
         ],

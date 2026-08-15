@@ -60,7 +60,7 @@ class _CarriedContextBannerState extends State<CarriedContextBanner> {
       child: Row(
         children: [
           const Icon(Icons.account_tree_outlined,
-              size: 14, color: Color(0xFF005BB3)),
+              size: 14, color: Color(0xFFFFC812)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -102,7 +102,7 @@ class _CarriedContextBannerState extends State<CarriedContextBanner> {
               child: Row(
                 children: [
                   const Icon(Icons.account_tree_outlined,
-                      size: 18, color: Color(0xFF005BB3)),
+                      size: 18, color: Color(0xFFFFC812)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(

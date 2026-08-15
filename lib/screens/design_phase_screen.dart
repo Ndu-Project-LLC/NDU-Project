@@ -1433,7 +1433,7 @@ Future<void> _loadProgress(String projectId) async {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
- color: const Color(0xFFFFF8E1), // amber 50 — was blue #EFF6FF
+ color: const Color(0xFFFFF8E1), // amber 50 — was blue #FFF8E1
  borderRadius: BorderRadius.circular(6),
  ),
  child: Text(
@@ -1441,7 +1441,7 @@ Future<void> _loadProgress(String projectId) async {
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFFB8860B), // NDU deep gold — was blue #2563EB
+ color: Color(0xFFB8860B), // NDU deep gold — was blue #FFC812
  ),
  ),
  ),
@@ -1762,13 +1762,13 @@ Future<void> _loadProgress(String projectId) async {
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: const Color(0xFFFFF8E1), // amber 50 — yellow theme (was blue #DBEAFE)
+ color: const Color(0xFFFFF8E1), // amber 50 — yellow theme (was blue #FEF3C7)
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(
  Icons.design_services_outlined,
  size: 20,
- color: Color(0xFFFFC812), // NDU primary gold (was blue #005BB3)
+ color: Color(0xFFFFC812), // NDU primary gold (was blue #FFC812)
  ),
  ),
  const SizedBox(width: 10),
@@ -1830,7 +1830,7 @@ Future<void> _loadProgress(String projectId) async {
  size: 14,
  color: _isSaving
  ? Colors.orange
- : const Color(0xFFFFC812)), // NDU primary gold (was blue #005BB3)
+ : const Color(0xFFFFC812)), // NDU primary gold (was blue #FFC812)
  const SizedBox(width: 6),
  Text(
  _isSaving
@@ -1842,7 +1842,7 @@ Future<void> _loadProgress(String projectId) async {
  fontSize: 12,
  color: _isSaving
  ? Colors.orange
- : const Color(0xFFFFC812), // NDU primary gold (was blue #005BB3)
+ : const Color(0xFFFFC812), // NDU primary gold (was blue #FFC812)
  fontWeight: FontWeight.w600,
  ),
  ),
@@ -1850,13 +1850,13 @@ Future<void> _loadProgress(String projectId) async {
  _buildGovernanceMetric(
  'Nodes',
  '${_nodes.length}',
- const Color(0xFFB8860B), // NDU deep gold (was purple #7C3AED)
+ const Color(0xFFB8860B), // NDU deep gold (was purple #B8860B)
  ),
  const SizedBox(width: 12),
  _buildGovernanceMetric(
  'Edges',
  '${_edges.length}',
- const Color(0xFFD97706), // amber 600 (was blue #2563EB)
+ const Color(0xFFD97706), // amber 600 (was blue #FFC812)
  ),
  ],
  ),
@@ -1894,7 +1894,7 @@ Future<void> _loadProgress(String projectId) async {
  width: 36,
  height: 36,
  decoration: BoxDecoration(
- color: const Color(0xFFFAF5FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(10),
  ),
  child: const Icon(
@@ -3225,7 +3225,7 @@ Future<void> _loadProgress(String projectId) async {
  padding:
  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFFFF8E1), // amber 50 — yellow theme (was blue #EFF6FF)
+ color: const Color(0xFFFFF8E1), // amber 50 — yellow theme (was blue #FFF8E1)
  borderRadius: BorderRadius.circular(999),
  ),
  child: const Text('Live canvas',
@@ -3272,7 +3272,7 @@ Future<void> _loadProgress(String projectId) async {
  onPressed: _clearArchitectureCanvas,
  style: OutlinedButton.styleFrom(
  foregroundColor: const Color(0xFF7A0916),
- side: const BorderSide(color: Color(0xFFFDA4AF)),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
  padding: const EdgeInsets.symmetric(
  horizontal: 12, vertical: 10),
  shape: RoundedRectangleBorder(

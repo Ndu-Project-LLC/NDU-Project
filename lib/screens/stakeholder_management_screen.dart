@@ -1723,7 +1723,7 @@ class _StatsRow extends StatelessWidget {
         title: 'Total Stakeholders',
         value: totalStakeholders.toString(),
         icon: Icons.people_alt_outlined,
-        accentColor: const Color(0xFF60A5FA),
+        accentColor: const Color(0xFFFFC812),
       ),
       _MetricCard(
         title: 'External Partners',
@@ -2041,8 +2041,8 @@ class _InfluenceInterestMatrixState extends State<_InfluenceInterestMatrix> {
                   Expanded(
                     child: _matrixQuadrant(
                       label: 'Keep Satisfied',
-                      color: const Color(0xFFEFF6FF), // Blue
-                      accentColor: const Color(0xFF3B82F6),
+                      color: const Color(0xFFFFF8E1), // Blue
+                      accentColor: const Color(0xFFFFC812),
                       stakeholders: _sorted('Keep Satisfied', keepSatisfied),
                     ),
                   ),
@@ -2877,8 +2877,8 @@ class _StakeholderMappingTable extends StatelessWidget {
         description: 'High influence / High interest'),
     'Keep Satisfied': _QuadrantPalette(
         name: 'Keep Satisfied',
-        bg: Color(0xFFEFF6FF),
-        accent: Color(0xFF3B82F6),
+        bg: Color(0xFFFFF8E1),
+        accent: Color(0xFFFFC812),
         description: 'High influence / Low interest'),
     'Keep Informed': _QuadrantPalette(
         name: 'Keep Informed',
@@ -5021,10 +5021,10 @@ class _AudienceTemplateGroup extends StatelessWidget {
 
   static const Map<String, Color> _audienceColors = {
     'Manage Closely': Color(0xFFEF4444),
-    'Keep Satisfied': Color(0xFF3B82F6),
+    'Keep Satisfied': Color(0xFFFFC812),
     'Keep Informed': Color(0xFF10B981),
     'Monitor': Color(0xFF6B7280),
-    'Project Team': Color(0xFF8B5CF6),
+    'Project Team': Color(0xFFB8860B),
   };
 
   @override
@@ -5355,18 +5355,18 @@ class _AnnouncementCard extends StatelessWidget {
 
   static const Map<String, Color> _audienceColors = {
     'Manage Closely': Color(0xFFFEE2E2),
-    'Keep Satisfied': Color(0xFFDBEAFE),
+    'Keep Satisfied': Color(0xFFFEF3C7),
     'Keep Informed': Color(0xFFD1FAE5),
     'Monitor': Color(0xFFF3F4F6),
-    'Project Team': Color(0xFFEDE9FE),
+    'Project Team': Color(0xFFFFF8E1),
   };
 
   static const Map<String, Color> _audienceTextColors = {
     'Manage Closely': Color(0xFF991B1B),
-    'Keep Satisfied': Color(0xFF1E40AF),
+    'Keep Satisfied': Color(0xFFFFC812),
     'Keep Informed': Color(0xFF065F46),
     'Monitor': Color(0xFF374151),
-    'Project Team': Color(0xFF5B21B6),
+    'Project Team': Color(0xFFB8860B),
   };
 
   static const Map<String, Color> _statusColors = {

@@ -11,7 +11,7 @@
 //
 // Visual language:
 //   - White canvas (#FFFFFF) matching the app surface
-//   - Brand yellow accent (#FFC812) + info blue primary (#2563EB)
+//   - Brand yellow accent (#FFC812) + info blue primary (#FFC812)
 //     aligned with the overall NDU app theme (theme.dart)
 //   - Sand/clay neutrals for surfaces
 
@@ -65,7 +65,7 @@ class _RegularProjectDashboardScreenState
   late final Animation<Offset> _heroSlide;
 
   // Design tokens — aligned with the NDU app theme (theme.dart):
-  //   primary = #FFC812 (brand yellow), secondary = #2563EB (info blue),
+  //   primary = #FFC812 (brand yellow), secondary = #FFC812 (info blue),
   //   tertiary = #16A34A (success green), surface = white.
   static const _canvas = Color(0xFFFFFFFF);
   static const _surface = Color(0xFFFFFFFF);
@@ -78,14 +78,14 @@ class _RegularProjectDashboardScreenState
   static const _muted = Color(0xFF6B7280);
   static const _mutedSoft = Color(0xFF9CA3AF);
   static const _brand = Color(0xFFFFC812); // App primary (brand yellow)
-  static const _teal = Color(0xFF2563EB); // App secondary (info blue)
-  static const _tealDeep = Color(0xFF1E40AF);
-  static const _tealSoft = Color(0xFFDBEAFE);
+  static const _teal = Color(0xFFFFC812); // App secondary (info blue)
+  static const _tealDeep = Color(0xFFFFC812);
+  static const _tealSoft = Color(0xFFFEF3C7);
 
-  static const _coral = Color(0xFFFB7185);
+  static const _coral = Color(0xFFFBBF24);
   static const _amber = Color(0xFFF59E0B);
   static const _emerald = Color(0xFF10B981);
-  static const _indigo = Color(0xFF6366F1);
+  static const _indigo = Color(0xFFB8860B);
 
   @override
   void initState() {
@@ -1119,7 +1119,7 @@ class _RegularProjectCard extends StatelessWidget {
       case 'at_risk':
         return const Color(0xFFF59E0B);
       case 'off_track':
-        return const Color(0xFFFB7185);
+        return const Color(0xFFFBBF24);
       default:
         return const Color(0xFF6B7280);
     }
@@ -1214,7 +1214,7 @@ class _BottomMiniNav extends StatelessWidget {
             icon: Icons.explore_rounded,
             label: 'Insights',
             isActive: activeIndex == 1,
-            color: const Color(0xFF6366F1),
+            color: const Color(0xFFB8860B),
           ),
           _NavItem(
             icon: Icons.bookmark_rounded,
@@ -1226,7 +1226,7 @@ class _BottomMiniNav extends StatelessWidget {
             icon: Icons.person_rounded,
             label: 'Profile',
             isActive: activeIndex == 3,
-            color: const Color(0xFFFB7185),
+            color: const Color(0xFFFBBF24),
           ),
         ],
       ),

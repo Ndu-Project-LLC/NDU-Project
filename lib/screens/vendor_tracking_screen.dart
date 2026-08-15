@@ -1404,11 +1404,11 @@ class _VendorTrackingScreenState extends State<VendorTrackingScreen> {
   Color _actionStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'agenda locked':
-        return const Color(0xFF0EA5E9);
+        return const Color(0xFFFFC812);
       case 'docs requested':
         return const Color(0xFFD97706);
       case 'pending invite':
-        return const Color(0xFF6366F1);
+        return const Color(0xFFB8860B);
       case 'completed':
         return const Color(0xFF059669);
       case 'overdue':

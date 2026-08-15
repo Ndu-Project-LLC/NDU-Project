@@ -45,8 +45,8 @@ enum ProjectMethodology {
       };
 
   Color get color => switch (this) {
-        ProjectMethodology.waterfall => const Color(0xFF2563EB),
-        ProjectMethodology.agile => const Color(0xFF7C3AED),
+        ProjectMethodology.waterfall => const Color(0xFFFFC812),
+        ProjectMethodology.agile => const Color(0xFFB8860B),
         ProjectMethodology.hybrid => const Color(0xFF059669),
       };
 }
@@ -749,7 +749,7 @@ String nodeLevelLabel(WBSNode node, WBSFramework framework) {
 }
 
 /// Determine the color shade for a given level (for visual hierarchy).
-Color levelColor(int level, [Color base = const Color(0xFF2563EB)]) {
+Color levelColor(int level, [Color base = const Color(0xFFFFC812)]) {
   final opacity = switch (level) {
     0 => 1.0,
     1 => 0.9,

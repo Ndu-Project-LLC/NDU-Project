@@ -746,7 +746,7 @@ class _ITConsiderationsScreenState extends State<ITConsiderationsScreen> {
               width: 40,
               height: 40,
               decoration: const BoxDecoration(
-                  color: Colors.blue, shape: BoxShape.circle),
+                  color: Color(0xFFFFC812), shape: BoxShape.circle),
               child: const Icon(Icons.person, color: Colors.white, size: 20)),
           if (!isMobile) ...[
             const SizedBox(width: 12),

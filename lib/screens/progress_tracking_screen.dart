@@ -460,9 +460,9 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
                           style: TextStyle(
                               fontSize: 13, fontWeight: FontWeight.w600)),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF7C3AED),
-                        side: const BorderSide(color: Color(0xFFDDD6FE)),
-                        backgroundColor: const Color(0xFFF5F3FF),
+                        foregroundColor: const Color(0xFFB8860B),
+                        side: const BorderSide(color: Color(0xFFFEF3C7)),
+                        backgroundColor: const Color(0xFFFFF8E1),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 10),
                         shape: RoundedRectangleBorder(
@@ -488,7 +488,7 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
                 collapsible: true,
                 initiallyExpanded: false,
                 headerIcon: Icons.view_timeline_outlined,
-                headerIconColor: const Color(0xFF2563EB),
+                headerIconColor: const Color(0xFFFFC812),
                 child: Wrap(
                   spacing: 10,
                   runSpacing: 10,
@@ -567,10 +567,10 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
       showCheckmark: false,
       shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      selectedColor: const Color(0xFFE0F2FE),
+      selectedColor: const Color(0xFFFFF8E1),
       backgroundColor: Colors.white,
       side: BorderSide(
-        color: selected ? const Color(0xFF7DD3FC) : const Color(0xFFE2E8F0),
+        color: selected ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0),
       ),
       labelStyle: TextStyle(
         fontSize: 12,

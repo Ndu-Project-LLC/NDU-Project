@@ -914,27 +914,27 @@ class _AddLineDialogState extends State<AddLineDialog> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFF6366F1).withValues(alpha: 0.1),
-                const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                const Color(0xFFB8860B).withValues(alpha: 0.1),
+                const Color(0xFFB8860B).withValues(alpha: 0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+              color: const Color(0xFFB8860B).withValues(alpha: 0.2),
               width: 0.5,
             ),
           ),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.auto_awesome, size: 12, color: Color(0xFF6366F1)),
+              Icon(Icons.auto_awesome, size: 12, color: Color(0xFFB8860B)),
               SizedBox(width: 4),
               Text(
                 'KAZ AI',
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF6366F1),
+                  color: Color(0xFFB8860B),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -962,7 +962,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
             SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF6366F1)),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFB8860B)),
             ),
             SizedBox(width: 16),
             Text('Getting KAZ AI suggestions...'),
@@ -1028,7 +1028,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Row(
             children: [
-              Icon(Icons.auto_awesome, color: Color(0xFF6366F1), size: 20),
+              Icon(Icons.auto_awesome, color: Color(0xFFB8860B), size: 20),
               SizedBox(width: 8),
               Text('KAZ AI Suggestion', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             ],
@@ -1063,7 +1063,7 @@ class _AddLineDialogState extends State<AddLineDialog> {
             ElevatedButton(
               onPressed: () => Navigator.of(ctx).pop(suggestion),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6366F1),
+                backgroundColor: const Color(0xFFB8860B),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),

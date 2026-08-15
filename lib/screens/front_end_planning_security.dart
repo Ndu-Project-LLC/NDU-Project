@@ -964,7 +964,7 @@ Security Training:
  'Protect project facilities, equipment, materials, and physical assets '
  'from unauthorized access, damage, theft, or disruption.',
  icon: Icons.shield_outlined,
- accentColor: const Color(0xFF0EA5E9),
+ accentColor: const Color(0xFFFFC812),
  considerations: const [
  'Site access controls and visitor management',
  'Asset, equipment, and material protection',
@@ -1016,7 +1016,7 @@ Security Training:
  'Protect project information, digital systems, and intellectual '
  'property throughout the project lifecycle.',
  icon: Icons.lock_outline,
- accentColor: const Color(0xFF8B5CF6),
+ accentColor: const Color(0xFFB8860B),
  considerations: const [
  'Information classification and data ownership',
  'Cybersecurity requirements (authentication, encryption, backups, disaster recovery)',
@@ -1488,12 +1488,12 @@ class _BottomOverlay extends StatelessWidget {
  child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
  SizedBox(width: 10),
  Text('AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB))),
+ color: Color(0xFFFFC812))),
  SizedBox(width: 12),
  Text(
  'Identify security measures and compliance requirements.',

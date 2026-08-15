@@ -5883,7 +5883,7 @@ class DebtInsight {
     this.evidence = '',
     this.control = '',
     this.tier = 'Medium',
-    this.colorValue = 0xFF6366F1,
+    this.colorValue = 0xFFB8860B,
   });
 
   Map<String, dynamic> toJson() => {
@@ -5901,7 +5901,7 @@ class DebtInsight {
         evidence: json['evidence'] ?? '',
         control: json['control'] ?? '',
         tier: json['tier'] ?? 'Medium',
-        colorValue: json['colorValue'] ?? 0xFF6366F1,
+        colorValue: json['colorValue'] ?? 0xFFB8860B,
       );
 
   DebtInsight copyWith({
@@ -5938,7 +5938,7 @@ class RemediationTrack {
     this.evidence = '',
     this.ownerCadence = '',
     this.progress = 0.0,
-    this.colorValue = 0xFF6366F1,
+    this.colorValue = 0xFFB8860B,
   });
 
   Map<String, dynamic> toJson() => {
@@ -5961,7 +5961,7 @@ class RemediationTrack {
         progress: (json['progress'] is num)
             ? (json['progress'] as num).toDouble()
             : 0.0,
-        colorValue: json['colorValue'] ?? 0xFF6366F1,
+        colorValue: json['colorValue'] ?? 0xFFB8860B,
       );
 
   RemediationTrack copyWith({
@@ -6682,7 +6682,7 @@ class RaciDesignation {
   static ({int bg, int fg}) color(String code) {
     switch (code.toUpperCase()) {
       case 'R':
-        return (bg: 0xFFDBEAFE, fg: 0xFF1D4ED8);
+        return (bg: 0xFFFEF3C7, fg: 0xFFFFC812);
       case 'A':
         return (bg: 0xFFFEE2E2, fg: 0xFFB91C1C);
       case 'C':
@@ -6690,9 +6690,9 @@ class RaciDesignation {
       case 'RV':
         return (bg: 0xFFFFEDD5, fg: 0xFFC2410C);
       case 'I':
-        return (bg: 0xFFF3E8FF, fg: 0xFF7E22CE);
+        return (bg: 0xFFFFF8E1, fg: 0xFFB8860B);
       case 'V':
-        return (bg: 0xFFE0E7FF, fg: 0xFF4338CA);
+        return (bg: 0xFFFFF8E1, fg: 0xFF4338CA);
       default:
         return (bg: 0xFFF3F4F6, fg: 0xFF6B7280);
     }

@@ -475,7 +475,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
           icon: Icons.upload_file,
           label: 'Import from .docx / .doc',
           tooltip: widget.docxImportTooltip,
-          accent: const Color(0xFF0EA5E9),
+          accent: const Color(0xFFFFC812),
           onTap: _importDocument,
         ),
       if (kazAiEnabled && _controller.text.isNotEmpty)
@@ -1183,7 +1183,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
           icon: Icons.upload_file,
           label: 'Import from .docx / .doc',
           tooltip: widget.docxImportTooltip,
-          accent: const Color(0xFF0EA5E9),
+          accent: const Color(0xFFFFC812),
           onTap: _importDocument,
         ),
       if (kazAiEnabled && _controller.text.isNotEmpty)

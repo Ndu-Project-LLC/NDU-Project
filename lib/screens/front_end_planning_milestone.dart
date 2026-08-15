@@ -631,7 +631,7 @@ Generate milestones that cover the typical project lifecycle phases.''';
  const SnackBar(
  content:
  Text('Using default milestones - you can edit them as needed'),
- backgroundColor: Color(0xFF3B82F6),
+ backgroundColor: Color(0xFFFFC812),
  duration: Duration(seconds: 3),
  ),
  );

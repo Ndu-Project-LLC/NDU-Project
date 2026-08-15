@@ -229,7 +229,7 @@ class _SummarizeAccountRisksScreenState
               label: 'Milestones Done',
               value: '$completedMilestones',
               icon: Icons.flag_outlined,
-              color: const Color(0xFF2563EB),
+              color: const Color(0xFFFFC812),
               delta:
                   '${milestones.isEmpty ? 0 : (completedMilestones / milestones.length * 100).round()}% complete',
             ),

@@ -705,7 +705,7 @@ class _PreferredSolutionAnalysisScreenState
               width: 40,
               height: 40,
               decoration: const BoxDecoration(
-                  color: Colors.blue, shape: BoxShape.circle),
+                  color: Color(0xFFFFC812), shape: BoxShape.circle),
               child: const Icon(Icons.person, color: Colors.white, size: 20)),
           if (!isMobile) ...[
             const SizedBox(width: 12),
@@ -3646,7 +3646,7 @@ class _PreferredSolutionAnalysisScreenState
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF2563EB),
+                        color: Color(0xFFFFC812),
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -3655,7 +3655,7 @@ class _PreferredSolutionAnalysisScreenState
                           ? Icons.keyboard_arrow_up
                           : Icons.keyboard_arrow_down,
                       size: 14,
-                      color: const Color(0xFF2563EB),
+                      color: const Color(0xFFFFC812),
                     ),
                   ],
                 ),
@@ -6897,21 +6897,21 @@ class _PreferredSolutionDetailsScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: Color(0xFFFFC812).shade50,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.blue.shade200),
+                    border: Border.all(color: Color(0xFFFDE68A)),
                   ),
                   child: Row(
                     children: [
                       Icon(Icons.attach_money,
-                          size: 16, color: Colors.blue.shade700),
+                          size: 16, color: Color(0xFFB8860B)),
                       const SizedBox(width: 6),
                       Text(
                         'Currency: $currency',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: Colors.blue.shade700,
+                          color: Color(0xFFB8860B),
                         ),
                       ),
                     ],
@@ -7172,9 +7172,9 @@ class _PreferredSolutionDetailsScreenState
               _buildStatChip(Icons.warning_amber, '$_riskCount Risks',
                   _riskCount > 0 ? const Color(0xFFEF4444) : Colors.grey),
               _buildStatChip(Icons.computer, '$_techCount Technologies',
-                  _techCount > 0 ? const Color(0xFF3B82F6) : Colors.grey),
+                  _techCount > 0 ? const Color(0xFFFFC812) : Colors.grey),
               _buildStatChip(Icons.construction, '$_infraCount Infrastructure',
-                  _infraCount > 0 ? const Color(0xFF8B5CF6) : Colors.grey),
+                  _infraCount > 0 ? const Color(0xFFB8860B) : Colors.grey),
               _buildStatChip(
                   Icons.people,
                   '$_stakeholderCount Stakeholders',
@@ -7273,7 +7273,7 @@ class _PreferredSolutionDetailsScreenState
     if (analysis.technologies.isEmpty &&
         (analysis.itConsiderationText?.isEmpty ?? true)) {
       return _buildEmptyState(
-          'No IT considerations recorded', Icons.computer, Colors.blue);
+          'No IT considerations recorded', Icons.computer, Color(0xFFFFC812));
     }
 
     return Column(
@@ -7300,21 +7300,21 @@ class _PreferredSolutionDetailsScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                        color: const Color(0xFFFFF8E1),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.code,
-                              size: 14, color: Color(0xFF3B82F6)),
+                              size: 14, color: Color(0xFFFFC812)),
                           const SizedBox(width: 6),
                           Text(
                             tech,
                             style: const TextStyle(
                               fontSize: 13,
-                              color: Color(0xFF1E40AF),
+                              color: Color(0xFFFFC812),
                             ),
                           ),
                         ],
@@ -7331,7 +7331,7 @@ class _PreferredSolutionDetailsScreenState
     if (analysis.infrastructure.isEmpty &&
         (analysis.infraConsiderationText?.isEmpty ?? true)) {
       return _buildEmptyState('No infrastructure considerations',
-          Icons.construction, Colors.purple);
+          Icons.construction, Color(0xFFB8860B));
     }
 
     return Column(
@@ -7350,14 +7350,14 @@ class _PreferredSolutionDetailsScreenState
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F3FF),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFDDD6FE)),
+                border: Border.all(color: const Color(0xFFFEF3C7)),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.check_circle,
-                      size: 18, color: Color(0xFF8B5CF6)),
+                      size: 18, color: Color(0xFFB8860B)),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(item, style: const TextStyle(fontSize: 14)),
@@ -7376,7 +7376,7 @@ class _PreferredSolutionDetailsScreenState
 
     if (!hasStakeholders) {
       return _buildEmptyState(
-          'No stakeholders identified', Icons.people, Colors.teal);
+          'No stakeholders identified', Icons.people, Color(0xFFD97706));
     }
 
     return Column(
@@ -7389,7 +7389,7 @@ class _PreferredSolutionDetailsScreenState
         ],
         if (analysis.internalStakeholders?.isNotEmpty ?? false)
           _buildStakeholderGroup('Internal Stakeholders',
-              analysis.internalStakeholders!, const Color(0xFF0891B2)),
+              analysis.internalStakeholders!, const Color(0xFFD97706)),
         if (analysis.stakeholders.isNotEmpty &&
             (analysis.externalStakeholders?.isEmpty ?? true) &&
             (analysis.internalStakeholders?.isEmpty ?? true))
@@ -7583,7 +7583,7 @@ class _PreferredSolutionDetailsScreenState
                     // IT Considerations
                     _buildSectionCard(
                       icon: Icons.computer,
-                      iconColor: const Color(0xFF3B82F6),
+                      iconColor: const Color(0xFFFFC812),
                       title: 'IT Considerations',
                       subtitle: analysis.technologies.isEmpty
                           ? 'No data'
@@ -7595,7 +7595,7 @@ class _PreferredSolutionDetailsScreenState
                     // Infrastructure
                     _buildSectionCard(
                       icon: Icons.construction,
-                      iconColor: const Color(0xFF8B5CF6),
+                      iconColor: const Color(0xFFB8860B),
                       title: 'Infrastructure Considerations',
                       subtitle: analysis.infrastructure.isEmpty
                           ? 'No data'
@@ -7619,7 +7619,7 @@ class _PreferredSolutionDetailsScreenState
                     // Scope Statement
                     _buildSectionCard(
                       icon: Icons.description,
-                      iconColor: const Color(0xFF6366F1),
+                      iconColor: const Color(0xFFB8860B),
                       title: 'Scope Statement',
                       subtitle: analysis.solution.description.isEmpty
                           ? 'Not provided'
@@ -7632,7 +7632,7 @@ class _PreferredSolutionDetailsScreenState
                               style: const TextStyle(fontSize: 14, height: 1.6),
                             )
                           : _buildEmptyState('No scope statement provided',
-                              Icons.description, Colors.indigo),
+                              Icons.description, Color(0xFFB8860B)),
                     ),
 
                     const SizedBox(height: 100), // Space for bottom buttons

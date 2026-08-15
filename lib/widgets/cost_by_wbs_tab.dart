@@ -124,7 +124,7 @@ class CostByWBSTab extends StatelessWidget {
                       'Total Cost',
                       '$currencySymbol${_fmt(totalAll)}',
                       Icons.account_balance_wallet_outlined,
-                      const Color(0xFF6366F1))),
+                      const Color(0xFFB8860B))),
               const SizedBox(width: 12),
               Expanded(
                   child: _costKpi(
@@ -142,7 +142,7 @@ class CostByWBSTab extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                   child: _costKpi('L1 Deliverables', '${l1Rollups.length}',
-                      Icons.layers_outlined, const Color(0xFF8B5CF6))),
+                      Icons.layers_outlined, const Color(0xFFB8860B))),
             ],
           ),
           const SizedBox(height: 24),
@@ -233,7 +233,7 @@ class CostByWBSTab extends StatelessWidget {
                         lineCount: lineCount,
                         pct: pct,
                         barPct: barPct,
-                        color: const Color(0xFF6366F1),
+                        color: const Color(0xFFB8860B),
                         // Schedule linkage (backfilled by WbsLinkageService).
                         plannedStart: rollup.node.plannedStart,
                         plannedFinish: rollup.node.plannedFinish,
@@ -254,7 +254,7 @@ class CostByWBSTab extends StatelessWidget {
                             barPct: cost > 0
                                 ? (l2Rollup.rolledUpCost / cost)
                                 : 0,
-                            color: const Color(0xFF8B5CF6),
+                            color: const Color(0xFFB8860B),
                             plannedStart: l2.plannedStart,
                             plannedFinish: l2.plannedFinish,
                             scheduleStatus: l2.scheduleStatus,
@@ -547,7 +547,7 @@ class CostByWBSTab extends StatelessWidget {
       return (color: const Color(0xFF10B981), label: status);
     }
     if (s.contains('on track') || s.contains('on-track') || s == 'in_progress') {
-      return (color: const Color(0xFF3B82F6), label: 'On track');
+      return (color: const Color(0xFFFFC812), label: 'On track');
     }
     if (s.contains('delay') || s.contains('late') || s.contains('behind')) {
       return (color: const Color(0xFFEF4444), label: status);

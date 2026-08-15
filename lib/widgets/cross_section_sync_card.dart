@@ -341,19 +341,19 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
               decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
+                color: const Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(7),
-                border: Border.all(color: const Color(0xFFBFDBFE)),
+                border: Border.all(color: const Color(0xFFFDE68A)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.loop, size: 14, color: Color(0xFF2563EB)),
+                  const Icon(Icons.loop, size: 14, color: Color(0xFFFFC812)),
                   const SizedBox(width: 7),
                   Expanded(
                     child: Text(
                       '${lifecycle.openFeedbackCount} control signal${lifecycle.openFeedbackCount == 1 ? '' : 's'} require review. Feed approved changes back into Scope/WBS, then resync downstream.',
                       style: const TextStyle(
-                          fontSize: 10.5, color: Color(0xFF1E40AF)),
+                          fontSize: 10.5, color: Color(0xFFFFC812)),
                     ),
                   ),
                 ],
@@ -807,12 +807,12 @@ class _CrossSectionSyncCardState extends State<CrossSectionSyncCard> {
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
           decoration: BoxDecoration(
             color: isCurrent
-                ? const Color(0xFFEEF2FF)
+                ? const Color(0xFFFFF8E1)
                 : color.withValues(alpha: .06),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isCurrent
-                  ? const Color(0xFF6366F1)
+                  ? const Color(0xFFB8860B)
                   : color.withValues(alpha: .28),
               width: isCurrent ? 1.5 : 1,
             ),

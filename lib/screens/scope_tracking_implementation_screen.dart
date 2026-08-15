@@ -461,7 +461,7 @@ class _ScopeTrackingImplementationScreenState
           label: const Text('Add Scope Item',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF0EA5E9),
+            backgroundColor: const Color(0xFFFFC812),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             shape: RoundedRectangleBorder(
@@ -573,7 +573,7 @@ class _ScopeTrackingImplementationScreenState
         'Scope Adherence',
         '$scopeAdherence%',
         '$inProgressOrVerified of $totalItems items',
-        const Color(0xFF2563EB),
+        const Color(0xFFFFC812),
       ),
       _StatCardData(
         'Identified Creep',

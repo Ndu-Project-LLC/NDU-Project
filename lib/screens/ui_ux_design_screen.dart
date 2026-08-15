@@ -379,7 +379,7 @@ class _UiUxDesignScreenState extends State<UiUxDesignScreen> {
  _DesignTokenRow(
  id: _newId(),
  title: 'Color palette - Primary',
- description: 'Brand primary (#0F172A), secondary (#2563EB), accent (#F59E0B), surface (#F8FAFC) with usage rules for dark/light themes.',
+ description: 'Brand primary (#0F172A), secondary (#FFC812), accent (#F59E0B), surface (#F8FAFC) with usage rules for dark/light themes.',
  category: 'Colors',
  status: 'Ready',
  owner: 'Design Systems Lead',
@@ -887,7 +887,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  '${_journeys.length}',
  'User Journeys',
  '$journeyMapped validated',
- const Color(0xFF0EA5E9),
+ const Color(0xFFFFC812),
  ),
  _StatCardData(
  '${_interfaces.length}',
@@ -905,7 +905,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  '$reviewPending',
  'Pending Reviews',
  reviewPending > 0 ? 'Require attention' : 'All reviewed',
- const Color(0xFF6366F1),
+ const Color(0xFFB8860B),
  ),
  ];
 
@@ -972,7 +972,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  collapsible: true,
  initiallyExpanded: false,
  headerIcon: Icons.auto_awesome_outlined,
- headerIconColor: const Color(0xFF6366F1),
+ headerIconColor: const Color(0xFFB8860B),
  child: Column(
  children: [
  const Text(
@@ -993,7 +993,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  'Define end-to-end user journeys from entry to task completion. Map touchpoints, '
  'decision points, and emotional arcs. Validate journeys against user research '
  'and business objectives before investing in interface design.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildGuideCard(
@@ -1816,7 +1816,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFF10B981);
  break;
  case 'In progress':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Draft':
  color = const Color(0xFFF59E0B);
@@ -1845,7 +1845,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFF10B981);
  break;
  case 'Medium':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Low':
  color = const Color(0xFFF59E0B);
@@ -1871,10 +1871,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFF10B981);
  break;
  case 'Prototype':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'User flow map':
- color = const Color(0xFF8B5CF6);
+ color = const Color(0xFFB8860B);
  break;
  case 'Wireframe':
  color = const Color(0xFFF59E0B);
@@ -1903,10 +1903,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Color color;
  switch (category) {
  case 'Colors':
- color = const Color(0xFF8B5CF6);
+ color = const Color(0xFFB8860B);
  break;
  case 'Typography':
- color = const Color(0xFF2563EB);
+ color = const Color(0xFFFFC812);
  break;
  case 'Layout':
  color = const Color(0xFF10B981);
@@ -1915,7 +1915,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFFF59E0B);
  break;
  case 'Motion':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Iconography':
  color = const Color(0xFFEF4444);
@@ -1941,13 +1941,13 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFF10B981);
  break;
  case 'In review':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Draft':
  color = const Color(0xFFF59E0B);
  break;
  case 'Planned':
- color = const Color(0xFF8B5CF6);
+ color = const Color(0xFFB8860B);
  break;
  case 'Deprecated':
  color = const Color(0xFF9CA3AF);
@@ -1976,7 +1976,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFFEF4444);
  break;
  case 'In progress':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Conditional':
  color = const Color(0xFFF59E0B);
@@ -2005,7 +2005,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFF10B981);
  break;
  case 'In Review':
- color = const Color(0xFF0EA5E9);
+ color = const Color(0xFFFFC812);
  break;
  case 'Pending':
  color = const Color(0xFFF59E0B);
@@ -2014,7 +2014,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  color = const Color(0xFFEF4444);
  break;
  case 'Waived':
- color = const Color(0xFF8B5CF6);
+ color = const Color(0xFFB8860B);
  break;
  case 'Not Started':
  color = const Color(0xFF9CA3AF);

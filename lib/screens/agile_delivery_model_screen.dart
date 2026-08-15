@@ -778,20 +778,20 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
           padding: const EdgeInsets.all(14),
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
+            color: const Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFBFDBFE)),
+            border: Border.all(color: const Color(0xFFFDE68A)),
           ),
           child: const Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.insights, size: 18, color: Color(0xFF2563EB)),
+              Icon(Icons.insights, size: 18, color: Color(0xFFFFC812)),
               SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Define how delivery progress, throughput, predictability, '
                   'and quality will be measured and reported across the project.',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF1E40AF)),
+                  style: TextStyle(fontSize: 13, color: Color(0xFFFFC812)),
                 ),
               ),
             ],
@@ -994,20 +994,20 @@ class _AgileDeliveryModelScreenState extends State<AgileDeliveryModelScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Color(0xFFE0F2FE),
+                    color: Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.auto_awesome,
-                          size: 10, color: Color(0xFF0284C7)),
+                          size: 10, color: Color(0xFFFFC812)),
                       SizedBox(width: 3),
                       Text('AI',
                           style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0284C7))),
+                              color: Color(0xFFFFC812))),
                     ],
                   ),
                 ),

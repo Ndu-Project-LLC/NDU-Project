@@ -1171,13 +1171,13 @@ $requirementsList
  child:
  CircularProgressIndicator(
  strokeWidth: 2,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  )
  : const Icon(
  Icons.auto_fix_high,
  size: 20,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  onPressed:
  _isGeneratingRequirementsPlan
@@ -1236,13 +1236,13 @@ $requirementsList
  child:
  CircularProgressIndicator(
  strokeWidth: 2,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  )
  : const Icon(
  Icons.refresh,
  size: 20,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  onPressed: _isGeneratingRequirements
  ? null
@@ -1453,7 +1453,7 @@ $requirementsList
                               onPressed: isRowLoading ? null : () => _regenerateRequirementRow(index),
                               icon: isRowLoading
                                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Icon(Icons.refresh, size: 18, color: Color(0xFF2563EB)),
+                                  : const Icon(Icons.refresh, size: 18, color: Color(0xFFFFC812)),
                               padding: const EdgeInsets.all(6),
                               constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                               splashRadius: 18,
@@ -1886,8 +1886,8 @@ $requirementsList
  label: const Text('Import CSV', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
  style: OutlinedButton.styleFrom(
  backgroundColor: Colors.white,
- foregroundColor: const Color(0xFF2563EB),
- side: const BorderSide(color: Color(0xFF93C5FD)),
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFFC812)),
  shape: RoundedRectangleBorder(
  borderRadius: BorderRadius.circular(12),
  ),
@@ -1904,8 +1904,8 @@ $requirementsList
   label: const Text('Template', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
   style: OutlinedButton.styleFrom(
   backgroundColor: Colors.white,
-  foregroundColor: const Color(0xFF2563EB),
-  side: const BorderSide(color: Color(0xFF93C5FD)),
+  foregroundColor: const Color(0xFFFFC812),
+  side: const BorderSide(color: Color(0xFFFFC812)),
   shape: RoundedRectangleBorder(
   borderRadius: BorderRadius.circular(12),
   ),
@@ -2482,13 +2482,13 @@ class _MemberPickerDialogState extends State<_MemberPickerDialog> {
  dense: true,
  leading: CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFFDBEAFE),
+ backgroundColor: const Color(0xFFFEF3C7),
  child: Text(
  member.displayLabel[0].toUpperCase(),
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),

@@ -251,7 +251,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
         title: 'Stakeholder Sign-off',
         subtitle: 'Pending approvals',
         value: '',
-        accent: const Color(0xFF2563EB),
+        accent: const Color(0xFFFFC812),
       ),
       _SnapshotMetric(
         id: _newId(),
@@ -265,7 +265,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
         title: 'Ops Readiness',
         subtitle: 'Handover confidence',
         value: '',
-        accent: const Color(0xFF7C3AED),
+        accent: const Color(0xFFB8860B),
       ),
     ];
   }
@@ -371,7 +371,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
             title: 'Snapshot Metrics',
             value: '${_snapshotMetrics.length}',
             icon: Icons.dashboard_outlined,
-            color: const Color(0xFF2563EB),
+            color: const Color(0xFFFFC812),
           ),
         ),
         const SizedBox(width: 16),
@@ -390,7 +390,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
             value:
                 '${_signOffs.where((s) => s.status == 'Approved').length}/${_signOffs.length}',
             icon: Icons.verified_outlined,
-            color: const Color(0xFF7C3AED),
+            color: const Color(0xFFB8860B),
           ),
         ),
       ],
@@ -495,7 +495,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  title: r['title'] ?? '',
  subtitle: r['subtitle'] ?? '',
  value: r['value'] ?? '',
- accent: const Color(0xFF2563EB),
+ accent: const Color(0xFFFFC812),
  ));
  }
  });
@@ -504,7 +504,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
  },
  icon: const Icon(Icons.upload_file_outlined, size: 16),
  label: const Text('Import CSV'),
- style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), foregroundColor: const Color(0xFF2563EB), side: const BorderSide(color: Color(0xFF93C5FD))),
+ style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), foregroundColor: const Color(0xFFFFC812), side: const BorderSide(color: Color(0xFFFFC812))),
  ),
  const SizedBox(width: 8),
  FilledButton.icon(
@@ -620,7 +620,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
       try {
         return metric.accent;
       } catch (e) {
-        return const Color(0xFF0EA5E9);
+        return const Color(0xFFFFC812);
       }
     }
 
@@ -880,15 +880,15 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
       case 'complete':
         return const Color(0xFF16A34A);
       case 'on track':
-        return const Color(0xFF0EA5E9);
+        return const Color(0xFFFFC812);
       case 'at risk':
         return const Color(0xFFF59E0B);
       case 'blocked':
         return const Color(0xFFEF4444);
       case 'in progress':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFFB8860B);
       case 'under review':
-        return const Color(0xFF06B6D4);
+        return const Color(0xFFD97706);
       case 'pending sign-off':
         return const Color(0xFFF97316);
       case 'not started':
@@ -945,8 +945,8 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                         horizontal: 16, vertical: 10),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
-                    foregroundColor: const Color(0xFF2563EB),
-                    side: const BorderSide(color: Color(0xFF93C5FD))),
+                    foregroundColor: const Color(0xFFFFC812),
+                    side: const BorderSide(color: Color(0xFFFFC812))),
               ),
               const SizedBox(width: 8),
               FilledButton.icon(
@@ -1166,7 +1166,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
               children: [
                 IconButton(
                   icon:
-                      const Icon(Icons.edit_outlined, color: Color(0xFF2563EB)),
+                      const Icon(Icons.edit_outlined, color: Color(0xFFFFC812)),
                   tooltip: 'Edit',
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -1279,7 +1279,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Color(0xFFEEF2FF),
+                        Color(0xFFFFF8E1),
                         Color(0xFFE8F0FE),
                       ],
                     ),
@@ -1577,7 +1577,7 @@ class _FinalizeProjectScreenState extends State<FinalizeProjectScreen> {
         title: '',
         subtitle: '',
         value: '',
-        accent: const Color(0xFF2563EB),
+        accent: const Color(0xFFFFC812),
       ));
     });
     _scheduleSave();
@@ -1793,13 +1793,13 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color:
-                _isHovered ? const Color(0xFFC7D2FE) : const Color(0xFFE5E7EB),
+                _isHovered ? const Color(0xFFFEF3C7) : const Color(0xFFE5E7EB),
             width: _isHovered ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
               color: _isHovered
-                  ? const Color(0xFF6366F1).withValues(alpha: 0.06)
+                  ? const Color(0xFFB8860B).withValues(alpha: 0.06)
                   : Colors.black.withValues(alpha: 0.03),
               blurRadius: _isHovered ? 16 : 8,
               offset: Offset(0, _isHovered ? 6 : 2),
@@ -1818,8 +1818,8 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      const Color(0xFF6366F1),
-                      const Color(0xFF8B5CF6).withValues(alpha: 0.6),
+                      const Color(0xFFB8860B),
+                      const Color(0xFFB8860B).withValues(alpha: 0.6),
                     ],
                   ),
                   borderRadius: const BorderRadius.only(
@@ -1848,9 +1848,9 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  const Color(0xFF6366F1)
+                                  const Color(0xFFB8860B)
                                       .withValues(alpha: 0.12),
-                                  const Color(0xFF8B5CF6)
+                                  const Color(0xFFB8860B)
                                       .withValues(alpha: 0.08),
                                 ],
                               ),
@@ -1860,7 +1860,7 @@ class _VerticalInsightCardState extends State<_VerticalInsightCard> {
                               Icons.lightbulb_outline_rounded,
                               size: 16,
                               color: hasTitle
-                                  ? const Color(0xFF6366F1)
+                                  ? const Color(0xFFB8860B)
                                   : const Color(0xFF9CA3AF),
                             ),
                           ),
@@ -2267,7 +2267,7 @@ class _SnapshotMetric {
         title: map['title']?.toString() ?? '',
         subtitle: map['subtitle']?.toString() ?? '',
         value: map['value']?.toString() ?? '',
-        accent: safeAccent(0xFF0EA5E9),
+        accent: safeAccent(0xFFFFC812),
       );
     }).toList();
   }

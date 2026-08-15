@@ -112,7 +112,7 @@ class PlanningDashboardCard extends StatelessWidget {
                                     CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.auto_awesome,
-                                color: Color(0xFF7C3AED)), // Purple accent
+                                color: Color(0xFFB8860B)), // Purple accent
                       ),
                   ],
                 ),
@@ -254,7 +254,7 @@ class PlanningDashboardCard extends StatelessWidget {
               height: 8,
               decoration: BoxDecoration(
                 color: item.isAiGenerated
-                    ? const Color(0xFF8B5CF6) // Purple for AI
+                    ? const Color(0xFFB8860B) // Purple for AI
                     : const Color(0xFF10B981), // Green for Manual
                 shape: BoxShape.circle,
               ),

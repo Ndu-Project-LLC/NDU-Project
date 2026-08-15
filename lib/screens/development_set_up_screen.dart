@@ -794,10 +794,10 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  final toolsActive = _toolItems.where((e) => e.status == 'Active').length;
  final secInProgress = _securityItems.where((e) => e.status == 'In Progress' || e.status == 'Not Started').length;
  final stats = [
- _StatCardData('Environments Ready', '$envReady/${_envItems.length}', 'Provisioned spaces', const Color(0xFF0EA5E9)),
+ _StatCardData('Environments Ready', '$envReady/${_envItems.length}', 'Provisioned spaces', const Color(0xFFFFC812)),
  _StatCardData('Pipeline Stages', '$pipelineReady/${_cicdItems.length}', 'Ready stages', const Color(0xFF10B981)),
  _StatCardData('Active Tools', '$toolsActive', 'Licensed and active', const Color(0xFFF97316)),
- _StatCardData('Security Pending', '$secInProgress', secInProgress > 0 ? 'Require attention' : 'All complete', const Color(0xFF6366F1)),
+ _StatCardData('Security Pending', '$secInProgress', secInProgress > 0 ? 'Require attention' : 'All complete', const Color(0xFFB8860B)),
  ];
  return LayoutBuilder(
  builder: (context, constraints) {
@@ -891,7 +891,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF6B7280), height: 1.5),
  ),
  const SizedBox(height: 18),
- _buildGuideCard(Icons.dns_outlined, 'Environment First', 'Provision and validate all environments before onboarding the team. Each environment should mirror its target configuration to prevent late-stage surprises.', const Color(0xFF0EA5E9)),
+ _buildGuideCard(Icons.dns_outlined, 'Environment First', 'Provision and validate all environments before onboarding the team. Each environment should mirror its target configuration to prevent late-stage surprises.', const Color(0xFFFFC812)),
  const SizedBox(height: 12),
  _buildGuideCard(Icons.play_circle_outline, 'Pipeline Automation', 'Automate build, test, and deployment from day one. Fast feedback loops catch issues early and reduce manual coordination overhead.', const Color(0xFF10B981)),
  const SizedBox(height: 12),
@@ -983,7 +983,7 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  Expanded(flex: 4, child: Text(item.environment, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)))),
  SizedBox(width: 110, child: Text(item.type, style: const TextStyle(fontSize: 12, color: Color(0xFF475569)))),
  SizedBox(width: 120, child: _buildStatusTag(item.status, color)),
- Expanded(flex: 3, child: Text(item.accessUrl, style: const TextStyle(fontSize: 11, fontFamily: appFontFamily, color: Color(0xFF2563EB)), overflow: TextOverflow.ellipsis)),
+ Expanded(flex: 3, child: Text(item.accessUrl, style: const TextStyle(fontSize: 11, fontFamily: appFontFamily, color: Color(0xFFFFC812)), overflow: TextOverflow.ellipsis)),
  SizedBox(width: 120, child: Text(item.owner, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)))),
  SizedBox(width: 110, child: Text(item.targetDate, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
  SizedBox(

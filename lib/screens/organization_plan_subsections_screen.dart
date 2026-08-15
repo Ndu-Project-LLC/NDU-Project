@@ -708,9 +708,9 @@ class _OrganizationStaffingPlanScreenState
 
     final metrics = <_MetricData>[
       _MetricData('Total Positions', staffing.length.toString(),
-          const Color(0xFF3B82F6)),
+          const Color(0xFFFFC812)),
       _MetricData(
-          'Total Personnel', totalPersonnel.toString(), const Color(0xFF8B5CF6)),
+          'Total Personnel', totalPersonnel.toString(), const Color(0xFFB8860B)),
       _MetricData('NDU Access', nduAccessCount.toString(),
           const Color(0xFF10B981)),
       _MetricData('Active Reminders', reminders.length.toString(),
@@ -991,14 +991,14 @@ class _NduSuggestionBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFBFDBFE)),
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.auto_awesome, color: Color(0xFF2563EB), size: 22),
+          const Icon(Icons.auto_awesome, color: Color(0xFFFFC812), size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1009,7 +1009,7 @@ class _NduSuggestionBanner extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E3A8A),
+                    color: Color(0xFFB8860B),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1034,8 +1034,8 @@ class _NduSuggestionBanner extends StatelessWidget {
                 icon: const Icon(Icons.person_add_alt_1, size: 16),
                 label: const Text('Add Position'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF1E40AF),
-                  side: const BorderSide(color: Color(0xFFBFDBFE)),
+                  foregroundColor: const Color(0xFFFFC812),
+                  side: const BorderSide(color: Color(0xFFFDE68A)),
                 ),
               ),
               ElevatedButton.icon(
@@ -1043,7 +1043,7 @@ class _NduSuggestionBanner extends StatelessWidget {
                 icon: const Icon(Icons.auto_awesome, size: 16),
                 label: const Text('AI Suggest NDU Access'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: const Color(0xFFFFC812),
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -1217,7 +1217,7 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
     return AlertDialog(
       title: Row(
         children: const [
-          Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+          Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
           SizedBox(width: 8),
           Expanded(
             child: Text('AI Suggested NDU Project Access'),
@@ -1235,10 +1235,10 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(8),
                   border:
-                      Border.all(color: const Color(0xFFBFDBFE)),
+                      Border.all(color: const Color(0xFFFDE68A)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1343,7 +1343,7 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
                               color: hasAccess
                                   ? const Color(0xFF059669)
                                   : suggested
-                                      ? const Color(0xFF2563EB)
+                                      ? const Color(0xFFFFC812)
                                       : const Color(0xFF6B7280),
                               fontWeight: hasAccess || suggested
                                   ? FontWeight.w700
@@ -1430,7 +1430,7 @@ class _NduSuggestionDialogState extends State<_NduSuggestionDialog> {
           icon: const Icon(Icons.check, size: 16),
           label: Text('Apply ($totalAfter role${totalAfter == 1 ? '' : 's'})'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2563EB),
+            backgroundColor: const Color(0xFFFFC812),
             foregroundColor: Colors.white,
           ),
         ),
@@ -1624,7 +1624,7 @@ class _StaffingRequirementDialogState
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.badge_outlined, color: Color(0xFF2563EB)),
+          const Icon(Icons.badge_outlined, color: Color(0xFFFFC812)),
           const SizedBox(width: 8),
           Expanded(child: Text(widget.title)),
         ],
@@ -1710,7 +1710,7 @@ class _StaffingRequirementDialogState
                       return ListTile(
                         dense: true,
                         leading: CircleAvatar(
-                          backgroundColor: const Color(0xFFE0E7FF),
+                          backgroundColor: const Color(0xFFFFF8E1),
                           child: Text(
                             (user.displayName.isNotEmpty
                                     ? user.displayName[0]
@@ -1731,7 +1731,7 @@ class _StaffingRequirementDialogState
                         trailing: alreadySelected
                             ? const Icon(Icons.check, color: Color(0xFF059669))
                             : const Icon(Icons.add_circle_outline,
-                                color: Color(0xFF2563EB)),
+                                color: Color(0xFFFFC812)),
                         onTap: () {
                           setState(() {
                             _nameCtrl.text = user.displayName;
@@ -2268,11 +2268,11 @@ class _OrganizationRolesResponsibilitiesScreenState
 
     final List<_MetricData> metrics = [
       _MetricData(
-          'Total Roles', roles.length.toString(), const Color(0xFF3B82F6)),
+          'Total Roles', roles.length.toString(), const Color(0xFFFFC812)),
       _MetricData(
           'Total Personnel',
           totalPersonnel.toString(),
-          const Color(0xFF8B5CF6)),
+          const Color(0xFFB8860B)),
       _MetricData(
           'Disciplines',
           roles.map<String>((r) => r.workstream).toSet().length.toString(),
@@ -3574,7 +3574,7 @@ class _RolesTableRow extends StatelessWidget {
           padding:
               const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFFE0E7FF),
+            color: const Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
@@ -4262,8 +4262,8 @@ class _StaffingPlanTabContent extends StatelessWidget {
                 icon: const Icon(Icons.person_add_alt_1, size: 16),
                 label: const Text('Add Position'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF1E40AF),
-                  side: const BorderSide(color: Color(0xFFBFDBFE)),
+                  foregroundColor: const Color(0xFFFFC812),
+                  side: const BorderSide(color: Color(0xFFFDE68A)),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 ),
@@ -4273,7 +4273,7 @@ class _StaffingPlanTabContent extends StatelessWidget {
                 icon: const Icon(Icons.auto_awesome, size: 16),
                 label: const Text('AI Suggest Dates'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7C3AED),
+                  backgroundColor: const Color(0xFFB8860B),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding:
@@ -4434,7 +4434,7 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
             Container(
               padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
               decoration: const BoxDecoration(
-                color: Color(0xFFF5F3FF),
+                color: Color(0xFFFFF8E1),
                 borderRadius:
                     BorderRadius.vertical(top: Radius.circular(16)),
               ),
@@ -4443,11 +4443,11 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEDE9FE),
+                      color: const Color(0xFFFFF8E1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.auto_awesome,
-                        color: Color(0xFF7C3AED), size: 20),
+                        color: Color(0xFFB8860B), size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -4504,12 +4504,12 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isAccepted
-                            ? const Color(0xFFF5F3FF)
+                            ? const Color(0xFFFFF8E1)
                             : Colors.white,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: isAccepted
-                              ? const Color(0xFFC4B5FD)
+                              ? const Color(0xFFFDE68A)
                               : const Color(0xFFE5E7EB),
                         ),
                       ),
@@ -4527,7 +4527,7 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
                                 }
                               });
                             },
-                            activeColor: const Color(0xFF7C3AED),
+                            activeColor: const Color(0xFFB8860B),
                           ),
                           const SizedBox(width: 4),
                           Expanded(
@@ -4570,7 +4570,7 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
                                       _DateChip(
                                         label: 'Milestone',
                                         value: s.matchedMilestone!,
-                                        color: const Color(0xFF6366F1),
+                                        color: const Color(0xFFB8860B),
                                       ),
                                   ],
                                 ),
@@ -4613,7 +4613,7 @@ class _AiSuggestDatesDialogState extends State<_AiSuggestDatesDialog> {
                             ? null
                             : () => Navigator.pop(context, _accepted),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF7C3AED),
+                          backgroundColor: const Color(0xFFB8860B),
                           foregroundColor: Colors.white,
                         ),
                         child: const Text('Apply Selected'),
@@ -5124,9 +5124,9 @@ class _TimelineRow extends StatelessWidget {
 
                   // Bar color shifts based on role.
                   final title = parsed.requirement.title.toLowerCase();
-                  Color barColor = const Color(0xFF3B82F6);
+                  Color barColor = const Color(0xFFFFC812);
                   if (title.contains('manager') || title.contains('lead')) {
-                    barColor = const Color(0xFF8B5CF6);
+                    barColor = const Color(0xFFB8860B);
                   } else if (title.contains('developer') ||
                       title.contains('tech') ||
                       title.contains('engineer') ||
@@ -5137,7 +5137,7 @@ class _TimelineRow extends StatelessWidget {
                     barColor = const Color(0xFFF59E0B);
                   } else if (title.contains('contract') ||
                       title.contains('procurement')) {
-                    barColor = const Color(0xFFEC4899);
+                    barColor = const Color(0xFFD97706);
                   } else if (title.contains('ssher') ||
                       title.contains('safety')) {
                     barColor = const Color(0xFFEF4444);

@@ -526,7 +526,7 @@ class _AgileAiCoachScreenState extends State<AgileAiCoachScreen> {
                 const Text(
                     'Embedded AI guidance across sprint planning, story writing, estimation, risk detection, and continuous improvement. Proactive recommendations tuned to your delivery patterns.',
                     style: TextStyle(
-                        fontSize: 13, color: Color(0xFFC7D2FE), height: 1.5)),
+                        fontSize: 13, color: Color(0xFFFEF3C7), height: 1.5)),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,

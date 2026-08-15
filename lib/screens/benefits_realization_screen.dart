@@ -267,10 +267,10 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
 
     const segColors = [
       Color(0xFF10B981),
-      Color(0xFF2563EB),
+      Color(0xFFFFC812),
       Color(0xFFF59E0B),
-      Color(0xFF7C3AED),
-      Color(0xFF06B6D4),
+      Color(0xFFB8860B),
+      Color(0xFFD97706),
       Color(0xFFEF4444),
     ];
     final donutSegments = <({String label, double value, Color color})>[];
@@ -300,7 +300,7 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
               label: 'Categories',
               value: '${categories.length}',
               icon: Icons.category_outlined,
-              color: const Color(0xFF2563EB),
+              color: const Color(0xFFFFC812),
               delta: 'benefit streams',
             ),
             LaunchKpiTile(

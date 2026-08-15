@@ -738,7 +738,7 @@ class _TeamStatusCheckScreenState extends State<TeamStatusCheckScreen>
           'AI Operations Insights',
           'AI continuously identifies trends, predicts capacity constraints, flags coverage gaps, '
               'and recommends staffing or workload adjustments to maintain project performance.',
-          const Color(0xFF0891B2),
+          const Color(0xFFD97706),
         ),
       ],
     );

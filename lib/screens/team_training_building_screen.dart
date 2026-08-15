@@ -283,7 +283,7 @@ class _TeamTrainingAndBuildingScreenState
  addLabel: 'Add Discipline Training',
  addIcon: Icons.school_outlined,
  activities: disciplineActivities,
- accent: Colors.blue,
+ accent: Color(0xFFFFC812),
  onAdd: () => _addActivity(
  context,
  title: 'New Training',
@@ -299,7 +299,7 @@ class _TeamTrainingAndBuildingScreenState
  addLabel: 'Add Team Building',
  addIcon: Icons.favorite_outline,
  activities: teamBuildingActivities,
- accent: Colors.purple,
+ accent: Color(0xFFB8860B),
  heart: true,
  onAdd: () => _addActivity(
  context,
@@ -789,14 +789,14 @@ class _TeamTrainingAndBuildingScreenState
  padding:
  const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
  decoration: BoxDecoration(
- color: Colors.blue[50],
+ color: Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: Colors.blue[100]!),
+ border: Border.all(color: Color(0xFFFEF3C7)!),
  ),
  child: Row(
  children: [
  const Icon(Icons.attach_file,
- size: 16, color: Colors.blue),
+ size: 16, color: Color(0xFFFFC812)),
  const SizedBox(width: 8),
  Expanded(
  child: Text(
@@ -804,7 +804,7 @@ class _TeamTrainingAndBuildingScreenState
  maxLines: 1,
  overflow: TextOverflow.ellipsis,
  style:
- TextStyle(color: Colors.blue[900], fontSize: 13),
+ TextStyle(color: Color(0xFF92400E), fontSize: 13),
  ),
  ),
  if ((attachedFileUrl ?? '').trim().isNotEmpty)
@@ -813,7 +813,7 @@ class _TeamTrainingAndBuildingScreenState
  onPressed: () =>
  _downloadAttachment(rootContext, attachedFileUrl),
  icon: const Icon(Icons.download_outlined,
- size: 18, color: Colors.blue),
+ size: 18, color: Color(0xFFFFC812)),
  ),
  IconButton(
  tooltip: 'Remove attachment',
@@ -826,7 +826,7 @@ class _TeamTrainingAndBuildingScreenState
  scheduleAutoSave();
  }),
  icon: const Icon(Icons.close,
- size: 16, color: Colors.blue),
+ size: 16, color: Color(0xFFFFC812)),
  ),
  ],
  ),
@@ -1100,21 +1100,21 @@ class _TeamTrainingAndBuildingScreenState
  padding: const EdgeInsets.symmetric(
  horizontal: 10, vertical: 10),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(8),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  ),
  child: Row(
  children: [
  const Icon(Icons.attach_file,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  const SizedBox(width: 8),
  Expanded(
  child: Text(
  _baseName(attachedFile!),
  overflow: TextOverflow.ellipsis,
  style: const TextStyle(
- color: Color(0xFF1E3A8A), fontSize: 13),
+ color: Color(0xFFB8860B), fontSize: 13),
  ),
  ),
  if ((attachedFileUrl ?? '').trim().isNotEmpty)
@@ -1123,7 +1123,7 @@ class _TeamTrainingAndBuildingScreenState
  onPressed: () => _downloadAttachment(
  rootContext, attachedFileUrl),
  icon: const Icon(Icons.download_outlined,
- size: 18, color: Color(0xFF2563EB)),
+ size: 18, color: Color(0xFFFFC812)),
  ),
  IconButton(
  tooltip: 'Remove',
@@ -1135,7 +1135,7 @@ class _TeamTrainingAndBuildingScreenState
  manualUrlController.text = '';
  }),
  icon: const Icon(Icons.close,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  ),
  ],
  ),
@@ -2234,7 +2234,7 @@ class _UpcomingTrainingList extends StatelessWidget {
  if (activity.attachedFile != null) ...[
  const SizedBox(width: 6),
  const Icon(Icons.attach_file,
- size: 14, color: Colors.blue),
+ size: 14, color: Color(0xFFFFC812)),
  ],
  if (activity.isMandatory) ...[
  const SizedBox(width: 8),
@@ -2271,7 +2271,7 @@ class _UpcomingTrainingList extends StatelessWidget {
  Row(
  children: [
  Icon(Icons.insert_drive_file_outlined,
- size: 14, color: Colors.blue[800]),
+ size: 14, color: Color(0xFFB8860B)),
  const SizedBox(width: 6),
  Expanded(
  child: Text(
@@ -2280,7 +2280,7 @@ class _UpcomingTrainingList extends StatelessWidget {
  overflow: TextOverflow.ellipsis,
  style: TextStyle(
  fontSize: 11,
- color: Colors.blue[800],
+ color: Color(0xFFB8860B),
  fontStyle: FontStyle.italic,
  ),
  ),
@@ -2323,7 +2323,7 @@ class _UpcomingTrainingList extends StatelessWidget {
  IconButton(
  onPressed: () => onDownload!(activity),
  icon: const Icon(Icons.download_outlined,
- size: 18, color: Colors.blue),
+ size: 18, color: Color(0xFFFFC812)),
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(),
  ),
@@ -2386,7 +2386,7 @@ class _BenefitCard extends StatelessWidget {
  CircleAvatar(
  radius: 18,
  backgroundColor: Colors.grey.withValues(alpha: 0.15),
- child: Icon(icon, color: Colors.blueGrey[700]),
+ child: Icon(icon, color: Color(0xFFFFC812)Grey[700]),
  ),
  const SizedBox(height: 12),
  Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),

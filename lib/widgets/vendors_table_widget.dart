@@ -335,15 +335,15 @@ class _CategoryCell extends StatelessWidget {
   };
 
   static const _categoryColors = <String, Color>{
-    'Logistics': Color(0xFF0EA5E9),
-    'IT Hardware': Color(0xFF6366F1),
-    'Consulting': Color(0xFF8B5CF6),
+    'Logistics': Color(0xFFFFC812),
+    'IT Hardware': Color(0xFFB8860B),
+    'Consulting': Color(0xFFB8860B),
     'Raw Materials': Color(0xFFF59E0B),
     'Utilities': Color(0xFF10B981),
-    'Technology': Color(0xFF3B82F6),
+    'Technology': Color(0xFFFFC812),
     'Operations': Color(0xFF64748B),
-    'Facilities': Color(0xFFEC4899),
-    'Services': Color(0xFF14B8A6),
+    'Facilities': Color(0xFFD97706),
+    'Services': Color(0xFFD97706),
   };
 
   @override
@@ -646,7 +646,7 @@ class _RatingCell extends StatelessWidget {
 
   static const _ratingConfig = <String, (Color, String)>{
     'A': (Color(0xFF10B981), 'Excellent'),
-    'B': (Color(0xFF0EA5E9), 'Good'),
+    'B': (Color(0xFFFFC812), 'Good'),
     'C': (Color(0xFFF59E0B), 'Fair'),
     'D': (Color(0xFFEF4444), 'Poor'),
   };
@@ -695,7 +695,7 @@ class _StatusCell extends StatelessWidget {
     'Active': (Color(0xFF10B981), Icons.check_circle_rounded),
     'Watch': (Color(0xFFF59E0B), Icons.visibility_outlined),
     'At risk': (Color(0xFFEF4444), Icons.warning_amber_rounded),
-    'Onboard': (Color(0xFF0EA5E9), Icons.flight_takeoff_outlined),
+    'Onboard': (Color(0xFFFFC812), Icons.flight_takeoff_outlined),
   };
 
   @override
@@ -1046,20 +1046,20 @@ class _ActionsCellState extends State<_ActionsCell> {
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Color(0xFF7C3AED),
+                              color: Color(0xFFB8860B),
                             ),
                           ),
                         )
                       : _actionIcon(
                           Icons.auto_awesome,
-                          color: const Color(0xFF7C3AED),
+                          color: const Color(0xFFB8860B),
                           tooltip: 'Regenerate SLA',
                           onPressed: _regenerateSLATerms,
                         ),
                 if (widget.canEdit)
                   _actionIcon(
                     Icons.edit_outlined,
-                    color: const Color(0xFF0EA5E9),
+                    color: const Color(0xFFFFC812),
                     tooltip: 'Edit',
                     onPressed: () {
                       // Trigger inline edit mode via the parent

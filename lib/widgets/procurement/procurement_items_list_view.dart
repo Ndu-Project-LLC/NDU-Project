@@ -97,7 +97,7 @@ class _SummaryMetricsRow extends StatelessWidget {
     final cards = [
       ProcurementSummaryCard(
         icon: Icons.inventory_2_outlined,
-        iconBackground: const Color(0xFFEFF6FF),
+        iconBackground: const Color(0xFFFFF8E1),
         value: '$totalItems',
         label: 'Total Items',
       ),
@@ -110,14 +110,14 @@ class _SummaryMetricsRow extends StatelessWidget {
       ),
       ProcurementSummaryCard(
         icon: Icons.access_time,
-        iconBackground: const Color(0xFFF5F3FF),
+        iconBackground: const Color(0xFFFFF8E1),
         value: '$pendingApprovals',
         label: 'Pending Approvals',
         valueColor: const Color(0xFF1F2937),
       ),
       ProcurementSummaryCard(
         icon: Icons.attach_money,
-        iconBackground: const Color(0xFFECFEFF),
+        iconBackground: const Color(0xFFFFF8E1),
         value: totalBudgetLabel,
         label: 'Total Budget',
         valueColor: const Color(0xFF047857),
@@ -277,7 +277,7 @@ class _AddItemButton extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF2563EB),
+        backgroundColor: const Color(0xFFFFC812),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         shape: RoundedRectangleBorder(
@@ -659,7 +659,7 @@ class _TrackableRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEFF6FF) : Colors.transparent,
+          color: isSelected ? const Color(0xFFFFF8E1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -669,7 +669,7 @@ class _TrackableRow extends StatelessWidget {
               height: 28,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF2563EB)
+                    ? const Color(0xFFFFC812)
                     : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(8),
               ),

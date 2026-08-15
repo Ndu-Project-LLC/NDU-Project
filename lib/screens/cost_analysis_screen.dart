@@ -1655,7 +1655,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
                 width: 40,
                 height: 40,
                 decoration: const BoxDecoration(
-                    color: Colors.blue, shape: BoxShape.circle),
+                    color: Color(0xFFFFC812), shape: BoxShape.circle),
                 child: const Icon(Icons.person, color: Colors.white, size: 20),
               ),
               if (!isMobile) ...[
@@ -2486,7 +2486,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           Expanded(
             child: Text(
               'Switch tabs as needed',
-              style: TextStyle(fontSize: 13, color: Colors.blueGrey[700]),
+              style: TextStyle(fontSize: 13, color: Color(0xFFFFC812)Grey[700]),
             ),
           ),
         ],
@@ -4229,7 +4229,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           final metadata = [
             Chip(
               avatar: Icon(Icons.attach_money,
-                  size: 16, color: Colors.blue.shade700),
+                  size: 16, color: Color(0xFFB8860B)),
               label: Text('Currency: $_currency'),
             ),
             Chip(
@@ -4712,12 +4712,12 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.6),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.teal.shade200),
+        border: Border.all(color: Color(0xFFFDE68A)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.show_chart, size: 16, color: Colors.teal.shade700),
+          Icon(Icons.show_chart, size: 16, color: Color(0xFFB8860B)),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
@@ -4725,7 +4725,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
               style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Colors.teal.shade900),
+                  color: Color(0xFF92400E)),
               overflow: TextOverflow.ellipsis,
             ),
           ),

@@ -654,7 +654,7 @@ class _AgileRisksScreenState extends State<AgileRisksScreen> {
         : status == 'Escalated'
             ? Colors.red
             : status == 'In Progress'
-                ? Colors.blue
+                ? Color(0xFFFFC812)
                 : _kAccent;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

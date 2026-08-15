@@ -168,7 +168,7 @@ class _DeliverProjectClosureScreenState
           label: 'Milestones',
           value: '${projectData.keyMilestones.length}',
           icon: Icons.flag_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta:
               '${projectData.keyMilestones.where((m) => m.dueDate.isNotEmpty).length} dated',
         ),

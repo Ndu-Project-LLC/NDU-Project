@@ -317,7 +317,7 @@ class _StakeholderAlignmentScreenState
           label: const Text('Add Stakeholder',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF0EA5E9),
+            backgroundColor: const Color(0xFFFFC812),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             shape: RoundedRectangleBorder(

@@ -747,7 +747,7 @@ class _BuilderScreenState extends State<BuilderScreen> {
             ? '${DateFormat('MMM d').format(root.startDate!)} → ${DateFormat('MMM d').format(root.endDate!)}'
             : 'Setup timeline to begin',
         icon: Icons.calendar_month_rounded,
-        tint: const Color(0xFF6366F1),
+        tint: const Color(0xFFB8860B),
         tintSoft: TreasuryTokens.infoSoft,
       ),
       TreasuryKpiSpec(
@@ -763,8 +763,8 @@ class _BuilderScreenState extends State<BuilderScreen> {
         value: _domainLabelFromColor(topDomainColor),
         sub: '${domainCounts.length} domains active',
         icon: Icons.hub_outlined,
-        tint: const Color(0xFFEC4899),
-        tintSoft: const Color(0xFFFCE7F3),
+        tint: const Color(0xFFD97706),
+        tintSoft: const Color(0xFFFFF8E1),
       ),
     ];
   }

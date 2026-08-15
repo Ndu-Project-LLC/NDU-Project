@@ -438,9 +438,9 @@ class _AgileDevelopmentIterationsScreenState
 
     final stats = [
       _StatCardData('Iteration Progress', '$iterationProgress%',
-          '$completedTasks/$totalTasks tasks', const Color(0xFF0EA5E9)),
+          '$completedTasks/$totalTasks tasks', const Color(0xFFFFC812)),
       _StatCardData('Sprint Velocity', '$sprintVelocity', 'Total story points',
-          const Color(0xFF6366F1)),
+          const Color(0xFFB8860B)),
       _StatCardData('Active Blockers', '$activeBlockers',
           'Critical tasks pending', const Color(0xFFEF4444)),
     ];
@@ -576,7 +576,7 @@ class _AgileDevelopmentIterationsScreenState
                       child: Row(
                         children: [
                           Icon(Icons.speed,
-                              size: 16, color: const Color(0xFF7C3AED)),
+                              size: 16, color: const Color(0xFFB8860B)),
                           const SizedBox(width: 8),
                           Text(
                             epicEntry.key,

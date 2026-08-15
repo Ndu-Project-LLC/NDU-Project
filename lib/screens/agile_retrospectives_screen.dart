@@ -73,7 +73,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
         _RetroColumn(
             id: 'sad',
             title: 'Sad',
-            color: Colors.blue,
+            color: Color(0xFFFFC812),
             prompt: 'What disappointed you?'),
         _RetroColumn(
             id: 'glad',
@@ -104,7 +104,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
         _RetroColumn(
             id: 'longed',
             title: 'Longed For',
-            color: Colors.purple,
+            color: Color(0xFFB8860B),
             prompt: 'What did you long for?'),
       ],
     ),
@@ -311,7 +311,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
           member: 'Marcus Reed',
           role: 'Backend Engineer',
           avatar: 'MR',
-          color: Colors.blue,
+          color: Color(0xFFFFC812),
           sentiment: 'positive',
           comment:
               'Pairing on rate limiting paid off. Would love more mid-sprint refinement time.'),
@@ -319,7 +319,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
           member: 'Priya Nair',
           role: 'Frontend Engineer',
           avatar: 'PN',
-          color: Colors.purple,
+          color: Color(0xFFB8860B),
           sentiment: 'mixed',
           comment:
               'Felt rushed toward the end. Story rejection hurt morale — let\'s tighten DoR.'),
@@ -335,7 +335,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
           member: 'Lena Park',
           role: 'Frontend Engineer',
           avatar: 'LP',
-          color: Colors.teal,
+          color: Color(0xFFD97706),
           sentiment: 'positive',
           comment:
               'Onboarding tour planning went smoothly. Team coordination was excellent.'),
@@ -1147,7 +1147,7 @@ class _AgileRetrospectivesScreenState extends State<AgileRetrospectivesScreen> {
                   color: done
                       ? Colors.green
                       : a.status == 'In Progress'
-                          ? Colors.blue
+                          ? Color(0xFFFFC812)
                           : _kAccent),
             ),
           ],

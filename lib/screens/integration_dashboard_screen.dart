@@ -327,19 +327,19 @@ class _CoverageKpisRow extends StatelessWidget {
         label: 'Scope Items',
         value: '${l.workPackageCount > 0 ? l.workPackageCount : 0}',
         sub: 'work packages',
-        color: const Color(0xFF6366F1),
+        color: const Color(0xFFB8860B),
       ),
       _KpiSpec(
         label: 'WBS Leaves',
         value: '${l.workPackageCount}',
         sub: '${l.fullyTracedWorkPackageCount} fully traced',
-        color: const Color(0xFF0EA5E9),
+        color: const Color(0xFFFFC812),
       ),
       _KpiSpec(
         label: 'Schedule Activities',
         value: '${l.scheduleActivityCount}',
         sub: 'CPM activities',
-        color: const Color(0xFF14B8A6),
+        color: const Color(0xFFD97706),
       ),
       _KpiSpec(
         label: 'Control Accounts',
@@ -351,7 +351,7 @@ class _CoverageKpisRow extends StatelessWidget {
         label: 'Cost Lines',
         value: '${l.costLineCount}',
         sub: 'linked to WBS',
-        color: const Color(0xFFEC4899),
+        color: const Color(0xFFD97706),
       ),
     ];
     return LayoutBuilder(
@@ -763,14 +763,14 @@ class _QuickLinksCard extends StatelessWidget {
         label: 'WBS Builder',
         subtitle: 'Decompose scope',
         icon: Icons.account_tree,
-        color: const Color(0xFF0EA5E9),
+        color: const Color(0xFFFFC812),
         route: AppRoutes.wbs,
       ),
       _QuickLink(
         label: 'Schedule',
         subtitle: 'Sequence activities',
         icon: Icons.calendar_month,
-        color: const Color(0xFF14B8A6),
+        color: const Color(0xFFD97706),
         route: AppRoutes.schedule,
       ),
       _QuickLink(
@@ -784,21 +784,21 @@ class _QuickLinksCard extends StatelessWidget {
         label: 'Cost Estimate',
         subtitle: 'BAC & baseline',
         icon: Icons.attach_money,
-        color: const Color(0xFFEC4899),
+        color: const Color(0xFFD97706),
         route: AppRoutes.costEstimate,
       ),
       _QuickLink(
         label: 'Change Management',
         subtitle: 'CCB & rebaseline',
         icon: Icons.sync_alt,
-        color: const Color(0xFF6366F1),
+        color: const Color(0xFFB8860B),
         route: AppRoutes.changeManagement,
       ),
       _QuickLink(
         label: 'Project Baseline',
         subtitle: 'PMB snapshot',
         icon: Icons.lock,
-        color: const Color(0xFF8B5CF6),
+        color: const Color(0xFFB8860B),
         route: AppRoutes.projectBaseline,
       ),
     ];
@@ -952,21 +952,21 @@ class _ScopeCoverageDetailsCard extends StatelessWidget {
                   value: cov.scopeCoverageRatio,
                   detail:
                       '${cov.coveredScopeItemCount}/${cov.totalScopeItems} scope items traced to WBS',
-                  color: const Color(0xFF6366F1),
+                  color: const Color(0xFFB8860B),
                 ),
                 _CoverageBar(
                   label: 'WBS leaf trace',
                   value: cov.wbsLeafTraceRatio,
                   detail:
                       '${cov.tracedLeafCount}/${cov.totalWbsLeaves} leaves traced to scope',
-                  color: const Color(0xFF0EA5E9),
+                  color: const Color(0xFFFFC812),
                 ),
                 _CoverageBar(
                   label: 'WBS Dictionary complete',
                   value: cov.dictionaryCompletenessRatio,
                   detail:
                       '${cov.completeDictionaryCount}/${cov.totalWbsLeaves} leaves with full dictionary',
-                  color: const Color(0xFF14B8A6),
+                  color: const Color(0xFFD97706),
                 ),
               ];
               if (cols == 3) {
@@ -1018,7 +1018,7 @@ class _ScopeCoverageDetailsCard extends StatelessWidget {
             _GapList(
               title: 'WBS leaves missing dictionary entry',
               icon: Icons.edit_note,
-              color: const Color(0xFF8B5CF6),
+              color: const Color(0xFFB8860B),
               items: cov.incompleteDictionaryLeaves
                   .map((n) => '${n.code} — ${n.name}')
                   .toList(growable: false),
@@ -1227,13 +1227,13 @@ class _IntegrationFlow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _FlowNode('Scope', 'Statement', Icons.description,
-                  const Color(0xFF6366F1)),
+                  const Color(0xFFB8860B)),
               _FlowArrow(label: 'decomposes'),
               _FlowNode('WBS', 'Tree', Icons.account_tree,
-                  const Color(0xFF0EA5E9)),
+                  const Color(0xFFFFC812)),
               _FlowArrow(label: 'sequences'),
               _FlowNode('Schedule', 'Activities', Icons.calendar_month,
-                  const Color(0xFF14B8A6)),
+                  const Color(0xFFD97706)),
               _FlowArrow(label: 'measures'),
               _FlowNode('Controls', 'EVM', Icons.dashboard_customize,
                   const Color(0xFFF59E0B)),
@@ -1244,13 +1244,13 @@ class _IntegrationFlow extends StatelessWidget {
         return Column(
           children: [
             _FlowNode('Scope', 'Statement', Icons.description,
-                const Color(0xFF6366F1)),
+                const Color(0xFFB8860B)),
             _FlowArrow(label: 'decomposes'),
             _FlowNode('WBS', 'Tree', Icons.account_tree,
-                const Color(0xFF0EA5E9)),
+                const Color(0xFFFFC812)),
             _FlowArrow(label: 'sequences'),
             _FlowNode('Schedule', 'Activities', Icons.calendar_month,
-                const Color(0xFF14B8A6)),
+                const Color(0xFFD97706)),
             _FlowArrow(label: 'measures'),
             _FlowNode('Controls', 'EVM', Icons.dashboard_customize,
                 const Color(0xFFF59E0B)),

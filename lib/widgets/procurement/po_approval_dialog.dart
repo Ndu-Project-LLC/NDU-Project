@@ -293,11 +293,11 @@ class _EscalationTargetTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFFEFF6FF) : Colors.white,
+            color: selected ? const Color(0xFFFFF8E1) : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color:
-                  selected ? const Color(0xFF93C5FD) : const Color(0xFFE5E7EB),
+                  selected ? const Color(0xFFFFC812) : const Color(0xFFE5E7EB),
             ),
           ),
           child: Row(
@@ -305,7 +305,7 @@ class _EscalationTargetTile extends StatelessWidget {
               Icon(
                 selected ? Icons.radio_button_checked : Icons.radio_button_off,
                 color: selected
-                    ? const Color(0xFF2563EB)
+                    ? const Color(0xFFFFC812)
                     : const Color(0xFF94A3B8),
               ),
               const SizedBox(width: 10),

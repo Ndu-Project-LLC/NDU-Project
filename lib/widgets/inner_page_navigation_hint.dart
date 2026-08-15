@@ -74,7 +74,7 @@ class InnerPageNavigationHint extends StatefulWidget {
     required this.sections,
     required this.onSectionTap,
     this.description,
-    this.accentColor = const Color(0xFF005BB3),
+    this.accentColor = const Color(0xFFFFC812),
     this.currentSectionId,
     this.compact = false,
   });

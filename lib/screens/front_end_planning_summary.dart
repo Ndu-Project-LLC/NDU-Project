@@ -311,7 +311,7 @@ class _FrontEndPlanningSummaryScreenState
  ),
  CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  child: Text(
  (projectName.isNotEmpty ? projectName[0] : 'P')
  .toUpperCase(),
@@ -1562,7 +1562,7 @@ class _GoalsCard extends StatelessWidget {
  const SizedBox(width: 8),
  IconButton(
  onPressed: onAdd,
- icon: const Icon(Icons.add_circle, color: Color(0xFF2563EB)),
+ icon: const Icon(Icons.add_circle, color: Color(0xFFFFC812)),
  tooltip: 'Add Item',
  padding: EdgeInsets.zero,
  constraints: const BoxConstraints(),
@@ -1672,12 +1672,12 @@ class _BottomOverlay extends StatelessWidget {
  child: const Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
  SizedBox(width: 10),
  Text('AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB))),
+ color: Color(0xFFFFC812))),
  SizedBox(width: 12),
  Text(
  'Generate a summary of all front end planning activities.',

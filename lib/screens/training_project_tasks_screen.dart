@@ -265,7 +265,7 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  builder: (ctx) => StatefulBuilder(
  builder: (ctx, setDialogState) => LaunchModalShell(
  icon: Icons.edit_rounded,
- accent: const Color(0xFF0EA5E9),
+ accent: const Color(0xFFFFC812),
  title: 'Edit Lesson',
  subtitle: 'Update the lesson details.',
  body: Column(
@@ -368,7 +368,7 @@ class _TrainingProjectTasksScreenState extends State<TrainingProjectTasksScreen>
  children: [
  CircleAvatar(
  radius: 16,
- backgroundColor: Colors.blue[400],
+ backgroundColor: Color(0xFFFBBF24),
  backgroundImage:
  photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
  child: photoUrl.isEmpty

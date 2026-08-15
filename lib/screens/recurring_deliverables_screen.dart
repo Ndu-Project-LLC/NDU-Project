@@ -344,7 +344,7 @@ class _RecurringDeliverablesScreenState
       collapsible: true,
       initiallyExpanded: false,
       headerIcon: Icons.schedule_outlined,
-      headerIconColor: const Color(0xFF7C3AED),
+      headerIconColor: const Color(0xFFB8860B),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -357,13 +357,13 @@ class _RecurringDeliverablesScreenState
           _buildCadenceRow(
             'Weekly',
             'Status reports, risk reviews, sprint planning, timesheet approvals',
-            const Color(0xFF2563EB),
+            const Color(0xFFFFC812),
           ),
           const SizedBox(height: 10),
           _buildCadenceRow(
             'Bi-Weekly',
             'Sprint reviews, retrospectives, resource reallocation, dependency checks',
-            const Color(0xFF7C3AED),
+            const Color(0xFFB8860B),
           ),
           const SizedBox(height: 10),
           _buildCadenceRow(

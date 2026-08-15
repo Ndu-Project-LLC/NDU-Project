@@ -95,7 +95,7 @@ class _ExecutiveDashboardScreenState extends State<ExecutiveDashboardScreen> {
  kpiCard('BAC', '\$${_fmt(bac)}',
  const Color(0xFF1E293B), Icons.dashboard),
  kpiCard('EAC', '\$${_fmt(eac)}',
- const Color(0xFF7C3AED), Icons.trending_up),
+ const Color(0xFFB8860B), Icons.trending_up),
  kpiCard('VAC', '\$${_fmt(vac)}',
  vac >= 0
  ? const Color(0xFF059669)
@@ -110,10 +110,10 @@ class _ExecutiveDashboardScreenState extends State<ExecutiveDashboardScreen> {
  children: [
  kpiCard('Baseline Budget',
  '\$${_fmt(baselineBudget)}',
- const Color(0xFF2563EB), Icons.account_balance),
+ const Color(0xFFFFC812), Icons.account_balance),
  kpiCard('Forecast',
  '\$${_fmt(forecastBudget)}',
- const Color(0xFF7C3AED), Icons.trending_up),
+ const Color(0xFFB8860B), Icons.trending_up),
  kpiCard('Overrun',
  '\$${_fmt(overrun)} (${overrunPct.toStringAsFixed(1)}%)',
  overrun >= 0
@@ -136,7 +136,7 @@ class _ExecutiveDashboardScreenState extends State<ExecutiveDashboardScreen> {
  const Color(0xFFB45309)),
  const SizedBox(height: 8),
  cashRow('Forecast', forecastTotal,
- const Color(0xFF7C3AED)),
+ const Color(0xFFB8860B)),
  const SizedBox(height: 8),
  cashRow(
  'Actual', ac, const Color(0xFF059669)),
@@ -194,7 +194,7 @@ class _ExecutiveDashboardScreenState extends State<ExecutiveDashboardScreen> {
  const Color(0xFF059669)),
  const SizedBox(height: 8),
  statusRow('Authorized', authorizedCount,
- const Color(0xFF2563EB)),
+ const Color(0xFFFFC812)),
  const SizedBox(height: 8),
  statusRow('Closed', closedCount,
  const Color(0xFF6B7280)),

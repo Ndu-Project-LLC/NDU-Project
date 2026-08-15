@@ -715,7 +715,7 @@ class _RequirementsImplementationScreenState
  const LinearProgressIndicator(
  minHeight: 2,
  backgroundColor: Color(0xFFE5E7EB),
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  Expanded(
  child: SingleChildScrollView(
@@ -1347,7 +1347,7 @@ class _RequirementsImplementationScreenState
  'Total Requirements',
  '$totalReq',
  totalReq == 1 ? '1 item registered' : '$totalReq items registered',
- const Color(0xFF0EA5E9),
+ const Color(0xFFFFC812),
  ),
  _StatCardData(
  'Mapped to Design',
@@ -1365,7 +1365,7 @@ class _RequirementsImplementationScreenState
  'Gap Items',
  '$gapCount',
  gapCount > 0 ? 'Open gaps' : 'No gaps',
- const Color(0xFF8B5CF6),
+ const Color(0xFFB8860B),
  ),
  ];
 
@@ -1500,7 +1500,7 @@ class _RequirementsImplementationScreenState
  'to design artifacts, test cases, and source documents. Every mapped '
  'requirement should have an unbroken chain from origin through '
  'implementation to verification.',
- const Color(0xFF2563EB),
+ const Color(0xFFFFC812),
  ),
  const SizedBox(height: 12),
  _buildWebGuideCard(
@@ -1800,7 +1800,7 @@ class _RequirementsImplementationScreenState
  onTap: () => _showVerificationPopup(actualIndex),
  child: Container(
  color: isSelected
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF8E1)
  : isStriped
  ? const Color(0xFFF9FAFB)
  : Colors.white,
@@ -3264,7 +3264,7 @@ class _RequirementsImplementationScreenState
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFFFC812), width: 2),
  ),
  ),
  );
@@ -3296,7 +3296,7 @@ class _RequirementsImplementationScreenState
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFFFC812), width: 2),
  ),
  ),
  items: safeOptions
@@ -3339,7 +3339,7 @@ class _RequirementsImplementationScreenState
  ),
  focusedBorder: OutlineInputBorder(
  borderRadius: BorderRadius.circular(10),
- borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
+ borderSide: const BorderSide(color: Color(0xFFFFC812), width: 2),
  ),
  ),
  items: safeOptions
@@ -3362,7 +3362,7 @@ class _RequirementsImplementationScreenState
  case 'unmapped':
  return const Color(0xFFF59E0B);
  case 'in review':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  default:
  return const Color(0xFF9CA3AF);
  }
@@ -3377,7 +3377,7 @@ class _RequirementsImplementationScreenState
  case 'open':
  return const Color(0xFFEF4444);
  case 'deferred':
- return const Color(0xFF8B5CF6);
+ return const Color(0xFFB8860B);
  default:
  return const Color(0xFF9CA3AF);
  }
@@ -3388,7 +3388,7 @@ class _RequirementsImplementationScreenState
  case 'complete':
  return const Color(0xFF10B981);
  case 'in review':
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  case 'pending':
  return const Color(0xFFF59E0B);
  case 'not started':

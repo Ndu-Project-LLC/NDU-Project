@@ -446,7 +446,7 @@ class _AgileIterationManagementScreenState
     final tabs = [
       _LifecycleTab('Start', Icons.play_arrow, Colors.green),
       _LifecycleTab('During', Icons.loop, _kAccent),
-      _LifecycleTab('End', Icons.flag, Colors.purple),
+      _LifecycleTab('End', Icons.flag, Color(0xFFB8860B)),
     ];
     return Container(
       padding: const EdgeInsets.all(6),

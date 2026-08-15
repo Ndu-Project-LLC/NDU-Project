@@ -623,11 +623,11 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
                                           height: 16,
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
-                                            color: Color(0xFF7C3AED),
+                                            color: Color(0xFFB8860B),
                                           ),
                                         )
                                       : const Icon(Icons.auto_awesome,
-                                          size: 16, color: Color(0xFF7C3AED)),
+                                          size: 16, color: Color(0xFFB8860B)),
                                   onPressed: _isRegenerating
                                       ? null
                                       : () {
@@ -684,7 +684,7 @@ class _DeliverableRowWidgetState extends State<_DeliverableRowWidget> {
   Color _getStatusColor(String status) {
     return switch (status) {
       'Completed' => const Color(0xFF10B981),
-      'In Progress' => const Color(0xFF2563EB),
+      'In Progress' => const Color(0xFFFFC812),
       'At Risk' => const Color(0xFFF59E0B),
       'Blocked' => const Color(0xFFEF4444),
       _ => const Color(0xFF9CA3AF),

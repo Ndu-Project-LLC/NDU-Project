@@ -277,10 +277,10 @@ class _DeliverableStatusUpdatesScreenState
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Color(0xFFF0F9FF),
+            color: Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 18, color: const Color(0xFF0284C7)),
+          child: Icon(icon, size: 18, color: const Color(0xFFFFC812)),
         ),
         const SizedBox(width: 14),
         Expanded(

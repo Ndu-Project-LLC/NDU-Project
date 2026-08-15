@@ -1264,7 +1264,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
       sectionSubtitle:
           'Final invoices, deliverables, sign-offs, and retention releases',
       sectionIcon: Icons.handshake_outlined,
-      sectionColor: const Color(0xFF7C3AED),
+      sectionColor: const Color(0xFFB8860B),
       completionPercent: completionPct,
       completionLabel: 'CLOSED',
       completionCaption:
@@ -1274,7 +1274,7 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
           label: 'Contractors',
           value: '${projectData.contractors.length}',
           icon: Icons.construction_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'to close out',
         ),
         LaunchKpiTile(

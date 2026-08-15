@@ -2210,8 +2210,8 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (normalized.contains('planning')) return const Color(0xFFFFF1CC);
  if (normalized.contains('front end')) return const Color(0xFFFFF8E1);
  if (normalized.contains('design')) return const Color(0xFFE8E6FF);
- if (normalized.contains('launch')) return const Color(0xFFE0F2FE);
- if (normalized.contains('close')) return const Color(0xFFEFF6FF);
+ if (normalized.contains('launch')) return const Color(0xFFFFF8E1);
+ if (normalized.contains('close')) return const Color(0xFFFFF8E1);
  if (normalized.contains('completed')) return const Color(0xFFE8F0FF);
  if (normalized.contains('initiation') || normalized.contains('idea')) {
  return const Color(0xFFF3F4F8);
@@ -2226,8 +2226,8 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  if (normalized.contains('front end')) return const Color(0xFF9A6700);
  if (normalized.contains('design')) return const Color(0xFF5941C6);
  if (normalized.contains('launch')) return const Color(0xFF075985);
- if (normalized.contains('close')) return const Color(0xFF1D4ED8);
- if (normalized.contains('completed')) return const Color(0xFF1D4ED8);
+ if (normalized.contains('close')) return const Color(0xFFFFC812);
+ if (normalized.contains('completed')) return const Color(0xFFFFC812);
  if (normalized.contains('initiation') || normalized.contains('idea')) {
  return const Color(0xFF4A4D57);
  }
@@ -2250,7 +2250,7 @@ class _ProjectTableRowFromFirebase extends StatelessWidget {
  Color _progressStatusForeground(ProjectProgressHealth status) {
  switch (status) {
  case ProjectProgressHealth.completed:
- return const Color(0xFF1E40AF);
+ return const Color(0xFFFFC812);
  case ProjectProgressHealth.onTrack:
  return const Color(0xFF166534);
  case ProjectProgressHealth.behind:

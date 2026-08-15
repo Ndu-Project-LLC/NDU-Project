@@ -1034,7 +1034,7 @@ Opportunity generation constraints:
                   ),
                   const CircleAvatar(
                     radius: 13,
-                    backgroundColor: Color(0xFF2563EB),
+                    backgroundColor: Color(0xFFFFC812),
                     child: Text('C',
                         style: TextStyle(
                             color: Colors.white,
@@ -1084,7 +1084,7 @@ Opportunity generation constraints:
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
                       ),
                       child: Text(
                         topSummary.isEmpty
@@ -1104,7 +1104,7 @@ Opportunity generation constraints:
                           : 'No additional opportunities.',
                       style: const TextStyle(
                         fontSize: 11,
-                        color: Color(0xFF2563EB),
+                        color: Color(0xFFFFC812),
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1338,7 +1338,7 @@ Opportunity generation constraints:
     required bool active,
     required VoidCallback onTap,
   }) {
-    final color = active ? const Color(0xFF2563EB) : const Color(0xFF9CA3AF);
+    final color = active ? const Color(0xFFFFC812) : const Color(0xFF9CA3AF);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -1603,15 +1603,15 @@ class _OpportunityDialogState extends State<_OpportunityDialog> {
                               });
                             },
                             backgroundColor: Colors.white,
-                            selectedColor: const Color(0xFFEFF6FF),
-                            checkmarkColor: const Color(0xFF3B82F6),
+                            selectedColor: const Color(0xFFFFF8E1),
+                            checkmarkColor: const Color(0xFFFFC812),
                             side: BorderSide(
                                 color: isSelected
-                                    ? const Color(0xFF3B82F6)
+                                    ? const Color(0xFFFFC812)
                                     : const Color(0xFFE5E7EB)),
                             labelStyle: TextStyle(
                               color: isSelected
-                                  ? const Color(0xFF1E40AF)
+                                  ? const Color(0xFFFFC812)
                                   : const Color(0xFF374151),
                               fontWeight: isSelected
                                   ? FontWeight.w600
@@ -1859,7 +1859,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                                 child: Checkbox(
                                   value: widget.selectedIds.contains(r.id),
                                   onChanged: (_) => widget.onToggleSelect(r.id),
-                                  activeColor: const Color(0xFF2563EB),
+                                  activeColor: const Color(0xFFFFC812),
                                   materialTapTargetSize:
                                       MaterialTapTargetSize.shrinkWrap,
                                   visualDensity: VisualDensity.compact,
@@ -1993,7 +1993,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                                         padding: const EdgeInsets.all(6),
                                         decoration: BoxDecoration(
                                           color: canUndo
-                                              ? const Color(0xFFEFF6FF)
+                                              ? const Color(0xFFFFF8E1)
                                               : const Color(0xFFF3F4F6),
                                           borderRadius:
                                               BorderRadius.circular(8),
@@ -2001,7 +2001,7 @@ class _OpportunityTableState extends State<_OpportunityTable> {
                                         child: Icon(Icons.undo_rounded,
                                             size: 16,
                                             color: canUndo
-                                                ? const Color(0xFF2563EB)
+                                                ? const Color(0xFFFFC812)
                                                 : const Color(0xFF9CA3AF)),
                                       ),
                                     ),
@@ -2061,8 +2061,8 @@ class _OpportunityTableState extends State<_OpportunityTable> {
       bg = const Color(0xFFDCFCE7);
       fg = const Color(0xFF15803D);
     } else if (normalized.contains('progress')) {
-      bg = const Color(0xFFEFF6FF);
-      fg = const Color(0xFF1D4ED8);
+      bg = const Color(0xFFFFF8E1);
+      fg = const Color(0xFFFFC812);
     } else {
       bg = const Color(0xFFFFF7ED);
       fg = const Color(0xFFC2410C);
@@ -2151,11 +2151,11 @@ class _BottomOverlays extends StatelessWidget {
       ),
       child: Row(
         children: const [
-          Icon(Icons.lightbulb_outline, color: Color(0xFF2563EB)),
+          Icon(Icons.lightbulb_outline, color: Color(0xFFFFC812)),
           SizedBox(width: 8),
           Text('Hint',
               style: TextStyle(
-                  fontWeight: FontWeight.w800, color: Color(0xFF2563EB))),
+                  fontWeight: FontWeight.w800, color: Color(0xFFFFC812))),
           SizedBox(width: 10),
           Text(
               'Keep opportunities tied to scope, discipline, role, owner, and phase.',
@@ -2326,7 +2326,7 @@ class _ExpandableCellTextState extends State<_ExpandableCellText> {
                 child: Text(
                   _isExpanded ? 'View less' : 'View more',
                   style: widget.style.copyWith(
-                    color: const Color(0xFF2563EB),
+                    color: const Color(0xFFFFC812),
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),

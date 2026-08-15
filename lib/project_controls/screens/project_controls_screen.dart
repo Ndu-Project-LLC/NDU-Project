@@ -252,9 +252,9 @@ class _DashboardTab extends StatelessWidget {
       icon: Icons.dashboard_rounded,
       accent: PcPalette.indigo,
       accentDeep: const Color(0xFF4F46E5),
-      accentSoft: const Color(0xFFE0E7FF),
-      tint: const Color(0xFFEEF2FF),
-      borderColor: const Color(0xFFC7D2FE),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'Total Budget',
@@ -382,8 +382,8 @@ class _DashboardTab extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFFEEF2FF),
-            const Color(0xFFF5F3FF),
+            const Color(0xFFFFF8E1),
+            const Color(0xFFFFF8E1),
           ],
         ),
         border: Border.all(
@@ -1143,9 +1143,9 @@ class _ScopeTrackingTab extends StatelessWidget {
       icon: Icons.account_tree_rounded,
       accent: PcPalette.indigo,
       accentDeep: const Color(0xFF4F46E5),
-      accentSoft: const Color(0xFFE0E7FF),
-      tint: const Color(0xFFEEF2FF),
-      borderColor: const Color(0xFFC7D2FE),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       // Per Task 19: 'Sync from Schedule' CTA on the hero band feeds
       // Schedule activities into Scope Tracking.
       action: PcHeroAction(
@@ -2053,7 +2053,7 @@ class _CostControlTab extends StatelessWidget {
                   label: 'Total Reserved',
                   value: formatter.format(totalReserved),
                   icon: Icons.account_balance_wallet_outlined,
-                  color: const Color(0xFF2563EB),
+                  color: const Color(0xFFFFC812),
                   tileWidth: tileW,
                 ),
                 _allowanceSummaryTile(
@@ -2117,7 +2117,7 @@ class _CostControlTab extends StatelessWidget {
                     runSpacing: 6,
                     children: [
                       _statusCountChip(
-                          'Reserved', reservedCount, const Color(0xFF2563EB)),
+                          'Reserved', reservedCount, const Color(0xFFFFC812)),
                       _statusCountChip(
                           'Released', releasedCount, PcPalette.amber),
                       _statusCountChip(
@@ -2290,7 +2290,7 @@ class _CostControlTab extends StatelessWidget {
         statusColor = PcPalette.inkMuted;
         break;
       default:
-        statusColor = const Color(0xFF2563EB);
+        statusColor = const Color(0xFFFFC812);
     }
     final burnColor = burnRate > 1.0
         ? PcPalette.danger
@@ -2738,10 +2738,10 @@ class _ChangeMgmtTab extends StatelessWidget {
           '${state.deliveryModel.label} • ${state.deliveryModel.changeProcess}',
       icon: Icons.sync_alt_rounded,
       accent: PcPalette.teal,
-      accentDeep: const Color(0xFF0D9488),
-      accentSoft: const Color(0xFFCCFBF1),
-      tint: const Color(0xFFF0FDFA),
-      borderColor: const Color(0xFF99F6E4),
+      accentDeep: const Color(0xFFD97706),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'Total Requests',
@@ -2827,8 +2827,8 @@ class _ChangeMgmtTab extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFFFFF1F2),
-            const Color(0xFFFFE4E6),
+            const Color(0xFFFFF8E1),
+            const Color(0xFFFFF8E1),
           ],
         ),
         border: Border.all(
@@ -2856,7 +2856,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                   colors: [
                     PcPalette.rose.withValues(alpha: 0),
                     PcPalette.rose,
-                    const Color(0xFFE11D48),
+                    const Color(0xFFD97706),
                     PcPalette.rose.withValues(alpha: 0),
                   ],
                 ),
@@ -2880,7 +2880,7 @@ class _ChangeMgmtTab extends StatelessWidget {
                           end: Alignment.bottomRight,
                           colors: [
                             PcPalette.rose.withValues(alpha: 0.95),
-                            const Color(0xFFE11D48),
+                            const Color(0xFFD97706),
                           ],
                         ),
                         boxShadow: [
@@ -3484,9 +3484,9 @@ class _ForecastingTab extends StatelessWidget {
       icon: Icons.trending_up_rounded,
       accent: PcPalette.fuchsia,
       accentDeep: const Color(0xFFA21CAF),
-      accentSoft: const Color(0xFFFAE8FF),
-      tint: const Color(0xFFFDF4FF),
-      borderColor: const Color(0xFFF5D0FE),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'EAC',
@@ -3771,10 +3771,10 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
   static const Color _gold = Color(0xFFFFC107);
   static const Color _goldDeep = Color(0xFFF59E0B);
   static const Color _goldSoft = Color(0xFFFFF4CC);
-  static const Color _indigo = Color(0xFF6366F1);
+  static const Color _indigo = Color(0xFFB8860B);
   static const Color _emerald = Color(0xFF10B981);
   static const Color _amber = Color(0xFFD97706);
-  static const Color _violet = Color(0xFF8B5CF6);
+  static const Color _violet = Color(0xFFB8860B);
   static const Color _danger = Color(0xFFEF4444);
   static const Color _dangerSurface = Color(0xFFFFF1F1);
 
@@ -4963,15 +4963,15 @@ class _BaselineMgmtTabState extends State<_BaselineMgmtTab>
       case BaselineType.scope:
         return _indigo;
       case BaselineType.schedule:
-        return const Color(0xFF0EA5E9);
+        return const Color(0xFFFFC812);
       case BaselineType.cost:
         return _amber;
       case BaselineType.resource:
         return _violet;
       case BaselineType.procurement:
-        return const Color(0xFF14B8A6);
+        return const Color(0xFFD97706);
       case BaselineType.contract:
-        return const Color(0xFFEC4899);
+        return const Color(0xFFD97706);
     }
   }
 
@@ -6429,10 +6429,10 @@ class _ScheduleControlTabState extends State<_ScheduleControlTab> {
           'Real-time variance, float, and SPI tracking across all work packages — including delay reasons and compression strategies.',
       icon: Icons.schedule_rounded,
       accent: PcPalette.sky,
-      accentDeep: const Color(0xFF0284C7),
-      accentSoft: const Color(0xFFE0F2FE),
-      tint: const Color(0xFFF0F9FF),
-      borderColor: const Color(0xFFBAE6FD),
+      accentDeep: const Color(0xFFFFC812),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'Work Packages',
@@ -7150,10 +7150,10 @@ class _RiskIssuesTabState extends State<_RiskIssuesTab> {
           'Track and mitigate risks and issues — heatmap, weekly trend, severity-filtered register, and per-item response plans.',
       icon: Icons.warning_amber_rounded,
       accent: PcPalette.rose,
-      accentDeep: const Color(0xFFE11D48),
-      accentSoft: const Color(0xFFFFE4E6),
-      tint: const Color(0xFFFFF1F2),
-      borderColor: const Color(0xFFFECDD3),
+      accentDeep: const Color(0xFFD97706),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'Open Risks',
@@ -7879,10 +7879,10 @@ class _ResourceControlTabState extends State<_ResourceControlTab> {
           'Weekly allocation histogram, what-if scenarios, and per-resource utilization across the 12-week rolling window.',
       icon: Icons.people_alt_rounded,
       accent: PcPalette.violet,
-      accentDeep: const Color(0xFF7C3AED),
-      accentSoft: const Color(0xFFEDE9FE),
-      tint: const Color(0xFFF5F3FF),
-      borderColor: const Color(0xFFDDD6FE),
+      accentDeep: const Color(0xFFB8860B),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       kpis: [
         PcKpiSpec(
           label: 'Resources',
@@ -8582,9 +8582,9 @@ class _ReportingAuditTabState extends State<_ReportingAuditTab> {
       icon: Icons.assessment_rounded,
       accent: PcPalette.indigo,
       accentDeep: const Color(0xFF4F46E5),
-      accentSoft: const Color(0xFFE0E7FF),
-      tint: const Color(0xFFEEF2FF),
-      borderColor: const Color(0xFFC7D2FE),
+      accentSoft: const Color(0xFFFFF8E1),
+      tint: const Color(0xFFFFF8E1),
+      borderColor: const Color(0xFFFEF3C7),
       action: PcHeroAction(
         label: 'Generate Report',
         icon: Icons.picture_as_pdf_outlined,

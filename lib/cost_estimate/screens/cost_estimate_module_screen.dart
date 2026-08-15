@@ -292,12 +292,12 @@ class _CostDashboardTab extends StatelessWidget {
 
     // Category breakdown (top-level summary categories)
     final categories = <_CatData>[
-      _CatData('Direct', t.direct, const Color(0xFF6366F1), Icons.engineering_outlined),
-      _CatData('Indirect', t.indirect, const Color(0xFF8B5CF6), Icons.account_tree_outlined),
-      _CatData('SSHER & Quality', t.sherQuality, const Color(0xFFEC4899), Icons.health_and_safety_outlined),
+      _CatData('Direct', t.direct, const Color(0xFFB8860B), Icons.engineering_outlined),
+      _CatData('Indirect', t.indirect, const Color(0xFFB8860B), Icons.account_tree_outlined),
+      _CatData('SSHER & Quality', t.sherQuality, const Color(0xFFD97706), Icons.health_and_safety_outlined),
       _CatData('Risk', t.riskAllowances, const Color(0xFFF59E0B), Icons.shield_outlined),
       _CatData('Contingency', t.contingency, const Color(0xFF10B981), Icons.savings_outlined),
-      _CatData('Escalation', t.escalation, const Color(0xFF06B6D4), Icons.trending_up_rounded),
+      _CatData('Escalation', t.escalation, const Color(0xFFD97706), Icons.trending_up_rounded),
       _CatData('Taxes', t.taxes, const Color(0xFF64748B), Icons.receipt_long_outlined),
     ];
     final activeCats = categories.where((c) => c.value > 0).toList();
@@ -380,7 +380,7 @@ class _CostDashboardTab extends StatelessWidget {
                     value: '$currencySymbol${_fmt(t.totalAuthorizedBudget)}',
                     sub: 'Baseline + mgmt reserve',
                     icon: Icons.account_balance_wallet_outlined,
-                    tint: const Color(0xFF6366F1),
+                    tint: const Color(0xFFB8860B),
                     tintSoft: const Color(0xFFEEF0FF),
                   ),
                   _KpiSpec(
@@ -396,7 +396,7 @@ class _CostDashboardTab extends StatelessWidget {
                     value: '$currencySymbol${_fmt(avgPerLine)}',
                     sub: 'Mean cost per line',
                     icon: Icons.analytics_outlined,
-                    tint: const Color(0xFF8B5CF6),
+                    tint: const Color(0xFFB8860B),
                     tintSoft: const Color(0xFFF4EEFF),
                   ),
                 ];
@@ -1591,32 +1591,32 @@ class _LinesByCategoryCard extends StatelessWidget {
       case CostCategory.procurement:
       case CostCategory.travelTraining:
       case CostCategory.construction:
-        return const Color(0xFF6366F1); // Direct (indigo)
+        return const Color(0xFFB8860B); // Direct (indigo)
       case CostCategory.projectTeam:
       case CostCategory.overheads:
       case CostCategory.ga:
       case CostCategory.facilities:
       case CostCategory.insuranceCompliance:
-        return const Color(0xFF8B5CF6); // Indirect (violet)
+        return const Color(0xFFB8860B); // Indirect (violet)
       case CostCategory.ssher:
       case CostCategory.quality:
-        return const Color(0xFFEC4899); // SSHER & Quality (pink)
+        return const Color(0xFFD97706); // SSHER & Quality (pink)
       case CostCategory.riskAllowance:
         return const Color(0xFFF59E0B); // Risk (amber)
       case CostCategory.contingency:
         return const Color(0xFF10B981); // Contingency (emerald)
       case CostCategory.mgmtReserve:
-        return const Color(0xFF06B6D4); // Mgmt reserve (cyan)
+        return const Color(0xFFD97706); // Mgmt reserve (cyan)
       case CostCategory.escalation:
-        return const Color(0xFF06B6D4); // Escalation (cyan)
+        return const Color(0xFFD97706); // Escalation (cyan)
       case CostCategory.taxes:
         return const Color(0xFF64748B); // Taxes (slate)
       case CostCategory.financing:
-        return const Color(0xFF0EA5E9); // Financing (sky)
+        return const Color(0xFFFFC812); // Financing (sky)
       case CostCategory.startup:
-        return const Color(0xFF14B8A6); // Startup (teal)
+        return const Color(0xFFD97706); // Startup (teal)
       case CostCategory.warranty:
-        return const Color(0xFFA855F7); // Warranty (purple)
+        return const Color(0xFFFFC812); // Warranty (purple)
       case CostCategory.decommissioning:
         return const Color(0xFF64748B); // Decommissioning (slate)
     }

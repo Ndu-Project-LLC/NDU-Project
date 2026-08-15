@@ -460,7 +460,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
       collapsible: true,
       initiallyExpanded: false,
       headerIcon: Icons.description_outlined,
-      headerIconColor: const Color(0xFF0EA5E9),
+      headerIconColor: const Color(0xFFFFC812),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -470,7 +470,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
             'Summarize progress against the project baseline for the past week. '
                 'Include schedule variance, cost performance index, and upcoming milestones. '
                 'Target audience: Project Manager, Team Leads, PMO.',
-            const Color(0xFF2563EB),
+            const Color(0xFFFFC812),
           ),
           const SizedBox(height: 14),
           _buildReportSection(
@@ -479,7 +479,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
             'High-level narrative with RAG (Red/Amber/Green) status indicators. '
                 'Focus on strategic risks, budget health, and decisions requiring '
                 'steering committee approval. Target audience: Sponsors, Executives.',
-            const Color(0xFF7C3AED),
+            const Color(0xFFB8860B),
           ),
           _buildReportSection(
             Icons.handshake_outlined,
@@ -487,7 +487,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
             'Track stakeholder sentiment, engagement actions taken, and upcoming '
                 'communication events. Ensure alignment between project deliverables '
                 'and stakeholder expectations. Target audience: Project Board, Key Stakeholders.',
-            const Color(0xFF0D9488),
+            const Color(0xFFD97706),
           ),
           const SizedBox(height: 14),
           _buildReportSection(

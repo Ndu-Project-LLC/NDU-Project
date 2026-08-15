@@ -1197,8 +1197,8 @@ class _SettingsViewState extends State<_SettingsView> {
           const SizedBox(height: 32),
           _SettingsSection(
             icon: Icons.verified_user_outlined,
-            iconBackground: const Color(0xFFEFF6FF),
-            iconColor: const Color(0xFF2563EB),
+            iconBackground: const Color(0xFFFFF8E1),
+            iconColor: const Color(0xFFFFC812),
             title: 'Authentication',
             subtitle: 'Enforce login security and session controls',
             children: [
@@ -1262,11 +1262,11 @@ class _SettingsViewState extends State<_SettingsView> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.tune_outlined,
-                    color: Color(0xFF2563EB), size: 22),
+                    color: Color(0xFFFFC812), size: 22),
               ),
               const SizedBox(width: 14),
               const Expanded(
@@ -1498,11 +1498,11 @@ class _AccessLogsViewState extends State<_AccessLogsView> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.receipt_long_outlined,
-                    color: Color(0xFF2563EB), size: 22),
+                    color: Color(0xFFFFC812), size: 22),
               ),
               const SizedBox(width: 14),
               const Expanded(
@@ -1561,7 +1561,7 @@ class _AccessLogsViewState extends State<_AccessLogsView> {
                 child: ElevatedButton(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
+                    backgroundColor: const Color(0xFFFFC812),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -1822,11 +1822,11 @@ class _SettingToggleRow extends StatelessWidget {
           onChanged: onChanged,
           thumbColor: WidgetStateProperty.resolveWith((states) =>
               states.contains(WidgetState.selected)
-                  ? const Color(0xFF2563EB)
+                  ? const Color(0xFFFFC812)
                   : null),
           trackColor: WidgetStateProperty.resolveWith((states) =>
               states.contains(WidgetState.selected)
-                  ? const Color(0xFF2563EB)
+                  ? const Color(0xFFFFC812)
                   : null),
         ),
       ],
@@ -2035,11 +2035,11 @@ class _RolesView extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.groups_outlined,
-                    color: Color(0xFF2563EB), size: 22),
+                    color: Color(0xFFFFC812), size: 22),
               ),
               const SizedBox(width: 14),
               const Expanded(
@@ -2068,7 +2068,7 @@ class _RolesView extends StatelessWidget {
               ElevatedButton(
                 onPressed: onAdd,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: const Color(0xFFFFC812),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding:
@@ -2538,7 +2538,7 @@ class _RoleTierBadge extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF2563EB),
+            color: const Color(0xFFFFC812),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(label,
@@ -2818,7 +2818,7 @@ class _RoleTiersCard extends StatelessWidget {
     final total = roles.isEmpty ? 1 : roles.length;
     final slices = [
       _PieSlice(
-          color: const Color(0xFF0EA5E9),
+          color: const Color(0xFFFFC812),
           value: tierCounts['Tier 1']!.toDouble(),
           label: 'Tier 1'),
       _PieSlice(
@@ -2826,7 +2826,7 @@ class _RoleTiersCard extends StatelessWidget {
           value: tierCounts['Tier 2']!.toDouble(),
           label: 'Tier 2'),
       _PieSlice(
-          color: const Color(0xFF22D3EE),
+          color: const Color(0xFFFBBF24),
           value: tierCounts['Tier 3']!.toDouble(),
           label: 'Tier 3'),
       _PieSlice(
@@ -2856,7 +2856,7 @@ class _RoleTiersCard extends StatelessWidget {
                 _LegendEntry(
                     label: 'Tier 1',
                     value: '${_percent(tierCounts['Tier 1']!, total)}%',
-                    color: const Color(0xFF0EA5E9)),
+                    color: const Color(0xFFFFC812)),
                 _LegendEntry(
                     label: 'Tier 2',
                     value: '${_percent(tierCounts['Tier 2']!, total)}%',
@@ -2864,7 +2864,7 @@ class _RoleTiersCard extends StatelessWidget {
                 _LegendEntry(
                     label: 'Tier 3',
                     value: '${_percent(tierCounts['Tier 3']!, total)}%',
-                    color: const Color(0xFF22D3EE)),
+                    color: const Color(0xFFFBBF24)),
                 if (tierCounts['Other']! > 0)
                   _LegendEntry(
                       label: 'Other',
@@ -2976,10 +2976,10 @@ int _percent(int value, int total) {
 
 Color _resourceColor(int index) {
   const palette = [
-    Color(0xFF22D3EE),
+    Color(0xFFFBBF24),
     Color(0xFFF97316),
-    Color(0xFF6366F1),
-    Color(0xFFFB7185),
+    Color(0xFFB8860B),
+    Color(0xFFFBBF24),
     Color(0xFF34D399),
   ];
   return palette[index % palette.length];
@@ -3067,7 +3067,7 @@ class _StatusTile extends StatelessWidget {
             color: const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: const Color(0xFF2563EB), size: 20),
+          child: Icon(icon, color: const Color(0xFFFFC812), size: 20),
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -3096,7 +3096,7 @@ class _StatusTile extends StatelessWidget {
             style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF2563EB)),
+                color: Color(0xFFFFC812)),
           ),
         ),
       ],
@@ -3320,7 +3320,7 @@ class _DashedBorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final Paint paint = Paint()
-      ..color = const Color(0xFFE0E7FF)
+      ..color = const Color(0xFFFFF8E1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -3388,7 +3388,7 @@ class _MetricCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child:
-                    Icon(headerIcon, size: 18, color: const Color(0xFF2563EB)),
+                    Icon(headerIcon, size: 18, color: const Color(0xFFFFC812)),
               ),
               const SizedBox(width: 12),
               Expanded(

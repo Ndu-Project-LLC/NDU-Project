@@ -789,7 +789,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  return DataRow(cells: [
  DataCell(Text(plan.riskId,
  style: const TextStyle(
- fontSize: 12, color: Color(0xFF6366F1)))),
+ fontSize: 12, color: Color(0xFFB8860B)))),
  DataCell(SizedBox(
  width: 220,
  child: Text(plan.strategy,
@@ -885,7 +885,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Color _coverageColor(int pct) {
  if (pct >= 75) return const Color(0xFF10B981);
- if (pct >= 50) return const Color(0xFF0EA5E9);
+ if (pct >= 50) return const Color(0xFFFFC812);
  if (pct >= 25) return const Color(0xFFF59E0B);
  return const Color(0xFFEF4444);
  }
@@ -925,8 +925,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final (color, icon) = switch (status) {
  'On track' => (const Color(0xFF10B981), Icons.check_circle_outline),
  'At risk' => (const Color(0xFFEF4444), Icons.warning_amber),
- 'In progress' => (const Color(0xFF0EA5E9), Icons.sync),
- 'Completed' => (const Color(0xFF6366F1), Icons.task_alt),
+ 'In progress' => (const Color(0xFFFFC812), Icons.sync),
+ 'Completed' => (const Color(0xFFB8860B), Icons.task_alt),
  'Not started' => (const Color(0xFF94A3B8), Icons.radio_button_unchecked),
  _ => (const Color(0xFF64748B), Icons.help_outline),
  };
@@ -1073,7 +1073,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  )),
  DataCell(Text(signal.linkedRisk,
  style: const TextStyle(
- fontSize: 11, color: Color(0xFF6366F1), fontWeight: FontWeight.w600))),
+ fontSize: 11, color: Color(0xFFB8860B), fontWeight: FontWeight.w600))),
  DataCell(_trendChip(signal.trend)),
  DataCell(Text(signal.detectedDate,
  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
@@ -1130,7 +1130,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Widget _signalCategoryChip(String category) {
  final isLeading = category == 'Leading';
- final color = isLeading ? const Color(0xFF0EA5E9) : const Color(0xFF8B5CF6);
+ final color = isLeading ? const Color(0xFFFFC812) : const Color(0xFFB8860B);
  final icon = isLeading ? Icons.trending_up : Icons.history;
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1200,7 +1200,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final (color, icon) = switch (trend) {
  'Increasing' => (const Color(0xFFEF4444), Icons.arrow_upward),
  'Decreasing' => (const Color(0xFF10B981), Icons.arrow_downward),
- 'Stable' => (const Color(0xFF0EA5E9), Icons.horizontal_rule),
+ 'Stable' => (const Color(0xFFFFC812), Icons.horizontal_rule),
  _ => (const Color(0xFF64748B), Icons.remove),
  };
  return Container(
@@ -1317,7 +1317,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  DataCell(Text(esc.responsibleParty,
  style: const TextStyle(fontSize: 12, color: Color(0xFF374151)))),
  DataCell(Text(esc.escalationTarget,
- style: const TextStyle(fontSize: 11, color: Color(0xFF6366F1), fontWeight: FontWeight.w600))),
+ style: const TextStyle(fontSize: 11, color: Color(0xFFB8860B), fontWeight: FontWeight.w600))),
  DataCell(_escalationStatusChip(esc.status)),
  DataCell(_buildEscalationReadinessCell(esc)),
  DataCell(_responseWindowChip(esc.responseWindow)),
@@ -1409,7 +1409,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
 
  Color _readinessColor(int pct) {
  if (pct >= 80) return const Color(0xFF10B981);
- if (pct >= 60) return const Color(0xFF0EA5E9);
+ if (pct >= 60) return const Color(0xFFFFC812);
  if (pct >= 40) return const Color(0xFFF59E0B);
  return const Color(0xFFEF4444);
  }
@@ -1417,7 +1417,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  Widget _escalationLevelChip(String level) {
  final (color, icon) = switch (level) {
  'L1-Operational' => (const Color(0xFF10B981), Icons.support_agent),
- 'L2-Management' => (const Color(0xFF0EA5E9), Icons.manage_accounts),
+ 'L2-Management' => (const Color(0xFFFFC812), Icons.manage_accounts),
  'L3-Executive' => (const Color(0xFFF59E0B), Icons.business_center),
  'L4-Board/C-Suite' => (const Color(0xFFEF4444), Icons.account_balance),
  _ => (const Color(0xFF64748B), Icons.help_outline),
@@ -1445,7 +1445,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final (color, icon) = switch (status) {
  'Ready' => (const Color(0xFF10B981), Icons.check_circle_outline),
  'Pending' => (const Color(0xFFF59E0B), Icons.schedule),
- 'In progress' => (const Color(0xFF0EA5E9), Icons.sync),
+ 'In progress' => (const Color(0xFFFFC812), Icons.sync),
  'Escalated' => (const Color(0xFFEF4444), Icons.notifications_active),
  'Deferred' => (const Color(0xFF94A3B8), Icons.pause_circle_outline),
  _ => (const Color(0xFF64748B), Icons.help_outline),
@@ -1475,7 +1475,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ? const Color(0xFFEF4444)
  : hrs <= 12
  ? const Color(0xFFF59E0B)
- : const Color(0xFF0EA5E9);
+ : const Color(0xFFFFC812);
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
  decoration: BoxDecoration(
@@ -1830,7 +1830,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  final color = label == 'Escalated'
  ? const Color(0xFFEF4444)
  : label == 'Mitigating'
- ? const Color(0xFF0EA5E9)
+ ? const Color(0xFFFFC812)
  : label == 'Monitoring'
  ? const Color(0xFFF59E0B)
  : const Color(0xFF10B981);

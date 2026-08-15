@@ -210,9 +210,9 @@ class _ReadinessRow extends StatelessWidget {
  value: '9',
  accent: Color(0xFFF59E0B)),
  _MetricCard(
- label: 'Launch Window', value: 'Jul 8', accent: Color(0xFF2563EB)),
+ label: 'Launch Window', value: 'Jul 8', accent: Color(0xFFFFC812)),
  _MetricCard(
- label: 'Hypercare Days', value: '14', accent: Color(0xFF8B5CF6)),
+ label: 'Hypercare Days', value: '14', accent: Color(0xFFB8860B)),
  ],
  );
  }

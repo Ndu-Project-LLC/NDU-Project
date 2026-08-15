@@ -662,7 +662,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
           label: 'Checklist Items',
           value: '${_checklistItems.length}',
           icon: Icons.checklist_rounded,
-          emphasisColor: const Color(0xFF2563EB),
+          emphasisColor: const Color(0xFFFFC812),
         ),
         ExecutionMetricData(
           label: 'Approvals Done',
@@ -674,7 +674,7 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
           label: 'Milestones Hit',
           value: '$milestonesHit',
           icon: Icons.flag_outlined,
-          emphasisColor: const Color(0xFF8B5CF6),
+          emphasisColor: const Color(0xFFB8860B),
         ),
         ExecutionMetricData(
           label: 'Timeline Stages',

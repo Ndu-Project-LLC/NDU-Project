@@ -610,7 +610,7 @@ class _StatusPill extends StatelessWidget {
       case 'Not Started':
         return const Color(0xFF9CA3AF); // Grey
       case 'In-Progress':
-        return const Color(0xFF2563EB); // Blue
+        return const Color(0xFFFFC812); // Blue
       case 'Verified':
         return const Color(0xFF10B981); // Green
       case 'Out-of-Scope':

@@ -145,12 +145,12 @@ class PartnerScreen extends StatelessWidget {
 
   Widget _partnershipOpportunities() {
     final opps = [
-      const _POpp(title: 'Project Management Consulting Firms', desc: 'Help your clients establish repeatable delivery processes while leveraging Ndu Project as the technology platform.', tags: ['PM Consulting Firms', 'PMO Advisory Firms', 'Business Transformation Consultants', 'Digital Transformation Consultants'], color: Color(0xFF3B82F6)),
-      const _POpp(title: 'Technology & Systems Integrators', desc: 'Expand your implementation portfolio by integrating Ndu Project with your clients\' technology ecosystem.', tags: ['Microsoft 365', 'Jira', 'Monday.com', 'Asana', 'Salesforce', 'ERP systems', 'HR platforms'], color: Color(0xFF8B5CF6)),
+      const _POpp(title: 'Project Management Consulting Firms', desc: 'Help your clients establish repeatable delivery processes while leveraging Ndu Project as the technology platform.', tags: ['PM Consulting Firms', 'PMO Advisory Firms', 'Business Transformation Consultants', 'Digital Transformation Consultants'], color: Color(0xFFFFC812)),
+      const _POpp(title: 'Technology & Systems Integrators', desc: 'Expand your implementation portfolio by integrating Ndu Project with your clients\' technology ecosystem.', tags: ['Microsoft 365', 'Jira', 'Monday.com', 'Asana', 'Salesforce', 'ERP systems', 'HR platforms'], color: Color(0xFFB8860B)),
       const _POpp(title: 'Universities & Educational Institutions', desc: 'Prepare students and professionals with practical project delivery experience through classroom licensing, research collaboration, and workforce development.', tags: ['Student access', 'Faculty collaboration', 'Capstone projects', 'Certification preparation', 'Research initiatives'], color: Color(0xFF10B981)),
-      const _POpp(title: 'Government & Economic Development', desc: 'Support small businesses, nonprofits, and public agencies by providing access to structured project delivery tools.', tags: ['Small business support', 'Workforce development', 'Innovation hubs', 'Economic development', 'Public sector transformation'], color: Color(0xFF06B6D4)),
+      const _POpp(title: 'Government & Economic Development', desc: 'Support small businesses, nonprofits, and public agencies by providing access to structured project delivery tools.', tags: ['Small business support', 'Workforce development', 'Innovation hubs', 'Economic development', 'Public sector transformation'], color: Color(0xFFD97706)),
       const _POpp(title: 'Industry Associations', desc: 'Deliver additional value to your members through project delivery resources, workshops, webinars, and preferred access.', tags: ['Construction Associations', 'Manufacturing Associations', 'Healthcare Organizations', 'Technology Councils', 'Chambers of Commerce'], color: Color(0xFFF59E0B)),
-      const _POpp(title: 'Startup Accelerators & Incubators', desc: 'Equip founders with structured project planning and execution capabilities to improve startup execution and investor readiness.', tags: ['Startup onboarding', 'Portfolio support', 'Workshops', 'Office hours', 'Mentor resources'], color: Color(0xFFEC4899)),
+      const _POpp(title: 'Startup Accelerators & Incubators', desc: 'Equip founders with structured project planning and execution capabilities to improve startup execution and investor readiness.', tags: ['Startup onboarding', 'Portfolio support', 'Workshops', 'Office hours', 'Mentor resources'], color: Color(0xFFD97706)),
     ];
     return LayoutBuilder(builder: (context, c) {
       final cols = c.maxWidth >= 1000 ? 3 : (c.maxWidth >= 600 ? 2 : 1);
@@ -316,7 +316,7 @@ class PartnerScreen extends StatelessWidget {
 
 class _PItem {
   final IconData icon; final String title; final String desc; final Color color;
-  const _PItem({required this.icon, required this.title, required this.desc}) : color = const Color(0xFF3B82F6);
+  const _PItem({required this.icon, required this.title, required this.desc}) : color = const Color(0xFFFFC812);
 }
 
 class _POpp {

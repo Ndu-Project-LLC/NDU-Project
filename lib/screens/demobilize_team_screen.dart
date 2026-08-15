@@ -1311,7 +1311,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
           label: 'Team Members',
           value: '${projectData.teamMembers.length}',
           icon: Icons.people_outline,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'to demobilize',
         ),
         LaunchKpiTile(
@@ -1325,7 +1325,7 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
           label: 'Vendors',
           value: '${projectData.vendors.length}',
           icon: Icons.inventory_2_outlined,
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFFB8860B),
           delta: 'to close out',
         ),
         LaunchKpiTile(

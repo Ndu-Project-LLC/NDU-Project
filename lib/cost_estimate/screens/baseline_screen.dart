@@ -83,17 +83,17 @@ class BaselineScreen extends StatelessWidget {
         // Category rows (for totals breakdown)
         final categories = <_BaselineCategory>[
           _BaselineCategory(
-              'Direct costs', t.direct, const Color(0xFF6366F1), Icons.engineering_outlined),
+              'Direct costs', t.direct, const Color(0xFFB8860B), Icons.engineering_outlined),
           _BaselineCategory(
-              'Indirect costs', t.indirect, const Color(0xFF8B5CF6), Icons.account_tree_outlined),
+              'Indirect costs', t.indirect, const Color(0xFFB8860B), Icons.account_tree_outlined),
           _BaselineCategory('SSHER & Quality', t.sherQuality,
-              const Color(0xFFEC4899), Icons.health_and_safety_outlined),
+              const Color(0xFFD97706), Icons.health_and_safety_outlined),
           _BaselineCategory('Risk allowances', t.riskAllowances,
               const Color(0xFFF59E0B), Icons.shield_outlined),
           _BaselineCategory(
               'Contingency', t.contingency, const Color(0xFF10B981), Icons.savings_outlined),
           _BaselineCategory(
-              'Escalation', t.escalation, const Color(0xFF06B6D4), Icons.trending_up_rounded),
+              'Escalation', t.escalation, const Color(0xFFD97706), Icons.trending_up_rounded),
           _BaselineCategory(
               'Taxes & duties', t.taxes, const Color(0xFF64748B), Icons.receipt_long_outlined),
         ];
@@ -154,7 +154,7 @@ class BaselineScreen extends StatelessWidget {
                           '$currencySymbol${treasuryFmt(t.totalAuthorizedBudget)}',
                       sub: 'Baseline + mgmt reserve',
                       icon: Icons.account_balance_wallet_rounded,
-                      tint: const Color(0xFF6366F1),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFEEF0FF),
                     ),
                     TreasuryKpiSpec(
@@ -171,7 +171,7 @@ class BaselineScreen extends StatelessWidget {
                       sub:
                           '${baseline.rebaselineRemaining} remaining via MoC',
                       icon: Icons.refresh_rounded,
-                      tint: const Color(0xFF8B5CF6),
+                      tint: const Color(0xFFB8860B),
                       tintSoft: const Color(0xFFF4EEFF),
                     ),
                   ],

@@ -1151,11 +1151,11 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   Color _signalCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'sponsor':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'operations':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'technical':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       case 'regulatory':
         return const Color(0xFFEA580C);
       default:
@@ -1166,13 +1166,13 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
   Color _changeTypeColor(String type) {
     switch (type.toLowerCase()) {
       case 'scope':
-        return const Color(0xFF7C3AED);
+        return const Color(0xFFB8860B);
       case 'budget':
         return const Color(0xFFD97706);
       case 'schedule':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'quality':
-        return const Color(0xFF0D9488);
+        return const Color(0xFFD97706);
       default:
         return const Color(0xFF6B7280);
     }
@@ -1187,7 +1187,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       case 'deferred':
         return const Color(0xFFD97706);
       case 'open':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       default:
         return const Color(0xFF6B7280);
     }
@@ -2910,7 +2910,7 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Color(0xFF93C5FD)),
+        borderSide: BorderSide(color: Color(0xFFFFC812)),
       ),
     );
   }

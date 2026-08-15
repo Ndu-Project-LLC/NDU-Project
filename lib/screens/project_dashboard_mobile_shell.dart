@@ -343,7 +343,7 @@ class _ProjectDashboardMobileShellState
  switch (snapshot.health) {
  case ProjectProgressHealth.completed:
  healthLabel = 'Completed';
- healthColor = const Color(0xFF1D4ED8);
+ healthColor = const Color(0xFFFFC812);
  break;
  case ProjectProgressHealth.onTrack:
  healthLabel = 'On Track';
@@ -821,8 +821,8 @@ class _ProjectDashboardMobileShellState
  ? 'Sign in to view'
  : programCount.toString(),
  icon: Icons.layers,
- iconBg: const Color(0xFFFAF5FF),
- iconColor: const Color(0xFF9333EA),
+ iconBg: const Color(0xFFFFF8E1),
+ iconColor: const Color(0xFFB8860B),
  onTap: _navigateToProgram,
  ),
  _statCard(

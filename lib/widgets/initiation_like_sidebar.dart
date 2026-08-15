@@ -1738,7 +1738,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  colors: [Color(0xFFB8860B), Color(0xFFB8860B)],
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -1761,7 +1761,7 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             style:
-                TextButton.styleFrom(foregroundColor: const Color(0xFF6366F1)),
+                TextButton.styleFrom(foregroundColor: const Color(0xFFB8860B)),
             child: const Text('Got it'),
           ),
         ],

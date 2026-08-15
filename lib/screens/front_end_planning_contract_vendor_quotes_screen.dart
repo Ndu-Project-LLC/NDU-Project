@@ -808,13 +808,13 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  children: [
  CircleAvatar(
  radius: 11,
- backgroundColor: const Color(0xFFEFF6FF),
+ backgroundColor: const Color(0xFFFFF8E1),
  child: Text(
  '${index + 1}',
  style: const TextStyle(
  fontSize: 10,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -1539,12 +1539,12 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  }) {
  final selected = _selectedManagementTab == tab;
  final baseColor =
- selected ? const Color(0xFFEFF6FF) : const Color(0xFFFFFFFF);
+ selected ? const Color(0xFFFFF8E1) : const Color(0xFFFFFFFF);
  final borderColor = selected
- ? const Color(0xFF93C5FD)
+ ? const Color(0xFFFFC812)
  : (enabled ? const Color(0xFFE5E7EB) : const Color(0xFFE5E7EB));
  final textColor = selected
- ? const Color(0xFF1D4ED8)
+ ? const Color(0xFFFFC812)
  : (enabled ? const Color(0xFF4B5563) : const Color(0xFF9CA3AF));
 
  return InkWell(
@@ -1932,13 +1932,13 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  vertical: 4),
  decoration: BoxDecoration(
  color: const Color(
- 0xFFEFF6FF),
+ 0xFFFFF8E1),
  borderRadius:
  BorderRadius.circular(
  999),
  border: Border.all(
  color: const Color(
- 0xFFBFDBFE),
+ 0xFFFDE68A),
  ),
  ),
  child: Text(
@@ -1948,7 +1948,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  fontWeight:
  FontWeight.w600,
  color:
- Color(0xFF1E3A8A),
+ Color(0xFFB8860B),
  ),
  ),
  ),
@@ -2009,7 +2009,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  label: const Text(
  'Start Process for this Scope'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  ),
  ),
@@ -3086,7 +3086,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  .trim()
  .isEmpty
  ? const Color(0xFFF59E0B)
- : const Color(0xFF2563EB),
+ : const Color(0xFFFFC812),
  ),
  ],
  ),
@@ -3632,7 +3632,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  );
  }
 
- Widget _statusBadge(String label, {Color tone = const Color(0xFF2563EB)}) {
+ Widget _statusBadge(String label, {Color tone = const Color(0xFFFFC812)}) {
  return Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
  decoration: BoxDecoration(
@@ -3654,8 +3654,8 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  Color _trackingStatusTone(String status) {
  final normalized = status.toLowerCase();
  if (normalized.contains('draft')) return const Color(0xFF94A3B8);
- if (normalized.contains('sent')) return const Color(0xFF2563EB);
- if (normalized.contains('response')) return const Color(0xFF14B8A6);
+ if (normalized.contains('sent')) return const Color(0xFFFFC812);
+ if (normalized.contains('response')) return const Color(0xFFD97706);
  if (normalized.contains('evaluation')) return const Color(0xFFF59E0B);
  if (normalized.contains('award') || normalized.contains('signed')) {
  return const Color(0xFF16A34A);
@@ -3667,7 +3667,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  final normalized = status.toLowerCase();
  if (normalized.contains('draft')) return const Color(0xFF94A3B8);
  if (normalized.contains('review')) return const Color(0xFFF59E0B);
- if (normalized.contains('approved')) return const Color(0xFF2563EB);
+ if (normalized.contains('approved')) return const Color(0xFFFFC812);
  if (normalized.contains('publish')) return const Color(0xFF16A34A);
  return const Color(0xFF64748B);
  }
@@ -4062,7 +4062,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  builder: (context, setState) => AlertDialog(
  title: const Row(
  children: [
- Icon(Icons.fact_check_outlined, color: Color(0xFF2563EB)),
+ Icon(Icons.fact_check_outlined, color: Color(0xFFFFC812)),
  SizedBox(width: 10),
  Text('Approved Contractor List'),
  ],
@@ -4096,7 +4096,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  const EdgeInsets.symmetric(horizontal: 0),
  leading: CircleAvatar(
  radius: 14,
- backgroundColor: const Color(0xFFEFF6FF),
+ backgroundColor: const Color(0xFFFFF8E1),
  child: Text(
  name.isEmpty
  ? '?'
@@ -4104,7 +4104,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  style: const TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -5112,7 +5112,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  const CircleAvatar(
  radius: 13,
- backgroundColor: Color(0xFF2563EB),
+ backgroundColor: Color(0xFFFFC812),
  child: Text('Ch',
  style: TextStyle(
  color: Colors.white,
@@ -5261,7 +5261,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  strokeWidth: 2),
  )
  : const Icon(Icons.refresh_rounded,
- color: Color(0xFF2563EB)),
+ color: Color(0xFFFFC812)),
  ),
  ],
  ),
@@ -5283,10 +5283,10 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  label: const Text('Approved Contractor List'),
  style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF1E3A8A),
+ foregroundColor: const Color(0xFFB8860B),
  side: const BorderSide(
- color: Color(0xFFBFDBFE)),
- backgroundColor: const Color(0xFFEFF6FF),
+ color: Color(0xFFFDE68A)),
+ backgroundColor: const Color(0xFFFFF8E1),
  ),
  ),
  ),
@@ -5333,7 +5333,7 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  child: const Row(
  children: [
  Icon(Icons.auto_awesome,
- size: 16, color: Color(0xFF2563EB)),
+ size: 16, color: Color(0xFFFFC812)),
  SizedBox(width: 8),
  Expanded(
  child: Text(
@@ -5600,11 +5600,11 @@ class _FrontEndPlanningContractVendorQuotesScreenState
  ),
  style: OutlinedButton.styleFrom(
  foregroundColor:
- const Color(0xFF1E3A8A),
+ const Color(0xFFB8860B),
  side: const BorderSide(
- color: Color(0xFFBFDBFE)),
+ color: Color(0xFFFDE68A)),
  backgroundColor:
- const Color(0xFFEFF6FF),
+ const Color(0xFFFFF8E1),
  padding: const EdgeInsets.symmetric(
  horizontal: 14,
  vertical: 10,
@@ -6096,13 +6096,13 @@ class _BottomOverlay extends StatelessWidget {
  ),
  child: const Row(
  children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
  SizedBox(width: 10),
  Text(
  'AI',
  style: TextStyle(
  fontWeight: FontWeight.w800,
- color: Color(0xFF2563EB),
+ color: Color(0xFFFFC812),
  ),
  ),
  SizedBox(width: 12),
@@ -6167,11 +6167,11 @@ class _ScopeSectionModeSwitcher extends StatelessWidget {
  curve: Curves.easeOut,
  padding: const EdgeInsets.symmetric(vertical: 10),
  decoration: BoxDecoration(
- color: selected ? const Color(0xFFEFF6FF) : Colors.white,
+ color: selected ? const Color(0xFFFFF8E1) : Colors.white,
  borderRadius: BorderRadius.circular(10),
  border: Border.all(
  color: selected
- ? const Color(0xFF93C5FD)
+ ? const Color(0xFFFFC812)
  : const Color(0xFFE5E7EB),
  ),
  ),
@@ -6182,7 +6182,7 @@ class _ScopeSectionModeSwitcher extends StatelessWidget {
  fontSize: 12.5,
  fontWeight: FontWeight.w700,
  color: selected
- ? const Color(0xFF1D4ED8)
+ ? const Color(0xFFFFC812)
  : const Color(0xFF6B7280),
  ),
  ),
@@ -6282,7 +6282,7 @@ class _ContractScopeDetailsBoard extends StatelessWidget {
  style: TextStyle(
  fontSize: 12,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1E3A8A),
+ color: Color(0xFFB8860B),
  ),
  ),
  const SizedBox(height: 4),
@@ -6477,9 +6477,9 @@ class _ContractScopeDetailCardState extends State<_ContractScopeDetailCard> {
  Container(
  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(999),
- border: Border.all(color: const Color(0xFFBFDBFE)),
+ border: Border.all(color: const Color(0xFFFDE68A)),
  ),
  child: Text(
  item.category.trim().isEmpty
@@ -6488,7 +6488,7 @@ class _ContractScopeDetailCardState extends State<_ContractScopeDetailCard> {
  style: const TextStyle(
  fontSize: 11,
  fontWeight: FontWeight.w700,
- color: Color(0xFF1D4ED8),
+ color: Color(0xFFFFC812),
  ),
  ),
  ),
@@ -7013,8 +7013,8 @@ class _SectionHeader extends StatelessWidget {
  icon: const Icon(Icons.add, size: 16),
  label: Text(actionLabel),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFEFF6FF),
- foregroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFF8E1),
+ foregroundColor: const Color(0xFFFFC812),
  elevation: 0,
  shape:
  RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -7430,7 +7430,7 @@ class _AiPreviewDialog extends StatelessWidget {
  return AlertDialog(
  title: const Row(
  children: [
- Icon(Icons.auto_awesome, color: Color(0xFF2563EB)),
+ Icon(Icons.auto_awesome, color: Color(0xFFFFC812)),
  SizedBox(width: 12),
  Text('AI Suggested Contracting Scope'),
  ],
@@ -7499,7 +7499,7 @@ class _AiPreviewDialog extends StatelessWidget {
  ElevatedButton(
  onPressed: () => Navigator.of(context).pop(true),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  ),
  child: const Text('Confirm & Save'),

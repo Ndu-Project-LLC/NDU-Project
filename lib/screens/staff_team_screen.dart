@@ -686,7 +686,7 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
                     radius: 16,
                     backgroundColor: isMobilized
                         ? const Color(0xFFDCFCE7)
-                        : const Color(0xFFEEF2FF),
+                        : const Color(0xFFFFF8E1),
                     child: Text(
                       (member.name.isNotEmpty ? member.name : '?')[0]
                           .toUpperCase(),
@@ -818,7 +818,7 @@ class _StaffTeamScreenState extends State<StaffTeamScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Color(0xFFEEF2FF),
+                color: Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.groups_rounded,

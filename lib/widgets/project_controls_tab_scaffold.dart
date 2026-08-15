@@ -48,14 +48,14 @@ class PcPalette {
   static const Color goldSoft = Color(0xFFFFF4CC);
 
   // Semantic accents
-  static const Color indigo = Color(0xFF6366F1);
+  static const Color indigo = Color(0xFFB8860B);
   static const Color emerald = Color(0xFF10B981);
   static const Color amber = Color(0xFFD97706);
-  static const Color violet = Color(0xFF8B5CF6);
-  static const Color sky = Color(0xFF0EA5E9);
-  static const Color rose = Color(0xFFF43F5E);
-  static const Color teal = Color(0xFF14B8A6);
-  static const Color fuchsia = Color(0xFFD946EF);
+  static const Color violet = Color(0xFFB8860B);
+  static const Color sky = Color(0xFFFFC812);
+  static const Color rose = Color(0xFFD97706);
+  static const Color teal = Color(0xFFD97706);
+  static const Color fuchsia = Color(0xFFD97706);
 
   // Status
   static const Color danger = Color(0xFFEF4444);

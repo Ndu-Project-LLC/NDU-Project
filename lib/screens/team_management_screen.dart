@@ -775,7 +775,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  ? 'Generate Summary'
  : 'Regenerate Summary'),
  style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFF2563EB),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  elevation: 0,
  shape: RoundedRectangleBorder(
@@ -1420,7 +1420,7 @@ class _TeamRoleCard extends StatelessWidget {
  borderRadius: BorderRadius.circular(14),
  border: Border.all(
  color: isFromStaffingPlan
- ? const Color(0xFFBFDBFE).withValues(alpha: 0.7)
+ ? const Color(0xFFFDE68A).withValues(alpha: 0.7)
  : const Color(0xFFE5E7EB),
  ),
  boxShadow: const [
@@ -1438,7 +1438,7 @@ class _TeamRoleCard extends StatelessWidget {
  height: 36,
  decoration: BoxDecoration(
  color: isFromStaffingPlan
- ? const Color(0xFFEFF6FF)
+ ? const Color(0xFFFFF8E1)
  : const Color(0xFFEAF2FF),
  borderRadius: BorderRadius.circular(10),
  ),
@@ -1446,7 +1446,7 @@ class _TeamRoleCard extends StatelessWidget {
  isFromStaffingPlan
  ? Icons.badge_outlined
  : Icons.work_outline,
- color: const Color(0xFF2563EB),
+ color: const Color(0xFFFFC812),
  size: 20,
  ),
  ),
@@ -1618,10 +1618,10 @@ class _StaffingPlanSummaryCard extends StatelessWidget {
  width: double.infinity,
  padding: const EdgeInsets.all(16),
  decoration: BoxDecoration(
- color: const Color(0xFFEFF6FF),
+ color: const Color(0xFFFFF8E1),
  borderRadius: BorderRadius.circular(12),
  border: Border.all(
- color: const Color(0xFFBFDBFE).withValues(alpha: 0.7)),
+ color: const Color(0xFFFDE68A).withValues(alpha: 0.7)),
  ),
  child: Column(
  crossAxisAlignment: CrossAxisAlignment.start,
@@ -1629,13 +1629,13 @@ class _StaffingPlanSummaryCard extends StatelessWidget {
  Row(
  children: [
  const Icon(Icons.people_alt_outlined,
- size: 16, color: Color(0xFF1D4ED8)),
+ size: 16, color: Color(0xFFFFC812)),
  const SizedBox(width: 8),
  const Expanded(
  child: Text(
  'Staffing Plan — from Front-End Planning',
  style: TextStyle(
- color: Color(0xFF1E3A8A),
+ color: Color(0xFFB8860B),
  fontSize: 14,
  fontWeight: FontWeight.w700),
  ),
@@ -1646,7 +1646,7 @@ class _StaffingPlanSummaryCard extends StatelessWidget {
  icon: const Icon(Icons.sync, size: 16),
  label: const Text('Sync to Members'),
  style: FilledButton.styleFrom(
- backgroundColor: const Color(0xFF1D4ED8),
+ backgroundColor: const Color(0xFFFFC812),
  foregroundColor: Colors.white,
  padding: const EdgeInsets.symmetric(
  horizontal: 14, vertical: 8),
@@ -1658,8 +1658,8 @@ class _StaffingPlanSummaryCard extends StatelessWidget {
  icon: const Icon(Icons.refresh, size: 16),
  label: const Text('Re-sync'),
  style: OutlinedButton.styleFrom(
- foregroundColor: const Color(0xFF1D4ED8),
- side: const BorderSide(color: Color(0xFFBFDBFE)),
+ foregroundColor: const Color(0xFFFFC812),
+ side: const BorderSide(color: Color(0xFFFDE68A)),
  padding: const EdgeInsets.symmetric(
  horizontal: 14, vertical: 8),
  ),
@@ -1671,7 +1671,7 @@ class _StaffingPlanSummaryCard extends StatelessWidget {
  'Pulls the staffing roles defined in Front-End Planning > '
  'Personnel into the Members list. Idempotent — re-running '
  'only adds slots that aren\'t already linked.',
- style: TextStyle(color: Color(0xFF1E40AF), fontSize: 12),
+ style: TextStyle(color: Color(0xFFFFC812), fontSize: 12),
  ),
  const SizedBox(height: 12),
  Wrap(
@@ -1708,16 +1708,16 @@ class _StaffingPlanSummaryCard extends StatelessWidget {
  color: Colors.white,
  borderRadius: BorderRadius.circular(6),
  border: Border.all(
- color: const Color(0xFFBFDBFE).withValues(alpha: 0.5)),
+ color: const Color(0xFFFDE68A).withValues(alpha: 0.5)),
  ),
  child: Row(
  mainAxisSize: MainAxisSize.min,
  children: [
- Icon(icon, size: 12, color: const Color(0xFF1D4ED8)),
+ Icon(icon, size: 12, color: const Color(0xFFFFC812)),
  const SizedBox(width: 4),
  Text(value,
  style: const TextStyle(
- color: Color(0xFF1E3A8A),
+ color: Color(0xFFB8860B),
  fontSize: 11,
  fontWeight: FontWeight.w700)),
  const SizedBox(width: 4),
@@ -1753,8 +1753,8 @@ class _StaffingPlanBadge extends StatelessWidget {
  _pill(
  'From Staffing Plan',
  Icons.link_outlined,
- const Color(0xFF1D4ED8),
- const Color(0xFFEFF6FF),
+ const Color(0xFFFFC812),
+ const Color(0xFFFFF8E1),
  ),
  if (row != null) ...[
  _pill(
@@ -1824,7 +1824,7 @@ class _StaffingPlanBadge extends StatelessWidget {
  return const Color(0xFF16A34A);
  }
  if (s.contains('progress') || s.contains('active')) {
- return const Color(0xFF2563EB);
+ return const Color(0xFFFFC812);
  }
  if (s.contains('delay') || s.contains('block')) {
  return const Color(0xFFDC2626);
@@ -2113,7 +2113,7 @@ class _EditableTextBlockState extends State<_EditableTextBlock> {
  label: Text(
  _isGenerating ? 'Generating…' : 'Generate with AI'),
  style: TextButton.styleFrom(
- foregroundColor: const Color(0xFF7C3AED),
+ foregroundColor: const Color(0xFFB8860B),
  padding: const EdgeInsets.symmetric(
  horizontal: 12, vertical: 8),
  ),
@@ -2215,7 +2215,7 @@ class _MemberChecklistCard extends StatelessWidget {
  : Icons.person_outline,
  color: mobilization.isFullyMobilized
  ? const Color(0xFF10B981)
- : const Color(0xFF2563EB),
+ : const Color(0xFFFFC812),
  size: 18,
  ),
  ),
@@ -2353,7 +2353,7 @@ class _RoleRequirementCard extends StatelessWidget {
  style: const TextStyle(
  fontSize: 10,
  fontWeight: FontWeight.w700,
- color: Color(0xFF2563EB))),
+ color: Color(0xFFFFC812))),
  ),
  const SizedBox(width: 8),
  if (requirement.isRequired)
@@ -2563,7 +2563,7 @@ class _ActivityPostCard extends StatelessWidget {
  color: Color(0xFFEAF2FF),
  shape: BoxShape.circle,
  ),
- child: const Icon(Icons.person, color: Color(0xFF2563EB), size: 18),
+ child: const Icon(Icons.person, color: Color(0xFFFFC812), size: 18),
  ),
  const SizedBox(width: 12),
  Expanded(

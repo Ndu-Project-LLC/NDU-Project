@@ -141,7 +141,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEEF2FF),
+                            color: const Color(0xFFFFF8E1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(Icons.person_add_alt_1_rounded,
@@ -464,8 +464,8 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                           label: Text(
                               aiLoading ? 'Generating...' : 'KAZ AI Suggest'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF7C3AED),
-                            side: const BorderSide(color: Color(0xFFDDD6FE)),
+                            foregroundColor: const Color(0xFFB8860B),
+                            side: const BorderSide(color: Color(0xFFFEF3C7)),
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 14, vertical: 10),
                             shape: RoundedRectangleBorder(
@@ -707,7 +707,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
               value: _totalHeadcount.toString(),
               icon: Icons.people_outline_rounded,
               accentColor: const Color(0xFF4338CA),
-              accentBg: const Color(0xFFEEF2FF),
+              accentBg: const Color(0xFFFFF8E1),
             ),
             const SizedBox(height: 12),
             _PremiumSummaryCard(
@@ -738,7 +738,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
             value: _totalHeadcount.toString(),
             icon: Icons.people_outline_rounded,
             accentColor: const Color(0xFF4338CA),
-            accentBg: const Color(0xFFEEF2FF),
+            accentBg: const Color(0xFFFFF8E1),
           )),
           const SizedBox(width: 16),
           Expanded(
@@ -813,9 +813,9 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF5F3FF),
+        color: Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFDDD6FE)),
+        border: Border.all(color: Color(0xFFFEF3C7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -825,7 +825,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Color(0xFF7C3AED),
+                  color: Color(0xFFB8860B),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.auto_awesome,
@@ -837,7 +837,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF5B21B6),
+                  color: Color(0xFFB8860B),
                 ),
               ),
             ],
@@ -882,7 +882,7 @@ class _StaffTeamResourceGridState extends State<StaffTeamResourceGrid> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Color(0xFFEEF2FF),
+                    color: Color(0xFFFFF8E1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.table_chart_outlined,
@@ -1182,7 +1182,7 @@ class _PremiumSuggestionPill extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFC4B5FD)),
+          border: Border.all(color: const Color(0xFFFDE68A)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -1197,7 +1197,7 @@ class _PremiumSuggestionPill extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: const Color(0xFF7C3AED),
+                color: const Color(0xFFB8860B),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: const Icon(Icons.add, size: 12, color: Colors.white),
@@ -1208,7 +1208,7 @@ class _PremiumSuggestionPill extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF5B21B6),
+                color: Color(0xFFB8860B),
               ),
             ),
           ],
@@ -1292,7 +1292,7 @@ class _PremiumStaffingRowState extends State<_PremiumStaffingRow> {
         return const Color(0xFF059669);
       case 'in progress':
       case 'active':
-        return const Color(0xFF2563EB);
+        return const Color(0xFFFFC812);
       case 'planned':
       case 'not started':
         return const Color(0xFF6B7280);
@@ -1311,7 +1311,7 @@ class _PremiumStaffingRowState extends State<_PremiumStaffingRow> {
         return const Color(0xFFECFDF5);
       case 'in progress':
       case 'active':
-        return const Color(0xFFEFF6FF);
+        return const Color(0xFFFFF8E1);
       case 'planned':
       case 'not started':
         return const Color(0xFFF3F4F6);
@@ -1319,7 +1319,7 @@ class _PremiumStaffingRowState extends State<_PremiumStaffingRow> {
       case 'at risk':
         return const Color(0xFFFEF2F2);
       default:
-        return const Color(0xFFEEF2FF);
+        return const Color(0xFFFFF8E1);
     }
   }
 
@@ -1395,12 +1395,12 @@ class _PremiumStaffingRowState extends State<_PremiumStaffingRow> {
                                   horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
                                 color: _row.isInternal
-                                    ? const Color(0xFFEEF2FF)
+                                    ? const Color(0xFFFFF8E1)
                                     : const Color(0xFFFEF3C7),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: _row.isInternal
-                                      ? const Color(0xFFC7D2FE)
+                                      ? const Color(0xFFFEF3C7)
                                       : const Color(0xFFFDE68A),
                                 ),
                               ),
@@ -1438,7 +1438,7 @@ class _PremiumStaffingRowState extends State<_PremiumStaffingRow> {
                                   horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
                                 color: _row.isInternal
-                                    ? const Color(0xFFEEF2FF)
+                                    ? const Color(0xFFFFF8E1)
                                     : const Color(0xFFFEF3C7),
                                 borderRadius: BorderRadius.circular(6),
                               ),
@@ -1749,7 +1749,7 @@ class _KazAiActionButtonState extends State<_KazAiActionButton> {
             SnackBar(
               content: Text('KAZ AI suggested: ${suggestions.first}'),
               behavior: SnackBarBehavior.floating,
-              backgroundColor: const Color(0xFF7C3AED),
+              backgroundColor: const Color(0xFFB8860B),
               duration: const Duration(seconds: 2),
             ),
           );
@@ -1779,9 +1779,9 @@ class _KazAiActionButtonState extends State<_KazAiActionButton> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
-            color: _loading ? Color(0xFFF3F0FF) : Color(0xFFF5F3FF),
+            color: _loading ? Color(0xFFF3F0FF) : Color(0xFFFFF8E1),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Color(0xFFDDD6FE)),
+            border: Border.all(color: Color(0xFFFEF3C7)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1792,19 +1792,19 @@ class _KazAiActionButtonState extends State<_KazAiActionButton> {
                   height: 12,
                   child: CircularProgressIndicator(
                     strokeWidth: 1.5,
-                    color: Color(0xFF7C3AED),
+                    color: Color(0xFFB8860B),
                   ),
                 )
               else
                 const Icon(Icons.auto_awesome_rounded,
-                    size: 13, color: Color(0xFF7C3AED)),
+                    size: 13, color: Color(0xFFB8860B)),
               const SizedBox(width: 4),
               Text(
                 _loading ? '...' : 'KAZ AI',
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF7C3AED),
+                  color: Color(0xFFB8860B),
                 ),
               ),
             ],

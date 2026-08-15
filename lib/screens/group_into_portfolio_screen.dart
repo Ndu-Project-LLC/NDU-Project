@@ -44,7 +44,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
   static const _onSurface = Color(0xFF0F172A);
   static const _muted = Color(0xFF64748B);
   static const _outline = Color(0xFFE2E8F0);
-  static const _blue = Color(0xFF6366F1);
+  static const _blue = Color(0xFFB8860B);
 
   // ── State ──
   final TextEditingController _searchController = TextEditingController();
@@ -105,7 +105,7 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2FF),
+                  color: const Color(0xFFFFF8E1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.pie_chart_outline_rounded,
@@ -374,12 +374,12 @@ class _GroupIntoPortfolioScreenState extends State<GroupIntoPortfolioScreen> {
                             horizontal: 18, vertical: 16),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFFEEF2FF)
+                              ? const Color(0xFFFFF8E1)
                               : _surface.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFFA5B4FC)
+                                ? const Color(0xFFFDE68A)
                                 : _outline.withValues(alpha: 0.15),
                             width: isSelected ? 2 : 1,
                           ),

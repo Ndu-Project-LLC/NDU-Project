@@ -126,7 +126,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             label: 'Active Warranties',
             value: '$activeWarranties',
             icon: Icons.verified_user_outlined,
-            emphasisColor: const Color(0xFF2563EB)),
+            emphasisColor: const Color(0xFFFFC812)),
         ExecutionMetricData(
             label: 'Monthly Ops Cost',
             value:
@@ -137,7 +137,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             label: 'Financial Metrics',
             value: '${_financialMetrics.length}',
             icon: Icons.analytics_outlined,
-            emphasisColor: const Color(0xFF8B5CF6)),
+            emphasisColor: const Color(0xFFB8860B)),
         ExecutionMetricData(
             label: 'Recommendations',
             value: '${_recommendations.length}',
@@ -1259,7 +1259,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
           label: 'Vendors',
           value: '${projectData.vendors.length}',
           icon: Icons.inventory_2_outlined,
-          color: const Color(0xFF2563EB),
+          color: const Color(0xFFFFC812),
           delta: 'under warranty',
         ),
         LaunchKpiTile(
@@ -1273,7 +1273,7 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
           label: 'Allowances',
           value: '${projectData.frontEndPlanning.allowanceItems.length}',
           icon: Icons.savings_outlined,
-          color: const Color(0xFF7C3AED),
+          color: const Color(0xFFB8860B),
           delta: 'contingency tracked',
         ),
         LaunchKpiTile(

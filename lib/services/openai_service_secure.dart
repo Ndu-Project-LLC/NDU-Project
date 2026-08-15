@@ -11424,7 +11424,7 @@ Return ONLY JSON: {"items":[...]}'''
             'label': 'IT Equipment',
             'amount': 240000,
             'percent': 42,
-            'color': 0xFF6366F1
+            'color': 0xFFB8860B
           },
           {
             'label': 'Construction',

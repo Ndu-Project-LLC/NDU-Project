@@ -444,7 +444,7 @@ class _PlanningInfrastructureCostSectionState
                               currency.format(item.potentialCost),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF2563EB),
+                                color: Color(0xFFFFC812),
                               ),
                             ),
                             if (item.owner.trim().isNotEmpty)

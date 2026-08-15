@@ -618,7 +618,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             'and continuous improvement — integrated with the Project Delivery Operating System (PDOS).',
             style: TextStyle(
               fontSize: 15,
-              color: Color(0xFFC7D2FE),
+              color: Color(0xFFFEF3C7),
               height: 1.6,
             ),
           ),
@@ -649,7 +649,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: const Color(0xFFA5B4FC)),
+          Icon(icon, size: 16, color: const Color(0xFFFDE68A)),
           const SizedBox(width: 8),
           Text(
             label,
@@ -742,7 +742,7 @@ class _AgileProjectHubScreenState extends State<AgileProjectHubScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Color(0xFFEEF2FF),
+                color: Color(0xFFFFF8E1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(

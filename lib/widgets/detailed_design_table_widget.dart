@@ -470,10 +470,10 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
   Color _getStatusColor(String status) {
     return switch (status.toLowerCase()) {
       'draft' => const Color(0xFF9CA3AF),
-      'in review' => const Color(0xFF0EA5E9),
-      'reviewed' => const Color(0xFF6366F1),
+      'in review' => const Color(0xFFFFC812),
+      'reviewed' => const Color(0xFFB8860B),
       'approved' => const Color(0xFF10B981),
-      'baseline' => const Color(0xFF2563EB),
+      'baseline' => const Color(0xFFFFC812),
       'superseded' => const Color(0xFFEF4444),
       _ => const Color(0xFF9CA3AF),
     };
@@ -483,7 +483,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
   Color _getPriorityColor(String priority) {
     return switch (priority.toLowerCase()) {
       'must have' => const Color(0xFFDC2626),
-      'should have' => const Color(0xFF2563EB),
+      'should have' => const Color(0xFFFFC812),
       'could have' => const Color(0xFFD97706),
       "won't have" => const Color(0xFF6B7280),
       _ => const Color(0xFF6B7280),
@@ -493,14 +493,14 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
   // ── Spec type color mapping ──
   Color _getSpecTypeColor(String type) {
     return switch (type.toLowerCase()) {
-      'architecture' => const Color(0xFF7C3AED),
-      'interface' => const Color(0xFF2563EB),
-      'data' => const Color(0xFF0891B2),
+      'architecture' => const Color(0xFFB8860B),
+      'interface' => const Color(0xFFFFC812),
+      'data' => const Color(0xFFD97706),
       'component' => const Color(0xFF059669),
       'security' => const Color(0xFFDC2626),
       'nfr' => const Color(0xFFD97706),
       'infrastructure' => const Color(0xFF475569),
-      'ui/ux' => const Color(0xFFEC4899),
+      'ui/ux' => const Color(0xFFD97706),
       _ => const Color(0xFF6B7280),
     };
   }
@@ -706,7 +706,7 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
             style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF2563EB)),
+                color: Color(0xFFFFC812)),
             textAlign: TextAlign.center,
           ),
         );
@@ -771,11 +771,11 @@ class _DesignSpecRowWidgetState extends State<_DesignSpecRowWidget> {
                                 height: 14,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Color(0xFF7C3AED),
+                                  color: Color(0xFFB8860B),
                                 ),
                               )
                             : const Icon(Icons.auto_awesome,
-                                size: 14, color: Color(0xFF7C3AED)),
+                                size: 14, color: Color(0xFFB8860B)),
                         onPressed:
                             _isRegenerating ? null : _regenerateSpecification,
                         tooltip: 'AI Regenerate',

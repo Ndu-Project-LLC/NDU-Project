@@ -443,46 +443,44 @@ class _LongLeadEquipmentOrderingScreenState
  setState(() => _actions.removeWhere((entry) => entry.id == id));
  _scheduleSave();
     showDeleteSuccessSnackBar(context, itemLabel: 'Action');
- }
+ }  Future<void> _openCategoryDialog() async {
+    final draft = _EquipmentCategory.empty();
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    final thresholdController = TextEditingController();
+    final ownerController = TextEditingController();
+    String criticality = _criticalityOptions[1];
 
- Future<void> _openCategoryDialog() async {
- final draft = _EquipmentCategory.empty();
- final titleController = TextEditingController();
- final descriptionController = TextEditingController();
- final thresholdController = TextEditingController();
- final ownerController = TextEditingController();
- String criticality = _criticalityOptions[1];
-
- final saved = await showDialog<bool>(
- context: context,
- builder: (dialogContext) => StatefulBuilder(
- builder: (context, setModalState) => AlertDialog(
- title: const Text('Add equipment category'),
- content: SizedBox(
- width: 520,
- child: Column(
- mainAxisSize: MainAxisSize.min,
- children: [
- VoiceTextField(
- controller: titleController,
- decoration: const InputDecoration(
- labelText: 'Category',
- border: OutlineInputBorder(),
- ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: descriptionController,
- minLines: 2,
- maxLines: 4,
- decoration: const InputDecoration(
- labelText: 'Description',
- border: OutlineInputBorder(),
- ),
- ),
- const SizedBox(height: 12),
- DropdownButtonFormField<String>(
- initialValue: criticality,
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          title: const Text('Add equipment category'),
+          content: SizedBox(
+            width: 520,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descriptionController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: criticality,
  items: _criticalityOptions
  .map((option) => DropdownMenuItem(
  value: option,
@@ -497,23 +495,22 @@ class _LongLeadEquipmentOrderingScreenState
  labelText: 'Criticality',
  border: OutlineInputBorder(),
  ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: thresholdController,
- decoration: const InputDecoration(
- labelText: 'Lead time threshold',
- border: OutlineInputBorder(),
- ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: ownerController,
- decoration: const InputDecoration(
- labelText: 'Owner',
- border: OutlineInputBorder(),
- ),
- ),
+ ),                const SizedBox(height: 12),
+                TextField(
+                  controller: thresholdController,
+                  decoration: const InputDecoration(
+                    labelText: 'Lead time threshold',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: ownerController,
+                  decoration: const InputDecoration(
+                    labelText: 'Owner',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
  ],
  ),
  ),
@@ -543,67 +540,65 @@ class _LongLeadEquipmentOrderingScreenState
  );
  });
  _scheduleSave();
- }
+ }  Future<void> _openEquipmentDialog() async {
+    final draft = _EquipmentItem.empty();
+    final nameController = TextEditingController();
+    final categoryController = TextEditingController();
+    final vendorController = TextEditingController();
+    final leadTimeController = TextEditingController();
+    final deliveryController = TextEditingController();
+    final ownerController = TextEditingController();
+    String status = _equipmentStatusOptions.first;
 
- Future<void> _openEquipmentDialog() async {
- final draft = _EquipmentItem.empty();
- final nameController = TextEditingController();
- final categoryController = TextEditingController();
- final vendorController = TextEditingController();
- final leadTimeController = TextEditingController();
- final deliveryController = TextEditingController();
- final ownerController = TextEditingController();
- String status = _equipmentStatusOptions.first;
-
- final saved = await showDialog<bool>(
- context: context,
- builder: (dialogContext) => StatefulBuilder(
- builder: (context, setModalState) => AlertDialog(
- title: const Text('Add equipment item'),
- content: SizedBox(
- width: 560,
- child: Column(
- mainAxisSize: MainAxisSize.min,
- children: [
- VoiceTextField(
- controller: nameController,
- decoration: const InputDecoration(
- labelText: 'Item',
- border: OutlineInputBorder(),
- ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: categoryController,
- decoration: const InputDecoration(
- labelText: 'Category',
- border: OutlineInputBorder(),
- ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: vendorController,
- decoration: const InputDecoration(
- labelText: 'Vendor',
- border: OutlineInputBorder(),
- ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: leadTimeController,
- decoration: const InputDecoration(
- labelText: 'Lead time',
- border: OutlineInputBorder(),
- ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: deliveryController,
- decoration: const InputDecoration(
- labelText: 'Expected delivery',
- border: OutlineInputBorder(),
- ),
- ),
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          title: const Text('Add equipment item'),
+          content: SizedBox(
+            width: 560,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Item',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: categoryController,
+                  decoration: const InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: vendorController,
+                  decoration: const InputDecoration(
+                    labelText: 'Vendor',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: leadTimeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Lead time',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: deliveryController,
+                  decoration: const InputDecoration(
+                    labelText: 'Expected delivery',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
  initialValue: status,
@@ -621,26 +616,25 @@ class _LongLeadEquipmentOrderingScreenState
  labelText: 'Status',
  border: OutlineInputBorder(),
  ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: ownerController,
- decoration: const InputDecoration(
- labelText: 'Owner',
- border: OutlineInputBorder(),
- ),
- ),
- ],
- ),
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(false),
- child: const Text('Cancel'),
- ),
- ElevatedButton(
- onPressed: () => Navigator.of(dialogContext).pop(true),
- child: const Text('Add item'),
+ ),                const SizedBox(height: 12),
+                TextField(
+                  controller: ownerController,
+                  decoration: const InputDecoration(
+                    labelText: 'Owner',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Add item'),
  ),
  ],
  ),
@@ -661,49 +655,47 @@ class _LongLeadEquipmentOrderingScreenState
  );
  });
  _scheduleSave();
- }
+ }  Future<void> _openActionDialog() async {
+    final draft = _ProcurementAction.empty();
+    final titleController = TextEditingController();
+    final ownerController = TextEditingController();
+    final dueDateController = TextEditingController();
+    final notesController = TextEditingController();
+    String status = _actionStatusOptions.first;
 
- Future<void> _openActionDialog() async {
- final draft = _ProcurementAction.empty();
- final titleController = TextEditingController();
- final ownerController = TextEditingController();
- final dueDateController = TextEditingController();
- final notesController = TextEditingController();
- String status = _actionStatusOptions.first;
-
- final saved = await showDialog<bool>(
- context: context,
- builder: (dialogContext) => StatefulBuilder(
- builder: (context, setModalState) => AlertDialog(
- title: const Text('Add procurement action'),
- content: SizedBox(
- width: 540,
- child: Column(
- mainAxisSize: MainAxisSize.min,
- children: [
- VoiceTextField(
- controller: titleController,
- decoration: const InputDecoration(
- labelText: 'Action',
- border: OutlineInputBorder(),
- ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: ownerController,
- decoration: const InputDecoration(
- labelText: 'Owner',
- border: OutlineInputBorder(),
- ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: dueDateController,
- decoration: const InputDecoration(
- labelText: 'Due date',
- border: OutlineInputBorder(),
- ),
- ),
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          title: const Text('Add procurement action'),
+          content: SizedBox(
+            width: 540,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Action',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: ownerController,
+                  decoration: const InputDecoration(
+                    labelText: 'Owner',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: dueDateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Due date',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
  const SizedBox(height: 12),
  DropdownButtonFormField<String>(
  initialValue: status,
@@ -721,17 +713,16 @@ class _LongLeadEquipmentOrderingScreenState
  labelText: 'Status',
  border: OutlineInputBorder(),
  ),
- ),
- const SizedBox(height: 12),
- VoiceTextField(
- controller: notesController,
- minLines: 2,
- maxLines: 4,
- decoration: const InputDecoration(
- labelText: 'Notes',
- border: OutlineInputBorder(),
- ),
- ),
+ ),                const SizedBox(height: 12),
+                TextField(
+                  controller: notesController,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
  ],
  ),
  ),

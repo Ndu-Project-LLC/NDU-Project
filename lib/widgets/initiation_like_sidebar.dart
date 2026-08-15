@@ -3200,107 +3200,12 @@ class _InitiationLikeSidebarState extends State<InitiationLikeSidebar> {
         _buildSubMenuItem('Detailed Design',
             onTap: _openDetailedDesign,
             isActive: widget.activeItemLabel == 'Detailed Design'),
-        _buildSubExpandableHeader(
-          'Agile Project Hub',
-          expanded: _agileHubExpanded,
-          onTap: () => setState(() {
-            _agileHubExpanded = !_agileHubExpanded;
-            _sharedAgileHubExpanded = _agileHubExpanded;
-          }),
-          isActive: _activeIn(_agileHubLabels),
-        ),
-        if (_agileHubExpanded) ...[
-          _buildSubSubMenuItem(
-            'Agile Dashboard',
-            onTap: () => AgileDashboardScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Agile Dashboard',
-          ),
-          _buildSubSubMenuItem(
-            'Product Backlog',
-            onTap: _openAgileBacklogGovernance,
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Product Backlog',
-          ),
-          _buildSubSubMenuItem(
-            'Sprint / Iteration Planning',
-            onTap: _openAgileSprintCalendar,
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Sprint Planning',
-          ),
-          _buildSubSubMenuItem(
-            'Iteration Management',
-            onTap: () => AgileIterationManagementScreen.open(context),
-            isActive: widget.activeItemLabel ==
-                'Agile Project Hub - Iteration Management',
-          ),
-          _buildSubSubMenuItem(
-            'Kanban Board',
-            onTap: () => AgileKanbanBoardScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Kanban Board',
-          ),
-          _buildSubSubMenuItem(
-            'Daily Standups',
-            onTap: () => AgileDailyStandupsScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Daily Standups',
-          ),
-          _buildSubSubMenuItem(
-            'Sprint Reviews',
-            onTap: () => AgileSprintReviewsScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Sprint Reviews',
-          ),
-          _buildSubSubMenuItem(
-            'Sprint Retrospectives',
-            onTap: () => AgileRetrospectivesScreen.open(context),
-            isActive: widget.activeItemLabel ==
-                'Agile Project Hub - Sprint Retrospectives',
-          ),
-          _buildSubSubMenuItem(
-            'Backlog Grooming',
-            onTap: _openAgileBacklogGovernance,
-            isActive: widget.activeItemLabel ==
-                'Agile Project Hub - Backlog Grooming',
-          ),
-          _buildSubSubMenuItem(
-            'Agile Metrics & Reporting',
-            onTap: () => AgileMetricsScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Agile Metrics',
-          ),
-          _buildSubSubMenuItem(
-            'Release Planning',
-            onTap: _openAgileReleasePlan,
-            isActive: widget.activeItemLabel ==
-                'Agile Project Hub - Release Planning',
-          ),
-          _buildSubSubMenuItem(
-            'Agile Risks & Impediments',
-            onTap: () => AgileRisksScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Agile Risks',
-          ),
-          _buildSubSubMenuItem(
-            'Team Capacity & Workload',
-            onTap: _openAgileTeamStructure,
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Team Capacity',
-          ),
-          _buildSubSubMenuItem(
-            'AI Agile Coach',
-            onTap: () => AgileAiCoachScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - AI Agile Coach',
-          ),
-          _buildSubSubMenuItem(
-            'Agile Roadmap',
-            onTap: () => AgileRoadmapScreen.open(context),
-            isActive:
-                widget.activeItemLabel == 'Agile Project Hub - Agile Roadmap',
-          ),
-        ],
+        // Simplified Agile Project Hub — removed detailed sub-section list
+        // per product request. The header now navigates to the main Agile Hub
+        // landing screen when tapped.
+        _buildSubMenuItem('Agile Project Hub',
+            onTap: _openAgileProjectHub,
+            isActive: widget.activeItemLabel == 'Agile Project Hub'),
         _buildSubMenuItem('Scope Tracking Implementation',
             onTap: _openScopeTrackingImplementation,
             isActive:

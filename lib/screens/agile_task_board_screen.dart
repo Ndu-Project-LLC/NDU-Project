@@ -150,7 +150,7 @@ class _BoardColumn extends StatelessWidget {
           width: 300,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFFFFFBEB) : const Color(0xFFF8FAFC),
+            color: isActive ? const Color(0xFFFFFBEB) : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color:

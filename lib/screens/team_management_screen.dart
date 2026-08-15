@@ -168,12 +168,17 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  color: Colors.white,
  borderRadius: BorderRadius.circular(24),
  ),
- child: Form(
- key: formKey,
- child: Column(
- mainAxisSize: MainAxisSize.min,
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(dialogContext).size.height * 0.8,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
  Row(
  children: [
  Container(
@@ -247,13 +252,13 @@ class _TeamManagementScreenState extends State<TeamManagementScreen>
  ),
  const SizedBox(height: 20),
  const _DialogSectionTitle(title: 'Responsibilities'),
- const SizedBox(height: 10),
- _DialogTextField(
- controller: responsibilitiesController,
- label: 'Key responsibilities',
- maxLines: 4,
- hintText: 'Add key responsibilities, separated by line breaks.',
- ),
+                const SizedBox(height: 10),
+                _DialogTextField(
+                  controller: responsibilitiesController,
+                  label: 'Key responsibilities',
+                  maxLines: 6,
+                  hintText: 'Add key responsibilities, separated by line breaks.',
+                ),
  const SizedBox(height: 22),
  Row(
  children: [

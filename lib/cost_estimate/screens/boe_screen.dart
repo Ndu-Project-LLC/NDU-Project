@@ -253,7 +253,7 @@ class _BOEScreenState extends State<BOEScreen> {
             LayoutBuilder(
               builder: (context, c) {
                 final wide = c.maxWidth >= 900;
-                Widget assumptions = _ListCard(
+                  Widget assumptions = _ListCard(
                   title: 'Assumptions',
                   icon: Icons.lightbulb_outline_rounded,
                   tint: TreasuryTokens.brandDeep,
@@ -262,8 +262,10 @@ class _BOEScreenState extends State<BOEScreen> {
                   canEdit: canEdit,
                   suffixSingular: 'assumption',
                   hint: 'State an assumption...',
-                  onAdd: () => setState(
-                      () => _assumptionCtrls.add(TextEditingController())),
+                  onAdd: () => setState(() {
+                        final defaultText = '${estimate.projectName} — Assumption: Based on ${estimate.className.label} accuracy range.';
+                        _assumptionCtrls.add(TextEditingController(text: defaultText));
+                      }),
                 );
                 Widget constraints = _ListCard(
                   title: 'Constraints',
@@ -274,8 +276,10 @@ class _BOEScreenState extends State<BOEScreen> {
                   canEdit: canEdit,
                   suffixSingular: 'constraint',
                   hint: 'State a constraint...',
-                  onAdd: () => setState(
-                      () => _constraintCtrls.add(TextEditingController())),
+                  onAdd: () => setState(() {
+                        final defaultText = '${estimate.projectName} — Constraint: Funding, approvals, or access may limit delivery.';
+                        _constraintCtrls.add(TextEditingController(text: defaultText));
+                      }),
                 );
                 Widget exclusions = _ListCard(
                   title: 'Exclusions',
@@ -286,8 +290,10 @@ class _BOEScreenState extends State<BOEScreen> {
                   canEdit: canEdit,
                   suffixSingular: 'exclusion',
                   hint: 'State an exclusion...',
-                  onAdd: () => setState(
-                      () => _exclusionCtrls.add(TextEditingController())),
+                  onAdd: () => setState(() {
+                        final defaultText = '${estimate.projectName} — Exclusion: Operations, maintenance, and third-party warranties.';
+                        _exclusionCtrls.add(TextEditingController(text: defaultText));
+                      }),
                 );
                 if (wide) {
                   return Row(

@@ -77,6 +77,33 @@ class _AddLineDialogState extends State<AddLineDialog> {
       if (!mounted) return;
       _resolveWbsNodeIdFromRef();
     });
+    // Auto-populate sensible defaults from the current estimate context
+    // when creating a new line (not editing). This uses the project
+    // name and class to give the user a helpful starting point.
+    if (widget.editingLine == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        try {
+          final provider = context.read<CostEstimateProvider>();
+          final estimate = provider.estimate;
+          if (estimate != null) {
+            setState(() {
+              _subCategory = _subCategory.isEmpty
+                  ? '${estimate.className.label} ${_category.name}'
+                  : _subCategory;
+              _description = _description.isEmpty
+                  ? '${estimate.projectName} — ${_category.name} work package'
+                  : _description;
+              _basisReference = _basisReference.isEmpty
+                  ? 'Context: ${estimate.projectName} · ${estimate.className.label}'
+                  : _basisReference;
+            });
+          }
+        } catch (_) {
+          // Non-fatal — if provider isn't available, skip defaults.
+        }
+      });
+    }
   }
 
   /// Try to resolve [_wbsRef] (a path string like `1.2.3`) back to a WBS

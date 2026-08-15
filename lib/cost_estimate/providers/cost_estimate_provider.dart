@@ -518,6 +518,107 @@ class CostEstimateProvider extends ChangeNotifier {
     _saveToStorage();
   }
 
+  /// Ensure non-destructive seeding of estimate content from the central
+  /// ProjectDataModel. This uses real project data (core stakeholders,
+  /// assumptions/constraints/exclusions) when the estimate has empty
+  /// corresponding sections. No synthetic or placeholder values are created.
+  void ensureSeededFromProjectData(ProjectDataModel data) {
+    if (_estimate == null) return;
+    var changed = false;
+
+    // 1) Stakeholders — pull from project-level CoreStakeholdersData
+    try {
+      if ((_estimate!.stakeholders.isEmpty) &&
+          data.coreStakeholdersData != null) {
+        final core = data.coreStakeholdersData!;
+        final names = <String>{};
+        for (final s in core.solutionStakeholderData) {
+          for (final field in [
+            s.notableStakeholders,
+            s.internalStakeholders,
+            s.externalStakeholders
+          ]) {
+            if (field.trim().isEmpty) continue;
+            final parts = field.split(RegExp(r'[,;\n]'));
+            for (final p in parts) {
+              final n = p.trim();
+              if (n.isNotEmpty) names.add(n);
+            }
+          }
+        }
+        if (names.isNotEmpty) {
+          final stakeholders = names
+              .map((n) => Stakeholder(
+                    id: newId('sh'),
+                    name: n,
+                    email: '',
+                    role: '',
+                    sme: false,
+                    includedInDevelopment: true,
+                  ))
+              .toList();
+          _estimate = _estimate!.copyWith(
+            stakeholders: stakeholders,
+            updatedAt: DateTime.now(),
+          );
+          changed = true;
+        }
+      }
+    } catch (_) {}
+
+    // 2) BOE — import project-level assumptions/constraints/exclusions
+    try {
+      final boe = _estimate!.boe;
+      final hasAssumptions = boe.assumptions.isNotEmpty;
+      final hasConstraints = boe.constraints.isNotEmpty;
+      final hasExclusions = boe.exclusions.isNotEmpty;
+      if ((!hasAssumptions || !hasConstraints || !hasExclusions) &&
+          (data.assumptions.isNotEmpty || data.constraints.isNotEmpty || data.outOfScope.isNotEmpty)) {
+        final newBoe = boe.copyWith(
+          assumptions: hasAssumptions ? boe.assumptions : data.assumptions,
+          constraints: hasConstraints ? boe.constraints : data.constraints,
+          exclusions: hasExclusions ? boe.exclusions : data.outOfScope,
+        );
+        _estimate = _estimate!.copyWith(
+          boe: newBoe,
+          updatedAt: DateTime.now(),
+        );
+        changed = true;
+      }
+    } catch (_) {}
+
+    // 3) Review — if no explicit approvers but stakeholders with emails exist,
+    // create approver records from real stakeholder emails (non-destructive).
+    try {
+      final review = _estimate!.review;
+      final hasApprovers = review != null && review.requiredApprovers.isNotEmpty;
+      final stakeholdersWithEmail = _estimate!.stakeholders.where((s) => s.email.trim().isNotEmpty).toList();
+      if (!hasApprovers && stakeholdersWithEmail.isNotEmpty) {
+        final approvers = stakeholdersWithEmail.map((s) => Approver(
+              id: newId('ap'),
+              name: s.name,
+              email: s.email,
+              role: s.role,
+              approved: false,
+              approvedAt: null,
+            )).toList();
+        final newReview = (review ?? const ReviewApproval(requiredApprovers: [], acceptanceStep1: (confirmed: false, by: null, at: null), acceptanceStep2: (confirmed: false, by: null, at: null))).copyWith(
+          requiredApprovers: approvers,
+        );
+        _estimate = _estimate!.copyWith(
+          review: newReview,
+          updatedAt: DateTime.now(),
+        );
+        changed = true;
+      }
+    } catch (_) {}
+
+    if (changed) {
+      notifyListeners();
+      _saveToStorage();
+    }
+  }
+
   // ---- Stakeholders ----
 
   void addStakeholder(Stakeholder s) {

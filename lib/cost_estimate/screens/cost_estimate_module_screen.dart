@@ -92,6 +92,10 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
           provider.importFromProjectCostEstimateItems(
               projectData.costEstimateItems);
         }
+        // Non-destructive seeding: pull real stakeholder/BOE/review info
+        // from the central ProjectDataModel when corresponding sections
+        // in the estimate are empty.
+        provider.ensureSeededFromProjectData(projectData);
       }
     });
   }

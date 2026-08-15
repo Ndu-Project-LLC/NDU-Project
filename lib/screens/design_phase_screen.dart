@@ -14,6 +14,7 @@ import 'package:ndu_project/widgets/responsive_scaffold.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
 import 'package:ndu_project/theme.dart';
 import 'package:ndu_project/widgets/architecture_canvas.dart';
+import 'package:provider/provider.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/services/architecture_service.dart';
 import 'package:ndu_project/services/project_navigation_service.dart';
@@ -1966,9 +1967,7 @@ Future<void> _loadProgress(String projectId) async {
  SizedBox(
  width: double.infinity,
  child: ElevatedButton.icon(
- onPressed: () {
- // Open collaborator dialog
- },
+ onPressed: () => _showAddCollaboratorDialog(context),
  style: ElevatedButton.styleFrom(
  backgroundColor: const Color(0xFFB8860B),
  foregroundColor: Colors.white,
@@ -2827,6 +2826,83 @@ Future<void> _loadProgress(String projectId) async {
  ];
  final hash = name.hashCode.abs();
  return colors[hash % colors.length];
+ }
+
+ void _showAddCollaboratorDialog(BuildContext context) {
+ final nameController = TextEditingController();
+ final roleController = TextEditingController();
+ final emailController = TextEditingController();
+
+ showDialog(
+ context: context,
+ builder: (ctx) => AlertDialog(
+ title: const Text('Add Collaborator'),
+ content: SizedBox(
+ width: 400,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ TextField(
+ controller: nameController,
+ decoration: const InputDecoration(
+ labelText: 'Name *',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: roleController,
+ decoration: const InputDecoration(
+ labelText: 'Role',
+ hintText: 'e.g. UX Designer, Backend Engineer',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: emailController,
+ keyboardType: TextInputType.emailAddress,
+ decoration: const InputDecoration(
+ labelText: 'Email',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.pop(ctx),
+ child: const Text('Cancel'),
+ ),
+ ElevatedButton(
+ onPressed: () {
+ if (nameController.text.trim().isEmpty) return;
+ final provider = context.read<ProjectDataProvider>();
+ final current = provider.projectData.teamMembers;
+ final newMember = TeamMember(
+ id: '${DateTime.now().microsecondsSinceEpoch}',
+ name: nameController.text.trim(),
+ role: roleController.text.trim(),
+ email: emailController.text.trim(),
+ );
+ provider.updateField(
+ (data) => data.copyWith(teamMembers: [...current, newMember]),
+ );
+ Navigator.pop(ctx);
+ },
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFD97706),
+ foregroundColor: Colors.white,
+ ),
+ child: const Text('Add'),
+ ),
+ ],
+ ),
+ );
  }
 
  Widget _buildCollaboratorItem(

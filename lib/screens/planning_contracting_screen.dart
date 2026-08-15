@@ -4718,18 +4718,198 @@ class _BudgetEditableTable extends StatelessWidget {
  final List<ContractModel> contracts;
  final String projectId;
 
+ void _showEditModal(BuildContext context, ContractModel contract) {
+ final baseController = TextEditingController(
+ text: contract.estimatedValue.toStringAsFixed(0));
+ final pctController = TextEditingController(
+ text: (contract.contingencyPercent ?? 0).toStringAsFixed(0));
+
+ showDialog(
+ context: context,
+ builder: (ctx) => StatefulBuilder(
+ builder: (ctx, setDialogState) {
+ final base = double.tryParse(baseController.text) ?? 0;
+ final pct = double.tryParse(pctController.text) ?? 0;
+ final contAmt = base * pct / 100;
+ final total = base + contAmt;
+
+ return AlertDialog(
+ title: Text('Edit: ${contract.name}'),
+ content: SizedBox(
+ width: 420,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ TextField(
+ controller: baseController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Base Value (\$)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ onChanged: (_) => setDialogState(() {}),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: pctController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Contingency (%)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ onChanged: (_) => setDialogState(() {}),
+ ),
+ const SizedBox(height: 16),
+ Row(
+ mainAxisAlignment: MainAxisAlignment.spaceBetween,
+ children: [
+ Text('Contingency: \$${contAmt.toStringAsFixed(0)}',
+ style: const TextStyle(fontSize: 13, color: Color(0xFFF59E0B))),
+ Text('Total: \$${total.toStringAsFixed(0)}',
+ style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF059669))),
+ ],
+ ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+ ElevatedButton(
+ onPressed: () {
+ final newBase = double.tryParse(baseController.text) ?? 0;
+ final newPct = (double.tryParse(pctController.text) ?? 0).clamp(0.0, 100.0);
+ onChangedBaseValue(projectId, contract.id, newBase);
+ onChangedContingencyPercent(projectId, contract.id, newBase, newPct);
+ Navigator.pop(ctx);
+ },
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFD97706),
+ foregroundColor: Colors.white,
+ ),
+ child: const Text('Save'),
+ ),
+ ],
+ );
+ },
+ ),
+ );
+ }
+
+ void _showAddModal(BuildContext context) {
+ final nameController = TextEditingController();
+ final baseController = TextEditingController(text: '0');
+ final pctController = TextEditingController(text: '0');
+
+ showDialog(
+ context: context,
+ builder: (ctx) => AlertDialog(
+ title: const Text('Add Contract Budget'),
+ content: SizedBox(
+ width: 420,
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ children: [
+ TextField(
+ controller: nameController,
+ decoration: const InputDecoration(
+ labelText: 'Contract Name *',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: baseController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Base Value (\$)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: pctController,
+ keyboardType: TextInputType.number,
+ decoration: const InputDecoration(
+ labelText: 'Contingency (%)',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ ],
+ ),
+ ),
+ actions: [
+ TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+ ElevatedButton(
+ onPressed: () async {
+ if (nameController.text.trim().isEmpty) return;
+ final base = double.tryParse(baseController.text) ?? 0;
+ final pct = (double.tryParse(pctController.text) ?? 0).clamp(0.0, 100.0);
+ final contAmt = base * pct / 100;
+ await ContractService.createContract(
+ projectId: projectId,
+ name: nameController.text.trim(),
+ description: '',
+ contractType: 'fixed_price',
+ paymentType: 'milestone',
+ status: 'draft',
+ estimatedValue: base,
+ scope: '',
+ discipline: '',
+ createdById: '',
+ createdByEmail: '',
+ createdByName: '',
+ );
+ Navigator.pop(ctx);
+ },
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFD97706),
+ foregroundColor: Colors.white,
+ ),
+ child: const Text('Add'),
+ ),
+ ],
+ ),
+ );
+ }
+
  @override
  Widget build(BuildContext context) {
  final columns = [
- const _TableColumnDef('#', 60),
- const _TableColumnDef('Contract', 180),
+ const _TableColumnDef('#', 50),
+ const _TableColumnDef('Contract', 200),
  const _TableColumnDef('Base Value', 120),
  const _TableColumnDef('Contingency %', 100),
- const _TableColumnDef('Contingency', 120),
- const _TableColumnDef('Total', 120),
+ const _TableColumnDef('Contingency', 110),
+ const _TableColumnDef('Total', 110),
+ const _TableColumnDef('', 60),
  ];
 
- return _EditableTable(
+ return Column(
+ children: [
+ // Add button
+ Align(
+ alignment: Alignment.centerRight,
+ child: Padding(
+ padding: const EdgeInsets.only(bottom: 12),
+ child: OutlinedButton.icon(
+ onPressed: () => _showAddModal(context),
+ icon: const Icon(Icons.add, size: 16),
+ label: const Text('Add Contract', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+ style: OutlinedButton.styleFrom(
+ foregroundColor: const Color(0xFF475569),
+ side: const BorderSide(color: Color(0xFFE2E8F0)),
+ padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+ shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+ ),
+ ),
+ ),
+ ),
+ _EditableTable(
  columns: columns,
  rows: [
  for (int index = 0; index < contracts.length; index++)
@@ -4738,6 +4918,9 @@ class _BudgetEditableTable extends StatelessWidget {
  columns: columns,
  contract: contracts[index],
  index: index,
+ onEdit: () => _showEditModal(context, contracts[index]),
+ ),
+ ],
  ),
  ],
  );
@@ -4750,11 +4933,13 @@ class _BudgetEditableRow extends StatelessWidget {
  required this.columns,
  required this.contract,
  required this.index,
+ this.onEdit,
  });
 
  final List<_TableColumnDef> columns;
  final ContractModel contract;
  final int index;
+ final VoidCallback? onEdit;
 
  String get projectId => contract.projectId;
 
@@ -4798,27 +4983,18 @@ class _BudgetEditableRow extends StatelessWidget {
  SizedBox(
  width: columns[2].width,
  child: _TableFieldShell(
- child: _NumberInputCell(
- value: base,
- fieldKey: '${contract.id}_baseValue',
- prefix: '\$',
- onChanged: (value) {
- onChangedBaseValue(projectId, contract.id, value);
- },
+ child: Text(
+ '\$${_formatCurrency(base)}',
+ style: const TextStyle(fontSize: 12),
  ),
  ),
  ),
  SizedBox(
  width: columns[3].width,
  child: _TableFieldShell(
- child: _NumberInputCell(
- value: contPct,
- fieldKey: '${contract.id}_contPct',
- suffix: '%',
- onChanged: (value) {
- final newPct = value.clamp(0.0, 100.0);
- onChangedContingencyPercent(projectId, contract.id, base, newPct);
- },
+ child: Text(
+ '${contPct.toStringAsFixed(0)}%',
+ style: const TextStyle(fontSize: 12),
  ),
  ),
  ),
@@ -4844,6 +5020,18 @@ class _BudgetEditableRow extends StatelessWidget {
  fontWeight: FontWeight.w600,
  color: Color(0xFF059669),
  ),
+ ),
+ ),
+ ),
+ SizedBox(
+ width: columns[6].width,
+ child: _TableFieldShell(
+ child: IconButton(
+ icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF9CA3AF)),
+ onPressed: onEdit,
+ tooltip: 'Edit budget',
+ padding: EdgeInsets.zero,
+ constraints: const BoxConstraints(),
  ),
  ),
  ),

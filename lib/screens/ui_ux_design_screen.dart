@@ -1239,18 +1239,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(icon: isRegenerating ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)), tooltip: 'KAZ AI', onPressed: isRegenerating ? null : () => _kazRegenerateJourney(i), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
- const SizedBox(width: 4),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
+
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16), onPressed: () => _showJourneyDialog(existing: row), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: () => _confirmDelete(() => _deleteJourney(row)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  ],
@@ -1354,18 +1343,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(icon: isRegenerating ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)), tooltip: 'KAZ AI', onPressed: isRegenerating ? null : () => _kazRegenerateInterface(i), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
- const SizedBox(width: 4),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
+
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16), onPressed: () => _showInterfaceDialog(existing: row), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: () => _confirmDelete(() => _deleteInterface(row)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  ],
@@ -1469,18 +1447,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(icon: isRegenerating ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)), tooltip: 'KAZ AI', onPressed: isRegenerating ? null : () => _kazRegenerateDesignToken(i), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
- const SizedBox(width: 4),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
+
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16), onPressed: () => _showDesignTokenDialog(existing: row), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: () => _confirmDelete(() => _deleteDesignToken(row)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  ],
@@ -1587,17 +1554,6 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  children: [
  IconButton(icon: isRegenerating ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)), tooltip: 'KAZ AI', onPressed: isRegenerating ? null : () => _kazRegenerateUsability(i), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  const SizedBox(width: 4),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16), onPressed: () => _showUsabilityDialog(existing: row), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: () => _confirmDelete(() => _deleteUsability(row)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  ],
@@ -1706,18 +1662,7 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  mainAxisSize: MainAxisSize.min,
  children: [
  IconButton(icon: isRegenerating ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFF59E0B)), tooltip: 'KAZ AI', onPressed: isRegenerating ? null : () => _kazRegenerateReviewGate(i), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
- const SizedBox(width: 4),
- IconButton(
-   onPressed: () {
-     ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(content: Text('KAZ AI: Generating suggestions...'), duration: Duration(seconds: 2)),
-     );
-   },
-   icon: const Icon(Icons.auto_awesome, size: 16, color: Color(0xFFF59E0B)),
-   tooltip: 'KAZ AI',
-   padding: EdgeInsets.zero,
-   constraints: const BoxConstraints(minWidth: 28),
- ),
+
  IconButton(icon: const Icon(Icons.edit_outlined, size: 16), onPressed: () => _showReviewGateDialog(existing: row), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: () => _confirmDelete(() => _deleteReviewGate(row)), padding: EdgeInsets.zero, constraints: const BoxConstraints()),
  ],

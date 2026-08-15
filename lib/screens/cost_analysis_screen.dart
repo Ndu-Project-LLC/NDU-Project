@@ -2486,7 +2486,7 @@ class _CostAnalysisScreenState extends State<CostAnalysisScreen>
           Expanded(
             child: Text(
               'Switch tabs as needed',
-              style: TextStyle(fontSize: 13, color: Color(0xFFFFC812)Grey[700]),
+              style: TextStyle(fontSize: 13, color: Colors.blueGrey[700]),
             ),
           ),
         ],

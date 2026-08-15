@@ -2386,7 +2386,7 @@ class _BenefitCard extends StatelessWidget {
  CircleAvatar(
  radius: 18,
  backgroundColor: Colors.grey.withValues(alpha: 0.15),
- child: Icon(icon, color: Color(0xFFFFC812)Grey[700]),
+ child: Icon(icon, color: Colors.blueGrey[700]),
  ),
  const SizedBox(height: 12),
  Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),

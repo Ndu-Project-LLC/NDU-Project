@@ -1505,8 +1505,8 @@ class _SettingsScreenState extends State<SettingsScreen>
       },
       'People': {
         'High': Color(0xFFFFC812),
-        'Medium': Color(0xFFFFC812)Accent.withOpacity(0.6),
-        'Low': Color(0xFFFFC812)Accent.withOpacity(0.3)
+        'Medium': Color(0xFFFFC812).withOpacity(0.6),
+        'Low': Color(0xFFFFC812).withOpacity(0.3)
       },
     };
 

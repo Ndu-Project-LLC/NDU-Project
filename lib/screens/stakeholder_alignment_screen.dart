@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/screens/scope_tracking_implementation_screen.dart';
 import 'package:ndu_project/screens/update_ops_maintenance_plans_screen.dart';
@@ -676,10 +677,10 @@ class _StakeholderAlignmentScreenState
 
   Widget _buildFooterNavigation(BuildContext context) {
     return LaunchPhaseNavigation(
-      backLabel: 'Back: Scope Tracking Implementation',
-      nextLabel: 'Next: Update Ops & Maintenance Plans',
-      onBack: () => ScopeTrackingImplementationScreen.open(context),
-      onNext: () => UpdateOpsMaintenancePlansScreen.open(context),
+      backLabel: PlanningPhaseNavigation.backLabel('stakeholder_alignment'),
+      nextLabel: PlanningPhaseNavigation.nextLabel('stakeholder_alignment'),
+      onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'stakeholder_alignment'),
+      onNext: () => PlanningPhaseNavigation.goToNext(context, 'stakeholder_alignment'),
     );
   }
 

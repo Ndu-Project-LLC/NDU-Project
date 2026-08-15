@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/screens/salvage_disposal_team_screen.dart';
@@ -108,10 +109,10 @@ class _IdentifyStaffOpsTeamScreenState
                 _buildHandoffPanel(),
                 const SizedBox(height: 24),
                 LaunchPhaseNavigation(
-                  backLabel: 'Back: Technical Debt Management',
-                  nextLabel: 'Next: Salvage & Disposal Plan',
-                  onBack: () => TechnicalDebtManagementScreen.open(context),
-                  onNext: () => SalvageDisposalTeamScreen.open(context),
+                  backLabel: PlanningPhaseNavigation.backLabel('identify_staff_ops_team'),
+                  nextLabel: PlanningPhaseNavigation.nextLabel('identify_staff_ops_team'),
+                  onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'identify_staff_ops_team'),
+                  onNext: () => PlanningPhaseNavigation.goToNext(context, 'identify_staff_ops_team'),
                 ),
               ],
             ),

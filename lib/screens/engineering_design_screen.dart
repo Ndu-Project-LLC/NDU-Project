@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -1921,10 +1922,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildEngineeringBriefCard(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Backend Design',
- nextLabel: 'Next: Technical Development',
- onBack: () => context.go('/backend-design'),
- onNext: () => context.go('/technical-development'),
+ backLabel: PlanningPhaseNavigation.backLabel('engineering_design'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('engineering_design'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'engineering_design'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'engineering_design'),
  ),
  ],
  ),

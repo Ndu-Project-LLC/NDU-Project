@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -290,10 +291,10 @@ class _RecurringDeliverablesScreenState
               ),
               const SizedBox(height: 24),
               LaunchPhaseNavigation(
-                backLabel: 'Back: Deliverable Status Updates',
-                nextLabel: 'Next: Status Reports',
-                onBack: () => DeliverableStatusUpdatesScreen.open(context),
-                onNext: () => StatusReportsScreen.open(context),
+                backLabel: PlanningPhaseNavigation.backLabel('recurring_deliverables'),
+                nextLabel: PlanningPhaseNavigation.nextLabel('recurring_deliverables'),
+                onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'recurring_deliverables'),
+                onNext: () => PlanningPhaseNavigation.goToNext(context, 'recurring_deliverables'),
               ),
             ],
             const SizedBox(height: 48),

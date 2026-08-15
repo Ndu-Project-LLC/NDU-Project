@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -129,10 +130,10 @@ class _GapAnalysisScopeReconcillationScreenState
                         ),
                         const SizedBox(height: 24),
                         LaunchPhaseNavigation(
-                          backLabel: 'Back: Scope Completion',
-                          nextLabel: 'Next: Punchlist Actions',
-                          onBack: () => ScopeCompletionScreen.open(context),
-                          onNext: () => PunchlistActionsScreen.open(context),
+                          backLabel: PlanningPhaseNavigation.backLabel('gap_analysis_scope_reconcillation'),
+                          nextLabel: PlanningPhaseNavigation.nextLabel('gap_analysis_scope_reconcillation'),
+                          onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'gap_analysis_scope_reconcillation'),
+                          onNext: () => PlanningPhaseNavigation.goToNext(context, 'gap_analysis_scope_reconcillation'),
                         ),
                         const SizedBox(height: 48),
                       ],

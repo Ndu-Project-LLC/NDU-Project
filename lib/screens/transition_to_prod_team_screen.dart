@@ -1,6 +1,6 @@
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
-import 'package:ndu_project/widgets/launch_notes_section.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:convert';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
@@ -110,11 +110,10 @@ class _TransitionToProdTeamScreenState
             _buildSignOffsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Launch Readiness Assessment',
-              nextLabel:
-                  'Next: FAT, Mechanical Completion & Commission Solution',
-              onBack: () => DeliverProjectClosureScreen.open(context),
-              onNext: () => FatMechanicalCompletionScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('transition_to_prod_team'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('transition_to_prod_team'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'transition_to_prod_team'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'transition_to_prod_team'),
             ),
             const SizedBox(height: 48),
           ],

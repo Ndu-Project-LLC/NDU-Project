@@ -1,4 +1,5 @@
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 // ignore_for_file: unused_element
 
 import 'dart:async';
@@ -56,6 +57,7 @@ class _RequirementsImplementationScreenState
  final TextEditingController _sectionApprovalNotesController =
  TextEditingController();
  final List<_DesignSpecDocumentRow> _documents = [];
+ final List<_ApprovalGateData> _customApprovalGates = [];
 
  final List<RequirementRow> _requirementRows = [
  RequirementRow(
@@ -1426,10 +1428,10 @@ class _RequirementsImplementationScreenState
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Design Management',
- nextLabel: 'Next: Technical Alignment',
- onBack: _navigateToDesignOverview,
- onNext: _tryNavigateToTechnicalAlignment,
+ backLabel: PlanningPhaseNavigation.backLabel('requirements_implementation'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('requirements_implementation'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'requirements_implementation'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'requirements_implementation'),
  ),
  ],
  ),
@@ -1813,10 +1815,10 @@ class _RequirementsImplementationScreenState
 
  // Navigation
  LaunchPhaseNavigation(
- backLabel: 'Back: Design Management',
- nextLabel: 'Next: Technical Alignment',
- onBack: _navigateToDesignOverview,
- onNext: _tryNavigateToTechnicalAlignment,
+ backLabel: PlanningPhaseNavigation.backLabel('requirements_implementation'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('requirements_implementation'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'requirements_implementation'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'requirements_implementation'),
  ),
  ],
  ),
@@ -3175,7 +3177,7 @@ class _RequirementsImplementationScreenState
  _sectionApprovalStatus == 'In Review' ||
  _sectionApprovalStatus == 'Approved';
 
- final gates = [
+ final autoGates = [
  _ApprovalGateData(
  gate: 'Requirements Complete',
  description:
@@ -3229,6 +3231,7 @@ class _RequirementsImplementationScreenState
  status: sectionApproved ? 'Complete' : 'Not Started',
  ),
  ];
+ final gates = [...autoGates, ..._customApprovalGates];
 
  return Container(
  decoration: BoxDecoration(
@@ -3247,11 +3250,15 @@ class _RequirementsImplementationScreenState
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
  // Panel header
- const Padding(
- padding: EdgeInsets.all(20),
- child: Column(
+ Padding(
+ padding: const EdgeInsets.all(20),
+ child: Row(
  crossAxisAlignment: CrossAxisAlignment.start,
  children: [
+ Expanded(
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: const [
  Text(
  'Approval readiness',
  style: TextStyle(
@@ -3269,6 +3276,25 @@ class _RequirementsImplementationScreenState
  fontWeight: FontWeight.w500,
  color: Color(0xFF6B7280),
  height: 1.45,
+ ),
+ ),
+ ],
+ ),
+ ),
+ const SizedBox(width: 12),
+ OutlinedButton.icon(
+ onPressed: _showAddApprovalGateDialog,
+ icon: const Icon(Icons.add, size: 16),
+ label: const Text('Add gate',
+ style: TextStyle(
+ fontSize: 12, fontWeight: FontWeight.w600)),
+ style: OutlinedButton.styleFrom(
+ foregroundColor: const Color(0xFF475569),
+ side: const BorderSide(color: Color(0xFFE2E8F0)),
+ padding: const EdgeInsets.symmetric(
+ horizontal: 14, vertical: 10),
+ shape: RoundedRectangleBorder(
+ borderRadius: BorderRadius.circular(12)),
  ),
  ),
  ],
@@ -3341,9 +3367,14 @@ class _RequirementsImplementationScreenState
  ...List.generate(gates.length, (index) {
  final gate = gates[index];
  final isLast = index == gates.length - 1;
+ final isCustom = index >= autoGates.length;
  return _buildWebApprovalGateRow(
  gate: gate,
  showDivider: !isLast,
+ isCustom: isCustom,
+ onDelete: isCustom
+ ? () => _removeCustomApprovalGate(index - autoGates.length)
+ : null,
  );
  }),
  ],
@@ -3355,9 +3386,11 @@ class _RequirementsImplementationScreenState
  Widget _buildWebApprovalGateRow({
  required _ApprovalGateData gate,
  required bool showDivider,
+ bool isCustom = false,
+ VoidCallback? onDelete,
  }) {
  return Container(
- color: Colors.white,
+ color: isCustom ? const Color(0xFFFFFDF5) : Colors.white,
  child: Column(
  children: [
  Padding(
@@ -3368,6 +3401,15 @@ class _RequirementsImplementationScreenState
  // GATE
  Expanded(
  flex: 4,
+ child: Row(
+ children: [
+ if (isCustom)
+ const Padding(
+ padding: EdgeInsets.only(right: 6),
+ child: Icon(Icons.add_circle_outline,
+ size: 12, color: Color(0xFFD97706)),
+ ),
+ Expanded(
  child: Text(
  gate.gate,
  style: const TextStyle(
@@ -3375,6 +3417,9 @@ class _RequirementsImplementationScreenState
  fontWeight: FontWeight.w700,
  color: Color(0xFF111827),
  ),
+ ),
+ ),
+ ],
  ),
  ),
  // DESCRIPTION
@@ -3443,6 +3488,20 @@ class _RequirementsImplementationScreenState
  color: _priorityColor(gate.priority),
  ),
  ),
+ ),
+ ),
+ ),
+ // DELETE (custom gates only)
+ if (isCustom && onDelete != null)
+ Padding(
+ padding: const EdgeInsets.only(left: 8),
+ child: InkWell(
+ onTap: onDelete,
+ borderRadius: BorderRadius.circular(6),
+ child: const Padding(
+ padding: EdgeInsets.all(4),
+ child: Icon(Icons.delete_outline,
+ size: 16, color: Color(0xFFEF4444)),
  ),
  ),
  ),
@@ -4071,6 +4130,164 @@ class _RequirementsImplementationScreenState
  default:
  return const Color(0xFF9CA3AF);
  }
+ }
+
+ // --- Add / Delete custom approval gates ---
+
+ Future<void> _showAddApprovalGateDialog() async {
+ final gateController = TextEditingController();
+ final descController = TextEditingController();
+ final approverController = TextEditingController();
+ var selectedPriority = 'High';
+ var selectedStatus = 'Not Started';
+
+ final saved = await showDialog<_ApprovalGateData>(
+ context: context,
+ builder: (dialogContext) {
+ return StatefulBuilder(
+ builder: (context, setDialogState) {
+ return AlertDialog(
+ title: const Text('Add approval gate'),
+ content: SizedBox(
+ width: 520,
+ child: SingleChildScrollView(
+ child: Column(
+ mainAxisSize: MainAxisSize.min,
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ TextField(
+ controller: gateController,
+ decoration: const InputDecoration(
+ labelText: 'Gate name *',
+ hintText: 'e.g. Legal Review & Compliance',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: descController,
+ decoration: const InputDecoration(
+ labelText: 'Description',
+ hintText:
+ 'What this gate covers and why it matters',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ minLines: 2,
+ maxLines: 4,
+ ),
+ const SizedBox(height: 12),
+ TextField(
+ controller: approverController,
+ decoration: const InputDecoration(
+ labelText: 'Approver *',
+ hintText: 'e.g. General Counsel',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ ),
+ const SizedBox(height: 12),
+ Row(
+ children: [
+ Expanded(
+ child: DropdownButtonFormField<String>(
+ value: selectedPriority,
+ decoration: const InputDecoration(
+ labelText: 'Priority',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ items: ['Critical', 'High', 'Medium', 'Low']
+ .map((p) => DropdownMenuItem(
+ value: p,
+ child: Text(p,
+ style:
+ const TextStyle(fontSize: 13)),
+ ))
+ .toList(),
+ onChanged: (value) {
+ if (value == null) return;
+ setDialogState(
+ () => selectedPriority = value);
+ },
+ ),
+ ),
+ const SizedBox(width: 12),
+ Expanded(
+ child: DropdownButtonFormField<String>(
+ value: selectedStatus,
+ decoration: const InputDecoration(
+ labelText: 'Status',
+ isDense: true,
+ border: OutlineInputBorder(),
+ ),
+ items: [
+ 'Not Started',
+ 'Pending',
+ 'In Review',
+ 'Complete',
+ ]
+ .map((s) => DropdownMenuItem(
+ value: s,
+ child: Text(s,
+ style:
+ const TextStyle(fontSize: 13)),
+ ))
+ .toList(),
+ onChanged: (value) {
+ if (value == null) return;
+ setDialogState(
+ () => selectedStatus = value);
+ },
+ ),
+ ),
+ ],
+ ),
+ ],
+ ),
+ ),
+ ),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.pop(dialogContext),
+ child: const Text('Cancel'),
+ ),
+ ElevatedButton(
+ onPressed: () {
+ if (gateController.text.trim().isEmpty ||
+ approverController.text.trim().isEmpty) return;
+ Navigator.pop(
+ dialogContext,
+ _ApprovalGateData(
+ gate: gateController.text.trim(),
+ description: descController.text.trim(),
+ approver: approverController.text.trim(),
+ priority: selectedPriority,
+ status: selectedStatus,
+ ),
+ );
+ },
+ style: ElevatedButton.styleFrom(
+ backgroundColor: const Color(0xFFD97706),
+ foregroundColor: Colors.white,
+ ),
+ child: const Text('Add gate'),
+ ),
+ ],
+ );
+ },
+ );
+ },
+ );
+
+ if (saved != null && mounted) {
+ setState(() => _customApprovalGates.add(saved));
+ }
+ }
+
+ void _removeCustomApprovalGate(int index) {
+ setState(() => _customApprovalGates.removeAt(index));
  }
 
  Color _approvalStatusColor(String status) {

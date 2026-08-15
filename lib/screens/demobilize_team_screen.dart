@@ -1,4 +1,5 @@
 import 'package:ndu_project/widgets/launch_notes_section.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -128,10 +129,10 @@ class _DemobilizeTeamScreenState extends State<DemobilizeTeamScreen> {
               ),
             ),
             child: LaunchPhaseNavigation(
-              backLabel: 'Back: Benefits Realization',
-              nextLabel: 'Next: Project Closeout',
-              onBack: () => BenefitsRealizationScreen.open(context),
-              onNext: () => ProjectCloseOutScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('demobilize_team'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('demobilize_team'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'demobilize_team'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'demobilize_team'),
             ),
           ),
         ],

@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // ignore_for_file: unused_element
 
@@ -809,9 +810,9 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildReviewGatesPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Development Set Up',
- nextLabel: 'Next: Backend Design',
- onBack: () => context.push('/development-set-up'),onNext: () => context.push('/backend-design')),
+ backLabel: PlanningPhaseNavigation.backLabel('ui_ux_design'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('ui_ux_design'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'ui_ux_design'),onNext: () => PlanningPhaseNavigation.goToNext(context, 'ui_ux_design')),
  ],
  ),
  ),

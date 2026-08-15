@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -418,10 +419,10 @@ class _ContractsTrackingScreenState extends State<ContractsTrackingScreen> {
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Status Reports',
-              nextLabel: 'Next: Vendor Tracking',
-              onBack: () => StatusReportsScreen.open(context),
-              onNext: () => VendorTrackingScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('contracts_tracking'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('contracts_tracking'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'contracts_tracking'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'contracts_tracking'),
             ),
           ],
         ),

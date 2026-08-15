@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -714,9 +715,9 @@ class _ProjectCloseOutScreenState extends State<ProjectCloseOutScreen> {
 
   Widget _buildNavigation() {
     return LaunchPhaseNavigation(
-      backLabel: 'Back: Team Demobilization & Operations/Production Transition',
+      backLabel: PlanningPhaseNavigation.backLabel('project_close_out'),
       nextLabel: 'Finalize & Close Project',
-      onBack: () => DemobilizeTeamScreen.open(context),
+      onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'project_close_out'),
       onNext: () {
         Navigator.of(context).maybePop();
       },

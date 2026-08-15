@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -538,10 +539,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildDocumentationPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Engineering Design',
- nextLabel: 'Next: Tools Integration',
- onBack: () => context.go('/${AppRoutes.engineeringDesign}'),
- onNext: () => context.push('/${AppRoutes.toolsIntegration}'),
+ backLabel: PlanningPhaseNavigation.backLabel('technical_development'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('technical_development'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'technical_development'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'technical_development'),
  ),
  ],
  ),

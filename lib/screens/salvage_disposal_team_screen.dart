@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ndu_project/screens/deliver_project_closure_screen.dart';
@@ -910,10 +911,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildTabContent(isNarrow),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Identify & Staff Ops Team',
- nextLabel: 'Next: Deliver Project Closure',
- onBack: () => IdentifyStaffOpsTeamScreen.open(context),
- onNext: () => DeliverProjectClosureScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('salvage_disposal_team'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('salvage_disposal_team'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'salvage_disposal_team'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'salvage_disposal_team'),
  ),
  ],
  ),

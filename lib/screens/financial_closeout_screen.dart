@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/project_data_model.dart';
@@ -204,10 +205,10 @@ class _FinancialCloseoutScreenState extends State<FinancialCloseoutScreen> {
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Hypercare & Warranty Support',
-              nextLabel: 'Next: Project Performance Review',
-              onBack: () => CommerceViabilityScreen.open(context),
-              onNext: () => BenefitsRealizationScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('financial_closeout'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('financial_closeout'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'financial_closeout'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'financial_closeout'),
             ),
             const SizedBox(height: 48),
           ],

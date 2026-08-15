@@ -4321,6 +4321,8 @@ class _ListEditor extends StatelessWidget {
                       child: VoiceTextFormField(
                         key: ValueKey(item.id),
                         initialValue: item.text,
+                        maxLines: null,
+                        minLines: 1,
                         decoration: InputDecoration(
                           hintText: hintText,
                           isDense: true,

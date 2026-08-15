@@ -1,4 +1,5 @@
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 // ignore_for_file: unused_element
 
 import 'dart:async';
@@ -324,9 +325,11 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildReviewGatesPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Technical Development',
- nextLabel: 'Next: Long Lead Equipment Ordering',
- onBack: () => context.push('/technical-development'),onNext: () => context.push('/long-lead-equipment-ordering')),
+ backLabel: PlanningPhaseNavigation.backLabel('specialized_design'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('specialized_design'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'specialized_design'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'specialized_design'),
+ ),
  ],
  ),
  ),

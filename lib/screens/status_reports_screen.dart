@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -406,10 +407,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Recurring Deliverables',
- nextLabel: 'Next: Contracts Tracking',
- onBack: () => RecurringDeliverablesScreen.open(context),
- onNext: () => ContractsTrackingScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('status_reports'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('status_reports'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'status_reports'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'status_reports'),
  ),
  ],
  const SizedBox(height: 48),

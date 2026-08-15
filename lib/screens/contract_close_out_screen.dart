@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/launch_notes_section.dart';
 import 'package:ndu_project/widgets/launch_insights_widgets.dart';
 import 'dart:convert';
@@ -105,11 +106,10 @@ class _ContractCloseOutScreenState extends State<ContractCloseOutScreen> {
             _buildSignOffsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel:
-                  'Back: FAT, Mechanical Completion & Commission Solution',
-              nextLabel: 'Next: Scope & Deliverable Reconciliation',
-              onBack: () => FatMechanicalCompletionScreen.open(context),
-              onNext: () => ActualVsPlannedGapAnalysisScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('contract_close_out'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('contract_close_out'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'contract_close_out'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'contract_close_out'),
             ),
             const SizedBox(height: 48),
           ],

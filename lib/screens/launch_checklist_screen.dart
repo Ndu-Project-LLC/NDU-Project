@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
     as loader;
@@ -637,10 +638,10 @@ class _LaunchChecklistScreenState extends State<LaunchChecklistScreen> {
             _buildTimelinePanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Update Ops & Maintenance Plans',
-              nextLabel: 'Next: Risk Tracking',
-              onBack: () => UpdateOpsMaintenancePlansScreen.open(context),
-              onNext: () => RiskTrackingScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('launch_checklist'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('launch_checklist'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'launch_checklist'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'launch_checklist'),
             ),
             const SizedBox(height: 48),
           ],

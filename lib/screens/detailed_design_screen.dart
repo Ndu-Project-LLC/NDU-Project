@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
 import 'package:ndu_project/screens/vendor_tracking_screen.dart';
 import 'package:ndu_project/models/design_component.dart';
@@ -447,10 +448,10 @@ class _DetailedDesignScreenState extends State<DetailedDesignScreen> {
             _buildArtifactReadiness(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Vendor Tracking',
-              nextLabel: 'Next: Agile Development Iterations',
-              onBack: () => VendorTrackingScreen.open(context),
-              onNext: () => AgileDevelopmentIterationsScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('detailed_design'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('detailed_design'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'detailed_design'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'detailed_design'),
             ),
           ],
         ),

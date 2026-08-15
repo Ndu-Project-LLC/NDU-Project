@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -95,10 +96,10 @@ class _ActualVsPlannedGapAnalysisScreenState
             _buildFollowUpPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Vendor & Contract Closeout',
-              nextLabel: 'Next: Hypercare & Warranty Support',
-              onBack: () => ContractCloseOutScreen.open(context),
-              onNext: () => CommerceViabilityScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('actual_vs_planned_gap_analysis'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('actual_vs_planned_gap_analysis'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'actual_vs_planned_gap_analysis'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'actual_vs_planned_gap_analysis'),
             ),
             const SizedBox(height: 48),
           ],

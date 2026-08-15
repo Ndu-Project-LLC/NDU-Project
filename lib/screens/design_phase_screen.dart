@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:webview_flutter/webview_flutter.dart';
@@ -439,10 +440,11 @@ Future<void> _loadProgress(String projectId) async {
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Design overview',
- nextLabel: 'Next: Requirements Implementation',
- onBack: () => Navigator.of(context).maybePop(),
- onNext: () => context.push('/requirements-implementation')),
+ backLabel: PlanningPhaseNavigation.backLabel('design_management'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('design_management'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'design_management'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'design_management'),
+ ),
  ],
  ),
  );

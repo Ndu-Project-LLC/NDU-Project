@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:convert';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
@@ -94,10 +95,10 @@ class _SummarizeAccountRisksScreenState
             _buildNext90DaysPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Financial Closeout',
-              nextLabel: 'Next: Benefits Realization',
-              onBack: () => FinancialCloseoutScreen.open(context),
-              onNext: () => BenefitsRealizationScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('summarize_account_risks'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('summarize_account_risks'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'summarize_account_risks'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'summarize_account_risks'),
             ),
             const SizedBox(height: 48),
           ],

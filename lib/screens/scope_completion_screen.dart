@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -583,11 +584,9 @@ class _ScopeCompletionScreenState extends State<ScopeCompletionScreen> {
                             _buildTipRow(context),
                             const SizedBox(height: 24),
                             LaunchPhaseNavigation(
-                              backLabel: 'Back: Risk Tracking',
-                              nextLabel:
-                                  'Next: Gap Analysis & Scope Reconciliation',
-                              onBack: () =>
-                                  RiskTrackingWorkspaceScreen.open(context),
+                              backLabel: PlanningPhaseNavigation.backLabel('scope_completion'),
+                              nextLabel: PlanningPhaseNavigation.nextLabel('scope_completion'),
+                              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'scope_completion'),
                               onNext: () =>
                                   GapAnalysisScopeReconcillationScreen.open(
                                       context),

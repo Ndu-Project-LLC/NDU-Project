@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:ndu_project/screens/detailed_design_screen.dart';
@@ -969,10 +970,10 @@ class _AgileDevelopmentIterationsScreenState
 
   Widget _buildFooterNavigation(BuildContext context) {
     return LaunchPhaseNavigation(
-      backLabel: 'Back: Detailed Design',
-      nextLabel: 'Next: Scope Tracking Implementation',
-      onBack: () => DetailedDesignScreen.open(context),
-      onNext: () => ScopeTrackingImplementationScreen.open(context),
+      backLabel: PlanningPhaseNavigation.backLabel('agile_development_iterations'),
+      nextLabel: PlanningPhaseNavigation.nextLabel('agile_development_iterations'),
+      onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'agile_development_iterations'),
+      onNext: () => PlanningPhaseNavigation.goToNext(context, 'agile_development_iterations'),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/screens/agile_development_iterations_screen.dart';
 import 'package:ndu_project/screens/stakeholder_alignment_screen.dart';
 import 'package:ndu_project/widgets/kaz_ai_chat_bubble.dart';
@@ -1006,10 +1007,10 @@ class _ScopeTrackingImplementationScreenState
 
   Widget _buildFooterNavigation(BuildContext context) {
     return LaunchPhaseNavigation(
-      backLabel: 'Back: Agile Development Iterations',
-      nextLabel: 'Next: Stakeholder Alignment',
-      onBack: () => AgileDevelopmentIterationsScreen.open(context),
-      onNext: () => StakeholderAlignmentScreen.open(context),
+      backLabel: PlanningPhaseNavigation.backLabel('scope_tracking_implementation'),
+      nextLabel: PlanningPhaseNavigation.nextLabel('scope_tracking_implementation'),
+      onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'scope_tracking_implementation'),
+      onNext: () => PlanningPhaseNavigation.goToNext(context, 'scope_tracking_implementation'),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/meeting_row.dart';
@@ -279,10 +280,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ],
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Staff Team',
- nextLabel: 'Next: Progress Tracking',
- onBack: () => StaffTeamScreen.open(context),
- onNext: () => ProgressTrackingScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('team_meetings'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('team_meetings'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'team_meetings'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'team_meetings'),
  ),
  const SizedBox(height: 48),
  ],

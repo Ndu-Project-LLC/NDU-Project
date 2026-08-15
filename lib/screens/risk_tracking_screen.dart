@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/screens/launch_checklist_screen.dart';
 import 'package:ndu_project/screens/scope_completion_screen.dart';
@@ -327,10 +328,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Start-up / Launch Checklist',
- nextLabel: 'Next: Scope Completion',
- onBack: () => LaunchChecklistScreen.open(context),
- onNext: () => ScopeCompletionScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('risk_tracking'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('risk_tracking'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'risk_tracking'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'risk_tracking'),
  ),
  ],
  ),

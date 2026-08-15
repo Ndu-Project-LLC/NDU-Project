@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/screens/identify_staff_ops_team_screen.dart';
 import 'package:ndu_project/screens/punchlist_actions_screen.dart';
@@ -99,10 +100,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildOwnershipPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Punchlist Actions',
- nextLabel: 'Next: Identify & Staff Ops Team',
- onBack: () => PunchlistActionsScreen.open(context),
- onNext: () => IdentifyStaffOpsTeamScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('technical_debt_management'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('technical_debt_management'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'technical_debt_management'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'technical_debt_management'),
  ),
  ],
  ),

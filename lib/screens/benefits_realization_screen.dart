@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:ndu_project/models/project_data_model.dart';
 import 'package:ndu_project/screens/demobilize_team_screen.dart';
@@ -205,11 +206,10 @@ class _BenefitsRealizationScreenState extends State<BenefitsRealizationScreen> {
             ),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Project Performance Review',
-              nextLabel:
-                  'Next: Team Demobilization & Operations/Production Transition',
-              onBack: () => FinancialCloseoutScreen.open(context),
-              onNext: () => DemobilizeTeamScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('benefits_realization'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('benefits_realization'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'benefits_realization'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'benefits_realization'),
             ),
             const SizedBox(height: 48),
           ],

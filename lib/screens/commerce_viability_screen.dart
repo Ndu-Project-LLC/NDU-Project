@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:convert';
 import 'package:ndu_project/utils/download_helper_stub.dart'
     if (dart.library.html) 'package:ndu_project/utils/download_helper_web.dart'
@@ -99,10 +100,10 @@ class _CommerceViabilityScreenState extends State<CommerceViabilityScreen> {
             _buildRecommendationsPanel(),
             const SizedBox(height: 24),
             LaunchPhaseNavigation(
-              backLabel: 'Back: Scope & Deliverable Reconciliation',
-              nextLabel: 'Next: Financial Closeout',
-              onBack: () => ActualVsPlannedGapAnalysisScreen.open(context),
-              onNext: () => FinancialCloseoutScreen.open(context),
+              backLabel: PlanningPhaseNavigation.backLabel('commerce_viability'),
+              nextLabel: PlanningPhaseNavigation.nextLabel('commerce_viability'),
+              onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'commerce_viability'),
+              onNext: () => PlanningPhaseNavigation.goToNext(context, 'commerce_viability'),
             ),
             const SizedBox(height: 48),
           ],

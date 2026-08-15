@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -491,10 +492,10 @@ showNavigationButtons: false,
  ),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Technical Development',
- nextLabel: 'Next: Long Lead Equipment',
- onBack: () => context.go('/${AppRoutes.technicalDevelopment}'),
- onNext: () => context.go('/${AppRoutes.longLeadEquipmentOrdering}'),
+ backLabel: PlanningPhaseNavigation.backLabel('tools_integration'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('tools_integration'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'tools_integration'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'tools_integration'),
  ),
  ],
  ),

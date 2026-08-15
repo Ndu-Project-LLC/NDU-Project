@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -480,10 +481,10 @@ class _UpdateOpsMaintenancePlansScreenState
         ],
       ),
       child: LaunchPhaseNavigation(
-        backLabel: 'Back: Stakeholder Alignment',
-        nextLabel: 'Next: Start-up / Launch Checklist',
-        onBack: () => StakeholderAlignmentScreen.open(context),
-        onNext: () => LaunchChecklistScreen.open(context),
+        backLabel: PlanningPhaseNavigation.backLabel('update_ops_maintenance_plans'),
+        nextLabel: PlanningPhaseNavigation.nextLabel('update_ops_maintenance_plans'),
+        onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'update_ops_maintenance_plans'),
+        onNext: () => PlanningPhaseNavigation.goToNext(context, 'update_ops_maintenance_plans'),
       ),
     );
   }

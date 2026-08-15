@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 // ignore_for_file: unused_element
 
@@ -625,8 +626,8 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildGovernanceGrid(snapshot),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Requirements Implementation',
- nextLabel: 'Next: Development Set Up',
+ backLabel: PlanningPhaseNavigation.backLabel('technical_alignment'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('technical_alignment'),
  onBack: _navigateToRequirementsImplementation,
  onNext: _navigateToDevelopmentSetUp,
  ),

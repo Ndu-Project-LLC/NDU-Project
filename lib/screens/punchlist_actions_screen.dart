@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:ndu_project/screens/gap_analysis_scope_reconcillation_screen.dart';
@@ -215,14 +216,10 @@ showNavigationButtons: false, onExportPdf: _exportPdf),
  _buildLowerGrid(context),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel:
- 'Back: Gap Analysis & Scope Reconciliation',
- nextLabel: 'Next: Technical Debt Management',
- onBack: () =>
- GapAnalysisScopeReconcillationScreen.open(
- context),
- onNext: () =>
- TechnicalDebtManagementScreen.open(context),
+ backLabel: PlanningPhaseNavigation.backLabel('punchlist_actions'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('punchlist_actions'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'punchlist_actions'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'punchlist_actions'),
  ),
  const SizedBox(height: 48),
  ],

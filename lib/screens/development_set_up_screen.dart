@@ -1,4 +1,5 @@
 import 'package:ndu_project/widgets/voice_text_field.dart';
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'package:ndu_project/theme.dart';
 // ignore_for_file: unused_element
 
@@ -534,10 +535,10 @@ class _DevelopmentSetUpScreenState extends State<DevelopmentSetUpScreen> {
  _buildApprovalGatesPanel(),
  const SizedBox(height: 24),
  LaunchPhaseNavigation(
- backLabel: 'Back: Technical Alignment',
- nextLabel: 'Next: UI/UX Design',
- onBack: _navigateToTechnicalAlignment,
- onNext: _navigateToUiUxDesign,
+ backLabel: PlanningPhaseNavigation.backLabel('development_set_up'),
+ nextLabel: PlanningPhaseNavigation.nextLabel('development_set_up'),
+ onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'development_set_up'),
+ onNext: () => PlanningPhaseNavigation.goToNext(context, 'development_set_up'),
  ),
  ],
  ),

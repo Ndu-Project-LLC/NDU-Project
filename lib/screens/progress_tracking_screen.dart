@@ -1,3 +1,4 @@
+import 'package:ndu_project/utils/planning_phase_navigation.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -515,10 +516,10 @@ class _ProgressTrackingScreenState extends State<ProgressTrackingScreen> {
               _buildActiveWorkspace(),
               const SizedBox(height: 24),
               LaunchPhaseNavigation(
-                backLabel: 'Back: Team Meetings',
-                nextLabel: 'Next: Contracts Tracking',
-                onBack: () => TeamMeetingsScreen.open(context),
-                onNext: () => ContractsTrackingScreen.open(context),
+                backLabel: PlanningPhaseNavigation.backLabel('progress_tracking'),
+                nextLabel: PlanningPhaseNavigation.nextLabel('progress_tracking'),
+                onBack: () => PlanningPhaseNavigation.goToPrevious(context, 'progress_tracking'),
+                onNext: () => PlanningPhaseNavigation.goToNext(context, 'progress_tracking'),
               ),
             ],
             const SizedBox(height: 48),

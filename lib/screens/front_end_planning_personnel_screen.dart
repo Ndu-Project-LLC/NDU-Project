@@ -11,7 +11,6 @@ import 'package:ndu_project/widgets/program_workspace_scaffold.dart';
 import 'package:ndu_project/widgets/voice_text_field.dart';
 import 'package:ndu_project/utils/pdf_export_helper.dart';
 import 'package:ndu_project/widgets/wrapped_table_primitives.dart';
-import 'package:ndu_project/widgets/searchable_table_section.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndu_project/widgets/delete_success_snackbar.dart';
 class FrontEndPlanningPersonnelScreen extends StatefulWidget {
@@ -689,89 +688,9 @@ class _PersonnelTable extends StatelessWidget {
  builder: (context, constraints) {
  final minTableWidth =
  constraints.maxWidth > 1400 ? constraints.maxWidth : 1400.0;
-      return SearchableTableSection(
-         title: 'Personnel Roles',
-         items: rows,
-         searchFilter: (item, query) {
-            final r = item as StaffingRow;
-            final q = query.trim().toLowerCase();
-            if (q.isEmpty) return true;
-            return r.role.toLowerCase().contains(q) ||
-                  r.roleDescription.toLowerCase().contains(q) ||
-                  r.skillRequirements.toLowerCase().contains(q) ||
-                  r.notes.toLowerCase().contains(q);
-         },
-         tableBuilder: (ctx, query) {
-            final filtered = rows
-                  .where((r) => r.role.toLowerCase().contains(query.trim().toLowerCase()) ||
-                        r.roleDescription.toLowerCase().contains(query.trim().toLowerCase()) ||
-                        r.skillRequirements.toLowerCase().contains(query.trim().toLowerCase()) ||
-                        r.notes.toLowerCase().contains(query.trim().toLowerCase()))
-                  .toList();
-
-            final tableRows = <TableRow>[
-               TableRow(
-                  decoration: const BoxDecoration(color: Color(0xFFF9FAFB)),
-                  children: [
-                     th('No'),
-                     th('Project Roles'),
-                     th('Definition'),
-                     th('Qty'),
-                     th('Duration'),
-                     th('Monthly Rate'),
-                     th('Subtotal'),
-                     th('Type'),
-                     th('Status'),
-                     th('Actions'),
-                  ],
-               ),
-            ];
-
-            if (filtered.isEmpty) {
-               tableRows.add(
-                  TableRow(
-                     children: [
-                        td(const SizedBox.shrink()),
-                        td(const WrappedText('No structured personnel roles added yet.', style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)))),
-                        td(const SizedBox.shrink()),
-                        td(const SizedBox.shrink()),
-                        td(const SizedBox.shrink()),
-                        td(const SizedBox.shrink()),
-                        td(const SizedBox.shrink()),
-                        td(const SizedBox.shrink()),
-                        td(const SizedBox.shrink()),
-                        td(const SizedBox.shrink()),
-                     ],
-                  ),
-               );
-            } else {
-               for (var index = 0; index < filtered.length; index++) {
-                  final row = filtered[index];
-                  tableRows.add(
-                     TableRow(
-                        children: [
-                           td(WrappedText('${index + 1}', style: cellStyle)),
-                           td(WrappedText(row.role.trim(), style: cellStyle)),
-                           td(WrappedText(row.roleDescription.trim().isEmpty ? 'No definition provided' : row.roleDescription.trim(), style: cellStyle)),
-                           td(WrappedText('${row.quantity}', style: cellStyle)),
-                           td(WrappedText(row.durationMonths.trim().isEmpty ? '-' : '${row.durationMonths.trim()} mo', style: cellStyle)),
-                           td(WrappedText(row.monthlyCost.trim().isEmpty ? '-' : row.monthlyCost.trim(), style: cellStyle)),
-                           td(WrappedText(_formatCurrency(row.subtotal), style: cellStyle)),
-                           td(WrappedText(row.isInternal ? 'Internal' : 'External', style: cellStyle)),
-                           td(WrappedText(row.status.trim(), style: cellStyle)),
-                           td(Row(mainAxisSize: MainAxisSize.min, children: [
-                              IconButton(onPressed: () => onEdit(row), icon: const Icon(Icons.edit_outlined, size: 18)),
-                              IconButton(onPressed: () => onDelete(row), icon: const Icon(Icons.delete_outline, size: 18)),
-                           ])),
-                        ],
-                     ),
-                  );
-               }
-            }
-
-            return FullScreenTableWrapper(
-               title: 'Personnel Roles',
-               child: Container(
+ return Scrollbar(
+ thumbVisibility: true,
+ child: SingleChildScrollView(
  scrollDirection: Axis.horizontal,
  child: ConstrainedBox(
  constraints: BoxConstraints(minWidth: minTableWidth),
@@ -788,7 +707,7 @@ class _PersonnelTable extends StatelessWidget {
  8: FixedColumnWidth(110),
  9: FixedColumnWidth(110),
  },
-                                    columnWidths: const {
+ border: TableBorder(
  horizontalInside: border,
  verticalInside: border,
  top: border,
@@ -809,7 +728,7 @@ class _PersonnelTable extends StatelessWidget {
  decoration: BoxDecoration(
  color: Colors.white,
  borderRadius: BorderRadius.circular(12),
-                                    children: tableRows,
+ border: Border.all(color: const Color(0xFFE5E7EB)),
  ),
  child: LayoutBuilder(
  builder: (context, constraints) {

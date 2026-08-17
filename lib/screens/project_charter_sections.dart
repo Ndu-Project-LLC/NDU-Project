@@ -783,7 +783,7 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
      if (existingEmail.isNotEmpty && existingName.isNotEmpty) {
        final invSnap = await FirebaseFirestore.instance
            .collection('manager_invitations')
-           .where('toEmail', '==', existingEmail)
+           .where('toEmail', isEqualTo: existingEmail)
            .limit(1)
            .get();
        wasPreviouslyInvited = invSnap.docs.isNotEmpty;

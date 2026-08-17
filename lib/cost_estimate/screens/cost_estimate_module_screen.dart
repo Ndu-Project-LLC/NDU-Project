@@ -39,7 +39,8 @@ import 'package:ndu_project/wbs/models/wbs_models.dart';
 import 'package:ndu_project/providers/project_data_provider.dart';
 import 'package:ndu_project/utils/project_data_helper.dart';
 import 'package:ndu_project/widgets/cost_by_wbs_tab.dart';
-import 'package:ndu_project/widgets/cross_section_sync_card.dart';
+import 'package:ndu_project/widgets/ndu_logo_banner.dart';
+import 'package:ndu_project/services/navigation_context_service.dart';
 import 'package:go_router/go_router.dart';
 
 class CostEstimateModuleScreen extends StatefulWidget {
@@ -166,6 +167,8 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   ],
                   controller: _tabController,
                   onChanged: (index) => setState(() {}),
+                  collapsible: true,
+                  defaultCollapsed: false,
                 ),
               ),
               // ── Context banner (drawn from Initiation + WBS) ──────────
@@ -191,8 +194,13 @@ class _CostEstimateModuleScreenState extends State<CostEstimateModuleScreen>
                   ),
                 ],
               ),
-              const CrossSectionSyncCard(
-                currentSection: CrossSection.costEstimate,
+              // ── NDU PROJECT logo banner (replaces the previous
+              // CrossSectionSyncCard so the page now leads with the
+              // NDU PROJECT brand identity, freeing the vertical space
+              // the sync card used to occupy). ──────────────────────
+              NduLogoBanner(
+                onTap: () => NavigationContextService.instance
+                    .navigateFromLogo(context),
               ),
               // Tab content
               Expanded(

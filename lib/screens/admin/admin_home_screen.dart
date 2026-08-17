@@ -329,6 +329,15 @@ class AdminHomeScreen extends StatelessWidget {
               onTap: () => context.push('/admin-users'),width: cardWidth,
             ),
             _ActionCard(
+              title: 'Survey Responses',
+              description:
+                  'Read every user\'s profile-onboarding survey answers in real time, with search, filters, and CSV export',
+              icon: Icons.assignment_outlined,
+              color: _adminAccentColor,
+              onTap: () => context.push('/admin-survey-responses'),
+              width: cardWidth,
+            ),
+            _ActionCard(
               title: 'Content Management',
               description: 'Edit app content, labels, and system messages',
               icon: Icons.edit_document,

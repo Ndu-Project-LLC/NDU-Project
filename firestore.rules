@@ -29,9 +29,13 @@ service cloud.firestore {
         allow read, write: if isAuthenticated() && request.auth.uid == userId;
       }
       
-      // Profile onboarding
+      // Profile onboarding — owner has full read/write; admin has read-only
+      // (so the admin panel can list every user's survey responses for
+      // oversight, while users retain exclusive write access to their own
+      // answers).
       match /profile/{document=**} {
-        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+        allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+        allow write: if isAuthenticated() && request.auth.uid == userId;
       }
       
       // Change management subcollections

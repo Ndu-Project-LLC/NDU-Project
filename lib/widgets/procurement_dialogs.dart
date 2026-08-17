@@ -281,6 +281,13 @@ class AddItemDialog extends StatefulWidget {
     this.initialItem,
     this.showAiGenerateButton = false,
     this.itemDomainLabel = 'Procurement',
+    // If true, the dialog renders in read-only mode: every text field is
+    // readOnly, every dropdown has onChanged=null, every InkWell has
+    // onTap=null, and the primary action button (Add Item / Save Changes)
+    // is disabled. Used by callers that have already detected that the
+    // Project Charter is approved and want to ensure the modal cannot
+    // be used to add or edit records.
+    this.locked = false,
   });
 
   final List<Widget> contextChips;
@@ -289,6 +296,7 @@ class AddItemDialog extends StatefulWidget {
   final ProcurementItemModel? initialItem;
   final bool showAiGenerateButton;
   final String itemDomainLabel;
+  final bool locked;
 
   @override
   State<AddItemDialog> createState() => _AddItemDialogState();
@@ -574,7 +582,13 @@ class _AddItemDialogState extends State<AddItemDialog> {
     // (the "Add Item" button still receives taps from locations outside
     // the locked subtree, e.g. the tab strip or table action cell) and
     // freely edit item fields even after the charter is saved/approved.
-    final charterLocked =
+    //
+    // Defense in depth: the dialog is locked if EITHER the caller
+    // explicitly passes locked=true OR the dialog itself detects the
+    // charter is approved via the project data provider. This way the
+    // lock is robust even if the dialog's BuildContext somehow cannot
+    // reach the ProjectDataProvider registered at the root.
+    final charterLocked = widget.locked ||
         ProjectDataHelper.isCharterApproved(context, listen: true);
 
     return ProcurementDialogShell(
@@ -649,7 +663,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                       subtitle: 'What are you sourcing for this project?',
                     ),
                   ),
-                  if (widget.showAiGenerateButton) ...[
+                  if (widget.showAiGenerateButton && !charterLocked) ...[
                   const SizedBox(width: 12),
                   OutlinedButton.icon(
                     onPressed: _isGenerating ? null : _generateWithAI,
@@ -683,6 +697,9 @@ class _AddItemDialogState extends State<AddItemDialog> {
             VoiceTextFormField(
               controller: _nameCtrl,
               focusNode: _nameFocus,
+              readOnly: charterLocked,
+              enableKazAi: !charterLocked,
+              enableVoice: !charterLocked,
               decoration: _dialogDecoration(
                   label: 'Item name', hint: 'e.g. Network core switches'),
               validator: (value) => (value == null || value.trim().isEmpty)
@@ -694,6 +711,9 @@ class _AddItemDialogState extends State<AddItemDialog> {
             VoiceTextFormField(
               controller: _descCtrl,
               maxLines: 2,
+              readOnly: charterLocked,
+              enableKazAi: !charterLocked,
+              enableVoice: !charterLocked,
               decoration: _dialogDecoration(
                   label: 'Description', hint: 'Short scope description'),
             ),
@@ -713,10 +733,12 @@ class _AddItemDialogState extends State<AddItemDialog> {
                         .map((option) => DropdownMenuItem(
                             value: option, child: Text(option)))
                         .toList(),
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setState(() => _category = value);
-                    },
+                    onChanged: charterLocked
+                        ? null
+                        : (value) {
+                            if (value == null) return;
+                            setState(() => _category = value);
+                          },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -728,10 +750,12 @@ class _AddItemDialogState extends State<AddItemDialog> {
                         .map((option) => DropdownMenuItem(
                             value: option, child: Text(option.label)))
                         .toList(),
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setState(() => _status = value);
-                    },
+                    onChanged: charterLocked
+                        ? null
+                        : (value) {
+                            if (value == null) return;
+                            setState(() => _status = value);
+                          },
                   ),
                 ),
               ],
@@ -744,14 +768,16 @@ class _AddItemDialogState extends State<AddItemDialog> {
                   .map((option) => DropdownMenuItem(
                       value: option, child: Text(option.label)))
                   .toList(),
-              onChanged: (value) {
-                if (value == null) return;
-                setState(() => _priority = value);
-              },
+              onChanged: charterLocked
+                  ? null
+                  : (value) {
+                      if (value == null) return;
+                      setState(() => _priority = value);
+                    },
             ),
             const SizedBox(height: 12),
             InkWell(
-              onTap: widget.responsibleOptions.isEmpty
+              onTap: (charterLocked || widget.responsibleOptions.isEmpty)
                   ? null
                   : () async {
                       final selected =
@@ -826,6 +852,9 @@ class _AddItemDialogState extends State<AddItemDialog> {
                   child: VoiceTextFormField(
                     controller: _budgetCtrl,
                     keyboardType: TextInputType.number,
+                    readOnly: charterLocked,
+                    enableKazAi: !charterLocked,
+                    enableVoice: !charterLocked,
                     decoration: _dialogDecoration(
                         label: 'Budget',
                         hint: 'e.g. 85000',
@@ -839,20 +868,22 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _deliveryDate ??
-                            DateTime.now().add(const Duration(days: 14)),
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(DateTime.now().year + 5),
-                      );
-                      if (picked == null) return;
-                      setState(() {
-                        _deliveryDate = picked;
-                        _showDateError = false;
-                      });
-                    },
+                    onTap: charterLocked
+                        ? null
+                        : () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _deliveryDate ??
+                                  DateTime.now().add(const Duration(days: 14)),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(DateTime.now().year + 5),
+                            );
+                            if (picked == null) return;
+                            setState(() {
+                              _deliveryDate = picked;
+                              _showDateError = false;
+                            });
+                          },
                     child: InputDecorator(
                       decoration: _dialogDecoration(
                         label: 'Est. delivery',

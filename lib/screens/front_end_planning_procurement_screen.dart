@@ -4527,6 +4527,25 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openAddItemDialog() async {
+ // Defense-in-depth: capture the charter lock state at the moment
+ // the dialog is opened. The dialog also re-checks the lock state
+ // inside its own build, but this ensures the modal is locked even
+ // if the dialog's BuildContext somehow cannot reach the project
+ // data provider.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: false);
+ if (charterLocked) {
+ // Block opening the modal entirely when the charter is approved.
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Project Charter is approved — procurement items are locked from editing. Open the Project Charter page to request changes.'),
+ backgroundColor: Color(0xFFB8860B),
+ duration: Duration(seconds: 4),
+ ),
+ );
+ return;
+ }
  const categoryOptions = [
  'Materials',
  'Equipment',
@@ -4550,6 +4569,7 @@ class _FrontEndPlanningProcurementScreenState
  responsibleOptions: _assignableMembers,
  showAiGenerateButton: false,
  itemDomainLabel: 'Procurement',
+ locked: charterLocked,
  );
  },
  );
@@ -4586,6 +4606,24 @@ class _FrontEndPlanningProcurementScreenState
  }
 
  Future<void> _openEditItemDialog(ProcurementItemModel item) async {
+ // Defense-in-depth: capture the charter lock state at the moment
+ // the dialog is opened. The dialog also re-checks the lock state
+ // inside its own build, but this ensures the modal is locked even
+ // if the dialog's BuildContext somehow cannot reach the project
+ // data provider.
+ final charterLocked =
+ ProjectDataHelper.isCharterApproved(context, listen: false);
+ if (charterLocked) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ const SnackBar(
+ content: Text(
+ 'Project Charter is approved — procurement items are locked from editing. Open the Project Charter page to request changes.'),
+ backgroundColor: Color(0xFFB8860B),
+ duration: Duration(seconds: 4),
+ ),
+ );
+ return;
+ }
  const categoryOptions = [
  'Materials',
  'Equipment',
@@ -4610,6 +4648,7 @@ class _FrontEndPlanningProcurementScreenState
  initialItem: item,
  showAiGenerateButton: false,
  itemDomainLabel: 'Procurement',
+ locked: charterLocked,
  );
  },
  );

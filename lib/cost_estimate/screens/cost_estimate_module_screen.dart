@@ -349,35 +349,20 @@ class _CostDashboardTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── 1. Hero command band ─────────────────────────────────
-            _HeroBand(
-              eyebrow: 'COST ESTIMATE · DASHBOARD',
-              title: 'Cost Dashboard',
-              subtitle:
-                  '$lineCount cost lines · $className · $currencySymbol baseline',
-              statusLabel: statusLabel,
-              statusLive: isBaselined,
-              contextChips: [
-                _HeroChip(
-                    icon: Icons.flag_outlined, label: 'Project', value: estimate.projectName),
-                _HeroChip(
-                    icon: Icons.class_outlined,
-                    label: 'Class',
-                    value: className),
-                _HeroChip(
-                    icon: Icons.payments_outlined,
-                    label: 'Currency',
-                    value: estimate.currency),
-              ],
-              actions: [
-                _HeroAction(
-                  icon: Icons.build_outlined,
-                  label: 'Open Builder',
-                  primary: true,
-                  onTap: () => _scrollToBuilder(context),
-                ),
-              ],
-            ),
+            // ── Hero command band removed per product decision 2026-08-17 ──
+            // The _HeroBand (eyebrow + title + subtitle + status pill +
+            // Project/Class/Currency chips + 'Open Builder' action) was a
+            // large gradient banner consuming ~280px of prime above-the-fold
+            // real estate on the Cost Dashboard. Removed because:
+            //   1. The same context (project, class, currency) is already
+            //      surfaced by the Cost Estimate module's top-of-page
+            //      title and the SectionNavigator tab strip.
+            //   2. The 'Open Builder' CTA is redundant — the Builder tab
+            //      is one tap away in the SectionNavigator.
+            //   3. The status (DRAFT vs BASELINED) is also surfaced inline
+            //      on the Baseline tab.
+            // Removing this frees the dashboard's KPI cards + charts to
+            // appear immediately on page load.
             const SizedBox(height: 22),
 
             // ── 2. Premium KPI strip ─────────────────────────────────

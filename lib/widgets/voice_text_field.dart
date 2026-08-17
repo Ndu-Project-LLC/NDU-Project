@@ -437,7 +437,7 @@ class _VoiceTextFieldState extends State<VoiceTextField> {
             runSpacing: 8,
             children: [
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: OpenEditorButton(
                   actions: actions,
                   isLoading: anyLoading,
@@ -1145,7 +1145,7 @@ class _VoiceTextFormFieldState extends State<VoiceTextFormField> {
             runSpacing: 8,
             children: [
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: OpenEditorButton(
                   actions: actions,
                   isLoading: anyLoading,

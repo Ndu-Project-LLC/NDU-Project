@@ -1864,6 +1864,152 @@ exports.sendTeamInvitation = functions
   });
 
 // ============================================================================
+// PROJECT MANAGER INVITATION EMAIL
+// ============================================================================
+// Sends an email from noreply@nduproject.tech to a user who has been assigned
+// as the Project Manager for a project. The user is pre-populated from the
+// site's registered users collection (callers query 'users' and surface them
+// in an Autocomplete — see _showAssignManagerDialog in
+// lib/screens/project_charter_sections.dart). The Cloud Function accepts a
+// `resend` flag so the caller can re-send the invitation without re-creating
+// the underlying assignment (the user already has the role).
+//
+// Firestore collection: 'manager_invitations' (one document per send, with
+// toEmail / toName / projectName / projectId / sentBy / sentAt / isResend /
+// messageId). The collection is queried by the caller to detect whether a
+// 'Resend' button should appear on the Assign Project Manager dialog.
+//
+// Called from Flutter:
+//   FirebaseFunctions.instance.httpsCallable('sendManagerInvite')
+//       .call({ toEmail, toName, projectName, projectId, managerName, resend });
+// ============================================================================
+exports.sendManagerInvite = functions
+  .runWith({
+    secrets: ['RESEND_API_KEY'],
+    timeoutSeconds: 30,
+    memory: '256MB'
+  })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'You must be signed in.');
+    }
+
+    const {
+      toEmail,
+      toName,
+      projectName,
+      projectId,
+      managerName,
+      resend
+    } = data || {};
+
+    if (!toEmail || typeof toEmail !== 'string' || !toEmail.includes('@')) {
+      throw new functions.https.HttpsError('invalid-argument', 'A valid manager email is required.');
+    }
+
+    const project = (projectName && String(projectName).trim().length > 0)
+      ? String(projectName).trim()
+      : 'Untitled Project';
+    const managerDisplay = (managerName && String(managerName).trim().length > 0)
+      ? String(managerName).trim()
+      : (toName && String(toName).trim().length > 0 ? String(toName).trim() : 'there');
+    const senderName = context.auth.token.name || context.auth.token.email || 'Project Owner';
+    const isResend = Boolean(resend);
+
+    await checkRateLimit(context.auth.uid, 'manager_invite', 15); // 15 sends/hour per sender
+
+    const resendClient = getResendClient();
+
+    const subject = isResend
+      ? `Reminder: You are the Project Manager for ${project}`
+      : `You've been assigned as Project Manager for ${project}`;
+
+    const ctaUrl = projectId && String(projectId).trim().length > 0
+      ? `https://nduproject.tech/#/project-charter?projectId=${encodeURIComponent(String(projectId).trim())}`
+      : 'https://nduproject.tech/#/project-charter';
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr><td style="background:#051424;padding:32px 40px;text-align:center;">
+          <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:1px;">NDU <span style="color:#f8bd2a;">PROJECT</span></div>
+          <div style="font-size:11px;color:#909096;letter-spacing:3px;margin-top:4px;">NAVIGATE. DELIVER. UPGRADE.</div>
+        </td></tr>
+        <tr><td style="padding:40px;">
+          <h1 style="font-size:22px;font-weight:700;color:#1a1d1f;margin:0 0 16px;">${isResend ? 'Reminder: ' : ''}You're the Project Manager</h1>
+          <p style="font-size:15px;color:#495057;line-height:1.6;margin:0 0 24px;"><strong>${senderName}</strong> has assigned you as the Project Manager for <strong>${project}</strong>. You will be responsible for planning, execution, and delivery of this project on the NDU Project platform.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;margin:0 0 24px;">
+            <tr><td style="padding:20px;">
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Project</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0 0 16px;">${project}</p>
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Your Role</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0;">Project Manager</p>
+            </td></tr>
+          </table>
+          <p style="font-size:14px;color:#6b7280;line-height:1.6;margin:0 0 32px;">Please sign in to NDU Project to review the project charter, front-end execution plan, and milestone schedule before kicking off execution.</p>
+          <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
+            <tr><td style="background:#ffc107;border-radius:12px;">
+              <a href="${ctaUrl}" style="display:inline-block;padding:14px 36px;font-size:15px;font-weight:700;color:#1a1d1f;text-decoration:none;">Open Project Charter &rarr;</a>
+            </td></tr>
+          </table>
+          <p style="font-size:13px;color:#9ca3af;line-height:1.5;margin:0 0 8px;">Or copy this link into your browser:</p>
+          <p style="font-size:13px;color:#6366f1;word-break:break-all;margin:0 0 32px;">${ctaUrl}</p>
+          <div style="border-top:1px solid #e4e7ec;padding-top:24px;">
+            <p style="font-size:12px;color:#9ca3af;margin:0;">This assignment was made by ${senderName} via NDU Project. If you believe this was sent in error, you can safely ignore this email.</p>
+          </div>
+        </td></tr>
+      </table>
+      <p style="font-size:11px;color:#9ca3af;margin:24px 0 0;">&copy; 2026 NDU Project. All rights reserved.</p>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+    try {
+      const { data: emailResult, error } = await resendClient.emails.send({
+        from: RESEND_FROM_EMAIL,
+        to: toEmail,
+        subject: subject,
+        html: htmlBody,
+        text: `${senderName} has assigned you as Project Manager for ${project}. Visit ${ctaUrl} to review and start.`
+      });
+
+      if (error) {
+        console.error('Resend manager invite error:', error);
+        throw new functions.https.HttpsError('internal', `Failed to send manager invite: ${error.message}`);
+      }
+
+      console.log(`Manager invite email sent to ${toEmail}: ${emailResult?.id} (resend=${isResend})`);
+
+      // Track in Firestore so the caller can detect 'already invited' state.
+      await db.collection('manager_invitations').add({
+        toEmail: toEmail.toLowerCase().trim(),
+        toName: managerDisplay,
+        projectName: project,
+        projectId: projectId || '',
+        sentBy: context.auth.uid,
+        isResend: isResend,
+        messageId: emailResult?.id || null,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      await logSecurityEvent('manager_invite_sent', context.auth.uid, { toEmail, project, isResend });
+
+      return { success: true, messageId: emailResult?.id, isResend: isResend };
+
+    } catch (error) {
+      console.error('Manager invite email error:', error);
+      if (error instanceof functions.https.HttpsError) throw error;
+      throw new functions.https.HttpsError('internal', `Failed to send manager invite: ${error.message}`);
+    }
+  });
+
+// ============================================================================
 // SECURITY UTILITIES (shared across all Cloud Functions)
 // ============================================================================
 
@@ -2294,6 +2440,152 @@ exports.sendCharterApprovalEmail = functions
       console.error('Charter approval email error:', error);
       if (error instanceof functions.https.HttpsError) throw error;
       throw new functions.https.HttpsError('internal', `Failed to send charter email: ${error.message}`);
+    }
+  });
+
+// ============================================================================
+// PROJECT MANAGER INVITATION EMAIL
+// ============================================================================
+// Sends an email from noreply@nduproject.tech to a user who has been assigned
+// as the Project Manager for a project. The user is pre-populated from the
+// site's registered users collection (callers query 'users' and surface them
+// in an Autocomplete — see _showAssignManagerDialog in
+// lib/screens/project_charter_sections.dart). The Cloud Function accepts a
+// `resend` flag so the caller can re-send the invitation without re-creating
+// the underlying assignment (the user already has the role).
+//
+// Firestore collection: 'manager_invitations' (one document per send, with
+// toEmail / toName / projectName / projectId / sentBy / sentAt / isResend /
+// messageId). The collection is queried by the caller to detect whether a
+// 'Resend' button should appear on the Assign Project Manager dialog.
+//
+// Called from Flutter:
+//   FirebaseFunctions.instance.httpsCallable('sendManagerInvite')
+//       .call({ toEmail, toName, projectName, projectId, managerName, resend });
+// ============================================================================
+exports.sendManagerInvite = functions
+  .runWith({
+    secrets: ['RESEND_API_KEY'],
+    timeoutSeconds: 30,
+    memory: '256MB'
+  })
+  .https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'You must be signed in.');
+    }
+
+    const {
+      toEmail,
+      toName,
+      projectName,
+      projectId,
+      managerName,
+      resend
+    } = data || {};
+
+    if (!toEmail || typeof toEmail !== 'string' || !toEmail.includes('@')) {
+      throw new functions.https.HttpsError('invalid-argument', 'A valid manager email is required.');
+    }
+
+    const project = (projectName && String(projectName).trim().length > 0)
+      ? String(projectName).trim()
+      : 'Untitled Project';
+    const managerDisplay = (managerName && String(managerName).trim().length > 0)
+      ? String(managerName).trim()
+      : (toName && String(toName).trim().length > 0 ? String(toName).trim() : 'there');
+    const senderName = context.auth.token.name || context.auth.token.email || 'Project Owner';
+    const isResend = Boolean(resend);
+
+    await checkRateLimit(context.auth.uid, 'manager_invite', 15); // 15 sends/hour per sender
+
+    const resendClient = getResendClient();
+
+    const subject = isResend
+      ? `Reminder: You are the Project Manager for ${project}`
+      : `You've been assigned as Project Manager for ${project}`;
+
+    const ctaUrl = projectId && String(projectId).trim().length > 0
+      ? `https://nduproject.tech/#/project-charter?projectId=${encodeURIComponent(String(projectId).trim())}`
+      : 'https://nduproject.tech/#/project-charter';
+
+    const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr><td style="background:#051424;padding:32px 40px;text-align:center;">
+          <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:1px;">NDU <span style="color:#f8bd2a;">PROJECT</span></div>
+          <div style="font-size:11px;color:#909096;letter-spacing:3px;margin-top:4px;">NAVIGATE. DELIVER. UPGRADE.</div>
+        </td></tr>
+        <tr><td style="padding:40px;">
+          <h1 style="font-size:22px;font-weight:700;color:#1a1d1f;margin:0 0 16px;">${isResend ? 'Reminder: ' : ''}You're the Project Manager</h1>
+          <p style="font-size:15px;color:#495057;line-height:1.6;margin:0 0 24px;"><strong>${senderName}</strong> has assigned you as the Project Manager for <strong>${project}</strong>. You will be responsible for planning, execution, and delivery of this project on the NDU Project platform.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:12px;margin:0 0 24px;">
+            <tr><td style="padding:20px;">
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Project</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0 0 16px;">${project}</p>
+              <p style="font-size:13px;color:#6b7280;margin:0 0 4px;">Your Role</p>
+              <p style="font-size:15px;font-weight:600;color:#1a1d1f;margin:0;">Project Manager</p>
+            </td></tr>
+          </table>
+          <p style="font-size:14px;color:#6b7280;line-height:1.6;margin:0 0 32px;">Please sign in to NDU Project to review the project charter, front-end execution plan, and milestone schedule before kicking off execution.</p>
+          <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
+            <tr><td style="background:#ffc107;border-radius:12px;">
+              <a href="${ctaUrl}" style="display:inline-block;padding:14px 36px;font-size:15px;font-weight:700;color:#1a1d1f;text-decoration:none;">Open Project Charter &rarr;</a>
+            </td></tr>
+          </table>
+          <p style="font-size:13px;color:#9ca3af;line-height:1.5;margin:0 0 8px;">Or copy this link into your browser:</p>
+          <p style="font-size:13px;color:#6366f1;word-break:break-all;margin:0 0 32px;">${ctaUrl}</p>
+          <div style="border-top:1px solid #e4e7ec;padding-top:24px;">
+            <p style="font-size:12px;color:#9ca3af;margin:0;">This assignment was made by ${senderName} via NDU Project. If you believe this was sent in error, you can safely ignore this email.</p>
+          </div>
+        </td></tr>
+      </table>
+      <p style="font-size:11px;color:#9ca3af;margin:24px 0 0;">&copy; 2026 NDU Project. All rights reserved.</p>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+    try {
+      const { data: emailResult, error } = await resendClient.emails.send({
+        from: RESEND_FROM_EMAIL,
+        to: toEmail,
+        subject: subject,
+        html: htmlBody,
+        text: `${senderName} has assigned you as Project Manager for ${project}. Visit ${ctaUrl} to review and start.`
+      });
+
+      if (error) {
+        console.error('Resend manager invite error:', error);
+        throw new functions.https.HttpsError('internal', `Failed to send manager invite: ${error.message}`);
+      }
+
+      console.log(`Manager invite email sent to ${toEmail}: ${emailResult?.id} (resend=${isResend})`);
+
+      // Track in Firestore so the caller can detect 'already invited' state.
+      await db.collection('manager_invitations').add({
+        toEmail: toEmail.toLowerCase().trim(),
+        toName: managerDisplay,
+        projectName: project,
+        projectId: projectId || '',
+        sentBy: context.auth.uid,
+        isResend: isResend,
+        messageId: emailResult?.id || null,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      await logSecurityEvent('manager_invite_sent', context.auth.uid, { toEmail, project, isResend });
+
+      return { success: true, messageId: emailResult?.id, isResend: isResend };
+
+    } catch (error) {
+      console.error('Manager invite email error:', error);
+      if (error instanceof functions.https.HttpsError) throw error;
+      throw new functions.https.HttpsError('internal', `Failed to send manager invite: ${error.message}`);
     }
   });
 

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -759,144 +760,339 @@ class _CharterMetaInfoScrollState extends State<CharterMetaInfoScroll> {
  }
 
  Future<void> _showAssignManagerDialog(ProjectDataModel data) async {
- final nameController = TextEditingController();
- final emailController = TextEditingController();
- final formKey = GlobalKey<FormState>();
+   final nameController = TextEditingController();
+   final emailController = TextEditingController();
+   final formKey = GlobalKey<FormState>();
 
- final result = await showDialog<Map<String, String>>(
- context: context,
- builder: (dialogContext) {
- return AlertDialog(
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(20)),
- title: Row(
- children: [
- Container(
- padding: const EdgeInsets.all(8),
- decoration: BoxDecoration(
- color: const Color(0xFFFEF3C7),
- borderRadius: BorderRadius.circular(10),
- ),
- child: const Icon(Icons.person_add_outlined,
- color: Color(0xFFB45309), size: 24),
- ),
- const SizedBox(width: 12),
- const Text('Assign Project Manager'),
- ],
- ),
- content: SizedBox(
- width: 400,
- child: Form(
- key: formKey,
- child: Column(
- mainAxisSize: MainAxisSize.min,
- crossAxisAlignment: CrossAxisAlignment.start,
- children: [
- const Text(
- 'Assign a project manager to this project. '
- 'A manager must be assigned before proceeding to the next step.',
- style: TextStyle(color: Colors.grey, fontSize: 13),
- ),
- const SizedBox(height: 20),
- TextFormField(
- controller: nameController,
- autofocus: true,
- decoration: InputDecoration(
- labelText: 'Manager Name',
- hintText: 'e.g. John Doe',
- border: OutlineInputBorder(
- borderRadius: BorderRadius.circular(12)),
- filled: true,
- fillColor: Colors.grey[50],
- ),
- validator: (value) {
- if (value == null || value.trim().isEmpty) {
- return 'Please enter a manager name';
- }
- if (value.trim().length < 2) {
- return 'Name must be at least 2 characters';
- }
- return null;
- },
- ),
- const SizedBox(height: 12),
- TextFormField(
- controller: emailController,
- decoration: InputDecoration(
- labelText: 'Email (optional)',
- hintText: 'e.g. john.doe@company.com',
- border: OutlineInputBorder(
- borderRadius: BorderRadius.circular(12)),
- filled: true,
- fillColor: Colors.grey[50],
- ),
- ),
- ],
- ),
- ),
- ),
- actions: [
- TextButton(
- onPressed: () => Navigator.of(dialogContext).pop(),
- child: const Text('Cancel'),
- ),
- ElevatedButton(
- onPressed: () {
- if (formKey.currentState?.validate() ?? false) {
- Navigator.of(dialogContext).pop({
- 'name': nameController.text.trim(),
- 'email': emailController.text.trim(),
- });
- }
- },
- style: ElevatedButton.styleFrom(
- backgroundColor: const Color(0xFFFFC812),
- foregroundColor: Colors.black,
- shape: RoundedRectangleBorder(
- borderRadius: BorderRadius.circular(12)),
- ),
- child: const Text('Assign'),
- ),
- ],
- );
- },
- );
+   // Load registered users BEFORE opening the dialog so the
+   // Autocomplete is fully populated by the time the user can interact.
+   // Also detect whether this manager was already invited (so we can
+   // surface a 'Resend invite' affordance instead of 'Assign').
+   List<UserModel> allUsers = const [];
+   bool isSendingInvite = false;
+   bool wasPreviouslyInvited = false;
 
- if (result == null) return;
+   try {
+     final snap = await FirebaseFirestore.instance
+         .collection('users')
+         .limit(200)
+         .get();
+     allUsers = snap.docs.map((d) => UserModel.fromJson(d.data())).toList();
+     final existingEmail = (data.charterEmail ?? '').trim().toLowerCase();
+     final existingName = data.charterProjectManagerName.trim();
+     if (existingEmail.isNotEmpty && existingName.isNotEmpty) {
+       final invSnap = await FirebaseFirestore.instance
+           .collection('manager_invitations')
+           .where('toEmail', '==', existingEmail)
+           .limit(1)
+           .get();
+       wasPreviouslyInvited = invSnap.docs.isNotEmpty;
+     }
+   } catch (e) {
+     debugPrint('Manager users load failed: $e');
+   }
 
- // Persist the manager assignment to Firestore via ProjectDataHelper
- try {
- await ProjectDataHelper.updateAndSave(
- context: context,
- checkpoint: 'project_charter',
- dataUpdater: (current) => current.copyWith(
- charterProjectManagerName: result['name']!,
- ),
- showSnackbar: false,
- );
+   final result = await showDialog<Map<String, String>>(
+     context: context,
+     builder: (dialogContext) {
+       return StatefulBuilder(
+         builder: (dialogContext, setDialogState) {
+         return AlertDialog(
+         shape: RoundedRectangleBorder(
+             borderRadius: BorderRadius.circular(20)),
+         title: Row(
+           children: [
+             Container(
+               padding: const EdgeInsets.all(8),
+               decoration: BoxDecoration(
+                 color: const Color(0xFFFEF3C7),
+                 borderRadius: BorderRadius.circular(10),
+               ),
+               child: const Icon(Icons.person_add_outlined,
+                   color: Color(0xFFB45309), size: 24),
+             ),
+             const SizedBox(width: 12),
+             const Text('Assign Project Manager'),
+           ],
+         ),
+         content: SizedBox(
+           width: 400,
+           child: Form(
+             key: formKey,
+             child: Column(
+               mainAxisSize: MainAxisSize.min,
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+                 const Text(
+                   'Assign a project manager to this project. '
+                   'A manager must be assigned before proceeding to the next step. '
+                   'Start typing a name to pick from registered users — '
+                   'the email is auto-filled.',
+                   style: TextStyle(color: Colors.grey, fontSize: 13),
+                 ),
+                 const SizedBox(height: 20),
+                 // Manager Name — Autocomplete from registered users.
+                 Autocomplete<UserModel>(
+                     initialValue: TextEditingValue(
+                       text: data.charterProjectManagerName,
+                     ),
+                     displayStringForOption: (u) => u.displayName,
+                     optionsBuilder: (textEditingValue) {
+                       final q = textEditingValue.text.trim().toLowerCase();
+                       if (q.isEmpty) return allUsers;
+                       return allUsers.where((u) {
+                         final name = u.displayName.toLowerCase();
+                         final email = (u.email ?? '').toLowerCase();
+                         return name.contains(q) || email.contains(q);
+                       });
+                     },
+                     onSelected: (selection) {
+                       nameController.text = selection.displayName;
+                       emailController.text = selection.email ?? '';
+                       setDialogState(() {});
+                     },
+                     fieldViewBuilder:
+                         (ctx, controller, focusNode, onSubmitted) {
+                       controller.addListener(() {
+                         if (nameController.text != controller.text) {
+                           nameController.text = controller.text;
+                         }
+                       });
+                       return TextFormField(
+                         controller: controller,
+                         focusNode: focusNode,
+                         autofocus: true,
+                         decoration: InputDecoration(
+                           labelText: 'Manager Name',
+                           hintText: 'e.g. John Doe',
+                           border: OutlineInputBorder(
+                               borderRadius: BorderRadius.circular(12)),
+                           filled: true,
+                           fillColor: Colors.grey[50],
+                         ),
+                         validator: (value) {
+                           if (value == null || value.trim().isEmpty) {
+                             return 'Please enter a manager name';
+                           }
+                           if (value.trim().length < 2) {
+                             return 'Name must be at least 2 characters';
+                           }
+                           return null;
+                         },
+                       );
+                     },
+                     optionsViewBuilder: (ctx, onSelected, options) {
+                       return Align(
+                         alignment: Alignment.topLeft,
+                         child: Material(
+                           elevation: 4,
+                           borderRadius: BorderRadius.circular(12),
+                           child: ConstrainedBox(
+                             constraints: const BoxConstraints(maxHeight: 220),
+                             child: ListView.builder(
+                               padding: EdgeInsets.zero,
+                               shrinkWrap: true,
+                               itemCount: options.length,
+                               itemBuilder: (c, i) {
+                                 final u = options.elementAt(i);
+                                 return ListTile(
+                                   dense: true,
+                                   leading: CircleAvatar(
+                                     backgroundColor: const Color(0xFFFFC812),
+                                     child: Text(
+                                       u.displayName.isNotEmpty
+                                           ? u.displayName[0].toUpperCase()
+                                           : '?',
+                                       style: const TextStyle(color: Colors.white),
+                                     ),
+                                   ),
+                                   title: Text(u.displayName),
+                                   subtitle: Text(u.email ?? ''),
+                                   onTap: () => onSelected(u),
+                                 );
+                               },
+                             ),
+                           ),
+                         ),
+                       );
+                     },
+                   ),
+                 const SizedBox(height: 12),
+                 // Email — auto-filled when a registered user is selected,
+                 // still editable for the manual external-email path.
+                 TextFormField(
+                   controller: emailController,
+                   decoration: InputDecoration(
+                     labelText: 'Email (optional)',
+                     hintText: 'e.g. john.doe@company.com',
+                     border: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(12)),
+                     filled: true,
+                     fillColor: Colors.grey[50],
+                     suffixIcon: emailController.text.isNotEmpty
+                         ? const Icon(Icons.mail_outline,
+                             size: 18, color: Color(0xFF10B981))
+                         : null,
+                   ),
+                   onChanged: (_) => setDialogState(() {}),
+                 ),
+                 if (wasPreviouslyInvited)
+                   Padding(
+                     padding: const EdgeInsets.only(top: 8),
+                     child: Row(
+                       children: const [
+                         Icon(Icons.check_circle_outline,
+                             size: 14, color: Color(0xFF10B981)),
+                         SizedBox(width: 6),
+                         Expanded(
+                           child: Text(
+                             'This manager has already been invited. '
+                             'Saving will resend the invitation email.',
+                             style: TextStyle(
+                                 fontSize: 11,
+                                 color: Color(0xFF10B981)),
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+               ],
+             ),
+           ),
+         ),
+         actions: [
+           TextButton(
+             onPressed: () => Navigator.of(dialogContext).pop(),
+             child: const Text('Cancel'),
+           ),
+           ElevatedButton(
+             onPressed: isSendingInvite
+                 ? null
+                 : () async {
+                     if (!(formKey.currentState?.validate() ?? false)) {
+                       return;
+                     }
+                     setDialogState(() => isSendingInvite = true);
+                     try {
+                       // Persist the manager assignment to Firestore first
+                       // so the project data model reflects the new PM
+                       // before we send the email invitation.
+                       await ProjectDataHelper.updateAndSave(
+                         context: context,
+                         checkpoint: 'project_charter',
+                         dataUpdater: (current) => current.copyWith(
+                           charterProjectManagerName: nameController.text.trim(),
+                           charterEmail: emailController.text.trim().isNotEmpty
+                               ? emailController.text.trim()
+                               : current.charterEmail,
+                         ),
+                         showSnackbar: false,
+                       );
 
- if (mounted) {
- setState(() {});
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('${result['name']} assigned as Project Manager'),
- backgroundColor: Colors.green,
- ),
- );
- }
- } catch (e) {
- if (mounted) {
- ScaffoldMessenger.of(context).showSnackBar(
- SnackBar(
- content: Text('Failed to assign manager: $e'),
- backgroundColor: Colors.red,
- ),
- );
- }
- } finally {
- nameController.dispose();
- emailController.dispose();
- }
+                       // Send (or resend) the @nduproject.tech invitation
+                       // via the sendManagerInvite Cloud Function. Failures
+                       // don't roll back the assignment — the user is told
+                       // the email failed and offered a resend later.
+                       String? sendError;
+                       if (emailController.text.trim().isNotEmpty) {
+                         try {
+                           final callable = FirebaseFunctions.instance
+                               .httpsCallable('sendManagerInvite');
+                           await callable.call({
+                             'toEmail': emailController.text.trim(),
+                             'toName': nameController.text.trim(),
+                             'managerName': nameController.text.trim(),
+                             'projectName': data.projectName ?? '',
+                             'projectId': (data.projectId ?? '').trim(),
+                             'resend': wasPreviouslyInvited,
+                           });
+                         } on FirebaseFunctionsException catch (e) {
+                           sendError = e.message ?? e.code;
+                           debugPrint(
+                               'sendManagerInvite failed: ${e.code} ${e.message}');
+                         } catch (e) {
+                           sendError = e.toString();
+                           debugPrint('sendManagerInvite error: $e');
+                         }
+                       }
+
+                       if (!dialogContext.mounted) return;
+                       Navigator.of(dialogContext).pop({
+                         'name': nameController.text.trim(),
+                         'email': emailController.text.trim(),
+                         'inviteError': sendError ?? '',
+                       });
+                     } catch (e) {
+                       if (!dialogContext.mounted) return;
+                       Navigator.of(dialogContext).pop();
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(
+                           content: Text('Failed to assign manager: $e'),
+                           backgroundColor: Colors.red,
+                         ),
+                       );
+                     } finally {
+                       if (dialogContext.mounted) {
+                         setDialogState(() => isSendingInvite = false);
+                       }
+                     }
+                   },
+             style: ElevatedButton.styleFrom(
+               backgroundColor: const Color(0xFFFFC812),
+               foregroundColor: Colors.black,
+               shape: RoundedRectangleBorder(
+                   borderRadius: BorderRadius.circular(12)),
+             ),
+             child: isSendingInvite
+                 ? const SizedBox(
+                     width: 18,
+                     height: 18,
+                     child: CircularProgressIndicator(
+                         strokeWidth: 2, color: Colors.black),
+                   )
+                 : Text(wasPreviouslyInvited ? 'Resend Invite' : 'Assign'),
+           ),
+         ],
+       );
+         },
+       );
+     },
+   );
+
+   if (result == null) {
+     nameController.dispose();
+     emailController.dispose();
+     return;
+   }
+
+   // The persist + invite-send already happened inside the dialog (so the
+   // dialog could show a spinner on the Assign button). Here we just
+   // refresh the parent + surface a status SnackBar.
+   if (mounted) {
+     setState(() {});
+     final inviteError = (result['inviteError'] ?? '').toString();
+     if (inviteError.isEmpty) {
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           content: Text(result['email']!.isNotEmpty
+               ? '${result['name']} assigned as Project Manager and invite sent to ${result['email']}.'
+               : '${result['name']} assigned as Project Manager.'),
+           backgroundColor: Colors.green,
+         ),
+       );
+     } else {
+       ScaffoldMessenger.of(context).showSnackBar(
+         SnackBar(
+           content: Text(
+               '${result['name']} assigned as Project Manager, but the invite email failed: $inviteError. You can resend later.'),
+           backgroundColor: const Color(0xFFD97706),
+         ),
+       );
+     }
+   }
+
+   nameController.dispose();
+   emailController.dispose();
  }
 }
 
@@ -2724,9 +2920,22 @@ class _CharterFloatingApprovalBarState
     }
     setState(() => _sendingEmail = true);
     try {
+      // Construct a deep link to the Project Charter screen so the email's
+      // "Review & Approve Charter →" button lands the sponsor on the actual
+      // charter page (where they can review and tap "Click to Approve") —
+      // not on the bare homepage where nothing happens. The GoRouter route
+      // `/project-charter` resolves to ProjectCharterScreen, and Flutter web
+      // uses hash-based routing by default so the URL is `/#/project-charter`.
+      // projectId is appended as a query param so the charter screen can
+      // pre-select the right project when the sponsor has multiple.
+      final projectId = (data.projectId ?? '').trim();
+      final deepLinkUrl = projectId.isEmpty
+          ? 'https://nduproject.tech/#/project-charter'
+          : 'https://nduproject.tech/#/project-charter?projectId=$projectId';
       final result = await CharterApprovalService.sendApprovalRequestEmail(
         data: data,
         approver: _resolved,
+        deepLinkUrl: deepLinkUrl,
       );
       if (!mounted) return;
       final msg = switch (result.result) {
